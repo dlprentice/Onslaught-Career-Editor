@@ -235,7 +235,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # (12,430/94,572 decoded bytes); bounded identity/normal-flow proofs and historical leads.
 # Verified compiler deleting entries: 80 old/80 proposed authored comments
 # (29,285/234,452 decoded bytes); static identity proofs and marked historical leads.
+# Frontend page identities: 19 old/23 proposed authored comments
+# (11,493/71,741 decoded bytes); common-interface evidence and marked historical leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/frontend-page-identities-20260927.manifest.tsv":
+        "3f2c77b5f7bd530395bee5fb46c48ea7877f569e23ee9331ec8311e329491310",
     "tools/cohort-specs/compiler-destructor-verified-20260927.manifest.tsv":
         "eba36e6b528be7fa11cfc6996c8f162263628d8591ec9634c0295c39080af12f",
     "tools/cohort-specs/compiler-destructor-identities-20260927.manifest.tsv":

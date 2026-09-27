@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-09-27 (Options instruction repair and bounded transition execution; each dated section keeps its own date).
+Last updated: 2026-09-27 (frontend page identities promoted; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -7155,3 +7155,45 @@ name drift or unresolved assertions remain. `npm run test:safety` passed for
 4,124 public candidate files including submodules. `git diff --check` passed.
 Logs `docs.log`, `docs-final.log` and `safety.log` are retained in the cohort
 owner. Names and the running audit counts remain unchanged by this milestone.
+
+## RE frontend page identities — September 27
+
+The `frontend-page-identities-20260927` cohort promotes exactly 23 common-page
+method identities. Seven surviving `CFEPGoodies` declarations, common retail
+virtual calls and constructor/array receiver installation anchor the interface;
+saved names never supply proof. The same evidence proposes 74 kept names and
+withholds 35 other targets, excluded from this cohort.
+
+The first PRE stopped before sealing at the Options instruction-layout defect.
+After its separate repair, fresh PRE restoration and alignment v4 reproduced all
+v2 proof structures; only the export pin changed. The unused v3 command omitted
+three macro undefines and is retained. It changed unrelated header candidates,
+not frontend admission; the corrected v4 command restores the original profile.
+All 23 current bodies (2,573 instructions, 8,721 bytes) match pristine. The wider
+fresh proof covers 98 bodies, 10,814 instructions and 38,403 bytes.
+
+Rehearsal, separate/sealed readbacks, five byte-stable refusal controls,
+independent method/payload review with root reproduction, live readback and
+independently restored Archive A POST passed. All nine live exports equal
+rehearsal; 8,308 non-target function rows and all target body/ABI fields stay exact.
+Program-scope changes are comment content and four added plate comments only.
+
+`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
+`verify_projection.py`: all 8,331 live names match the composed projection;
+1,897 unique corrected names (1,898 rename rows), 220 additional kept names,
+2,121 comment updates and 6,214 names outside the accounted set. These are
+identity dispositions, not semantic-completion or parity percentages.
+
+Private commands and receipts:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/frontend-page-identities/`.
+The projection check identified five stale assertions in three existing notes;
+they were corrected, preserving the distinction between fresh interface/body
+proof and inherited behavior. The render note records the now-promoted Options
+name while keeping its saved ABI defect explicit. No Godot or desktop use.
+
+`npm run test:docs` passed with zero drifted/unresolved name assertions after
+completing the edited Debriefing note's provenance/address header; earlier
+refusals remain in `docs.log`, `docs-final.log` and `docs-complete.log`, with the
+passing run in `docs-verified.log`. `npm run test:safety` passed for 4,126 public
+candidate files including submodules. `git diff --check` passed. Two now-compliant
+notes were removed from the header backlog.

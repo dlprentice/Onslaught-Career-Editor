@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[Options instruction repair](#re-audit-options-instruction-repair--september-27);
+[frontend page identities](#re-audit-frontend-page-identities--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,50 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit frontend page identities — September 27
+
+The [manifest](../../tools/cohort-specs/frontend-page-identities-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/frontend-page-identities-20260927.spec.tsv) correct 23 names and their
+comments/tags. The common page interface distinguishes Init, Shutdown,
+Process, ButtonPressed, RenderPreCommon, Render and TransitionNotification.
+Examples: Options Update is Render; Wingmen Destroy is Shutdown; several
+initialization/timer labels are TransitionNotification callbacks. Intro and
+Multiplayer had misleading historical category tags, now corrected from their
+retail RTTI and separate member installations.
+
+Specimen: `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+Pinned source `5352a81c`: explicit `CFEPGoodies` declarations and the common
+`CFrontEnd` dispatch callers identify seven slots. The absent base header is
+not reconstructed by guessing declaration order. Calls `00466522`, `0046690d`,
+`00466dc4`, `00466a58`, `0046836f`, `00468415` and `00466b29` bind slots 0–6.
+The Goodies member/table installation and common receiver array connect those
+callers to raw RTTI; all known holders must agree and all admitted bodies must
+pass bounded instruction/return checks. No saved name supplies identity.
+
+Seven surviving CFEPGoodies declarations are bound to common retail virtual callers and the constructor/page-array receiver installation. No absent base-header layout or saved-name authority is invented. Complete known RTTI aliases, fixed zero-offset ancestry, bounded argument transport, complete instruction bodies and direct-tail cleanup are checked. Fresh PRE follows the reviewed Options instruction repair. Alignment v4 preserves every v2 proof structure with only the export pin changed; v3 omitted the macro profile and is retained as an unused attempt. The fresh 97-target proof covers 98 bodies, 10,814 instructions and 38,403 bytes. This 23-row subset has 2,573 instructions and 8,721 bytes. Seventy-four kept names await their separate comment cohort; 35 ambiguous or unsupported candidates remain withheld.
+
+The first PRE attempt stopped before sealing on the Options split instruction;
+its records and pre-repair drivers remain preserved. That structural defect was
+promoted separately before this fresh PRE. This exact cohort passed rehearsal,
+separate/sealed readbacks, five byte-stable refusals, independent method and
+payload review with root reproduction, live readback and independently restored
+Archive A POST. All nine live exports equal rehearsal. Exactly 23 frontend page names corrected to independently proven common-interface identities, with authored comments and tag corrections. Displaced names and older notes remain fallible leads. All prototypes, types, conventions, storage, bodies, instructions, references and bookmarks stay unchanged; 8,308 other function rows remain exact. Intro/multiplayer category tags and Wingmen Shutdown versus destructor are corrected. Names do not establish complete behavior or certify the two separately recorded ABI defects.
+All 2,573 target instruction rows remain exact. Program changes are confined to
+comment content and four newly added plate comments; symbol-source counts and
+all other program metrics remain unchanged.
+
+Options and Intro saved argument layouts remain separately recorded ABI defects;
+this identity promotion does not bless them. Rendered behavior, full helpers,
+real clock pacing, sound and player acceptance remain outside this cohort.
+The Options original-tail experiment is documented in the existing render note.
+
+Working identity: `db.18676`, 18 files / 122,932,084 bytes,
+inventory SHA-256 `438595cd2a659d71dde6f37fad952855eab5fb2799d4cfa7bcd9798afceff70c`; main database 72,630,272 bytes,
+SHA-256 `06a8d6f90b352e7d35a2addce79edd4c28384fcfd6dcb71443aeb7853508d9d4`. The restored Options instruction POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-frontend-page-identities/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/frontend-page-identities/`.
 
 ## RE-audit Options instruction repair — September 27
 

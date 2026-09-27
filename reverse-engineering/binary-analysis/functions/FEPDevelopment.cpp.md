@@ -1,5 +1,10 @@
 # FEPDevelopment.cpp Functions
 
+Status: active — current interface identities; older behavioral evidence retained
+Last updated: 2026-09-27
+Summary: retail development-page identity corrections with inherited body and
+storage behavior explicitly separated from the current audit.
+
 > Source File: FEPDevelopment.cpp | Binary: BEA.exe
 > Debug Path String: 0x0062921c (`[maintainer-local-source-export-root]\FEPDevelopment.cpp`)
 
@@ -14,11 +19,21 @@ withdrawn label can tell it was corrected and not lost.
 
 | Address | Superseded label | Current name | Correction |
 | --- | --- | --- | --- |
-| `0x00459580` | `CFEPDevelopment__ScheduleWorldListRefresh` | `CFEPDevSelect__ScheduleWorldListRefresh` | class prefix moved; suffix unchanged |
+| `0x00459580` | `CFEPDevelopment__ScheduleWorldListRefresh` | `CFEPDevSelect__TransitionNotification` | class prefix corrected in July; common-interface method re-derived in September |
 
 ---
 
 ## Overview
+
+The September 27 audit re-derived `00458090` as `CFEPDevelopment::Init`
+and `00459580` as `CFEPDevSelect::TransitionNotification` from raw RTTI slots,
+surviving explicit page declarations and common retail dispatch callers.
+Pristine SHA-256: `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+The [frontend cohort](../../ghidra/README.md#re-audit-frontend-page-identities--september-27)
+records complete body checks, exact scope and limits. Saved prototypes and the
+older storage/world-list interpretations below are not certified by that
+interface proof. Earlier wave totals are historical receipts, not current audit
+coverage or semantic completion.
 
 `CFEPDevelopment` is the retail frontend development/debug page cluster for world-list selection. Wave 384 corrected the saved Ghidra metadata for this cluster after fresh retail read-back. Stuart's checked source snapshot does not currently provide a matching `FEPDevelopment.cpp` source body, so these names and signatures are retail-binary evidence, not source-body proof.
 
@@ -31,16 +46,16 @@ Wave957 (`cfepdevelopment-world-list-review-wave957`) re-read the cluster with f
 | Address | Name | Saved signature | Evidence boundary |
 | --- | --- | --- | --- |
 | `0x00458050` | `CFEPDevelopment__CompareWorldFileNamePtrs` | `int __cdecl CFEPDevelopment__CompareWorldFileNamePtrs(char * * left, char * * right)` | Comparator passed to the generic quick-sort wrapper for world-file name ordering. |
-| `0x00458090` | `CFEPDevelopment__EnumerateWorldFiles` | `bool __fastcall CFEPDevelopment__EnumerateWorldFiles(void * this)` | Corrected true boundary for world-file enumeration/allocation/filter/sort; supersedes stale mid-body `0x00458100`. |
+| `0x00458090` | `CFEPDevelopment__Init` | `bool __fastcall CFEPDevelopment__Init(void * this)` | September 27: common page slot 0, Init. Earlier world-list behavior/boundary evidence remains below. |
 | `0x004581e0` | `CFEPDevelopment__Shutdown` | `void __fastcall CFEPDevelopment__Shutdown(void * this)` | Releases world-list state and resets list fields. |
 | `0x004583c0` | `CFEPDevelopment__RenderWorldListEntries` | `void __fastcall CFEPDevelopment__RenderWorldListEntries(void * this)` | Renders world-list rows for the development frontend page. |
 | `0x004584d0` | `CFEPDevelopment__Render` | `void __thiscall CFEPDevelopment__Render(void * this, float transition, int dest)` | Corrected calling convention; renders the page and delegates list-entry rendering. |
 | `0x00458710` | `CFEPDevelopment__RefreshWorldListCore` | `bool __fastcall CFEPDevelopment__RefreshWorldListCore(void * this)` | Core refresh helper after storage-device context resolution. |
 | `0x004589f0` | `CFEPDevelopment__RefreshWorldList` | `void __fastcall CFEPDevelopment__RefreshWorldList(void * this)` | Wrapper that pushes zero to the resolver and refreshes the list core. |
 | `0x00458ce0` | `CFEPDevelopment__ResolveActiveStorageDevice` | `void __thiscall CFEPDevelopment__ResolveActiveStorageDevice(void * this, int unused_refresh_arg)` | Corrected to `ret 0x4` thiscall shape; observed caller pushes zero and current body does not consume the argument. |
-| `0x00459580` | `CFEPDevSelect__ScheduleWorldListRefresh` | `void __thiscall CFEPDevSelect__ScheduleWorldListRefresh(void * this, int ignored_arg)` | Corrected to `ret 0x4` thiscall shape; schedules or triggers the world-list refresh path. |
+| `0x00459580` | `CFEPDevSelect__TransitionNotification` | `void __thiscall CFEPDevSelect__TransitionNotification(void * this, int ignored_arg)` | September 27: common page slot 6, TransitionNotification; RET 4. Saved parameter interpretation remains separate. |
 
-## Evidence
+## Inherited evidence and prior labels
 
 - Wave957 read-only review verified `13` metadata rows, `13` tag rows, `221` xref rows, `877` instruction rows, and `13` decompile-index rows. `0x00458100` remains `MISSING`; instruction evidence at that address is still a `PUSH 0x62921c` inside `CFEPDevelopment__EnumerateWorldFiles`, not a function prologue.
 - Wave957 preserved the Wave384 calling-convention evidence: `0x004584d0 CFEPDevelopment__Render` ends with `RET 0x8`, while `0x00458ce0 CFEPDevelopment__ResolveActiveStorageDevice` and `0x00459580 CFEPDevSelect__ScheduleWorldListRefresh` use `RET 0x4`; `0x004589f0` and `0x00459580` both push zero before calling the resolver.
