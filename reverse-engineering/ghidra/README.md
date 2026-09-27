@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[sound source names and arguments](#re-audit-sound-source-names-and-arguments--september-27);
+[verified walker records](#re-audit-verified-walker-records--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,39 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit verified walker records — September 27
+
+The [25-row manifest](../../tools/cohort-specs/walker-verified-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/walker-verified-20260927.spec.tsv) preserve existing walker
+names and correct their notes and tags. Specimen: `BEA.exe.original.backup`,
+SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Twenty-five existing walker identities verified within stated complete-body/source/caller limits. Only their plate comments and tag sets change; old notes remain qualified leads. All names, prototypes, variables, locals, frames, 7,121 code bytes / 2,224 instructions and 8,307 other function records stay unchanged.
+
+Root freshly decoded all complete pristine targets and relevant callers against pinned BattleEngineWalkerPart, BattleEngine and Player source. Constructor storage, directional calls, literals and field/call structure establish owner and identity independently of saved names. The review corrects signed gait selection, primary-absent enumeration and precise positive-count instructions; floating relational summaries are explicitly finite-operand claims, with the unordered heat-gate exception recorded. Retail keeps the strict two-sided dash window, asymmetric slow movement and mutating weapon getter. No full saved-ABI, helper, numerical, input/device or gameplay certification is claimed. Incorrect icon/placement and rotation labels are excluded for separate corrections.
+
+The [movement contract](../game-mechanics/walker-dash.md#september-27-complete-body-recheck)
+records directional asymmetries and the independently rederived control-binding
+lookup. The [weapon-store recheck](../game-mechanics/battle-engine-weapon-stores.md#september-27-walker-recheck)
+distinguishes selection, charge, store gates and readiness. These are static
+findings; no Godot, player-input or retail gameplay run occurred.
+
+The first seal and successful disposable rehearsal were rejected before live
+for imprecise wording in four comments. They remain under `rejected-v1/`.
+The corrected seal repeated fresh PRE restoration, rehearsal, separate/sealed
+readbacks and five byte-stable refusal controls. Independent exact-manifest
+review with root reproduction, live readback and independently restored
+Archive A POST passed. All nine live exports equal rehearsal; only the program
+comment digest moves. The production name projection is checked against the
+complete live export separately.
+
+Working identity: `db.18710`, 18 files / 125,930,356 bytes,
+inventory SHA-256 `afc19b20bc482b8f213c583ea06322705fc24df8803adbfd76a1b8e27dd8f374`; main database 75,628,544 bytes,
+SHA-256 `62d19dbebcd1b7586a60fbeafb2958e4ec87641366e9655e8b0a4fc6c36ac846`. Restored sound-source POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-walker-verified/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/walker-verified/`; complete bodies and caller/source evidence:
+`local-data/test-runs/re-audit-20260926/walker/`.
 
 ## RE-audit sound source names and arguments — September 27
 

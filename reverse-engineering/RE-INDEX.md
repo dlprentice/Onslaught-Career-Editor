@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (sound source names and argument labels corrected; sample-length return boundary retained; broader audit remains)
+Last updated: 2026-09-27 (25 walker identities rechecked; movement, selection and control-binding distinctions documented; broader audit remains)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -102,6 +102,15 @@ passed 42 original-code cases and two altered-copy controls. The
 [parent-link](binary-analysis/functions/Career.cpp/CCareerNode__GetParentLinks.md)
 notes bound how null-item copy termination affects career traversal; complete
 career execution and actual authored graph combinations remain open.
+The [25 verified walker records](ghidra/README.md#re-audit-verified-walker-records--september-27)
+preserve names and interfaces while correcting notes/tags through the complete
+live/recovery gate. The [movement contract](game-mechanics/walker-dash.md)
+records the strict dash window, slow-movement asymmetry and yaw-right binding's
+rotation/pitch multiplier. The [weapon-store recheck](game-mechanics/battle-engine-weapon-stores.md#september-27-walker-recheck)
+distinguishes mutable selection and store admission from complete readiness,
+including unequal unordered-comparison behavior. Static evidence is not runtime
+input acceptance; wrong helper names/interfaces remain the next correction set.
+
 The [sound event-queue recheck](binary-analysis/csoundmanager-shared-semantics-2026-08-11.md#september-27-event-queue-correction)
 corrects inherited insertion-order wording with 60 original-code cases and two
 altered-copy controls. Both nonempty paths preserve the active head; the flag

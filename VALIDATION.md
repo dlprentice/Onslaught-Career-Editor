@@ -8749,3 +8749,49 @@ gate logs remain in the same sound test-run owner as `source-*`.
 against the final registered spec. `npm run test:docs` passed with zero drifted
 or unresolved assertions; `npm run test:safety` passed across 4,192 candidate
 files. `git diff --check` passed. These gates do not establish audio acceptance.
+
+### RE walker records and default input mapping — September 27
+
+The RE lane promoted `walker-verified-20260927`: 25 retained names, corrected
+plate comments/tag sets, 7,121 unchanged code bytes / 2,224 instructions and
+8,307 untouched function records. The first successful disposable rehearsal
+was rejected for imprecise prose; its full seal and changed replica remain
+private under `rejected-v1/`. The corrected payload received independent exact
+review and root reproduction. No retail executable or checkpoint bytes changed.
+
+Executed in the existing audit owner, in order:
+
+- `walker-verified/prepare_preservation.py`, `prepare.py`, `rehearse.py` and
+  `compare_exports.py rehearsal-post`: fresh PRE and all declared deltas passed.
+- `walker-verified/negative_controls.py`: five expected refusals, all project
+  bytes unchanged.
+- `python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed after the
+  exact cohort allowlist registration.
+- `walker-verified/apply_live.py`, `compare_exports.py live-post` and `finish.py`:
+  exact live readback, all nine exports equal rehearsal, independent Archive A
+  POST copied, hash-compared, restored elsewhere and opened read-only.
+- `walker-verified/verify_projection.py`: all 8,332 projected names equal live.
+  Cumulative dispositions: 2,141 unique corrected names, 443 additional kept,
+  zero newly neutralized, 5,748 outside the accounted set; 2,597 comments and
+  105 prototype records corrected across the audit. These are audit counts,
+  not game-understanding or parity percentages.
+- `npm run test:docs`: no drifted or unresolved name assertions; two rewritten
+  function notes required their standard Source File/Binary provenance fields,
+  corrected before the passing run. `npm run test:safety`: 4,194 candidate files
+  passed. Whitespace/diff inspection is part of commit closeout.
+
+Private gate receipts:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/walker-verified/`.
+Command logs and complete pristine source/caller/control-binding evidence:
+`local-data/test-runs/re-audit-20260926/walker/`, including
+`verified-docs-v3.log`, `verified-safety.log` and `verified-framework.log`.
+The successful PRE/control and POST-open twins were freshly hash-compared and
+retired only after recovery completed; exact targets/outcomes are in the
+existing migration deletion queue. The changed/rejected rehearsals and all
+cold history remain preserved.
+
+Fresh static analysis additionally resolves the default held-charge/released-fire
+binding chain and the yaw-right binding's multiplier for both walker rotation
+and pitch velocity. Runtime sampling/Flush cadence, current settings, player
+input, sound, Godot and gameplay were not exercised. Two living function notes
+were rewritten from the new evidence; this is not a whole-document-corpus audit.

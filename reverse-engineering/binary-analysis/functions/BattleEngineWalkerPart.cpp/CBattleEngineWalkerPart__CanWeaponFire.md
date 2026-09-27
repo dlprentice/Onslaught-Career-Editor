@@ -1,90 +1,60 @@
 # CBattleEngineWalkerPart__CanWeaponFire
 
-Status: active static function note
-Last updated: 2026-08-19
-Source File: `references/Onslaught/BattleEngineWalkerPart.cpp` | Binary: BEA.exe,
-SHA-256
-`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
-Evidence: MEASURED — independently re-read 2026-08-19 from official
-`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`. Twin
-`local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`
-matches (2506752 equal). The Ghidra database was not opened. Cycle
-101 accepted through JetPart GetWeaponCharge `f31bee59` — not
-redone. This row is already campaign `REBUILD_READY` — not
-raised. Envelope only. Did not mill FUN_*. Did not implement
-lock sets. Did not edit `rebuild/**`.
+Status: active static function contract
+Last updated: 2026-09-27
+Summary: this is the selected active weapon's store-admission gate, separate from reload readiness; its heat and ammo comparisons differ for unordered operands.
+Source File: `references/Onslaught/BattleEngineWalkerPart.cpp` | Binary: `BEA.exe.original.backup` (pristine; identity below)
 
-> Address: `0x00414630`
-
-## Contract
-
-Incoming-ECX `thiscall`. First insn `push esi`. `esi = ecx`.
-Three bare `ret` (`0x00414689`, `0x004146a4`, `0x004146a8`). Body
-`0x00414630`–`0x004146a8` is 121 bytes, SHA-256
+Address: `0x00414630`. Pristine specimen:
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+Complete body `[00414630,004146a9)`: 121 bytes / 37 instructions, SHA-256
 `32e7211754b16a53331446a4e944518f50e1dacfd5a3846ca572a5db32dff029`.
-Capstone: 37 insns, 1 `E8`, zero `E9`, 1 unique rel32 target.
-Raw `0xE8` byte count is 1 and matches the instruction count.
 
-Pinned body, with `esi = ecx`:
+The September 27 pass freshly decoded the complete body and its caller,
+comparing pinned `BattleEngineWalkerPart.cpp:936–961` at source commit
+`5352a81cdb838b145a57f7febc5d9fc4b0129ebb`. This replaces the August 19
+unnamed-field account. Historical campaign grades do not establish current
+rebuild or retail runtime acceptance.
 
-1. `E8` already-pinned
-   `CBattleEngineWalkerPart__GetCurrentWeapon` `0x00414030`.
-   EAX==0 returns EAX=0.
-2. `[eax+0x9c]==0` returns EAX=0. Same `[+0x9c]` gate FireWeapon
-   already counts. **Not** named here.
-3. Store/heat/overheat walk on already-counted `[esi+0x20]`.
-   `fcomp` 0.0f at `0x005d856c`. EAX=1 on the two success `ret`s.
-   Those slots are **not** named here.
+## Admission
 
-One inbound `.text` `E8`/`E9`: `CALL` at `0x004065db` inside
-already-pinned `CBattleEngine__HandleLocks` `0x00406560`. Zero
-encodings of imm `30 46 41 00` in the image (not a vtable slot).
+The function calls GetCurrentWeapon, returning zero if selection is null or
+weapon active DWORD `+0x9c` is zero. The selected profile's `+0x24` supplies
+the store index. For finite comparison operands:
 
-Source architecture (not proof):
-`CBattleEngineWalkerPart::CanWeaponFire`
-`BattleEngineWalkerPart.cpp:936-961`. Retail `[+0x9c]` sits
-where source has `IsActive()`. Bare `ret` matches zero stack
-args.
+- Nonzero heat flag at main `+0x55c + 4*index`: require the current store at
+  main `+0x52c + 4*index` to be below capacity at configuration
+  `+0x88 + 4*index`, and overheat DWORD at main `+0x544 + 4*index` to be zero.
+- Zero heat flag: require the current store to be strictly positive.
 
-Rebuild mapping: existing `REBUILD_READY` **not raised**. This
-note is a PE envelope only. Do not implement Core from this RE
-root.
+It does not compare store against the next shot's consumption. Both success
+paths write full EAX=1; refusal writes full EAX=0. Incoming receiver is ECX,
+there are no stack arguments, and the three exits use bare RET. Keep the
+full-DWORD Boolean interface rather than an AL-only Boolean annotation.
 
-Cheapest falsifier: file `0x00014630` is not `56`, **or**
-`0x00014631` is not `8b f1`, **or** `0x00014633` is not
-`e8 f8 f9 ff ff`, **or** `0x0001463c` is not
-`8b 88 9c 00 00 00`, **or** `0x000146a8` is not `c3`, **or**
-body SHA-256 is not `32e72117…f029`, **or**
-`tools/call_xref_scan.py` on `0x00414630` is not exactly one
-`CALL` at `0x004065db`, **or** any encoding of imm `30 46 41 00`
-exists.
+At `00414673`, the heat path tests only x87 C0 (`TEST AH,1`), so a masked
+unordered comparison passes its comparison test; zero overheat is still needed.
+The ammo path tests C0/C3 (`TEST AH,41h` at `00414699`) and refuses unordered.
+These are instruction-level distinctions, not measured NaN behavior in retail.
+Do not silently replace both predicates with a supposedly equivalent comparison.
 
-## Rebuild mapping — 2026-08-19
+HandleLocks calls this gate at `004065db`, then separately calls weapon
+ReadyToFire at `00406817`. This function therefore does not establish reload,
+charge or projectile readiness by itself. Calling GetCurrentWeapon may change
+its list cursor or selected index, as [that contract](CBattleEngineWalkerPart__GetCurrentWeapon.md)
+records.
 
-Existing campaign grade `REBUILD_READY` is **not raised**.
-Independently re-read official+twin `74154bfa` this wake
-(2506752 equal). Body SHA-256 still `32e72117…f029`.
-`0x0001463c` still `8b889c000000`. `call_xref_scan` still one
-CALL. Did not open Ghidra. Did not edit `rebuild/**`. Did not
-name `[+0x9c]` / store slots. Did not invent a Core owner.
+The [weapon-store contract](../../../game-mechanics/battle-engine-weapon-stores.md#september-27-walker-recheck)
+and [Ghidra audit](../../../ghidra/README.md#re-audit-verified-walker-records--september-27)
+record scope and evidence. Private complete bodies and caller witnesses are in
+`local-data/test-runs/re-audit-20260926/walker/`.
 
-Retail entity: walker-part CanWeaponFire from already-pinned
-HandleLocks. Stuart architecture (not proof):
-`BattleEngineWalkerPart.cpp:936-961`.
+## Limits
 
-Nearest reconstruction owner: **none added**. Existing
-`REBUILD_READY` mapping is not rewritten. L100 card
-`t_aa5586e5` is on a playable training-path diet — do not
-implement from this mapping until that lane names the arm.
-
-Siblings: `CBattleEngineJetPart__CanWeaponFire` `17312e7a`
-(already on main this wake, not redone) /
-`CBattleEngineWalkerPart__GetCurrentWeapon`. Next named:
-`CBattleEngineWalkerPart__GetWeaponAmmoPercentage` `0x00414410`
-(no 2026-08-19 PE envelope).
-
-## Functions
-
-| Address | Name | Byte evidence | Contract (confidence) |
-| --- | --- | --- | --- |
-| `0x00414630` | `CBattleEngineWalkerPart__CanWeaponFire` | `56 8bf1 e8f8f9ffff 8b889c000000 … c3` (121 B) | incoming-ECX thiscall; bare ret ×3; 121 B; 1 E8 / 0 E9 / 1 target; 1 inbound CALL. HIGH on ABI, GetCurrentWeapon, `[+0x9c]` gate, unique inbound. Existing `REBUILD_READY` **not raised**. **Not** on store-slot names or a new Core owner. |
+Source/body agreement establishes this bounded identity and branch structure;
+complete Weapon layout, helper behavior, valid store indices and live firing
+cadence remain separate. A useful falsifier is a confined original-body probe
+with selection intercepted, covering inactive/null, finite threshold values,
+overheated heat stores and masked unordered operands, checking full EAX and
+preservation of authored memory. No such new execution is claimed by this pass.
