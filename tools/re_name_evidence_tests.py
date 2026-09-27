@@ -2302,5 +2302,132 @@ class CompilerDestructorTests(unittest.TestCase):
                 self.assertIn('opaque cleanup stack-pointer',report['admission']['rows'][1]['flags'][0])
 
 
+class CleanupBodyTests(unittest.TestCase):
+    """Real decoded authored x86, with a synthetic separately tested RTTI census."""
+
+    def fixture(self, prefix=None, ending=None):
+        prefix = bytes.fromhex('c701 00016000') if prefix is None else prefix
+        call = b'\xe8'+struct.pack('<i', 0x403000-(0x402000+len(prefix)+5))
+        cleanup = prefix + (call+b'\xc3' if ending is None else ending)
+        raw = {0x401000: CompilerDestructorTests.wrapper(0x401000,0x403000),
+               0x401100: CompilerDestructorTests.wrapper(0x401100,0x402000),
+               0x402000: cleanup, 0x403000:b'\xc3', 0x405000:bytes.fromhex('c20400')}
+        text = bytearray(b'\xcc'*0x6000)
+        for a, data in raw.items(): text[a-0x401000:a-0x401000+len(data)] = data
+        sections = [E.Section('.text',0x401000,len(text),bytes(text),0x60000020),
+                    E.Section('.rdata',0x600000,0x2000,bytes(0x2000),0x40000040)]
+        img = object.__new__(E.Image)
+        img.sections = sections; img.sha256 = 'a'*64
+        def put(address, data):
+            sec=img.section_of(address); start=address-sec.start
+            sec.raw=sec.raw[:start]+data+sec.raw[start+len(data):]
+        for a, value in {0x600000-4:0,0x600004:0x401000,0x6000fc:0x601000,
+                         0x600104:0x401100,0x601000:0,0x601004:0,0x601008:0}.items():
+            if a>=0x600000:put(a,struct.pack('<I',value))
+        names={0x401000:'Base__scalar_deleting_dtor',0x401100:'Child__scalar_deleting_dtor',
+               0x402000:'UntrustedCleanup',0x403000:'UntrustedBase',0x405000:'UntrustedFree'}
+        funcs=[E.Func(a,names[a],'USER_DEFINED',a,a+len(data)-1,'','',False,'',False,
+                      1,len(data),a+len(data)-1) for a,data in raw.items()]
+        bases={'Base':[('Base',0)],'Child':[('Child',0),('Base',0)]}
+        rtti=E.RttiModel({},bases,[E.Vtable(0x600000,'Base',0,[0,0x401000]),
+                                  E.Vtable(0x600100,'Child',0,[0,0x401100])],copy.deepcopy(bases))
+        model=SimpleNamespace(rtti=rtti,insns=[i for f in funcs for i in E.decode_entry_body(img,f)])
+        prog=E.Program(img,model,funcs)
+        pin=lambda a:dict(address=hex(a),bytes=len(raw[a]),sha256=hashlib.sha256(raw[a]).hexdigest())
+        doc={'specimenSha256':img.sha256,'evidence':'Authored test seed',
+             'seed':{'class':'Base','table':'0x600000','slot':1,'target':'0x401000','body':pin(0x401000)},
+             'teardown':pin(0x403000),'deallocator':pin(0x405000),'manager':'0x680000'}
+        return prog,doc,put
+
+    def report(self, p, d):
+        with patch.object(E,'scan_rtti',return_value=p.model.rtti):
+            return E.compiler_cleanup_bodies(p,d)
+
+    def test_zero_displacement_first_store_cannot_be_skipped(self):
+        for first in (bytes.fromhex('c74100 00006000'), bytes.fromhex('894100'),
+                      bytes.fromhex('3ec701 00006000'), bytes.fromhex('31c0 c70401 00006000'),
+                      bytes.fromhex('c741ff 00006000'), bytes.fromhex('c64101 00')):
+            with self.subTest(first=first.hex()):
+                p,d,_=self.fixture(first+bytes.fromhex('c701 00016000'))
+                self.assertEqual(self.report(p,d)['rows'][0]['status'],'withheld')
+
+    def test_clipped_other_owner_cannot_hide_overlap(self):
+        for target in (0x402000,0x403000,0x401100):
+            with self.subTest(target=hex(target)):
+                p,d,_=self.fixture()
+                p.funcs.append(E.Func(target-4,'Overlap','DEFAULT',target-4,target-1,
+                                     '','',False,'',False,1,12,target+7))
+                self.assertEqual(self.report(p,d)['rows'][0]['status'],'withheld')
+
+    def test_names_do_not_feed_admission_and_old_spelling_can_be_kept(self):
+        p,d,_=self.fixture(); before=self.report(p,d)
+        self.assertEqual(before['proposals']['rows'][0]['proposedName'],'Child__dtor_body')
+        for f in p.funcs:f.name='Guess_'+hex(f.va)
+        self.assertEqual(before['rows'],self.report(p,d)['rows'])
+        p.by_va[0x402000].name='Child__dtor_base'
+        self.assertEqual(self.report(p,d)['proposals']['rows'][0]['status'],'keep')
+
+    def test_wrong_ancestor_member_adjusted_or_late_store_is_withheld(self):
+        prefixes=[bytes.fromhex(v) for v in (
+            'c701 00006000', 'c74104 00016000', '83c104 c701 00016000',
+            'b101 c701 00016000', '8b09 c701 00016000',
+            'eb00 c701 00016000', 'e800000000 c701 00016000',
+            'c701 04016000', 'c701 00006000 c701 00016000')]
+        for prefix in prefixes:
+            with self.subTest(prefix=prefix.hex()):
+                p,d,_=self.fixture(prefix)
+                report=self.report(p,d)
+                self.assertFalse(any(r['status']=='mechanical-checks-pass' for r in report['rows']))
+
+    def test_register_copy_and_zero_displacement_owner_store_pass(self):
+        for prefix in (bytes.fromhex('8bf1 c70600016000'),bytes.fromhex('c7410000016000'),
+                       bytes.fromhex('3ec70100016000'),bytes.fromhex('c7410400000000 c70100016000')):
+            with self.subTest(prefix=prefix.hex()):
+                p,d,_=self.fixture(prefix)
+                self.assertEqual(self.report(p,d)['rows'][0]['status'],'mechanical-checks-pass')
+
+    def test_segment_register_mutations_in_prefix_or_teardown_are_refused(self):
+        for prefix in (bytes.fromhex('8ed8 c70100016000'), bytes.fromhex('1f c70100016000'),
+                       bytes.fromhex('c70100016000 8ed8')):
+            with self.subTest(prefix=prefix.hex()):
+                p,d,_=self.fixture(prefix)
+                self.assertFalse(any(r['status']=='mechanical-checks-pass' for r in self.report(p,d)['rows']))
+
+    def test_stale_cached_body_cannot_be_used_with_fresh_pins(self):
+        for target, data in [(0x402002,struct.pack('<I',0x600000)),
+                             (0x402007,struct.pack('<i',0x404000-0x40200b)),
+                             (0x403000,b'\x90')]:
+            with self.subTest(target=hex(target)):
+                p,d,put=self.fixture();put(target,data)
+                if target==0x403000:d['teardown']['sha256']=hashlib.sha256(b'\x90').hexdigest()
+                self.assertEqual(self.report(p,d)['rows'][0]['status'],'withheld')
+
+    def test_unowned_matching_wrapper_and_virtual_alias_are_withheld(self):
+        for kind in ('wrapper','alias'):
+            with self.subTest(kind=kind):
+                p,d,put=self.fixture()
+                if kind=='wrapper':put(0x406000,CompilerDestructorTests.wrapper(0x406000,0x402000))
+                else:p.slots[0x402000].append(('Other',0,1,0x610000))
+                self.assertEqual(self.report(p,d)['rows'][0]['status'],'withheld')
+
+    def test_constructor_displacement_and_raw_slot_disagreement_are_withheld(self):
+        p,d,put=self.fixture();put(0x601008,struct.pack('<I',4))
+        self.assertEqual(self.report(p,d)['rows'][0]['status'],'withheld')
+        p,d,put=self.fixture();put(0x600104,struct.pack('<I',0x401000))
+        with self.assertRaisesRegex(ValueError,'slot word mismatch'):self.report(p,d)
+
+    def test_occupied_spelling_is_not_resolved_by_moving_another_name(self):
+        p,d,_=self.fixture();p.by_va[0x405000].name='Child__dtor_body'
+        report=self.report(p,d)
+        self.assertEqual(report['rows'][0]['status'],'mechanical-checks-pass')
+        self.assertEqual(report['proposals']['rows'][0]['status'],'withheld')
+
+    def test_fresh_rtti_disagreement_refuses_before_admission(self):
+        p,d,_=self.fixture()
+        with patch.object(E,'scan_rtti',return_value=E.RttiModel({}, {}, [])):
+            with self.assertRaisesRegex(ValueError,'fresh specimen'):
+                E.compiler_cleanup_bodies(p,d)
+
+
 if __name__ == "__main__":
     unittest.main()

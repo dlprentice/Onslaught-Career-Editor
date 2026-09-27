@@ -7952,3 +7952,33 @@ replaced its duplicate source-parity function note with an owner link. The
 177-byte body reloads active-page state after callbacks and converts signed
 time to stored float; actual callback side effects, duration units and SetPage
 execution remain open. No new original-game runtime experiment was run.
+
+## RE cleanup-body admission tool — September 27
+
+`tools/re_name_evidence.py cleanup-bodies` combines the existing compiler
+deleting-entry proof with the cleanup's own first primary-vptr store. It checks
+fresh RTTI, every matching wrapper byte shape, exact complete fresh decoding
+of wrappers and recursive teardown bodies, original-this flow, every explicit
+normal return and conflicting ownership. Names are output comparisons only.
+Known cleanup spellings can remain; prototype and old-comment claims are excluded.
+
+`python -m unittest tools.re_name_evidence_tests`: 152 passed. Review exposed
+two bypasses, reproduced as five failing subcases before correction: explicit
+zero displacement could hide an earlier table store, and a clipped earlier
+function could hide overlapping declared ownership. Controls also cover DS
+forms, indexed/partial/overlapping writes, segment-register mutations, stale
+instruction caches, extra wrappers, virtual aliases and occupied names.
+
+The private `cleanup-admission-v2.json` covers 44 accepted cleanup identities
+(43 retained spellings, one proposed rename) and 69 withheld cases. It checks
+154 complete fresh bodies. This includes CUnit's cleanup through a mechanically
+admitted wrapper whose earlier name proposal collided; only 113 wrapper names
+were previously promoted. The 44 cleanup dispositions are not yet promoted.
+No runtime experiment was run. Complete destruction behavior, exception paths,
+callee compliance and arbitrary indirect callers remain unproved.
+
+Evidence/logs: `local-data/test-runs/re-audit-20260926/frontend-options/`:
+`cleanup-review-negatives-before.log`, `cleanup-suite-v2.log`,
+`cleanup-admission-v2.log` and `cleanup-admission-v2.json`. Independent read-only
+review approved the bounded mechanism; root reproduced the counterexamples and
+checked the real packet. Exact cohort payload review remains a separate gate.
