@@ -8488,3 +8488,45 @@ unchanged. No Ghidra was opened and no new restore-open result is claimed.
 Logs and per-copy proofs:
 `local-data/test-runs/re-audit-20260926/sptrset/backup-retention-tests.log` and
 `local-data/test-runs/re-audit-20260926/sptrset/storage-retirement-20260927/`.
+
+## GenericSPtrSet physical interfaces — September 27
+
+The eight-row `sptrset-abi-20260927` cohort changes seven direct physical
+interfaces and explicitly reads back one dependent direct-JMP thunk. Contains
+returns int/EAX:4 instead of bool/AL:1; the constructor records its unconditional
+returned receiver in EAX. Four direct member receivers and the thunk normalize
+to automatic thiscall; two static pool methods gain source-correlated cdecl
+conventions with no receiver or parameters. A bare zero-argument RET cannot
+distinguish cdecl from stdcall; source identity and the sibling Init caller's
+cleanup support this annotation. Constructor transport does not establish an
+external consumer or a pointer return in C++ syntax.
+
+Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+Root re-derived all eight bodies and eleven complete caller spans. The initial
+caller-window disassembly was not admitted because its arbitrary starts could
+misalign instructions; `abi-caller-objdump-v2.log` starts at each complete caller.
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, eight byte-stable
+refusal controls, independent exact review with root reproduction, live readback
+and independent Archive A POST restoration passed. Removing the thunk dependency
+fails before writes. All nine live exports equal rehearsal; 339 bytes / 121
+instructions, all names, frames and 8,324 non-target function records are unchanged.
+All 15 target variable records match the correction; 32,711 other records remain
+unchanged. This cohort adds no new retail or original-code runtime observation.
+
+Commands: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `register_live.py`,
+`apply_live.py`, `compare_exports.py live-post`, `finish.py` and `verify_projection.py`
+in `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/sptrset-abi/`.
+Logs: `local-data/test-runs/re-audit-20260926/sptrset/abi-*`.
+`PYTHONPATH=tools python -m unittest tools.ghidra_cohort_framework_tests` passed
+94 tests. The full 8,332-row name projection equals live: 2,139 unique corrected
+names, 377 additional kept, zero newly neutralized, 5,816 outside those sets;
+93 corrected interfaces and 2,529 corrected comments are separate dimensions.
+After all gates, the closeout retired only the freshly hash-matched control-PRE
+and POST-open project payloads. Their manifests, original receipts and all other
+evidence remain; Archive A recovery and the differing rehearsal remain intact.
+
+`npm run test:docs` passed with zero drifted assertions; `npm run test:safety`
+passed across 4,186 candidate files; `git diff --check` passed. Logs are
+`abi-docs.log` and `abi-safety.log` in the execution owner above.

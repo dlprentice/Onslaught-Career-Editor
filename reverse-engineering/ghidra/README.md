@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[GenericSPtrSet identities](#re-audit-genericsptrset-identities--september-27);
+[GenericSPtrSet interfaces](#re-audit-genericsptrset-interfaces--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,34 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit GenericSPtrSet interfaces — September 27
+
+The [eight-row manifest](../../tools/cohort-specs/sptrset-abi-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/sptrset-abi-20260927.spec.tsv) correct saved physical
+interfaces in pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Seven direct GenericSPtrSet physical interfaces and one declared forwarding dependency corrected. Four direct explicit ECX receivers and the thunk normalize to automatic thiscall. Contains changes AL:1 bool to int/EAX:4; the constructor records its unconditional EAX:4 returned receiver. Two static global-pool cleanup functions gain source-correlated cdecl conventions with no receiver or arguments. All 339 code bytes / 121 instructions, names, physical input locations, frame sizes, locals, thunk association and 8,324 other function records remain unchanged.
+
+Pinned SPtrSet.h/cpp member/static declarations are matched to complete pristine bodies and complete retail caller spans. Caller 0x004441b0 consumes full EAX after Contains; career callers supply local list receivers in ECX. The constructor result describes native transport, not a pointer return in C++ syntax or a proved caller use. Zero-argument RET cannot distinguish cdecl/stdcall: static source identity and sibling Init caller cleanup supply the convention normalization. Only the target prototype is written for the direct five-byte RemoveAll thunk; its dependent interface is explicitly read back. Unknown concrete template types, allocator effects, invalid traversals and full career/runtime acceptance remain open. Earlier notes remain fallible leads.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, eight byte-stable
+refusal controls, independent exact review with root reproduction, live readback
+and independently restored Archive A POST passed. Omitting the declared thunk
+is rejected before writes. All nine live exports equal rehearsal. All 15 target
+variable records match the declared return/receiver correction; 32,711 other
+variable records, all frames, names, code and non-target function rows remain
+unchanged. The current name projection still equals all 8,332 live entries.
+This metadata cohort adds no new original-code or retail runtime observation;
+the preceding list experiment retains its own bounded evidence and limitations.
+
+Working identity: `db.18706`, 18 files / 125,586,292 bytes,
+inventory SHA-256 `c8c067b443fda86b9d693681c04cb0e40139122ada42a404fc354127fefe766a`; main database 75,284,480 bytes,
+SHA-256 `81c64213f513bdb428ade40a69156a51578d4f18ad6d413f2dac870e4a2f154b`. Restored GenericSPtrSet identity POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-sptrset-abi/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/sptrset-abi/`; fresh evidence and execution logs:
+`local-data/test-runs/re-audit-20260926/sptrset/abi-*`.
 
 ## RE-audit GenericSPtrSet identities — September 27
 
