@@ -1,6 +1,6 @@
 # CFrontEnd__Render
 
-Status: active — retail dispatch rechecked; bounded Options tail execution
+Status: active — retail dispatch and three frontend ABIs rechecked; bounded Options tail execution
 Last updated: 2026-09-27
 Summary: page render ordering and argument transport, including the Options
 transition-factor exception; complete visual behavior remains unvalidated.
@@ -14,8 +14,19 @@ Body `[00468200,004684c6)`, raw SHA-256
 Pinned source `5352a81c` defines `BOOL CFrontEnd::Render(BOOL forcerender)`
 at `references/Onslaught/FrontEnd.cpp:1259`. The old zero-argument source
 description was wrong. Retail preserves ECX in ESI, returns the status saved
-from `00540f70` in EBX, and executes RET 4. This note does not certify the
-saved Ghidra prototype or all helper semantics.
+from `00540f70` in EBX, and executes RET 4. Both direct callers at
+`0046852f` / `0046853c` push a zero DWORD, supply ECX and test full EAX.
+The complete body never reads that stack slot. Its saved prototype is now
+`int __thiscall CFrontEnd__Render(void *this, int force_render)` through the
+[frontend ABI cohort](../../../ghidra/README.md#re-audit-frontend-callback-abi--september-27).
+The source supplies the parameter name; exact original typedef/signedness and
+all helper semantics remain unproved.
+
+The source's initial elapsed-time/forcerender test at `FrontEnd.cpp:1261–1262`
+is absent in retail. Retail immediately increments frame counter `008a9aac`,
+samples the clock and stores last-render time at receiver `+0xbe20`. This
+establishes omission of that function-local 60 Hz gate, not an unlimited global
+frame rate: callers, helpers and device pacing still need their own evidence.
 
 ## Purpose
 
@@ -88,8 +99,11 @@ The saved listing's split instruction at `[0051f7be,0051f7c6)` was corrected
 through the [Options instruction promotion](../../../ghidra/README.md#re-audit-options-instruction-repair--september-27).
 The original bytes were always intact. The subsequent
 [frontend identity cohort](../../../ghidra/README.md#re-audit-frontend-page-identities--september-27)
-corrected the Options name to `CFEPOptions__Render`. Its prototype correction
-remains separate; the saved stack-parameter interpretation is not endorsed.
+corrected the Options name to `CFEPOptions__Render`. The subsequent three-row
+ABI cohort replaces its old stdcall interpretation with an implicit ECX receiver,
+`float transition` at stack `+4` and `int other_page` at `+8`. Intro notification
+at `0051be70` also gains its unused source-page DWORD, consumed by RET 4.
+No missing page-enum or class definition is synthesized.
 
 ## Remaining limits
 

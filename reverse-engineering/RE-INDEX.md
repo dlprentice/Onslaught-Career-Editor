@@ -85,7 +85,12 @@ Full cleanup, exceptions,
 prototype types and runtime behavior remain outside this identity proof.
 [PROGRAM.md](../PROGRAM.md#re-record-audit--requested-september-25) separates
 unique name dispositions from ABI/comment coverage and the unmeasured document
-remainder. Extend the mechanized evidence across further interfaces; identity
+remainder. The [three frontend ABI corrections](ghidra/README.md#re-audit-frontend-callback-abi--september-27)
+now bind Render's and Intro notification's implicit receiver/stack argument,
+and Options Render's float/page argument order. Complete bodies and all other
+function records remain unchanged; live readback and independent recovery passed.
+The [render note](binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)
+records retail's omission of the surviving source's local throttle. Extend the mechanized evidence across further interfaces; identity
 coverage does not imply semantic coverage of the game's own code.
 
 The campaign projection is an oracle only, and dated generation or

@@ -239,7 +239,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # (11,493/71,741 decoded bytes); common-interface evidence and marked historical leads.
 # Verified frontend pages: 74 old/74 proposed authored comments
 # (34,497/228,505 decoded bytes); bounded interface identities and marked older leads.
+# Frontend callback ABI:3 old/3 proposed authored comments (8,037/12,358 decoded bytes);
+# bounded receiver/stack transport and source divergences, preserving old notes as leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/frontend-callback-abi-20260927.manifest.tsv":
+        "5b46095bcba7ae7883cbfee2a010750a031b1e84bf43b3833e3d85bf3ed2bc1d",
     "tools/cohort-specs/frontend-page-verified-20260927.manifest.tsv":
         "7f632659a7037581523e8223b47628e15cede7bd29a8c9e8b9005a07916cbbfb",
     "tools/cohort-specs/frontend-page-identities-20260927.manifest.tsv":
