@@ -380,7 +380,6 @@ reverse-engineering/source-code/README.md
 reverse-engineering/source-code/_index.md
 reverse-engineering/source-code/core/_index.md
 reverse-engineering/source-code/core/actor-system.md
-reverse-engineering/source-code/core/engine-system.md
 reverse-engineering/source-code/core/thing-system.md
 reverse-engineering/source-code/frontend/_index.md
 reverse-engineering/source-code/full-source-parse-2026-02-11.md

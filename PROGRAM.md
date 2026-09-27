@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-26 (rebuild constructs World 110; RE record audit: initializer/engine identities and original copy/load contracts added; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
+Last updated: 2026-09-27 (rebuild constructs World 110; RE record audit: Controller/Engine identities and contracts re-grounded; coverage counts separated from semantic completion; companion paused; earlier items keep their dates)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -407,6 +407,20 @@ short/zero reads, constructor defaults and full-game loading remain untested.
 The private copy/load receipts are under
 `local-data/test-runs/re-audit-20260926/initializer-copy/` and `initializer-load/`.
 
+The [Controller/Engine review](reverse-engineering/ghidra/README.md#re-audit-verified-controller-and-engine-identities--september-27)
+retains **14 more verified names** and updates their comments/tags. Twelve
+explicit anchors cover all 15 RTTI uses and 643 instruction rows. The
+[Controller contract](reverse-engineering/binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-27-joystick-and-recording-recheck)
+distinguishes 18 retail slots from 15 source slots, signed upper-only pad guards,
+RightY flag ordering, exact stored scale bits and three-DWORD recording. The
+[Engine recheck](reverse-engineering/source-code/core/engine-system.md#september-27-retail-initialization-recheck)
+corrects two slot tags, direct-versus-virtual calls, KempyCube/HUD confusion,
+the particle descriptor and local source omissions. Five refusal controls,
+exact live/rehearsal equality and independently restored Archive A POST passed.
+All names, prototypes, bodies and 8,317 non-target rows remain unchanged; all
+8,331 projected names match the live readback. These are static findings, not
+new joystick, recording-file or rendering acceptance.
+
 ABI admission now withholds unknown source widths and destructor entry kinds;
 a purecall seed's `RET` is no longer an inferred interface convention. The older
 Thing-family `SetAnimMode` and `GoToPoint` identities retain independent manual
@@ -415,11 +429,21 @@ call-site evidence: `0x004f450b` through `0x004f4511` forwards three DWORDs;
 slot 61. The stricter automated route awaits pinned parameter-width witnesses
 for those unknown source types. It does not establish a new prototype audit.
 
-Next review the five kept Engine comments and reproduce the Controller
-source/retail slot differences, using explicit independently witnessed slots
-where the complete header layout differs. Camera candidates need explicit
-aggregate-return, deleting-destructor and folded-alias handling. Follow up the
-loader contract with original-reader short/zero reads and the inlined Spawner.
+Next implement the compiler-destructor recognizer in the existing evidence
+tool. Read-only research and root byte checks identify 120 exact unadjusted
+wrappers in the fixed CMonitor slot-1 family: six ambiguous folded owners and
+one occupied-name collision leave 113 candidates (80 exact spelling keeps,
+33 normalizations). These are leads, not completed dispositions. Bind the
+independently re-derived CThing-to-CMonitor destruction chain, Free receiver
+and entry, complete boundaries, unadjusted-this return paths and every RTTI
+holder; validate adverse controls before a cohort. CMonitor's missing header
+must not be fabricated or used to relax generic source-ABI admission. The
+CMCMech teardown's internal backward block needs CFG reasoning, not the last
+instruction in address order. Exclude adjusted-pointer wrappers and the CUnit
+name collision. Broader same-template matches outside this family still need
+family evidence. Camera candidates need aggregate-return and folded-alias
+handling. Follow up the loader contract with original-reader short/zero reads
+and the inlined Spawner.
 Re-derive unresolved cases where the evidence can support a whole family, and
 neutralize nothing merely for missing tool support. Remaining name leads include
 `BattleEngineConfigurations__Load` (source class `UBattleEngineConfigurations`). Constructor, parser, font
@@ -455,23 +479,23 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the header-interface correction (September 26).**
+**Running coverage after the Controller/Engine correction (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
 | Names corrected | 1,841 unique functions; 1,842 rename rows include one repeated correction. |
-| Names verified and kept | 126 additional functions: 62 library/import identities, Damage and 63 newly verified virtual identities. This excludes functions already counted as corrected. |
+| Names verified and kept | 140 additional functions: 62 library/import identities, Damage, 63 Thing-family and 14 Controller/Engine identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 6,364 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 6,350 of 8,331. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototypes corrected | 5 interfaces: four keyboard queries and cockpit shake. Full ABI coverage is not yet counted. |
-| Comments corrected | 1,971 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 1,985 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
-Count sources: promoted `tools/cohort-specs/*-20260926.manifest.tsv`, the final
+Count sources: promoted September 26 manifests and `controller-engine-verified-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
-cohort, the Damage identity recheck and the 65 kept-name targets, deduplicated
+cohort, the Damage identity recheck and the 65 plus 14 kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/` owner. Name sets
 are deduplicated by entry address and checked against the current live export;

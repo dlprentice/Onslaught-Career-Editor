@@ -1,10 +1,54 @@
 # Engine System
 
+Status: active — source overview with a bounded retail initialization recheck
+Last updated: 2026-09-27
+Summary: engine architecture references and re-derived Engine initialization,
+resource and shutdown identities; remaining source descriptions are not retail acceptance.
+Evidence: MEASURED — September 27 pristine instructions and RTTI; the older
+architecture sections remain SOURCE evidence within their stated limits.
+Specimen: pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
 > Analysis from engine.cpp/h, DXEngine.cpp/h, PCEngine.cpp/h, Camera.cpp/h, and EditorD3DApp.cpp/h - December 2025
 
 ## Overview
 
-The Engine system is the core 3D rendering and world management framework. It has **NO direct connection to save files** - all rendering state is runtime-only.
+The Engine system provides rendering and world management. This source overview
+does not establish persistence boundaries for graphics settings; those also pass
+through the career/options system. A rendering object's runtime lifetime does
+not prove that every value configuring it is absent from a save.
+
+## September 27 retail initialization recheck
+
+The five complete bodies below were checked against pristine
+`BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`,
+and Stuart's source at `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`.
+Source names describe independently matched interfaces; source implementation
+differences remain material.
+
+| Address / retained name | Corrected or bounded finding |
+| --- | --- |
+| `0x00449890`, `CEngine__Shutdown` | The final call is `CVBufTexture::ClearOut` at `0x005015c0`. Earlier generic VB/IB-capacity and HUD-resource descriptions are unproved. Camera, light, water, map texture and KempyCube cleanup are distinct operations. |
+| `0x004499d0`, `CEngine__Init` | The allocation at `0x00449c20` through `0x00449c62` is the `CKEMPYCUBE` object corresponding to `engine.cpp:165`: 0xa14 bytes, constructor `0x00544040`, stored at receiver `+0x498`. It is not a HUD allocation. |
+| `0x00449d50`, `CEngine__InitResources` | The three texture literals are `hilight.tga`, `hiteffect.tga` and `cloak.tga`. This review does not certify the previous interpretations of other callees as zoom/blob-shadow operations. |
+| `0x0053d5f0`, `CDXEngine__Init` | Slot 1 of primary table `0x005e4fc4`; `0x005e4fc8` is a cell, not the table start. It calls base Init, registers gamma/reflection controls and initializes the global patch manager `0x009c64d8` with counts 800/300/90. |
+| `0x0053d6d0`, `CDXEngine__InitResources` | Slot 2 of that table; cell `0x005e4fcc`. It loads `default.tga`, `outline.tga`, `EdArrow.tga` into `+0x4e4/+0x4e8/+0x4ec` and `default.msh` into `+0x28`, incrementing the mesh reference. |
+
+`CGame` calls the two derived methods directly at `0x0046c39f` and
+`0x0046e335`; those sites are not virtual dispatches. The complete derived Init
+body omits the pinned PC source's screen-texture allocation, `InitCustom(1024,
+512)` and capture setup. This local difference does not prove that all capture
+facilities are absent elsewhere. Derived InitResources also omits the source's
+`basicpanel.tga`/`mTexOpaque` operation. Its raw particle literal is `Sun Sprite`;
+the source-corresponding `GetPD` result at `+0xc80` is a particle descriptor,
+not established physics-node data.
+
+Private body, source/RTTI and preservation evidence is under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/controller-engine-verified/`.
+The cohort retains all five names and changes only comments/tags. It does not
+validate every existing prototype, resource lifetime or runtime behavior. The
+rest of this document retains its dated source-analysis scope.
 
 ---
 
@@ -109,7 +153,8 @@ Fixed rendering order from `engine.cpp`:
 10. **Cockpit** - HUD interior overlays
 11. **Screen FX** - Post-processing effects
 
-All rendering state is runtime-only and not persisted to save files.
+This source pipeline description does not establish which graphics settings
+persist through career/options files.
 
 ---
 
