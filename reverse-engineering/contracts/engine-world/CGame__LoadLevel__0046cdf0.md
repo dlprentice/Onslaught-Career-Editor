@@ -1,7 +1,7 @@
 # CGame__LoadLevel
 
 Status: active static contract (factory draft)
-Last updated: 2026-08-22
+Last updated: 2026-09-26 (PC constructor callee name only; factory evidence retains its date)
 Summary: specimen-bound static contract for `CGame__LoadLevel` at `0x0046cdf0`; packet-described behavior is retained with explicit unknowns and no promotion claim.
 Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, and independently recomputed pristine body bytes; runtime and source limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -14,6 +14,10 @@ Source File: references/Onslaught/game.cpp | Binary: BEA.exe, SHA-256 `74154bfae
 - Canonical name `CGame__LoadLevel` comes from the current closure/register row. Packet label matches canonical tracked name `CGame__LoadLevel`.
 - Packet name source `USER_DEFINED` and signature source `USER_DEFINED` are counted provenance, not semantic proof.
 - Campaign grade `C1_CANDIDATE_PARTIAL` / closure class `SEALED_STATIC_RECEIPT` / packet confidence `HIGH`. Proposed promotion: false.
+
+The September 26 [controller identity recheck](../../binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-26-keyboard-recheck)
+corrects the constructor callee name below; the frozen packet used `CController__ctor`.
+This scoped correction does not revalidate the rest of this factory draft.
 
 ## Calling convention
 Packet records `__thiscall` for `int __thiscall CGame__LoadLevel(void * this, int aLevel)`. Register/stack placement beyond that packet declaration is not_determinable without a separate instruction-level ABI review.
@@ -37,7 +41,7 @@ The packet signature declares `int`. Exact domain meaning of the returned bits/v
 - Callee `CPlayer__ctor` `0x004d2780` ×1 site(s) (STATIC_DIRECT).
 - Callee `CWorld__LoadWorldFile` `0x0050b520` ×1 site(s) (STATIC_DIRECT).
 - Callee `CWorld__IsMultiplayerMode` `0x0050d7d0` ×1 site(s) (STATIC_DIRECT).
-- Callee `CController__ctor` `0x005145f0` ×1 site(s) (STATIC_DIRECT).
+- Callee `CPCController__ctor` `0x005145f0` ×1 site(s) (STATIC_DIRECT).
 - Callee `PlatformInput__ResetKeyStateTables` `0x005159b0` ×1 site(s) (STATIC_DIRECT).
 - Callee `CFEPOptions__GetState` `0x0051f370` ×1 site(s) (STATIC_DIRECT).
 - Callee `CDXEngine__SetTrackSlotByFlag` `0x0053f010` ×1 site(s) (STATIC_DIRECT).

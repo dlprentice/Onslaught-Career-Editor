@@ -1,5 +1,11 @@
 # Display Settings & Screen Mode Analysis
 
+Status: mixed — retained display evidence with a scoped parser correction
+Last updated: 2026-09-26 (windowed guard scope; other sections keep their dated evidence)
+Summary: display/settings reference; the pristine parser route is distinct from device/runtime acceptance.
+Source File: pinned `references/Onslaught/d3dapp.cpp` and `CLIParams.cpp`; Binary: pristine
+`BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
 <!-- ghidra-full-reaudit-20260713:start -->
 > **2026-07-13 live correction closeout:** `0x005be628` comment correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
 <!-- ghidra-full-reaudit-20260713:end -->
@@ -166,7 +172,7 @@ Sets custom resolution:
 BEA.exe -res 1920 1080
 ```
 
-Parsed in `CLIParams::ParseCommandLine`, stored at offsets 0x164/0x168. Minimum enforced: 640x480.
+Parsed in `CCLIParams::GetParams(char *text)`, stored at offsets 0x164/0x168. Minimum enforced: 640x480.
 
 ### -forcewindowed
 
@@ -175,7 +181,14 @@ Attempts to run in windowed mode:
 BEA.exe -forcewindowed
 ```
 
-**Status** *(corrected 2026-07-28; previously read "In the canonical Steam hash used in this repo (`74154bfa...`), guard flag `0x00662f3e` is `0x01`, so parser gating does not block `-forcewindowed`; startup fullscreen flow can still override launch mode.")*: guard flag `0x00662f3e` is **BSS and zero at load in every build**, so parser gating **does** block `-forcewindowed` on a stock command line. Use `-testeur -forcewindowed`, in that order. Startup fullscreen flow can still override launch mode.
+**Parser correction, September 26:** on the pristine specimen identified above,
+guard `0x00662f3e` is BSS and the startup initializer explicitly clears its
+object-relative field at `0x00423ad6`. The standalone example is therefore
+rejected by this parser gate. `-testeur -forcewindowed`, in that order, enables
+the branch on the canonical receiver. Earlier claims of an enabled pristine
+guard or a result applying to “every build” were wrong or unproven. See the
+[parser evidence and runtime limits](CLIParams.cpp/CLIParams__ParseCommandLine.md#windowed-guard-and-logger-boundaries).
+Actual fullscreen/windowed presentation is a separate acceptance question.
 
 ## Aspect Ratio Handling
 

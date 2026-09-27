@@ -1,7 +1,7 @@
 # CFrontEnd__Init
 
 Status: mixed — inherited function reference with scoped startup-selector corrections
-Last updated: 2026-09-26 (0x00459810 renamed CFEPDevSelect__SetCurrentCard by the RE audit)
+Last updated: 2026-09-26 (PC controller constructor identity corrected; other evidence retains its date)
 Summary: frontend initialization reference; distinguish developer selection and the separate startup selector from command-line level parsing.
 Source File: `references/Onslaught/FrontEnd.cpp` at `5352a81cdb838b145a57f7febc5d9fc4b0129ebb` | Binary: pristine BEA.exe.original.backup, SHA-256 74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750
 
@@ -43,7 +43,7 @@ withdrawn label can tell it was corrected and not lost.
 | `0x004f2150` | `FUN_004f2150` | `CText__Ctor` | placeholder replaced; this address carries a name now |
 | `0x004f21f0` | `FUN_004f21f0` | `CText__Init` | placeholder replaced; this address carries a name now |
 | `0x004fdc10` | `FUN_004fdc10` | `SharedVFunc__ReturnTrue_004fdc10` | placeholder replaced; the 2026-07-28 `CFrontEndPage__Init_ReturnTrue` reading was itself withdrawn on 2026-08-17 (see below) |
-| `0x005145f0` | `FUN_005145f0` | `CController__ctor` | placeholder replaced; this address carries a name now |
+| `0x005145f0` | `FUN_005145f0` | `CPCController__ctor` | placeholder replaced; this address carries a name now |
 | `0x005159b0` | `FUN_005159b0` | `PlatformInput__ResetKeyStateTables` | placeholder replaced; this address carries a name now |
 | `0x00541240` | `FUN_00541240` | `CDXFrontEndVideo__SetDefaultSize` | placeholder replaced; this address carries a name now |
 | `0x005490e0` | `OID__AllocObject` | `CDXMemoryManager__Alloc` | class prefix and suffix both moved |
@@ -219,7 +219,7 @@ Complex logic determines which page to show first:
 | 0x0044d320 | CFrontEnd__InitPageStateDefaults | Unknown |
 | 0x0055de9b | sprintf (`FUN_0055de9b`) | sprintf equivalent |
 | 0x005490e0 | CDXMemoryManager__Alloc | Memory allocation |
-| 0x005145f0 | CController__ctor | Object constructor |
+| 0x005145f0 | CPCController__ctor | Object constructor |
 | 0x005159b0 | PlatformInput__ResetKeyStateTables | Unknown |
 | 0x00466ae0 | CFrontEnd__SetPage | Page transition (`SetPage(page,time)`) |
 | 0x00459810 | CFEPDevSelect__SetCurrentCard | Sets the device-select card when the CLI device-select field is not -1 (`FrontEnd.cpp:178-186`) |

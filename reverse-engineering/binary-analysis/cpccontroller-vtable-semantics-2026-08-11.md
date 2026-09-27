@@ -16,6 +16,15 @@ PC demo `BEA.exe`, SHA-256
 
 ## September 26 keyboard recheck
 
+The controller constructor at `0x005145f0` is `CPCController__ctor`, formerly
+mislabelled `CController__ctor`. Its 37-byte body ends at `0x00514615`, SHA-256
+`a6a21888c776478c7b72f6c5728e922db5b0a416f4da7a62d5b97832d507b5f6`.
+It forwards three explicit arguments and ECX to `0x0042d640`, then installs
+the PC vtable below at `0x00514609`, returns the receiver and pops 12 bytes.
+Pinned `PCController.cpp:143–146` instead takes four explicit arguments, including
+`reverse_look_y_axis`. The source-only fourth argument must not be added to this
+retail call. The existing three-argument signature and storage are preserved.
+
 The specimen above decides these findings. Pinned source commit
 `5352a81cdb838b145a57f7febc5d9fc4b0129ebb` provides counterparts and differences;
 it is not a substitute for the retail interfaces.

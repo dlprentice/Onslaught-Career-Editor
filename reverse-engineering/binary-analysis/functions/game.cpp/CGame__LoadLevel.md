@@ -3,7 +3,7 @@
 > Address: `0x0046cdf0`
 
 Status: active static function note
-Last updated: 2026-09-26 (the retired World 110 owner noted; 2026-09-19 logger callee names; earlier measurement limits retained)
+Last updated: 2026-09-26 (PC constructor identity/argument order and 0.5f literal corrected; other evidence retains its date)
 Source File: `references/Onslaught/game.cpp:685` (`CGame::LoadLevel`) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -48,7 +48,7 @@ Sequence:
    sizes printed at every load (strings at `.rdata 0x0062bfbc` down to
    `0x0062bf50`).
 2. `[edi+0x30] = level` (`edi` = `this`); `[edi+0x110] = 0x3f000000`
-   (1.0f); `[edi+0xf4] = 0`; word `[0x0083da30] = 0`.
+   (0.5f); `[edi+0xf4] = 0`; word `[0x0083da30] = 0`.
 3. World load: `CWorld__LoadWorldFile(level)` with `ecx = 0x00855090`
    (`0x0050b520`). Zero return → failure tail (`eax` stays 0 path,
    `"G::LL succeeded"` is skipped). On success:
@@ -63,11 +63,13 @@ Sequence:
    players it re-reads the port plus `CFEPOptions__GetState`
    (`0x0051f370`) and inverts the port bit when they match.
    Second alloc: `CDXMemoryManager__Alloc(0x178, …, 0x366)` then
-   `CController__ctor(controller, port_from_[0x662ad4 + esi*4],
-   player, controller_table_entry)` (`0x005145f0`); result stored at
-   `[edi + esi*4 + 0x2b4]`. The port table sits in `.data` at
-   `0x00662ad4` (four dwords; this wake did not resolve what its bytes
-   point at — recorded unknown). These are per-attempt shells only;
+   `CPCController__ctor(controller, player, selected_port, table_entry)`
+   (`0x005145f0`); result stored at `[edi + esi*4 + 0x2b4]`. September 26
+   reinspection of `0x0046cf98–0x0046cfab` corrects the old argument order:
+   the last explicit argument is the dword at `0x00662ad4 + esi*4`, the
+   second is the selected port in EBX, and the first is the player pointer.
+   Exact setting semantics of that table are outside this scoped recheck.
+   These are per-attempt shells only;
    this body never reads the start list or calls
    `CPlayer__AssignBattleEngine`.
 5. Tail: first player pointer `[edi+0x2a4]` copied to global
@@ -86,7 +88,7 @@ Field map pinned by this body:
 | `[this+0x30]` | current level number | `0x0046ce24` |
 | `[this+0x29c]` | player count (1 single / 2 multiplayer) | `0x0046cec4`, `0x0046ced0` |
 | `[this+0x2a4 + i*4]` | per-player `CPlayer*` (0x50 bytes each) | `0x0046cf2d` |
-| `[this+0x2b4 + i*4]` | per-player `CController*` (0x178 bytes each) | `0x0046cfb4` |
+| `[this+0x2b4 + i*4]` | per-player `CPCController*` (0x178 bytes each) | `0x0046cfb4` |
 | `0x00855090` | global `CWorld` (load + multiplayer query) | `0x0046cea2`, `0x0046ceb6` |
 | `0x9c3df0` | global `CDXMemoryManager` | `0x0046cefe`, `0x0046cf7e` |
 

@@ -217,7 +217,11 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # (133,185/175,548 decoded bytes); identifiers/provenance, no program/library bytes.
 # Keyboard-query ABI: four current/four proposed analytic comments
 # (1,754/8,036 decoded bytes); authored findings and marked historical leads only.
+# Startup identities: four current/four proposed analytic comments
+# (2,296/8,381 decoded bytes); authored findings and marked historical leads only.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/startup-identities-20260926.manifest.tsv":
+        "12fc2b6c96e0dee69e8c10d3e3039abe30f797675e5ad458f727e5f5acd82936",
     "tools/cohort-specs/input-key-abi-20260926.manifest.tsv":
         "47dec4ac21fb1c416cb5520a34d21732f30018cd26c5417fd2193e024114a875",
     "tools/cohort-specs/library-verified-20260926.manifest.tsv":

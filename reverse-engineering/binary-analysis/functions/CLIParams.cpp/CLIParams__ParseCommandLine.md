@@ -1,7 +1,7 @@
-# CLIParams__ParseCommandLine
+# CCLIParams__GetParams
 
 Status: active — complete parser static audit; bounded original-code execution
-Last updated: 2026-09-19
+Last updated: 2026-09-26 (identity and startup guard rechecked; September 19 experiments retain their date)
 Summary: startup defaults, the 25 retail option comparisons, argument ordering and bounded side effects.
 Evidence: MEASURED — pristine instructions, four initializer controls and 47 isolated parser cases; no retail startup or gameplay acceptance.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, 2,506,752 bytes,
@@ -12,11 +12,14 @@ Source File: `references/Onslaught/CLIParams.cpp` at `5352a81cdb838b145a57f7febc
 
 ## Identity and evidence
 
-The saved signature remains
-`void __thiscall CLIParams__ParseCommandLine(void * this, char * commandLine)`.
+The corrected saved name is `CCLIParams__GetParams`; the former
+`CLIParams__ParseCommandLine` was an analytic description. The interface remains
+`void __thiscall CCLIParams__GetParams(void * this, char * commandLine)`.
 The complete retail body is `[00423bc0,004241a0)`, 1,504 bytes / 465 instructions,
 SHA-256 `7e9869f8c52f40b3b9ac5d85e48d40389b1de09ad8c829b94be121f774b75ec6`.
-`CLTShell__WinMain` supplies receiver `00662db8` at call `0051229d`.
+`WinMain` loads `lpCmdLine` at `00512287`, supplies receiver `00662db8`
+at `00512298` and calls at `0051229d`. The string tokenizer and caller identify
+the source's `GetParams(char *text)` overload, not `GetParams(argc,argv)`.
 
 Pinned source `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`,
 [`CLIParams.cpp`](../../../../references/Onslaught/CLIParams.cpp):18–87,

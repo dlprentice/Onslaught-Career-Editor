@@ -1,5 +1,11 @@
 # CGame__RunIntroFMV
 
+Status: mixed — retained function evidence with scoped caller-name corrections
+Last updated: 2026-09-26 (caller names only; other claims retain their earlier evidence)
+Summary: retained playback evidence with current parser/startup callers.
+Source File: references/Onslaught/game.cpp and CLIParams.cpp; Binary: pristine `BEA.exe.original.backup`,
+SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
 - **Address:** `0x0046d890`
 - **Status:** Renamed, signature set, commented in Ghidra (read-back verified)
 - **Signature:** `void CGame__RunIntroFMV(void *this)`
@@ -18,10 +24,10 @@
 This function owns a level's intro FMV, not the startup front-end sequence. The
 Steam build has two distinct skip mechanisms for this playback path:
 
-- `CLIParams__ParseCommandLine` (`0x00423BC0`) recognizes `-skipfmv` and sets
+- `CCLIParams__GetParams` (`0x00423BC0`) recognizes `-skipfmv` and sets
   the gate read by this function at `0x00663050`, so the level-intro playback
   call is never entered. The same retail global is checked by
-  `CLTShell__InitializeRuntimeAndLoadCoreResources` (`0x004EFB10`) to bypass
+  `SYSTEM__Init` (`0x004EFB10`) to bypass
   startup full-screen FMV playback. It does not bypass the click-to-start page.
 - During playback, the receiver at `0x004656E0` sets the FMV quit flag for
   virtual `BUTTON_SKIP_CUTSCENE` (`7`). The retail default single-player table

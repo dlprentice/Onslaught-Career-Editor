@@ -6778,3 +6778,38 @@ disproved historical claims are explicitly marked as such.
 refused missing/malformed evidence headers; those were corrected and the full
 docs gate rerun. Both outcomes remain in this cohort's private gate logs. The full contract is in
 [the keyboard recheck](reverse-engineering/binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-26-keyboard-recheck).
+
+## RE startup identities — September 26
+
+The `startup-identities-20260926` cohort corrects four names, comments and tag
+sets: `CCLIParams__GetParams`, `CPCController__ctor`, `CPCPlatform__InitFonts`
+and `CPCSoundManager__DeviceInit`. It preserves every prototype shape,
+parameter/local storage, type, bookmark, body and all 8,327 non-target function
+rows. All 979 selected instructions are unchanged; the nine live exports equal
+the separately reopened rehearsal. Only the comment digest changes among
+program metrics. Independent Archive A POST restoration passed; the tracked
+checkpoint remains unchanged.
+
+Private commands and receipts are under
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/startup-identities/`:
+`prepare_preservation.py`, `prepare.py`, `rehearse.py`,
+`compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`
+and `finish.py`. Five controls reject stale comments, name collisions and wrong
+readback names/comments/tags without attempting writes or changing project
+bytes. Independent read-only review and root reproduction checked body hashes,
+callers, RTTI, strings, source differences and the exact rehearsal delta.
+
+The consumer notes correct the retail main-font spelling, debug-font identity,
+Xbox slot handling, sound quality/default differences and upper-bound-only
+device-index check. LoadLevel's constructor argument order and `0.5f` value
+were re-derived. Font argument 7 is recorded without assuming a typographic unit.
+Earlier isolated parser results remain dated evidence, not rerun results.
+No new Windows startup, physical input, rendering, device or audible acceptance
+is claimed. Damage investigation is a subsequent, separate milestone.
+
+`python -m unittest tools.ghidra_cohort_framework_tests`: 93 passed.
+`python tools/public_allowlist_safety_check.py --self-test`: passed.
+`npm run test:docs`: passed with zero drifted or unresolved name assertions.
+`npm run test:safety` and `git diff --check`: passed. The first docs gate required
+removing a newly conforming CLI reference from the header backlog; that entry
+was removed and the full gate rerun. Both outcomes are retained in private logs.

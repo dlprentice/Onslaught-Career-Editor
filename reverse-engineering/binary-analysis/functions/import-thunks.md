@@ -1,7 +1,10 @@
 # Import Thunks Function Mappings
 
-> Static Ghidra notes for external import thunks in the Steam retail `BEA.exe`.
-> Last updated: 2026-05-22
+Status: mixed — import-thunk reference with dated ABI evidence
+Last updated: 2026-09-26 (sound initializer caller name corrected; other entries retain their dates)
+Summary: local import-thunk identities and bounded saved signatures, not imported implementation behavior.
+Source File: PE import table and the cited caller sources; Binary: pristine `BEA.exe.original.backup`,
+SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 ## Overview
 
@@ -27,8 +30,8 @@ Wave619 hardened the contiguous import-thunk island from `0x0055d5e0` through `0
 
 | Address | Function | Saved Ghidra state | Evidence |
 | --- | --- | --- | --- |
-| `0x0055d5e0` | `DirectSoundCreate8` | `int __stdcall DirectSoundCreate8(void * pcGuidDevice, void * * ppDS8, void * pUnkOuter)` | Six-byte thunk to IAT `0x005d802c`; xrefs include `CPCSoundManager__Init`. |
-| `0x0055d5e6` | `DirectSoundEnumerateA` | `int __stdcall DirectSoundEnumerateA(void * pDSEnumCallback, void * pContext)` | Six-byte thunk to IAT `0x005d8028`; xrefs include `CPCSoundManager__Init`. |
+| `0x0055d5e0` | `DirectSoundCreate8` | `int __stdcall DirectSoundCreate8(void * pcGuidDevice, void * * ppDS8, void * pUnkOuter)` | Six-byte thunk to IAT `0x005d802c`; xrefs include `CPCSoundManager__DeviceInit`. |
+| `0x0055d5e6` | `DirectSoundEnumerateA` | `int __stdcall DirectSoundEnumerateA(void * pDSEnumCallback, void * pContext)` | Six-byte thunk to IAT `0x005d8028`; xrefs include `CPCSoundManager__DeviceInit`. |
 | `0x0055d5ec` | `AVIStreamWrite` | `int __stdcall AVIStreamWrite(void * pavi, int lStart, int lSamples, void * lpBuffer, int cbBuffer, uint dwFlags, int * plSampWritten, int * plBytesWritten)` | Six-byte thunk to IAT `0x005d8018`; xref from `CDXEngine__CaptureAviFrame`. |
 | `0x0055d5f2` | `uncompress` | `int __cdecl uncompress(void * dest, uint * destLen, void * source, uint sourceLen)` | Six-byte thunk to IAT `0x005d83b8`; xrefs include `CDXMemBuffer__InitFromFile`, `CDXMemBuffer__Skip`, `CDXMemBuffer__Read`, and `CDXMemBuffer__ReadLine`. |
 | `0x0055d5f8` | `compress` | `int __cdecl compress(void * dest, uint * destLen, void * source, uint sourceLen)` | Six-byte thunk to IAT `0x005d83bc`; xrefs include `CDXMemBuffer__WriteBytes` and `CDXMemBuffer__Close`. |

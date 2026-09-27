@@ -3,7 +3,7 @@
 Status: active canonical synthesis of executable-analysis evidence; raw
 machine exports remain the address-level evidence behind this human-readable
 master
-Last updated: 2026-09-26 (dated RTTI queue reconciled with current type-setter identity).
+Last updated: 2026-09-26 (startup identities corrected; dated evidence below retains its limits).
 Campaign authority is selected only
 through `developer_state.json` → `current_re_authority`; rolling Ghidra state is
 selected through [`ghidra/README.md`](ghidra/README.md) and fresh inspection.
@@ -1000,7 +1000,7 @@ projection update replaces the literal `FUN_*` name.
 | `0x00456190` | 1,056 / 357 | `Controls__RemapCaptureKeySink` is the supported descriptive identity: `Controls__BeginRemapCapture` installs it through `PLATFORM__SetKeySink`, and an Options trace observed 694 body bytes. Exact callback ABI remains open. |
 | `0x00470cc0` | 1,009 / 176 | No plate comment. Trace callers and dominant globals first. |
 | `0x0041a980` | 841 / 257 | RTTI owner `CControllableCamera`. Slot semantics and callsites should name it. |
-| `0x00516ed0` | 774 / 235 | `CPCSoundManager__DirectSoundEnumerateCallback` is closed: `CPCSoundManager__Init` registers it with `DirectSoundEnumerateA`; the startup trace records the primary and hardware-device callbacks from `DSOUND.dll`; `RET 0x10` and the SDK contract establish `BOOL CALLBACK (LPGUID, LPCSTR, LPCSTR, LPVOID)`. The live Ghidra database remains unchanged. |
+| `0x00516ed0` | 774 / 235 | `CPCSoundManager__DirectSoundEnumerateCallback` is closed: `CPCSoundManager__DeviceInit` registers it with `DirectSoundEnumerateA`; the startup trace records the primary and hardware-device callbacks from `DSOUND.dll`; `RET 0x10` and the SDK contract establish `BOOL CALLBACK (LPGUID, LPCSTR, LPCSTR, LPVOID)`. The live Ghidra database remains unchanged. |
 | `0x004254f0` | 621 / 194 | RTTI owner `CCockpit`. |
 | `0x004595b0` | 596 / 184 | Frontend region; no plate comment. |
 | `0x004060b0` | 531 / 168 | RTTI owner `CBattleEngine`. |
@@ -1029,7 +1029,7 @@ is D3D8-era and cannot be copied mechanically into a D3D9 behavior claim.
 
 | Address | Current identity | Measured role |
 | --- | --- | --- |
-| `0x00423bc0` | `CLIParams__ParseCommandLine` | 1,504-byte / 465-instruction command-line parser |
+| `0x00423bc0` | `CCLIParams__GetParams` | 1,504-byte / 465-instruction command-line parser |
 | `0x0046c360` | `CGame__Init` | Game initialization |
 | `0x0046c990` | `CGame__Shutdown` | Game teardown |
 | `0x0046cdf0` | `CGame__LoadLevel` | Level-selection/load entry |

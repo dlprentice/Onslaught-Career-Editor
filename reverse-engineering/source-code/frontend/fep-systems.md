@@ -1,7 +1,7 @@
 # Frontend System
 
 Status: active source map with retail cross-checks
-Last updated: 2026-09-26 (SYSTEM startup identity corrected; earlier runtime observations remain unconfirmed)
+Last updated: 2026-09-26 (startup/parser identities corrected; earlier runtime observations remain unconfirmed)
 Summary: frontend pages, save/load pages, cheats, autosave, transitions and input constants from the pinned source, cross-checked against the retail executable where an address is given.
 Evidence: SOURCE — pinned `references/Onslaught` files cited by line; MEASURED — retail addresses read from the pristine specimen; the startup-input observations below have no recorded capture.
 Specimen: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -33,7 +33,7 @@ unconfirmed; this label correction does not revalidate them:
   second focused Space press advanced the startup movie immediately to
   `click to start`, after which a click entered the main menu.
 
-`CLIParams__ParseCommandLine` (`0x00423BC0`) recognizes `-skipfmv` and writes
+`CCLIParams__GetParams` (`0x00423BC0`) recognizes `-skipfmv` and writes
 `1` to `0x00663050`. `SYSTEM__Init`
 (`0x004EFB10`) checks that same global and branches around the startup
 full-screen FMV group. The lower video-open path at `0x00541173` also avoids
