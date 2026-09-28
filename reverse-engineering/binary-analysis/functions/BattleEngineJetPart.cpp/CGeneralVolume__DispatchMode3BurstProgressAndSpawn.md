@@ -1,9 +1,9 @@
 # CBattleEngineJetPart__ChargeWeapon
 
 Status: active static function note
-Last updated: 2026-09-07
-Summary: current source-and-byte-backed identity with the earlier bounded analysis retained.
-Source File: none under this table name | Binary: BEA.exe,
+Last updated: 2026-09-27
+Summary: complete-body recheck confirms Jet ChargeWeapon and corrects four chargeable tiers versus five total tiers; earlier dated analysis stays historical.
+Source File: `references/Onslaught/BattleEngineJetPart.cpp` | Binary: BEA.exe.original.backup,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Evidence: MEASURED — independently re-read 2026-08-19 from official
@@ -34,6 +34,23 @@ The exact five-row name/comment change is pinned in
 Its comments bind the pristine specimen and half-open body hashes. The dated
 analysis below records the previous narrower assessment; its reservations
 about this rename are superseded, while unrelated limits remain.
+
+## September 27 complete-body recheck
+
+The complete 632-byte body was decoded again from the pristine specimen and
+compared with the pinned source and actual main-part tail at `00409f11`.
+The [current weapon-store contract](../../../game-mechanics/battle-engine-weapon-stores.md#september-27-jet-recheck)
+records the active/readiness gates, charge tiers, heat behavior and fire fallbacks.
+In particular, the chargeability scan visits **four** DWORDs beginning at
+profile `+0x10`; the maximum-charge scan visits **five** beginning at `+0x0c`.
+The historical five-DWORD claim for the first scan below is superseded.
+
+The physical receiver arrives in ECX with no stack arguments. The saved explicit
+ECX/fastcall annotation is preserved for now; the automatic-this member
+normalization is a separate pending correction. Retaining it is not ABI approval.
+The 90-case jet selection/store probe does not execute this charging body or
+establish player-input cadence. Earlier rebuild grades and unresolved-name
+statements below describe their dates, not current implementation coverage.
 
 ## Historical August 19 contract
 

@@ -1,14 +1,16 @@
 # Battle Engine weapon stores, charge and firing state
 
 Status: active static contract for the rebuild's player weapons
-Last updated: 2026-09-27 (walker helper identities corrected and original selection/store execution checked; earlier findings retain their dates)
+Last updated: 2026-09-27 (walker and jet selection/store execution checked; jet charge/body recheck; earlier findings retain their dates)
 Summary: the Aquila's ammo and heat stores, when a shot spends them, cooling, the
 Missile Pod and Pulse Cannon Pod charge law, what an empty store blocks, and what
 `IsFiring` counts.
 Evidence: MEASURED static reads of the pristine specimen and the shipped data; a
 read-only research pass traced the functions and the RE lane re-checked the store
 table, both spend paths, the cooling loop, `Charge`, the jet charge gate and both
-`IsFiring` bodies at their addresses. No runtime capture.
+`IsFiring` bodies at their addresses. The dated September 27 sections separately
+record fresh complete-body checks and isolated original-code runs. No whole-game
+runtime capture or player acceptance is claimed.
 Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 `data/battle engine configurations.dat`, 1,514 bytes, SHA-256 prefix `58722b12a04cae97`;
@@ -219,6 +221,101 @@ notes. This does not prove corrupt-list safety, complete Weapon layout,
 ReadyToFire behavior, device/input cadence or retail gameplay. The unchanged
 retail executable, real saves and both protected Ghidra owners were not used
 as runtime outputs.
+
+## September 27 jet recheck
+
+The complete JetPart helper bodies and their actual caller transports were
+re-read from the same pristine specimen, against pinned source
+`BattleEngineJetPart.cpp:638–1089`. These results qualify the earlier prose:
+
+- Jet GetCurrentWeapon (`00412610`) walks from index zero, mutates cursor `+8`
+  and returns null for an absent selection. It **does not repair the selected
+  index or fall back to another weapon**, unlike Walker. Null items terminate
+  the walk; corrupt/cyclic lists remain outside the established contract.
+- Jet CanWeaponFire (`00412570`) checks stores without testing weapon `+9c`.
+  Jet FireWeapon (`00411b90`, call `00411be4`) and ChargeWeapon (`00411bf0`,
+  gate `00411c51–00411c59`) **do test that active DWORD**. A passing store gate
+  therefore does not show that a disabled weapon fires. HandleLocks calls
+  store eligibility and weapon readiness separately.
+- Chargeability scans **four** profile entries `+10/+14/+18/+1c`, corresponding
+  to charge levels 1–4. The highest-charge scan visits **five** entries
+  `+0c..+1c`, levels 0–4. The earlier Charge note's five-entry description for
+  the first loop is wrong. Initial ammo and maximum-charge admission reject
+  unordered comparisons; the later heat-capacity C0 test admits unordered
+  while overheat is clear. Finite-value source reasoning alone omits that
+  distinction. No change to a charging constant is justified by this audit.
+- ChangeWeapon (`00411e70`) dereferences the old selection's zoom profile
+  before a null guard, then cycles active affordable weapons. Selection is
+  written before **the newly selected weapon's charge is cleared** at
+  `00411f96`; zoom comparison follows. Consumption-versus-store admission
+  (`00411f3a–00411f49`) also accepts unordered. Valid initial selection remains
+  a premise, rather than demonstrated empty-configuration safety.
+- WeaponFired (`00412050`) matches the passed pointer anywhere in the jet
+  list, not just the current weapon, and does not test active. Signed charged
+  count `+68 > 0` lets heat shots succeed before the store/overheat tests.
+  For ordinary heat admission it adds consumption minus the integer cooling
+  global; for ammo it subtracts consumption and clamps the negative/unordered
+  result. These callback semantics are distinct from permission to initiate Fire.
+- Ammo count (`00412240`) uses `FISTP QWORD` at `004122a1`, then returns its
+  low DWORD. It does not set the x87 control word. Nearest-even or truncation
+  is an ambient-state premise requiring evidence, not a universal cast rule.
+  The percentage getter clamps only above one; flag getters return full
+  DWORDs. Existing ST0 return annotations are not newly proved by ST0 alone.
+
+Two implementation follow-ups are recorded for the paused rebuild lane. The
+remark in `RetailWeaponSelection.cs` saying an inactive current jet weapon can
+still fire should describe only store eligibility; its adjacent `00414610`
+icon citation now refers to the proven attachment getter. Also,
+`Level100PlayerWeaponRuntime.AdvanceCharge` uses a time-only helper, while
+original ReadyToCharge (`0050a080`, freshly checked 35-byte body SHA-256
+`1ba024f1f14e38bee454b5d72c39f2cf64257e446a5bcf2e98fa117df64052f9`)
+admits null current mode `+a0` without checking time. `RetailWeaponCharge`
+already models that branch. Whether runtime initialization excludes this case
+is an integration question, not an established gameplay failure. The remaining
+PARITY question about `00509f70` is likewise integration of its documented
+mode/no-mode distinction, rather than a missing static read. No rebuild code
+was changed. The source's float GetWeaponReadiness remains unlocated; neither
+Boolean readiness helper supplies a defensible substitute identity.
+
+Private complete-body/source/caller packets are under
+`local-data/test-runs/re-audit-20260926/jet/`: `helper-bodies-v1.json`,
+`helper-callers-v1.json` and `readiness-bodies-v1.json`. These retain exact
+body lengths/hashes and source pins. Saved labels and model agreement were
+not identity evidence. They do not revalidate every earlier burst or asset claim.
+
+## Isolated jet selection and admission — September 27
+
+The unchanged bodies at `00412610` (selection), `00412570` (store eligibility),
+`00412520` (attachment) and `004124d0` (icon) executed at their original addresses
+in the existing native i386/seccomp probe pattern. All **90 cases and four
+altered-copy controls passed**. The loaded spans total **357 pristine bytes**;
+there are no intercepted helpers.
+
+Thirteen list/selection cases run through each entry (52 cases). Nineteen further
+store cases run under both authored masked x87 modes `037f` and `007f` (38 cases):
+inactive/noncanonical active flags, heat/ammo, overheat, equality, negative/zero
+values, infinities and quiet NaNs. That is 71 cases under `037f` and 19 under
+`007f`, not every case under both. Each case checks EAX, all 8,192 authored memory
+bytes, exact cursor changes, unchanged selected index, preserved registers,
+stack balance and x87 control/stack state. The results distinguish Jet's null
+return from Walker's fallback and confirm that Jet's store gate ignores active.
+They also distinguish raw icon pointers from attachment integers.
+
+The four separate one-byte controls change the selection equality branch,
+attachment field, heat equality admission or zero-ammo admission; each produces
+a detected difference. The initial run passed its baseline cases but could not
+locate a control opcode because Jet uses ECX where Walker uses EAX. That run and
+driver remain retained; correcting the locator changed no oracle or baseline
+expectation. Independent review decoded every retained input/output and ELF
+span; it did not rerun the binaries.
+
+Driver: `local-data/test-runs/re-audit-20260926/jet/original_selection_stores.py`,
+SHA-256 `62d9c741317341e70019d61ac62437d034ce0e51052993bc079f3695707a9eb2`.
+Receipts: `local-data/test-runs/re-audit-20260926/jet/selection-stores-4dq8psvd/`.
+This establishes only authored valid storage, small acyclic lists, a fixed
+store index and the supplied floating-point cases. It does not establish
+complete firing admission, corrupt-list safety, lifetime, retail x87 state,
+input cadence, rendered output or whole-game parity.
 
 ## Default held/release bindings — September 27
 

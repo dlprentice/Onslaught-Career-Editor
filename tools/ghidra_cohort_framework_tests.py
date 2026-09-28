@@ -307,6 +307,7 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # Walker verified: twenty-five kept names; only comments and tag sets change.
 # Walker helpers: eleven names/interfaces; code, locals and frames preserved.
 # Weapon icons: two names and walker pointer return; physical transport/code preserved.
+# Jet verified: fourteen kept names; only comments and tag sets change.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -397,6 +398,7 @@ LIVE_GRANTED_COHORTS = [
     "walker-verified-20260927",
     "walker-helper-identities-20260927",
     "weapon-icon-identities-20260927",
+    "jet-verified-20260927",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -893,6 +895,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "walker-verified-20260927",\n'
         '        "walker-helper-identities-20260927",\n'
         '        "weapon-icon-identities-20260927",\n'
+        '        "jet-verified-20260927",\n'
         "    };\n",
     ),
     (
