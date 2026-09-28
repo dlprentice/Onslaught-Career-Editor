@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[jet weapon identities and interfaces](#re-audit-jet-weapon-identities-and-interfaces--september-27);
+[jet charge member interface](#re-audit-jet-charge-member-interface--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,32 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit jet charge member interface — September 27
+
+The [one-row manifest](../../tools/cohort-specs/jet-charge-abi-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/jet-charge-abi-20260927.spec.tsv) correct the saved interface at
+`00411bf0 CBattleEngineJetPart__ChargeWeapon`. Pristine specimen SHA-256:
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+One ChargeWeapon receiver annotation normalizes from explicit-ECX fastcall to automatic thiscall. Its name, physical ECX input, void result, zero stack arguments, both locals, frame size, all 632 code bytes / 222 instructions and 8,331 non-target function records remain unchanged.
+
+The complete pristine body saves ECX into ESI and defines EDX before use; all seven returns are bare RETs. The 39-byte main ChargeWeapon dispatcher loads the Jet receiver from main+57c and tail-jumps to this body in mode3. Pinned JetPart.cpp659-697 supplies the same zero-argument member identity. The former general_volume receiver label is disproved. This corrects analysis metadata, not physical register transport or a demonstrated runtime failure. Existing semantic notes remain qualified leads.
+
+Fresh PRE restoration/census, rehearsal, separate/sealed readbacks, seven
+byte-stable refusals, independent exact-manifest review with root reproduction,
+live readback and independently restored Archive A POST passed. All nine live
+exports equal rehearsal; only the program comment digest moves. The complete
+current name projection is compared with live at closeout. An unused pre-seal
+draft incorrectly counted eight returns; the admitted evidence has seven,
+independently recounted before preservation and sealing.
+
+Working identity: `db.18715`, 18 files / 126,077,812 bytes,
+inventory SHA-256 `77397867016480707b2b673c6c20d38fd2f43aadb49ddc7f186319833a8651b1`; main database 75,776,000 bytes,
+SHA-256 `94446e31ffc826f6ac31f6482b6192a2e24c7b49abc1c788cadb14167a63f2dd`. Restored Jet identity/interface POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-jet-charge-abi/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/jet-charge-abi/`; body/source/caller packet:
+`local-data/test-runs/re-audit-20260926/jet/charge-interface-v2.json`.
 
 ## RE-audit jet weapon identities and interfaces — September 27
 

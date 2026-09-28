@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (RE Jet/main weapon identities/interfaces completed; Charge receiver and memory family next; broader audit unfinished; rebuild and companion paused)
+Last updated: 2026-09-27 (RE Jet Charge interface completed; memory family next; broader audit unfinished; rebuild and companion paused)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -491,7 +491,7 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the Jet/main identity and interface cohort (September 27).**
+**Running coverage after the Jet Charge interface cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
@@ -501,7 +501,7 @@ and final library-match proofs, not a percentage of game understanding:
 | Names verified and kept | 457 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader, seventeen switch-method, 43 cleanup-body, nine console-menu, eight shared-music, 41 shared/PC-sound, 25 walker and 14 jet identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
 | Names still outside that accounted set | 5,712 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
-| Prototype records corrected | 127 functions: the prior 118 plus nine Jet/main signature records. Three explicit-ECX members become automatic thiscall; two main name inputs become char pointers; four arguments acquire source names. Two records change only the function name. Physical input locations, return widths and cleanup stay unchanged. Receiver normalization in earlier cohorts does not imply demonstrated runtime transport breakage. Three unresolved frontend returns, ten custom-storage floating rows and GetSampleLength's float/double question remain outside these corrections; a corrected parameter list is not complete ABI validation. |
+| Prototype records corrected | 128 functions: the prior 118 plus nine Jet/main signature records and ChargeWeapon receiver normalization. Three explicit-ECX members become automatic thiscall; two main name inputs become char pointers; four arguments acquire source names. Two records change only the function name. Physical input locations, return widths and cleanup stay unchanged. Receiver normalization in earlier cohorts does not imply demonstrated runtime transport breakage. Three unresolved frontend returns, ten custom-storage floating rows and GetSampleLength's float/double question remain outside these corrections; a corrected parameter list is not complete ABI validation. |
 | Comments corrected | 2,633 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Function boundaries | One additional window callback admitted over existing code, subsequently identified as WndProc. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
@@ -512,7 +512,7 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
 `membuffer-abi-20260927`, `resource-reader-identities-20260927`, `reader-abi-20260927` and
-`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, `console-menu-identities-20260927` / `console-menu-verified-20260927`, `vertex-menu-abi-20260927`, `music-identities-20260927` / `music-verified-20260927`, `thing-gameplay-identities-20260927` / `thing-gameplay-abi-20260927`, `sptrset-forwarder-20260927`, `sptrset-identities-20260927` and `sptrset-abi-20260927`, `sound-verified-20260927`, `sound-abi-20260927` and `sound-source-identities-20260927`, `walker-verified-20260927`, `walker-helper-identities-20260927` and `weapon-icon-identities-20260927`, `jet-verified-20260927`, `jet-helper-identities-20260927`, the final
+`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, `console-menu-identities-20260927` / `console-menu-verified-20260927`, `vertex-menu-abi-20260927`, `music-identities-20260927` / `music-verified-20260927`, `thing-gameplay-identities-20260927` / `thing-gameplay-abi-20260927`, `sptrset-forwarder-20260927`, `sptrset-identities-20260927` and `sptrset-abi-20260927`, `sound-verified-20260927`, `sound-abi-20260927` and `sound-source-identities-20260927`, `walker-verified-20260927`, `walker-helper-identities-20260927` and `weapon-icon-identities-20260927`, `jet-verified-20260927`, `jet-helper-identities-20260927`, `jet-charge-abi-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen plus 43 plus nine plus eight plus 41 plus 25 plus 14 kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -573,12 +573,20 @@ The 769 code bytes and all 8,323 non-target records are unchanged. Six living
 function notes/contracts now replace obsolete identity restrictions with the
 complete-byte/source/caller findings; three other notes reconcile caller names.
 
-Next: normalize ChargeWeapon's retained-name explicit-ECX annotation. The broader
-27-function memory-manager/heap family now has root and independent complete-body
-source review. It exposes Boolean return-width defects, retail mutex handling
-that differs from source, and a dump failure branch that bypasses the explicit
-reentrancy-flag reset. Selected callers, exact interface/comment plans and
-controlled checks remain; none of this family has been promoted yet.
+The [ChargeWeapon member interface](reverse-engineering/ghidra/README.md#re-audit-jet-charge-member-interface--september-27)
+now uses automatic thiscall. Complete body and actual dispatcher transport prove
+the ECX receiver; seven returns have no stack cleanup. Its physical transport,
+name and code are unchanged. Full live readback, independent POST restoration,
+seven refusal controls and all 8,332 projected names pass.
+
+Next: the 27-function memory-manager/heap family. Root and independent complete-body,
+source and selected-caller review expose Boolean return-width defects, retail mutex
+handling that differs from source, and a dump failure branch bypassing the explicit
+reentrancy-flag reset. Draft wording was corrected before sealing: tiny helpers
+check ranges without alignment, ReAlloc reads old size only after allocation
+succeeds, diagnostics do not cover every allocation failure, and physical heap
+walks exclude the terminal block. Names/comments are the next cohort; four ABI
+corrections and controlled checks remain separate. None has been promoted yet.
 Private inputs and probes: `local-data/test-runs/re-audit-20260926/jet/` and
 `memory/`. Scoped scripts remain in the existing ignored audit owner.
 

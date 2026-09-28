@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (Jet/main weapon identity/interface corrections completed; broader audit remains)
+Last updated: 2026-09-27 (Jet Charge interface correction completed; broader audit remains)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -121,9 +121,10 @@ passes 90 authored cases and four altered-copy controls; it tests selection/stor
 eligibility, not the complete firing chain. The same contract records paused-lane
 integration questions. The [nine Jet/main identity/interface corrections](ghidra/README.md#re-audit-jet-weapon-identities-and-interfaces--september-27)
 are now live with exact readback and independently restored recovery. Their
-living function notes/contracts have been reconciled. Charge receiver normalization
-and the 27-function allocator family are next; allocator differences remain
-unpromoted static findings until their exact plans and gates pass.
+living function notes/contracts have been reconciled. The [Charge receiver correction](ghidra/README.md#re-audit-jet-charge-member-interface--september-27)
+is also live with preserved physical transport and independent recovery. The
+27-function allocator family is next; its differences remain unpromoted static
+findings until exact plans and gates pass.
 
 The [sound event-queue recheck](binary-analysis/csoundmanager-shared-semantics-2026-08-11.md#september-27-event-queue-correction)
 corrects inherited insertion-order wording with 60 original-code cases and two

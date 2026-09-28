@@ -8955,3 +8955,16 @@ checks and recovery/retirement receipts:
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/jet-helper-identities/`.
 Only successful byte-identical control/POST-open twins were retired after fresh
 comparison; recovery and all evidence remain, with exact deletion-queue records.
+
+## RE Jet Charge member interface — September 27
+
+The one-row `jet-charge-abi-20260927` passed fresh PRE restoration/census,
+rehearsal and separate/sealed readbacks, seven byte-stable refusal controls,
+independent exact-manifest review, live readback and independently restored
+Archive A POST. All nine exports equal rehearsal. Only receiver annotation,
+comment and tags changed; name, physical transport, 632 code bytes and 8,331
+non-target function records are preserved. The 94 framework tests pass.
+Private commands/results: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/jet-charge-abi/`.
+This is static interface evidence, with no new Godot or retail runtime acceptance.
+The complete 8,332-name projection matches live; `test:docs` reports zero drift
+and `test:safety` passes (4,204 public candidate files). `git diff --check` passes.
