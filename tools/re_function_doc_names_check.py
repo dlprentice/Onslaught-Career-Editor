@@ -186,6 +186,8 @@ CURRENT_WALKER_HELPER_OVERLAY = REPO_ROOT / "tools/cohort-specs/walker-helper-id
 CURRENT_WALKER_HELPER_OVERLAY_SHA256 = "b97d29f562aee82b5663ad6cc3199e6a80739bab256974b96cd44cc852e0d6d5"
 CURRENT_WEAPON_ICON_OVERLAY = REPO_ROOT / "tools/cohort-specs/weapon-icon-identities-20260927.manifest.tsv"
 CURRENT_WEAPON_ICON_OVERLAY_SHA256 = "437dd948f5dba051b30a61ca50db25a4063f5e94f41beaad3471dae2154a7d35"
+CURRENT_JET_HELPER_OVERLAY = REPO_ROOT / "tools/cohort-specs/jet-helper-identities-20260927.manifest.tsv"
+CURRENT_JET_HELPER_OVERLAY_SHA256 = "5ca9339b2cedd9214ba31397d4b44b9a3fc34b93323a4ca0e7f1025f54381b7a"
 CURRENT_GETBPP_OVERLAY_COLUMNS = (
     "addr", "liveKind", "currentName", "proposedName", "currentSignature",
     "currentSignatureSha256", "proposedSignature", "currentCallingConvention",
@@ -1044,6 +1046,11 @@ def run(
                 table, CURRENT_WEAPON_ICON_OVERLAY,
                 expected_sha256=CURRENT_WEAPON_ICON_OVERLAY_SHA256,
                 expected_rows=2, expected_columns=CURRENT_GETBPP_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_JET_HELPER_OVERLAY,
+                expected_sha256=CURRENT_JET_HELPER_OVERLAY_SHA256,
+                expected_rows=9, expected_columns=CURRENT_GETBPP_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)

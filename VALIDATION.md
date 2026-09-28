@@ -8921,3 +8921,37 @@ retail FPU state, complete firing behavior or reconstruction parity.
 Closeout: `npm run test:docs` passed with zero drifted name assertions;
 `npm run test:safety` passed (4,200 public candidate files);
 `git diff --check` passed. Logs: `local-data/test-runs/re-audit-20260926/jet/jet-verified-{docs,safety,framework}.log`.
+
+
+## Jet/main weapon identities and interfaces — September 27
+
+The nine-row `jet-helper-identities-20260927` cohort corrects six Jet helpers and
+three main dispatchers. Three explicit ECX annotations become automatic thiscall;
+two name pointers become char pointers; four source argument names are adopted.
+Two signature records change only the function name. All physical locations,
+return widths, cleanup, locals, frames and 769 code bytes / 315 instructions stay
+unchanged. All 8,323 other function records remain exact.
+
+Fresh PRE restore/census, dry/apply/separate/sealed rehearsal readbacks, nine
+byte-stable refusal controls, independent exact-manifest review with root
+reproduction, live readback and independently restored Archive A POST passed.
+All nine live exports equal rehearsal; the tracked checkpoint is unchanged.
+The production name projection equals all 8,332 live rows. Counts are 2,163
+unique corrected names (2,164 rename rows), 457 additional names kept, zero
+neutralized, 5,712 outside the accounted set, 2,633 comments and 127 signature
+records corrected. These dimensions do not measure semantic completion.
+
+The focused framework command `python -m unittest tools.ghidra_cohort_framework_tests`
+passed all 94 cases. Six living notes/contracts were re-derived or reconciled;
+three other notes update caller names. An initial documentation run found six
+header/evidence-format defects in those edits; the headers were corrected.
+Commands and actual final outcomes are recorded under the private cohort owner
+below. No Godot, player/device check or execution of these nine helpers was run.
+The earlier Jet store experiment exercises different bodies and is not acceptance
+of this cohort's complete behavior.
+
+Private commands, readbacks, exact refusal results, projection counts, final
+checks and recovery/retirement receipts:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/jet-helper-identities/`.
+Only successful byte-identical control/POST-open twins were retired after fresh
+comparison; recovery and all evidence remain, with exact deletion-queue records.
