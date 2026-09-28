@@ -291,7 +291,10 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # Jet verified: 14 old/authored notes (5,775/28,878 bytes); old notes remain leads.
 # Jet/main helpers: nine old/authored notes (3,476/17,801 bytes); old notes remain leads.
 # Jet ChargeWeapon: one old/authored note (3,229/4,680 bytes); old notes remain leads.
+# Allocator verified: 27 old/authored notes (13,760/62,108 bytes); old notes remain leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/memory-verified-20260927.manifest.tsv":
+        "fd355d74bbb544b136d19485cdc1a14d0ca3deed4c895283e898a22863ef6cef",
     "tools/cohort-specs/jet-charge-abi-20260927.manifest.tsv":
         "4be7541e2f5ef278c2bf8f260020cc19f1ac488b7bc6a6398ea32aceb1b549ac",
     "tools/cohort-specs/jet-helper-identities-20260927.manifest.tsv":

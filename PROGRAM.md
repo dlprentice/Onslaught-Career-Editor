@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-27 (RE Jet Charge interface completed; memory family next; broader audit unfinished; rebuild and companion paused)
+Last updated: 2026-09-28 (RE allocator records promoted; byte-matching decompilation started; broader audit unfinished; rebuild and companion paused)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -17,6 +17,36 @@ validation in [VALIDATION.md](VALIDATION.md), and database state in
 queue revisions remain in Git and existing evidence owners; do not recreate a diary here.
 
 ## Open work
+
+### Byte-matching decompilation — started September 28
+
+David's September 28 goal makes a byte-matching decompilation of the game code the RE
+lane's main loop. The source, build scripts and score live in the private repository
+`github.com/dlprentice/bea-decomp` (checkout `~/Projects/game-dev/bea-decomp`); its README
+owns the score and the matched-function list, and this file keeps only the plan.
+
+- **Toolchain.** Visual C++ 6.0 under a headless Wine prefix: CL 12.00.8804 with
+  C1/C1XX/C2 12.00.9782 (SP6) and LINK 6.00.8447, pinned with provenance in
+  `local-lab/third-party/msvc6-toolchain/SOURCE.txt`. The Rich header records build 8966
+  (SP5 with the Processor Pack) for the game's 464 C++ and 3 C objects; SP6 has reproduced
+  every function tried so far. Flags `/O2 /Ob2 /GX /MT`; the retail build folder
+  `C:\dev\ONSLAUGHT2\` is mapped onto the source folder so `__FILE__` matches.
+- **Judge.** A function counts only when its whole compiled section equals the pristine
+  bytes and every relocation lands where the evidence says (own section, annotated callees,
+  pooled strings and constants by content, import slots by name, one consistent address
+  for everything else).
+- **Structure.** Objects are linked alphabetically by file name; unreferenced functions are
+  removed and identical ones folded (every empty function is the `RET` at `0040c640`).
+  Nearly every object ends with the maths header's constant initializers (288 found), which
+  mark object boundaries (`bea-decomp/config/objects.tsv`).
+- **Order.** Startup, settings, saves, menus and Level 100 first, then by object file and
+  subsystem, dormant code included. Stuart's GPL source seeds the 26 files it shares with
+  the retail build; each divergence is recorded in the decomp README with its evidence.
+- **Promotion.** Names and prototypes a match proves go to Ghidra in batches through the
+  promotion gate; the allocator interfaces are the first.
+
+MemoryManager.cpp and DXMemoryManager.cpp match completely apart from their per-object
+maths-constant initializers, which wait on the maths header.
 
 ### Dedicated RE lane — current continuation
 
@@ -491,18 +521,18 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the Jet Charge interface cohort (September 27).**
+**Running coverage after the allocator records (September 28).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
 | Names corrected | 2,163 unique functions; 2,164 rename rows include one repeated correction. The latest nine correct six Jet weapon helpers and three main dispatchers; the preceding 14 Jet and 25 Walker verified names stay retained. |
-| Names verified and kept | 457 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader, seventeen switch-method, 43 cleanup-body, nine console-menu, eight shared-music, 41 shared/PC-sound, 25 walker and 14 jet identities. This excludes functions already counted as corrected. |
+| Names verified and kept | 484 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader, seventeen switch-method, 43 cleanup-body, nine console-menu, eight shared-music, 41 shared/PC-sound, 25 walker, 14 jet and 27 allocator identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 5,712 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Names still outside that accounted set | 5,685 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
 | Prototype records corrected | 128 functions: the prior 118 plus nine Jet/main signature records and ChargeWeapon receiver normalization. Three explicit-ECX members become automatic thiscall; two main name inputs become char pointers; four arguments acquire source names. Two records change only the function name. Physical input locations, return widths and cleanup stay unchanged. Receiver normalization in earlier cohorts does not imply demonstrated runtime transport breakage. Three unresolved frontend returns, ten custom-storage floating rows and GetSampleLength's float/double question remain outside these corrections; a corrected parameter list is not complete ABI validation. |
-| Comments corrected | 2,633 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Comments corrected | 2,660 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Function boundaries | One additional window callback admitted over existing code, subsequently identified as WndProc. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
@@ -512,9 +542,9 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
 `membuffer-abi-20260927`, `resource-reader-identities-20260927`, `reader-abi-20260927` and
-`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, `console-menu-identities-20260927` / `console-menu-verified-20260927`, `vertex-menu-abi-20260927`, `music-identities-20260927` / `music-verified-20260927`, `thing-gameplay-identities-20260927` / `thing-gameplay-abi-20260927`, `sptrset-forwarder-20260927`, `sptrset-identities-20260927` and `sptrset-abi-20260927`, `sound-verified-20260927`, `sound-abi-20260927` and `sound-source-identities-20260927`, `walker-verified-20260927`, `walker-helper-identities-20260927` and `weapon-icon-identities-20260927`, `jet-verified-20260927`, `jet-helper-identities-20260927`, `jet-charge-abi-20260927`, the final
+`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, `console-menu-identities-20260927` / `console-menu-verified-20260927`, `vertex-menu-abi-20260927`, `music-identities-20260927` / `music-verified-20260927`, `thing-gameplay-identities-20260927` / `thing-gameplay-abi-20260927`, `sptrset-forwarder-20260927`, `sptrset-identities-20260927` and `sptrset-abi-20260927`, `sound-verified-20260927`, `sound-abi-20260927` and `sound-source-identities-20260927`, `walker-verified-20260927`, `walker-helper-identities-20260927` and `weapon-icon-identities-20260927`, `jet-verified-20260927`, `jet-helper-identities-20260927`, `jet-charge-abi-20260927`, `memory-verified-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
-cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen plus 43 plus nine plus eight plus 41 plus 25 plus 14 kept-name targets, deduplicated
+cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen plus 43 plus nine plus eight plus 41 plus 25 plus 14 plus 27 kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/` owner. Name sets
 are deduplicated by entry address and checked against the current live export;
@@ -579,23 +609,19 @@ the ECX receiver; seven returns have no stack cleanup. Its physical transport,
 name and code are unchanged. Full live readback, independent POST restoration,
 seven refusal controls and all 8,332 projected names pass.
 
-Next: the 27-function memory-manager/heap family. Root and independent complete-body,
-source and selected-caller review expose Boolean return-width defects, retail mutex
-handling that differs from source, and a dump failure branch bypassing the explicit
-reentrancy-flag reset. Draft wording was corrected before sealing: tiny helpers
-check ranges without alignment, ReAlloc reads old size only after allocation
-succeeds, diagnostics do not cover every allocation failure, and physical heap
-walks exclude the terminal block. Names/comments are the next cohort; four ABI
-corrections remain separate. None has been promoted yet.
+The [27 allocator records](reverse-engineering/ghidra/README.md#re-audit-verified-allocator-records--september-28)
+now carry verified notes and tags; names, interfaces and code are unchanged. Complete
+bodies, callers and the pinned source expose the retail differences: Win32 mutex
+handles replace the BTS spinlock (Cleanup passes the handle's address), allocation
+failures report localized per-heap errors, ReAlloc frees the original even when the
+new allocation fails, and DumpMemory's first-buffer failure exits past its flag
+reset. The first seal was rejected for three wording errors and is retained under
+`memory-verified/rejected-v1/`; the replacement passed every gate.
 
-**Safe pause requested September 27:** no allocator manifest is sealed and no
-allocator change has reached live. `memory-verified/` holds corrected
-`declared-scope.json`, 27 target addresses and prepared scripts. Fresh PRE
-restore/census completed against the verified Charge POST and matched all seven
-full exports. Resume by rechecking current live/cold authority, then seal/rehearse
-the corrected scope and obtain exact-payload review before registration. The
-initial `prepare_identity_plan.py` is a historical draft; its wording was
-corrected in the current declared scope, with the review preserved beside it.
+Next: the four allocator interfaces (`memory-abi/`). FreeTiny and ReallocTiny
+return bool in AL, Cleanup takes a bool in its 4-byte slot and Shutdown is an
+automatic-this member. The byte-matching decompilation below compiles all four
+to the retail bytes, which proves the prototypes.
 
 The completed native tiny-helper probe executes 197 unchanged retail bytes in
 93 authored cases; four altered-copy controls fail as intended. It verifies that
@@ -615,7 +641,6 @@ A subsequent console-registration alignment design is preserved as a research
 lead: reuse the existing evidence tools and argument-transport checker; do not
 use nearest strings or saved names as proof. Root checked the registrar body,
 but the broader callback candidate set/tool extension remains unimplemented.
-Start with the allocator checkpoint above rather than opening a second cohort.
 Private inputs and probes: `local-data/test-runs/re-audit-20260926/jet/` and
 `memory/`. Scoped scripts remain in the existing ignored audit owner.
 
