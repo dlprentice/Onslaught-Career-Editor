@@ -150,8 +150,8 @@ diet — comment only until that lane names the arm.
 Siblings: `CBattleEngineWalkerPart__ChargeWeapon` /
 `TargetProfileContext__CanProceedByTargetRangeGate` /
 `CBattleEngineJetPart__ChangeWeapon`. Next named:
-`CGeneralVolume__DispatchSelectedBurstPreset` `0x00411b90`
-(table name counted; no 2026-08-19 PE envelope).
+`CBattleEngineJetPart__FireWeapon` `0x00411b90`
+(identity re-derived and promoted September 27; the August assessment is superseded).
 
 ## Functions
 

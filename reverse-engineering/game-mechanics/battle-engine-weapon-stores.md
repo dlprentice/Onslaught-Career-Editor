@@ -262,6 +262,16 @@ re-read from the same pristine specimen, against pinned source
   The percentage getter clamps only above one; flag getters return full
   DWORDs. Existing ST0 return annotations are not newly proved by ST0 alone.
 
+The [nine Jet/main identity and interface corrections](../ghidra/README.md#re-audit-jet-weapon-identities-and-interfaces--september-27)
+are live. Fire, AmmoCount, localized Name, Enable, Disable and CountActiveWeapons
+now carry JetPart identities; the three main Enable/Disable/Count wrappers carry
+their source identities. Enable/Disable always forward Walker then Jet, whereas
+Count chooses Jet only in state 3. Name comparisons use bytes and are case-sensitive.
+Three explicit ECX annotations now use automatic thiscall; their physical
+transport and return widths are preserved. Charge's receiver annotation remains
+pending. The localized result's existing short-pointer type does not prove its
+full representation or lifetime.
+
 Two implementation follow-ups are recorded for the paused rebuild lane. The
 remark in `RetailWeaponSelection.cs` saying an inactive current jet weapon can
 still fire should describe only store eligibility; its adjacent `00414610`

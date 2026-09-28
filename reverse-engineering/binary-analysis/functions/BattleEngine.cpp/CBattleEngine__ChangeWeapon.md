@@ -1,8 +1,8 @@
 # CBattleEngine__ChangeWeapon
 
 Status: active static function note
-Last updated: 2026-09-27 (walker helper identities reconciled; earlier evidence retains its stated limits)
-Summary: retained function evidence with current walker helper identities; unrelated historical claims are not revalidated by this naming pass.
+Last updated: 2026-09-27 (Jet and Walker count identities reconciled; earlier evidence retains its stated limits)
+Summary: retained bounded dispatcher evidence with current Jet/Walker active-count identities; unrelated historical claims are not revalidated by this pass.
 Source File: `references/Onslaught/BattleEngine.cpp` | Binary: BEA.exe,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -33,7 +33,7 @@ Pinned prologue, with `edi = ecx`:
 
 1. `cmp [edi+0x260], 3` (same JET polarity Init already pins).
    JET loads `[edi+0x57c]` / `E8` table
-   `LinkedObjectList__CountFlag9C` `0x004129a0`. Non-jet loads
+   `CBattleEngineJetPart__CountActiveWeapons` `0x004129a0`. Non-jet loads
    `[edi+0x578]` / `E8` table
    `CBattleEngineWalkerPart__CountActiveWeapons`
    `0x00414b70`. Those table names are **not** adopted as

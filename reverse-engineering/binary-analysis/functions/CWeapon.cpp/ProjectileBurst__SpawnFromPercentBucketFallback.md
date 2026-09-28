@@ -1,7 +1,7 @@
 # CWeapon__Fire
 
 Status: active static function note
-Last updated: 2026-09-07
+Last updated: 2026-09-27 (Jet caller name reconciled; earlier evidence retains its limits)
 Summary: current source-and-byte-backed identity with the earlier bounded analysis retained.
 Source File: none in the pinned GPL drop | Binary: BEA.exe,
 SHA-256
@@ -70,7 +70,7 @@ Ten inbound `.text` `E8`/`E9` (6 already inside pinned
 fire/charge bodies; 4 counted, not rewritten):
 
 - `CALL` `0x00411be4` already-pinned
-  `CGeneralVolume__DispatchSelectedBurstPreset`
+  `CBattleEngineJetPart__FireWeapon`
 - `CALL` `0x00411e0f` / `0x00411e5b` already-pinned
   `CGeneralVolume__DispatchMode3BurstProgressAndSpawn`
 - `JMP` `0x00413ce2` already-pinned

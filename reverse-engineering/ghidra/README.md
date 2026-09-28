@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[verified jet records](#re-audit-verified-jet-records--september-27);
+[jet weapon identities and interfaces](#re-audit-jet-weapon-identities-and-interfaces--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,33 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit jet weapon identities and interfaces — September 27
+
+The [nine-row manifest](../../tools/cohort-specs/jet-helper-identities-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/jet-helper-identities-20260927.spec.tsv) correct six JetPart identities
+and three main-part wrappers. Pristine specimen SHA-256:
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Nine Jet/main weapon names and signature records corrected, including three explicit-ECX receiver annotations normalized to automatic thiscall, two main byte-string pointer annotations and four source argument names. All physical input locations, return widths, cleanup, locals, frames, 769 code bytes / 315 instructions and 8,323 non-target function records remain unchanged.
+
+Pristine complete bodies and actual main+57c caller transports match pinned JetPart source. The three ECX receivers use no incoming EDX argument. Enable/Disable forward a byte-string name to Walker then Jet without a mode gate; CountActiveWeapons chooses Jet only for state3. Localized name lookup is distinct from physics/icon fields. AmmoCount uses FISTP QWORD with ambient rounding; its lowDWORD return is not a universal C# cast rule. Existing short-pointer return is preserved rather than newly certified. This is static identity/interface evidence, not original-code execution of these nine helpers or gameplay acceptance. ChargeWeapon retained-name receiver normalization remains separate.
+
+The old labels and notes remain qualified leads in each plate comment. The
+[weapon-store contract](../game-mechanics/battle-engine-weapon-stores.md#september-27-jet-recheck)
+records reconstruction implications and separate experimental limits.
+Fresh PRE restoration/census, rehearsal, separate/sealed readbacks, nine
+byte-stable refusals, independent exact-manifest review with root reproduction,
+live readback and independently restored Archive A POST passed. All nine live
+exports equal rehearsal; only the program comment digest moves. The complete
+current name projection is compared with live at closeout.
+
+Working identity: `db.18714`, 18 files / 126,061,428 bytes,
+inventory SHA-256 `37b1e74a4a11551a7684b6fc8455891a17428587242d07c8618fe756a5eaa2ba`; main database 75,759,616 bytes,
+SHA-256 `1414c05a9426c6d461e422336bcc0a98f7bafe9766f8e5e64f4f26829fb49d0c`. Restored Jet verified POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-jet-helper-identities/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/jet-helper-identities/`; body/source/caller packets:
+`local-data/test-runs/re-audit-20260926/jet/`.
 
 ## RE-audit verified jet records — September 27
 

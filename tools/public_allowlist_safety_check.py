@@ -289,7 +289,10 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # Walker helpers: eleven old/authored notes (5,388/24,918 bytes); old notes remain leads.
 # Weapon icons: two old/authored notes (1,078/4,249 bytes); old notes remain leads.
 # Jet verified: 14 old/authored notes (5,775/28,878 bytes); old notes remain leads.
+# Jet/main helpers: nine old/authored notes (3,476/17,801 bytes); old notes remain leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/jet-helper-identities-20260927.manifest.tsv":
+        "5ca9339b2cedd9214ba31397d4b44b9a3fc34b93323a4ca0e7f1025f54381b7a",
     "tools/cohort-specs/jet-verified-20260927.manifest.tsv":
         "2cbf3ba4fe7ea7023977311a8f5c179b845f85e76e898645799b3b5f053e2d25",
     "tools/cohort-specs/weapon-icon-identities-20260927.manifest.tsv":
