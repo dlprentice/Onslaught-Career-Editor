@@ -17,35 +17,27 @@ companion for Linux and Windows for careers, saves, safe copies, patches and med
 the rebuild exposes the next retail questions, and both make safe app features possible.
 [`GOAL.md`](GOAL.md) states the standing outcomes,
 [`PROGRAM.md`](PROGRAM.md) is the work queue, [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) says what is
-proven today. David's September 6 direction keeps this repository and consolidates
-implementation responsibilities; older Blazor/Uno and repository-split recommendations
-in `~/Projects/game-dev/PLAN.md` are superseded.
+proven today.
 
-David replaced the WinUI 3 development lane with the Godot companion on September 6.
-Keep the existing WinUI/AppCore source as migration material. After the completed
-baseline report, David authorized the first Godot Save Lab workflow. Existing Windows
-release procedures describe the retained implementation, not a queued WinUI release.
+The Godot companion replaced the WinUI 3 application; its WinUI/AppCore source stays as migration material, and
+the Windows release procedures describe that retained implementation, not a queued release.
 
-Linux owns development and native Godot execution. The rebuild now has Linux build/run/smoke/capture
+Linux owns development and native Godot execution. The rebuild has Linux build/run/smoke/capture
 commands. The companion is a C# application built in code on Godot 4.8 dev6 .NET (`godot48-mono`); its
-in-process file-safety boundary links the existing AppCore safety source unchanged. The standalone helper
-prototype was retired on September 25; its publication-race cases run inside the companion's C# suite.
+in-process file-safety boundary links the existing AppCore safety source unchanged; the publication-race cases of the
+retired standalone helper run inside the companion's C# suite.
 Native scene/write/reopen checks passed on Linux; human interaction, the complete player walkthrough
 and Windows runtime acceptance remain separate; read `CURRENT_CAPABILITIES.md`.
 The full legacy AppCore suite, WinUI, Windows-targeted CLI and portable ZIP retain Windows dependencies.
-David retired the never-built Windows VM and its installer media on September 12. No local Windows
-validation environment is provisioned; Linux evidence does not establish Windows behavior.
+No local Windows validation environment exists (the Windows VM was retired unbuilt); Linux evidence does not
+establish Windows behavior.
 While David uses the desktop, continue code/RE and noninteractive checks;
 wait for him to announce availability before resuming live input or visible launches.
 
-David resumed scoped development on September 6 after accepting the baseline and
-assessment. The active phase covers native Linux Godot launch/input/audio/capture,
-the complete player-input Level 100 route, targeted RE, the first Godot Save Lab
-workflow, and real World 110 construction/transition. Refactor and consolidate where
-these deliverables require it; keep the three standing outcomes. The former storage
-hold is retained as history in `developer_state.json`; it does not block this phase.
-Do not recreate Windows VM staging without a new Windows-validation task. Ghidra changes still require the preservation workflow
-and an exact declared cohort. External archive reconciliation and historical recovery
+Each lane's scope and state are in the table below. Refactor and consolidate where a lane's deliverables require
+it; keep the three standing outcomes. The former storage hold is history in `developer_state.json` and blocks
+nothing. Do not recreate Windows VM staging without a new Windows-validation task. Ghidra changes require the
+preservation workflow and an exact declared cohort. External archive reconciliation and historical recovery
 investigation remain outside this repository's development scope. Any agent may work here, Claude Code included;
 subagents and peer sessions follow machine rule 12 (disjoint scopes in their own worktrees; the lead integrates).
 
@@ -55,9 +47,9 @@ Three lanes share this repository, each in its own checkout. `main` is the integ
 into it only when its own checks pass. The 2026-09-25 baseline and its logs are in
 [VALIDATION.md](VALIDATION.md#lane-baseline--september-25).
 
-| Lane | Branch | Checkout | State on 2026-09-25 |
+| Lane | Branch | Checkout | State |
 | --- | --- | --- | --- |
-| Reverse engineering | `codex/retail-re-20260919` | the repository's main checkout | Owns specimen-bound executable analysis and contracts; rebuild and companion implementation remain paused. The RE record audit and current counts live in `PROGRAM.md`; `developer_state.json` selects the measured writable Ghidra state. September 27: walker helpers/icons, fourteen retained Jet identities and nine Jet/main weapon identities/interfaces are promoted with recovery; Jet selection/store experiments pass within authored-input limits. Charge receiver normalization is also promoted. September 28: David made a byte-matching decompilation the lane's main loop (private `dlprentice/bea-decomp`, checkout `~/Projects/game-dev/bea-decomp`, plan in `PROGRAM.md`); the 27 allocator records are promoted and their four interfaces are next. Paused-lane integration questions are in the weapon-store contract. Runs no Godot. |
+| Reverse engineering | `codex/retail-re-20260919` | the repository's main checkout | Owns specimen-bound executable analysis and contracts. Its main loop is a byte-matching decompilation (private `dlprentice/bea-decomp`, checkout `~/Projects/game-dev/bea-decomp`; score, matched list and divergences in its README, plan in `PROGRAM.md`). The RE record audit and its counts live in `PROGRAM.md`; `developer_state.json` selects the measured writable Ghidra state. Paused-lane integration questions are in the weapon-store contract. Runs no Godot. |
 | Rebuild | `codex/godot-editor-48-20260919` | `.worktrees/godot-editor-48-20260919` | C# only and built in code: no GDScript or editor-authored scenes. `npm run check:rebuild` runs its whole gate (build, Core with its ferry-landing sweep, Client, the Godot checks, the smoke and both tapes' replays). Level 100 runs in the retail load order with the RE lane's contracts for its units' callbacks, weapons, aircraft, the U-17's flight, waypoint walks, scripts and pre-run; the cold-start route and its recorded tape win it and replay deterministically. World 110 is built in Core from retail data through its start state, with Level 100's surviving base world carried in. The final capture matches the September 25 baseline except differences traced to evidence ([VALIDATION.md](VALIDATION.md#return-to-all-code-c--september-25)). Next: World 110's landing craft (flight and landing), World 110 in the Godot host, the friendly turrets and auto-aim. |
 | Companion | `claude/companion-csharp-20260925` | `.worktrees/companion-csharp-20260925` | Rebuilt around players on 2026-09-26 at David's direction and merged into `main`; David closed that goal the same day and paused the lane, which resumes on the branch when he sets new requirements. C# only and built in code: no GDScript, one-node entry scene. The sidebar is Home, Your career (a Summary with a campaign map, Goodies, Edit career, Cheats), Your game (Game settings, Backups), Extras (Music & voices, Lore) and Advanced, folded away. Every game write is a choice in one dialog, made after a verified backup and never while the game runs; automatic backups; it catches up when the game closes. `npm test`, renders of every screen at two sizes and both exports pass (evidence in the lane's commit messages). Patching the installed `BEA.exe` is a later phase. Windows execution (the portable write path has run only on Linux), a human click-through and listening to the audio remain. |
 
