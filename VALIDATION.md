@@ -8846,3 +8846,38 @@ Command logs are `helper-*` and `original-selection-stores-v2.log` under the
 same existing walker test-run owner. `npm run test:docs` passed with zero
 drifted/unresolved assertions; `npm run test:safety` passed 4,196 candidate
 files; `git diff --check` passed. No Godot or physical desktop control was used.
+
+### RE weapon icon identities — September 27
+
+Promoted `weapon-icon-identities-20260927`: the actual Jet and Walker icon
+getters now have their proven source names. Walker's return annotation changes
+from int to char pointer at unchanged EAX4; the Jet interface retains its
+physical transport. All 94 code bytes / 42 instructions, locals, frames and
+8,330 other function records remain unchanged. The observed main icon wrapper
+is inlined within ChangeWeapon; no new function boundary is asserted.
+
+The cohort's `prepare_preservation.py`, `prepare.py`, `rehearse.py` and
+`compare_exports.py rehearsal-post` passed. Nine negative controls refused
+without changing any project bytes. Independent exact-manifest review and root
+reproduction agreed on the source, complete bodies and string-consuming caller.
+`python -m unittest tools.ghidra_cohort_framework_tests` passed 94 cases.
+`apply_live.py`, `compare_exports.py live-post` and `finish.py` passed: all nine
+live exports equal rehearsal; the Archive A POST was independently restored and
+opened read-only. The checkpoint is unchanged. Successful exact probe twins
+were retired only after fresh comparisons, with existing deletion-queue records.
+
+`verify_projection.py` compared all 8,332 projected names against live. Counts:
+2,154 unique corrected names, 443 additional verified/kept, zero newly
+neutralized, 5,735 outside the accounted set, 2,610 corrected comments and
+118 corrected signature records. No new runtime experiment was executed for
+this pair; the earlier walker probe remains bounded evidence for its getter.
+Jet execution, pointed-string lifetime, rendering and retail acceptance are
+not claimed. The old factory contract is marked superseded and routes to the
+corrected function note.
+
+The first documentation gate found missing explicit Evidence/Specimen header
+fields in that replacement contract; they were added. `npm run test:docs`
+then passed with zero drifted/unresolved assertions; `npm run test:safety`
+passed 4,198 candidate files. Private gate receipts:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/weapon-icon-identities/`;
+command logs: `local-data/test-runs/re-audit-20260926/walker/icon-*`.

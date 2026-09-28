@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[walker helper identities and interfaces](#re-audit-walker-helper-identities-and-interfaces--september-27);
+[weapon icon identities](#re-audit-weapon-icon-identities--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,32 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit weapon icon identities — September 27
+
+The [two-row manifest](../../tools/cohort-specs/weapon-icon-identities-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/weapon-icon-identities-20260927.spec.tsv) correct source identities,
+interfaces, notes and tags. Pristine `BEA.exe.original.backup` SHA-256:
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Two icon getter identities corrected: Jet GetCurrentWeaponNameField04 and Walker structural T3 become their proven GetWeaponIconName source identities. Walker int return becomes char pointer at unchanged EAX4; the Jet physical interface is unchanged. Names, signature records, notes and tags change. All 94 code bytes  / 42 instructions, locals, frames and 8,330 non-target function records remain unchanged.
+
+Complete pristine bodies return profile+04, while the preceding placement correction returns integer+38. The actual ChangeWeapon caller selects walker/jet receivers, guards the returned pointer, skips seven bytes and compares string bytes. This establishes source identity independently of saved names. The observed main wrapper is inlined; no standalone function is created. The walker body also participated in the 90-case isolated selection/store probe; Jet execution, string lifetime, HUD rendering and retail input acceptance are not claimed.
+
+Fresh PRE restoration/census, dry/apply/separate/sealed rehearsal readbacks,
+nine no-write refusal controls, independent exact-manifest review with root
+reproduction, live readback and independently restored Archive A POST passed.
+All nine live exports equal rehearsal. The only program-scope metric change
+is its comment digest; exact names, parameter/return storage and all non-target
+records were separately compared. The complete name projection is checked
+against live at closeout. No Godot or retail runtime was launched.
+
+Working identity: `db.18712`, 18 files / 125,979,508 bytes,
+inventory SHA-256 `e5bc5af2e44b3989b2bb10e825f9b325e5a5768427d389abc6289f6965b532df`; main database 75,677,696 bytes,
+SHA-256 `fcc0b0fb82ef1f6107a6f62ea59f9e9e21ae9751fd4488361606f622d44c93da`. Restored walker-helper POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-weapon-icon-identities/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/weapon-icon-identities/`; complete-body, source and caller witnesses:
+`local-data/test-runs/re-audit-20260926/walker/`.
 
 ## RE-audit walker helper identities and interfaces — September 27
 

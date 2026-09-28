@@ -1,84 +1,52 @@
-# CBattleEngineJetPart__GetCurrentWeaponNameField04
+# CBattleEngineJetPart__GetWeaponIconName
 
-Status: active static function note
-Last updated: 2026-09-27 (walker helper identities reconciled; earlier evidence retains its stated limits)
-Summary: retained function evidence with current walker helper identities; unrelated historical claims are not revalidated by this naming pass.
-Source File: `references/Onslaught/BattleEngineJetPart.cpp` | Binary: BEA.exe,
-SHA-256
-`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
-Evidence: MEASURED — independently re-read 2026-08-19 from official
-`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`. Twin
-`local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`
-matches (2506752 equal). The Ghidra database was not opened. Cycle
-104 accepted through parent GetWeaponPhysicsName `bc2a0601` —
-not redone. This wake independently accepted `dcfd613e` /
-`a85fbe48` / `539cceea` / `57f4d0ff`. Envelope. Did not mill
-FUN_*. Did not invent field names. Did not rename this table
-name. Did not invent a Core owner.
+Status: active function contract; earlier structural name superseded
+Last updated: 2026-09-27
+Summary: returns the selected weapon profile's icon-string pointer, separate from its integer attachment position.
+Source File: `references/Onslaught/BattleEngineJetPart.cpp` | Binary: `BEA.exe.original.backup` (pristine; identity below)
 
-> Address: `0x004124d0`
+Address: `0x004124d0`. Complete body: 72 bytes, SHA-256
+`2d8da83fe0ac62923da64e3ab3d4812ed40378622d05cfd6fc344f5dc693fa20`.
+Pristine specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
+SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+Source `BattleEngineJetPart.cpp:918–924` is pinned at
+`5352a81cdb838b145a57f7febc5d9fc4b0129ebb`. The legacy filename retains links;
+its former label is not current identity authority.
 
 ## Contract
 
-Incoming-ECX `thiscall`. First insn `mov eax, [ecx]`. Live `ecx`
-is this. Two bare `ret` (`0x00412508`, `0x00412517`). Body
-`0x004124d0`–`0x00412517` is 72 bytes, SHA-256
-`2d8da83fe0ac62923da64e3ab3d4812ed40378622d05cfd6fc344f5dc693fa20`.
-Capstone: 34 insns, zero `E8`, zero `E9`.
+The complete body inlines the selected list walk: enumeration begins at index
+zero, writes cursor `+0x08` and stops on a null item. When its enumeration index
+matches selected index `+0x10`, it loads weapon profile `+0xa4`, then returns
+profile `+0x04`; empty/missing selection returns null. This body does not repair
+the selected index. ECX is the jet receiver, EAX carries the pointer, and both
+exits use bare RET. Existing `char *`/automatic-thiscall annotations stay intact.
 
-Pinned body:
+This jet body has static complete-body/source/caller evidence. The separate
+walker selection/store execution does not count as execution of this function.
 
-1. Counted list walk on `[ecx]` / `[ecx+8]` until the index
-   matches `[ecx+0x10]`. Same shape JetPart GetWeaponIconName
-   already counts. Empty / miss returns EAX=0.
-2. Else EAX = `[[eax+0xa4]+4]`. That slot is **not** named here.
-   Do **not** equate it to source `CWeapon::GetName` (physics
-   name already returns `[[+0xa4]+0]`).
+## Caller evidence
 
-One inbound `.text` `E8`/`E9`: `CALL` at `0x0040a001` inside
-already-pinned `CBattleEngine__ChangeWeapon` `0x00409f70`. Zero
-encodings of imm `d0 24 41 00` in the image (not a vtable slot).
-The inbound parent is counted, not rewritten.
+The main ChangeWeapon body `[00409f70,0040a555)` selects walker `+0x578`
+through call `00409ff4`, or jet `+0x57c` through `0040a001` when mode
+`+0x260 == 3`. The join `0040a006` guards null, adds seven to the pointer
+at `0040a010`, then compares pointed bytes, including the Vulcan Cannon
+suffix. This independently identifies string transport and matches
+`BattleEngine.cpp:1987–1994`. The main source icon wrapper (`2837–2843`)
+is inlined at this observed caller; no additional standalone function boundary
+is established. Profile `+0x38` instead supplies the attachment integer.
 
-Source architecture (not proof): no matching
-`CBattleEngineJetPart` method of this name. ChangeWeapon
-(`BattleEngine.cpp` ChangeWeapon) consumes the returned pointer
-as a `char *` next to walker `0x004145f0`. That walker table
-name is counted, not rewritten.
+The two-body [identity cohort](../../../ghidra/README.md#re-audit-weapon-icon-identities--september-27)
+records exact names/interfaces, preservation, readback and recovery. Complete
+pristine bodies/caller evidence is retained under
+`local-data/test-runs/re-audit-20260926/walker/neighbor-callers-v1.json`.
+The [isolated probe](../../../game-mechanics/battle-engine-weapon-stores.md#isolated-selection-and-admission--september-27)
+records which original bodies actually executed.
 
-Rebuild mapping: `PARTIAL_CONTRACT` (named, not implemented). See
-the section below. Do not implement Core from this RE root.
+## Limits
 
-Cheapest falsifier: file `0x000124d0` is not `8b 01`, **or**
-`0x00012508` is not `c3`, **or** `0x00012517` is not `c3`, **or**
-body SHA-256 is not `2d8da83f…fa20`, **or**
-`tools/call_xref_scan.py` on `0x004124d0` is not exactly one
-`CALL` at `0x0040a001`, **or** any encoding of imm `d0 24 41 00`
-exists.
-
-## Rebuild mapping — 2026-08-19
-
-Grade: `PARTIAL_CONTRACT`. Not `REBUILD_READY`. Independently
-re-read official+twin `74154bfa` this wake (2506752 equal). Body
-SHA-256 still `2d8da83f…fa20`. `call_xref_scan` still one CALL.
-Did not open Ghidra. Did not edit `rebuild/**`. Did not name
-`[+0x10]` / `[+4]`. Did not rename `0x004145f0`. Did not invent
-a Core owner.
-
-Retail entity: jet-part current-weapon `+4` pointer query used
-by ChangeWeapon. No matching Stuart method on this class.
-
-Nearest reconstruction owner: **none added**. L100 card
-`t_aa5586e5` is on a playable training-path diet — do not
-implement from this mapping until that lane names the arm.
-
-Siblings: `CBattleEngineJetPart__WhereIsCurrentWeaponAttached` /
-`CBattleEngine__ChangeWeapon`. Next named:
-`CBattleEngineWalkerPart__GetCurrentWeaponZoomMode` `0x004145f0`
-(no 2026-08-19 PE envelope).
-
-## Functions
-
-| Address | Name | Byte evidence | Contract (confidence) |
-| --- | --- | --- | --- |
-| `0x004124d0` | `CBattleEngineJetPart__GetCurrentWeaponNameField04` | `8b01 … 8b4104 c3` (72 B) | incoming-ECX thiscall; bare ret ×2; 72 B; 0 E8 / 0 E9; 1 inbound CALL. HIGH on ABI, inlined list walk, unique inbound. Mapping `PARTIAL_CONTRACT`. **Not** on `[+4]` name, walker rename, or rebuild parity. |
+Valid receiver/list/profile memory is a premise. The missing Weapon source
+headers prevent a complete layout claim; raw pointer transport does not prove
+its content, lifetime or rendered output. No player input, HUD rendering or
+retail gameplay acceptance is claimed. A copied-runtime observation of the
+selected pointer and rendered icon is the remaining presentation falsifier.
