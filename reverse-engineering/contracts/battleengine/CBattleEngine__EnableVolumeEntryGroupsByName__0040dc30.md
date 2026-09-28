@@ -1,7 +1,7 @@
 # CBattleEngine__EnableVolumeEntryGroupsByName
 
 Status: active static contract (factory draft)
-Last updated: 2026-08-22
+Last updated: 2026-09-27 (walker helper identities reconciled; earlier evidence retains its stated limits)
 Summary: specimen-bound static function contract for `CBattleEngine__EnableVolumeEntryGroupsByName` at `0x0040dc30`; unknown semantics and runtime limits remain explicit.
 Evidence: MEASURED — packet/decompile, closure range identity, and independently recomputed pristine body bytes; no TTD-session execution row in the bounded deep-mine corpus.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -31,7 +31,7 @@ not_applicable (void).
 not_applicable — no absolute global read/write is visible in this body.
 
 ## Callees relied on / callers
-- Callees (packet structured array): `CGeneralVolume__EnableLinkedEntriesByName` `0x004127a0` ×1 (STATIC_DIRECT); `CGeneralVolume__EnableEntriesByName` `0x00414970` ×1 (STATIC_DIRECT).
+- Callees (packet structured array): `CGeneralVolume__EnableLinkedEntriesByName` `0x004127a0` ×1 (STATIC_DIRECT); `CBattleEngineWalkerPart__EnableWeapon` `0x00414970` ×1 (STATIC_DIRECT).
 - Callers (packet structured array): none recorded; virtual dispatch may not appear as a structured direct caller.
 - Names on these edges are counted analysis labels; semantic claims above rely on the visible body and argument flow, not the labels alone.
 

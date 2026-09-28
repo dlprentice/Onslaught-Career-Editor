@@ -52,3 +52,13 @@ source, so no complete weapon layout is inferred. A useful falsifier is an
 isolated original-body run on copied lists covering index zero without a
 primary, invalid indices, null items and augmented activation, checking both
 EAX and the cursor/index writes. Current rebuild implementation was not inspected.
+
+## Isolated original-code check — September 27
+
+The [selection/store probe](../../../game-mechanics/battle-engine-weapon-stores.md#isolated-selection-and-admission--september-27)
+now executes this unchanged body together with its actual selector on authored
+memory. Its 90 cases across four bodies and four altered-copy controls check
+EAX, expected cursor/index changes, all other authored bytes, preserved
+registers, stack balance and explicit x87 modes. This adds isolated execution
+evidence to the static analysis; it does not establish real gameplay, device
+input or current settings. The remaining safety/lifetime limits above stand.

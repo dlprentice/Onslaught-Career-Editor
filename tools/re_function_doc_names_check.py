@@ -182,6 +182,8 @@ CURRENT_SPTRSET_IDENTITIES_OVERLAY = REPO_ROOT / "tools/cohort-specs/sptrset-ide
 CURRENT_SPTRSET_IDENTITIES_OVERLAY_SHA256 = "9ce5e7d3871208383f3d85397bbf7ca40bb3f315e756dc33484d4ac7908f22ed"
 CURRENT_SOUND_SOURCE_OVERLAY = REPO_ROOT / "tools/cohort-specs/sound-source-identities-20260927.manifest.tsv"
 CURRENT_SOUND_SOURCE_OVERLAY_SHA256 = "d8ea10c9e14801f33c0d56261b124154dee2f15096b97010895c92a709f76543"
+CURRENT_WALKER_HELPER_OVERLAY = REPO_ROOT / "tools/cohort-specs/walker-helper-identities-20260927.manifest.tsv"
+CURRENT_WALKER_HELPER_OVERLAY_SHA256 = "b97d29f562aee82b5663ad6cc3199e6a80739bab256974b96cd44cc852e0d6d5"
 CURRENT_GETBPP_OVERLAY_COLUMNS = (
     "addr", "liveKind", "currentName", "proposedName", "currentSignature",
     "currentSignatureSha256", "proposedSignature", "currentCallingConvention",
@@ -1030,6 +1032,11 @@ def run(
                 table, CURRENT_SOUND_SOURCE_OVERLAY,
                 expected_sha256=CURRENT_SOUND_SOURCE_OVERLAY_SHA256,
                 expected_rows=2, expected_columns=CURRENT_GETBPP_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_WALKER_HELPER_OVERLAY,
+                expected_sha256=CURRENT_WALKER_HELPER_OVERLAY_SHA256,
+                expected_rows=11, expected_columns=CURRENT_GETBPP_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)

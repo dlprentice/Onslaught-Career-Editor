@@ -1,5 +1,8 @@
 # CBattleEngine__HandleLocks
 
+Status: active static function note
+Last updated: 2026-09-27 (walker helper identities reconciled)
+Summary: retained function evidence with current walker helper identities; unrelated historical claims are not revalidated by this naming pass.
 <!-- ghidra-full-reaudit-20260713:start -->
 > **2026-07-13 live correction closeout:** `0x00406560` → `CBattleEngine__HandleLocks` (was `CBattleEngine__UpdateAutoTargetSetAndFireProjectiles`). Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the [closeout](../../ghidra-full-reaudit-closeout-2026-07-13.md); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
 <!-- ghidra-full-reaudit-20260713:end -->
@@ -76,10 +79,11 @@ Pinned prologue:
 1. `ebx = ecx`. `[ebx+0x260]` compared to 3 (same JET arm
    DisplayLock uses).
 2. Jet: `ecx=[ebx+0x57c]` / `E8` `0x00414b30`. Walker:
-   `ecx=[ebx+0x578]` / same `0x00414b30`. Table name
-   `TargetSet__AnyUnitTargetTimeoutBeforeProfileLimit`. Nonzero
-   EAX jumps to the epilogue. That table name, and source
-   `IsFiring()`, are **not** this proof.
+   `ecx=[ebx+0x578]` / same `0x00414b30`. Current name
+   `SharedBattleEngineParts__IsFiring`. Nonzero EAX jumps to the epilogue.
+   The September 27 helper audit proves this shared walker/jet identity
+   from both complete callers and source bodies; it does not revalidate
+   every other inherited statement in this note.
 3. Jet: `E8` `CBattleEngineJetPart__GetCurrentWeapon`
    `0x00412610` then `CBattleEngineJetPart__CanWeaponFire`
    `0x00412570`. Walker: `CBattleEngineWalkerPart__GetCurrentWeapon`

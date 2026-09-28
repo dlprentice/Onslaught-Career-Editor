@@ -8795,3 +8795,54 @@ binding chain and the yaw-right binding's multiplier for both walker rotation
 and pitch velocity. Runtime sampling/Flush cadence, current settings, player
 input, sound, Godot and gameplay were not exercised. Two living function notes
 were rewritten from the new evidence; this is not a whole-document-corpus audit.
+
+### RE walker helper identities and isolated selection — September 27
+
+Promoted `walker-helper-identities-20260927`: eleven names and associated
+signature/comment/tag records. Five type corrections distinguish float axis
+inputs and integer attachment results; three members normalize explicit ECX
+to automatic thiscall; two argument names are corrected; LoseWeaponCharge
+changes only its name within the signature. All physical input locations,
+cleanup, 1,015 code bytes / 367 instructions, locals, frames and 8,321 other
+function records remain unchanged.
+
+The cohort's `prepare_preservation.py`, `prepare.py`, `rehearse.py` and
+`compare_exports.py rehearsal-post` passed. `negative_controls.py` passed nine
+no-write refusals with unchanged project bytes. Independent review checked the
+exact 48,943-byte manifest (`b97d29f5…e0d6d5`) and root reproduced the evidence.
+`python -m unittest tools.ghidra_cohort_framework_tests` passed 94 cases.
+`apply_live.py`, `compare_exports.py live-post` and `finish.py` passed: all nine
+live exports equal rehearsal; the independent Archive A POST was copied,
+hash-compared, restored elsewhere and opened read-only. The tracked checkpoint
+is unchanged. Only successful exact control/POST-open twins were retired, with
+the existing deletion queue recording every target and preservation proof.
+
+`verify_projection.py` compared all 8,332 current names against live. Counts:
+2,152 unique corrected names, 443 additional verified/kept, zero newly
+neutralized, 5,737 outside the accounted set, 2,608 corrected comments and
+116 corrected signature records. These count audit dispositions, not parity
+or complete semantic/ABI validation. Living callee references were reconciled;
+three attachment notes replace the disproven icon-string identity. Frozen
+historical audit receipts retain their original labels.
+
+`python local-data/test-runs/re-audit-20260926/walker/original_selection_stores.py`
+executed four original bodies, unchanged at their retail addresses, on authored
+memory: **90 cases and four altered-copy controls passed**. The native i386
+probe checks full EAX, exact cursor/index changes, all 8,192 authored bytes,
+preserved registers, stack balance and two explicit masked x87 modes. There
+are no intercepted helpers. The first attempt used a nondistinguishing NaN
+input for one heat-mask control; that failed control/run was retained, then
+replaced with equality. No unchanged-body expected result was changed.
+Independent read-only inspection of all 94 retained outputs and exact loaded
+ELF spans found no mismatch. This is isolated original-code execution, not
+retail/player/device acceptance or complete firing readiness.
+
+Passing experiment receipt:
+`local-data/test-runs/re-audit-20260926/walker/selection-stores-l5vyw197/result.json`,
+SHA-256 `3f9759ac72532ab9c6f6ded5ccb950dc35102070a84b72d3d2502ff3b3c5b795`.
+Gate receipts:
+`local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/walker-helper-identities/`.
+Command logs are `helper-*` and `original-selection-stores-v2.log` under the
+same existing walker test-run owner. `npm run test:docs` passed with zero
+drifted/unresolved assertions; `npm run test:safety` passed 4,196 candidate
+files; `git diff --check` passed. No Godot or physical desktop control was used.

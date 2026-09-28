@@ -1,7 +1,7 @@
 # CBattleEngine__Morph
 
 Status: active static contract (factory draft)
-Last updated: 2026-08-22
+Last updated: 2026-09-27 (walker helper identities reconciled; earlier evidence retains its stated limits)
 Summary: specimen-bound static contract for `CBattleEngine__Morph` at `0x0040a580`; packet-described behavior is retained with explicit unknowns and no promotion claim.
 Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, and independently recomputed pristine body bytes; runtime and source limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -35,7 +35,7 @@ The packet signature declares `void`; no scalar return contract is claimed. Call
 - Callee `CBattleEngineJetPart__GetIsDoingSpecialAirMove` `0x00411b70` ×1 site(s) (STATIC_DIRECT).
 - Callee `CBattleEngineJetPart__LoseWeaponCharge` `0x00412000` ×1 site(s) (STATIC_DIRECT).
 - Callee `CBattleEngineWalkerPart__GetIsDoingSpecialWalkerMove` `0x004135d0` ×1 site(s) (STATIC_DIRECT).
-- Callee `CMonitor__ClearCurrentTrackedEntryFlag60` `0x00414010` ×1 site(s) (STATIC_DIRECT).
+- Callee `CBattleEngineWalkerPart__LoseWeaponCharge` `0x00414010` ×1 site(s) (STATIC_DIRECT).
 - Callee `CGeneralVolume__BeginFlyToWalkTransition` `0x00424920` ×1 site(s) (STATIC_DIRECT).
 - Callee `CGeneralVolume__BeginWalkToFlyTransition` `0x00424990` ×1 site(s) (STATIC_DIRECT).
 - Callee `CEventManager__AddEvent_AtTime` `0x0044b370` ×2 site(s) (STATIC_DIRECT).

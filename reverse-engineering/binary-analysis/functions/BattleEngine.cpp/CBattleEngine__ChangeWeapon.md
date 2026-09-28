@@ -1,7 +1,8 @@
 # CBattleEngine__ChangeWeapon
 
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-27 (walker helper identities reconciled; earlier evidence retains its stated limits)
+Summary: retained function evidence with current walker helper identities; unrelated historical claims are not revalidated by this naming pass.
 Source File: `references/Onslaught/BattleEngine.cpp` | Binary: BEA.exe,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -34,7 +35,7 @@ Pinned prologue, with `edi = ecx`:
    JET loads `[edi+0x57c]` / `E8` table
    `LinkedObjectList__CountFlag9C` `0x004129a0`. Non-jet loads
    `[edi+0x578]` / `E8` table
-   `CGeneralVolume__CountEnabledEntriesIncludingPrimary`
+   `CBattleEngineWalkerPart__CountActiveWeapons`
    `0x00414b70`. Those table names are **not** adopted as
    `CountWeapons`. EAX<=1 jumps to the last epilogue.
 2. Store 0 at `[edi+0x588]`. `cmp eax, 2` (WALKER) then `E8`

@@ -1,7 +1,7 @@
 # CBattleEngine__HandleLocks
 
 Status: active static contract (factory draft)
-Last updated: 2026-08-22
+Last updated: 2026-09-27 (walker helper identities reconciled; earlier evidence retains its stated limits)
 Summary: specimen-bound static function contract for `CBattleEngine__HandleLocks` at `0x00406560`; unknown semantics and runtime limits remain explicit.
 Evidence: MEASURED — packet/decompile, closure range identity, and independently recomputed pristine body bytes; no TTD-session execution row in the bounded deep-mine corpus.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -44,7 +44,7 @@ not_applicable (void); several inner paths early-return.
   - `CBattleEngineJetPart__GetCurrentWeapon` `0x00412610` ×1 (STATIC_DIRECT).
   - `CBattleEngineWalkerPart__GetCurrentWeapon` `0x00414030` ×1 (STATIC_DIRECT).
   - `CBattleEngineWalkerPart__CanWeaponFire` `0x00414630` ×1 (STATIC_DIRECT).
-  - `TargetSet__AnyUnitTargetTimeoutBeforeProfileLimit` `0x00414b30` ×2 (STATIC_DIRECT).
+  - `SharedBattleEngineParts__IsFiring` `0x00414b30` ×2 (STATIC_DIRECT).
   - `CGenericActiveReader__dtor` `0x0044b1d0` ×2 (STATIC_DIRECT).
   - `CSPtrSet__Remove` `0x004e5bd0` ×2 (STATIC_DIRECT).
   - `CUnit__IsCandidateSideCompatibleForTargeting` `0x004fd3d0` ×2 (STATIC_DIRECT).
@@ -62,7 +62,7 @@ not_applicable (void); several inner paths early-return.
 
 ## Behavior summary
 Lock maintenance + acquisition for the current weapon:
-1. Part select by `*(int*)(this+0x260) == 3` → jet (+0x57c) else walker (+0x578). Abort unless `TargetSet__AnyUnitTargetTimeoutBeforeProfileLimit(part)` is false.
+1. Part select by `*(int*)(this+0x260) == 3` → jet (+0x57c) else walker (+0x578). Abort unless `SharedBattleEngineParts__IsFiring(part)` is false.
 2. Get current weapon + CanWeaponFire for that part; abort if no weapon.
 3. Prune pass over set at `+0x294`: remove entries with null reader; compute unit-to-this delta rotated by the matrix at `this+0x3c`, normalize it, and drop entries whose normalized Y-component fails `cos(CWeapon__GetDistanceProfileField98)` deflection test, when weapon can't fire, or whose unit has death bit (`+0x2c & 4`). Removed entries get `CGenericActiveReader__dtor` + free.
 4. Count non-null entries; gate acquisition on `count < CWeapon__GetDistanceProfileField90(weapon)`, CanWeaponFire true, and `TargetProfileContext__IsEligibleByDistanceBucketOrRange(weapon)`.
@@ -85,7 +85,7 @@ if ((((float10)local_3c < fVar18) || (iVar10 == 0)) ||
 ```
 
 ## Error / edge behavior
-All walks are null-guarded; empty-set, no-weapon, timeout-active, count-at-limit, and failed eligibility each short-circuit to plain return. Alloc failure inside StartLock is that callee's concern. Behavior with corrupt set links: not_determinable.
+All walks are null-guarded; empty-set, no-weapon, firing-active, count-at-limit, and failed eligibility each short-circuit to plain return. Alloc failure inside StartLock is that callee's concern. Behavior with corrupt set links: not_determinable.
 
 ## Runtime corroboration (TTD, bounded)
 No TTD execution observed (bounded: deep-mine captures only). values.tsv has no rows for 0x00406560; brief sessions/ttd_values empty.

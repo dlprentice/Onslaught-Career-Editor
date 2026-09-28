@@ -1,7 +1,8 @@
 # CBattleEngineWalkerPart__Move
 
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-27 (walker helper identities reconciled; earlier evidence retains its stated limits)
+Summary: retained function evidence with current walker helper identities; unrelated historical claims are not revalidated by this naming pass.
 Source File: `references/Onslaught/BattleEngineWalkerPart.cpp` | Binary: BEA.exe,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -28,7 +29,7 @@ bytes, SHA-256
 `0x0041388a` is intra-body to `0x00413924` and is not named.
 Neighbour table `CBattleEngineWalkerPart__GoingIntoWater` starts
 at `0x00413a70` after alignment `nop`s and is not rewritten.
-Preceding table `CGeneralVolume__ApplyPitchInputByWeaponClass`
+Preceding table `CBattleEngineWalkerPart__Pitch`
 ends before the `nop` pad and is not rewritten.
 
 Pinned prologue, with `esi = ecx`:

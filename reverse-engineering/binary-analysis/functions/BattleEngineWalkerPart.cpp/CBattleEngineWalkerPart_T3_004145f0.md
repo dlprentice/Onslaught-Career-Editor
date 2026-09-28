@@ -1,7 +1,8 @@
 # CBattleEngineWalkerPart_T3_004145f0
 
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-27 (walker helper identities reconciled; earlier evidence retains its stated limits)
+Summary: retained function evidence with current walker helper identities; unrelated historical claims are not revalidated by this naming pass.
 Source File: `references/Onslaught/BattleEngineWalkerPart.cpp` | Binary: BEA.exe,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -74,7 +75,7 @@ Nearest reconstruction owner: **none added**. L100 card
 implement from this mapping until that lane names the arm.
 
 Siblings: `CBattleEngineJetPart__GetCurrentWeaponNameField04` /
-`CBattleEngineWalkerPart__GetWeaponIconName`. Next named:
+`CBattleEngineWalkerPart__WhereIsCurrentWeaponAttached`. Next named:
 `CBattleEngineJetPart__ResetConfiguration` `0x00412650` (no
 2026-08-19 PE envelope).
 
