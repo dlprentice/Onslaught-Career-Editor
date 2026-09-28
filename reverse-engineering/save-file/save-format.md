@@ -1,7 +1,7 @@
 # BES save file format
 
 Status: supported retail/Steam specimen contract
-Last updated: 2026-09-26 (RE audit: the god flags at 0x2496/0x249A, displayable Goodies, the attempts field and the screen-position bytes)
+Last updated: 2026-09-28 (options tail +0x2C/+0x40/+0x44 renamed from the byte-matched writer; earlier: the god flags at 0x2496/0x249A, displayable Goodies, the attempts field and the screen-position bytes)
 Summary: supported byte layout and preservation policy; startup/load and tail semantics have scoped independent rechecks, not whole-format acceptance.
 Evidence: MEASURED — the scoped September 19 original-code controls and byte findings linked below; remaining field interpretations retain their older evidence limits.
 Specimen: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -172,13 +172,13 @@ Offsets are relative to `0x26BE` for the supported specimen.
 | `+0x20` | 4 | screen shape |
 | `+0x24` | 4 | mipmapping-disallow flag |
 | `+0x28` | 4 | packed display-mode key: width, height, pixel-format class |
-| `+0x2C` | 4 | lockable-backbuffer flag |
+| `+0x2C` | 4 | vsync flag |
 | `+0x30` | 4 | landscape maximum levels |
 | `+0x34` | 4 | texture resolution-loss shift |
 | `+0x38` | 4 | 32-bit texture allowance |
 | `+0x3C` | 4 | multisample override |
-| `+0x40` | 4 | invert-X flag |
-| `+0x44` | 4 | sound enabled |
+| `+0x40` | 4 | flip-speakers flag (negates each sound's x) |
+| `+0x44` | 4 | hardware-sound flag |
 | `+0x48` | 4 | sample-rate index |
 | `+0x4C` | 4 | sound device index |
 | `+0x50` | 4 | 3D sound method |

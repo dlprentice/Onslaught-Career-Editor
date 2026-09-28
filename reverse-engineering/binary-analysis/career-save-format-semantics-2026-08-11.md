@@ -1,7 +1,7 @@
 # `CCareer` released PC save-format semantics
 
 Status: active, bounded semantic recovery
-Last updated: 2026-08-11
+Last updated: 2026-09-28 (three options-tail field names corrected from the byte-matched source)
 Evidence: MEASURED — complete pristine retail bodies and instruction streams,
 the supported 10,004-byte save specimen, retained `CCareer` source, typed
 frontend callers, and eight normalized-identical PC demo twins; UNKNOWN —
@@ -107,13 +107,13 @@ that a matching source struct existed.
 | `+0x20` | 4 | screen shape |
 | `+0x24` | 4 | disallow-mipmapping flag |
 | `+0x28` | 4 | packed D3D device/mode key |
-| `+0x2C` | 4 | lockable-backbuffer flag |
+| `+0x2C` | 4 | vsync flag (`CLIPARAMS`+0x2b4; the `CVSync` option; `Initialize3DEnvironment` presents with interval one when set, immediate otherwise) |
 | `+0x30` | 4 | landscape LOD quality |
 | `+0x34` | 4 | texture downscale shift |
 | `+0x38` | 4 | texture-compression mode |
 | `+0x3C` | 4 | current adapter/profile field |
-| `+0x40` | 4 | invert-X flag |
-| `+0x44..+0x50` | 16 | sound enabled, sample-rate index, device index, and 3D method |
+| `+0x40` | 4 | flip-speakers flag (`CLIPARAMS`+0x2b8; the `CFlipSpeakers` option; `CSoundManager::UpdateSoundPosition` negates each sound's x) |
+| `+0x44..+0x50` | 16 | hardware-sound flag, sample-rate index, device index, and 3D method (`CLIPARAMS`+0x2bc, +0x2c8, +0x2c0, +0x2cc; the `CHWSound`, `CSoundRate`, `CSoundDeviceSelect` and `C3DSoundMethod` options) |
 | `+0x54..+0x55` | 2 | two boolean landscape-detail levels |
 
 `OptionsTail_Read` restores the scalar values, applies the control preset and
