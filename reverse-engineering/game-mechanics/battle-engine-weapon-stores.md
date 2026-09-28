@@ -268,9 +268,12 @@ now carry JetPart identities; the three main Enable/Disable/Count wrappers carry
 their source identities. Enable/Disable always forward Walker then Jet, whereas
 Count chooses Jet only in state 3. Name comparisons use bytes and are case-sensitive.
 Three explicit ECX annotations now use automatic thiscall; their physical
-transport and return widths are preserved. Charge's receiver annotation remains
-pending. The localized result's existing short-pointer type does not prove its
-full representation or lifetime.
+transport and return widths are preserved. [Charge's receiver](../ghidra/README.md#re-audit-jet-charge-member-interface--september-27)
+now also uses automatic thiscall: ECX comes from main+0x57c in the actual
+mode-3 dispatcher; no incoming EDX or stack argument is consumed. All seven
+returns use bare RET. This is an annotation correction with unchanged transport.
+The localized result's existing short-pointer type does not prove its full
+representation or lifetime.
 
 Two implementation follow-ups are recorded for the paused rebuild lane. The
 remark in `RetailWeaponSelection.cs` saying an inactive current jet weapon can

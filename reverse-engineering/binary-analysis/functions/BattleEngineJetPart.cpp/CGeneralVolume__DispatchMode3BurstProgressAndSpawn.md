@@ -26,8 +26,9 @@ passes the Battle Engine's jet-part pointer. Pinned GPL source
 `references/Onslaught/BattleEngineJetPart.cpp:659-700` names the matching selected
 weapon, readiness, ammo/heat, overheat and fire-fallback control flow. The
 `CGeneralVolume` label and target-range interpretation were misleading.
-The prototype and its calling-convention spelling are unchanged; this is a
-static semantic correction, not measured runtime charge parity.
+That earlier semantic correction preserved the prototype spelling. The
+September 27 receiver correction below supersedes that annotation; neither
+change establishes measured runtime charge parity.
 
 The exact five-row name/comment change is pinned in
 [`first-training-semantic-corrections.manifest.tsv`](../../../../tools/cohort-specs/first-training-semantic-corrections.manifest.tsv).
@@ -45,9 +46,11 @@ In particular, the chargeability scan visits **four** DWORDs beginning at
 profile `+0x10`; the maximum-charge scan visits **five** beginning at `+0x0c`.
 The historical five-DWORD claim for the first scan below is superseded.
 
-The physical receiver arrives in ECX with no stack arguments. The saved explicit
-ECX/fastcall annotation is preserved for now; the automatic-this member
-normalization is a separate pending correction. Retaining it is not ABI approval.
+The physical receiver arrives in ECX with no stack arguments. The
+[one-row interface correction](../../../ghidra/README.md#re-audit-jet-charge-member-interface--september-27)
+now represents it as automatic thiscall, preserving the ECX location, void
+result, all seven bare returns, locals and frame. EDX is defined before use;
+no incoming second-register argument was established.
 The 90-case jet selection/store probe does not execute this charging body or
 establish player-input cadence. Earlier rebuild grades and unresolved-name
 statements below describe their dates, not current implementation coverage.
