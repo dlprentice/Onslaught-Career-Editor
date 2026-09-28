@@ -1,7 +1,8 @@
 # CBattleEngineJetPart__GetCurrentWeaponNameField04
 
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-27 (walker helper identities reconciled; earlier evidence retains its stated limits)
+Summary: retained function evidence with current walker helper identities; unrelated historical claims are not revalidated by this naming pass.
 Source File: `references/Onslaught/BattleEngineJetPart.cpp` | Binary: BEA.exe,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -71,7 +72,7 @@ Nearest reconstruction owner: **none added**. L100 card
 `t_aa5586e5` is on a playable training-path diet — do not
 implement from this mapping until that lane names the arm.
 
-Siblings: `CBattleEngineJetPart__GetWeaponIconName` /
+Siblings: `CBattleEngineJetPart__WhereIsCurrentWeaponAttached` /
 `CBattleEngine__ChangeWeapon`. Next named:
 `CBattleEngineWalkerPart__GetCurrentWeaponZoomMode` `0x004145f0`
 (no 2026-08-19 PE envelope).

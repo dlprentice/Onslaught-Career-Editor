@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (25 walker identities rechecked; movement, selection and control-binding distinctions documented; broader audit remains)
+Last updated: 2026-09-27 (walker helper names/interfaces corrected; selection/store experiment passed; broader audit remains)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
 Select complete-RE campaign authority only through `developer_state.json` →
@@ -109,7 +109,10 @@ records the strict dash window, slow-movement asymmetry and yaw-right binding's
 rotation/pitch multiplier. The [weapon-store recheck](game-mechanics/battle-engine-weapon-stores.md#september-27-walker-recheck)
 distinguishes mutable selection and store admission from complete readiness,
 including unequal unordered-comparison behavior. Static evidence is not runtime
-input acceptance; wrong helper names/interfaces remain the next correction set.
+input acceptance. The [eleven helper corrections](ghidra/README.md#re-audit-walker-helper-identities-and-interfaces--september-27)
+are now live with exact recovery. The [isolated probe](game-mechanics/battle-engine-weapon-stores.md#isolated-selection-and-admission--september-27)
+executes four original bodies on authored memory in 90 cases, with four
+altered-copy controls. Actual icon getter names are the next two corrections.
 
 The [sound event-queue recheck](binary-analysis/csoundmanager-shared-semantics-2026-08-11.md#september-27-event-queue-correction)
 corrects inherited insertion-order wording with 60 original-code cases and two

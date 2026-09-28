@@ -57,4 +57,14 @@ complete Weapon layout, helper behavior, valid store indices and live firing
 cadence remain separate. A useful falsifier is a confined original-body probe
 with selection intercepted, covering inactive/null, finite threshold values,
 overheated heat stores and masked unordered operands, checking full EAX and
-preservation of authored memory. No such new execution is claimed by this pass.
+preservation of authored memory. The bounded isolated probe below now exercises those cases; full retail execution remains separate.
+
+## Isolated original-code check — September 27
+
+The [selection/store probe](../../../game-mechanics/battle-engine-weapon-stores.md#isolated-selection-and-admission--september-27)
+now executes this unchanged body together with its actual selector on authored
+memory. Its 90 cases across four bodies and four altered-copy controls check
+EAX, expected cursor/index changes, all other authored bytes, preserved
+registers, stack balance and explicit x87 modes. This adds isolated execution
+evidence to the static analysis; it does not establish real gameplay, device
+input or current settings. The remaining safety/lifetime limits above stand.

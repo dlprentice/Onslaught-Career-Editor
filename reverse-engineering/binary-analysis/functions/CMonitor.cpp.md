@@ -1,7 +1,7 @@
 # CMonitor / GenericSPtrSet function map
 
 Status: active static function map
-Last updated: 2026-09-27 (GenericSPtrSet identities and pool-base store corrected; earlier caller evidence retains its limits)
+Last updated: 2026-09-27 (walker helper identities reconciled; earlier evidence retains its stated limits)
 Summary: retained monitor/reader evidence with current GenericSPtrSet identities and bounded container behavior.
 Source File: `C:\dev\ONSLAUGHT2\Monitor.h` (SEH `__FILE__` pointer `0x00622b80`
 read out of `AddDeletionEvent`) | Binary: BEA.exe, SHA-256
@@ -109,6 +109,10 @@ CGameInterface and not linker folding. The former Shutdown_Thunk label was
 misleading. Exact scope and readback are in the
 [third label cohort](../../ghidra/README.md#re-audit-label-corrections-third-cohort--september-26).
 
+`00414010` is the walker part’s LoseWeaponCharge, not a Monitor method: it
+selects the current weapon, guards null, then clears charge at `+0x60`.
+The September 27 helper audit removes it from this family.
+
 ## Family roster (named in live Ghidra, not yet byte-mapped here)
 
 `CMonitor__UpdateSoundEventPlaybackForReader` (`0x00409950`),
@@ -116,7 +120,6 @@ misleading. Exact scope and readback are in the
 `CMonitor__UpdateTrackedList_59C` (`0x0040e940`),
 `CMonitor__FlushTrackedList_1D4` (`0x0040eb50`),
 `CMonitor__UpdateTrackedList_620` (`0x0040ebf0`),
-`CMonitor__ClearCurrentTrackedEntryFlag60` (`0x00414010`),
 `CMonitor__SpawnParticleEffectFromIndexedListInHeightBand` (`0x004ef120`),
 `CMonitor__UpdateTrackedRenderPair` (`0x005078f0`).
 

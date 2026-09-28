@@ -1,7 +1,7 @@
 # Battle Engine weapon stores, charge and firing state
 
 Status: active static contract for the rebuild's player weapons
-Last updated: 2026-09-27 (walker selection, charge-clear and store getters rechecked; older weapon-helper findings retain their dates)
+Last updated: 2026-09-27 (walker helper identities corrected and original selection/store execution checked; earlier findings retain their dates)
 Summary: the Aquila's ammo and heat stores, when a shot spends them, cooling, the
 Missile Pod and Pulse Cannon Pod charge law, what an empty store blocks, and what
 `IsFiring` counts.
@@ -153,8 +153,8 @@ It confirms these implementation boundaries:
 - `00414019` is the store inside the 17-byte body `[00414010,00414021)`, SHA-256
   `338009a0afe409a13acfbba66d573a8981e8905526707547eec79b1f7884de34`.
   It selects a weapon, guards null and clears `+0x60`, matching source
-  LoseWeaponCharge at lines 602–606. Its saved Monitor label is a correction
-  candidate, not a reason to treat this as firing.
+  LoseWeaponCharge at lines 602–606. Its former Monitor label is now corrected
+  to LoseWeaponCharge; it must not be treated as firing.
 - The ammo-count getter uses `FISTP QWORD` at `0041449d`, then returns the low
   DWORD. It does not change the x87 rounding control locally. A truncating cast
   is therefore not an established equivalent. The ammo-percentage getter caps
@@ -175,6 +175,50 @@ Private complete-body/caller evidence is under
 absent from the pinned source drop. This pass does not revalidate every earlier
 weapon-helper claim, all unordered floating comparisons, burst timing or a
 retail gameplay run.
+
+## Isolated selection and admission — September 27
+
+A native i386 probe executed the unchanged pristine bodies at `00414030`
+(GetCurrentWeapon), `00414630` (CanWeaponFire), `00414610` (attachment integer)
+and `004145f0` (icon pointer), at their original addresses with no intercepted
+helpers. All **90 cases** and **four altered-copy controls** passed. The inputs
+were authored valid acyclic lists, weapon/profile records and stores; they were
+not original saves or a running game.
+
+- Thirteen selection cases, repeated through each of the four entries, cover
+  empty lists, primary and augmented selection, nonzero full-DWORD flags,
+  index zero without a primary, later indices, invalid indices and null-item
+  termination. EAX and exact cursor/index mutations agree with the static
+  contract. Invalid-index fallback does not retry augmented selection.
+- Thirty-eight further CanWeaponFire cases cover inactive/full-DWORD active,
+  ammo versus heat, full-DWORD overheat, below/equal/above capacity, zero and
+  negative stores, infinities and masked quiet NaNs. They run under authored
+  x87 control words `037f` and `007f`, not measured retail control state.
+  A masked unordered heat comparison admits the comparison gate when not
+  overheated; the ammo gate rejects it. Equality to heat capacity and zero
+  ammunition both refuse.
+- The attachment getter returns profile `+0x38` as a full integer, including
+  the supplied non-enum sentinel. The icon getter returns the distinct pointer
+  at `+0x04`. No icon dereference or HUD rendering is exercised.
+
+Every case checks the entire authored memory region, preserved registers,
+stack balance, x87 stack balance and unchanged control word. Only selection's
+expected cursor/index mutations are allowed. Four one-byte changes in separate
+probe executables are detected: wrong attachment field, reversed augmented
+selection, heat admitting equality and ammo admitting zero. The initial heat
+control used NaN, which does not distinguish `TEST AH,1` from `TEST AH,41h`
+under the following JZ; that insufficient control was retained and replaced
+with equality. The unchanged-body expectations were not altered.
+
+Private driver: `local-data/test-runs/re-audit-20260926/walker/original_selection_stores.py`,
+SHA-256 `d5f8e1722d9c905b98ce55948f38b4bcf43eb232370c8fb65fdf068f593d1320`.
+Inputs, outputs, original ELF, changed copies and `result.json`:
+`local-data/test-runs/re-audit-20260926/walker/selection-stores-l5vyw197/`.
+The four body hashes are recorded in that receipt and the relevant function
+notes. This does not prove corrupt-list safety, complete Weapon layout,
+ReadyToFire behavior, device/input cadence or retail gameplay. The unchanged
+retail executable, real saves and both protected Ghidra owners were not used
+as runtime outputs.
 
 ## Default held/release bindings — September 27
 

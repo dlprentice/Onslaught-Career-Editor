@@ -286,7 +286,10 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # Sound ABI: ten old/authored notes (21,154/35,742 bytes); old notes remain leads.
 # Sound source identities: two old/authored notes (1,155/5,191 bytes); old notes remain leads.
 # Walker verified: 25 old/authored notes (7,504/50,256 bytes); old notes remain leads.
+# Walker helpers: eleven old/authored notes (5,388/24,918 bytes); old notes remain leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/walker-helper-identities-20260927.manifest.tsv":
+        "b97d29f562aee82b5663ad6cc3199e6a80739bab256974b96cd44cc852e0d6d5",
     "tools/cohort-specs/walker-verified-20260927.manifest.tsv":
         "bfb0f0ce0f3d92453faafcd86993f626b539ef6bc04090529ba5ca23eb07b805",
     "tools/cohort-specs/sound-source-identities-20260927.manifest.tsv":

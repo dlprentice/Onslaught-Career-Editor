@@ -1,7 +1,8 @@
 # CGeneralVolume__DispatchSelectedBurstPreset
 
 Status: active static function note
-Last updated: 2026-08-19
+Last updated: 2026-09-27 (walker helper identities reconciled; earlier evidence retains its stated limits)
+Summary: retained function evidence with current walker helper identities; unrelated historical claims are not revalidated by this naming pass.
 Source File: none under this table name | Binary: BEA.exe,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -47,7 +48,7 @@ Pinned body:
 One inbound `.text` `E8`/`E9`: `JMP` at `0x00409f6a`. That site
 is the already-settled `[ecx+0x260]==3` arm loading
 `[ecx+0x57c]` (jet part) in table-named
-`CGeneralVolume__Reset588AndDispatchModeSpecific_13CC0_or_11B90`
+`CBattleEngine__FireWeapon`
 `0x00409f20`. That parent table name is counted, not rewritten.
 Zero encodings of imm `90 1b 41 00` in the image (not a vtable
 slot).

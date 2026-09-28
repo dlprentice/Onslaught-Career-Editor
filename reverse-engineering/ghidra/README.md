@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[verified walker records](#re-audit-verified-walker-records--september-27);
+[walker helper identities and interfaces](#re-audit-walker-helper-identities-and-interfaces--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,32 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit walker helper identities and interfaces — September 27
+
+The [11-row manifest](../../tools/cohort-specs/walker-helper-identities-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/walker-helper-identities-20260927.spec.tsv) correct source identities,
+interfaces, notes and tags. Pristine `BEA.exe.original.backup` SHA-256:
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Eleven wrong helper names corrected, with explicit member, float-input and integer-return annotations and qualified notes/tags. Three explicit ECX members normalize to automatic thiscall; Rotate/Pitch inputs become float; three attachment getters return int rather than char pointer; Enable/Disable argument labels become name. LoseWeaponCharge changes no physical interface. All 1,015 code bytes / 367 instructions, locals, frames and 8,321 other function records remain unchanged.
+
+Complete pristine bodies, receiver installations, relevant full callers and pinned source establish identity independently of saved labels. The HUD consumes attachment results as integers; actual icon functions return profile+4 strings and remain excluded until the names become free. Both rotation functions use the yaw-right binding category to select their multiplier, absent from source. The shared IsFiring body serves both walker and jet source aliases, not a fabricated retail class. Old names/notes remain fallible leads; no runtime cadence, complete class layout or gameplay acceptance is claimed.
+
+Fresh PRE restoration/census, dry/apply/separate/sealed rehearsal readbacks,
+nine no-write refusal controls, independent exact-manifest review with root
+reproduction, live readback and independently restored Archive A POST passed.
+All nine live exports equal rehearsal. The only program-scope metric change
+is its comment digest; exact names, parameter/return storage and all non-target
+records were separately compared. The complete name projection is checked
+against live at closeout. No Godot or retail runtime was launched.
+
+Working identity: `db.18711`, 18 files / 125,979,508 bytes,
+inventory SHA-256 `e25d01106311ca4c3b496d24a905e7657a5553447e7291b560449deae8650a98`; main database 75,677,696 bytes,
+SHA-256 `bc123787733d275df87d9b0b9b0646c23c2c3069020545d224ab431ce3908974`. Restored walker-verified POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-walker-helper-identities/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/walker-helper-identities/`; complete-body, source and caller witnesses:
+`local-data/test-runs/re-audit-20260926/walker/`.
 
 ## RE-audit verified walker records — September 27
 

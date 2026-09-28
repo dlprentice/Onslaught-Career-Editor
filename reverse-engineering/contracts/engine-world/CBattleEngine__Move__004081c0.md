@@ -1,7 +1,7 @@
 # CBattleEngine__Move
 
 Status: active static contract (factory draft)
-Last updated: 2026-08-22
+Last updated: 2026-09-27 (walker helper identities reconciled; earlier evidence retains its stated limits)
 Summary: specimen-bound static contract for `CBattleEngine__Move` at `0x004081c0`; packet-described behavior is retained with explicit unknowns and no promotion claim.
 Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, and independently recomputed pristine body bytes; runtime and source limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -52,7 +52,7 @@ The packet signature declares `void`; no scalar return contract is claimed. Call
 - Callee `CBattleEngineJetPart__Move` `0x00410c50` ×1 site(s) (STATIC_DIRECT).
 - Callee `CBattleEngineJetPart__LoseWeaponCharge` `0x00412000` ×1 site(s) (STATIC_DIRECT).
 - Callee `CBattleEngineWalkerPart__Move` `0x00413760` ×2 site(s) (STATIC_DIRECT).
-- Callee `CMonitor__ClearCurrentTrackedEntryFlag60` `0x00414010` ×1 site(s) (STATIC_DIRECT).
+- Callee `CBattleEngineWalkerPart__LoseWeaponCharge` `0x00414010` ×1 site(s) (STATIC_DIRECT).
 - Callee `CController__SetVibration` `0x0042e750` ×1 site(s) (STATIC_DIRECT).
 - Callee `CEulerAngles__ctor_from_FMatrix` `0x0044adb0` ×1 site(s) (STATIC_DIRECT).
 - Callee `CEventManager__AddEvent_AtTime` `0x0044b370` ×1 site(s) (STATIC_DIRECT).

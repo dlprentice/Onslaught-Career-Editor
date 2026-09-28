@@ -1,7 +1,7 @@
 # CBattleEngine__AugmentWeapon
 
 Status: active static contract (factory draft)
-Last updated: 2026-08-22
+Last updated: 2026-09-27 (walker helper identities reconciled; earlier evidence retains its stated limits)
 Summary: specimen-bound static function contract for `CBattleEngine__AugmentWeapon` at `0x0040de40`; unknown semantics and runtime limits remain explicit.
 Evidence: MEASURED — packet/decompile, closure range identity, and independently recomputed pristine body bytes; no TTD-session execution row in the bounded deep-mine corpus.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -32,7 +32,7 @@ not_applicable (void).
 - `DAT_00896988` and `_DAT_008969b8` — passed to sound lookup/play calls.
 
 ## Callees relied on / callers
-- Callees (packet structured array): `CBattleEngineJetPart__LoseWeaponCharge` `0x00412000` ×1 (STATIC_DIRECT); `CMonitor__ClearCurrentTrackedEntryFlag60` `0x00414010` ×1 (STATIC_DIRECT); `CSoundManager__GetEffectByName` `0x004e1910` ×1 (STATIC_DIRECT); `CSoundManager__PlayEffect` `0x004e1940` ×1 (STATIC_DIRECT); `sprintf` `0x0055de9b` ×1 (STATIC_DIRECT).
+- Callees (packet structured array): `CBattleEngineJetPart__LoseWeaponCharge` `0x00412000` ×1 (STATIC_DIRECT); `CBattleEngineWalkerPart__LoseWeaponCharge` `0x00414010` ×1 (STATIC_DIRECT); `CSoundManager__GetEffectByName` `0x004e1910` ×1 (STATIC_DIRECT); `CSoundManager__PlayEffect` `0x004e1940` ×1 (STATIC_DIRECT); `sprintf` `0x0055de9b` ×1 (STATIC_DIRECT).
 - Callers (packet structured array): `CBattleEngine__Move` `0x004081c0` ×1 site(s).
 - Names on these edges are counted analysis labels; semantic claims above rely on the visible body and argument flow, not the labels alone.
 
