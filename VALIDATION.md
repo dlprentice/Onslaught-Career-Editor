@@ -8968,3 +8968,20 @@ Private commands/results: `local-lab/ghidra-first-training-20260907-v1/re-audit-
 This is static interface evidence, with no new Godot or retail runtime acceptance.
 The complete 8,332-name projection matches live; `test:docs` reports zero drift
 and `test:safety` passes (4,204 public candidate files). `git diff --check` passes.
+
+## RE allocator preparation and safe pause — September 27
+
+`python local-data/test-runs/re-audit-20260926/memory/original_tiny_helpers.py`
+passed 93 authored cases and four altered-copy controls. The two original bodies
+total 197 bytes; FreeTiny has no calls, and ReallocTiny's Alloc/memcpy boundaries
+are authored interceptors. Full authored memory, stack balance and preserved
+registers match the expected results. No desktop/game/allocator-lock acceptance.
+Outputs: `local-data/test-runs/re-audit-20260926/memory/tiny-helpers-4vuzyaxo/`.
+The earlier `tiny-helpers-nlrs60d8/` remains: an incorrect expected opcode stopped
+the second adverse control, before that altered copy was written.
+
+The 27-function allocator plan has fresh PRE restore/census, all seven full
+exports equal to the latest live readback, and corrected draft wording from
+independent review reproduced by root. It is **unsealed and unpromoted**;
+its fresh specimen-bound body packet covers 7,761 bytes / 2,533 instructions.
+`PROGRAM.md` records the exact resume point and remaining review/gates.

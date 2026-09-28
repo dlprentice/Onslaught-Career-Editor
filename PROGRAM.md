@@ -586,7 +586,36 @@ reentrancy-flag reset. Draft wording was corrected before sealing: tiny helpers
 check ranges without alignment, ReAlloc reads old size only after allocation
 succeeds, diagnostics do not cover every allocation failure, and physical heap
 walks exclude the terminal block. Names/comments are the next cohort; four ABI
-corrections and controlled checks remain separate. None has been promoted yet.
+corrections remain separate. None has been promoted yet.
+
+**Safe pause requested September 27:** no allocator manifest is sealed and no
+allocator change has reached live. `memory-verified/` holds corrected
+`declared-scope.json`, 27 target addresses and prepared scripts. Fresh PRE
+restore/census completed against the verified Charge POST and matched all seven
+full exports. Resume by rechecking current live/cold authority, then seal/rehearse
+the corrected scope and obtain exact-payload review before registration. The
+initial `prepare_identity_plan.py` is a historical draft; its wording was
+corrected in the current declared scope, with the review preserved beside it.
+
+The completed native tiny-helper probe executes 197 unchanged retail bytes in
+93 authored cases; four altered-copy controls fail as intended. It verifies that
+false may leave nonzero upper EAX while AL is zero, in-range interior pointers
+are accepted without alignment checks, and ReallocTiny links the old storage
+into the free list before the intercepted allocation. It returns true for
+recognition even when that allocation supplies null. Alloc and memcpy are
+authored interceptors for ReallocTiny; FreeTiny has no calls. Full authored
+memory, stack balance and preserved registers were checked. This does not
+validate the real allocator, locks, exceptions or game runtime. Results:
+`local-data/test-runs/re-audit-20260926/memory/tiny-helpers-4vuzyaxo/result.json`.
+The first run is retained: its second adverse control refused a wrong expected
+XOR opcode; the corrected run passed the complete set. No new Ghidra claim
+was promoted from that failed run.
+
+A subsequent console-registration alignment design is preserved as a research
+lead: reuse the existing evidence tools and argument-transport checker; do not
+use nearest strings or saved names as proof. Root checked the registrar body,
+but the broader callback candidate set/tool extension remains unimplemented.
+Start with the allocator checkpoint above rather than opening a second cohort.
 Private inputs and probes: `local-data/test-runs/re-audit-20260926/jet/` and
 `memory/`. Scoped scripts remain in the existing ignored audit owner.
 

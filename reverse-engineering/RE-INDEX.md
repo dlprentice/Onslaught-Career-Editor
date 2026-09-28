@@ -124,7 +124,10 @@ are now live with exact readback and independently restored recovery. Their
 living function notes/contracts have been reconciled. The [Charge receiver correction](ghidra/README.md#re-audit-jet-charge-member-interface--september-27)
 is also live with preserved physical transport and independent recovery. The
 27-function allocator family is next; its differences remain unpromoted static
-findings until exact plans and gates pass.
+findings until exact plans and gates pass. The native tiny-helper probe has
+passed 93 authored cases and four altered-copy controls; its allocator/copy
+interceptors limit the result to the two original callers and supplied outcomes.
+The exact unsealed allocator resume point is in `PROGRAM.md`.
 
 The [sound event-queue recheck](binary-analysis/csoundmanager-shared-semantics-2026-08-11.md#september-27-event-queue-correction)
 corrects inherited insertion-order wording with 60 original-code cases and two

@@ -955,7 +955,7 @@ The [one-row manifest](../../tools/cohort-specs/jet-charge-abi-20260927.manifest
 
 One ChargeWeapon receiver annotation normalizes from explicit-ECX fastcall to automatic thiscall. Its name, physical ECX input, void result, zero stack arguments, both locals, frame size, all 632 code bytes / 222 instructions and 8,331 non-target function records remain unchanged.
 
-The complete pristine body saves ECX into ESI and defines EDX before use; all seven returns are bare RETs. The 39-byte main ChargeWeapon dispatcher loads the Jet receiver from main+57c and tail-jumps to this body in mode3. Pinned JetPart.cpp659-697 supplies the same zero-argument member identity. The former general_volume receiver label is disproved. This corrects analysis metadata, not physical register transport or a demonstrated runtime failure. Existing semantic notes remain qualified leads.
+The complete pristine body saves ECX into ESI and defines EDX before use; all seven returns are bare RETs. The 39-byte main ChargeWeapon dispatcher loads the Jet receiver from main+57c and tail-jumps to this body in mode3. Pinned BattleEngineJetPart.cpp659-697 supplies the same zero-argument member identity. The former general_volume receiver label is disproved. This corrects analysis metadata, not physical register transport or a demonstrated runtime failure. Existing semantic notes remain qualified leads.
 
 Fresh PRE restoration/census, rehearsal, separate/sealed readbacks, seven
 byte-stable refusals, independent exact-manifest review with root reproduction,
