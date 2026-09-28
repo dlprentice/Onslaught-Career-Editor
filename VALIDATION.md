@@ -8881,3 +8881,43 @@ then passed with zero drifted/unresolved assertions; `npm run test:safety`
 passed 4,198 candidate files. Private gate receipts:
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/weapon-icon-identities/`;
 command logs: `local-data/test-runs/re-audit-20260926/walker/icon-*`.
+
+## Jet weapon recheck and retained identities — September 27
+
+The RE lane completed `jet-verified-20260927`: 14 supported names retained,
+comments/tags corrected, all signatures and 2,676 code bytes / 1,014 instructions
+preserved. The tracked checkpoint and earlier recovery history remain unchanged.
+
+Executed under the existing ignored `re-audit-20260926/jet-verified/` owner:
+
+- Fresh `prepare_preservation.py`; prior reviewed manifest/spec and fresh PRE
+  compared exactly. `rehearse.py` and `compare_exports.py rehearsal-post` passed.
+- `negative_controls.py`: five expected refusals, each without project byte changes.
+- `python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed after registration.
+- `apply_live.py`, `compare_exports.py live-post`, `finish.py`: nine live exports
+  equal the separately reopened rehearsal; Archive A POST independently restored
+  and opened read-only. Only hash-equal successful control/POST probe payloads
+  were retired, with exact migration-queue records.
+- `verify_projection.py`: all 8,332 projected names equal live; 2,154 unique
+  corrected, 457 additional kept, zero neutralized and 5,721 outside that set.
+
+The first seal/rehearsal was rejected for three imprecise authored descriptions;
+`rejected-v1/` preserves it. The revised seal's second disposable apply exited
+143 before a receipt. Its project/locks/logs remain in `interrupted-v2/`; cause
+was not established. No live apply had started. Live/cold/checkpoint identities
+were verified, then the fresh replacement above passed every gate.
+
+The separate original-code probe, executed before this promotion, ran
+`python local-data/test-runs/re-audit-20260926/jet/original_selection_stores.py`:
+90 original cases plus four one-byte controls passed across four unmodified
+bodies (357 pristine bytes), with full authored-memory/register/cursor checks.
+The first locator failure is retained; its correction changed no expected result.
+Independent review inspected all retained inputs, outputs, executable spans and
+controls. Exact driver/result paths and limits are in the
+[weapon-store contract](reverse-engineering/game-mechanics/battle-engine-weapon-stores.md#isolated-jet-selection-and-admission--september-27).
+These checks do not execute every audited helper or establish player acceptance,
+retail FPU state, complete firing behavior or reconstruction parity.
+
+Closeout: `npm run test:docs` passed with zero drifted name assertions;
+`npm run test:safety` passed (4,200 public candidate files);
+`git diff --check` passed. Logs: `local-data/test-runs/re-audit-20260926/jet/jet-verified-{docs,safety,framework}.log`.

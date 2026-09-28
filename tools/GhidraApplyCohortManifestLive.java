@@ -356,6 +356,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "walker-verified-20260927",
         "walker-helper-identities-20260927",
         "weapon-icon-identities-20260927",
+        "jet-verified-20260927",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

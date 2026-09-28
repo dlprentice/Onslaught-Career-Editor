@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[weapon icon identities](#re-audit-weapon-icon-identities--september-27);
+[verified jet records](#re-audit-verified-jet-records--september-27);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,39 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit verified jet records — September 27
+
+The [14-row manifest](../../tools/cohort-specs/jet-verified-20260927.manifest.tsv) and
+[spec](../../tools/cohort-specs/jet-verified-20260927.spec.tsv) keep the supported JetPart
+names and correct their comments/tags. Pristine specimen SHA-256:
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Fourteen existing JetPart identities verified within the stated complete-body/source/caller limits. Only plate comments and tags change; all earlier notes remain qualified leads. All names, signatures, locals, frames, 2,676 code bytes / 1,014 instructions and 8,318 other function records stay unchanged.
+
+Pristine complete bodies and real main+57c caller transports match pinned JetPart source. The notes distinguish mutable index selection without walker fallback, four chargeable tiers versus five total tiers, active firing admission versus store eligibility, the newly selected charge clear, full DWORD flags and x87 unordered/rounding limits. The original native Jet selection/store experiment passes 90 cases and 4 one-byte controls across four unmodified bodies; it is not execution of every audited helper or retail acceptance. ChargeWeapon explicit-ECX normalization and six wrong Jet names are separate pending corrections. No collective saved-ABI, lifetime, device or gameplay certification follows.
+
+The [jet recheck](../game-mechanics/battle-engine-weapon-stores.md#september-27-jet-recheck)
+and [original-code experiment](../game-mechanics/battle-engine-weapon-stores.md#isolated-jet-selection-and-admission--september-27)
+record the evidence and paused-rebuild integration questions separately.
+The first seal and successful disposable rehearsal were rejected before live
+for three imprecise authored descriptions: caller receiver ownership, mismatch
+iteration and initialization pointer ownership. They remain under `rejected-v1/`.
+The revised seal's second disposable apply ended with exit 143 before a
+completion receipt; its project, lock files and logs remain in `interrupted-v2/`.
+No live apply had started. The live/cold/checkpoint identities were rechecked,
+and a new independent restore repeated PRE census, rehearsal with separate/
+sealed readbacks and five byte-stable refusals. Independent exact-manifest review
+with root reproduction, live readback and independently restored Archive A POST passed.
+All nine live exports equal rehearsal; only the program comment digest moves.
+The complete current name projection is compared with live at closeout.
+
+Working identity: `db.18713`, 18 files / 126,012,276 bytes,
+inventory SHA-256 `62d33d1d1b4391d9b1e8aeb7c2de0a69ea6c2a00e8bd02e4d4679ae023b23a0c`; main database 75,710,464 bytes,
+SHA-256 `04025146754bc3728db0aae1a639d919e50bc33a5e1ef51ce0c4af74c26e9f17`. Restored weapon-icon POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-27-jet-verified/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/jet-verified/`; complete bodies/callers/source and original-code
+inputs/outputs: `local-data/test-runs/re-audit-20260926/jet/`.
 
 ## RE-audit weapon icon identities — September 27
 
