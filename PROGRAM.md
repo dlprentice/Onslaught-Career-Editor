@@ -491,18 +491,18 @@ on September 25 include:
 - the base-thing bitmap's meaning;
 - World 110's turret fire-control statement.
 
-**Running coverage after the walker helper cohort (September 27).**
+**Running coverage after the weapon icon cohort (September 27).**
 These are conservative dispositions supported by this date's sealed cohorts
 and final library-match proofs, not a percentage of game understanding:
 
 | Audit dimension | Current count and limit |
 | --- | --- |
-| Names corrected | 2,152 unique functions; 2,153 rename rows include one repeated correction. The latest eleven correct walker/main/jet helper identities; the preceding 25 walker names stay retained. |
+| Names corrected | 2,154 unique functions; 2,155 rename rows include one repeated correction. The latest two correct the actual walker/jet icon getters after the eleven helper corrections; the preceding 25 walker names stay retained. |
 | Names verified and kept | 443 additional functions: 62 library/import identities, Damage, 63 Thing-family, 14 Controller/Engine, 80 compiler deleting-entry, 74 frontend, six reader, seventeen switch-method, 43 cleanup-body, nine console-menu, eight shared-music, 41 shared/PC-sound and 25 walker identities. This excludes functions already counted as corrected. |
 | Names neutralized by this audit | 0; existing structural placeholders are not newly completed dispositions. |
-| Names still outside that accounted set | 5,737 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
-| Prototype records corrected | 116 functions: the prior 105 plus eleven helper signature records. Five correct types, three normalize explicit ECX to automatic thiscall, two correct argument names, and one changes only the function name in its signature. These categories describe this cohort; all physical input locations/cleanup stay unchanged. Receiver normalization does not imply demonstrated runtime transport breakage. Three unresolved frontend returns, ten custom-storage floating rows and GetSampleLength's float/double question remain outside these corrections; a corrected parameter list is not complete ABI validation. |
-| Comments corrected | 2,608 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
+| Names still outside that accounted set | 5,735 of 8,332. This is an audit queue, not a claim that all those names are wrong or unsupported. |
+| Prototype records corrected | 118 functions: the prior 116 plus two icon signature records. Walker's return changes from int to char pointer at unchanged EAX4; Jet changes only the function name in its signature. Physical input locations/cleanup stay unchanged. Receiver normalization in earlier cohorts does not imply demonstrated runtime transport breakage. Three unresolved frontend returns, ten custom-storage floating rows and GetSampleLength's float/double question remain outside these corrections; a corrected parameter list is not complete ABI validation. |
+| Comments corrected | 2,610 unique function comments updated across the promoted cohorts. Retained historical leads are not automatically verified semantics. |
 | Function boundaries | One additional window callback admitted over existing code, subsequently identified as WndProc. |
 | Living documents | Whole-corpus verified/corrected/open totals remain unmeasured; dated samples below are not complete coverage. |
 
@@ -512,7 +512,7 @@ Count sources: promoted September 26 manifests, `controller-engine-verified-2026
 `frontend-callback-abi-20260927`, `class-name-identities-20260927` and
 `membuffer-identities-20260927`, `listener-identities-20260927` and
 `membuffer-abi-20260927`, `resource-reader-identities-20260927`, `reader-abi-20260927` and
-`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, `console-menu-identities-20260927` / `console-menu-verified-20260927`, `vertex-menu-abi-20260927`, `music-identities-20260927` / `music-verified-20260927`, `thing-gameplay-identities-20260927` / `thing-gameplay-abi-20260927`, `sptrset-forwarder-20260927`, `sptrset-identities-20260927` and `sptrset-abi-20260927`, `sound-verified-20260927`, `sound-abi-20260927` and `sound-source-identities-20260927`, `walker-verified-20260927` and `walker-helper-identities-20260927`, the final
+`switch-identities-20260927` / `switch-verified-20260927`, `camera-position-20260927` / `camera-copy-abi-20260927`, `device-lifecycle-20260927`, `startup-shell-20260927`, `getbpp-abi-20260927`, `window-callback-boundary-20260927`, `frontend-argument-abi-20260927`, `window-callback-abi-20260927`, `cleanup-body-verified-20260927`, `postevent-cleanup-20260927`, `console-menu-identities-20260927` / `console-menu-verified-20260927`, `vertex-menu-abi-20260927`, `music-identities-20260927` / `music-verified-20260927`, `thing-gameplay-identities-20260927` / `thing-gameplay-abi-20260927`, `sptrset-forwarder-20260927`, `sptrset-identities-20260927` and `sptrset-abi-20260927`, `sound-verified-20260927`, `sound-abi-20260927` and `sound-source-identities-20260927`, `walker-verified-20260927`, `walker-helper-identities-20260927` and `weapon-icon-identities-20260927`, the final
 `library-verified/prepare-plan/match/lib-verified.tsv`, its three-thunk comment
 cohort, the Damage identity recheck and the 65 plus 14 plus 80 plus 74 plus six plus seventeen plus 43 plus nine plus eight plus 41 plus 25 kept-name targets, deduplicated
 against every renamed address. Private paths are under the existing
@@ -542,10 +542,20 @@ readiness and the heat gate's unordered-comparison distinction. No new player,
 Godot or retail runtime acceptance follows. The independently reviewed
 11-row helper correction is now live with exact rehearsal/readback/recovery.
 It corrects the false icon-pointer labels, float rotation inputs, charge clearing,
-weapon enable/disable/count and the shared walker/jet firing predicate. Next:
-the two actual icon getter names, now available. The main icon dispatch is
+weapon enable/disable/count and the shared walker/jet firing predicate. The
+[two actual icon getters](reverse-engineering/ghidra/README.md#re-audit-weapon-icon-identities--september-27)
+are now corrected live, with exact readback and independently restored recovery.
+Their complete bodies return profile +0x04; the string-consuming ChangeWeapon
+caller distinguishes them from integer attachment +0x38. The main icon dispatch is
 inlined inside ChangeWeapon; the bounded byte/caller search supports no extra
 standalone wrapper label.
+Next: re-derive the 20 remaining JetPart weapon helpers, including six inherited
+wrong-name leads and four explicit-ECX member annotations. The preliminary
+complete-body recheck distinguishes store eligibility from actual firing:
+CanWeaponFire lacks the active flag test, while FireWeapon and ChargeWeapon
+require it. The rebuild's `RetailWeaponSelection.cs` remark that a disabled jet
+weapon can still fire overstates the store check; the adjacent old icon citation
+also needs correction when that lane resumes. Its code remains untouched.
 Private prepared evidence: `local-data/test-runs/re-audit-20260926/walker/`.
 
 A new native original-code probe executes four unmodified selection/store bodies
