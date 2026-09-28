@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[verified allocator records](#re-audit-verified-allocator-records--september-28);
+[allocator interfaces](#re-audit-allocator-interfaces--september-28);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,30 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit allocator interfaces — September 28
+
+The [three-row manifest](../../tools/cohort-specs/memory-abi-20260928.manifest.tsv) and
+[spec](../../tools/cohort-specs/memory-abi-20260928.spec.tsv) correct the saved interfaces of
+`004a1570 CMemoryHeap__FreeTiny`, `004a15a0 CMemoryHeap__ReallocTiny` and
+`004a17b0 CMemoryHeap__Shutdown`. Pristine specimen SHA-256:
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Three allocator interfaces take the prototypes their byte-matching compiled source proves: FreeTiny and ReallocTiny return bool (AL) instead of int, and Shutdown becomes an automatic-this thiscall member instead of an explicit-ECX fastcall. Names, stack arguments, cleanup, locals, frames, all 93 instructions and 8,329 other function records are unchanged.
+
+The private byte-matching decompilation (github.com/dlprentice/bea-decomp) compiles MemoryManager.cpp with the original VC6 toolchain (/O2 /Ob2 /GX /MT) to exactly these bodies, relocations checked, defining bool CMemoryHeap::FreeTiny(void *), bool CMemoryHeap::ReallocTiny(void *, unsigned int, void **) and void CMemoryHeap::Shutdown(void). The pristine bodies return through AL only and every caller tests only AL; Shutdown takes its receiver in ECX with a bare RET, reached by CDXMemoryManager::Shutdown's tail jump. Cleanup's bool parameter is deferred: the applier admits a sub-word final stack parameter only for renames, and the first rehearsal refused it at apply (kept in rejected-v1/).
+
+Fresh PRE restoration/census, rehearsal, separate/sealed readbacks, seven
+byte-stable refusals, independent exact-manifest review with root reproduction,
+live readback and independently restored Archive A POST passed. All nine live
+exports equal rehearsal; only the program comment digest moves.
+
+Working identity: `db.18717`, 18 files / 126,241,652 bytes,
+inventory SHA-256 `ece192c72c9f08c4239d730e2686fdb3f0afc5a102745e267043f33d3c15a4fc`; main database 75,939,840 bytes,
+SHA-256 `4f95b4d716ef624882db430cfe0787763e9f1719f2039130c3812f399b4d3905`. Restored allocator-records POST is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-28-memory-abi/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/memory-abi/`; compiled-source witness:
+`local-data/test-runs/re-audit-20260926/memory/abi-witness-v1.json`.
 
 ## RE-audit verified allocator records — September 28
 
