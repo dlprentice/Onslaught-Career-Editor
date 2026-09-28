@@ -359,6 +359,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "jet-verified-20260927",
         "jet-helper-identities-20260927",
         "jet-charge-abi-20260927",
+        "memory-verified-20260927",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any
