@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-09-26 (companion lane paused; C# only by David's 2026-09-25 direction)
+Last updated: 2026-09-28 (helpers may write code on disjoint scopes; companion lane paused; C# only)
 Summary: active development authority, evidence and data protections, task-specific reference routing,
 and proportional completion checks.
 
@@ -47,7 +47,7 @@ hold is retained as history in `developer_state.json`; it does not block this ph
 Do not recreate Windows VM staging without a new Windows-validation task. Ghidra changes still require the preservation workflow
 and an exact declared cohort. External archive reconciliation and historical recovery
 investigation remain outside this repository's development scope. Any agent may work here, Claude Code included;
-subagents follow machine rule 12 (read-only research or a taste check).
+subagents and peer sessions follow machine rule 12 (disjoint scopes in their own worktrees; the lead integrates).
 
 ## Lanes
 
