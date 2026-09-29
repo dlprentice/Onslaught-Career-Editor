@@ -1,6 +1,6 @@
 # CFrontEnd__HasStandardSlidingTextBordersAndMask
 
-<!-- ghidra-name-drift-accepted: 0x004679a0 FrontEnd__HasStandardSlidingTextBordersAndMaskPage (2026-07-28) -->
+<!-- ghidra-name-drift-accepted: 0x004679a0 got_standard_SlidingTextBordersAndMask (2026-09-29) -->
 
 - Address: 0x004679a0
 - Status: Superseded alias (Wave 377 owner correction)
@@ -12,6 +12,6 @@ Returns whether a destination page uses standard sliding borders/mask.
 
 ## Notes
 
-Wave 377 corrected the saved Ghidra name to [FrontEnd__HasStandardSlidingTextBordersAndMaskPage](./FrontEnd__HasStandardSlidingTextBordersAndMaskPage.md) because the source analogue is a source-static page predicate, not a `CFrontEnd` instance method.
+Wave 377 corrected the saved Ghidra name to [FrontEnd__HasStandardSlidingTextBordersAndMaskPage](./FrontEnd__HasStandardSlidingTextBordersAndMaskPage.md) because the source analogue is a source-static page predicate, not a `CFrontEnd` instance method. On 2026-09-29 `decomp-names-20260929` renamed it to Stuart's `got_standard_SlidingTextBordersAndMask`, which the byte-matching decompilation compiles to this body.
 
 This alias page remains to preserve historical links only. Use the owner-corrected page for current evidence.

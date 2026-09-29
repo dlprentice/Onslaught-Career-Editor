@@ -1,6 +1,6 @@
 # CPlayer__dtor
 
-> Addresses: `0x004d2810` (`CPlayer__scalar_deleting_dtor`), `0x004d2830` (`CPlayer__dtor_base`)
+> Addresses: `0x004d2810` (`CPlayer__scalar_deleting_dtor`), `0x004d2830` (`CPlayer__dtor`)
 >
 > Source: `references/Onslaught/Player.cpp` (`CPlayer::~CPlayer()`)
 

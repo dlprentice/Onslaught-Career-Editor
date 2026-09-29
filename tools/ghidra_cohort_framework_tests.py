@@ -312,6 +312,7 @@ REQUIRED_LIVE_PROJECT_DIR = r"c:\users\david\ghidra\projects\bea.rep"
 # Jet ChargeWeapon: one explicit ECX receiver normalized; physical transport preserved.
 # Allocator: 27 verified kept names; comments/tags only, names and interfaces preserved.
 # Allocator interfaces: two bool returns and one automatic receiver; physical transport preserved.
+# Decomp names: 75 names proven by the byte-matching decompilation and the released source; comments/tags added.
 LIVE_GRANTED_COHORTS = [
     "boundary-cohort41", "name-cohort160", "abi-cohort294",
     "tentacle-chain-a", "tentacle-chain-b",
@@ -407,6 +408,7 @@ LIVE_GRANTED_COHORTS = [
     "jet-charge-abi-20260927",
     "memory-verified-20260927",
     "memory-abi-20260928",
+    "decomp-names-20260929",
 ]
 PROGRAM_SHA256 = (
     "74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750"
@@ -908,6 +910,7 @@ LIVE_ALLOWLISTED_EDITS: list[tuple[str, str, str]] = [
         '        "jet-charge-abi-20260927",\n'
         '        "memory-verified-20260927",\n'
         '        "memory-abi-20260928",\n'
+        '        "decomp-names-20260929",\n'
         "    };\n",
     ),
     (

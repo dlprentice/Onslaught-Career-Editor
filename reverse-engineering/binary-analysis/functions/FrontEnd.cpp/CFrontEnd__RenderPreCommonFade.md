@@ -1,4 +1,4 @@
-# CFrontEnd__RenderPreCommonFade
+# CFrontEnd__DrawStandardVideoBackground
 
 - Address: 0x004679e0
 - Status: Wave467 signature/comment hardened (headless apply/read-back/probe verified)

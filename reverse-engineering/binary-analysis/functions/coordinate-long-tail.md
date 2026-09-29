@@ -132,7 +132,7 @@ or certify its prototypes or runtime behavior.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x0042D640` | `CController__Init` | 308 | 3 | 967 | `CSPtrSet__Init` x2; `CDXMemoryManager__Alloc` x2 |
+| `0x0042D640` | `CController__ctor` | 308 | 3 | 967 | `CSPtrSet__Init` x2; `CDXMemoryManager__Alloc` x2 |
 
 ### `Cutscene.cpp` (2)
 
@@ -354,7 +354,7 @@ coordinate/callee evidence, not new behavioral validation.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x0048C650` | `InitThing__CreateThingByType` | 1267 | 0 | 15–63 | `CDXMemoryManager__Alloc` x13; `CInitThing__ctor` x11 |
+| `0x0048C650` | `SpawnInitThing` | 1267 | 0 | 15–63 | `CDXMemoryManager__Alloc` x13; `CInitThing__ctor` x11 |
 
 ### `ltshell.cpp` (1)
 
@@ -450,7 +450,7 @@ pinned source. See the [platform contract](../../source-code/core/platform-syste
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x0042D640` | `CController__Init` | 308 | 3 | 24 | `CSPtrSet__Init` x2; `CDXMemoryManager__Alloc` x2 |
+| `0x0042D640` | `CController__ctor` | 308 | 3 | 24 | `CSPtrSet__Init` x2; `CDXMemoryManager__Alloc` x2 |
 | `0x0042E610` | `CController__SetToControl` | 204 | 1 | 24 | `CDXMemoryManager__Alloc` x2; `CSPtrSet__AddToHead` x2 |
 | `0x00444660` | `CDestructableSegmentsController__Init` | 732 | 0 | 24 | `CDebugLog__Printf` x4; `CDXMemoryManager__Alloc` x3 |
 | `0x004D28C0` | `CPlayer__GotoFPView` | 246 | 0 | 24 | `CDXMemoryManager__Alloc` x2; `CSPtrSet__Init` x1 |

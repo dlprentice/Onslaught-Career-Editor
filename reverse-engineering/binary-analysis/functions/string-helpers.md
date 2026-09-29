@@ -33,7 +33,7 @@ Static read-back evidence:
 | --- | --- |
 | `0x004f7d30 FromWCHAR` | Calls `WcsLen(wstr)`, rotates `g_FromWCHAR_RingIndex` at `0x00854d4c` modulo four, selects `0x00840d40+(slot*0x1000)`, copies the low byte from each 16-bit input slot while advancing the source pointer by two bytes, NUL-terminates the selected slot, and returns the selected scratch-buffer pointer. |
 | `0x0042d098`, `0x0042cfdf`, `0x0042d009`, `0x0042d0c4`, `0x0042c764` | Fatal-error/localized text callers. |
-| `0x004654f8 IsCheatActive` | Cheat text compare caller. |
+| `0x004654f8 CFEPSaveGame__IsCheatActive` | Cheat text compare caller. |
 | `0x004b7b28 CMessageBox__SelectPortraitIndex`, `0x004b7fdf CMessageBox__StartVoiceOrFallbackTextReveal` | Message-box text and portrait caller evidence. |
 | `0x00514c33 EnumerateSaveFiles_Main`, `0x00514fb7 PCPlatform__WriteSaveFile`, `0x005150b7 PCPlatform__ReadSaveFile`, `0x00514ef7 PCPlatform__DeleteSaveFile` | Save-file path caller evidence. |
 | `0x004f7bf0 Text__AsciiToWideScratch`, `0x004f7c70 StringScratch_T3_004f7c70`, `0x004f7cd0 StringScratch_T3_004f7cd0` | Adjacent four-slot scratch-buffer helper context. The two `StringScratch__CopyToRotating4KBuffer{A,B}` spellings were demoted to neutral Tier-3 placeholders on 2026-08-17: no `StringScratch` type descriptor exists in the image and no vtable owns either VA, so the invented class and the A/B ordering were both unsupported. Their adjacency to `0x004f7bf0` and the four-slot rotation described in the `FromWCHAR` row above are separate, still-standing byte readings. |

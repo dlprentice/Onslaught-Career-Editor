@@ -1,4 +1,4 @@
-# IsCheatActive
+# CFEPSaveGame__IsCheatActive
 
 Status: mixed — inherited cheat reference with scoped autoconfig identity correction
 Last updated: 2026-09-19

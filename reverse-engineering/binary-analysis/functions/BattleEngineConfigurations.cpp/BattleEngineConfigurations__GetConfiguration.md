@@ -1,4 +1,4 @@
-# BattleEngineConfigurations__GetConfiguration
+# UBattleEngineConfigurations__GetConfiguration
 
 > Address: `0x0040f2f0` | Source family: `references/Onslaught/BattleEngineConfigurations.cpp`
 
