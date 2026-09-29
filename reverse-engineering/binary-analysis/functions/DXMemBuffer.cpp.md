@@ -44,7 +44,7 @@ remain outside Git. Native experiment commands and limits are also recorded in
 | --- | --- | --- |
 | `0x00547d40` | `CDXMemBuffer__SetNextReadBufferSize` | One caller-popped DWORD; writes the shared read-size global. |
 | `0x00547d70` | `CDXMemBuffer__ctor` | ECX receiver; zeros only `+04/+0c/+10/+14`, returns that receiver in EAX. |
-| `0x00547d90` | `CDXMemBuffer__dtor_base` | ECX receiver; frees `+04/+0c`, without closing a file handle or nulling the fields. |
+| `0x00547d90` | `CDXMemBuffer__dtor` | ECX receiver; frees `+04/+0c`, without closing a file handle or nulling the fields. |
 | `0x00547dc0` | `CDXMemBuffer__InitFromMem` | ECX, filename and memory-type stack words, `RET 8`; opens a file-backed writer, not an input-memory view. |
 | `0x00547ec0` | `CDXMemBuffer__InitFromFile` | ECX and four stack words, `RET 16`; initializes a reader, fills it and applies start-skip. The PC body does not consume the source's `mungepath` argument. |
 | `0x005482c0` | `CDXMemBuffer__GetFileSize` | Calls PE import `GetFileSize([ECX], NULL)` and returns its full EAX value. |

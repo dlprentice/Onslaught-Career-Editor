@@ -44,7 +44,7 @@ withdrawn label can tell it was corrected and not lost.
 | `0x004f21f0` | `FUN_004f21f0` | `CText__Init` | placeholder replaced; this address carries a name now |
 | `0x004fdc10` | `FUN_004fdc10` | `SharedVFunc__ReturnTrue_004fdc10` | placeholder replaced; the 2026-07-28 `CFrontEndPage__Init_ReturnTrue` reading was itself withdrawn on 2026-08-17 (see below) |
 | `0x005145f0` | `FUN_005145f0` | `CPCController__ctor` | placeholder replaced; this address carries a name now |
-| `0x005159b0` | `FUN_005159b0` | `PlatformInput__ResetKeyStateTables` | placeholder replaced; this address carries a name now |
+| `0x005159b0` | `FUN_005159b0` | `CPCPlatform__FlushInputBuffers` | placeholder replaced; this address carries a name now |
 | `0x00541240` | `FUN_00541240` | `CDXFrontEndVideo__SetDefaultSize` | placeholder replaced; this address carries a name now |
 | `0x005490e0` | `OID__AllocObject` | `CDXMemoryManager__Alloc` | class prefix and suffix both moved |
 
@@ -220,7 +220,7 @@ Complex logic determines which page to show first:
 | 0x0055de9b | sprintf (`FUN_0055de9b`) | sprintf equivalent |
 | 0x005490e0 | CDXMemoryManager__Alloc | Memory allocation |
 | 0x005145f0 | CPCController__ctor | Object constructor |
-| 0x005159b0 | PlatformInput__ResetKeyStateTables | Unknown |
+| 0x005159b0 | CPCPlatform__FlushInputBuffers | Unknown |
 | 0x00466ae0 | CFrontEnd__SetPage | Page transition (`SetPage(page,time)`) |
 | 0x00459810 | CFEPDevSelect__SetCurrentCard | Sets the device-select card when the CLI device-select field is not -1 (`FrontEnd.cpp:178-186`) |
 | 0x004e2c50 | CSoundManager__ReloadLanguageSampleBank | Conditional language sound-bank reload |

@@ -294,7 +294,10 @@ PAYLOAD_TEXT_ALLOW_EXACT: set[str] = set()
 # Allocator verified: 27 old/authored notes (13,760/62,108 bytes); old notes remain leads.
 # Allocator interfaces: three verified/authored notes (7,745/12,012 bytes); the verified notes are kept.
 # Decomp names: 75 old/authored notes (40,476/109,654 bytes); old notes remain leads.
+# Decomp names, batch 2: 44 old/authored notes (23,292/63,912 bytes); old notes remain leads.
 REVIEWED_ENCODED_COMMENTS_SHA256 = {
+    "tools/cohort-specs/decomp-names-2-20260929.manifest.tsv":
+        "f415dd868a2948f9df8c352d894be674eed47ce016c9893529f55a34e1fb41bf",
     "tools/cohort-specs/decomp-names-20260929.manifest.tsv":
         "73f50978847462c0050ad1b0921fc3d15ff4858975b80f59e6f1df27395617e2",
     "tools/cohort-specs/memory-abi-20260928.manifest.tsv":

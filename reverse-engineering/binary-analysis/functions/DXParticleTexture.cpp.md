@@ -26,7 +26,7 @@ withdrawn label can tell it was corrected and not lost.
 | `0x00513e20` | `FUN_00513e20` | `CEngine__SetShaderObject` | placeholder replaced; this address carries a name now |
 | `0x00513f20` | `FUN_00513f20` | `CEngine__CreatePixelShaderFromText` | placeholder replaced; this address carries a name now |
 | `0x00514010` | `FUN_00514010` | `IUnknown__ReleaseAndNull` | placeholder replaced; this address carries a name now |
-| `0x00515970` | `FUN_00515970` | `PlatformInput__GetKeyOn` | placeholder replaced; this address carries a name now |
+| `0x00515970` | `FUN_00515970` | `CPCPlatform__KeyOn` | placeholder replaced; this address carries a name now |
 | `0x00549220` | `OID__FreeObject` | `CDXMemoryManager__Free` | class prefix and suffix both moved |
 | `0x00550380` | `CDXPatch__Constructor` | `CLandscapeVB__ctor` | class prefix and suffix both moved |
 | `0x00558690` | `FUN_00558690` | `CDXTexture__GetAnimatedFrame` | placeholder replaced; this address carries a name now |
@@ -329,7 +329,7 @@ Instance method that renders this particle texture's geometry.
 | 0x00568390 | stricmp (`FUN_00568390`) | Case-insensitive string compare |
 | 0x00441740 | CDebugLog__Printf (`FUN_00441740`) | Debug log marker |
 | 0x004725d0 | CGame__IsMultiplayer | Check multiplayer/current-level render condition |
-| 0x00515970 | PlatformInput__GetKeyOn | Check render pass |
+| 0x00515970 | CPCPlatform__KeyOn | Check render pass |
 
 ## Texture Type Meanings
 

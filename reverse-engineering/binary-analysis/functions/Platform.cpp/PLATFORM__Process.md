@@ -1,4 +1,4 @@
-# PLATFORM__Process
+# CPCPlatform__Process
 
 > Address: `0x00515880` | Source: `references/Onslaught/PCPlatform.cpp:144` (`CPCPlatform::Process`)
 

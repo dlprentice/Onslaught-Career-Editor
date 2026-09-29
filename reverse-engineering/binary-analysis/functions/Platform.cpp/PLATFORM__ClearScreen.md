@@ -1,4 +1,4 @@
-# PLATFORM__ClearScreen
+# CPCPlatform__ClearScreen
 
 > Address: `0x00515910` | Source: `references/Onslaught/PCPlatform.cpp:180` (`CPCPlatform::ClearScreen`)
 

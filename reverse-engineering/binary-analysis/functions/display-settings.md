@@ -23,7 +23,7 @@ Battle Engine Aquila retail imports `d3d9.dll` for rendering, but parts of its a
 | Address | Function | Purpose |
 |---------|----------|---------|
 | 0x005286e0 | `CD3DApplication__LoadCardIdAndApplyVendorTweaks` | Wave571 retail `cardid.txt` tweak loader; opens the supplied path, parses adapter/range/tweak rows, scans `DAT_0089c018` CVar entries, and applies matching tweak values |
-| 0x00528f80 | `CD3DApplication__Init` | Wave572 constructor/init; seeds global app pointer, defaults, and 640x480 creation dimensions |
+| 0x00528f80 | `CD3DApplication__ctor` | Wave572 constructor/init; seeds global app pointer, defaults, and 640x480 creation dimensions |
 | 0x005290a0 | `CD3DApplication__Create` | Wave572 D3D app create path; Direct3DCreate9, device-list build, window create, environment init, timer start |
 | 0x00529350 | `CD3DApplication__BuildDeviceList` | Wave572 adapter/device/mode enumeration and HAL/REF/depth/texture/MSAA probes |
 | 0x0052af00 | `CD3DApplication__Initialize3DEnvironment` | Wave572 device create/reset path with cardid/CVar tweaks, presentation parameters, fallbacks, cursor/stats/backbuffer state |

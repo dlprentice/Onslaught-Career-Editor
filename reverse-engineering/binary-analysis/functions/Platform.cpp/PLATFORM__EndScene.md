@@ -1,4 +1,4 @@
-# PLATFORM__EndScene
+# CPCPlatform__EndScene
 
 > Address: `0x005158e0` | Source: `references/Onslaught/PCPlatform.cpp:165` (`CPCPlatform::EndScene`)
 

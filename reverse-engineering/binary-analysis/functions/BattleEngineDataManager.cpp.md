@@ -12,7 +12,7 @@ coordinates, and heaviest direct callees. No purpose is invented.
 | Address | Current name | Bytes | Stack args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
 | `0x0040F590` | `CBattleEngineData__Initialise` | 759 | 0 | 36, 40, 41, 45, 46, 50, 51, 61, 67, 70 | `CDXMemoryManager__Alloc` ×13, `CSPtrSet__AddToHead` ×4 |
-| `0x0040F980` | `CBattleEngineData__LoadFromMemBuffer` | 1939 | 1 | 192, 193, 207, 208, 222, 223, 237, 238, 252, 253, 268, 298, 304, 324, 325, 347, 348, 402, 417, 432, 438 | `CDXMemBuffer__Read` ×42, `CDXMemoryManager__Alloc` ×21, `CSPtrSet__AddToHead` ×5 |
+| `0x0040F980` | `CBattleEngineData__Load` | 1939 | 1 | 192, 193, 207, 208, 222, 223, 237, 238, 252, 253, 268, 298, 304, 324, 325, 347, 348, 402, 417, 432, 438 | `CDXMemBuffer__Read` ×42, `CDXMemoryManager__Alloc` ×21, `CSPtrSet__AddToHead` ×5 |
 
 ## What the coordinates show
 

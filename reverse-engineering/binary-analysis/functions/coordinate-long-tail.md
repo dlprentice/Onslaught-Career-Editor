@@ -492,7 +492,7 @@ pinned source. See the [platform contract](../../source-code/core/platform-syste
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x005154E0` | `PCPlatform__Init` | 253 | 0 | 27 | `CDebugLog__Printf` x3; `CDXMemoryManager__Alloc` x1 |
+| `0x005154E0` | `CPCPlatform__Init` | 253 | 0 | 27 | `CDebugLog__Printf` x3; `CDXMemoryManager__Alloc` x1 |
 | `0x005155E0` | `CPCPlatform__InitFonts` | 457 | 0 | 79–103 | `DebugTrace` x4; `CDXMemoryManager__Alloc` x4 |
 
 ### `PCRTID.cpp` (1)

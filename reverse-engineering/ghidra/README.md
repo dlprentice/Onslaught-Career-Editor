@@ -8,7 +8,7 @@ Summary: checkpoint identity, writable-project routing and external recovery.
 Battle Engine Aquila analysis database. This is the single tracked database
 owner; the mutable Linux project and historical recovery packages remain
 untracked. The latest working correction is the
-[names from the byte-matching decompilation](#re-audit-names-from-the-byte-matching-decompilation--september-29);
+[names from the byte-matching decompilation, batch 2](#re-audit-names-from-the-byte-matching-decompilation-batch-2--september-29);
 `developer_state.json` → `current_re_authority.latestLiveGhidraState` owns its measured identity.
 
 - Snapshot date: 2026-08-28 (seventeenth refresh: the one-row
@@ -945,6 +945,26 @@ Private owner: `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260
 `completion.json` records the exact live readbacks, recovery receipts and full
 export hashes. Current name lookup composes the new manifest; frozen tables
 and historical receipts remain unchanged.
+
+## RE-audit names from the byte-matching decompilation, batch 2 — September 29
+
+The [44-row manifest](../../tools/cohort-specs/decomp-names-2-20260929.manifest.tsv) and
+[spec](../../tools/cohort-specs/decomp-names-2-20260929.spec.tsv) rename functions to the names
+the byte-matching decompilation proves. Specimen: pristine `BEA.exe.original.backup`,
+SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+Each name is the qualified function the private byte-matching decompilation (github.com/dlprentice/bea-decomp) compiles with the original VC6 toolchain (/O2 /Ob2 /GX /MT) to exactly that retail body, relocations checked, and that Stuart's released GPL source (references/Onslaught at 5352a81c) defines under that name in the same-named file. Bodies that may be shared with other functions through identical-code folding are excluded: the screen dropped nine rows (shared-style names, slots of unrelated classes), overloads the live names already distinguish and one name collision were kept out, and the independent review rejected two more shared bodies (GetInitialLife/GetMaxLife 00406040, GetScreenWidth/GetWindowWidth 00515940); the rejected version is kept in rejected-v1/. Prototypes are not changed here.
+
+Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
+refusals, independent review with root reproduction, live readback and
+independently restored POST passed. All nine live exports equal rehearsal.
+Exactly 44 function names, plate comments and tag sets change to the names the byte-matching decompilation proves. All saved prototypes, code bytes, locals and 8,288 non-target function rows are unchanged; 1 previously empty plate comments are added. Former names and notes are kept in each comment as fallible leads.
+
+Working identity: `db.18719`, 18 files / 126,503,796 bytes,
+inventory SHA-256 `0dd36a6af43c7698545035c507af88edb744cfa1d2c23760425a6913b5d2981b`; main database 76,201,984 bytes,
+SHA-256 `b5a2ebbc8dd77a9c77e12483047044f8773585ef812cfae853689dd5a9999c64`. The restored decomp-names POST (batch 1) is PRE.
+Independent POST: `/srv/archive-a/onslaught-ghidra-cold/2026-09-29-decomp-names-2/post-working`. Tracked checkpoint remains `745c00ad…`.
+Private receipts: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/decomp-names-2/`.
 
 ## RE-audit names from the byte-matching decompilation — September 29
 

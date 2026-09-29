@@ -1,4 +1,4 @@
-# PLATFORM__BeginScene
+# CPCPlatform__BeginScene
 
 > Address: `0x005158c0` | Source: `references/Onslaught/PCPlatform.cpp:159` (`CPCPlatform::BeginScene`)
 

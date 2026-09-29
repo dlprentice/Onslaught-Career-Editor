@@ -1,4 +1,4 @@
-# CEngine__ClampBurstStartTimeFloorNow
+# CBattleEngine__WeaponOverheated
 
 > Address: `0x0040f110` | Source family: `engine.cpp` / burst-progress helper cluster
 
