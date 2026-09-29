@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-29 (decompilation continuation recorded; broader RE audit unfinished; rebuild and companion paused)
+Last updated: 2026-09-29 (decompilation reconciled and continuing; broader RE audit unfinished; rebuild and companion paused)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -48,8 +48,10 @@ owns the score and the matched-function list, and this file keeps only the plan.
 
 For the September 29 handover, continue from the current private `bea-decomp` main branch,
 whose README and commit bodies record the integrated source, exact score, original-code
-experiments and remaining partials. Collision, terrain sampling, polygon buckets and weapon/shell
-lifecycle are the current object families. This continuation did not open or mutate Ghidra;
+experiments and remaining partials. Work is split into disjoint object families, one worker per
+`bea-decomp` worktree; the lead merges each pushed branch into main, scores it and checks that no
+earlier match is lost. The September 29 reconciliation merged every worker branch the handover had
+left out. This continuation did not open or mutate Ghidra;
 the recorded live authority remains selected by `developer_state.json`. Do not replay the old
 prepared-cohort queue or mistake isolated original-code probes for full game acceptance.
 
