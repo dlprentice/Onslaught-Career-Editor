@@ -1,4 +1,4 @@
-# CFrontEnd__RenderCursorEndSceneAndAsyncSave
+# CFrontEnd__RenderEnd
 
 - Address: 0x00468700
 - Status: Renamed (headless batch, Wave 377 read-back verified)

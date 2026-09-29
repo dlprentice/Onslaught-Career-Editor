@@ -1,4 +1,4 @@
-# FrontEnd__HasStandardSlidingTextBordersAndMaskPage
+# got_standard_SlidingTextBordersAndMask
 
 - Address: 0x004679a0
 - Status: Renamed (headless batch, Wave 377 read-back verified)

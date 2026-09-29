@@ -1,10 +1,10 @@
 # CCareer__GetGradeForWorld
 
-<!-- ghidra-name-drift-accepted: 0x0041c330 CCareer_T3_0041c330 (2026-08-17) -->
+<!-- ghidra-name-drift-accepted: 0x0041c330 GRADE (2026-09-29) -->
 
 > Address: 0x0041c330 | Source: `references/Onslaught/Career.cpp`
 >
-> **The saved Ghidra name is now the Tier-3 placeholder `CCareer_T3_0041c330`.**
+> **The saved Ghidra name is now `GRADE`** (2026-09-29, `decomp-names-20260929`: the byte-matching decompilation compiles Stuart's `GRADE` in Career.cpp to this body). It was the Tier-3 placeholder `CCareer_T3_0041c330`.
 > This page keeps its old title so existing references still resolve.
 
 ## Name demotion — 2026-08-17

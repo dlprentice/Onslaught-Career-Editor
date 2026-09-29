@@ -1,4 +1,4 @@
-# CBattleEngineJetPart__dtor_base
+# CBattleEngineJetPart__dtor
 
 > Address: `0x004102a0` | Source family: `references/Onslaught/BattleEngineJetPart.cpp`
 

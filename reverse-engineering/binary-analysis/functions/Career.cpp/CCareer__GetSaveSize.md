@@ -1,4 +1,4 @@
-# CCareer__GetSaveSize
+# CCareer__SizeOfSaveGame
 
 Status: active bounded retail size contract
 Last updated: 2026-09-19

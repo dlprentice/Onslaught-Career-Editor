@@ -1,4 +1,4 @@
-# CBattleEngine__SelectNearestForwardTargetFromGlobalSet
+# CBattleEngine__GetClosestLockableUnit
 
 > Address: `0x00406da0` | Source family: `references/Onslaught/BattleEngine.cpp`
 
@@ -141,4 +141,4 @@ Siblings: `CBattleEngine__HandleLocks` /
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x00406da0` | `CBattleEngine__SelectNearestForwardTargetFromGlobalSet` | `83ec4c a1d0508500 … e8ef650f00 … e8fdf30f00 … c21800` (539 B) | incoming-ECX thiscall; ret 0x18 ×2; 539 B; 5 E8 side/profile/field98/First/Next / 0 E9; 3 inbound HandleLocks. HIGH on ABI, BSS set `[0x008550d0]`, unique three-site inbound. Mapping `PARTIAL_CONTRACT`; no Core owner. **Not** on `GetClosestLockableUnit` or rebuild parity. |
+| `0x00406da0` | `CBattleEngine__GetClosestLockableUnit` | `83ec4c a1d0508500 … e8ef650f00 … e8fdf30f00 … c21800` (539 B) | incoming-ECX thiscall; ret 0x18 ×2; 539 B; 5 E8 side/profile/field98/First/Next / 0 E9; 3 inbound HandleLocks. HIGH on ABI, BSS set `[0x008550d0]`, unique three-site inbound. Mapping `PARTIAL_CONTRACT`; no Core owner. **Not** on `GetClosestLockableUnit` or rebuild parity. |
