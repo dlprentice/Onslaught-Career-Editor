@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-28 (RE allocator records promoted; byte-matching decompilation started; broader audit unfinished; rebuild and companion paused)
+Last updated: 2026-09-29 (decompilation continuation recorded; broader RE audit unfinished; rebuild and companion paused)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -25,11 +25,12 @@ lane's main loop. The source, build scripts and score live in the private reposi
 `github.com/dlprentice/bea-decomp` (checkout `~/Projects/game-dev/bea-decomp`); its README
 owns the score and the matched-function list, and this file keeps only the plan.
 
-- **Toolchain.** Visual C++ 6.0 under a headless Wine prefix: CL 12.00.8804 with
-  C1/C1XX/C2 12.00.9782 (SP6) and LINK 6.00.8447, pinned with provenance in
-  `local-lab/third-party/msvc6-toolchain/SOURCE.txt`. The Rich header records build 8966
-  (SP5 with the Processor Pack) for the game's 464 C++ and 3 C objects; SP6 has reproduced
-  every function tried so far. Flags `/O2 /Ob2 /GX /MT`; the retail build folder
+- **Toolchain.** Visual C++ 6.0 SP5 under isolated headless Wine prefixes: CL 12.00.8804,
+  C1 12.00.8867, C1XX 12.00.8964, C2 12.00.8966 and LINK 6.00.8447, pinned by
+  `bea-decomp/config/toolchain.sha256`, with provenance in
+  `local-lab/third-party/msvc6-sp5-toolchain/SOURCE.txt`. C2 build 8966 matches the retail
+  Rich-header record; the initial SP6 setup is superseded. Flags `/O2 /Ob2 /GX /MT /QIfist`;
+  the retail build folder
   `C:\dev\ONSLAUGHT2\` is mapped onto the source folder so `__FILE__` matches.
 - **Judge.** A function counts only when its whole compiled section equals the pristine
   bytes and every relocation lands where the evidence says (own section, annotated callees,
@@ -43,10 +44,14 @@ owns the score and the matched-function list, and this file keeps only the plan.
   subsystem, dormant code included. Stuart's GPL source seeds the 26 files it shares with
   the retail build; each divergence is recorded in the decomp README with its evidence.
 - **Promotion.** Names and prototypes a match proves go to Ghidra in batches through the
-  promotion gate; the allocator interfaces are the first.
+  promotion gate. New source matches do not automatically change the live database.
 
-MemoryManager.cpp and DXMemoryManager.cpp match completely apart from their per-object
-maths-constant initializers, which wait on the maths header.
+For the September 29 handover, continue from the current private `bea-decomp` main branch,
+whose README and commit bodies record the integrated source, exact score, original-code
+experiments and remaining partials. Collision, terrain sampling, polygon buckets and weapon/shell
+lifecycle are the current object families. This continuation did not open or mutate Ghidra;
+the recorded live authority remains selected by `developer_state.json`. Do not replay the old
+prepared-cohort queue or mistake isolated original-code probes for full game acceptance.
 
 ### Dedicated RE lane — current continuation
 
