@@ -50,7 +50,10 @@ owns the score and the matched-function list, and this file keeps only the plan.
   when Stuart's released source ties it to the body: the same-named released file defines
   it; a matched function compiled from a released file calls it by that name, so the
   relocation check puts the call on this address; or a released header declares it as a
-  virtual whose slot the matched vtable fills with this body. A body shared through
+  virtual whose slot the matched vtable fills with this body. The method name must be
+  written in his text. Where it does not name the class (a global object, a macro, an
+  unreleased header), the comment says the class qualifier is the reconstruction's; a
+  caller that exists only in retail or in reconstructed code backs nothing. A body shared through
   identical-code folding keeps a shared name. A reconstruction label may go in as a
   comment that says it is one, never as the function's name.
 
