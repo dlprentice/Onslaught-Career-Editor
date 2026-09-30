@@ -1,9 +1,9 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-09-30 (named-mesh interface and segment-contact rounding corrections)
-Summary: named-mesh rendering uses a secondary interface pointer, and segment contact coordinates round after addition; retained engine/resource slices are historical leads, not current completeness claims.
-Evidence: MEASURED — September 30 RTTI, vtable and instruction readback, the named-mesh getter's whole-section byte match, and bounded original-code contact calculations; older slices were not reverified in this pass.
+Last updated: 2026-09-30 (named-mesh interface, segment precision and primitive collision boundaries)
+Summary: named-mesh rendering uses a secondary interface pointer; segment and sphere float materialization affects admission, while sampled cylinder behavior preserves retail quirks. Retained engine/resource slices are historical leads.
+Evidence: MEASURED — September 30 RTTI, vtable and instruction readback, the named-mesh getter's whole-section byte match, and bounded original-code collision calculations; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 This contract consolidates the retained engine/frame, render-state, resource,
@@ -56,8 +56,9 @@ segment `(1,-1,-1)` to `(-2,2,2)` and a null report reach the compared contact s
 before prism admission. The slice comparison begins with an empty x87 stack and nonaliased finite
 inputs. It neither determines the game's actual FPU control state nor validates denominator rounding,
 normal construction, prism acceptance, report writes, special floating values or whole-function
-behavior. The corrected candidate remains unmatched: 624 compiled bytes versus 1,014 retail body
-bytes. All 18 previously matched Geometry functions remain exact.
+behavior. That intermediate candidate was 624 compiled bytes; the following approach correction
+supersedes it and retains all 27 contact-slice results. All 18 previously matched Geometry functions
+remain exact.
 
 These higher-precision counterexamples are not established failures of ordinary gameplay. The earlier
 [copied-retail observation](functions/CComplexThing.cpp.md#copied-retail-plane-observation-september-8)
@@ -75,6 +76,84 @@ Consumers should preserve the addition-before-store boundary instead of introduc
 temporary. A useful next falsifier is a controlled caller observation recording the FPU control word,
 contact bits and subsequent prism decision together. This correction does not establish a Godot
 collision defect, gameplay outcome or runtime parity.
+
+## Segment facing and approach — September 30
+
+The same routine has two distinct dot products. At `0x00478cff`–`0x00478d2d`, the facing
+test uses displacement differences retained in x87 while also storing float32 copies. At
+`0x00478d3a`–`0x00478d54`, the threshold/division dot reloads those copies; the absolute-value
+threshold comparison is at `0x00478d58`–`0x00478d5a`. Reusing one cached float dot or simply
+splitting its tests does not preserve these two evaluation boundaries.
+
+The corrected reconstruction evaluates facing separately, constructs the stored displacement, then
+recomputes approach. The lead reproduced 57 finite ordinary-entry prefixes at declared PC24/53/64,
+nearest rounding: all corrected outcomes, normal bits and admitted distance bits agree. The previous
+candidate differs twice; a naive split-expression version differs eight times. With normal
+`(0.6f,0.8f,0)` and Y displacement bits `0xbbcccccc`, the previous float store rounds the magnitude
+up to the `0.005f` threshold at PC53/64 and admits a case retail rejects. With normal +Z,
+start Z=1 and end Z=`-2^-24`, retaining the unrounded displacement for the second dot yields
+distance `0x3f7fffff` instead of retail's `0x3f800000`, affecting comparison with a previous hit.
+
+These runs stop at rejection or the first contact instruction. They do not validate the prism,
+report publication or the whole function. Two controls refuse an undeclared read and input write;
+declared input/report bytes and FPU control state are preserved. All other Geometry callable sections
+and relocations are unchanged. The corrected body remains unmatched: 672 section bytes versus
+1,014 retail body bytes. The earlier contact slices still agree in all 27 cases.
+
+Private probe: `bea-decomp/.worktrees/codex-collision-nearmiss-20260930/build/geometry-approach-probe-v2-20260930.py`,
+SHA-256 `c3d393e008a240aaaa533fe54c1b4859654887cd2230c35f0f3c836ac298bf84`.
+Lead receipts: `bea-decomp/local-data/geometry-approach-root-20260930.json` and
+`bea-decomp/local-data/geometry-contact-retained-root-20260930.json`.
+The useful runtime falsifier remains observation of the actual caller's FPU state and admission path;
+the earlier Plane/AirGuide PC24 observations do not settle this call site.
+
+## Sphere and cylinder boundary checks — September 30
+
+The lead independently reproduced complete invocations of sphere line admission (`0x004e4b90`)
+and cylinder collision/line response (`0x0043fe20`, `0x00440510`) with actual byte-verified retail
+helpers and no stubs. These are bounded emulator experiments over authored records, not a running
+retail game or proof of function equivalence.
+
+Sphere line admission has an open reconstruction defect. For radius 1, zero relative position and
+segment `(1,1,0)` to `(-0.5,1,0)`, retail materializes the scaled displacement before addition
+through its constructor call at `0x004e4cf7`. Its closest point is `(0,1,0)` and admission is true.
+The candidate's earlier inlining retains closest-point X=`-2^-25` at PC53/64 and returns false.
+Across 51 finite cases at PC24/53/64, twelve admissions differ; PC24 controls agree. Both entries
+reject radial endpoint-only contact when the projection lies outside the segment. Named-temporary
+and cast-only experiments did not reliably restore the boundary, so no forced source fix is retained.
+Nine controls detect invalid execution/dependencies and a strict-versus-inclusive tangency mutant.
+Degenerate outside/tangent division, nonfinite inputs, hardware exceptions and live FPU mode remain open.
+The next source falsifier is recovery of the two retail constructor-call boundaries while retaining
+the already-exact vector helpers and all earlier Sphere matches.
+
+Cylinder's 55 sampled cases agree in defined outputs across two stack-fill patterns at declared
+PC64/RN. They preserve behavior that should not be replaced with idealized collision geometry:
+
+- Equality is admitted at the coarse radial/height tests (`0x0043fe71`–`0x0043fe96`).
+- Response-enabled admission can reject a separating overlap that the coarse test accepts
+  (`0x0043ffbf`–`0x0043ffd5`).
+- The deep-overlap branch at `0x004403ec` moves both positions and sets stopped flags without
+  writing the report normal. With unit cylinders, initial other X=1.5 and movement X=-0.25,
+  the sampled other/own positions become 1.625/-0.125.
+- Vertical branch selection at `0x0043ff1e`–`0x0043ff5c` uses signed initial Z; substituting
+  absolute Z changes the branch.
+- The line quadratic (`0x00440801`–`0x00440884`) uses the full 3D direction length. For unit
+  radius/half-height and line `(-2,1,0)` to `(2,1,0)`, detailed response yields contact
+  `(-0.76393199,1,0)`, rather than the ideal tangent point.
+
+The cylinder probe executes seven exact helpers and detects nine negative controls. Six identified
+integer-copy sites read uninitialized vector padding; these bytes are recorded and excluded from
+defined-output comparisons. All other uninitialized stack reads refuse. Zero-length inputs may produce
+nonfinite intermediates; no hardware-exception claim follows. Both large cylinder bodies remain
+unmatched, with no demonstrated source defect in these samples. A useful next falsifier combines a
+real caller's FPU word, detail flag, distinct volume/movement records and resulting contact state.
+
+Private frozen probes are `bea-decomp/.worktrees/codex-career-nearmiss-20260930/build/sphere-line-review-20260930/probe.py`
+(SHA-256 `f68e248f2d072172bfa0d5e15cc9046bf00f91ba80b644167181d8cb67fd3067`) and
+`bea-decomp/.worktrees/codex-unitai-nearmiss-20260930/build/cylinder-boundaries-20260930/probe.py`
+(SHA-256 `60339772c35dcb6ea86e28aef2014df2515476beac0d9c60e386ef6b48514936`).
+Independent lead results are `bea-decomp/local-data/sphere-line-root-20260930/comparison.json`
+and `bea-decomp/local-data/cylinder-boundaries-root-20260930/comparison.json`.
 
 ## Baseline Static System Slices
 

@@ -95,6 +95,9 @@ pushed; its README owns the exact score. What remains:
   The same contract records a [segment-contact precision correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#segment-contact-precision--september-30):
   retail adds before storing each coordinate, whereas a reconstruction temporary rounded two products
   early. Bounded original-code cases expose the difference; the complete collision body remains open.
+  Its [approach and primitive-collision checks](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#segment-facing-and-approach--september-30)
+  additionally distinguish facing from the reloaded displacement dot, leave a demonstrated sphere-tangency
+  reconstruction defect open, and bound cylinder admission/response without claiming equivalence.
   The generic scale-menu renderer now matches, including separate alpha products; see the
   [frontend contract](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#generic-scale-menu-rendering--september-30).
   The [unit damage note](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__ApplyDamage.md)
@@ -107,6 +110,9 @@ pushed; its README owns the exact score. What remains:
   matrix initialization; bounded arithmetic probes remain distinct from live camera acceptance.
 - **Tools.** The permuter, the inline-rule experiments and the near-miss scanners are in bea-decomp
   `tools/`. A permuter result that does not match fully is a lead to read, not a patch.
+  The harness compiles and compares objects; it does not yet link a replacement executable. Its selected
+  compiler and complete DirectX/VC6 include trees are pinned. Original project/PCH/link settings and
+  portions of the game headers remain reconstructed or unknown; function matches do not settle them.
 - **Ghidra.** The name promotions are `decomp-names`, `decomp-names-2` and `decomp-names-3` (evidence in
   `local-lab/…/re-audit-20260926/decomp-names*/`; the batch-3 folder holds the caller-witness and
   shared-body screens to reuse). One flow defect was found and left for a boundary correction: Ghidra
