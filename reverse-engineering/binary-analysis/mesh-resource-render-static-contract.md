@@ -1,9 +1,9 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-09-30 (named-mesh interface, collision boundaries and serialized bone payload sizes)
-Summary: named-mesh rendering uses a secondary interface pointer; collision calculations preserve float materialization and retail quirks; the mesh-part consumer distinguishes bone weights from fixed-width bone slots. Retained engine/resource slices are historical leads.
-Evidence: MEASURED — September 30 RTTI, vtable and instruction readback, the named-mesh getter's whole-section byte match, and bounded original-code collision calculations; older slices were not reverified in this pass.
+Last updated: 2026-09-30 (mesh-part loader match and distinct render-method setters)
+Summary: named-mesh rendering uses a secondary interface pointer; collision calculations preserve float materialization and retail quirks; the mesh-part consumer distinguishes bone weights from fixed-width bone slots; an integer render-method store leaves acceptance unchanged. Retained engine/resource slices are historical leads.
+Evidence: MEASURED — September 30 RTTI, vtable and instruction readback, whole-section byte matches for the named-mesh getter, mesh-part loader and render-method setters, and bounded original-code collision calculations; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 This contract consolidates the retained engine/frame, render-state, resource,
@@ -29,8 +29,14 @@ Both call `CChunkReader::Read` at `0x00423960`; its instructions at `0x00423961`
 multiply the element size and count. The slot loop has **no bone-count multiplier**. Thus the
 pinned extractor's `numPVert * 4 * numBones * 3` skip at `AyaModelImporter.cs:321` disagrees
 with this consumer when the bone count is greater than one and positions are present. Its
-weight formula agrees within these static limits. The current private reconstruction already
-uses the retail dimensions; this recheck does not add an exact function match.
+weight formula agrees within these static limits. The private reconstruction already used the
+retail dimensions before this recheck. A subsequent source-lifetime correction also makes the
+entire loader match: its five independent chunk-read indices now have separate lexical scopes,
+reproducing retail's reuse of dead argument homes. All 2528 compiled section bytes and every
+relocation match, covering 2514 retail function bytes. The lead recompiled the helper's change and
+reproduced it in the complete integrated build with all earlier matched identities retained.
+Private receipts: `bea-decomp/.worktrees/codex-unitai-nearmiss-20260930/build/meshpart-load-stack-20260930/`
+and `bea-decomp/build/source-interfaces-score-20260930.log`.
 
 These are consumer/data-flow findings from the pristine specimen above, independently read
 from its instructions on September 30. The reader advances chunks without comparing the
@@ -41,6 +47,31 @@ interpretation, or safe malformed-input behavior is established. A hash-pinned r
 these payloads remains the cheapest end-to-end falsifier; the comparison does not authorize
 guessing data or silently enabling a new rebuild parser path. See the corrected
 [extractor crosswalk](../source-code/aya-resource-extractor-source-audit.md).
+
+## Render-method setters have different acceptance effects — September 30
+
+The integer store at `0x00528b50` copies its stack argument to receiver `+0x0c` and returns
+with four bytes of callee cleanup. It does not touch `+0x10`. The float setter at `0x00527d00`
+instead converts its argument through x87, stores the resulting integer at `+0x0c`, and sets
+the acceptance flag at `+0x10` to one (`0x00527d0f`). These are distinct operations even when
+both receive zero.
+
+Landscape's call at `0x0054565c` uses the integer store on `0x008aa920`; water's call at
+`0x0055bacc` uses that same body on `0x009cc030`. The private reconstruction had incorrectly
+selected the float setter for Landscape. It now uses an explicit integer setter, while the
+console/CLI float setter remains unchanged. Both complete setter sections match retail.
+`SetMethod` is a reconstruction name: folding shares the integer body with other setters and
+does not establish its original source spelling or object-file home.
+
+The texture-call recheck also consolidates fourteen declaration-only `GetAnimatedFrame` aliases
+onto the existing `GetTexture` implementation at `0x00558690`. The checked callers pass the
+returned pointer unchanged to texture binding; no second animation operation is established.
+The whole integrated build preserves prior matched identities. Fresh instruction readback and
+the before/after object comparison are in the private owner
+`bea-decomp/.worktrees/codex-equiv-20260930/build/interface-bindings-20260930/`.
+These findings correct source bindings and state writes, not a demonstrated Godot or GPU defect.
+The cheapest runtime falsifier would observe `+0x10` across the Landscape fallback call and the
+subsequent validation path; no new retail rendering run was performed.
 
 ## Named-mesh render interface — September 30
 

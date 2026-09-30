@@ -119,6 +119,11 @@ pushed; its README owns the exact score. What remains:
   This is structural progress; the complete callers remain unmatched. The AYA cross-check also
   [bounds weight/slot payload dimensions](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#serialized-bone-payload-dimensions--september-30),
   disproving the extractor's extra bone-count multiplier for slots without claiming a newly observed asset.
+  The complete mesh-part loader now matches after separating five read-index lifetimes. A further
+  interface pass restores source-backed release no-op definitions and removes duplicate texture and
+  collision-report declarations; the [render-method correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#render-method-setters-have-different-acceptance-effects--september-30)
+  prevents Landscape from setting an acceptance flag that retail leaves unchanged. The complete private
+  score retains all earlier matched identities; these fixes do not establish a linked replacement game.
 - **Ghidra.** The name promotions are `decomp-names`, `decomp-names-2` and `decomp-names-3` (evidence in
   `local-lab/…/re-audit-20260926/decomp-names*/`; the batch-3 folder holds the caller-witness and
   shared-body screens to reuse). One flow defect was found and left for a boundary correction: Ghidra
