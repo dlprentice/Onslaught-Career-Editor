@@ -1,17 +1,19 @@
 # CUnit__ApplyDamage
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-22
-Summary: specimen-bound static contract for `CUnit__ApplyDamage` at `0x004f9a90`; packet-described behavior is retained with explicit unknowns and no promotion claim.
+Status: historical packet contract (factory draft); current identity and behavior are owned by the corrected function note
+Last updated: 2026-09-30 (routing only; August packet evidence retained)
+Summary: retained August packet for `0x004f9a90`; current `CUnit__Damage` semantics are in the corrected function note, not this historical summary.
 Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, and independently recomputed pristine body bytes; runtime and source limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not_applicable (no current source-crosswalk row) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x004f9a90`
 
+Current interpretation: [CUnit__Damage function note](../../binary-analysis/functions/Unit.cpp/CUnit__ApplyDamage.md). Its September 30 instruction recheck corrects damage/repair gates, mesh-name polarity, receiver attribution and warning thresholds. The packet labels, grades and coverage counts below remain dated historical evidence.
+
 ## Identity
 - Body `[0x004f9a90,0x004fa4a9]`, 2586 bytes, 771 closure instructions. Raw pristine-body SHA-256 `c00c805fc86ad1f52e6ab7d8fc739c456983914319ad99870d49c88b8733f859`; closure range SHA-256 `6d887e5b714b5c78474870ba56e04925a0b1652f2464f9484a4d03d26e353e45`; packet range-plus-bytes SHA-256 `4a3d778ea9d637633abb7727bab4746eaac74f0c62a5eb7399f82894ed170999`. All three were independently recomputed over the exact single contiguous inclusive range.
-- Canonical name `CUnit__ApplyDamage` comes from the current closure/register row. Packet label matches canonical tracked name `CUnit__ApplyDamage`.
+- The August closure/register row called this `CUnit__ApplyDamage`; that is the retained packet label, not the current saved identity.
 - Packet name source `USER_DEFINED` and signature source `USER_DEFINED` are counted provenance, not semantic proof.
 - Campaign grade `C2_BOUNDED_RUNTIME` / closure class `SEALED_STATIC_RECEIPT` / packet confidence `HIGH`. Proposed promotion: false.
 

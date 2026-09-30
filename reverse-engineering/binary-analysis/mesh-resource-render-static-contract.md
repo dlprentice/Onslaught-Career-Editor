@@ -1,20 +1,50 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
+Last updated: 2026-09-30 (named-mesh interface correction; older slices retained as history)
+Summary: named-mesh rendering reads the mesh number through a secondary interface pointer; retained engine/resource slices are historical leads, not current completeness claims.
+Evidence: MEASURED — September 30 RTTI, vtable and instruction readback plus a whole-section byte match for the named-mesh getter; older slices were not reverified in this pass.
+Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 This contract consolidates the retained engine/frame, render-state, resource,
 mesh geometry, and collision bridges used by asset tooling and rebuild planning.
 Current corrected metadata is owned by the
-[Ghidra correction authority](ghidra-full-reaudit-closeout-2026-07-13.md).
+[Ghidra guide](../ghidra/README.md) and `developer_state.json`'s selected live authority.
 Static evidence does not by itself establish runtime rendering or layout parity.
 
+## Named-mesh render interface — September 30
+
+The shared getter at `0x004183f0` reads `[ecx+0xd8]` and returns. ECX is the **secondary render
+interface at complete-object offset +8**, so the read selects complete-object `+0xe0`. It is not a
+read of the actor's `+0xd8` field. RTTI complete-object locators for named-mesh vtables `0x005dd578`
+and `0x005d9094` both record offset 8; their zero-based slot 11 (`+0x2c`) contains this getter.
+`CNamedMesh::Init` loads the initialization mesh number at `+0x64` and stores it at complete-object
+`+0xe0` (`0x004bbcd8`–`0x004bbcdc`).
+
+The caller path independently supports the adjustment: `0x004f35d7` forms the object-plus-eight
+pointer passed to the render factory; `0x004dc4fa` retrieves the render object's stored interface
+pointer and `0x004dc503` invokes its slot `+0x2c`. The private reconstruction's `GetRenderMesh`
+override now reproduces the complete 16-byte compiled section (seven body bytes plus alignment).
+The lead recompiled the affected objects and the full integrated build without losing earlier matches.
+Private receipts: `bea-decomp/.worktrees/codex-equiv-20260930/build/namedmesh-secondary-this-evidence-20260930.json`
+and `menu-namedmesh-readback-root-20260930.txt`; integrated checks are in
+`bea-decomp/build/root-score-menu-namedmesh-20260930.log`.
+
+Preserve the adjusted receiver when translating render dispatch or object layouts. This closes the
+getter/receiver identity question; it does not demonstrate a current Godot defect, visible mesh selection,
+animation correctness or scene parity. A useful runtime falsifier would observe the complete-object
+pointer, interface pointer and selected mesh number together at a real render initialization boundary.
+
 ## Baseline Static System Slices
+
+The following dated slices and backup paths are inherited records, not reverified recovery or semantic
+completeness claims. Their historical function spellings may have been corrected by later audits.
 
 | Slice | Contract role |
 | --- | --- |
 | Wave904 `texture-render-static-review-wave904` | Static-coherent texture/resource/decode/render baseline: texture lookup/lifetime, DirectX texture load/decode/upload, CFastVB dispatch/math/render, CVBufTexture/CVBuffer/CIBuffer render paths, render-state cache, render queue, mesh-renderer entry, and asset extraction counts. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-101300_post_wave904_texture_render_static_review_verified`. |
 | Wave905 `mesh-motion-world-particle-static-review-wave905` | Static-coherent mesh/motion/world/particle baseline: thing/render initialization, CMesh/CMeshPart geometry and pose-cache rows, world occupancy and physics-manager lists, mesh collision, particle manager/set/descriptor rows, and mesh asset bridge counts. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260526-103409_post_wave905_mesh_motion_world_particle_static_review_verified`. |
-| Waves1093-1100 | Recent focused rechecks tying engine bootstrap, frame render spine, state/matrix support, render queue, primitive collision, CMesh registry, and CMeshPart load/geometry rows into the current `6410/6410 = 100.00%` closure state. |
+| Waves1093-1100 | Historical focused rechecks covering engine bootstrap, frame render spine, state/matrix support, render queue, primitive collision, CMesh registry and CMeshPart load/geometry rows. Their reported closure coverage did not establish complete semantic understanding. |
 
 ## Engine And Frame Render Contract
 

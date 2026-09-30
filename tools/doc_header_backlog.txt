@@ -277,11 +277,9 @@ reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md
 reverse-engineering/binary-analysis/ghidra-fullpass-expedition-handoff-2026-07-25.md
 reverse-engineering/binary-analysis/goodies-gallery-display-unlock-patch.md
 reverse-engineering/binary-analysis/high-impact-call-chain-appendix.md
-reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md
 reverse-engineering/binary-analysis/local-multiplayer-static-runtime-contract.md
 reverse-engineering/binary-analysis/mapped-systems.md
 reverse-engineering/binary-analysis/mesh-motion-world-particle-static-review-2026-05-26.md
-reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md
 reverse-engineering/binary-analysis/missionscript-iscript-static-contract.md
 reverse-engineering/binary-analysis/name-grading-ledger-2026-07-25.md
 reverse-engineering/binary-analysis/name-grading-ledger-2026-07-26.md

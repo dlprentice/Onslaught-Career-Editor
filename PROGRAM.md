@@ -60,8 +60,8 @@ owns the score and the matched-function list, and this file keeps only the plan.
 Handover, September 30 (the Claude team stopped for a machine restart). Continue from `bea-decomp` main:
 every worker branch (`decomp/frontend`, `world`, `units`, `engine`, `lead`) is merged into main, and all are
 pushed; its README owns the exact score. What remains:
-- **Near misses only.** No game function is left unwritten apart from a few out-of-line copies
-  (`004183f0`, `00449560`, `004c78d0`). The rest compile but differ in inlining, register choice or
+- **Near misses.** Most game functions have source candidates, with some out-of-line copies still
+  absent from compiled output. The named-mesh getter `004183f0` now matches. Remaining bodies differ in inlining, register choice or
   instruction order. The README's "Findings" start with VC6's measured inline rule: per-callee size
   caps, a per-caller budget and the order sites are spent. It is the main lever for the inlining class.
   Per-function notes sit above each near miss in the source.
@@ -82,6 +82,15 @@ pushed; its README owns the exact score. What remains:
   mode-search control flow and inlining. The compiled-prefix scoring gap is guarded; the fresh complete
   build found no previously credited undersized sections. A small instruction-byte difference is not a
   semantic-equivalence measure, especially before relocation constants have been checked.
+- **Contracts corrected from this work.** Named-mesh rendering uses a secondary interface pointer,
+  explaining the apparent field-offset disagreement in the [mesh/render contract](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#named-mesh-render-interface--september-30).
+  The generic scale-menu renderer now matches, including separate alpha products; see the
+  [frontend contract](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#generic-scale-menu-rendering--september-30).
+  The [unit damage note](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__ApplyDamage.md)
+  corrects inherited nexus/weakpoint polarity, repair/death thresholds, squad receiver attribution and
+  warning-latch behavior. Fresh static reads and 61 bounded original-code cases support those corrections;
+  the complete Damage function remains unmatched. These contracts do not establish live presentation
+  or player acceptance, and neither paused implementation lane was changed.
 - **Tools.** The permuter, the inline-rule experiments and the near-miss scanners are in bea-decomp
   `tools/`. A permuter result that does not match fully is a lead to read, not a patch.
 - **Ghidra.** The name promotions are `decomp-names`, `decomp-names-2` and `decomp-names-3` (evidence in
