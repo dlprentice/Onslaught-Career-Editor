@@ -57,101 +57,46 @@ owns the score and the matched-function list, and this file keeps only the plan.
   identical-code folding keeps a shared name. A reconstruction label may go in as a
   comment that says it is one, never as the function's name.
 
-Handover, September 30: David asked Codex to stop at a clean resume point for Claude Code.
-Continue from `bea-decomp` main and this repository's `codex/retail-re-20260919` branch;
-their existing README and contracts own the results. The earlier Claude worker branches
-(`decomp/frontend`, `world`, `units`, `engine`, `lead`) were integrated before this continuation.
-The latest squad-centroid, trail-allocation and physics-profile reload corrections are also
-integrated in private main. Codex's helper worktrees retain frozen, ignored experiments;
-do not replay their commits or delete their evidence. No Ghidra promotion was started in
-this closeout, and no lane should be resumed from the superseded prepared queues. What remains:
-- **Near misses.** Most game functions have source candidates, with some out-of-line copies still
-  absent from compiled output. The named-mesh getter `004183f0` now matches. Remaining bodies differ in inlining, register choice or
-  instruction order. The README's "Findings" start with VC6's measured inline rule: per-callee size
-  caps, a per-caller budget and the order sites are spent. It is the main lever for the inlining class.
-  Per-function notes sit above each near miss in the source.
-- **Behaviour tests.** The saved `decomp/equiv-wip` work is integrated with corrections in private
-  `bea-decomp` main. The false divergence of matched `00442d40` at trial 73 came from placing the
-  candidate at an address also used for synthetic indirect calls. Both bodies now execute at the
-  retail address in separate emulator images. Unsupported ABI/stack observations, faults, unresolved
-  dependencies and incomplete coverage remain INCONCLUSIVE; x87 return/control state and callee-saved
-  registers are compared. The exact `00411b70` control completed 45 trials covering its four blocks
-  without a difference. This is bounded stub-model evidence, not equivalence, retail acceptance, or
-  proof that a near miss is impossible to compile exactly. See `bea-decomp/AGENTS.md` and its focused
-  authored-code tests; do not use randomized agreement to close an unresolved body.
-- **Current matching work.** Continue from integrated source, not the old prepared queues. Exact
-  collision-response, box-distance, actor-movement and mouse-recentering corrections are in the private
-  repository; its README and full score own counts. Mouse recentering also corrected a one-ULP constant
-  error, documented in the existing [controller reference](reverse-engineering/source-code/frontend/controller-system.md#september-30-mouse-recentering-byte-match).
-  `ReadOptions` remains open: its old "register-only" description understated differences in key packing,
-  mode-search control flow and inlining. Fifty fresh bounded comparisons now agree on the inspected
-  selection/settings paths under declared callback models; the [save/settings contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#september-30-reconstructed-options-reader-comparison)
-  preserves the inputs, controls and limits. This is not a byte match or whole-save acceptance.
-  The [current-mode lookup recheck](reverse-engineering/game-mechanics/battle-engine-weapon-stores.md#current-mode-lookup--september-30-recheck)
-  records 57 finite in-array comparisons, with malformed-input witnesses and x87 emulator limits kept
-  separate. Shared-iterator writes and the ordered fallback are required behavior; the complete section
-  remains unmatched. The private reconstruction also now reproduces the mesh destructor call boundary
-  while retaining its correctly inlined caller. Its README owns exact counts and failed alternatives.
-  The compiled-prefix scoring gap is guarded; the fresh complete
-  build found no previously credited undersized sections. A small instruction-byte difference is not a
-  semantic-equivalence measure, especially before relocation constants have been checked.
-- **Contracts corrected from this work.** Named-mesh rendering uses a secondary interface pointer,
-  explaining the apparent field-offset disagreement in the [mesh/render contract](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#named-mesh-render-interface--september-30).
-  The same contract records a [segment-contact precision correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#segment-contact-precision--september-30):
-  retail adds before storing each coordinate, whereas a reconstruction temporary rounded two products
-  early. Bounded original-code cases expose the difference; the complete collision body remains open.
-  Its [approach and primitive-collision checks](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#segment-facing-and-approach--september-30)
-  additionally distinguish facing from the reloaded displacement dot, leave a demonstrated sphere-tangency
-  reconstruction defect open, and bound cylinder admission/response without claiming equivalence.
-  The generic scale-menu renderer now matches, including separate alpha products; see the
-  [frontend contract](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#generic-scale-menu-rendering--september-30).
-  The [unit damage note](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__ApplyDamage.md)
-  corrects inherited nexus/weakpoint polarity, repair/death thresholds, squad receiver attribution and
-  warning-latch behavior. Fresh static reads and 61 bounded original-code cases support those corrections;
-  the complete Damage function remains unmatched. These contracts do not establish live presentation
-  or player acceptance, and neither paused implementation lane was changed. The
-  [free-camera function](reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleFreeCameraOn.md)
-  now matches completely after correcting the elevation float boundary and restoring the released source's
-  matrix initialization; bounded arithmetic probes remain distinct from live camera acceptance.
-- **Tools.** The permuter, the inline-rule experiments and the near-miss scanners are in bea-decomp
-  `tools/`. A permuter result that does not match fully is a lead to read, not a patch.
-  The harness compiles and compares objects; it does not yet link a replacement executable. Its selected
-  compiler and complete DirectX/VC6 include trees are pinned. Original project/PCH/link settings and
-  portions of the game headers remain reconstructed or unknown; function matches do not settle them.
-  A fresh source/header cross-check found declaration-only helpers behind nine incorrect direct-call
-  sites in auto-aim and launch-position reconstruction. The corrected virtual slots, direct profile
-  reads and null defaults are in the [aiming contract](reverse-engineering/game-mechanics/battle-engine-aiming.md#september-30-call-binding-recheck).
-  This is structural progress; the complete callers remain unmatched. The AYA cross-check also
-  [bounds weight/slot payload dimensions](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#serialized-bone-payload-dimensions--september-30),
-  disproving the extractor's extra bone-count multiplier for slots without claiming a newly observed asset.
-  The complete mesh-part loader now matches after separating five read-index lifetimes. A further
-  interface pass restores source-backed release no-op definitions and removes duplicate texture and
-  collision-report declarations; the [render-method correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#render-method-setters-have-different-acceptance-effects--september-30)
-  prevents Landscape from setting an acceptance flag that retail leaves unchanged. The complete private
-  score retains all earlier matched identities; these fixes do not establish a linked replacement game.
-  The [device-startup recheck](reverse-engineering/contracts/render-platform/CD3DApplication__Initialize3DEnvironment__0052af00.md#device-boundaries-and-cleanup--september-30)
-  adds 23 bounded original/candidate cases: safe-mode pointer lifetime and cleanup ordering are
-  preserved, and the inherited separate-restore claim is corrected. Real driver behavior and the
-  complete compiled function remain open. The segmented-core getter also now matches completely;
-  its absent-part fallback retains retail reads previously optimized out of the reconstruction.
-  The [emitter/effect recheck](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#emitter-and-effect-part-pointers--september-30)
-  distinguishes the serialized presence marker, following part index and runtime part pointer;
-  effect lookup compares pointer identity. The pose caller now binds to its existing implementation.
-  Mine hit admission also matches completely after restoring its allegiance accessor. The integrated
-  score retains all previous matched addresses; the pose implementation remains unmatched.
-  The [trail-point recheck](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#trail-point-count-and-arithmetic-order--september-30)
-  now proves the complete allocator section and demonstrates a calculated point-count difference
-  caused by the old sum order under selected native x87 modes; actual game mode and visible trails
-  remain unmeasured. The [relaxed-squad centroid](reverse-engineering/game-mechanics/spawner-squad-cycle.md#relaxed-squad-centroid--september-30-recheck)
-  also matches completely, with eight original-code cases distinguishing cleared readers from a
-  null payload and documenting the return's fourth-word limit. Physics-profile Reload (`00510800`)
-  matches its complete section and all 55 relocations after restoring a source-backed local-result
-  idiom; no runtime file-loading claim follows. The private README records the focused negative
-  experiments and exact integrated score so the next owner can avoid repeating exhausted variants.
-- **Ghidra.** The name promotions are `decomp-names`, `decomp-names-2` and `decomp-names-3` (evidence in
+Current state. The lead and its peer sessions work from `bea-decomp` main, whose README owns the
+score, the matched list, the findings and the failed alternatives; per-function notes sit above each
+near miss in the source.
+- **What remains.** Every game function has source except one out-of-line copy (`00449560`); the rest
+  compile but differ in inlining, register choice or instruction order. The README's "Findings" start
+  with VC6's measured inline rule (per-callee size caps, a per-caller budget, the order sites are
+  spent), the main lever for the inlining class. The linker's 32 import thunks at `0055d5e0` (jump
+  stubs into the game's DLLs: DirectSound, AVIFile, zlib, Ogg Vorbis, version.dll) are library code,
+  verified against the import table and counted apart from the game functions.
+- **Judge and tools.** A compiled section shorter than retail's body cannot match, vtable identities
+  join the relocation-conflict check, and the DirectX and VC6 include trees are pinned.
+  `tools/equiv.py` is a bounded differential falsifier: both bodies run at the retail address in
+  separate emulators, and faults, unresolved dependencies, unsupported ABIs and incomplete coverage are
+  inconclusive; randomized agreement never closes a body. The permuter, the inline-rule experiments
+  and the near-miss scanners are in `tools/`. The harness compiles and compares objects; it does not
+  link a replacement executable, and the original project, PCH and link settings remain unknown.
+- **Contracts the decompilation corrected (September 30).** Static reads and bounded original-code
+  cases; none establishes live presentation or player acceptance:
+  - input and settings: [mouse recentering constant](reverse-engineering/source-code/frontend/controller-system.md#september-30-mouse-recentering-byte-match),
+    [options reader](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#september-30-reconstructed-options-reader-comparison);
+  - weapons and aiming: [current-mode lookup](reverse-engineering/game-mechanics/battle-engine-weapon-stores.md#current-mode-lookup--september-30-recheck),
+    [call binding](reverse-engineering/game-mechanics/battle-engine-aiming.md#september-30-call-binding-recheck);
+  - meshes, rendering and collision: [named-mesh interface](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#named-mesh-render-interface--september-30),
+    [segment-contact precision](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#segment-contact-precision--september-30),
+    [segment approach](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#segment-facing-and-approach--september-30),
+    [bone payload dimensions](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#serialized-bone-payload-dimensions--september-30),
+    [render-method setters](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#render-method-setters-have-different-acceptance-effects--september-30),
+    [emitter and effect parts](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#emitter-and-effect-part-pointers--september-30),
+    [trail points](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#trail-point-count-and-arithmetic-order--september-30),
+    [device startup](reverse-engineering/contracts/render-platform/CD3DApplication__Initialize3DEnvironment__0052af00.md#device-boundaries-and-cleanup--september-30);
+  - gameplay and interface: [unit damage](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__ApplyDamage.md),
+    [free camera](reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleFreeCameraOn.md),
+    [relaxed-squad centroid](reverse-engineering/game-mechanics/spawner-squad-cycle.md#relaxed-squad-centroid--september-30-recheck),
+    [scale-menu rendering](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#generic-scale-menu-rendering--september-30).
+- **Ghidra.** Name promotions `decomp-names`, `decomp-names-2` and `decomp-names-3` (evidence in
   `local-lab/…/re-audit-20260926/decomp-names*/`; the batch-3 folder holds the caller-witness and
-  shared-body screens to reuse). One flow defect was found and left for a boundary correction: Ghidra
-  treats `0042c750` as non-returning, so `004b7d90`'s body omits the `ret` at `004b7e0a`.
+  shared-body screens to reuse). Open flow defect: Ghidra treats `0042c750` as non-returning, so
+  `004b7d90`'s body omits the `ret` at `004b7e0a`.
+- Codex's helper worktrees (`bea-decomp/.worktrees/codex-*`) retain frozen, ignored experiments; do not
+  replay their commits or delete their evidence.
 The recorded live authority remains selected by `developer_state.json`. Do not replay the old
 prepared-cohort queue or mistake isolated original-code probes for full game acceptance.
 
