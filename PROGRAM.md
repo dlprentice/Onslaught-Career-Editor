@@ -79,7 +79,10 @@ pushed; its README owns the exact score. What remains:
   repository; its README and full score own counts. Mouse recentering also corrected a one-ULP constant
   error, documented in the existing [controller reference](reverse-engineering/source-code/frontend/controller-system.md#september-30-mouse-recentering-byte-match).
   `ReadOptions` remains open: its old "register-only" description understated differences in key packing,
-  mode-search control flow and inlining. The compiled-prefix scoring gap is guarded; the fresh complete
+  mode-search control flow and inlining. Fifty fresh bounded comparisons now agree on the inspected
+  selection/settings paths under declared callback models; the [save/settings contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#september-30-reconstructed-options-reader-comparison)
+  preserves the inputs, controls and limits. This is not a byte match or whole-save acceptance.
+  The compiled-prefix scoring gap is guarded; the fresh complete
   build found no previously credited undersized sections. A small instruction-byte difference is not a
   semantic-equivalence measure, especially before relocation constants have been checked.
 - **Contracts corrected from this work.** Named-mesh rendering uses a secondary interface pointer,
@@ -90,7 +93,10 @@ pushed; its README owns the exact score. What remains:
   corrects inherited nexus/weakpoint polarity, repair/death thresholds, squad receiver attribution and
   warning-latch behavior. Fresh static reads and 61 bounded original-code cases support those corrections;
   the complete Damage function remains unmatched. These contracts do not establish live presentation
-  or player acceptance, and neither paused implementation lane was changed.
+  or player acceptance, and neither paused implementation lane was changed. The
+  [free-camera function](reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleFreeCameraOn.md)
+  now matches completely after correcting the elevation float boundary and restoring the released source's
+  matrix initialization; bounded arithmetic probes remain distinct from live camera acceptance.
 - **Tools.** The permuter, the inline-rule experiments and the near-miss scanners are in bea-decomp
   `tools/`. A permuter result that does not match fully is a lead to read, not a patch.
 - **Ghidra.** The name promotions are `decomp-names`, `decomp-names-2` and `decomp-names-3` (evidence in

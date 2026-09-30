@@ -1,10 +1,52 @@
 # Save, options and startup compatibility contract
 
 Status: active bounded contract; comprehensive compatibility recheck in progress
-Last updated: 2026-09-27
+Last updated: 2026-09-30
 Summary: independently rechecked startup/serialization behavior and explicit remaining save/settings compatibility boundaries.
 Evidence: MEASURED — selected pristine instructions and the isolated execution below; inherited subsystem summaries remain subject to recheck.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+## September 30 reconstructed options-reader comparison
+
+The lead independently reran 50 bounded in-memory comparisons between the original `0x00420d70` reader
+and the current private reconstruction. Both execute at the original address in separate emulator images;
+the 1,072-byte candidate is still shorter than the 1,155-byte retail body and **does not count as a byte match**.
+All 70 candidate relocations are bound by 20 retail data-immediate witnesses and seven direct-call witnesses.
+The exact mode-key packer (`0x00420d10`, 93 bytes) and small setter (`0x004d1710`, 20 bytes) execute original
+instructions. Tweak conversion results, preset/language application and audio calls use declared callback
+models. These cases do not replace the earlier original-code experiments below.
+
+The compared results agree on these tested boundaries:
+
+- A mode key keeps 16 width bits, 15 height bits and a top bit for formats 20, 21 or 22. Lookup compares the
+  entire key and selects the first match. Width/height truncation, duplicate entries and nonzero adapter/device
+  indices are included. A changed key with a nonempty list clears its low 16 bits after either match or fallback;
+  zero modes skip that lookup/fallback and its reset request.
+- Unavailable modes choose index zero and invoke `0x004d1710(0xf6)`. The small setter writes the argument
+  to `0x0082b494` and `0xff` to `0x0082b4ec`; this does not prove a visible warning or validate its inherited name.
+- Raw DWORD changes to hardware sound, rate, device or method select reinitialization. Flip-speakers alone
+  selects language-bank reload instead. Tests include high-bit/noncanonical values, device-gated display reset,
+  unsigned preset/language words and normalized final detail bytes.
+- All cases return the input pointer plus `0x56`. Callback order, arguments, receivers, intermediate state,
+  final permitted writes and the device block agree; original input/canaries, preserved registers and x87 balance
+  remain intact.
+
+The controls refuse an unbound relocation, an unknown callee and truncated executable bounds. Suppressing
+the hardware-sound restart flag produces a detected callback difference. This is finite agreement under
+explicit boundary models, not proof of whole-function equivalence, malformed-buffer admission, filesystem
+publication, actual graphics/audio/language behavior or complete original-save compatibility.
+
+Private reproduction, from `bea-decomp` main, with a new output directory:
+
+```text
+local-data/venv/bin/python -B .worktrees/codex-career-nearmiss-20260930/build/career-compatibility-review-20260930/probe.py --out local-data/CHOSEN_NEW_DIRECTORY
+```
+
+The frozen script SHA-256 is `270920c047c0bb3ce53f2683a9473627d92ecb9b85410776396a98daba3a2846`;
+its pinned source/COFF inputs are adjacent. The lead's actual output is
+`bea-decomp/local-data/career-compatibility-root-20260930/results.json`. Independent review checked the anchors,
+ABI boundaries and controls before the lead rerun. Extending the callback boundary to original tweak/audio
+implementations is a stronger falsifier; no save or settings file was created or modified by these probes.
 
 ## September 27 options-callback entry to persistence
 
