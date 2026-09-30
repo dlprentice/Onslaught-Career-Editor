@@ -84,7 +84,7 @@ runtime acceptance, a whole-function equivalence claim or an exact compiled matc
 | Trigger | Measured retail observation |
 | --- | --- |
 | Six consecutive `D3DERR_DEVICELOST` results | Six 100-ms Sleep calls precede call seven. The iteration captures its mode pointer at `0052af94`–`0052afab`, then changes the index at `0052b01a`. In the fixture, selected mode becomes 0 but call seven still submits mode 1's 1024×768, format 21, depth format 77 and CreateDevice flags `0x40`. Refreshing the pointer early would change behavior. |
-| Seventh consecutive device-lost result | Reaches the fatal-call boundary with arguments `FALSE, 0xd2, 0x10`; the fatal helper itself is not executed. |
+| Seventh consecutive device-lost result | Reaches the fatal-call boundary with arguments `FALSE, 0xd2, 10` (decimal 10); the fatal helper itself is not executed. |
 | Ordinary friendly-mode fallback | Starts another loop iteration. The second attempt uses new mode 0's 640×480/format 22/depth 75, and setup-message state becomes `0xe6`, kind `0xff`. |
 | Lockable-backbuffer or multisample failure | The corresponding retry removes the lockable flag or multisampling before retrying. These separate authored cases do not establish every combination of failures. |
 | Mode unchanged, software device returns `0x80004005` | Returns that failure rather than claiming startup succeeded. |

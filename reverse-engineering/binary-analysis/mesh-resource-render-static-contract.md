@@ -1,8 +1,8 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-09-30 (mesh-part loader match and distinct render-method setters)
-Summary: named-mesh rendering uses a secondary interface pointer; collision calculations preserve float materialization and retail quirks; the mesh-part consumer distinguishes bone weights from fixed-width bone slots; an integer render-method store leaves acceptance unchanged. Retained engine/resource slices are historical leads.
+Last updated: 2026-09-30 (emitter and effect part-pointer chain)
+Summary: emitter loading resolves a serialized index to a part pointer, which effect lookup compares by identity; named-mesh rendering uses a secondary interface pointer; collision and mesh-loading contracts retain their measured limits. Retained engine/resource slices are historical leads.
 Evidence: MEASURED — September 30 RTTI, vtable and instruction readback, whole-section byte matches for the named-mesh getter, mesh-part loader and render-method setters, and bounded original-code collision calculations; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
@@ -11,6 +11,36 @@ mesh geometry, and collision bridges used by asset tooling and rebuild planning.
 Current corrected metadata is owned by the
 [Ghidra guide](../ghidra/README.md) and `developer_state.json`'s selected live authority.
 Static evidence does not by itself establish runtime rendering or layout parity.
+
+## Emitter and effect part pointers — September 30
+
+The serialized emitter record's `+0x40` word is a presence marker, not its part index.
+When nonzero, the reader consumes a separate index word and replaces the marker with
+`mParts[index]` (`0x004ab275`–`0x004ab29d`). The older readers also store a selected part
+pointer (`0x004a85ba`–`0x004a85c3`, `0x004a90ec`–`0x004a90f9`). At runtime both
+emitter-part getters (`0x004aa5a0`, `0x004aa820`) return this pointer. Its consumers
+dereference part fields, including the controller at `0x0044478c` and unit at `0x004f8927`.
+
+CRTMesh's array at `+0x3c` retains these part pointers. Its distinct `+0x38` array holds
+emitter ordinals, while `+0x40` holds numeric effect IDs. `FindEffect` (`0x004dd510`,
+zero-based render slot 19) compares the supplied pointer with the `+0x3c` entries and returns
+the first equal entry's index, or -1. It does not dereference the argument or exclude null
+equality. The mesh-renderer and destructible-segment callers pass part pointers at
+`0x004b6402`/`0x004b6405` and `0x00442ba4`/`0x00442ba5` respectively.
+
+The private reconstruction now carries `CMeshPart*` across these getters and the virtual
+interface, preserving all field offsets, allocation widths and slot positions. The pose call
+at `0x004dd1cf` also binds to the existing `0x004b4de0` implementation with seven four-byte
+arguments rather than a declaration-only alias. Its complete body remains unmatched;
+`EvaluatePose` and `FindEmitterPart` are reconstruction names, not proven original spellings.
+
+The lead inspected the pristine instructions above, reproduced all 378 previous exact
+results in the affected twelve-object set and ran the full integrated score with no lost
+matched addresses or relocation conflicts. Private receipts:
+`bea-decomp/.worktrees/codex-equiv-20260930/build/emitter-pointer-20260930/`, its adjacent
+before/after logs, and `bea-decomp/build/emitter-pointer-score-20260930.log`.
+No new game run or Godot behavior was tested. A useful runtime falsifier would observe the
+loaded part pointer, the effect array and the selected index together on an admitted mesh.
 
 ## Serialized bone payload dimensions — September 30
 

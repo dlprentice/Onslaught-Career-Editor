@@ -129,6 +129,11 @@ pushed; its README owns the exact score. What remains:
   preserved, and the inherited separate-restore claim is corrected. Real driver behavior and the
   complete compiled function remain open. The segmented-core getter also now matches completely;
   its absent-part fallback retains retail reads previously optimized out of the reconstruction.
+  The [emitter/effect recheck](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#emitter-and-effect-part-pointers--september-30)
+  distinguishes the serialized presence marker, following part index and runtime part pointer;
+  effect lookup compares pointer identity. The pose caller now binds to its existing implementation.
+  Mine hit admission also matches completely after restoring its allegiance accessor. The integrated
+  score retains all previous matched addresses; the pose implementation remains unmatched.
 - **Ghidra.** The name promotions are `decomp-names`, `decomp-names-2` and `decomp-names-3` (evidence in
   `local-lab/…/re-audit-20260926/decomp-names*/`; the batch-3 folder holds the caller-witness and
   shared-body screens to reuse). One flow defect was found and left for a boundary correction: Ghidra
