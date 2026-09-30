@@ -1,8 +1,8 @@
 # Control Bindings (Options Entries)
 
 Status: active bounded contract; complete remap/input acceptance pending
-Last updated: 2026-09-20
-Summary: original preset execution establishes initialized-table replacement, enabled-device fallback and the boundary between saved bindings and runtime bindings.
+Last updated: 2026-09-30 (bounded RemapKey comparison; earlier preset evidence retains its scope)
+Summary: original preset execution establishes initialized-table replacement and device fallback; a separate reconstruction comparison bounds remapping of authored runtime bindings.
 Source File: binary-derived contract; no exact partial-source body asserted. Binary: pristine `BEA.exe.original.backup`.
 Evidence: MEASURED — selected pristine instructions, 20 direct preset controls and 19 composed loader controls; historical remap/UI mappings below remain subject to recheck.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -90,6 +90,54 @@ input and complete player startup acceptance remain separate boundaries.
 For tooling, custom scheme 0 preserves admitted manual bindings through this
 preset helper. Selecting it is a deliberate settings change, not permission
 to silently alter an unrelated saved scheme.
+
+## Reconstructed RemapKey comparison — September 30
+
+Fresh reads of the pristine specimen above show `004541e0..00454df1` contains
+ten inline duplicate-binding scans (20 calls to the action-group helper at
+`00454e00`) and 18 calls to `00454e90`. The reconstruction's former comment
+claiming this retail body calls the clearing helper throughout was wrong.
+The 1,968-byte reconstructed body is substantially shorter than retail's 3,089
+bytes; it still receives no exact-match credit.
+
+A frozen original-instruction comparison was independently inspected and rerun
+by the RE lead. **120 cases agree** on the complete authored binding table,
+capture/preset state and selected dispatch/callback/preset event order. Cases
+exercise eight directional actions, six negative axis keys, both polarities,
+fallback actions, both valid input slots and duplicate-clear admission controls
+(immutable records, different devices/keys and already unbound slots).
+
+Both images execute at `004541e0` in separate emulators. Six actual retail helpers
+execute, with no function stubs or device calls. Candidate relocations are bound
+to freshly read retail call/load operands; the 16 indirect dispatch sites admit
+only callback `004540c0`. Data reads admit the authored records and six
+instruction-bound switch tables. Stack accesses admit 120 bytes of initialized
+scratch, with return-slot and surrounding canaries, completed return, stack
+balance and preserved-register checks.
+
+One deliberately wrong captured-polarity instruction changes an actual binding
+record from `(device=0, type=5, key=-2, character=81)` to
+`(-1, 4, -2, 81)`; the comparison detects the erroneous unbinding. Ten separate
+refusal controls cover existing output paths, missing/wrong relocations,
+unexpected/interior callbacks, escaped/incomplete execution, wrong BSS reads
+and stack violations, including a write that preserves the canary's value.
+
+This compares final state and the named event sequence, **not exact write order
+or every helper-call order**. ApplyPreset executes only the preset-zero early
+return; its nonzero behavior belongs to the earlier independent evidence.
+`004565d0` is not executed here. Authored tables are not save files; this does not
+establish persistence, physical input, UI behavior, RemapKeyTrap correctness,
+complete equivalence or full branch coverage.
+
+Private owner relative to `~/Projects/game-dev/bea-decomp`:
+`.worktrees/codex-unitai-nearmiss-20260930/build/fepcontrols-remap-20260930/frozen-v2/`.
+Script SHA-256:
+`b6fc88f060010dfb48584fb2d5c807cf7a4e3a007d38be19a3465b700de3a145`.
+The script requires pinned source/COFF/parser inputs and records specimen-bound
+relocations and helper/switch hashes. The lead's rerun is
+`local-data/fepcontrols-remap-root-20260930/comparison.json`. Reproduce with the
+existing `local-data/venv/bin/python -B`, the owner's `probe.py`, and `--out`
+naming a new private directory whose parent already exists.
 
 ## When these bindings apply in the selected retail body
 
