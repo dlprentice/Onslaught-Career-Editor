@@ -124,6 +124,11 @@ pushed; its README owns the exact score. What remains:
   collision-report declarations; the [render-method correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#render-method-setters-have-different-acceptance-effects--september-30)
   prevents Landscape from setting an acceptance flag that retail leaves unchanged. The complete private
   score retains all earlier matched identities; these fixes do not establish a linked replacement game.
+  The [device-startup recheck](reverse-engineering/contracts/render-platform/CD3DApplication__Initialize3DEnvironment__0052af00.md#device-boundaries-and-cleanup--september-30)
+  adds 23 bounded original/candidate cases: safe-mode pointer lifetime and cleanup ordering are
+  preserved, and the inherited separate-restore claim is corrected. Real driver behavior and the
+  complete compiled function remain open. The segmented-core getter also now matches completely;
+  its absent-part fallback retains retail reads previously optimized out of the reconstruction.
 - **Ghidra.** The name promotions are `decomp-names`, `decomp-names-2` and `decomp-names-3` (evidence in
   `local-lab/…/re-audit-20260926/decomp-names*/`; the batch-3 folder holds the caller-witness and
   shared-body screens to reuse). One flow defect was found and left for a boundary correction: Ghidra

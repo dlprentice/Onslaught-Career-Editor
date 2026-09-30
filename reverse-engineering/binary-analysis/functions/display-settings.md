@@ -1,8 +1,8 @@
 # Display Settings & Screen Mode Analysis
 
 Status: mixed — retained display evidence with scoped parser and options-callback corrections
-Last updated: 2026-09-27 (options callback; other sections keep their dated evidence)
-Summary: display/settings reference; original options-callback controls remain distinct from device and full-menu acceptance.
+Last updated: 2026-09-30 (device-boundary recheck; other sections keep their dated evidence)
+Summary: display/settings reference; bounded options/device execution remains distinct from real driver and full-menu acceptance.
 Source File: pinned `references/Onslaught/d3dapp.cpp` and `CLIParams.cpp`; Binary: pristine
 `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
@@ -79,7 +79,7 @@ Wave572 hardened the adjacent retail `CD3DApplication` shell after fresh decompi
 - `CD3DApplication__Init(void * this)` seeds global `DAT_0089c0f4`, initializes ten adapter-info blocks, installs the vtable, clears device/window/ready/timer fields, and sets 640x480 creation dimensions.
 - `CD3DApplication__Create(void * this, void * hinstance)` calls `Direct3DCreate9(0x1f)`, builds the device list, registers/creates the D3D window when needed, initializes the environment, starts the perf timer, and marks the app ready.
 - `CD3DApplication__BuildDeviceList(void * this)` enumerates adapters, devices, modes, depth-stencil, texture, and multisample support, with widescreen allowance through `DAT_0089c0ac`.
-- `CD3DApplication__Initialize3DEnvironment(void * this, bool reuse_existing_device)` applies cardid/CVar tweaks, builds presentation parameters, creates or resets the device, falls back from lockable backbuffer/multisampling/friendly modes, updates stats/backbuffer/cursor state, and calls init/restore vfuncs.
+- `CD3DApplication__Initialize3DEnvironment(void * this, bool reuse_existing_device)` applies cardid/CVar tweaks, builds presentation parameters, creates or resets the device, falls back from lockable backbuffer/multisampling/friendly modes, updates stats/backbuffer/cursor state, and calls the initialization virtual. The September 30 instruction/execution recheck disproves this paragraph's former separate-restore claim; that sequence belonged to the released D3D8 source analog.
 - `CD3DApplication__Resize3DEnvironment`, `CD3DApplication__ToggleFullscreen`, `CD3DApplication__ForceWindowed`, and `CD3DApplication__Reset3DEnvironment` cover the reset/toggle/fallback/dialog commit shell around the D3D device.
 - `CD3DApplication__SelectDeviceProc` is a four-argument stdcall Win32 dialog proc for adapter/device/mode/MSAA selection controls.
 - `CD3DApplication__Cleanup3DEnvironment` releases app-owned D3D state and logs device/interface refcount text through `DebugTrace`.
@@ -113,6 +113,13 @@ Critical function for display mode setup:
 - Creates D3D device with appropriate presentation parameters
 - Handles device creation failures with fallback options
 - Sets up swap chain and back buffers
+
+The [September 30 device-boundary recheck](../../contracts/render-platform/CD3DApplication__Initialize3DEnvironment__0052af00.md#device-boundaries-and-cleanup--september-30)
+records 23 modeled original/candidate cases and nine negative controls. Safe-mode selection can
+leave the current attempt using the old mode pointer; ordinary friendly-mode fallback refreshes
+it on the next iteration. Failed initialization invalidates, deletes, then reloads/releases the
+current device while preserving the original failure code. These observations correct the
+compatibility contract; they do not establish real driver behavior or a complete byte match.
 
 ### Additional Recovered Retail Helpers
 
