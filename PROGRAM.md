@@ -92,6 +92,9 @@ pushed; its README owns the exact score. What remains:
   semantic-equivalence measure, especially before relocation constants have been checked.
 - **Contracts corrected from this work.** Named-mesh rendering uses a secondary interface pointer,
   explaining the apparent field-offset disagreement in the [mesh/render contract](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#named-mesh-render-interface--september-30).
+  The same contract records a [segment-contact precision correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#segment-contact-precision--september-30):
+  retail adds before storing each coordinate, whereas a reconstruction temporary rounded two products
+  early. Bounded original-code cases expose the difference; the complete collision body remains open.
   The generic scale-menu renderer now matches, including separate alpha products; see the
   [frontend contract](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#generic-scale-menu-rendering--september-30).
   The [unit damage note](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__ApplyDamage.md)
