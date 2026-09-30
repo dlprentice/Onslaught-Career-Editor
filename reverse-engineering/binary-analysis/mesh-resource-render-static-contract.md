@@ -59,6 +59,11 @@ normal construction, prism acceptance, report writes, special floating values or
 behavior. The corrected candidate remains unmatched: 624 compiled bytes versus 1,014 retail body
 bytes. All 18 previously matched Geometry functions remain exact.
 
+These higher-precision counterexamples are not established failures of ordinary gameplay. The earlier
+[copied-retail observation](functions/CComplexThing.cpp.md#copied-retail-plane-observation-september-8)
+records PC24/RN at 25 Plane/AirGuide calls on its WineD3D route; that retained observation was read,
+not rerun here, and does not cover this collision site or other backends.
+
 Private evidence owner:
 `bea-decomp/.worktrees/codex-collision-nearmiss-20260930/build/geometry-segment-contact-probe-20260930.py`
 (SHA-256 `6739a2747f431a85c561f306adb9d353da7d91d57034cbd6a6fa4ebc5af8b771`), with
