@@ -79,7 +79,7 @@ floating-point cases; this note does not declare NaNs, invalid pointers or arbit
     The clamp comparison is strict. Repair does not test shields or the positive-arm vulnerability flag,
     does not revive zero/negative life, and is not reached by falling through positive damage/death.
 12. **Deferred death hook** (`0x004f9fa0`–`0x004f9fc7`). Profile `+0x11c` nonzero and life below zero
-    invoke primary slot 100 (`+0x190`). This shared tail follows either non-returning damage or repair.
+    invoke primary slot 100 (`+0x190`). This shared tail follows damage or repair paths that did not return earlier.
 13. **Warning-message path** (`0x004f9fcd` onward). Profile `+0x120` gates the entire path. If enabled,
     call the RNG at `0x004de8d0` through the pointer `[0x008a9d9c]` **once before checking any threshold or latch**,
     taking its signed remainder modulo 3. This draw still occurs when no warning is due or text display is disabled.
@@ -111,9 +111,25 @@ condition; this is not three independent warning emissions. Each chosen branch r
 from its profile-specific three-way table through `0x004f2580` and updates the latches before the display gate.
 If `[0x008a9d84]` is nonzero and the returned message pointer is non-null, the tail allocates/constructs a
 message on successful allocation and submits it to `0x004b7ca0`. Null allocation skips construction but
-still calls that submission boundary with null (`0x004fa45d`–`0x004fa48a`); its downstream handling is not
-established here. This establishes call and state order, not audible playback or
+still calls that submission boundary with null (`0x004fa45d`–`0x004fa48a`). This establishes call and state order, not audible playback or
 successful presentation. The old 0.25/0.5/1.0 threshold description and “re-armed” interpretation were wrong.
+
+The separate September 30 queue probe now bounds that null edge. With a prepopulated node pool, original
+submission code plus the original pointer-set constructor, append, assignment and clear routines return an
+empty queue for **empty queue + null**, with playback allowed either zero or one. With one real message already
+queued, a null incoming message instead attempts a DWORD read at address `0x2c`, instruction `0x004b7cee`.
+Ten cases agree with the current reconstruction, including valid-message controls that preserve ascending
+priority and stable ordering for equal priorities. Unknown calls and an unrelated bad-receiver fault are
+rejected rather than accepted as the expected null observation. No allocator, logger, playback or exception
+handler runs; this is not an observed Windows crash or proof of an actual allocation-failure path.
+
+The lead reran the frozen private script
+`bea-decomp/.worktrees/codex-career-nearmiss-20260930/build/messagebox-queue-review-20260930/probe.py`
+with `bea-decomp/local-data/venv/bin/python -B` and
+`--out local-data/messagebox-queue-root-20260930` from `bea-decomp` main. Script SHA-256:
+`f40a99c04dcc7af1b80efdee4de1ed40cb071c7b75a6b6f2e11b1ac9e601b866`.
+The output records pinned specimen/source/object identities, exact call boundaries, queue/canary state and
+the two refusal controls. The submission function still has an unresolved byte mismatch.
 
 ## Caller corrections
 
