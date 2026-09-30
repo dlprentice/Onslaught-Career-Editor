@@ -138,6 +138,18 @@ center. It writes the updated coordinates and clears the axis-read flag.
 The matched reconstruction uses an adjacent two-integer cursor snapshot; exact
 compiler output does not prove the original local-variable names or source spelling.
 
+Six isolated original-body comparisons also bound the numerical consequence, with
+the window-size calls stubbed and only the reciprocal changed in emulator memory.
+At 24-bit precision with rounding toward negative infinity (`CW=0x047f`), center
+512 and initial coordinate 529 produce 521 with the previous coefficient versus
+522 with retail. At 24-bit precision with truncation (`CW=0x0c7f`), center 768 and
+coordinate 683 produce 717 versus 718. Both coordinate axes agreed and the
+axis-read flag cleared. Nearest-rounding controls at 24 and 53 bits (`0x007f`,
+`0x027f`) produce equal outputs for those inputs. The private script and results
+are `bea-decomp/build/controller-recenter-mode-probe-20260930.py` and `.json`.
+These are conditional instruction-level witnesses, not evidence that this live
+controller site uses either directed rounding mode or that a player saw a difference.
+
 ### Debug Keyboard Shortcuts
 
 **Source/internal mapping with Steam caveat:** These debug-key bindings exist in internal/source code; in the Steam retail build analyzed here, their gameplay handlers are not observed as active:
