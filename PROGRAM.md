@@ -31,7 +31,9 @@ owns the score and the matched-function list, and this file keeps only the plan.
   `local-lab/third-party/msvc6-sp5-toolchain/SOURCE.txt`. C2 build 8966 matches the retail
   Rich-header record; the initial SP6 setup is superseded. Flags `/O2 /Ob2 /GX /MT /QIfist`;
   the retail build folder
-  `C:\dev\ONSLAUGHT2\` is mapped onto the source folder so `__FILE__` matches.
+  `C:\dev\ONSLAUGHT2\` is mapped onto the source folder so `__FILE__` matches; file names keep
+  the case retail's strings spell (`Unit.cpp`, `mapwho.cpp`), and a header's string follows the
+  spelling of the `#include` that opened it.
 - **Judge.** A function counts only when its whole compiled section equals the pristine
   bytes and every relocation lands where the evidence says (own section, annotated callees,
   pooled strings and constants by content, import slots by name, one consistent address
@@ -63,7 +65,8 @@ near miss in the source.
 - **What remains.** Every game function has source except one out-of-line copy (`00449560`); the rest
   compile but differ in inlining, register choice or instruction order. The README's "Findings" start
   with VC6's measured inline rule (per-callee size caps, a per-caller budget, the order sites are
-  spent), the main lever for the inlining class. The linker's 32 import thunks at `0055d5e0` (jump
+  spent), the main lever for the inlining class, and with retail's maths header bracketing each
+  product in its sums, which settled the term-order cluster on September 30. The linker's 32 import thunks at `0055d5e0` (jump
   stubs into the game's DLLs: DirectSound, AVIFile, zlib, Ogg Vorbis, version.dll) are library code,
   verified against the import table and counted apart from the game functions.
 - **Judge and tools.** A compiled section shorter than retail's body cannot match, vtable identities
