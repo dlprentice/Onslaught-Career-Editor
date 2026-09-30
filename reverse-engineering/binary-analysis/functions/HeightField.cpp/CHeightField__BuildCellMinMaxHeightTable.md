@@ -59,4 +59,4 @@ not exactly `E8` at `0x0046d244`, **or** `0x0006d23f` is not
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x00490e30` | `CHeightField__BuildCellMinMaxHeightTable` | `83ec14 53 894c2410 55 81c1dc130000 … d9812c100000 da4c2414 … c3` | thiscall; bare ret; this=`0x006fadc8`; writes float pairs at `+0x13dc` as word-max/min × `[+0x102c]`. HIGH on ABI, inbound, dest, scale. Not on authored names. |
+| `0x00490e30` | `CMap__InitQuickCollisionMap` | `83ec14 53 894c2410 55 81c1dc130000 … d9812c100000 da4c2414 … c3` | thiscall; bare ret; this=`0x006fadc8`; writes float pairs at `+0x13dc` as word-max/min × `[+0x102c]`. HIGH on ABI, inbound, dest, scale. Not on authored names. |

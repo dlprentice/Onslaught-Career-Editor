@@ -1,4 +1,4 @@
-# CConsole__AppendToStatusBufferV
+# CDebugText__Out
 
 - **Address:** `0x00472240`
 - **Saved signature:** `void __cdecl CConsole__AppendToStatusBufferV(void * console, char * format)`

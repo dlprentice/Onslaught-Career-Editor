@@ -77,4 +77,4 @@ is not `6a 00`, **or** `0x0013352a` is not
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x00533500` | `IScript__CallEvent0AndRegisterNestedListeners` | `a1c09a8a00 53 55 56 83f804 8bf1 750c … e867640000 … 6a00 6a00 6a00 50 … e861640000 8b6e0c 83c548 … e8f7530000 894704 … c3` | thiscall; bare ret; 155 B; 3 E8 Reset `0x00539980` / CallEvent `0x00539990` / RegisterEventListener `0x00538960`; 0 E9; 1 inbound E8. HIGH on ABI, inbound set, cmp-4, those three plants, `+0x48` walk start, `[edi+4]` store. **Not** on callee bodies, list types, authored event name, or the host. |
+| `0x00533500` | `IScript__Init` | `a1c09a8a00 53 55 56 83f804 8bf1 750c … e867640000 … 6a00 6a00 6a00 50 … e861640000 8b6e0c 83c548 … e8f7530000 894704 … c3` | thiscall; bare ret; 155 B; 3 E8 Reset `0x00539980` / CallEvent `0x00539990` / RegisterEventListener `0x00538960`; 0 E9; 1 inbound E8. HIGH on ABI, inbound set, cmp-4, those three plants, `+0x48` walk start, `[edi+4]` store. **Not** on callee bodies, list types, authored event name, or the host. |

@@ -41,10 +41,10 @@ The `mGrowth` field controls how the array grows when capacity is exceeded:
 | `0x00465570` | `CFlexArray__Free` | `void __fastcall Free(void *this)` | Free allocated memory |
 | `0x00465580` | `CFlexArray__Resize` | `void __thiscall Resize(void *this, uint newCapacity)` | Resize array, zero-fill new elements |
 | `0x004241a0` | `CFlexArray__InitWithGrowth` | `void * __thiscall InitWithGrowth(void *this, int initialCapacity, int growth)` | Init with custom growth factor and return `this` |
-| `0x004241e0` | `CFlexArray__Clear` | `void __fastcall Clear(void *this)` | Reset count to 0 (keep capacity) |
+| `0x004241e0` | `GenericOPtrSet__reset` | `void __fastcall Clear(void *this)` | Reset count to 0 (keep capacity) |
 | `0x004241f0` | `CFlexArray__Add` | `void * __thiscall Add(void *this, void *element)` | Append element, grow if needed, return `this` |
-| `0x00424260` | `CFlexArray__InsertAt` | `void * __thiscall InsertAt(void *this, int index, void *element)` | Insert at position, shift elements, return `this` |
-| `0x00424360` | `CFlexArray__RemoveRange` | `void __thiscall RemoveRange(void *this, int startIndex, int endIndex)` | Remove inclusive range `[startIndex, endIndex]` |
+| `0x00424260` | `GenericOPtrSet__insert_at` | `void * __thiscall InsertAt(void *this, int index, void *element)` | Insert at position, shift elements, return `this` |
+| `0x00424360` | `GenericOPtrSet__remove` | `void __thiscall RemoveRange(void *this, int startIndex, int endIndex)` | Remove inclusive range `[startIndex, endIndex]` |
 | `0x0044b290` | `CFlexArray__Free_thunk` | `void __fastcall Free_thunk(void *this)` | Jump thunk to `CFlexArray__Free` |
 
 ## Detailed Analysis

@@ -62,4 +62,4 @@ is not exactly `E8` at `0x0046c38f`, **or** `0x0006c38a` is not
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x00490f10` | `CHeightField__InitAndClearMapLoadFlags` | `568bf1 e8f8cc0600 85c0 7502 5ec3 33c0 8986e0930000 8986e4930000 b801000000 5e c3` | thiscall; EAX in {0,1}; zeros `[+0x93e0]`/`[+0x93e4]` after stub `0x004fdc10`; inbound `mov ecx,0x006fadc8`. HIGH on ABI, inbound, both stores, stub six bytes. **Not** on caller body or authored names. |
+| `0x00490f10` | `CMap__Init` | `568bf1 e8f8cc0600 85c0 7502 5ec3 33c0 8986e0930000 8986e4930000 b801000000 5e c3` | thiscall; EAX in {0,1}; zeros `[+0x93e0]`/`[+0x93e4]` after stub `0x004fdc10`; inbound `mov ecx,0x006fadc8`. HIGH on ABI, inbound, both stores, stub six bytes. **Not** on caller body or authored names. |

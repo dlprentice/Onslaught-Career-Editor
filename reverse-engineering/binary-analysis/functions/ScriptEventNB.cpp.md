@@ -115,7 +115,7 @@ Non-blocking script event system for mission scripting. "NB" stands for "Non-Blo
 | 0x00538860 | CScriptEventNB__CreateListenerSet | WAVE586 | `void __fastcall ... (void * event_nb)`; allocates the listener set. Renamed 2026-08-17 to agree with the behaviour this row already recorded; the class keeps its RTTI anchor. |
 | 0x00538960 | CScriptEventNB__RegisterEventListener | WAVE586 | `void * __thiscall ... (void * this, void * event_name_ref, void * event_function)` |
 | 0x005387b0 | CScriptEventNB__ClearListenerEntry | WAVE586 | `void __fastcall ... (void * listener_entry)`; clears one listener entry. Renamed 2026-08-17 from the plural `ClearEventListeners`, which contradicted this row's own singular reading and its `listener_entry` parameter. |
-| 0x005388d0 | CScriptEventNB__DestroyAllEvents | WAVE586 | `void __fastcall ... (void * event_nb)`; destroys all listener entries |
+| 0x005388d0 | CScriptEventNB__Shutdown | WAVE586 | `void __fastcall ... (void * event_nb)`; destroys all listener entries |
 | 0x00538470 | IScript__UpdateWaypointFollowing | WAVE586 | `void __fastcall ... (void * event_nb)`; waypoint following logic with distance checks |
 | 0x005385e0 | IScript__HandleMessage | WAVE586 | `void __thiscall ... (void * this, void * message)`; message IDs 2000, 0x7d1, 0x7d2 |
 | 0x00538b70 | CScriptEventNB__PostEvent | WAVE586 | `void __thiscall ... (void * this, char * event_name)`; posts event to matching listeners |

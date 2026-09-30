@@ -33,11 +33,11 @@ rests only on the alloc-site path `C:\dev\ONSLAUGHT2\WorldPhysicsManager.cpp`.
 | --- | --- | ---: | ---: | --- | --- |
 | `0x0050DF80` | `CWorldPhysicsManager__CreateThingByType` | 2,164 | 0 | 75–99 | definition ordinal → row `+0xE0` selector → one of 25 concrete unit shells; selector 11 returns null |
 | `0x0050F4B0` | `CWorldPhysicsManager__CreateSquad` | 268 | 0 | 145–149 | `CDXMemoryManager__Alloc` ×2 |
-| `0x0050F6D0` | `CWorldPhysicsManager__CreateWeaponByIndex` | 200 | 0 | 196 | `CWeapon__ctor_base` |
+| `0x0050F6D0` | `UPhysicsManager__SpawnWeapon` | 200 | 0 | 196 | `CWeapon__ctor_base` |
 | `0x0050F7A0` | `CWorldPhysicsManager__CreateProjectile` | 230 | 0 | 211–213 | `CRound__ctor` ×2 |
 | `0x0050F970` | `CWorldPhysicsManager__CreateSpawner` | 200 | 0 | 230 | `CSpawnerThng__Constructor` |
 | `0x0050FA40` | `CWorldPhysicsManager__CreateCharacter` | 590 | 0 | 247–251 | `CUnit__ctor_base` ×3 |
-| `0x0050FF10` | `CWorldPhysicsManager__CreateExplosion` | 152 | 0 | 265 | `CComplexThing__ctor_base`, then strict `CExplosion` vtables |
+| `0x0050FF10` | `UPhysicsManager__SpawnExplosion` | 152 | 0 | 265 | `CComplexThing__ctor_base`, then strict `CExplosion` vtables |
 | `0x00510060` | `CWorldPhysicsManager__CreateFeature` | 140 | 0 | 278 | `CComplexThing__ctor_base` |
 | `0x00510150` | `CWorldPhysicsManager__CreateHazard` | 165 | 0 | 292 | `CComplexThing__ctor_base` |
 | `0x005102A0` | `CWorldPhysicsManager__InitializeLists` | 626 | 0 | 301–309 | `CDXMemoryManager__Alloc` ×9, `CSPtrSet__Init` ×9 |

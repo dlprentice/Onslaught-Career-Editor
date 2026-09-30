@@ -1,4 +1,4 @@
-# CText__CopyFrom
+# CText__Copy
 
 Status: active bounded contract; file initialization and localization acceptance pending
 Last updated: 2026-09-20

@@ -54,4 +54,4 @@ inbound `E8`/`E9` exists.
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x00533660` | `IScript__CallEventId5_OrReset` | `833dc09a8a0004 750a b9e0c58900 e90d630000 8b410c 6a00 6828c58900 6a05 … e806630000 c3` | thiscall; bare ret; 43 B; 1 E9 Reset `0x00539980` if `[0x008a9ac0]==4`; 1 E8 CallEvent `0x00539990` with imm 5; 3 inbound E8. HIGH on ABI, inbound set, that cmp, that push 5. **Not** on callee bodies or authored event name. |
+| `0x00533660` | `IScript__StartedDying` | `833dc09a8a0004 750a b9e0c58900 e90d630000 8b410c 6a00 6828c58900 6a05 … e806630000 c3` | thiscall; bare ret; 43 B; 1 E9 Reset `0x00539980` if `[0x008a9ac0]==4`; 1 E8 CallEvent `0x00539990` with imm 5; 3 inbound E8. HIGH on ABI, inbound set, that cmp, that push 5. **Not** on callee bodies or authored event name. |

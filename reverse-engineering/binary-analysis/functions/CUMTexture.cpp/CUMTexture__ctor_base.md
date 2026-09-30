@@ -30,7 +30,7 @@ Three inbound `.text` `E8`, zero `E9`:
 | --- | --- |
 | `0x0048e433` | table `CLandscapeTexture__ConstructorMip` |
 | `0x0054150e` | `CDXFrontEndVideo__InitVideo` |
-| `0x00552198` | `CDXShadows__Init` |
+| `0x00552198` | `CShadows__Init` |
 
 Zero image encodings of imm `d0 79 4f 00`. Those three hosts
 are **not** claimed.

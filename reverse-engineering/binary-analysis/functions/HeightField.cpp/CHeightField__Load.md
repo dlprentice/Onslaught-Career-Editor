@@ -161,7 +161,7 @@ After loading, the function doubles color values in the gradient table and clamp
 ### Called By
 | Address | Function | Context |
 |---------|----------|---------|
-| 0x004910d6 | CHeightField__DeserializeMapAndInitResources | Wave426-corrected MAP deserialize/resource-init caller; static context includes "Deserializing map" |
+| 0x004910d6 | CMap__Deserialize | Wave426-corrected MAP deserialize/resource-init caller; static context includes "Deserializing map" |
 
 ### Calls
 | Address | Function | Purpose |

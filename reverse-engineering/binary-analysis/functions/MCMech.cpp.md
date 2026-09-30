@@ -43,8 +43,8 @@ Wave755 static read-back (`unwind-continuation-wave755`, `wave755-readback-verif
 | 0x00498510 | CMCMech__scalar_deleting_dtor | ~32 bytes | MSVC scalar deleting destructor wrapper |
 | 0x00498530 | CMCMech__Destructor | ~560 bytes | Clean up allocated arrays and unlink from global list |
 | 0x00498870 | CMCMech__HandleEvent | created slot | Vtable slot-0 timed reset/event requeue boundary |
-| 0x004988b0 | CMCMech__Reset | ~736 bytes | Reset mech state with identity matrices |
-| 0x00498bf0 | CMCMech__SetParams | ~80 bytes | Set motion parameters (offsets 0x98-0xc4) |
+| 0x004988b0 | CMCMech__ProcessMovement | ~736 bytes | Reset mech state with identity matrices |
+| 0x00498bf0 | CMCMech__SetMechParameters | ~80 bytes | Set motion parameters (offsets 0x98-0xc4) |
 | 0x00498c40 | CMCMech__Init | ~3008 bytes | Main initialization - allocate arrays, find leg bones, compute motion data |
 | 0x00499bc0 | CMCMech__GetFootHeight | ~320 bytes | Calculate foot height for terrain following |
 | 0x00499d60 | CMCMech__TranslatePositions | ~208 bytes | Apply translation offset to all foot positions |

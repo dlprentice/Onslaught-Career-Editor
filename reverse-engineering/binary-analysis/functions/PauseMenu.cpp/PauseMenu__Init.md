@@ -1,4 +1,4 @@
-# PauseMenu__Init
+# CPauseMenu__ctor
 
 > Address: 0x004cde60 | Source: PauseMenu.cpp (source file not present in `references/Onslaught/` snapshot)
 

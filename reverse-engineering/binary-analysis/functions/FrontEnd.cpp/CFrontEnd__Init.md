@@ -36,12 +36,12 @@ withdrawn label can tell it was corrected and not lost.
 | Address | Superseded label | Current name | Correction |
 | --- | --- | --- | --- |
 | `0x0044b060` | `FUN_0044b060` | `CEventManager__Init` | placeholder replaced; this address carries a name now |
-| `0x0044d320` | `FUN_0044d320` | `CFrontEnd__InitPageStateDefaults` | placeholder replaced; this address carries a name now |
+| `0x0044d320` | `FUN_0044d320` | `CFEMessBox__Init` | placeholder replaced; this address carries a name now |
 | `0x00459810` | `FUN_00459810` | `CFEPDevSelect__SetCurrentCard` | placeholder replaced; renamed by the 2026-09-26 RE audit |
 | `0x004687e0` | `FUN_004687e0` | `CFrontEnd__LoadSharedResources` | placeholder replaced; this address carries a name now |
 | `0x004bb8c0` | `FUN_004bb8c0` | `CMusic__PlaySelection` | placeholder replaced; this address carries a name now |
 | `0x004f2150` | `FUN_004f2150` | `CText__Ctor` | placeholder replaced; this address carries a name now |
-| `0x004f21f0` | `FUN_004f21f0` | `CText__Init` | placeholder replaced; this address carries a name now |
+| `0x004f21f0` | `FUN_004f21f0` | `CText__Load` | placeholder replaced; this address carries a name now |
 | `0x004fdc10` | `FUN_004fdc10` | `SharedVFunc__ReturnTrue_004fdc10` | placeholder replaced; the 2026-07-28 `CFrontEndPage__Init_ReturnTrue` reading was itself withdrawn on 2026-08-17 (see below) |
 | `0x005145f0` | `FUN_005145f0` | `CPCController__ctor` | placeholder replaced; this address carries a name now |
 | `0x005159b0` | `FUN_005159b0` | `CPCPlatform__FlushInputBuffers` | placeholder replaced; this address carries a name now |
@@ -216,7 +216,7 @@ Complex logic determines which page to show first:
 | 0x004fdc10 | SharedVFunc__ReturnTrue_004fdc10 | **`Resource loading` withdrawn.** Measured 2026-08-17: 36 data references from 36 distinct vtable classes. It is a shared `return 1` stub, not a FrontEnd-owned initializer, and no resource-loading purpose survives the measurement. |
 | 0x00541240 | CDXFrontEndVideo__SetDefaultSize | Resource loading |
 | 0x0040c640 | DebugTrace | Debug logging |
-| 0x0044d320 | CFrontEnd__InitPageStateDefaults | Unknown |
+| 0x0044d320 | CFEMessBox__Init | Unknown |
 | 0x0055de9b | sprintf (`FUN_0055de9b`) | sprintf equivalent |
 | 0x005490e0 | CDXMemoryManager__Alloc | Memory allocation |
 | 0x005145f0 | CPCController__ctor | Object constructor |
@@ -225,7 +225,7 @@ Complex logic determines which page to show first:
 | 0x00459810 | CFEPDevSelect__SetCurrentCard | Sets the device-select card when the CLI device-select field is not -1 (`FrontEnd.cpp:178-186`) |
 | 0x004e2c50 | CSoundManager__ReloadLanguageSampleBank | Conditional language sound-bank reload |
 | 0x004f2150 | CText__Ctor | Loop init |
-| 0x004f21f0 | CText__Init | Loop body (5 iterations) |
+| 0x004f21f0 | CText__Load | Loop body (5 iterations) |
 | 0x004bb8c0 | CMusic__PlaySelection | Unknown (conditional) |
 
 ## Callers

@@ -89,4 +89,4 @@ at file `0x0024cc20` is not `.?AVCThingPtrDataType@@`,
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x00533690` | `IScript__CreateThingRefWithSquad` | `6aff 683f6d5d00 … a1f0c78900 … e8005a0100 c7074c4b5e00 … c707f84d5e00 … 6a04 … e8ce610000 … c20400` | thiscall SEH; ret 4 ×2; 323 B; 6 E8 Alloc×2 / CSPtrSet Init+Add / Reset / CallEvent; 0 E9; 2 inbound E8. HIGH on ABI, inbound set, early-out pair, both vptr plants, CallEvent push-4. **Not** on callee bodies, host `+0x34` bit, CSPtrSet algebra, or authored event name. |
+| `0x00533690` | `IScript__Hit` | `6aff 683f6d5d00 … a1f0c78900 … e8005a0100 c7074c4b5e00 … c707f84d5e00 … 6a04 … e8ce610000 … c20400` | thiscall SEH; ret 4 ×2; 323 B; 6 E8 Alloc×2 / CSPtrSet Init+Add / Reset / CallEvent; 0 E9; 2 inbound E8. HIGH on ABI, inbound set, early-out pair, both vptr plants, CallEvent push-4. **Not** on callee bodies, host `+0x34` bit, CSPtrSet algebra, or authored event name. |

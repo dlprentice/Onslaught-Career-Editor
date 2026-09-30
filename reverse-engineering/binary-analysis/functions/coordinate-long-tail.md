@@ -63,7 +63,7 @@ or certify its prototypes or runtime behavior.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x00404A00` | `Atmospherics__Init` | 386 | 0 | 112–115 | `CConsole__RegisterVariable` x4; `CDXMemoryManager__Alloc` x2 |
+| `0x00404A00` | `CAtmospherics__InitialiseAll` | 386 | 0 | 112–115 | `CConsole__RegisterVariable` x4; `CDXMemoryManager__Alloc` x2 |
 
 ### `BattleEngineDataManager.h` (1)
 
@@ -124,7 +124,7 @@ or certify its prototypes or runtime behavior.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x00429EF0` | `CConsole__RegisterBuiltinCommands` | 1307 | 0 | 805 | `CConsole__RegisterCommand` x8; `CConsole__FindCommandByName` x7 |
+| `0x00429EF0` | `CConsole__InitDefaultCommands` | 1307 | 0 | 805 | `CConsole__RegisterCommand` x8; `CConsole__FindCommandByName` x7 |
 | `0x0042AF80` | `CConsole__RegisterCommand` | 189 | 4 | 805 | `stricmp` x1; `CDXMemoryManager__Alloc` x1 |
 | `0x0042B040` | `CConsole__RegisterVariable` | 209 | 6 | 830 | `stricmp` x1; `CDXMemoryManager__Alloc` x1 |
 
@@ -147,7 +147,7 @@ or certify its prototypes or runtime behavior.
 | --- | --- | ---: | ---: | --- | --- |
 | `0x00440B90` | `CDamage__Init` | 108 | 0 | 22 | `CDXMemoryManager__Alloc` x1; `CDamage__LoadDamageTexture` x1 |
 | `0x00440C70` | `CDamage__LoadDamageTexture` | 483 | 1 | 78 | `CTGALoader__CTGALoader` x1; `CTGALoader__Load` x1 |
-| `0x00441000` | `CDamage__CreateTextureBuffer` | 132 | 1 | 117 | `CDXMemoryManager__Alloc` x2; `CChunkReader__Read` x2 |
+| `0x00441000` | `CDamage__DeserializeAll` | 132 | 1 | 117 | `CDXMemoryManager__Alloc` x2; `CChunkReader__Read` x2 |
 
 ### `DataType.cpp` (1)
 
@@ -203,7 +203,7 @@ or certify its prototypes or runtime behavior.
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x00543D90` | `CDXImposter__Deserialize` | 439 | 0 | 1857–1858 | `CChunkReader__GetNext` x4; `CChunkReader__Read` x3 |
+| `0x00543D90` | `CDXImposter__DeserializeAll` | 439 | 0 | 1857–1858 | `CChunkReader__GetNext` x4; `CChunkReader__Read` x3 |
 | `0x00543F50` | `CDXImposter__Create` | 232 | 0 | 2019–2055 | `CChunkReader__GetNext` x4; `CChunkReader__Read` x3 |
 
 ### `DXLandscape.cpp` (3)
@@ -212,7 +212,7 @@ or certify its prototypes or runtime behavior.
 | --- | --- | ---: | ---: | --- | --- |
 | `0x005447E0` | `CDXLandscape__CreateMipLevels` | 442 | 1 | 95–115 | `CDXMemoryManager__Alloc` x4; `eh_vector_constructor_iterator` x2 |
 | `0x00544AF0` | `CDXLandscape__Init` | 457 | 1 | 169–179 | `CDXMemoryManager__Alloc` x3; `CLandscapeTexture__ResetUpdateQueue` x1 |
-| `0x00545070` | `CDXLandscape__Reset` | 851 | 0 | 434–443 | `CDXLandscape__CreateMipLevels` x3; `CDXMemoryManager__Alloc` x2 |
+| `0x00545070` | `CDXLandscape__BuildLevelSpecifics` | 851 | 0 | 434–443 | `CDXLandscape__CreateMipLevels` x3; `CDXMemoryManager__Alloc` x2 |
 
 ### `DXLandscape.h` (1)
 
@@ -234,14 +234,14 @@ or certify its prototypes or runtime behavior.
 | --- | --- | ---: | ---: | --- | --- |
 | `0x00557300` | `CDXTexture__LoadTextureFromFile` | 1650 | 1 | 418 | `CDXTexture__IsResourceHandleValid` x12; `CDXMemBuffer__dtor_base` x2 |
 | `0x005586E0` | `CDXTexture__DumpTextureToRGBA` | 398 | 1 | 929 | `CDXMemoryManager__Alloc` x1; `DebugTrace` x1 |
-| `0x00559BE0` | `CDXTexture__Deserialize` | 1154 | 0 | 3109 | `CChunkReader__GetNext` x4; `CChunkReader__Read` x3 |
+| `0x00559BE0` | `CTexture__Deserialize` | 1154 | 0 | 3109 | `CChunkReader__GetNext` x4; `CChunkReader__Read` x3 |
 | `0x005D7DC0` | `CDXTexture__Deserialize_Unwind` | 28 | 0 | 3109 | `OID__FreeObject_Callback` x1 |
 
 ### `DXTrees.cpp` (1)
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x0055A420` | `CDXTrees__BuildTreeGeometry` | 1505 | 0 | 94–106 | `CVBufTexture__dtor` x2; `CDXMemoryManager__Free` x2 |
+| `0x0055A420` | `CDXTrees__Build` | 1505 | 0 | 94–106 | `CVBufTexture__dtor` x2; `CDXMemoryManager__Free` x2 |
 
 ### `FastVB.cpp` (4)
 
@@ -371,13 +371,13 @@ pinned source. See the [platform contract](../../source-code/core/platform-syste
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x004914B0` | `CMapTex__LoadMixerTextureSet` | 275 | 3 | 151 | `sprintf` x2; `CDXMemoryManager__Free` x2 |
+| `0x004914B0` | `CMapTex__LoadAll` | 275 | 3 | 151 | `sprintf` x2; `CDXMemoryManager__Free` x2 |
 
 ### `mapwho.cpp` (1)
 
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
-| `0x004919B0` | `CMapWho__Init` | 667 | 0 | 100 | `CDXMemoryManager__Alloc` x3; `eh_vector_constructor_iterator` x1 |
+| `0x004919B0` | `CMapWho__Create` | 667 | 0 | 100 | `CDXMemoryManager__Alloc` x3; `eh_vector_constructor_iterator` x1 |
 
 ### `MCBuggy.cpp` (1)
 
@@ -652,7 +652,7 @@ pinned source. See the [platform contract](../../source-code/core/platform-syste
 | Address | Current name | Bytes | Args | Source lines | Heaviest callees |
 | --- | --- | ---: | ---: | --- | --- |
 | `0x0050AC70` | `CWorld__LoadScriptEvents` | 294 | 1 | 192–197 | `CDXMemoryManager__Alloc` x3; `CDXMemBuffer__Read` x2 |
-| `0x0050B780` | `CWorld__DeserializeWorld` | 423 | 1 | 644–646 | `CChunkReader__GetNext` x4; `CConsole__Status` x3 |
+| `0x0050B780` | `CWorld__Deserialize` | 423 | 1 | 644–646 | `CChunkReader__GetNext` x4; `CConsole__Status` x3 |
 | `0x0050D580` | `CWorld__InitLODLists` | 252 | 0 | 1335–1336 | `CDXMemoryManager__Alloc` x3; `CWorld__InitOccupancyBitplanes` x3 |
 
 ### `WorldMeshList.cpp` (1)

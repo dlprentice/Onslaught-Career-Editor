@@ -1,9 +1,9 @@
-# CTree__ComputeLodBucket
+# CTree__GetShadowSize
 
 | Property | Value |
 | --- | --- |
 | Address | `0x004f6430` |
-| Saved signature | `int __fastcall CTree__ComputeLodBucket(void * this)` |
+| Saved signature | `int __fastcall CTree__GetShadowSize(void * this)` |
 | Wave | Wave520 CTree static re-audit |
 
 Computes a clamped tree LOD bucket. The helper dispatches through the render/resource object at `this+0x08` virtual slot `+0x54`, reads resource floats at `+0x10` and `+0x14`, keeps the larger/non-NaN value, multiplies by the scale constant at `0x005d8be8`, rounds to a byte, and clamps the result to bucket `6`.

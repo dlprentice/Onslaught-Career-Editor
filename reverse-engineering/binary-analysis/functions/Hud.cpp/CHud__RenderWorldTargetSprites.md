@@ -98,7 +98,7 @@ order. Context stores first, then the overlay calls:
 | Callee | Current name | Instruction |
 | --- | --- | --- |
 | `0x00482090` | `HudRenderState__ApplyOverlaySpriteState` | `0x00487b56` |
-| `0x00513bc0` | `RenderState_Set` | `0x00487b64` (`push 0; push 0xf`) |
+| `0x00513bc0` | `PCLTShell__SRS` | `0x00487b64` (`push 0; push 0xf`) |
 | `0x00486e00` | `CHud__RenderWorldTargetSprites` | `0x00487b6b` (lock-HUD) |
 | `0x00482590` | `CHud__RenderTargetIndicatorOverlay` | `0x00487b72` |
 | `0x0047fb50` | `CHelpTextDisplay__RenderQueuedMessages` | `0x00487b83` (only if `[0x008a9d90]`) |

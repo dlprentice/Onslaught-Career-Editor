@@ -35,11 +35,11 @@ Eleven inbound `.text` `E8`, zero `E9`:
 | `0x004fffb0` | `CVBuffer__dtor_base` |
 | `0x0050190c` | `CVertexShader__dtor` |
 | `0x00544a93` | `CDXLandscape__Destructor` |
-| `0x00544f1f` | `CDXLandscape__Shutdown` |
+| `0x00544f1f` | `CDXLandscape__ShutDown` |
 | `0x0054c068` | `CDXMeshVB__dtor_base` |
-| `0x005520da` | `CDXShadows__Destructor` |
+| `0x005520da` | `CShadows__ShutDown` |
 | `0x00556dca` | `CDXTexture__Destructor` |
-| `0x0055a40e` | `CDXTrees__Reset` |
+| `0x0055a40e` | `CDXTrees__Shutdown` |
 | `0x0055b1a5` | `CDXWater__dtor` |
 
 Zero image encodings of imm `c0 2c 51 00`. Those ten unlist

@@ -363,6 +363,7 @@ public class GhidraApplyCohortManifestLive extends GhidraScript {
         "memory-abi-20260928",
         "decomp-names-20260929",
         "decomp-names-2-20260929",
+        "decomp-names-3-20260930",
     };
 
     // Reversibility strings.  These are the ONLY reversibility claims any

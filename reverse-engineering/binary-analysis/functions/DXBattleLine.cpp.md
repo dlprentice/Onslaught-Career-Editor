@@ -19,9 +19,9 @@ withdrawn label can tell it was corrected and not lost.
 
 | Address | Superseded label | Current name | Correction |
 | --- | --- | --- | --- |
-| `0x0047eb80` | `FUN_0047eb80` | `CStaticShadows__SampleShadowHeightBilinear` | placeholder replaced; this address carries a name now |
-| `0x0047ec60` | `FUN_0047ec60` | `CMonitor__SampleHeightfieldNormalAtXY` | placeholder replaced; this address carries a name now |
-| `0x00513820` | `FUN_00513820` | `D3DStateCache__SetStateCached` | placeholder replaced; this address carries a name now |
+| `0x0047eb80` | `FUN_0047eb80` | `CHeightField__Collide` | placeholder replaced; this address carries a name now |
+| `0x0047ec60` | `FUN_0047ec60` | `CHeightField__Normal` | placeholder replaced; this address carries a name now |
+| `0x00513820` | `FUN_00513820` | `PCLTShell__STS` | placeholder replaced; this address carries a name now |
 | `0x00513930` | `FUN_00513930` | `D3DStateCache__SetState114Raw` | placeholder replaced; this address carries a name now |
 | `0x00513a50` | `FUN_00513a50` | `PCLTShell__D3D_SetTexture` | placeholder replaced; this address carries a name now |
 | `0x00513c70` | `FUN_00513c70` | `CEngine__DrawIndexedPrimitives` | placeholder replaced; this address carries a name now |
@@ -375,8 +375,8 @@ Wave 310 corrected this saved owner label from the older `CExplosionInitThing` i
 | Address | Name | Purpose |
 |---------|------|---------|
 | 0x0047ef20 | CHeightField__RecomputeGridExtentsAndHeightRange | Heightfield-owned grid extent / height range helper consumed by battle-line mesh and heightmap updates; Wave396 corrected the older CDXBattleLine owner label. |
-| 0x0047eb80 | CStaticShadows__SampleShadowHeightBilinear | Sample terrain height |
-| 0x0047ec60 | CMonitor__SampleHeightfieldNormalAtXY | Unknown terrain function |
+| 0x0047eb80 | CHeightField__Collide | Sample terrain height |
+| 0x0047ec60 | CHeightField__Normal | Unknown terrain function |
 | 0x004f7170 | Triangulate__CreateQuadMesh | Allocates and seeds the BattleLine Triangulate work mesh. |
 | 0x004f7460 | Triangulate__InsertPointOrAppendVertex | Inserts/appends BattleLine mesh points into the Triangulate work object. |
 | 0x004f74b0 | Triangulate__SplitTriangleAtPointAndLegalizeEdges | Splits a containing triangle and legalizes new shared edges. |
@@ -385,8 +385,8 @@ Wave 310 corrected this saved owner label from the older `CExplosionInitThing` i
 | 0x004f7940 | Triangulate__RelaxMeshByEdgeFlips | Performs dirty-flagged edge-flip relaxation passes. |
 | 0x00558690 | CDXTexture__GetAnimatedFrame | Get texture/surface manager |
 | 0x00555be0 | CVBufTexture__DrawSpriteEx | Render sprite with rotation |
-| 0x00513bc0 | RenderState_Set | Cached render-state setter |
-| 0x00513820 | D3DStateCache__SetStateCached | Set texture stage state |
+| 0x00513bc0 | PCLTShell__SRS | Cached render-state setter |
+| 0x00513820 | PCLTShell__STS | Set texture stage state |
 | 0x00513930 | D3DStateCache__SetState114Raw | Set sampler state |
 | 0x00513a50 | PCLTShell__D3D_SetTexture | Set texture |
 | 0x00513c70 | CEngine__DrawIndexedPrimitives | Draw indexed primitives |

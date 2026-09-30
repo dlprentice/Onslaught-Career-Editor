@@ -1,4 +1,4 @@
-# CGeneralVolume__BeginFlyToWalkTransition
+# CCockpit__MorphIntoWalkerCockpit
 
 > Address: `0x00424920` | Source family: `CGeneralVolume`
 

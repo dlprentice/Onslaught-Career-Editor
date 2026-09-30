@@ -68,4 +68,4 @@ not `69a733ad…c8dd`, **or** `tools/call_xref_scan.py` on
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x00539dc0` | `CMissionScriptObjectCode__StartLoadAsync` | `53 56 57 8bd9 e846effeff … 8b7c2410 … 8d5320 f2ae … 8b4c2414 898b24010000 8bcb e851effeff 5f5e5b c20800` | thiscall; ret 8 ×1; 69 B; 2 E8 / 0 E9; 1 inbound E8. HIGH on ABI, inbound set, arg0 copy to `[+0x20]`, arg1 store to `[+0x124]`. **Not** on callee bodies, inbound host, or class of this. |
+| `0x00539dc0` | `CAsyncCache__LoadFile` | `53 56 57 8bd9 e846effeff … 8b7c2410 … 8d5320 f2ae … 8b4c2414 898b24010000 8bcb e851effeff 5f5e5b c20800` | thiscall; ret 8 ×1; 69 B; 2 E8 / 0 E9; 1 inbound E8. HIGH on ABI, inbound set, arg0 copy to `[+0x20]`, arg1 store to `[+0x124]`. **Not** on callee bodies, inbound host, or class of this. |

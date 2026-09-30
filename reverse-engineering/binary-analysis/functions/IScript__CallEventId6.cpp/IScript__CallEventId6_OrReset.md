@@ -50,4 +50,4 @@ inbound `E8`/`E9` exists.
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x005335a0` | `IScript__CallEventId6_OrReset` | `833dc09a8a0004 750a b9e0c58900 e9cd630000 8b410c 6a00 6828c58900 6a06 … e8c6630000 c3` | thiscall; bare ret; 43 B; 1 E9 Reset `0x00539980` if `[0x008a9ac0]==4`; 1 E8 CallEvent `0x00539990` with imm 6; 1 inbound E8. HIGH on ABI, inbound, that cmp, that push 6. **Not** on callee bodies or authored event name. |
+| `0x005335a0` | `IScript__Ready` | `833dc09a8a0004 750a b9e0c58900 e9cd630000 8b410c 6a00 6828c58900 6a06 … e8c6630000 c3` | thiscall; bare ret; 43 B; 1 E9 Reset `0x00539980` if `[0x008a9ac0]==4`; 1 E8 CallEvent `0x00539990` with imm 6; 1 inbound E8. HIGH on ABI, inbound, that cmp, that push 6. **Not** on callee bodies or authored event name. |

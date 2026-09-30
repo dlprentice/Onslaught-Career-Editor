@@ -26,7 +26,7 @@ DirectX environment cube map rendering. Implements skybox and environment reflec
 | `0x00544040` | `CDXEngine__ClearKempyCubeTextureSlots` | Clears the five Kempy cube texture slots in the `engine+0x498` resource block | Saved signature/comment in Wave600 |
 | `0x00544060` | `CDXEngine__ReleaseKempyCubeTexturesAndVertexBuffer` | Releases five texture refs through `CTexture__DecrementRefCountFromNameField(texture+8)` and global CVBuffer `0x008aa908` | Saved signature/comment in Wave600; stale helper wording corrected in Wave1033 |
 | `0x005440a0` | `CDXEngine__InitKempyCubeTexturesAndVertexBuffer` | Calls the formatter in a five-iteration loop, loads the cube textures, and initializes static cube vertex-buffer data | Saved signature/comment in Wave600 |
-| `0x005441a0` | `CDXEngine__InitKempyCubeResources` | `CEngine__SetKempyCube` wrapper around the texture/VB initializer | Saved signature/comment in Wave600 |
+| `0x005441a0` | `CDXKempyCube__Change` | `CEngine__SetKempyCube` wrapper around the texture/VB initializer | Saved signature/comment in Wave600 |
 | `0x005441b0` | `CDXEngine__RenderKempyCubeFaces` | Render helper reached from `CDXEngine__Render`; loops the five texture slots and uses global CVBuffer `0x008aa908` | Saved signature/comment in Wave600 |
 
 ## Notes

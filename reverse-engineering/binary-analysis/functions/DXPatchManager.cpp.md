@@ -127,9 +127,9 @@ struct CDXPatchPool {
 | 0x005503d0 | CDXPatchManager__ResetPatchSlots | 0x30 | Resets all slot indices to -1 (0xFFFF) |
 | 0x00550400 | CDXPatchManager__AllocatePatchSlot | 0x30 | Finds free slot, returns patch pointer |
 | 0x00550430 | CDXPatchManager__Init | 0x250 | Main initialization, creates 3 pools |
-| 0x005506e0 | CDXPatchManager__Destroy | 0x50 | Frees all pools and textures |
+| 0x005506e0 | CDXPatchManager__Shutdown | 0x50 | Frees all pools and textures |
 | 0x00550730 | CDXPatch__FreeData | 0x20 | Frees patch data buffer at +0x0C |
-| 0x00550750 | CDXPatch__LoadFromFile | 0x98 | Loads patch data from resource file |
+| 0x00550750 | CDXPatchManager__DeserializeAll | 0x98 | Loads patch data from resource file |
 
 ## Function Details
 
@@ -262,7 +262,7 @@ Vertex count per patch: `(level + 1)^2`
 | 0x005504f4 | CDXPatchManager__Init | 0x11 | Patch pool allocation |
 | 0x0055057d | CDXPatchManager__Init | 0x11 | Patch pool allocation |
 | 0x005505f1 | CDXPatchManager__Init | 0x5b | Texture array allocation |
-| 0x005507b5 | CDXPatch__LoadFromFile | 0x94 | Vertex buffer allocation |
+| 0x005507b5 | CDXPatchManager__DeserializeAll | 0x94 | Vertex buffer allocation |
 
 ## Notes
 

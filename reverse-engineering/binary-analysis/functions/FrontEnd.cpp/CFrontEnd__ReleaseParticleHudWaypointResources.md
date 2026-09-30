@@ -1,4 +1,4 @@
-# CFrontEnd__ReleaseParticleHudWaypointResources
+# CFrontEndData__Shutdown
 
 - Address: 0x004691c0
 - Status: Renamed (headless batch, Wave 377 read-back verified)

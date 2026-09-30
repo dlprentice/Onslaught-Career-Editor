@@ -5,7 +5,7 @@
 > Status: **superseded name — this note is a redirect, not evidence**
 > Last updated: 2026-07-28
 
-<!-- ghidra-name-drift-accepted: 0x004eb1e0 D3DStateCache__UseDefaultRenderState (2026-07-28) -->
+<!-- ghidra-name-drift-accepted: 0x004eb1e0 CState__UseDefault (2026-09-30) -->
 
 **The canonical record for `0x004EB1E0` is
 [The default render-state block, re-derived from bytes](../../d3d-default-render-state-block-2026-07-27.md).**

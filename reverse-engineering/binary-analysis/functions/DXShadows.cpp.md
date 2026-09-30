@@ -39,9 +39,9 @@ Runtime shadow behavior remains unproven. Treat this page as static binary evide
 
 | Address | Saved signature | Evidence notes |
 | --- | --- | --- |
-| `0x00552060` | `void __thiscall CDXShadows__Destructor(void * this)` | `CEngine__Shutdown` callsite `0x004498a4` passes `ECX=0x009c7550`. Body walks count `+0x5bc`, releases texture pointers from `+0x640`, clears blob texture/resource fields `+0x5b4/+0x5b8`, invokes vtable slot `+0x0c`, and unlinks from `CShaderBase` render lists. |
-| `0x005520f0` | `void __thiscall CDXShadows__Init(void * this)` | `CEngine__Init` callsite `0x00449d05` passes `ECX=0x009c7550`. Body calls the shared `CShaderBase` init path, selects shadow-map count `0x10` or `0x20` from `DAT_00662f10`, allocates/configures `CUMTexture` entries from `DXShadows.cpp` line `0x69`, registers shadow cvars, and invokes vtable slot `+0x08`. |
-| `0x00552330` | `void __thiscall CDXShadows__InitBlobShadows(void * this)` | `CEngine__InitResources` callsite `0x00449d62` passes `ECX=0x009c7550`. Body loads `shadowblob.tga`, stores it at `+0x5b4`, allocates a `0x68`-byte `CVBufTexture` from `DXShadows.cpp` line `0x97`, stores it at `+0x5b8`, and configures vertex/index buffer formats. |
+| `0x00552060` | `void __thiscall CShadows__ShutDown(void * this)` | `CEngine__Shutdown` callsite `0x004498a4` passes `ECX=0x009c7550`. Body walks count `+0x5bc`, releases texture pointers from `+0x640`, clears blob texture/resource fields `+0x5b4/+0x5b8`, invokes vtable slot `+0x0c`, and unlinks from `CShaderBase` render lists. |
+| `0x005520f0` | `void __thiscall CShadows__Init(void * this)` | `CEngine__Init` callsite `0x00449d05` passes `ECX=0x009c7550`. Body calls the shared `CShaderBase` init path, selects shadow-map count `0x10` or `0x20` from `DAT_00662f10`, allocates/configures `CUMTexture` entries from `DXShadows.cpp` line `0x69`, registers shadow cvars, and invokes vtable slot `+0x08`. |
+| `0x00552330` | `void __thiscall CShadows__InitResources(void * this)` | `CEngine__InitResources` callsite `0x00449d62` passes `ECX=0x009c7550`. Body loads `shadowblob.tga`, stores it at `+0x5b4`, allocates a `0x68`-byte `CVBufTexture` from `DXShadows.cpp` line `0x97`, stores it at `+0x5b8`, and configures vertex/index buffer formats. |
 
 ## Key Observed Offsets
 

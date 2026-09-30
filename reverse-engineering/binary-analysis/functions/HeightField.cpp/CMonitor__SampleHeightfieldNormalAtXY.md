@@ -76,7 +76,7 @@ Cheapest falsifier: file `0x0007ec60` is not `83 ec 28 53 55 8b 6c 24 34`,
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x0047ec60` | `CMonitor__SampleHeightfieldNormalAtXY` | `83ec28 53 55 8b6c2434 56 57 8bf2 … 8bd9 … c20400 … c70600000000 c7460400000000 c746080000803f … c20400` | thiscall; ECX→EBX; EDX=out*; one stack xy*; `ret 4`; OOB `(0,0,+1.0)`; in-range four dwords; this imm `0x006fadc8` on all 21 `E8`. HIGH on ABI, inbound set, both rets, OOB stores, in-range store slots, `0x00508f6a` add into `[esp+0x14]`. **Not** on authored names, `[out+0xc]`, or the `0x005088b0` mix meaning. |
+| `0x0047ec60` | `CHeightField__Normal` | `83ec28 53 55 8b6c2434 56 57 8bf2 … 8bd9 … c20400 … c70600000000 c7460400000000 c746080000803f … c20400` | thiscall; ECX→EBX; EDX=out*; one stack xy*; `ret 4`; OOB `(0,0,+1.0)`; in-range four dwords; this imm `0x006fadc8` on all 21 `E8`. HIGH on ABI, inbound set, both rets, OOB stores, in-range store slots, `0x00508f6a` add into `[esp+0x14]`. **Not** on authored names, `[out+0xc]`, or the `0x005088b0` mix meaning. |
 
 ## Open
 

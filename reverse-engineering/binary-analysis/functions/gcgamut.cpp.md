@@ -19,7 +19,7 @@ The system works by:
 
 | Address | Saved signature | Evidence |
 | --- | --- | --- |
-| `0x004741b0` | `void * __thiscall CGamut__Init(void * this, int init_arg)` | Called from `CEngine__Init`; writes grid/cell fields, allocates height and visibility buffers, and registers the gamut console variables. |
+| `0x004741b0` | `void * __thiscall C3DGamut__ctor(void * this, int init_arg)` | Called from `CEngine__Init`; writes grid/cell fields, allocates height and visibility buffers, and registers the gamut console variables. |
 | `0x00474260` | `void __fastcall CGamut__Destroy(void * this)` | Called from `CEngine__Shutdown`; frees and clears height/visibility buffers. |
 | `0x004742a0` | `void __thiscall CGamut__ComputePlanes(void * this, float * frustum_corners)` | Called from `CGamut__Calculate`; large frustum-plane and grid-rasterization helper over frustum-corner input. |
 | `0x00476a20` | `void __thiscall CGamut__Calculate(void * this, float * view_matrix, float depth, float width_scale, float height_scale, float * camera_pos)` | Called from `CDXEngine__Render`; honors `cg_gamutlocked`, stores camera position, builds frustum corners, calls `CGamut__ComputePlanes`, and fills visibility bytes from height ranges. |
@@ -70,7 +70,7 @@ struct CGamut {
 
 | Address | Name | Size | Notes |
 |---------|------|------|-------|
-| 0x004741b0 | CGamut__Init | 0xA8 | Init-style helper, allocates buffers, registers cvars |
+| 0x004741b0 | C3DGamut__ctor | 0xA8 | Init-style helper, allocates buffers, registers cvars |
 | 0x00474260 | CGamut__Destroy | 0x3E | Cleanup helper, frees allocated buffers |
 | 0x004742a0 | CGamut__ComputePlanes | ~0x27E0 | Complex plane intersection math (very large function) |
 | 0x00476a20 | CGamut__Calculate | ~0x580 | Main calculation entry point, calls ComputePlanes |
@@ -198,8 +198,8 @@ Each path computes min/max heights differently based on which planes contribute 
 
 | Address | Function | Line# | Context |
 |---------|----------|-------|---------|
-| 0x004741b5 | CGamut__Init | 0x39 | OID__AllocObject for height buffer |
-| 0x004741db | CGamut__Init | 0x3A | OID__AllocObject for visibility buffer |
+| 0x004741b5 | C3DGamut__ctor | 0x39 | OID__AllocObject for height buffer |
+| 0x004741db | C3DGamut__ctor | 0x3A | OID__AllocObject for visibility buffer |
 
 ## Call Graph
 

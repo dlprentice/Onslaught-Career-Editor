@@ -94,10 +94,10 @@ void __thiscall CThunderHead__CreateLegMotion(CThunderHead *this, void *init_con
 |---------|------|---------|
 | Virtual+0x24 | RegisterAnimation | Registers animation by name |
 | Virtual+0x24 | Mesh/controller getter | Returns object used for animation-name lookup |
-| 0x004aa630 | CMesh__FindAnimationIndexByName | Looks up animation index by name |
+| 0x004aa630 | CMesh__GetAnimModeByName | Looks up animation index by name |
 | OID__AllocObject | OID__AllocObject | Allocates memory from pool |
 | 0x004983b0 | CMCMech__Constructor | Initializes the motion-controller object |
-| 0x00498bf0 | CMCMech__SetParams | Configures motion parameters |
+| 0x00498bf0 | CMCMech__SetMechParameters | Configures motion parameters |
 
 ## Object Field Written
 

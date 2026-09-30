@@ -146,7 +146,7 @@ Wave583 identified two adjacent CVM stack cleanup rows near the script object-co
 |---------|------|---------|
 | `0x00539c80` | `CMissionScriptObjectCode__CMissionScriptObjectCode` | Constructor - initializes fields |
 | `0x00539ca0` | `CXBOXAsyncCache__LoadAsync` | Async load completion handler |
-| `0x00539dc0` | `CMissionScriptObjectCode__StartLoadAsync` | Starts async script file loading |
+| `0x00539dc0` | `CAsyncCache__LoadFile` | Starts async script file loading |
 | `0x00539f00` | `CMissionScriptObjectCode__InitFields` | Zero-initializes all instance fields |
 | `0x00539f30` | `CMissionScriptObjectCode__ClearFields_Thunk` | One-instruction jump thunk into `CMissionScriptObjectCode__ClearFields` |
 | `0x00539f40` | `CMissionScriptObjectCode__ClearFields` | Frees all dynamically allocated fields |

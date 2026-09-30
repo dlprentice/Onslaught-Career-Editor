@@ -1,4 +1,4 @@
-# CText__FreeBuffer
+# CText__Shutdown
 
 > Address: 0x004f2170 | Source: text.cpp (source file not present in `references/Onslaught/` snapshot)
 

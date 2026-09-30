@@ -68,7 +68,7 @@ Cheapest falsifier: file `0x0007eb80` is not `83 ec 08 d9 02`, **or**
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x0047eb80` | `CStaticShadows__SampleShadowHeightBilinear` | `83ec08 d902 d825f0bd5d00 … 8b9128100000 … d8892c100000 c3 d9056c855d00 … c3` | thiscall + EDX xy*; bare `ret`; ST0 = sample·`[this+0x102c]` or 0.0; this imm `0x006fadc8` on all 110 `E8`. HIGH on ABI, inbound count, both rets, ST0 polarity, fire-wrapper `target+0x1c`. **Not** on authored names or what `0x006fadc8` is beyond the shared BSS this. |
+| `0x0047eb80` | `CHeightField__Collide` | `83ec08 d902 d825f0bd5d00 … 8b9128100000 … d8892c100000 c3 d9056c855d00 … c3` | thiscall + EDX xy*; bare `ret`; ST0 = sample·`[this+0x102c]` or 0.0; this imm `0x006fadc8` on all 110 `E8`. HIGH on ABI, inbound count, both rets, ST0 polarity, fire-wrapper `target+0x1c`. **Not** on authored names or what `0x006fadc8` is beyond the shared BSS this. |
 
 ## Open
 

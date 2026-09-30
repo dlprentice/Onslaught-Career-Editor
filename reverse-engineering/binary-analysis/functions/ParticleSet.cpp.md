@@ -14,7 +14,7 @@ invented.
 | --- | --- | ---: | ---: | --- | --- |
 | `0x004CC020` | `CParticleSet__CreateByType` | 2036 | 3 | 95–107 | `CDXMemoryManager__Alloc` ×13, `CParticleSet__Init` ×10 |
 | `0x004CD7F0` | `CParticleSet__LoadFromArchive` | 617 | 1 | 315–348 | `CDXMemoryManager__Free` ×7, `CTokenArchive__ReadNextToken` ×5 |
-| `0x004CDA60` | `CParticleSet__LoadParticleSetFile` | 297 | 1 | 437 | `CDXMemoryManager__Alloc`, `CDXMemBuffer__ctor` |
+| `0x004CDA60` | `CParticleSet__LoadAllFromDisk` | 297 | 1 | 437 | `CDXMemoryManager__Alloc`, `CDXMemBuffer__ctor` |
 
 ## Two joins worth keeping
 

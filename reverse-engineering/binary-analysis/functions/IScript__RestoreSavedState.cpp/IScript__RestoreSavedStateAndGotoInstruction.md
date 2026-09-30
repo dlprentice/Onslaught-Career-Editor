@@ -68,4 +68,4 @@ Cheapest falsifier: file `0x00133840` is not `56 8b f1`,
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x00533840` | `IScript__RestoreSavedStateAndGotoInstruction` | `56 8bf1 8b4638 85c0 7453 50 b9e0c58900 e8bb600000 … e86f23fbff … c7463800000000 … e8f0600000 c3 / e843620000 c3` | thiscall; bare ret ×2; 95 B; 4 E8 CopyState `0x00539910` / Remove `0x004e5bd0` / Reset `0x00539980` / GotoInstruction `0x00539ae0`; 0 E9; 1 inbound E8. HIGH on ABI, inbound set, `[+0x38]` early-out and store-0, cmp-4 split. **Not** on callee bodies or the host. |
+| `0x00533840` | `IScript__FinishedPlayingAnim` | `56 8bf1 8b4638 85c0 7453 50 b9e0c58900 e8bb600000 … e86f23fbff … c7463800000000 … e8f0600000 c3 / e843620000 c3` | thiscall; bare ret ×2; 95 B; 4 E8 CopyState `0x00539910` / Remove `0x004e5bd0` / Reset `0x00539980` / GotoInstruction `0x00539ae0`; 0 E9; 1 inbound E8. HIGH on ABI, inbound set, `[+0x38]` early-out and store-0, cmp-4 split. **Not** on callee bodies or the host. |

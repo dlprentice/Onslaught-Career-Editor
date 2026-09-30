@@ -52,4 +52,4 @@ at `0x0046ca0e`, **or** `0x0006ca09` is not
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x00490f40` | `CHeightField__ShutdownAndDestroyMixerMap` | `e85bd9feff b980bd8900 e9e1220900` | thiscall; call FreeOwnedBuffers then `ecx=0x0089bd80` / `jmp 0x00523230`; inbound `CGame__Shutdown` `mov ecx,0x006fadc8`. HIGH on ABI, inbound, both transfers. **Not** on mixer-destroy body. |
+| `0x00490f40` | `CMap__Shutdown` | `e85bd9feff b980bd8900 e9e1220900` | thiscall; call FreeOwnedBuffers then `ecx=0x0089bd80` / `jmp 0x00523230`; inbound `CGame__Shutdown` `mov ecx,0x006fadc8`. HIGH on ABI, inbound, both transfers. **Not** on mixer-destroy body. |

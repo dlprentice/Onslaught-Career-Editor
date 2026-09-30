@@ -192,6 +192,8 @@ CURRENT_DECOMP_NAMES_OVERLAY = REPO_ROOT / "tools/cohort-specs/decomp-names-2026
 CURRENT_DECOMP_NAMES_OVERLAY_SHA256 = "73f50978847462c0050ad1b0921fc3d15ff4858975b80f59e6f1df27395617e2"
 CURRENT_DECOMP_NAMES_2_OVERLAY = REPO_ROOT / "tools/cohort-specs/decomp-names-2-20260929.manifest.tsv"
 CURRENT_DECOMP_NAMES_2_OVERLAY_SHA256 = "f415dd868a2948f9df8c352d894be674eed47ce016c9893529f55a34e1fb41bf"
+CURRENT_DECOMP_NAMES_3_OVERLAY = REPO_ROOT / "tools/cohort-specs/decomp-names-3-20260930.manifest.tsv"
+CURRENT_DECOMP_NAMES_3_OVERLAY_SHA256 = "99b6284b2a0d95c5fe3c65764317b103a532f1b5a8b62b2fac3222f276836408"
 CURRENT_GETBPP_OVERLAY_COLUMNS = (
     "addr", "liveKind", "currentName", "proposedName", "currentSignature",
     "currentSignatureSha256", "proposedSignature", "currentCallingConvention",
@@ -1065,6 +1067,11 @@ def run(
                 table, CURRENT_DECOMP_NAMES_2_OVERLAY,
                 expected_sha256=CURRENT_DECOMP_NAMES_2_OVERLAY_SHA256,
                 expected_rows=44, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
+            )
+            table = apply_current_name_overlay(
+                table, CURRENT_DECOMP_NAMES_3_OVERLAY,
+                expected_sha256=CURRENT_DECOMP_NAMES_3_OVERLAY_SHA256,
+                expected_rows=166, expected_columns=CURRENT_LABEL_AUDIT_OVERLAY_COLUMNS,
             )
     except (OSError, ValueError) as exc:
         print(f"UNAVAILABLE: could not read name table: {exc}", file=sys.stderr)

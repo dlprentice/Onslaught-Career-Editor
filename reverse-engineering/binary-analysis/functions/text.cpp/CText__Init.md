@@ -1,4 +1,4 @@
-# CText__Init
+# CText__Load
 
 Status: independently rechecked static and bounded original-parser contract
 Last updated: 2026-09-20

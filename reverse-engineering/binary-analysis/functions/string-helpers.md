@@ -35,7 +35,7 @@ Static read-back evidence:
 | `0x0042d098`, `0x0042cfdf`, `0x0042d009`, `0x0042d0c4`, `0x0042c764` | Fatal-error/localized text callers. |
 | `0x004654f8 CFEPSaveGame__IsCheatActive` | Cheat text compare caller. |
 | `0x004b7b28 CMessageBox__SelectPortraitIndex`, `0x004b7fdf CMessageBox__StartVoiceOrFallbackTextReveal` | Message-box text and portrait caller evidence. |
-| `0x00514c33 EnumerateSaveFiles_Main`, `0x00514fb7 PCPlatform__WriteSaveFile`, `0x005150b7 PCPlatform__ReadSaveFile`, `0x00514ef7 PCPlatform__DeleteSaveFile` | Save-file path caller evidence. |
+| `0x00514c33 CPCMemoryCard__CreateSave`, `0x00514fb7 CPCMemoryCard__WriteSave`, `0x005150b7 CPCMemoryCard__ReadSave`, `0x00514ef7 CPCMemoryCard__DeleteSave` | Save-file path caller evidence. |
 | `0x004f7bf0 Text__AsciiToWideScratch`, `0x004f7c70 StringScratch_T3_004f7c70`, `0x004f7cd0 StringScratch_T3_004f7cd0` | Adjacent four-slot scratch-buffer helper context. The two `StringScratch__CopyToRotating4KBuffer{A,B}` spellings were demoted to neutral Tier-3 placeholders on 2026-08-17: no `StringScratch` type descriptor exists in the image and no vtable owns either VA, so the invented class and the A/B ordering were both unsupported. Their adjacency to `0x004f7bf0` and the four-slot rotation described in the `FromWCHAR` row above are separate, still-standing byte readings. |
 
 Post-Wave834 queue telemetry is `6098` total, `5656` commented, `442` commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5656/6098 = 92.75%`, strict proxy `5656/6098 = 92.75%`, and next raw commentless row `0x004f9a90 CUnit__ApplyDamage`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260525-000436_post_wave834_fromwchar_string_conversion_verified`.
@@ -51,7 +51,7 @@ Static read-back evidence:
 | Address | Evidence |
 | --- | --- |
 | `0x004d6240 StrCopyN` | Returns the original `dst`, exits immediately when `maxLen < 1`, copies bytes from `src` to `dst` while the countdown remains positive, stops after copying the first NUL byte, and otherwise stops when `maxLen` is exhausted. The body does not zero-pad remaining destination bytes. |
-| `0x00441740 CDebugLog__Printf` | Caller xref at `0x0044185c`; formats into a 700-byte stack buffer, passes `0x50` to `StrCopyN`, then explicitly clears the final logger ring-entry byte. |
+| `0x00441740 CDebugLog__AddMessage` | Caller xref at `0x0044185c`; formats into a 700-byte stack buffer, passes `0x50` to `StrCopyN`, then explicitly clears the final logger ring-entry byte. |
 | `0x004418a0 CDebugLog__PrintfNoNewline` | Caller xref at `0x00441998`; formats into a 256-byte stack buffer, passes `0x50` to `StrCopyN`, then explicitly clears the final logger ring-entry byte. |
 
 Post-Wave825 queue telemetry is `6098` total, `5633` commented, `465` commentless, 0 exact-undefined signatures, 0 `param_N`, comment-backed proxy `5633/6098 = 92.37%`, strict proxy `5633/6098 = 92.37%`, and next raw commentless row `0x004daff0 FearGridTrackedObject__LookupFearWeightByArchetype`. Verified backup: `[maintainer-local-ghidra-backup-root]\BEA_20260524-193427_post_wave825_strcopyn_helper_verified`.

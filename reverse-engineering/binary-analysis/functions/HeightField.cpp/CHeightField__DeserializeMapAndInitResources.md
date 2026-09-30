@@ -88,4 +88,4 @@ not exactly `E8` at `0x0044a72f`, **or** `0x0004a72a` is not
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x00491060` | `CHeightField__DeserializeMapAndInitResources` | `83ec24 56 8bf1 57 6884da6200 … 8986dc930000 … e875e6feff … c20400` | thiscall; ret 4; this=`0x006fadc8`; dword → `+0x93dc`; flags `+0x93e0`/`+0x93e4`=1; then Load. HIGH on ABI, inbound, strings, those three stores, Load site. **Not** on authored names or callee bodies. |
+| `0x00491060` | `CMap__Deserialize` | `83ec24 56 8bf1 57 6884da6200 … 8986dc930000 … e875e6feff … c20400` | thiscall; ret 4; this=`0x006fadc8`; dword → `+0x93dc`; flags `+0x93e0`/`+0x93e4`=1; then Load. HIGH on ABI, inbound, strings, those three stores, Load site. **Not** on authored names or callee bodies. |
