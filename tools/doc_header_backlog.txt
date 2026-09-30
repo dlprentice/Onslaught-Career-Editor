@@ -239,7 +239,6 @@ reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleDebugSquadBa
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleDebugSquadForward.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleDebugUnitBackward.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleDebugUnitForward.md
-reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleFreeCameraOn.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__UnPause.md
 reverse-engineering/binary-analysis/functions/game.cpp/CGame__Update.md
 reverse-engineering/binary-analysis/functions/game.cpp/CWaitForStart__ctor.md
