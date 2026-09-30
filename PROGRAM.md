@@ -57,13 +57,27 @@ owns the score and the matched-function list, and this file keeps only the plan.
   identical-code folding keeps a shared name. A reconstruction label may go in as a
   comment that says it is one, never as the function's name.
 
-For the September 29 handover, continue from the current private `bea-decomp` main branch,
-whose README and commit bodies record the integrated source, exact score, original-code
-experiments and remaining partials. Work is split into disjoint object families, one worker per
-`bea-decomp` worktree; the lead merges each pushed branch into main, scores it and checks that no
-earlier match is lost. The September 29 reconciliation merged every worker branch the handover had
-left out. This continuation did not open or mutate Ghidra;
-the recorded live authority remains selected by `developer_state.json`. Do not replay the old
+Handover, September 30 (the Claude team stopped for a machine restart). Continue from `bea-decomp` main:
+every worker branch (`decomp/frontend`, `world`, `units`, `engine`, `lead`) is merged into main, and all are
+pushed; its README owns the exact score. What remains:
+- **Near misses only.** No game function is left unwritten apart from a few out-of-line copies
+  (`004183f0`, `00449560`, `004c78d0`). The rest compile but differ in inlining, register choice or
+  instruction order. The README's "Findings" start with VC6's measured inline rule: per-callee size
+  caps, a per-caller budget and the order sites are spent. It is the main lever for the inlining class.
+  Per-function notes sit above each near miss in the source.
+- **Behaviour tests.** `tools/equiv.py` (bea-decomp AGENTS.md, "Commands") runs our function and retail's
+  side by side in an emulator. The goal's "impossible for the toolchain" exit needs it for every function
+  closed that way. Unfinished fixes are on `decomp/equiv-wip`: unplaced-callee resolution, INCONCLUSIVE
+  results, an x87 return fix, coverage reporting and boundary-value inputs. One open fault there: matched
+  `00442d40` falsely diverges at trial 73 on an indirect call target. Trace that before merging the branch
+  and classifying the near misses.
+- **Tools.** The permuter, the inline-rule experiments and the near-miss scanners are in bea-decomp
+  `tools/`. A permuter result that does not match fully is a lead to read, not a patch.
+- **Ghidra.** The name promotions are `decomp-names`, `decomp-names-2` and `decomp-names-3` (evidence in
+  `local-lab/…/re-audit-20260926/decomp-names*/`; the batch-3 folder holds the caller-witness and
+  shared-body screens to reuse). One flow defect was found and left for a boundary correction: Ghidra
+  treats `0042c750` as non-returning, so `004b7d90`'s body omits the `ret` at `004b7e0a`.
+The recorded live authority remains selected by `developer_state.json`. Do not replay the old
 prepared-cohort queue or mistake isolated original-code probes for full game acceptance.
 
 ### Dedicated RE lane — current continuation
