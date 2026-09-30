@@ -45,6 +45,14 @@ owns the score and the matched-function list, and this file keeps only the plan.
   the retail build; each divergence is recorded in the decomp README with its evidence.
 - **Promotion.** Names and prototypes a match proves go to Ghidra in batches through the
   promotion gate. New source matches do not automatically change the live database.
+- **Name evidence.** A match proves a body, not its name, and most of the game's files were
+  never released, so their names are the reconstruction's labels. A name goes to Ghidra only
+  when Stuart's released source ties it to the body: the same-named released file defines
+  it; a matched function compiled from a released file calls it by that name, so the
+  relocation check puts the call on this address; or a released header declares it as a
+  virtual whose slot the matched vtable fills with this body. A body shared through
+  identical-code folding keeps a shared name. A reconstruction label may go in as a
+  comment that says it is one, never as the function's name.
 
 For the September 29 handover, continue from the current private `bea-decomp` main branch,
 whose README and commit bodies record the integrated source, exact score, original-code
