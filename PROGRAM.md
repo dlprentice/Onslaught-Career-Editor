@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-29 (decompilation reconciled and continuing; broader RE audit unfinished; rebuild and companion paused)
+Last updated: 2026-09-30 (near-miss matching resumed; differential checks repaired; broader RE audit unfinished; rebuild and companion paused)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -65,12 +65,23 @@ pushed; its README owns the exact score. What remains:
   instruction order. The README's "Findings" start with VC6's measured inline rule: per-callee size
   caps, a per-caller budget and the order sites are spent. It is the main lever for the inlining class.
   Per-function notes sit above each near miss in the source.
-- **Behaviour tests.** `tools/equiv.py` (bea-decomp AGENTS.md, "Commands") runs our function and retail's
-  side by side in an emulator. The goal's "impossible for the toolchain" exit needs it for every function
-  closed that way. Unfinished fixes are on `decomp/equiv-wip`: unplaced-callee resolution, INCONCLUSIVE
-  results, an x87 return fix, coverage reporting and boundary-value inputs. One open fault there: matched
-  `00442d40` falsely diverges at trial 73 on an indirect call target. Trace that before merging the branch
-  and classifying the near misses.
+- **Behaviour tests.** The saved `decomp/equiv-wip` work is integrated with corrections in private
+  `bea-decomp` main. The false divergence of matched `00442d40` at trial 73 came from placing the
+  candidate at an address also used for synthetic indirect calls. Both bodies now execute at the
+  retail address in separate emulator images. Unsupported ABI/stack observations, faults, unresolved
+  dependencies and incomplete coverage remain INCONCLUSIVE; x87 return/control state and callee-saved
+  registers are compared. The exact `00411b70` control completed 45 trials covering its four blocks
+  without a difference. This is bounded stub-model evidence, not equivalence, retail acceptance, or
+  proof that a near miss is impossible to compile exactly. See `bea-decomp/AGENTS.md` and its focused
+  authored-code tests; do not use randomized agreement to close an unresolved body.
+- **Current matching work.** Continue from integrated source, not the old prepared queues. Exact
+  collision-response, box-distance, actor-movement and mouse-recentering corrections are in the private
+  repository; its README and full score own counts. Mouse recentering also corrected a one-ULP constant
+  error, documented in the existing [controller reference](reverse-engineering/source-code/frontend/controller-system.md#september-30-mouse-recentering-byte-match).
+  `ReadOptions` remains open: its old "register-only" description understated differences in key packing,
+  mode-search control flow and inlining. The compiled-prefix scoring gap is guarded; the fresh complete
+  build found no previously credited undersized sections. A small instruction-byte difference is not a
+  semantic-equivalence measure, especially before relocation constants have been checked.
 - **Tools.** The permuter, the inline-rule experiments and the near-miss scanners are in bea-decomp
   `tools/`. A permuter result that does not match fully is a lead to read, not a patch.
 - **Ghidra.** The name promotions are `decomp-names`, `decomp-names-2` and `decomp-names-3` (evidence in

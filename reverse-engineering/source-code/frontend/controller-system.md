@@ -1,11 +1,12 @@
 # Controller System
 
 Status: active — mixed source reference and bounded retail evidence
-Last updated: 2026-09-27
+Last updated: 2026-09-30
 Summary: controller architecture and retail differences; the keyboard queries
 and POV neutral comparison were rechecked on September 26, while other sections
 retain their own dated evidence and limitations. The September 27 joystick and
 recording recheck supplies exact retail guards, scales and transfer counts.
+September 30 byte matching resolves the mouse-recentering arithmetic and constants.
 Evidence: MEASURED — bounded retail keyboard recheck and the dated evidence below;
 the separate pinned-source architecture is a reference, not proof of retail parity.
 Specimen: pristine `BEA.exe.original.backup`, SHA-256
@@ -96,8 +97,9 @@ For mouse push types `0x0B..0x0E`, Steam `CController__DoMappings` at
 clamp(g_MouseSensitivity * centeredCursorPixels * 0.004333333, -1, 1)
 ```
 
-`Input__UpdateCursorCenterWithWindowScale` at `0x0042DA00` retains `10/17` of
-the centered displacement per 20 Hz update. This is a displacement with
+`Input__UpdateCursorCenterWithWindowScale` at `0x0042DA00` has a nominal `10/17`
+displacement-retention factor per update; integer conversion and its minimum-one-pixel
+nudge make that fraction an approximation. This is a displacement with
 gradual recentering, not a sign-only mouse event. Stuart's player path routes the
 axes to `BattleEngine::Rotate` and `BattleEngine::Pitch`; the corresponding
 walker inputs add `axis * GroundTurnRate/75` and `axis/117`, after which the
@@ -109,6 +111,32 @@ pointer/movement sequence without focus loss. Both active runs produced the
 same sampled yaw delta `-0.019985914`, pitch delta `-0.021745417`, and gait
 range `6.232587`. This bounds the released walker path for that sensitivity; it
 does not establish inversion, every sensitivity setting, or jet mouse response.
+
+### September 30 mouse-recentering byte match
+
+A fresh pinned-VC6 build matches all 272 bytes and every relocation of
+`0x0042da00` against the pristine specimen identified above. This is static
+instruction and constant evidence; no new physical mouse or live game test ran.
+The private source owner is `bea-decomp/src/Controller.cpp`; reproduction is
+`python -B tools/decomp.py check src/Controller.cpp -v` in that checkout.
+The root's integrated receipt is `bea-decomp/build/controller-root-check-20260930.txt`.
+
+The arithmetic uses float constants `0x3f333333` (approximately `0.7`) and
+`0x3f169697` (`0.5882353186607361`, at `0x005d97c4`). The latter is obtained by
+rounding `1.0 / 1.7` to float. Reciprocating an already rounded `1.7f` produces
+the adjacent value `0x3f169696`; that was an error in the previous decompilation
+candidate, despite its description as an eight-byte stack-layout miss.
+The coefficient multiplies the weighted cursor position before the previous
+coordinate is subtracted, followed by x87 `FISTP` at `0x0042daa4`/`0x0042dac6`.
+Preserve those operations and the active x87 conversion mode when translating
+this path; simplifying it to an ideal `7/17` displacement step is not byte-level evidence.
+
+The routine first honors the autoconfiguration guard. A reset centers both
+coordinates; gradual recentering additionally requires the axis-read flag.
+For each axis, a zero computed step away from center becomes one pixel toward
+center. It writes the updated coordinates and clears the axis-read flag.
+The matched reconstruction uses an adjacent two-integer cursor snapshot; exact
+compiler output does not prove the original local-variable names or source spelling.
 
 ### Debug Keyboard Shortcuts
 
