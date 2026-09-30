@@ -3,6 +3,7 @@
 Status: active source/history/removed-release audit; format claims remain bounded by
 current corpus and retail evidence
 Date: 2026-08-22
+Last updated: 2026-09-30 (retail bone-payload consumer recheck; original corpus/history receipts retained)
 Verdict: **Stuart intentionally published the extractor implementation and its
 reverse-engineered format assumptions. Nothing in the removed release proves
 that original Battle Engine Aquila source was published. No extra named
@@ -12,8 +13,9 @@ equivalence is not established: no source-build IL comparison was made, and 47
 mixed-mode native/non-IL bodies remain semantically uninspected.
 Current AYA/CMSH tools already corroborate or supersede most extractor claims.
 The remaining actionable gaps are skinning/blending, PB-family payloads, TEXR
-layer semantics, and a few explicitly unproved labels—not a missing secret
-binary parser.**
+layer semantics, and a few explicitly unproved labels. The September 30 retail
+consumer recheck corroborates the weight dimensions and contradicts the
+extractor's extra bone-count multiplier for bone slots.**
 Evidence: SOURCE + CORPUS-MEASURED + BINARY-METADATA — complete read of every
 first-party source/project/history entry at AYA fork commit
 `53b10b083b59cfd7e72849c15bec8b608eaf8a23`, upstream commit
@@ -39,14 +41,14 @@ workspace, hashed, inspected as data, and left untracked.
 | Was source intentionally published? | **Yes.** Commit `801f3ba` added the solution, first-party source, third-party source, template, and release artifacts together. The later README explicitly points readers to the solution and describes the C#/C/C++ components (`references/AYAResourceExtractor/README.md:12-24`). |
 | Is original game code proved? | **No.** The extractor uses independently named C# readers and exporter code. The pinned Onslaught drop contains none of the 29 AYA/CMSH asset fourcc tokens. Its generic chunk reader, Direct3D enums, triangle-strip use, and `meshtex\\` names are architectural/contextual corroboration, not textual or binary proof that extractor code came from an in-house game owner. |
 | Do removed binaries contain extra implementation knowledge? | **No extra named type/member/resource/string/import format surface was identified.** The main DLL's 19 type definitions, 67 release IL bodies, and sole empty `.resources` manifest map by name/signature to surviving source or compiler/SDK generation; the native EXE is a .NET apphost with no CLR metadata. This is not behavior-equivalence proof: source-built IL was not compared, and the mixed-mode DLLs retain 47 native/non-IL bodies whose semantics were not inspected. Build-path/PDB strings are the only affirmative unpublished metadata found. |
-| Are there new actionable format facts? | **No new released-format field is established solely by the binaries.** The audit identifies two contradicted claims (`CMVB+264` is group count, not root texture count; DXT2 is not the shelf's only DDS FourCC), three corpus-absent tags/formulas (`CCUS`, `BONW`, `BONS`), several unproved labels, and legacy lookup/export limits that should not be promoted. |
+| Are there new actionable format facts? | **No new released-format field is established solely by the removed extractor binaries.** The retail consumer recheck below adds a third contradicted claim: the extractor's bone-slot size has an extra bone-count factor. `CCUS`, `BONW`, and `BONS` remain absent from the earlier measured corpus; static consumer evidence now bounds the latter two formulas. |
 
 The machine-readable owner is
 [`aya-resource-extractor-contract.tsv`](aya-resource-extractor-contract.tsv).
 Its six classifications are intentionally disjoint:
 
 - `EXTRACTOR_ONLY`: published source assumption with no present corpus support;
-- `CURRENTLY_CORROBORATED`: same bounded claim in current measured owners;
+- `CURRENTLY_CORROBORATED`: same bounded claim in current measured or specimen-backed static owners;
 - `CURRENT_TOOL_STRONGER`: current tooling validates a stricter or richer
   contract;
 - `CONTRADICTED`: current evidence rejects the extractor's label;
@@ -158,8 +160,8 @@ not just format names:
   static object, no bone/animation export, incomplete model coverage, PC-only
   operation, and untested Steam equivalence (`README.md:14-35`).
 
-The 92-row contract classifies **23 currently corroborated**, **39 current-tool
-stronger**, **19 export-only**, **6 unknown**, **3 extractor-only**, and **2
+The 92-row contract classifies **24 currently corroborated**, **39 current-tool
+stronger**, **19 export-only**, **6 unknown**, **1 extractor-only**, and **3
 contradicted** claims. Every first-party parsing/export assumption identified in
 all 40 routines has a row; no row is unclassified.
 
@@ -181,13 +183,21 @@ all 40 routines has a row; no row is unclassified.
 4. **CPOS/CORI are no longer generic unknowns.** They are bounded derived
    model-space caches indexed by virtual frame. Exact bitwise regeneration is
    not claimed.
-5. **Two extractor claims are contradicted.** The byte at `CMVB+264` is a
+5. **Three extractor claims are contradicted.** The byte at `CMVB+264` is a
    material group count, not the independent CMSH root texture count. The
    README's DXT2-only storage statement also overgeneralizes: the measured
-   800-file shelf has 212 DXT1 and 588 DXT2 DDS files.
-6. **`CCUS`, `BONW`, and `BONS` remain extractor-only.** None occurs in the
-   complete measured CMSH tag census. A marker branch or skip formula is not a
-   reason to add parser support without a hash-pinned specimen or writer/consumer.
+   800-file shelf has 212 DXT1 and 588 DXT2 DDS files. The September 30 retail
+   consumer recheck also rejects the extra `numBones` factor in the `BONS` skip.
+6. **`CCUS` remains extractor-only; `BONW`/`BONS` now have static consumer evidence.**
+   None occurs in the earlier measured CMSH tag census. The retail reader requests
+   `positions * bones * 4` weight bytes but `positions * 12` slot bytes. Its slot
+   loop reads three four-byte entries per position, regardless of the bone count.
+   These formulas apply to the corresponding conditional payload paths; the reader
+   does not validate their FourCC values here. The specimen hash, instruction sites,
+   conditions, and untested limits are in the
+   [mesh-resource contract](../binary-analysis/mesh-resource-render-static-contract.md#serialized-bone-payload-dimensions--september-30).
+   No new shipped asset or successful runtime load was inspected; rebuild parser
+   support remains separate work.
 7. **Several comments remain hypotheses.** TEXB's first 20 bytes are not proved
    “used region and scale”; serialized skipped words are not proved pointers;
    repeated BBOX is not proved an exporter bug; and the guncrab memory-saving

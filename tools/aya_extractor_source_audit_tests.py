@@ -45,11 +45,11 @@ class AyaExtractorSourceAuditTests(unittest.TestCase):
         self.assertEqual(0, report["contract"]["unclassifiedRows"])
         self.assertEqual(
             {
-                "CONTRADICTED": 2,
-                "CURRENTLY_CORROBORATED": 23,
+                "CONTRADICTED": 3,
+                "CURRENTLY_CORROBORATED": 24,
                 "CURRENT_TOOL_STRONGER": 39,
                 "EXPORT_CONVENTION_ONLY": 19,
-                "EXTRACTOR_ONLY": 3,
+                "EXTRACTOR_ONLY": 1,
                 "UNKNOWN": 6,
             },
             report["contract"]["classificationCounts"],

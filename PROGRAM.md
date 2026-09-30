@@ -113,6 +113,12 @@ pushed; its README owns the exact score. What remains:
   The harness compiles and compares objects; it does not yet link a replacement executable. Its selected
   compiler and complete DirectX/VC6 include trees are pinned. Original project/PCH/link settings and
   portions of the game headers remain reconstructed or unknown; function matches do not settle them.
+  A fresh source/header cross-check found declaration-only helpers behind nine incorrect direct-call
+  sites in auto-aim and launch-position reconstruction. The corrected virtual slots, direct profile
+  reads and null defaults are in the [aiming contract](reverse-engineering/game-mechanics/battle-engine-aiming.md#september-30-call-binding-recheck).
+  This is structural progress; the complete callers remain unmatched. The AYA cross-check also
+  [bounds weight/slot payload dimensions](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#serialized-bone-payload-dimensions--september-30),
+  disproving the extractor's extra bone-count multiplier for slots without claiming a newly observed asset.
 - **Ghidra.** The name promotions are `decomp-names`, `decomp-names-2` and `decomp-names-3` (evidence in
   `local-lab/…/re-audit-20260926/decomp-names*/`; the batch-3 folder holds the caller-witness and
   shared-body screens to reuse). One flow defect was found and left for a boundary correction: Ghidra

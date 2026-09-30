@@ -1,8 +1,8 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-09-30 (named-mesh interface, segment precision and primitive collision boundaries)
-Summary: named-mesh rendering uses a secondary interface pointer; segment and sphere float materialization affects admission, while sampled cylinder behavior preserves retail quirks. Retained engine/resource slices are historical leads.
+Last updated: 2026-09-30 (named-mesh interface, collision boundaries and serialized bone payload sizes)
+Summary: named-mesh rendering uses a secondary interface pointer; collision calculations preserve float materialization and retail quirks; the mesh-part consumer distinguishes bone weights from fixed-width bone slots. Retained engine/resource slices are historical leads.
 Evidence: MEASURED — September 30 RTTI, vtable and instruction readback, the named-mesh getter's whole-section byte match, and bounded original-code collision calculations; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
@@ -11,6 +11,36 @@ mesh geometry, and collision bridges used by asset tooling and rebuild planning.
 Current corrected metadata is owned by the
 [Ghidra guide](../ghidra/README.md) and `developer_state.json`'s selected live authority.
 Static evidence does not by itself establish runtime rendering or layout parity.
+
+## Serialized bone payload dimensions — September 30
+
+The retail mesh-part reader at `0x004b27a0` supplies a consumer check for the extractor's
+`BONW` and `BONS` formulas. The part is first read as a serialized object; its position count is
+at `+0xac`, bone count at `+0xc0`, weight-array pointer at `+0xd4`, and slot-array pointer at
+`+0xd8`. The following reads occur only with a positive bone count and the corresponding
+non-null array pointer:
+
+| Payload | Retail loop | Bytes requested |
+| --- | --- | --- |
+| Bone weights (`BONW` in the extractor) | `0x004b2ebd`–`0x004b2ee0`: one read per position, element size 4, count from `+0xc0` | `positions * bones * 4` |
+| Bone slots (`BONS` in the extractor) | `0x004b2eff`–`0x004b2f1d`: one read per position, literal element size 4 and literal count 3 | `positions * 12` |
+
+Both call `CChunkReader::Read` at `0x00423960`; its instructions at `0x00423961`–`0x00423965`
+multiply the element size and count. The slot loop has **no bone-count multiplier**. Thus the
+pinned extractor's `numPVert * 4 * numBones * 3` skip at `AyaModelImporter.cs:321` disagrees
+with this consumer when the bone count is greater than one and positions are present. Its
+weight formula agrees within these static limits. The current private reconstruction already
+uses the retail dimensions; this recheck does not add an exact function match.
+
+These are consumer/data-flow findings from the pristine specimen above, independently read
+from its instructions on September 30. The reader advances chunks without comparing the
+`BONW`/`BONS` FourCCs here; the marker names come from the extractor and their matching
+position in the optional payload sequence. Neither tag was present in the earlier measured
+CMSH census, which was not rerun. No new shipped asset, successful runtime load, bind/weight
+interpretation, or safe malformed-input behavior is established. A hash-pinned resource with
+these payloads remains the cheapest end-to-end falsifier; the comparison does not authorize
+guessing data or silently enabling a new rebuild parser path. See the corrected
+[extractor crosswalk](../source-code/aya-resource-extractor-source-audit.md).
 
 ## Named-mesh render interface — September 30
 

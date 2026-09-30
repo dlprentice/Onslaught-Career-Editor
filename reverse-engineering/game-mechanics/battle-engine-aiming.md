@@ -1,7 +1,7 @@
 # Battle Engine auto-aim, launch position and Gun emitters
 
 Status: active static contract for the rebuild's player shots
-Last updated: 2026-09-26 (exact Gun emitter table; no-report launch orientation)
+Last updated: 2026-09-30 (target-admission dispatch and null-data recheck; earlier emitter evidence retained)
 Summary: how the Battle Engine picks an auto-aim target and blends its aim offsets,
 where each player round starts (the cockpit mesh's Gun emitters) and in which
 direction, and which state that depends on.
@@ -48,15 +48,17 @@ Battle Engine fields (`BattleEngine.h:406-416`):
   - per level, cells from floor-int(c − r − cell/2) to floor-int(c + r + cell/2)
     (`fistp`), y outer and x inner;
   - each cell's list from its head, newest first; no distance filter in the walk.
-- **Gates, in source order** (`0x0040b8b9-0x0040b94a`). Each is an inline field read.
+- **Gates, in source order** (`0x0040b8b9-0x0040b94a`). These use direct field tests and the side-test helper.
   The Target Drone result is given in brackets.
   - side test `0x004fd3d0` [passes once its script sets it enemy];
   - not dying;
   - an air unit (type `0x400`) only with a predictive weapon [passes];
-  - IsBig, profile `+0x124` (`CUnitBig`, default 0) [0];
+  - IsBig, profile `+0x124` (`CUnitBig`, default 0) [0]; a null profile means false;
   - active, unit `+0x214` [1];
   - nexus `+0x228` and weakpoint `+0x22c`, from mesh parts [0 and 0];
-  - lockable, profile `+0x114` (`CUnitLockable`, default 1) [1].
+  - lockable, profile `+0x114` (`CUnitLockable`, default 1) [1]; a null profile means true.
+    This is a direct profile test, **not virtual slot 104 `CanBeLocked`**. The latter has a
+    separate Carver override with additional conditions.
 - **Unit slots used.** 90 is the aim point; for a `CPlane` that is `CThing::GetCentrePos`,
   pos + (0, 0, BBOX-origin z) = pos + (0, 0, −0.02630952) for the drone. 91 is
   stealth (0.0 for units), 105 is on-scanner (1) and 27 is velocity (`+0x7c`).
@@ -82,6 +84,24 @@ Battle Engine fields (`BattleEngine.h:406-416`):
 
 Differences from the pinned source are float-level only: stealth × 0.01 instead
 of / 100, the 6003 due-time addition order, and summation orders.
+
+### September 30 call-binding recheck
+
+Fresh reads of the pristine instructions confirm virtual aim-point slot 90 at `0x0040b95c`
+and `0x0040be40`, scanner slot 105 at `0x0040b9cb`, and Feature lockable slot 71 at
+`0x0040bbbc`. Feature slot 71 (`0x00510140`) unconditionally reads its data pointer at
+`+0xe4` and returns the raw four-byte field at data `+0x14`; there is no null-data fallback.
+Feature allegiance is the direct `+0xec` load at `0x0040bbca`. The unit's null-profile
+branches are at `0x0040b904`–`0x0040b914` and `0x0040b938`–`0x0040b948`.
+
+This caught unfinished bindings in the private C++ reconstruction: nine direct-call sites
+still targeted declaration-only helpers instead of the retail virtual calls or inline reads.
+Those bindings are corrected, including weapon-profile Smart/AdjustAim reads through weapon
+`+0xa4`. The large auto-aim and launch-position functions remain unmatched; corrected call
+binding does not validate their entire behavior or establish a defect in the paused Godot lane.
+Machine code proves the passed address and dispatch slot, not whether the original C++ declaration
+spelled its output parameter as a pointer or reference. Other observations and asset measurements
+on this page retain their earlier evidence dates; no desktop/runtime acceptance was performed.
 
 ## Launch position and direction
 
