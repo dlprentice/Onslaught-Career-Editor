@@ -82,6 +82,11 @@ pushed; its README owns the exact score. What remains:
   mode-search control flow and inlining. Fifty fresh bounded comparisons now agree on the inspected
   selection/settings paths under declared callback models; the [save/settings contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#september-30-reconstructed-options-reader-comparison)
   preserves the inputs, controls and limits. This is not a byte match or whole-save acceptance.
+  The [current-mode lookup recheck](reverse-engineering/game-mechanics/battle-engine-weapon-stores.md#current-mode-lookup--september-30-recheck)
+  records 57 finite in-array comparisons, with malformed-input witnesses and x87 emulator limits kept
+  separate. Shared-iterator writes and the ordered fallback are required behavior; the complete section
+  remains unmatched. The private reconstruction also now reproduces the mesh destructor call boundary
+  while retaining its correctly inlined caller. Its README owns exact counts and failed alternatives.
   The compiled-prefix scoring gap is guarded; the fresh complete
   build found no previously credited undersized sections. A small instruction-byte difference is not a
   semantic-equivalence measure, especially before relocation constants have been checked.

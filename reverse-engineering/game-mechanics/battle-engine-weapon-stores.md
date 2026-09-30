@@ -1,7 +1,7 @@
 # Battle Engine weapon stores, charge and firing state
 
 Status: active static contract for the rebuild's player weapons
-Last updated: 2026-09-27 (walker and jet selection/store execution checked; jet charge/body recheck; earlier findings retain their dates)
+Last updated: 2026-09-30 (current-mode lookup re-derived and bounded reconstruction comparison; earlier findings retain their dates)
 Summary: the Aquila's ammo and heat stores, when a shot spends them, cooling, the
 Missile Pod and Pulse Cannon Pod charge law, what an empty store blocks, and what
 `IsFiring` counts.
@@ -93,6 +93,65 @@ at 0.
   `0x00414019` (**walker LoseWeaponCharge**, not FireWeapon),
   `0x00411f96` (the newly selected weapon in `ChangeWeapon`) and `0x0050602a`
   (`CWeapon::Fire`).
+
+## Current-mode lookup — September 30 recheck
+
+The pristine specimen above was read again for `00509e90..00509f6e` (222 bytes,
+SHA-256 `8ebe2891b1cc4bc9f033481cba0789765880bbc0aeceebeb49f495caa93a42d7`).
+`GetCurrentMode` is the reconstruction's name; neither weapon.cpp nor weapon.h
+exists in the pinned Stuart release. This section establishes the lookup, not
+an original source spelling or all of its inlined callers.
+
+- `00509e93..00509eb5` loads charge at weapon `+60`, converts it with x87
+  `FISTP` to a signed 64-bit stack value, then uses its low signed DWORD for
+  integer division by 100. The conversion obeys the incoming rounding control;
+  the body does not set it. Earlier `round(charge)` notation is not a claim that
+  a host language's default rounding or truncating cast is compatible.
+- The initial read at `00509ec4` selects weapon-data `+0c + 4*level` before any
+  lower-bound check. There is no upper clamp in this body. Valid cases here use
+  the five authored slots; malformed charge observations do not establish game
+  reachability or safe handling of every value.
+- Each lookup resets the shared mode registry's iterator at list `+8` to its
+  first node (`00509ed1`, repeated at `00509f25`). It compares the requested
+  index with traversal position, rather than a mode object's ID. A null item
+  terminates that traversal even when another node follows. The reported list
+  size is not read by this walk.
+- Failure decrements the level and retries from the first node. The signed
+  lower-bound test at `00509f0c` occurs after decrement; failure below zero
+  returns null. A successful search leaves the shared iterator at the selected
+  node. Replacing this with a local iterator would omit observed state changes.
+
+The original and reconstructed bodies were executed at the same retail address
+in separate emulators, with no calls or stubs admitted. The candidate is 138
+instruction bytes in a 144-byte section; its unused original-code tail was not
+available for execution. Its two registry relocations were bound to the actual
+`008553ec` instruction operands. Both bodies had explicit execution/read/write
+bounds, return/stack and preserved-register checks, and memory canaries.
+
+The lead independently reran **57 finite in-array comparisons** covering all
+five levels, ordered fallback, missing/out-of-list modes, empty and null-item
+lists, stale iterator reset and four explicit rounding controls around charge
+boundaries. Six malformed-input witnesses are separate: four adjacent-field
+reads and two precisely declared first-read faults. Ten negative controls
+detected wrong cutoff/decrement, wrong rounding control, unresolved/corrupted
+relocations, unexpected calls, unrelated faults and incomplete/escaped runs.
+
+**Emulator limit:** Unicorn omitted expected x87 exception/status flags for
+fractional and nonfinite conversion. Twelve NaN/Infinity cases were refused.
+Fractional cases establish only selection/memory observations under the declared
+emulator controls; agreement on captured x87 registers is not a live-retail
+exception-status result. No whole-game FPU mode, weapon firing, CanLock behavior,
+device/player acceptance or complete equivalence is established. The compiled
+GetCurrentMode section still does not match retail.
+
+Private owner, relative to `~/Projects/game-dev/bea-decomp`:
+`.worktrees/codex-career-nearmiss-20260930/build/weapon-mode-review-20260930/`.
+The frozen script SHA-256 is
+`fe4bc36d1c5e3f4242881331be4e069153474ac4046e78edb0836891b03484ec`;
+its receipt pins source, COFF, parser, specimen and linked candidate. The lead's
+independent result is `local-data/weapon-mode-root-20260930/results.json`.
+Reproduce with the existing `local-data/venv/bin/python -B`, the owner's
+`probe.py`, and `--out` naming a new private output directory.
 
 ## Fire, empty stores and locks
 
@@ -392,5 +451,6 @@ commit above; raw retail dispatch decides where they differ.
 
 | Question | Cheapest falsifier |
 | --- | --- |
+| Which x87 control/status state reaches the current-mode lookup in the running game, and whether fractional charge reaches the tested boundaries | Trace the control word, charge bits and lookup result in a copied retail runtime; compare values immediately around the level boundaries. The emulator comparison does not settle exception flags. |
 | How sampling, release-latch clearing and Flush interleave during actual gameplay, including held-charge/released-fire call frequency | In a copied runtime, trace the sampler, clear routines and `0042d9d0`, alongside `00409ef0`/`00409f20`; compare mapping passes with event and rendered frames |
 | Whether Level 100's Health Pad fires `Repair Pad` rounds at the player (reload 30 s, range 7) | Read the repair-pad AI update's firing conditions |
