@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-30 (near-miss matching resumed; differential checks repaired; broader RE audit unfinished; rebuild and companion paused)
+Last updated: 2026-09-30 (RE at David's requested handoff; differential checks repaired; broader audit unfinished; rebuild and companion paused)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -57,9 +57,14 @@ owns the score and the matched-function list, and this file keeps only the plan.
   identical-code folding keeps a shared name. A reconstruction label may go in as a
   comment that says it is one, never as the function's name.
 
-Handover, September 30 (the Claude team stopped for a machine restart). Continue from `bea-decomp` main:
-every worker branch (`decomp/frontend`, `world`, `units`, `engine`, `lead`) is merged into main, and all are
-pushed; its README owns the exact score. What remains:
+Handover, September 30: David asked Codex to stop at a clean resume point for Claude Code.
+Continue from `bea-decomp` main and this repository's `codex/retail-re-20260919` branch;
+their existing README and contracts own the results. The earlier Claude worker branches
+(`decomp/frontend`, `world`, `units`, `engine`, `lead`) were integrated before this continuation.
+The latest squad-centroid, trail-allocation and physics-profile reload corrections are also
+integrated in private main. Codex's helper worktrees retain frozen, ignored experiments;
+do not replay their commits or delete their evidence. No Ghidra promotion was started in
+this closeout, and no lane should be resumed from the superseded prepared queues. What remains:
 - **Near misses.** Most game functions have source candidates, with some out-of-line copies still
   absent from compiled output. The named-mesh getter `004183f0` now matches. Remaining bodies differ in inlining, register choice or
   instruction order. The README's "Findings" start with VC6's measured inline rule: per-callee size
@@ -134,6 +139,15 @@ pushed; its README owns the exact score. What remains:
   effect lookup compares pointer identity. The pose caller now binds to its existing implementation.
   Mine hit admission also matches completely after restoring its allegiance accessor. The integrated
   score retains all previous matched addresses; the pose implementation remains unmatched.
+  The [trail-point recheck](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#trail-point-count-and-arithmetic-order--september-30)
+  now proves the complete allocator section and demonstrates a calculated point-count difference
+  caused by the old sum order under selected native x87 modes; actual game mode and visible trails
+  remain unmeasured. The [relaxed-squad centroid](reverse-engineering/game-mechanics/spawner-squad-cycle.md#relaxed-squad-centroid--september-30-recheck)
+  also matches completely, with eight original-code cases distinguishing cleared readers from a
+  null payload and documenting the return's fourth-word limit. Physics-profile Reload (`00510800`)
+  matches its complete section and all 55 relocations after restoring a source-backed local-result
+  idiom; no runtime file-loading claim follows. The private README records the focused negative
+  experiments and exact integrated score so the next owner can avoid repeating exhausted variants.
 - **Ghidra.** The name promotions are `decomp-names`, `decomp-names-2` and `decomp-names-3` (evidence in
   `local-lab/…/re-audit-20260926/decomp-names*/`; the batch-3 folder holds the caller-witness and
   shared-body screens to reuse). One flow defect was found and left for a boundary correction: Ghidra

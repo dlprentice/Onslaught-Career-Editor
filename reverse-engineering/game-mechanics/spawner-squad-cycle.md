@@ -3,6 +3,7 @@
 Status: accepted static contract with a deterministic reconstruction boundary;
 authored definition reach closed, per-world/runtime invocation reach open
 Date: 2026-08-28
+Last updated: 2026-09-30 (bounded relaxed-squad centroid recheck; earlier closure not rerun)
 Verdict: `CSpawnerThng__DoSpawn` admits one squad-production cycle, not one
 unit. A passing call can publish an empty squad, consumes its finite amount
 slot even if squad allocation returns null, starts the first member wave
@@ -17,6 +18,44 @@ Specimen: PC retail `BEA.exe`, 2,506,752 bytes, SHA-256
 Xbox USA/Issue11 mapped images SHA-256
 `665d34c581633e3cdc4c71b9a07dd9567e8e00703fe9f408a3c7930bbaab6a4d` /
 `0f751ef1ef63e730716d2b2ab2a15176b385f56765d99efb5ed1c0985c738e43`.
+
+## Relaxed-squad centroid — September 30 recheck
+
+The PC retail body at `0x004ea980` (relaxed-squad slot 72; original method name
+unknown) now matches its complete 224-byte compiled section, covering 221 function
+bytes and all three zero-literal relocations. Normalizing the accumulated vector in
+place reproduces retail's stack layout; the prior reconstruction used a separate
+result temporary. This proves the emitted body, not the unavailable source spelling.
+
+Fresh instruction inspection and eight bounded executions of the unchanged original
+body in Unicorn x86-32, with control word `0x037f` and no modeled callees, establish:
+
+- Member traversal reads the list at receiver `+0xa4`. Each node's payload points to
+  an active reader; the reader's first word points to the unit.
+- A cleared reader is skipped. A null node payload instead terminates traversal,
+  even if the linked list has later nodes.
+- Non-null units contribute position components at `+0x1c/+0x20/+0x24` in traversal
+  order. Duplicate unit pointers contribute twice; this body performs no flag filter.
+- With contributors, each accumulated coordinate is divided by the count. With none,
+  it returns the squad's own position.
+- The 16-byte return copy includes a fourth word. In the contributing path it retains
+  the seeded local-stack contents in these probes; the fallback copies the squad's
+  fourth position word. It must not be described as an initialized zero coordinate.
+
+The cases cover empty and cleared rosters, positive/negative coordinates, duplicate
+members and the null-payload stop. They check admitted reads/writes, return and saved
+registers, stack balance and empty x87 state. Removing the count increment or reading
+Y in place of X is detected by the two mutation controls. These are isolated original-code
+results; live roster validity, squad update timing and player-visible behavior were not
+tested. A runtime falsifier would capture the member-reader chain and slot-72 result
+together at a real squad update.
+
+Private replay: `bea-decomp/.worktrees/codex-equiv-20260930/build/squad-centroid-original-20260930/run.py`
+(SHA-256 `16d2f433e43c82dadd7120d843e304aaf064f09c29b8abe44beb93c06fb5479e`);
+its `receipt.json` SHA-256 is
+`84b54b578916a28fd4c8b0055cc93770fdf48a1e22cd9cacb74d86d8620cf895`.
+The selected specimen is the PC pristine backup named above. The older PC/Xbox/PS2
+spawner closure below retains its original evidence and was not rerun for this addition.
 
 ## Exact PC closure
 

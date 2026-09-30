@@ -1,9 +1,9 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-09-30 (emitter and effect part-pointer chain)
-Summary: emitter loading resolves a serialized index to a part pointer, which effect lookup compares by identity; named-mesh rendering uses a secondary interface pointer; collision and mesh-loading contracts retain their measured limits. Retained engine/resource slices are historical leads.
-Evidence: MEASURED — September 30 RTTI, vtable and instruction readback, whole-section byte matches for the named-mesh getter, mesh-part loader and render-method setters, and bounded original-code collision calculations; older slices were not reverified in this pass.
+Last updated: 2026-09-30 (trail-point arithmetic and emitter/effect part pointers)
+Summary: trail-point counts depend on the retail sum order and floating-point mode; emitter loading resolves an index to a pointer compared by effect lookup; collision and mesh-loading contracts retain their measured limits. Retained engine/resource slices are historical leads.
+Evidence: MEASURED — September 30 RTTI, vtable and instruction readback, whole-section byte matches, bounded original-code collision calculations and native trail-count arithmetic slices; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 This contract consolidates the retained engine/frame, render-state, resource,
@@ -11,6 +11,51 @@ mesh geometry, and collision bridges used by asset tooling and rebuild planning.
 Current corrected metadata is owned by the
 [Ghidra guide](../ghidra/README.md) and `developer_state.json`'s selected live authority.
 Static evidence does not by itself establish runtime rendering or layout parity.
+
+## Trail-point count and arithmetic order — September 30
+
+The body at `0x004c35d0`, reconstructed as `CPDTrail::AllocatePoints`, now matches its
+complete 224-byte compiled section, including the call relocation to `0x004caed0` at
+section offset `0x96`. Its retail function extent is 209 bytes. The saved Ghidra label
+`CEngine__ConfigureParticleBurstForDistance` does not establish its owner or original
+source name; this source correction has not changed the database.
+
+For the segment-length path, retail subtracts the frame's previous position
+(`+0x90/+0x94/+0x98`) from its current position (`+0/+4/+8`), combines the squared
+components as `(dz*dz + dy*dy) + dx*dx`, takes the square root and divides by descriptor
+`+0xa4`. The reconstruction had combined them as `(dz*dz + dx*dx) + dy*dy`.
+The integer conversion at `0x004c363a` is x87 `FISTP` into a 64-bit temporary;
+the following instructions use its low 32 bits and add three. Its rounding mode is
+inherited from the x87 control word, not established by a C# cast or a floor operation.
+The later allocation multiplies this count by 40. The experiment below executes the
+arithmetic only, not that allocation or the point-initialization loop.
+
+The lead reproduced a frozen native ELF32 probe of the unchanged, relocation-free
+retail slice `[0x004c3602,0x004c363e)`, the old candidate and the corrected candidate.
+It uses 140 finite float32 input cases at PC24, PC53 and PC64 with nearest-even and
+toward-zero rounding: 840 executions per image. The old candidate differs in 36
+calculated integers, twelve at each precision under nearest-even. No difference occurs
+in the tested toward-zero cases. The corrected slice is byte-identical to retail and
+agrees on every case.
+
+One PC24/nearest-even witness uses current-position float bits
+`[3f800000,39800001,39800001]`, previous position zero and segment length `2.0`.
+Retail converts to zero while the old candidate converts to one; the unchanged following
+addition therefore predicts three versus four points. This is a concrete consequence of
+the arithmetic order under that selected mode, not a newly observed in-game trail.
+The probe checks return, integer registers, stack canaries, preserved control word and
+an empty x87 stack. Five simple finite controls per mode, a divide-to-multiply mutation
+and truncated-input refusal also pass.
+
+Private reproducer:
+`bea-decomp/.worktrees/codex-career-nearmiss-20260930/build/trail-count-native-20260930/probe.py`
+(SHA-256 `a58ee0b5fb6aed5405aea7d371c5957ae660fd5b17d8582b009f4ddcbc6f6ccb`).
+Lead output: `bea-decomp/.worktrees/codex-equiv-20260930/build/trail-count-native-lead-20260930/result.json`
+(SHA-256 `221566301ee483bc306dd5e8eecaab514eb6c6e946710657eb8a046b508cb7df`).
+The full-section readback is in the adjacent `squad-trail-independent-readback-20260930.json`.
+The actual game's control word, allocation outcome and visible trail remain unmeasured.
+The cheapest runtime falsifier is to record the control word and these input fields at
+this call on an experimental game copy, then compare its stored point count.
 
 ## Emitter and effect part pointers — September 30
 
