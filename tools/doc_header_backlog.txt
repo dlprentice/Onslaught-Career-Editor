@@ -311,7 +311,6 @@ reverse-engineering/binary-analysis/widescreen-patch-analysis.md
 reverse-engineering/binary-analysis/widescreen-regions-8-11-validation.md
 reverse-engineering/binary-analysis/windbg-cdb-runbook.md
 reverse-engineering/game-assets/README.md
-reverse-engineering/game-assets/_index.md
 reverse-engineering/game-assets/aya-asset-format.md
 reverse-engineering/game-assets/extraction-pipeline.md
 reverse-engineering/game-assets/game-folder-analysis.md
