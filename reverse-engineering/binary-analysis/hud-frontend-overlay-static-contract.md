@@ -1,10 +1,37 @@
 # HUD / frontend overlay static contract
 
 Status: bounded retail static evidence; not visual proof
-Last updated: 2026-10-01 (compass coordinate rounding reproduced; loading-screen, font and options-list rechecks retained)
-Summary: compass fixed offsets precede heading displacement; loading-screen text selection is corrected; options-list rendering matches its complete compiled section and relocations; player acceptance remains separate.
+Last updated: 2026-10-01 (BE configuration input gate and light colors; earlier bounded rechecks retained)
+Summary: specimen-bound frontend input, color and coordinate corrections; complete function matches and isolated calculations remain distinct from player acceptance.
 Evidence: MEASURED — October 1 native compass and font fragments, isolated menu runs and full-section/relocation matches, plus September 30 font and scale-menu readback; August HUD claims were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+## BE configuration down-arrow gate — October 1
+
+In `CFEPBEConfig::Render` (`0x004505b0`), the down-arrow rectangle call at
+`0x00451835` occurs only after the counter/flash predicate admits it. The
+predicate at `0x004517f4` converts the counter using the current x87 control
+word, forms the signed remainder modulo 64, and admits a result below 50 or
+a positive down-flash value. The earlier reconstruction called the handler
+before that predicate. The up-arrow handler remains unconditional.
+
+The lead reproduced 256 finite authored cases of this predicate/call fragment,
+with explicit exits before rendering and an authored callback returning false.
+The old draft makes 44 extra calls; corrected traces and all five arguments agree
+with retail. Missing input, unexpected exits, stack/canary, register and x87
+violations are rejected. This does not execute the real callback, mouse handling
+or complete Render; callback state changes and player interaction remain open.
+
+The same source correction restores the three RGB light triples using vector
+scaling by `0.6f`. All nine compiled arguments now equal retail's float bits;
+the earlier literals were one ULP lower. A fresh lead compile matches the frozen
+corrected object and preserves all other callable sections in that object.
+Full Render remains unmatched. A future whole-caller falsifier should cover the
+counter boundary and flash states while observing actual handler side effects.
+
+Private lead evidence under
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+`frontend-gate-root-replay/receipt.json` and `trail-frontend-device-root-readback.json`.
 
 ## Compass coordinate association — October 1
 

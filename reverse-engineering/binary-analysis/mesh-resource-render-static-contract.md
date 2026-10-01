@@ -1,7 +1,7 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-10-01 (polygon side-normal magnitude, triangle travel gate and sphere-speed comparisons)
+Last updated: 2026-10-01 (trail normalization and texture constants/width; earlier bounded corrections retained)
 Summary: specimen-bound rendering and collision contracts, with bounded corrections to arithmetic association, float stores and ordered admission.
 Evidence: MEASURED — specimen instructions, whole-section/relocation matches and bounded native calculations and buffer comparisons; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -11,6 +11,55 @@ mesh geometry, and collision bridges used by asset tooling and rebuild planning.
 Current corrected metadata is owned by the
 [Ghidra guide](../ghidra/README.md) and `developer_state.json`'s selected live authority.
 Static evidence does not by itself establish runtime rendering or layout parity.
+
+## Trail basis normalization — October 1
+
+The basis calculations inside `0x004c36b0` divide stored components by a live
+x87 square-root magnitude at `0x004c398b`–`0x004c39a9` and
+`0x004c3a74`–`0x004c3a92`. Assigning a newly constructed vector in the private
+draft rounded the magnitude before division and retained a different component
+intermediate. Existing in-place division restores the observed value boundaries.
+
+The lead rebuilt the source and reproduced both frozen arithmetic corpora.
+For 3,594 prepared float32 step vectors under PC24/53/64 nearest rounding,
+1,636 prior XYZ/exception differences become zero. Extending to 14,412 cases
+over all four rounding modes leaves twelve inherited signed-zero differences,
+versus 7,490 before the change, with no new disagreements. Replacing the first
+division with multiplication changes 12,046 expanded-corpus results.
+
+The signed-zero counterexample remains explicit: at CW `037f`, step bits
+`[80000000,3f800000,00000000]` produce side.Y `00000000` in retail and
+`80000000` in both drafts. The complete function remains unmatched. These
+isolated calculations do not establish step reachability, complete trail updates,
+allocation, live control words or visible output; those remain useful falsifiers.
+
+Private lead receipts under
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+`trail-native-root-expanded/receipt.json`,
+`trail-native-root-replay/signed-zero-readback.json`, and
+`trail-frontend-device-root-readback.json`. The lead compared regenerated fixtures
+and admitted fragments with the frozen inputs and bound fresh compiled code to
+the accepted object. Other callable sections retain their bytes and references.
+
+## Texture constants and signed mipmap width — October 1
+
+Projected texture activation (`0x005588f0`) reads scale constants with float bits
+`3e9c18fa` at `0x005e59d0` and `bee38e39` at `0x005e59cc`, four uses each.
+The former source's short decimal approximations differed. More precise literals
+restore all eight references without changing the instruction section.
+
+Mipmap construction loads source width at `0x0055964d`, saves it at
+`0x00559667`, and halves it with arithmetic shifts at `0x0055994a` and
+`0x00559b1c`. A signed source-width local reproduces those two instructions;
+the unsigned draft emitted logical shifts. Only two compiled instruction bytes
+change, with every relocation preserved. This proves the operation's signedness,
+not that negative dimensions occur in admitted resources.
+
+Both full functions remain unmatched. In particular, a structural activation
+draft has identical non-relocation bytes but reverses two ENGINE field operands;
+it receives no exact-match credit. No resource decoding or graphics device ran.
+Private lead proof: `startup-render-texture-root-readback.json` under the owner
+above. A complete resource/device comparison remains the runtime falsifier.
 
 ## Projected-texture coordinate count — October 1
 

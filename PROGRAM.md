@@ -188,13 +188,14 @@ Root reproduced its native endpoint cases. Existing exact controls are preserved
 integrated check. Public documentation remains on `codex/retail-re-20260919`; private source integrates
 on `bea-decomp` main. Do not assume the public main includes every RE-branch commit.
 
-David has resumed the decompilation with independent object scopes. Further complete compiled
+David has resumed the decompilation with independent object scopes. His current priority is **100%
+exact compiled matching before the replacement-executable link milestone**. Further complete compiled
 matches are integrated into private main: the navigation segment query, sprite lifetime setup,
 trail colour packing, colour interpolation, blob shadows, shadow view construction, animal destruction,
 the player's weapon-charge update, [destructible-part break and rubble handling](reverse-engineering/binary-analysis/destroyable-segments-static-contract.md#base-rubble-code-match--october-1),
 the battle-line pulse, collision-sector updates, scratch text conversion, Unit Euler smoothing,
-mech initialization, texture deserialization and texture-state cleanup. All earlier matched symbols
-survive. The private README owns the current score and exact byte/relocation receipts; these static
+mech initialization, texture deserialization, texture-state cleanup, display-mode enumeration,
+arrow/cuboid rendering and mesh-buffer initialization. All earlier matched symbols survive. The private README owns the current score and exact byte/relocation receipts; these static
 matches are not live gameplay, resource-loading or graphics-device acceptance.
 The separately reproduced [compass coordinate correction](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#compass-coordinate-association--october-1)
 fixes a bounded rounding difference but adds no whole-function credit.
@@ -204,6 +205,11 @@ matching and live-world acceptance remain open. The [polygon side-normal correct
 likewise resolves the measured arithmetic slice while leaving the full function and mesh-state
 reachability open. Fresh [squad registration decoding](reverse-engineering/binary-analysis/unit-battleengine-gameplay-static-contract.md#squad-registration-order--october-1)
 corrects a head-insertion call to retail's tail append; this does not complete squad initialization.
+The [trail normalization correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#trail-basis-normalization--october-1)
+reduces the expanded native corpus discrepancies from 7,490 to twelve inherited signed-zero cases;
+full trail matching remains open. [BE configuration input gating](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#be-configuration-down-arrow-gate--october-1)
+and [texture constants/width](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#texture-constants-and-signed-mipmap-width--october-1)
+are corrected with their specific static/isolated-execution limits; they add no whole-function credit.
 
 Continue from the private README's current findings and retained **October 1 handback leads**, not an
 older handoff queue:
