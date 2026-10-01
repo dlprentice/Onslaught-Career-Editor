@@ -1,8 +1,8 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-10-01 (exact imposter quad, sphere and cylinder arithmetic rechecks)
-Summary: the imposter quad corrects texture-coordinate order and intermediate precision and now matches exactly; collision, trail, emitter and mesh-loading contracts retain their measured limits. Retained engine/resource slices are historical leads.
+Last updated: 2026-10-01 (imposter orientation and centre-offset corrections; exact quad and collision rechecks)
+Summary: imposter orientation and centre-offset arithmetic are corrected; its quad matches exactly. Collision, trail, emitter and mesh-loading contracts retain their measured limits; older slices are historical leads.
 Evidence: MEASURED — specimen instructions, whole-section/relocation matches and bounded native calculations and buffer comparisons; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
@@ -413,6 +413,43 @@ Private lead evidence:
 `bea-decomp/.worktrees/codex-equiv-20260930/local-data/imposter-correction-root-20261001/`,
 with `exact-readback.json`, `native-exact/receipt.json`, the pre-correction witnesses
 and capacity refusal controls. No Ghidra state changed during this correction.
+
+## Imposter orientation and centre offset — October 1
+
+The per-imposter renderer `0x00543300` updates orientation after each of its first
+four faces. At `0x00543878` it forms the current-orientation argument; after two
+pushes, `0x00543888` forms the turn-matrix receiver. The actual matrix product
+`0x0040d320` computes receiver times argument. Thus the operation is `turn * ori`,
+whereas the former reconstruction used `ori * turn`. Matrix multiplication is not
+commutative; this is a source error, not merely register allocation.
+
+The lead freshly compiled the combined correction and reproduced 48 native cases
+using the original turn-construction block, its exact trigonometric constants,
+the original update and the complete byte-matched matrix helper. Eight finite
+orientations at PC24/53/64 nearest and two stack fills distinguish the old source
+in 36 cases; the corrected source agrees in every case. Identity and commuting
+orientations remain controls. Inputs, stack guards, expected registers, control
+word and empty x87 stack are checked; undefined matrix padding is excluded.
+
+A separate first-row error combined the box-centre terms as `X+(Y+Z)`. Retail uses
+`(X+Y)+Z` for each row (`0x0054342a`–`0x005434a7`). The corrected 125-byte block and
+its constructor relocation equal retail exactly. With the actual vector constructor,
+102 native finite fixtures expose twelve old cancellation differences, four at each
+selected precision; the corrected block has none.
+
+The full renderer remains unmatched: 1,424 compiled bytes against a 1,467-byte
+retail body, with 25 relocations. All 26 earlier exact object controls and 29 other
+callable sections/relocation destinations survive. These are isolated arithmetic
+blocks with explicit state, not a full render, GPU or live-world observation.
+A useful runtime falsifier captures one noncommuting incoming orientation and the
+six resulting quad orientations on an experimental game copy; no such run occurred.
+
+Private lead owner:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/imposter-render-root-20261001/`.
+Rotation receipt SHA-256 `6a43f46e4bda0c1e011e200a36d7dce58815232356dc7a810e9dbbe8072cbc4d`;
+offset receipt SHA-256 `9aeb7e86d28698f1f2c688995ce708c16d763b327b2b4cbde4eb71d1c78f7ac1`.
+The adjacent `render-font-root-20261001/readback.json` binds the final source and
+freshly compiled objects. Ghidra was not changed.
 
 ## Baseline Static System Slices
 

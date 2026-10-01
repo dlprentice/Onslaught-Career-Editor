@@ -1,9 +1,9 @@
 # HUD / frontend overlay static contract
 
 Status: bounded retail static evidence; not visual proof
-Last updated: 2026-10-01 (complete options-list renderer and message construction; August HUD map retained)
+Last updated: 2026-10-01 (font stream and rounding recheck; complete options-list renderer; August HUD map retained)
 Summary: options-list rendering matches its complete compiled section and relocations, including title snapshots and scratch reuse; message construction and Goodies requirement text also match; player acceptance remains separate.
-Evidence: MEASURED — October 1 isolated menu-tail runs and full-section/relocation matches, plus September 30 font and scale-menu readback; August HUD claims were not reverified in this pass.
+Evidence: MEASURED — October 1 native font loops, isolated menu runs and full-section/relocation matches, plus September 30 font and scale-menu readback; August HUD claims were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 ## Goodies text preserves fractional Y — September 30
@@ -146,6 +146,43 @@ GDI/D3D initialization, live rounding state and visual text acceptance remain op
 Private lead receipt:
 `bea-decomp/.worktrees/codex-equiv-20260930/local-data/font-extent-root-20261001/native-v2/receipt.json`,
 SHA-256 `5887039c1a011a199c4e8b112e4b817fabf3a72be2380fc5bd3fd77f3d58fa63`.
+
+## Font glyph stream and V-inset rounding — October 1
+
+DrawTextScaled `0x00540010` writes corners top-left, top-right, bottom-right,
+bottom-left with their respective UVs (`0x0054047e`–`0x005405b9`). The former
+reconstruction cyclically shifted that stream to bottom-left, top-left, top-right,
+bottom-right. The actual FastVB index loop at `0x0051a5d7`–`0x0051a5f3` uses
+`0,1,2 / 2,3,0`; correcting the corner order therefore also restores the selected
+diagonal. Because UVs moved with the corners, this was not a demonstrated flipped
+glyph. No visible difference is claimed for an affine textured rectangle.
+
+The lead reproduced 468 native glyph-loop states with actual map initialization
+and remapping helpers. Explicit loop-entry adapters supply corresponding local
+values for each compiled frame. The old source differs in 404 cases; the corner
+correction reduces this to 32. A half-pixel mutation differs in all 468 cases and
+a missing remapper refuses execution. Input/map memory, output guards, vertex and
+colour cursors, final XY and x87 state are checked.
+
+The remaining differences expose a separate precision boundary: retail stores the
+last V coordinate as float32 at `0x00540311` and reloads it at `0x0054032d` before
+calculating glyph height. The candidate retains extended precision. An authored
+case with unit UV coordinates, V inset `2^-25`, texture height one and starting
+Y `.5` produces bottom Y zero in retail versus `-2^-25` in the candidate at
+PC53/64 nearest. Nonzero inset reachability is unproved; this is a conditional
+numerical defect, not an observed on-screen displacement.
+
+The complete candidate remains unmatched (1,552-byte section versus 1,581-byte
+retail body). All 14 previous exact object controls and 17 other callable
+sections/relocation destinations remain intact. Prefix and viewport conversion,
+flooring, buffer locking, device submission, arbitrary aliases/nonfinite inputs
+and actual rendering were excluded. The next numerical falsifier is the retained
+V-inset witness; a live follow-up must first establish the actual inset and FPU
+state at the caller.
+
+Private lead receipt:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/font-loop-root-20261001/native-v1/receipt.json`,
+SHA-256 `b7823166494f58996e7cea79b230abb85391352e68787fee03255cc71e46f60e`.
 
 ## Message construction and Goodies requirement text — October 1
 
