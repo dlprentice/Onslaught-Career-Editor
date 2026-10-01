@@ -1,7 +1,7 @@
 # CComplexThing function map
 
 Status: active static and isolated-code function map
-Last updated: 2026-09-26 (virtual-method identity refresh; earlier behavioral evidence keeps its stated limits)
+Last updated: 2026-10-01 (bounded ballistic caller composition; earlier evidence keeps its stated limits)
 Summary: script-bearing Thing contracts and related Unit movement ownership,
 including bounded controller, weapon-query, matrix and arithmetic evidence.
 Source File: `C:\dev\ONSLAUGHT2\thing.cpp` (SEH `__FILE__` pointer
@@ -806,6 +806,60 @@ equal directions to zero, or assuming precision modes have identical boundary
 decisions would change these measured paths. Ballistics, `weapon+98` handling,
 real attachment transforms, complete point providers, geometry and live combat
 remain outside this experiment.
+
+#### Weapon B ballistic height and prediction — October 1
+
+The unchanged `005088b0..00509135` body was executed with its original endpoint,
+Actor motion getter, vector magnitude, line-copy and finite `asin` support in
+**14 scenarios / 84 calls**, across explicit PC24/53/64 nearest rounding and
+CRT flag `009d08b4` values 0 and 1. Attachment position/orientation, target aim
+point and world query remain recording substitutes; mode, round and Actor
+objects are supplied fixtures. The lead reproduced the complete runs and
+independently re-read the instructions described here.
+
+Two different height inputs must be kept distinct:
+
+- `005089a8` generates the endpoint through `0050a0e0`. Endpoint minus attachment
+  origin stores as float32 components; `00508b06..00508b1c` uses its XY distance.
+- `00508adc..00508ae8` instead reads **owner current Z minus target current Z**
+  from the two Unit `+24` fields. Predicted endpoint Z and the selected aim-point
+  Z do not replace that height difference in the ballistic range calculation.
+
+For flat owner/origin, target point `(0,60,0)`, speed 100, gravity 10 and supplied
+limits `[-0.75,0.75]`, prediction with vertical motion 1, -1 or 2 changes endpoint
+Z to 12, -12 or 24, while admission stays true. Horizontal recession of 4 changes
+endpoint Y to 108 and refuses; disabling prediction restores admission. Raising
+only aim-point Z to 23 still admits. Raising the target's **current** Z to 23
+refuses, even with the aim point kept at Z=0. These are controlled counterfactual
+fixtures, not recorded moving aircraft or a proof about all weapon profiles.
+
+After its range window, this ballistic path goes directly to success or failure
+(`00508e06..00508e35`). It does not call the world query, and seek does not bypass
+range refusal. Zero-gravity and beam-exclusion controls instead reach the supplied
+rejecting world query and refuse. The initial height-gate control refuses before
+endpoint generation. Original endpoint and Actor getter execute 78 and 72 times;
+the world-query substitute executes only for the 12 nonballistic control calls.
+
+All declared original code is checked against the pristine PE in the executable's
+load mappings. Exact provider order/receivers, endpoint payloads, unchanged input
+objects, normal-return ABI, SEH restoration and x87 stack/control word are checked.
+The lead's complete recorded outputs agree after rebasing only ASLR-dependent
+stack pointers in provider arguments and the query report; every other byte agrees.
+No modern math function substitutes for the executed retail calculation.
+
+This establishes the bounded original-code composition, not candidate equivalence:
+the current reconstruction expresses the same input split but was not executed in
+this probe. `weapon+98` is zero and fear-grid gating is disabled. Real attachment
+and target providers, world geometry, outer Unit/controller admission, live
+precision and gameplay reachability remain open. The useful next falsifier is a
+retail caller trace binding both current and predicted target positions to the
+actual mode/round and final firing decision.
+
+Private owner: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/weapon-ballistic-root-20261001/`.
+`run-zy1ebdlj/weapon_ballistic.json` SHA-256:
+`1635c51d136734952d77bdce4c495875fa80f2de4dd06936429af659ec1d7a38`.
+The lead runner SHA-256 is `61f12be768828235159416d4066a1f532ba6b7f51d9c26557f6852e211321a57`;
+`readback.json` and `static-readback.json` preserve output comparison and instruction checks.
 
 #### Shared unary math-error bridge
 

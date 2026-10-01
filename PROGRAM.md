@@ -102,6 +102,10 @@ the API contract, while live control words and reset behavior remain unmeasured.
 then corrects squared-distance association, removing all 148 observed PC24 movement differences in
 4,512 native cases. That full body remains unmatched; the previously discrepant sphere line body is
 now exact, and all earlier matches are preserved.
+The [ballistic caller experiment](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-b-ballistic-height-and-prediction--october-1)
+now binds prediction to horizontal range while height uses current Unit positions, and confirms the
+ballistic return skips the world query. These are 84 original-code calls with explicit providers;
+full candidate equivalence and live firing acceptance remain open.
 The cockpit composition-order correction has bounded original-code evidence but leaves its two bodies
 unmatched. A damage-report index is now snapshotted before a virtual query, as retail does; the affected
 subblock is ordinarily unreachable under stable memory, and only an explicit isolated intervention exposes
