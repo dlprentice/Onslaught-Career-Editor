@@ -84,6 +84,11 @@ The [weapon contract](reverse-engineering/game-mechanics/battle-engine-weapon-st
 now records relative aiming limits based on barrel velocity and the observed retained-height fallback when
 no pitch is selected. The source corrections preserve existing exact matches, without claiming complete
 candidate equivalence or observed gameplay.
+Walker mouse scaling, dive-bomber firing and initial storage-device selection now also match their complete
+sections and relocations. Air/Carver guidance and virtual-keyboard layout initialization subsequently close
+three more complete bodies. A separate [projectile-distance recheck](reverse-engineering/contracts/round/CRound__SpawnConfiguredProjectile__004db150.md#squared-distance-comparison--october-1-recheck)
+corrects arithmetic order and reproduces a native x87 branch difference at explicitly selected 24-bit
+precision; that full function remains unmatched and live precision/reachability are unmeasured.
 The cockpit composition-order correction has bounded original-code evidence but leaves its two bodies
 unmatched. A damage-report index is now snapshotted before a virtual query, as retail does; the affected
 subblock is ordinarily unreachable under stable memory, and only an explicit isolated intervention exposes

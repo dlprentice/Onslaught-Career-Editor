@@ -1,9 +1,9 @@
 # CRound__SpawnConfiguredProjectile
 
-Status: active static contract (factory draft)
-Last updated: 2026-08-22
+Status: active partial contract (factory draft; dated arithmetic recheck below)
+Last updated: 2026-10-01 (squared-distance fragment re-derived; other factory claims retain their limits)
 Summary: specimen-bound conservative function contract for canonical tracked identity `CRound__SpawnConfiguredProjectile` at `0x004db150`; unknown semantics and runtime limits remain explicit.
-Evidence: MEASURED — packet/decompile, closure range identity, and independently recomputed pristine body bytes; no TTD-session execution row in the bounded deep-mine corpus.
+Evidence: MEASURED — the October 1 section has fresh pristine instructions and native isolated x87 execution. Earlier packet/decompiler-derived statements remain fallible factory claims; no whole-game observation is added.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not_applicable (no crosswalk row in cohort-4 brief) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -43,6 +43,46 @@ Calls the listed nearby-selection helper. A null result causes two random-derive
 
 ## Error / edge behavior
 `this`, +0xf0, selected/created object fields, and indirect slots are largely unguarded. Creation failure skips the payload path. `local_448`/`local_438` and several payload fields lack clear initialization on all paths, limiting exact dataflow.
+
+## Squared-distance comparison — October 1 recheck
+
+The lead re-read the pinned pristine body and independently reproduced the native arithmetic experiment.
+Only this fragment receives the following stronger disposition; the earlier payload/prototype narrative is
+not certified by it.
+
+At `0x004db54f..0x004db581` (end exclusive), three float32 components at entry ESP `+0x3c`,
+`+0x40`, `+0x44` form a squared length in X/Y/Z addition order. Retail compares the product of the
+float32 operands at entry ESP `+0x464` and `+0x50` against that length. The current reconstruction
+identifies these operands as initialized lifespan and velocity Y. The branch at `0x004db57f`
+skips the jitter path toward `0x004db5d6` when its tested status condition fails. These exact frame
+positions describe this fragment entry, not the whole function's incoming call frame.
+
+The former value-local reconstruction emitted Y/Z/X square-sum order. Binding the actual difference-vector
+result to a const reference reproduces all 50 original fragment bytes, changing six operand bytes.
+This proves the reconstructed arithmetic sequence, not the original C++ spelling. The whole function
+remains unmatched: a 1,200-byte section has 90 differing nonrelocation bytes in initialization scheduling.
+No exact-function credit is awarded for the fragment.
+
+A native i386 harness executes unchanged original and freshly compiled before/after fragments at the same
+address. Its 63,054 authored inputs explicitly select x87 control words `037f`, `027f` and `007f`.
+The previous source changes 718 branch decisions under 24-bit precision; no sampled branch difference
+occurs at 53/64-bit precision, although intermediate extended sums can differ. The corrected fragment
+agrees on every observed output. A separate diagnostic changing only the conditional branch from JNE to JE
+reverses every decision. Stack movement, restored registers, canaries and empty x87 stack are checked;
+other code in the fragment's page is INT3 poison. There are no external calls in this boundary.
+
+One 24-bit witness uses difference `(0.23711174726486206, 0.1873210072517395, 6.626147747039795)`,
+lifespan `1` and velocity Y `43.99714660644531`: retail skips jitter while the old source enters it.
+These are authored arithmetic values, not a recorded projectile configuration. Live x87 precision,
+contact/target generation and reachability remain open. The cheapest gameplay falsifier is to record the
+control word and exact fragment inputs from a copied retail run, then replay that observation at this boundary.
+
+Private root evidence is in `bea-decomp/.worktrees/codex-equiv-20260930/local-data/round-spawn-root-20261001/`:
+`readback.json` binds fresh before/after sections and relocation records to the reviewed objects;
+`native/receipt.json` has SHA-256 `fe9af2effa8c474a39796bf1caf2f589ec7153652bc28ea9f0a5b20029915be4`;
+`native/inputs.bin` has SHA-256 `688dee44a5691c00a2ebd0cd04cf1c9a58367925e059ce1376a51bc293c88ddb`.
+All four native output files reproduced the independent worker's frozen results. The focused build keeps
+102 earlier exact functions and all 14 vtables.
 
 ## Runtime corroboration (TTD, bounded)
 No TTD execution row in the bounded cohort-4 brief/deep-mine corpus. For `0x004db150`, `ttd_values` is empty and `sessions` is empty. This bounded absence is not a dormancy claim and supplies no runtime semantic proof.
