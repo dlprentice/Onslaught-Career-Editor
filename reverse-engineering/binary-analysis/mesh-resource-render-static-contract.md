@@ -282,9 +282,10 @@ PC64/RN. They preserve behavior that should not be replaced with idealized colli
 The cylinder probe executes seven exact helpers and detects nine negative controls. Six identified
 integer-copy sites read uninitialized vector padding; these bytes are recorded and excluded from
 defined-output comparisons. All other uninitialized stack reads refuse. Zero-length inputs may produce
-nonfinite intermediates; no hardware-exception claim follows. Both large cylinder bodies remain
-unmatched, with no demonstrated source defect in these samples. A useful next falsifier combines a
-real caller's FPU word, detail flag, distinct volume/movement records and resulting contact state.
+nonfinite intermediates; no hardware-exception claim follows. This dated probe found no source defect
+in its samples. The October 1 fresh check establishes that the line body `0x00440510` now matches all
+1,456 section bytes and 21 relocations (1,442-byte retail body). The response remains unmatched;
+the broader native experiment below exposes and corrects a radial-rounding defect.
 
 Private frozen probes are `bea-decomp/.worktrees/codex-career-nearmiss-20260930/build/sphere-line-review-20260930/probe.py`
 (SHA-256 `f68e248f2d072172bfa0d5e15cc9046bf00f91ba80b644167181d8cb67fd3067`) and
@@ -327,6 +328,43 @@ The latter's `native/receipt.json` SHA-256 is
 input SHA-256 is `45b993e1d8266cc3d73b6faffd1aabc9641da9c91a9bcda24fddc738803e0fd5`.
 Whole-build readback preserves all earlier exact matches. The useful next falsifier is an unresolved
 arithmetic block exercised at its actual caller's measured precision and contact state.
+
+## Cylinder response arithmetic — October 1
+
+The original `0x0043fe20` entry and fresh compiled candidate were run natively on 77 finite authored
+fixtures, each at explicit PC24/53/64 round-nearest settings and two stack fills: 462 cases. Seven
+byte-verified retail helpers are admitted. These expand the earlier sampled cylinder states with
+off-axis tangency, shallow/deep cutoff, translated origins and radial/vertical decision ties.
+
+Retail stores Y squared before adding X squared at `0x0043ff2e..0x0043ff42` and reuses the stored
+squares in deep normalization. The reconstructed `MagnitudeXY()` expression did not preserve those
+rounding points. Using direct `sqrtf(X*X + Y*Y)` removes 76 of the 84 observed defined-output
+differences. Inputs, original outputs and controls are identical between runs; the remaining eight
+differences are unchanged. They concern translated-origin initial Z at PC53/64: retail stores Z at
+`0x0043ff1a` before subtracting height, while the candidate retains excess precision. This remains
+an explicit reconstruction defect, not an accepted approximation.
+
+A broader depth-reordering draft initially agreed in 444 cases but failed additional moving-tie
+fixtures: with X=`0.6f` minus two float ULPs, Y=`0.8f`, Z=`1.125f` and Z movement=`0.125f`, retail
+returns true while that draft returns false at PC53/64. It was rejected. The retained correction
+introduces no discrepancy in the expanded 462-case set and still leaves the full function unmatched:
+1,664 section bytes versus the retail 1,731-byte body, with 29 relocations.
+
+Checks cover return values, defined XYZ position/movement, stopped flags, report normals, preserved
+inputs, nonvolatile registers, stack/canaries and x87 stack/control word. Copied vector padding is
+excluded. Altered coarse admission changes 20 cases; changing the half-overlap constant changes 182;
+removing an admitted dependency exits with the expected refusal. These are bounded original-code
+comparisons, not gameplay observations, general equivalence or measurements of the live FPU state.
+All 20 other retained callable sections and relocation destinations are unchanged; the line body
+remains exact. The no-longer-emitted local Normalise copy is covered by its exact whole-build owner.
+
+Lead private evidence is
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/cylinder-correction-root-20261001/`:
+`root-readback.json`, frozen sources/objects, inputs and outputs. The corrected native receipt
+`accepted-native/receipt.json` has SHA-256
+`b07ef298c8bc904b1ed557fbeb01c4ddd8b05a27388ef14c01fd41f47b00d554`.
+The next numerical falsifier is the retained translated-origin Z witness; live caller precision,
+nonfinite inputs, aliases and world contact reachability remain separate questions.
 
 ## Baseline Static System Slices
 
