@@ -1,7 +1,7 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-10-01 (buggy/tentacle transforms and shader constants match; bounded corrections retained)
+Last updated: 2026-10-01 (hive transforms and particle pass match; shadow projection ownership corrected)
 Summary: specimen-bound rendering and collision contracts, with bounded corrections to arithmetic association, float stores and ordered admission.
 Evidence: MEASURED — specimen instructions, whole-section/relocation matches and bounded native calculations and buffer comparisons; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -11,6 +11,52 @@ mesh geometry, and collision bridges used by asset tooling and rebuild planning.
 Current corrected metadata is owned by the
 [Ghidra guide](../ghidra/README.md) and `developer_state.json`'s selected live authority.
 Static evidence does not by itself establish runtime rendering or layout parity.
+
+## Hive-boss cylinder transforms — October 1
+
+The complete reconstructed `0x004976d0` section now matches: 2,480 bytes,
+including its 2,469-byte body and all 100 relocations. Copy-initializing the
+old/new Euler matrices in its six branches preserves the retail branch and
+multiplication orders. The lead freshly compiled it, bound each reference
+using baseline witnesses and preserved all 29 other callable sections and
+the controller vtable. This settles the compiled method, not live animation
+or the original spelling of its source. Private root `hive-copy-root-readback.json`
+under the evidence owner below records the check.
+
+## Non-mesh particle pass — October 1
+
+Reconstructed `CParticleManager::RenderOther` (`0x0054f7e0`) matches all 656
+section/body bytes and 51 relocations. Its camera basis keeps both matrix-vector
+products, the cross product and both normalizations as retail calls. The source
+separates state setup, camera basis, descriptor dispatch/flush and restoration;
+those helper names and groupings are reconstructed. The back vector receives
+the second product directly. Omitting the descriptor boundary or restoring an
+extra temporary fails the complete match.
+
+The lead rebuilt and checked every reference; eleven other retained callable
+sections/references survive. The newly emitted math helpers were already exact
+elsewhere and add no unique credit. No device, particle scene or GPU ran.
+Private root `particle-other-root-readback.json` records this static result.
+
+## Shadow projection owner — October 1
+
+At `0x005532c8`, retail copies sixteen dwords from `0x009c7c14` to
+`0x009c6994`. Exact initialization at `0x00551ef0` independently binds the
+global SHADOWS base to `0x009c7550`; the source is its projection at offset
+`0x6c4`. Exact `TestDraw` binds the RENDERINFO destination at base plus `0x3d4`.
+The private draft used the receiver's projection; it now uses the global owner.
+This distinction can matter when the receiver differs from that singleton,
+but no such live call was observed.
+
+The lead reproduced the operand correction, preserving all 107 prior reference
+identities/addends, 44 exact controls and 62 other callable sections across the
+shadow/patch objects. `RenderTextures` remains unmatched, with a 4,400-byte
+section and 108 relocations; this adds no whole-function credit. A complete
+match and a controlled receiver-identity observation remain separate falsifiers.
+Private root `shadow-projection-root-readback.json` records the evidence.
+
+All three root receipts are under
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`.
 
 ## Buggy and tentacle root transforms — October 1
 

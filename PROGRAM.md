@@ -198,8 +198,14 @@ mech initialization, texture deserialization, texture-state cleanup, display-mod
 arrow/cuboid rendering, mesh-buffer initialization, main rendering, texture activation,
 text measurement, reconnect rendering, console selection, particle allocation, render-state reset,
 unit-definition destruction, [declaration shader constants](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#declaration-shader-constants--october-1)
-and [buggy/tentacle root transforms](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#buggy-and-tentacle-root-transforms--october-1).
-All earlier matched symbols survive.
+[buggy/tentacle root transforms](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#buggy-and-tentacle-root-transforms--october-1),
+[hive-boss transforms](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#hive-boss-cylinder-transforms--october-1),
+[word wrapping and message-log input](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#word-wrapping-and-message-log-input--october-1)
+and the [non-mesh particle pass](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#non-mesh-particle-pass--october-1).
+Earlier unique matches survive. The particle object no longer emits an unused constructor;
+its shared implementation remains exact elsewhere. The
+[shadow projection-owner correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#shadow-projection-owner--october-1)
+is a separate partial correction and adds no whole-function credit.
 The private README owns the current score and exact byte/relocation receipts; these static
 matches are not live gameplay, resource-loading or graphics-device acceptance.
 The separately reproduced [compass coordinate correction](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#compass-coordinate-association--october-1)

@@ -1,10 +1,33 @@
 # HUD / frontend overlay static contract
 
 Status: bounded retail static evidence; not visual proof
-Last updated: 2026-10-01 (language-pulse arithmetic correction; complete matches and bounded rechecks retained)
+Last updated: 2026-10-01 (word wrapping and message-log input match; bounded pulse evidence retained)
 Summary: specimen-bound frontend input, color and coordinate corrections; complete function matches and isolated calculations remain distinct from player acceptance.
 Evidence: MEASURED — October 1 native compass and font fragments, isolated menu runs and full-section/relocation matches, plus September 30 font and scale-menu readback; August HUD claims were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+## Word wrapping and message-log input — October 1
+
+Reconstructed `CMessage::WordWrap` (`0x004b6f70`) matches the complete 496-byte
+section, including its 489-byte body and all four relocations. The reveal-count
+lifetime, positive-length scope, punctuation suppression and line-transition
+order reproduce retail. In particular, the break flag suppresses a space break
+when the next character is one of the admitted punctuation characters before
+the ordinary space/last-character decision.
+
+Reconstructed message-log input (`0x004b9ec0`) matches all 416 section bytes,
+its 409-byte body and thirteen relocations. The caller first updates selection;
+the shared distance query tests selected/top equality before initializing its
+own traversal cursor. The former draft passed a cursor captured before the
+selection update and failed the retail loop-entry comparisons.
+
+The lead freshly compiled both and verified every reference. All 44 other
+word-wrap-object callables and 22 other message-log callables survive, along
+with their five and two vtables. The log-panel renderer stays unmatched. These
+are complete static matches; no UI or player interaction ran. Private root
+receipts under
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+`wordwrap-root/readback.json` and `messagelog-root/readback.json`.
 
 ## Main-menu language pulse — October 1
 
