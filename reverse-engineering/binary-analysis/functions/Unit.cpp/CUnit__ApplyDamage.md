@@ -1,7 +1,7 @@
 # CUnit__Damage
 
 Status: active specimen-bound function contract; September 30 corrections supersede the August behavior summary
-Last updated: 2026-09-30
+Last updated: 2026-10-01
 Summary: shared unit damage, repair, mesh-part admission and warning-message ordering, re-derived from retail instructions; source reconstruction and isolated execution do not establish retail gameplay acceptance.
 Evidence: MEASURED — fresh pristine instructions, constants and caller reads; 61 bounded original-code cases with explicit callee stubs and separate runtime limits.
 Source File: no Unit.cpp body in the pinned partial source; the private reconstruction remains a candidate | Binary: pristine BEA.exe.original.backup, identified below.
@@ -94,6 +94,27 @@ but the same mask already caused the return at `0x004f9b69`. There is no call or
 tests that could change that result. This conclusion assumes stable ordinary object memory, not concurrent
 external mutation. The byte-matching source retains the code; do not implement it as an independently reachable
 explosion damage path based on the old prose.
+
+### October 1 report-index snapshot
+
+Within that retained block, `0x004f9d08` loads collision-report `+4` into EDI, rejects `-1`, calls
+render-object virtual slot 9 at `0x004f9d1e`, then indexes the mesh-part array with the saved EDI at
+`0x004f9d27`. The reconstruction previously reread the report after the virtual call; it now keeps an
+explicit snapshot. This corrects dormant data flow without claiming a new whole-function match.
+
+The lead compared the probe's baseline/corrected instruction blocks with independently compiled objects
+and reran **24 subblock scenarios, 72 executions across retail and the two candidates**. Ordinary controls
+agree. Deliberately changing the report at getter entry distinguishes the old candidate in six scenarios;
+the corrected candidate agrees with retail in all 24. That intervention is a falsifier for load order,
+not an observed retail action: the inspected slot-9 bodies at `0x004de070`, `0x004dbf80` and `0x00405930`
+perform no store or callback. The probe starts inside the ordinarily unreachable block and does not run
+the full Damage entry or collision query. Fresh instructions reproduce the two same-mask guards with
+no intervening call/write. Full candidate matching remains open.
+
+Private root receipt: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/unit-damage-root-20261001/`
+(`probe.py`, `input-pin.json`, `report.json`). The report SHA-256 is
+`19d1d86c569dd544afd360c89fed3d2a41c5c05788e7f0f816c84aab24c52625`; it identifies the same pristine
+specimen as this contract. No retail gameplay observation is added.
 
 ## Warning thresholds and latches
 
