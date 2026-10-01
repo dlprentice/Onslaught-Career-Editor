@@ -1,9 +1,9 @@
 # ProjectileBurst__SpawnFromCurrentPreset
 
 Status: active static contract, instruction-level (replaces the 2026-08-23 factory draft)
-Last updated: 2026-09-27 (caller interface identity; prior body evidence retains its date)
+Last updated: 2026-10-01 (native flak arithmetic discrepancies; prior whole-body evidence retains its date)
 Summary: one burst event of a weapon: the Battle Engine spend gate, then per round of the volley the emitter, aim, launch angle, two inaccuracy draws, target, locks, round Init, effects, clip ejection and recoil, in retail order.
-Evidence: MEASURED — objdump of the pristine body with every callee, slot and constant read at its address on 2026-09-25; field meanings from the physics value maps; no runtime replay of this body.
+Evidence: MEASURED — the September 25 body instruction record and physics value maps; October 1 native flak arithmetic fragments compared with a fresh reconstructed object. No complete-body runtime replay.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not in the pinned GPL drop (no `Weapon.cpp`); Battle Engine callees crosswalk to `references/Onslaught/BattleEngine.cpp:1094-1116` and `:2713-2737` | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
@@ -81,6 +81,55 @@ One call is one burst event. In order:
 - `AddShockShake(diff)` takes three draws once diff ≥ 0.001, a life loss of at least 0.008 without shields;
 - vibration then adds min(diff, 0.05) × 50;
 - life, shields and energy are restored after the shake when `+0x15c` (`mVulnerable`) is 0.
+
+## Flak arithmetic discrepancies — October 1
+
+The fresh private reconstruction remains unmatched: a 3,744-byte candidate section
+versus the 3,772-byte retail body, with 43 exact controls in the object. The lead
+reproduced two actual numerical discrepancies, not merely different instruction scheduling.
+
+At `0x005073c9`–`0x0050744b`, retail rounds each target-minus-launch-position component
+to binary32 through the actual vector constructor `0x00401ec0`. It accumulates squared
+components as `(Y² + Z²) + X²`, takes the square root and stores the distance as binary32
+at `0x00507433`. The strict admission compares **raw round-data speed (`+0x2c`) ×
+initialized lifespan > stored distance**. The candidate retains extended subtraction
+results and uses `(X² + Y²) + Z²`.
+
+After the admitted branch's random draw, retail stores `flakInaccuracy × distance`
+to binary32 at `0x00507481`, then uses that rounded error in the lifespan expression.
+The candidate retains the product in extended precision. Native original/candidate
+fragments produce the following differences on finite authored inputs:
+
+| Observation | Cases | PC24 differences | PC53 differences | PC64 differences |
+| --- | ---: | ---: | ---: | ---: |
+| Strict flak-adjustment admission | 10,824 total | 141 | 131 | 131 |
+| Stored lifespan after the error calculation | 7,245 total | 0 | 215 | 224 |
+
+For one PC24 admission witness, retail distance `810.126708984375` equals the supplied
+speed-times-life threshold and skips adjustment; candidate distance `810.1266479492188`
+enters it. Inverting the retail admission branch flips every exercised decision.
+All 45 zero-inaccuracy controls agree in the lifespan experiment. Stack/canary,
+source-field, control-word and empty-x87-stack checks pass; the distance experiment
+executes the original vector constructor rather than substituting a numeric helper.
+
+The admission cases begin after the flak/non-null-target tests. Lifespan cases begin
+after the random call with an explicitly supplied nonnegative random integer.
+No generator, callback, allocation, complete burst, shipping configuration or live
+FPU state is exercised. Threshold neighbors were selected from original distances.
+These are useful falsifiers for source repair; they do not establish occurrence in
+player gameplay. The current private source remains unchanged: tested partial fixes
+do not yet reproduce both materialization and summation safely.
+
+Root evidence in `bea-decomp/.worktrees/codex-equiv-20260930/`:
+
+- `local-data/weapon-spawn-root-20261001/native-admission-v06/receipt.json`, SHA-256
+  `e8cb8ec356f2d2b35f75921cefa4442676d8f411a248ab84c9cb617b476bd10c`.
+- `local-data/weapon-spawn-root-20261001/native-error-v12/receipt.json`, SHA-256
+  `74f0f5d4ea3ac589b63a953326bc24bc1671f686f2c1b789393b3f1c6e428183`.
+
+The root fresh object's outputs reproduce the research worker's frozen output hashes.
+Repair must preserve these original-code boundaries and the remaining exact controls;
+fewer disagreements on a sample is insufficient acceptance.
 
 ## Error / edge behavior
 - A null `CreateProjectile` result skips that round's draws, lock, Init and recoil, and the loop continues.

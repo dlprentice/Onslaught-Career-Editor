@@ -136,6 +136,17 @@ path in the checker. The Unit event handler also matches its complete 400-byte s
 20 relocations, preserving the two scheduler overloads and RNG ordering.
 The [auto-aim update](reverse-engineering/game-mechanics/battle-engine-aiming.md#october-1-complete-auto-aim-update-match)
 now matches its entire section and all relocations; target search and launch-position bodies remain open.
+The [visibility-call recheck](reverse-engineering/game-mechanics/battle-engine-aiming.md#october-1-visibility-call-correction)
+corrects three unchecked default arguments in the private target-search caller, reproducing retail
+argument bytes in isolated native execution while preserving its existing exact controls.
+Separate native comparisons leave [feature-range arithmetic](reverse-engineering/game-mechanics/battle-engine-aiming.md#october-1-feature-range-arithmetic-remains-open)
+and [flak admission/lifespan rounding](reverse-engineering/contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md#flak-arithmetic-discrepancies--october-1)
+as demonstrated source gaps with precise falsifiers; partial improvements were not accepted as fixes.
+The [Pod aiming recheck](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__BallisticAimState.md)
+corrects the historical owner description and reproduces 5,940 full-body native cases with actual
+gravity/Euler helpers. Original and candidate agree, including an unwritten pitch when the search
+never improves its sentinel and an unwritten fourth velocity word. Shipped-state reachability and
+the remaining whole-section mismatch stay open.
 The [settings conversion follow-up](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#october-1-original-integer-tweak-conversion)
 executes the original integer-tweak setter in 217 complete-reader cases, preserving the retail conversion
 and changed-value reset decision. Remaining callback models and real device/save acceptance remain explicit.

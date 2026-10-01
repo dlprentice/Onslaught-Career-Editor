@@ -1,7 +1,7 @@
 # Battle Engine auto-aim, launch position and Gun emitters
 
 Status: active static contract for the rebuild's player shots
-Last updated: 2026-10-01 (complete auto-aim update byte match; earlier target-admission and emitter evidence retained)
+Last updated: 2026-10-01 (complete update match and native visibility-call correction; earlier emitter evidence retained)
 Summary: how the Battle Engine picks an auto-aim target and blends its aim offsets,
 where each player round starts (the cockpit mesh's Gun emitters) and in which
 direction, and which state that depends on.
@@ -74,7 +74,7 @@ Battle Engine fields (`BattleEngine.h:406-416`):
     angleDiff. The smallest angle wins, and the first visited wins a tie.
 - **Visibility.** The winner is kept only when
   `FindFirstThingToHitLine(Battle Engine → aim point, self, level 1, mesh flag 1,
-  ignore rounds 0x4)` returns a thing hit, and the thing is that target
+  ignore rounds 0x4, map flag 1, allowed types -1)` returns a thing hit, and the thing is that target
   (`0x0040bf1d`). Trees are not ignored here, unlike the crosshair trace.
 - **Prediction and tracking** (`UpdateAutoAim`, every Move from `0x00409637`):
   - lead time t = |(target + target velocity) − origin| / |orientation × (0,
@@ -83,8 +83,9 @@ Battle Engine fields (`BattleEngine.h:406-416`):
   - the offsets then move half way: old ← current, then current += (desired −
     current) × 0.5 for yaw and pitch (`0x0040b5f7-0x0040b646`).
 
-Differences from the pinned source are float-level only: stealth × 0.01 instead
-of / 100, the 6003 due-time addition order, and summation orders.
+Measured differences from the available pinned source include stealth × 0.01 instead
+of / 100, the 6003 due-time addition order and summation orders. Missing source headers
+and default arguments require their own retail evidence, as the visibility recheck below demonstrates.
 
 ### September 30 call-binding recheck
 
@@ -103,6 +104,79 @@ binding does not validate their entire behavior or establish a defect in the pau
 Machine code proves the passed address and dispatch slot, not whether the original C++ declaration
 spelled its output parameter as a pointer or reference. Other observations and asset measurements
 on this page retain their earlier evidence dates; no desktop/runtime acceptance was performed.
+
+### October 1 visibility-call correction
+
+The private reconstructed `HandleAutoAim` caller relied on unchecked shared defaults
+and passed collision level 2, excluded-type mask 0 and map flag 0. The actual retail
+pushes at `0x0040becc`–`0x0040bed8` pass **1, 4 and 1**. The correction supplies
+these values explicitly in this caller; it does not change unrelated shared defaults.
+
+Fresh instruction reads of `FindFirstThingToHitLine` (`0x0050b030`, `ret 0x54`)
+establish the relevant semantics:
+
+| Entry-stack offset | Retail value | Use in the dispatcher |
+| --- | ---: | --- |
+| `+0x40` | 0 | Disables the enum-only first-hit early return (`0x0050b497`). |
+| `+0x44` | 1 | Permits the mesh path when the collision-flags condition selects it (`0x0050b349`). |
+| `+0x48` | 1 | Level 2 would enter the mesh-volume path directly; other levels require the flags/permission test (`0x0050b324`). |
+| `+0x4c` | 4 | Skips a candidate when its type intersects this mask (`0x0050b1bd`). |
+| `+0x50` | 1 | Forwarded into the map trace at `0x00490a40`; exactly 1 enables its additional water-level threshold test (`0x00490ba7`). |
+| `+0x54` | `0xffffffff` | Allows every type bit through the separate inclusion-mask test (`0x0050b1cc`). |
+
+The lead reproduced native i386 execution of the original, old candidate and corrected
+caller suffixes through the actual exact line-copy constructor (`0x004098e0`). The
+dispatch boundary captures all arguments, line bytes and report initialization. Retail
+and corrected results agree apart from the legitimate report pointer's frame offset;
+the old candidate exposes the three wrong argument values. The dispatcher itself is
+an observation stop in this experiment, not a modeled collision result.
+
+A separate native experiment executes the original 29-byte map predicate at
+`0x00490ba7`–`0x00490bc3`: only flag 1 enables `position.Z >= map[+0x1034]`.
+Flags 0, 2 and -1 bypass that water-level branch. All 168 finite authored cases
+across masked PC24/53/64 agree with those reads; changing the admitted flag from 1
+to 2 changes sixty branch decisions. Terrain sampling, recursive refinement,
+water-level loading and the composed visibility outcome are outside this experiment.
+Its root owner is `local-data/map-water-root-20261001/native-v01/receipt.json`
+in the same private RE worktree.
+
+All 190 exact controls and 253 other callable sections/relocations remain unchanged.
+The corrected caller still has a 2,272-byte section versus the 2,290-byte retail body.
+The extra reconstructed `GetThingOverCrossHair` routine has no established retail
+address; a scan instruction-validates twelve direct calls to the dispatcher but does
+not establish that routine, so its defaults remain unmodified. Full target admission,
+visibility outcomes and retail/Godot play acceptance remain separate.
+
+Private root reproduction under the `bea-decomp` RE worktree:
+`local-data/handleautoaim-root-20261001/call-boundary/receipt.json`, SHA-256
+`d9a4fdfc019dd6dedab7e39d95770a899bc460ed8e2143bd3436c83cdd0cc780`;
+`callee-readback.json` and `default-caller-readback.json` record the instruction reads
+and caller inventory. The specimen is the hash-pinned pristine executable above.
+
+### October 1 feature-range arithmetic remains open
+
+The feature branch's range calculation has a separate demonstrated discrepancy.
+Retail `0x0040bbec`–`0x0040bc32` rounds the X/Y displacements to binary32, retains
+the Z subtraction in extended precision, and sums `Z² + X² + Y²`. Its later pitch
+calculation calls `Magnitude` (`0x004026b0`) on the stored vector at `0x0040bcc8`.
+The private candidate instead retains X for one multiply, rounds Z/Y and reuses
+its earlier square sum for the later square root. Those calculations cannot be
+assumed interchangeable.
+
+The lead reproduced 1,143 native range-admission slices on finite authored coordinates:
+eight differences each at PC53/PC64, none in these PC24 cases. With target Z = 1,
+origin Z = −2⁻²⁴ and maximum range 1, retail rejects and the candidate admits.
+An X-axis counterpart disagrees in the opposite direction. A diagnostic reload of
+retail's stored Z exposes the lost-precision boundary; an inverted upper-bound
+branch changes 908 decisions. Source variants remain rejected, so this arithmetic
+defect is still open despite the separately accepted visibility-argument correction.
+
+Only the range decision is observed. Target filters, `GetCentrePos`, callback
+reachability, subsequent angle tests, target selection and live FPU configuration
+are outside the experiment. Private root receipt:
+`local-data/handleautoaim-root-20261001/feature-range-v01/receipt.json`, SHA-256
+`28d9cc5a4844f6f79741d2970fcfb3296d94593dcc283495024a4ae07668adde`.
+Its inputs and original/candidate/control outputs reproduce the worker's frozen bytes.
 
 ### October 1 complete auto-aim update match
 
