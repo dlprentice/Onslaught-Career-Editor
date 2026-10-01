@@ -127,15 +127,20 @@ corrects a reference-allocation request and the old integer-format description. 
 now has 72 original-code cases, nine refusals and 120 agreeing native runs under explicit C-locale
 boundaries. The [composed reader](reverse-engineering/binary-analysis/tokenarchive-semantics-2026-08-11.md#composed-numeric-and-header-reads--october-1)
 now reproduces failed-conversion/stale-output behavior across 38 complete calls; the fresh candidate
-agrees within the explicit memory-input and dependency limits. Production caller handling and full
-archive compatibility remain open. A separate
+agrees within the explicit memory-input and dependency limits. The original simple-sprite loader
+also stores the retained scalar after a malformed or missing value, demonstrated with fifteen reads
+and narrowly checked scratch providers. Full archive compatibility remains open. A separate
 [library-identity correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#inverse-trig-callee-identities--october-1)
 fixes two reconstructed acos calls that retail implements with asin and closes a false-acceptance
 path in the checker. The Unit event handler also matches its complete 400-byte section and all
 20 relocations, preserving the two scheduler overloads and RNG ordering.
 The [shadow-plane correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#static-shadow-plane-admission--october-1)
 restores numerator accumulation order and removes 152 observed admission differences in 1,950 native
-cases; full triangle-hit and visual-shadow behavior remain untested. The
+cases. The subsequent 2,025 complete-body cases remove all 100 observed final-result differences with
+the actual finite-domain CRT; visual shadows and arbitrary-input equivalence remain untested.
+The [walker recheck](reverse-engineering/game-mechanics/walker-dash.md#native-slow-movement-recheck--october-1)
+executes the directional slow-movement asymmetry in 408 native cases without providers; right strafe
+retains full acceleration while the other three directions quarter it under the admitted conditions. The
 [buffered-read comparison](reverse-engineering/binary-analysis/functions/DXMemBuffer.cpp.md#buffered-read-comparison--october-1)
 finds agreement only within its explicit memory/refill provider model; real Windows I/O remains untested.
 The [ballistic caller experiment](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-b-ballistic-height-and-prediction--october-1)

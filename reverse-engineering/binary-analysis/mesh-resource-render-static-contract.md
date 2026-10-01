@@ -558,15 +558,32 @@ Retail obtains a slightly negative segment parameter and rejects it; the old sou
 rounds to negative zero and admits it. This establishes an arithmetic boundary
 consequence, not a visible shadow defect or the fixture's occurrence in retail levels.
 The three later acos calls are correctly bound to `0x0055f380`, but no math helper or
-angle calculation executes in this prefix experiment. Full ray/triangle results,
-degenerate and nonfinite geometry, live control words and rendering remain open.
-The cheapest next falsifier executes the remaining angle stage with the actual CRT
-dependencies, then compares the final hit decision on these boundary fixtures.
+angle calculation executes in this prefix experiment.
+
+The subsequent complete native recheck executes all three actual acos calls and
+their admitted finite-domain CRT helpers, including the precision-exception path.
+It adds 75 inside/outside, edge, vertex, parallel and segment-limit controls to the
+earlier cases. Across 2,025 complete entry-to-return cases, the old source differs
+on 100 final BOOL results (84 at PC24, eight each at PC53/64); the correction differs
+on none. All complete output records agree, including exception flags and guarded
+input/ABI/x87 state. Inverting the final angle-test branch changes 913 results;
+redirecting an acos call outside the admitted code refuses before any output.
+No math function is replaced. The image-initial CRT flag at `0x009d08b4` remains
+zero, an explicit fixture value rather than a measurement after live startup.
+
+This closes the proposed complete-body falsifier only for these finite, nonaliased
+fixtures and masked precision modes. Degenerate triangles, nonfinite/domain-error
+paths, unmasked exceptions, arbitrary numeric equivalence and visible rendering
+remain open. The complete section still differs at 38 positions. A useful next
+runtime falsifier records an actual shadow ray, resulting BOOL and FPU/CRT state on
+an experimental retail copy, then reproduces those inputs without modifying assets.
 
 Private lead owner:
 `bea-decomp/.worktrees/codex-equiv-20260930/local-data/staticshadow-root-20261001/`.
 `readback.json` records the fresh compiled comparison; `native-plane/receipt.json`
 has SHA-256 `9920a99d67783f330ad20c96fb7f2ee278a21e598f31b1a86969730516abd317`.
+The complete-run receipt `full-native-v01/receipt.json` has SHA-256
+`22e0e9e5164f1cbabc34d9d1e5434f9d255a2bbf6cc1300a79b8ba9fca22f69b`.
 No Ghidra database or renderer was opened.
 
 ## Baseline Static System Slices

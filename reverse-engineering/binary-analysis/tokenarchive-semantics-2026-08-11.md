@@ -1,7 +1,7 @@
 # `CTokenArchive` particle grammar and reference semantics
 
 Status: active, bounded semantic recovery
-Last updated: 2026-10-01 (composed numeric/header reader recheck; August corpus evidence retained)
+Last updated: 2026-10-01 (numeric/header reader and simple-sprite caller rechecks; August corpus evidence retained)
 Evidence: MEASURED — complete pristine retail bodies, exact parser tables,
 particle-set files, callers, memory layout, and twelve normalized-identical PC
 demo twins; October adds bounded original-code numeric/header comparisons.
@@ -187,9 +187,9 @@ and a wrong numeric format are rejected. The allocation-refusal case reaches the
 same seven-byte request for `Smoke`, corroborating the preceding allocation fix.
 
 These observations do not establish descriptor publication or complete particle
-archive compatibility. Repeated test calls after FALSE/EOF do not prove a production
-caller continues then. Caller reinitialization/exit conditions and downstream use
-are the next falsifiers; no real file, original save or game asset was modified.
+archive compatibility. Repeated standalone calls after FALSE/EOF do not prove a
+production caller continues then. The simple-sprite caller is tested separately
+below; no real file, original save or game asset was modified.
 
 Private lead owner:
 `bea-decomp/.worktrees/codex-equiv-20260930/local-data/readtoken-scanner-20261001/`.
@@ -197,6 +197,41 @@ Original receipt `composition-v02/receipt.json` SHA-256:
 `25be4ba8c58e78535d2da04175a0139abc7fe5667d2d367e757ae0ab60ad2055`;
 fresh candidate comparison `comparison-v05/receipt.json`:
 `df634855aae4862dd022521d047491f295654b484c45391c25695f16fc0bce90`.
+
+## Simple-sprite caller retains the scalar — October 1
+
+The original loader at `0x004c05c0` ignores ReadToken's return value after its
+call at `0x004c05fb`, dispatches the token at `0x004c0600`, and loops until the
+separator token. Its shared float output is not reset between reads. The lead
+reproduced five authored streams through the complete original loader, totaling
+fifteen ReadToken calls, with the original reader/scanner and null-texture SetUV.
+
+For `Final_Radius 1.5`, then `Life_Pct +.`, then the real separator, all three
+ReadToken calls return TRUE. Failed conversion leaves the float output at 1.5,
+and `0x004c064d` writes it into descriptor `+0x74`; the loader returns TRUE.
+Omitting the Life_Pct value makes ReadToken return FALSE but still produces that
+same field write and successful load. Resetting just the shared output before
+the malformed read changes the stored value to 0.375, identifying its source.
+Blank-line and repeated-scalar cases likewise preserve the measured stale token/value.
+
+Two scratch services are substituted and checked narrowly: allocation at
+`0x005490e0` must return to `0x004c05e3`, request 1,000 bytes/type `0x61` with
+source `0x00630cd8`, line 205 and owner `0x009c3df0`; free at `0x00549220`
+must return to `0x004c0780` and release that one buffer once. Neither writes
+game memory. Clobbering their permitted ECX/EDX registers leaves the valid and
+malformed results unchanged. Five refusal controls detect a missing terminator,
+an uninitialized first malformed scalar, withheld scanner/SetUV, and an unexpected
+reference allocation. The EOF refusal is not counted as a successful load.
+
+This is guarded Unicorn execution under the explicit C-locale/control-word profile,
+with declared scratch providers. It demonstrates a downstream scalar store, not
+shipped-content reachability, descriptor-list publication, every descriptor or
+complete archive compatibility. Original saves and installed assets were untouched.
+A useful next falsifier follows another actual descriptor loader with the same
+numeric-output lifetime, before generalizing this caller's behavior.
+
+Lead evidence in the same private owner: `sprite-v10/receipt.json`, SHA-256
+`f80596125975a42fc7b39003da973842b31dad810e33c934963cf9b9dfe90b88`.
 
 ## Deferred reference workspace
 

@@ -1,14 +1,15 @@
 # Walker dash: the retail timing window
 
 Status: active static contract for the rebuild's walker movement
-Last updated: 2026-09-27 (complete directional bodies rechecked; slow-movement asymmetry added; earlier frame calculations retain their assumptions)
+Last updated: 2026-10-01 (native slow-movement recheck; earlier dash frame calculations retain their assumptions)
 Summary: a walker dash needs the opposite hard press to have started more than half of
 `mDashTime` and less than `mDashTime` before (0.1 to 0.2 s). The pinned source has only the
 0.2 s bound. The frame calculation assumes float32 event times and x87 single precision. At 20 event
 frames per second it always admits an opposite press 3 frames earlier and never one 1 frame
 earlier; one 2 or 4 frames earlier passes only on some frames, decided by rounding.
 Evidence: MEASURED — instruction reads of the pristine specimen; SOURCE —
-`BattleEngineWalkerPart.cpp`; COMPUTED — the frame table below, from the byte-level predicate.
+`BattleEngineWalkerPart.cpp`; EXECUTED — bounded native directional bodies below;
+COMPUTED — the frame table below, from the byte-level predicate.
 The audit's research pass found the extra bound; the RE lane re-derived it from the bytes.
 There is no runtime capture of a dash, and this pass has not measured the runtime
 x87 control word.
@@ -173,6 +174,36 @@ Private bodies/constants and complete caller witnesses are in
 These are static findings, not a new dash/input experiment. The earlier frame
 percentages were not recomputed by this pass.
 
+## Native slow-movement recheck — October 1
+
+The lead ran all four complete original directional bodies and their freshly compiled
+candidates in native i386 probes. The primary vtable at `0x005d89c4` identifies
+CBattleEngine through its RTTI; its ground-query and AddVelocity slots select the
+actual `0x00401f70` and `0x00404170` helpers. Those execute, along with the original
+Euler-matrix constructor at `0x004062d0`; no provider substitutes for their behavior.
+
+The 408 cases cover finite inputs and yaws, zero initial velocity, PC24/53/64, paired slow flags,
+grounded/no-dash movement and airborne/active-dash early returns. Original and
+candidate agree on receiver/configuration state and x87 flags in every case.
+All 135 paired Forward/Backward/StrafeLeft cases quarter the velocity increment
+when main `+0x588` is nonzero; all 45 right-strafe pairs retain the same increment.
+Changing only the quarter-scale constant to one-half alters exactly those 135
+slow cases. A bad virtual table and truncated input are refused. Full object/input
+bytes, nonvolatile registers, stack canaries and x87 control/stack state are checked.
+
+This executes the earlier static asymmetry; it does not measure a player's charging
+state, physical input, dash activation, audio, subsequent world movement or live
+precision. Right strafe still has ten differing positions in its 624-byte candidate
+section; sampled agreement does not make it an exact match. The other three
+directional sections already match completely, and 42 focused exact controls remain.
+The cheapest remaining player-level falsifier records the slow flag and resulting
+velocity during the same charging action in all four directions on a retail copy.
+
+Private lead owner:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/walker-strafe-root-20261001/slow-input/`.
+`native-v01/receipt.json` SHA-256:
+`309272f1a4bc382fb1100567e8ba6b50d645ac76467b351906b37bdc2a538f09`.
+
 ## Rotation and pitch use the yaw-right binding
 
 Fresh complete-body inspection also identifies `00413660` and `004136e0` as
@@ -214,5 +245,5 @@ current user settings or actual input sensitivity in a running game.
 | Whether the game thread runs at single precision during play | In a copied runtime, break at `0x00413235` and read the x87 control word: precision bits 8-9 should be `00` |
 | Whether one input sample reaches the walker per event frame | Count `CPlayer::ReceiveButtonAction` calls per `CEventManager::AdvanceTime` in a copied runtime, holding the stick steady; more than one per frame adds a `k = 0` case, which retail rejects |
 | Whether a dash two frames after the opposite press follows the frame table | A two-frame left-right flick ending on a frame the table admits (for example frame 21) and on one it rejects (frame 20), with the walker's `+0x44` dash count logged |
-| Effect of slow movement on all four directions | Run the original directional bodies on copies with identical finite inputs, yaw and velocity, toggling main `+0x588`; intercept AddVelocity and compare submitted vectors |
+| Player-level effect of slow movement on all four directions | The bounded native recheck above establishes the directional asymmetry; record the slow flag and velocity during an actual charging action to establish live reachability |
 | Effect of the yaw-right binding category on rotation and pitch | Execute both original bodies on copied valid receivers with identical finite input, varying that binding between categories 11, 12, 13 and 14; compare the yaw/pitch velocity writes while preserving x87 state |
