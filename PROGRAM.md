@@ -123,6 +123,13 @@ The [retained debug-arrow recheck](reverse-engineering/binary-analysis/mesh-reso
 corrects a component-rounding boundary and records an unwritten retail index without guessing its visual effect.
 The [particle-parser recheck](reverse-engineering/binary-analysis/tokenarchive-semantics-2026-08-11.md#allocation-and-scan-format-recheck--october-1)
 corrects a reference-allocation request and the old integer-format description. The
+[actual scanner](reverse-engineering/binary-analysis/tokenarchive-semantics-2026-08-11.md#original-numeric-scanner--october-1)
+now has 72 original-code cases, nine refusals and 120 agreeing native runs under explicit C-locale
+boundaries; composing its failed-conversion behavior through ReadToken remains open. A separate
+[library-identity correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#inverse-trig-callee-identities--october-1)
+fixes two reconstructed acos calls that retail implements with asin and closes a false-acceptance
+path in the checker. The Unit event handler also matches its complete 400-byte section and all
+20 relocations, preserving the two scheduler overloads and RNG ordering. The
 [buffered-read comparison](reverse-engineering/binary-analysis/functions/DXMemBuffer.cpp.md#buffered-read-comparison--october-1)
 finds agreement only within its explicit memory/refill provider model; real Windows I/O remains untested.
 The [ballistic caller experiment](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-b-ballistic-height-and-prediction--october-1)

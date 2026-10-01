@@ -1,7 +1,7 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-10-01 (debug-arrow precision/callers; imposter, quad and collision rechecks)
+Last updated: 2026-10-01 (inverse-trig identities; debug-arrow, imposter, quad and collision rechecks)
 Summary: imposter orientation and centre-offset arithmetic are corrected; its quad matches exactly. Collision, trail, emitter and mesh-loading contracts retain their measured limits; older slices are historical leads.
 Evidence: MEASURED — specimen instructions, whole-section/relocation matches and bounded native calculations and buffer comparisons; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -366,6 +366,15 @@ Lead private evidence is
 The next numerical falsifier is the retained translated-origin Z witness; live caller precision,
 nonfinite inputs, aliases and world contact reachability remain separate questions.
 
+A subsequent explicit Z/Y-rounding draft is **rejected**, despite matching all
+2,622 structured cases. The lead reproduced a separate frozen 24,000-case finite
+set: the draft reduces disagreements from 692 to 288 but introduces 116 newly
+failing cases. Retail's first position rewind rounds the X/Y products and retains
+Z; the draft retains X instead. That concrete boundary is the next source question,
+not permission to accept fewer total mismatches. Production source is unchanged.
+Private readback: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/cylinder-storage-root-20261001/independent-replay/readback.json`;
+frozen input SHA-256 `985c49eaa0876659e0849eb5a3acbf60191c860cb2503b2865cee4b17b79010a`.
+
 ## Imposter quad coordinates and precision — October 1
 
 The quad builder at `0x00542f90` receives texture coordinates from the frame record
@@ -494,6 +503,33 @@ The native receipt `native-v08/receipt.json` has SHA-256
 A cheap future runtime falsifier watches the selected-squad pointer and these three
 calls on an experimental game copy, then records the submitted index values.
 No renderer ran and no Ghidra database changed.
+
+## Inverse-trig callee identities — October 1
+
+Fresh library-member and instruction comparison distinguishes intrinsic asin
+`0x0055dcb0` from intrinsic acos `0x0055f380`; both consume an x87 argument.
+Their conventional stack-argument entries are `0x0055dcc4` and `0x0055f394`.
+The pinned VC6 LIBCMT `asin.obj` and `acos.obj` code sections each match their
+203-byte retail span outside relocation fields. Their distinct arithmetic,
+endpoint branches and linked operation-name strings establish which is which;
+swapped-member comparisons fail 47/51 nonrelocation bytes. Library SHA-256:
+`a541c95e5ffdd6d5573d1976f5e5d0038f2c4fb0bcb02975c68948bf1d6e452a`.
+
+`CFeature::Move` calls asin at `0x0044cc84`, and Explosion initialization calls
+it at `0x0044bb13`. Their reconstructed source wrongly called acos. The old
+checker accepted Feature because its other instructions matched and the caller
+inference consistently associated the wrong name with the asin address. Both
+source calls are corrected; Feature passes the stricter complete-section check,
+while Explosion remains unmatched. The shadow triangle routine's three calls
+at `0x004ee852`, `0x004ee85f` and `0x004ee86e` really do use acos and are unchanged.
+
+The checker and comparison resolver now enforce the four independently proved
+entry identities before caller inference, stale annotations or section aliases.
+This corrects a source/tooling defect; it does not prove visible toppling,
+explosion orientation, shadow rendering or all other library identities.
+Lead readback: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/math-binding-root-20261001/readback.json`;
+library comparison receipt SHA-256:
+`a173dd413c384bacbed2215af09b8b2f9f43aab6384b0f2bd2c5a4d0bcd03e96`.
 
 ## Baseline Static System Slices
 

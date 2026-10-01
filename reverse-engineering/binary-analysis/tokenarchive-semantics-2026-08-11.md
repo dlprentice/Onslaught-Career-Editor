@@ -1,7 +1,7 @@
 # `CTokenArchive` particle grammar and reference semantics
 
 Status: active, bounded semantic recovery
-Last updated: 2026-10-01 (allocation-prefix and integer-format recheck; August corpus evidence retained)
+Last updated: 2026-10-01 (allocation-prefix and original numeric-scanner recheck; August corpus evidence retained)
 Evidence: MEASURED — complete pristine retail bodies, exact parser tables,
 particle-set files, callers, memory layout, and twelve normalized-identical PC
 demo twins; UNKNOWN — no retained `TokenArchive.cpp`, malformed-input runtime
@@ -106,6 +106,46 @@ and `allocation-v1/receipt.json` (SHA-256
 `c1fffd33dab5794f33c216438ff47cb5a613c988e8d012eef1a69adb963cde76`).
 Complete parser/allocator behavior remains open; a useful next falsifier compares
 the whole reader on a disposable particle-set copy with real numeric conversion.
+
+## Original numeric scanner — October 1
+
+The lead independently reproduced `sscanf` at `0x0055e14f`, its `_input`
+implementation and admitted original CRT dependencies on 72 authored ASCII cases
+using `%i`, `%f` and `%s %s`. Nine negative controls reject missing initialization,
+conversion/EOF dependencies, unsupported locale state, incomplete execution,
+insufficient output space and missing termination. No conversion, Windows, TLS,
+heap or file-I/O routine is replaced. The admitted C locale and original tables
+are explicit inputs; this is not a claim that the complete CRT startup ran.
+
+Original `__cfltcvt_init` at `0x0055da8d` is necessary for floating conversion:
+it changes the dispatch at `0x00653660` from the trap routine to `_fassign`
+at `0x00560dea`. A native i386 runner executes the same 32 admitted function
+ranges, trapping all other code. It agrees on all 72 cases and six float edges
+under three precision controls and three stack patterns, 120 runs total.
+Return count, complete output buffers, consumed input, string-stream state,
+input preservation, stack guards, nonvolatile registers and x87 state are checked.
+
+Measured examples under those conditions:
+
+- `%i` parses `010` as eight; `08` yields zero after consuming only the first byte.
+- `%f` parses `1e+` as 1.0 and consumes the incomplete exponent. `nan` and `inf`
+  fail without writing; `+.` returns EOF without writing.
+- `%f` on `1.401298464324817e-45` yields raw float bits `00000002`, including
+  the native precision/stack controls. This malformed/extreme-input study does
+  not establish ordinary content reachability or a portable parsing rule.
+
+Fresh instructions show ReadToken's initial call at `0x004f57dc` uses `%s %s`
+at `0x00625274`. The scanner accepts both words in `File_Version +.`; whether
+ReadToken then reports success with an unchanged numeric destination remains
+a useful composed falsifier. ReadToken itself and archive I/O did not execute
+in this experiment.
+
+Lead reproduction owner:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/retail-sscanf-20261001/`.
+`scanner-v03/receipt.json` SHA-256:
+`1328f00bccda3b44438b691f36c3daef9ac9e8fdff7325852948a9f42509a089`;
+`native-v04/receipt.json`:
+`95f748a72bb132a775c4342368a228ca16c95917b84b9b4cfb3be6eee9701a5d`.
 
 ## Deferred reference workspace
 

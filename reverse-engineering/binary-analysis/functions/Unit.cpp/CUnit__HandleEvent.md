@@ -3,7 +3,7 @@
 > Address: `0x004F9820`
 
 Status: active static function note
-Last updated: 2026-09-26 (virtual-method identity refresh; earlier behavioral evidence keeps its stated limits)
+Last updated: 2026-10-01 (complete reconstruction match; earlier behavioral evidence keeps its stated limits)
 Source File: none — `Unit.cpp` is absent from `references/Onslaught/`
 (checked 2026-08-22) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -31,6 +31,21 @@ their exact mapping. This correction does not re-verify the rest of this note
 or certify its prototypes or runtime behavior.
 
 ## Contract (byte-exact)
+
+The October 1 lead build independently reproduces the complete **400-byte compiled
+section**, including the 376-byte body below, padding and jump table, and all
+20 relocation targets. A single shared float delay local gives the compiler the
+retail stack lifetime. The 4005 arm still supplies float `-1` to the same scheduler
+overload; 4003 still consumes one RNG result after the camera calls and supplies
+its delay to the relative-time overload. The manager-time addition stays in that
+callee. All 167 earlier focused matches and 214 other callable sections and
+relocation identities are preserved.
+
+This proves a compiled reconstruction, not the original source spelling or a new
+runtime acceptance result. Earlier caller/vtable censuses were not rerun. Lead
+readback: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/unit-event-root-20261001/readback.json`;
+entire relocated-section SHA-256:
+`45af6746abfb3d9d258c77fb71bc27153f16c4e97d78180c69f73ef38fea8088`.
 
 Body `0x004f9820`–`0x004f9997` inclusive through the final `ret 4`,
 **376 bytes / 122 instructions**, raw SHA-256
