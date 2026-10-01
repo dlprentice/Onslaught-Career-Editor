@@ -1,7 +1,7 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-10-01 (complete texture activation match and trail name gate; bounded corrections retained)
+Last updated: 2026-10-01 (shader constants match and trail signed-zero correction; bounded corrections retained)
 Summary: specimen-bound rendering and collision contracts, with bounded corrections to arithmetic association, float stores and ordered admission.
 Evidence: MEASURED — specimen instructions, whole-section/relocation matches and bounded native calculations and buffer comparisons; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -11,6 +11,25 @@ mesh geometry, and collision bridges used by asset tooling and rebuild planning.
 Current corrected metadata is owned by the
 [Ghidra guide](../ghidra/README.md) and `developer_state.json`'s selected live authority.
 Static evidence does not by itself establish runtime rendering or layout parity.
+
+## Declaration shader constants — October 1
+
+Private reconstructed `CVertexShader::SetCustomConstants` (`0x00502920`) now
+matches the pristine executable's complete 4,512-byte section and every one of
+its 165 relocations. The lead reproduced the stock-compiler result and verified
+the references; all 34 other callable sections and references in the object survive.
+
+The existing declaration-token accessor restores the observed expansion boundary:
+the last light constructor vector setter remains a call at `0x0050342a`, after
+which the light type is read again. Separately, the snow-wind normalization at
+`0x005031ba`–`0x005031e5` squares one promoted Y value before adding X and Z
+products. A direct float-Y spelling fails the complete match. The accepted
+source reconstructs those boundaries; it is not claimed as original source text.
+
+This settles the admitted function's compiled bytes and references, not a GPU
+observation, visible snow result or complete graphics pipeline. Private root proof
+under `bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+`trail-pulse-shader-root-readback.json`.
 
 ## Trail renderer name gate — October 1
 
@@ -47,17 +66,31 @@ over all four rounding modes leaves twelve inherited signed-zero differences,
 versus 7,490 before the change, with no new disagreements. Replacing the first
 division with multiplication changes 12,046 expanded-corpus results.
 
-The signed-zero counterexample remains explicit: at CW `037f`, step bits
+The earlier signed-zero counterexample was: at CW `037f`, step bits
 `[80000000,3f800000,00000000]` produce side.Y `00000000` in retail and
-`80000000` in both drafts. The complete function remains unmatched. These
-isolated calculations do not establish step reachability, complete trail updates,
-allocation, live control words or visible output; those remain useful falsifiers.
+`80000000` in both drafts. A subsequent correction restores the actual cross
+product of the step with `(0,0,-1)` at `0x004c3910`, including zero subtractions
+that the expanded scalar spelling discarded. The lead's fresh compilation and
+native replay agree with retail across 19,296 prepared cases: the previous
+108 XYZ/exception-flag differences become zero, with no new disagreements.
+The expanded corpus includes signed zeros, threshold neighbors, subnormals,
+large values, infinities and quiet NaNs under twelve precision/rounding modes.
+Changing the first divide to multiply produces 14,509 discrepancies.
+
+The complete function remains unmatched; its 99 other callable sections and
+references, 80 exact controls and both vtables survive. Bounding stack canaries,
+x87 stack/control and XYZ bits/exception flags are checked; opaque vector padding
+is not observed. These isolated calculations do not establish step reachability,
+complete trail updates, allocation, live control words or visible output; those
+remain useful falsifiers.
 
 Private lead receipts under
 `bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
 `trail-native-root-expanded/receipt.json`,
 `trail-native-root-replay/signed-zero-readback.json`, and
-`trail-frontend-device-root-readback.json`. The lead compared regenerated fixtures
+`trail-frontend-device-root-readback.json` preserve the earlier normalization-only
+results. The current cross-product proof is `trail-cross-root-expanded/receipt.json`
+and `trail-pulse-shader-root-readback.json`. The lead compared regenerated fixtures
 and admitted fragments with the frozen inputs and bound fresh compiled code to
 the accepted object. Other callable sections retain their bytes and references.
 

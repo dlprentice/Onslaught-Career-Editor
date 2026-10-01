@@ -4,6 +4,8 @@ Status: current fourth-plane correction; older overview and saved metadata retai
 Last updated: 2026-10-01
 Summary: specimen-bound fourth-plane Z dependence, bounded comparison, and historical gamut notes.
 
+> Source File: gcgamut.cpp | Binary: BEA.exe (pristine specimen identified below)
+
 > Graphics Context Gamut - view frustum visibility culling system
 > Debug path: `[maintainer-local-source-export-root]\gcgamut.cpp` (0x0062c968)
 

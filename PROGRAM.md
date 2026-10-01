@@ -196,7 +196,8 @@ the player's weapon-charge update, [destructible-part break and rubble handling]
 the battle-line pulse, collision-sector updates, scratch text conversion, Unit Euler smoothing,
 mech initialization, texture deserialization, texture-state cleanup, display-mode enumeration,
 arrow/cuboid rendering, mesh-buffer initialization, main rendering, texture activation,
-text measurement, reconnect rendering, console selection, particle allocation and render-state reset.
+text measurement, reconnect rendering, console selection, particle allocation, render-state reset,
+unit-definition destruction and [declaration shader constants](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#declaration-shader-constants--october-1).
 All earlier matched symbols survive.
 The private README owns the current score and exact byte/relocation receipts; these static
 matches are not live gameplay, resource-loading or graphics-device acceptance.
@@ -209,8 +210,11 @@ likewise resolves the measured arithmetic slice while leaving the full function 
 reachability open. Fresh [squad registration decoding](reverse-engineering/binary-analysis/unit-battleengine-gameplay-static-contract.md#squad-registration-order--october-1)
 corrects a head-insertion call to retail's tail append; this does not complete squad initialization.
 The [trail normalization correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#trail-basis-normalization--october-1)
-reduces the expanded native corpus discrepancies from 7,490 to twelve inherited signed-zero cases;
-full trail matching remains open. [BE configuration input gating](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#be-configuration-down-arrow-gate--october-1)
+first reduced native discrepancies to twelve signed-zero cases; the subsequent cross-product
+correction removes those and agrees across an expanded 19,296-case arithmetic corpus.
+Full trail matching remains open. The [main-menu language pulse](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#main-menu-language-pulse--october-1)
+also restores retail's two multiplications, with 120,012 bounded native cases; full Render and live
+counter/control-word reachability remain unproven. [BE configuration input gating](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#be-configuration-down-arrow-gate--october-1)
 and [texture constants/width](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#texture-constants-and-signed-mipmap-width--october-1)
 are corrected with their specific static/isolated-execution limits. Texture activation subsequently
 matches completely; the other bounded corrections alone add no whole-function credit.

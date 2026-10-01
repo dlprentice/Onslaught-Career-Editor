@@ -1,10 +1,36 @@
 # HUD / frontend overlay static contract
 
 Status: bounded retail static evidence; not visual proof
-Last updated: 2026-10-01 (complete text-measurement match; BE configuration and bounded rechecks retained)
+Last updated: 2026-10-01 (language-pulse arithmetic correction; complete matches and bounded rechecks retained)
 Summary: specimen-bound frontend input, color and coordinate corrections; complete function matches and isolated calculations remain distinct from player acceptance.
 Evidence: MEASURED — October 1 native compass and font fragments, isolated menu runs and full-section/relocation matches, plus September 30 font and scale-menu readback; August HUD claims were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+## Main-menu language pulse — October 1
+
+The selected-language pulse inside `CFEPMain::Render` (`0x00462d40`, admitted
+fragment `[0x0046319e,0x004631d3)`) multiplies its float counter by two separate
+float coefficients before `fsin`. The former private `sin` expression folded
+those coefficients; using `sinf` preserves the original instruction sequence.
+
+The lead reproduced native fragment execution for 120,012 authored cases:
+float32 integer counters from 0 through 10,000 under all twelve x87 precision/
+rounding combinations. Corrected color and integer-conversion outputs agree
+with retail in every case; the former expression differs in 44. At counter
+3235 and control word `037f`, retail/corrected color is `ffcbcbcb`, versus
+old `ffcacaca`. Counter and constant references are bound explicitly; bounding
+stack canaries, preserved control word, empty x87 stack and absence of
+nonprecision exceptions are checked. The old expression is the negative control.
+
+Full Render remains unmatched. All 15 exact controls and 16 other callable
+sections/references in the object survive. The experiment does not establish
+the game's live counter/control word, selection state, transition alpha or
+visible output. A controlled live selection/counter observation remains the
+cheapest check of reachability; a complete body match remains independently open.
+
+Private root evidence under
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+`pulse-root-native/receipt.json` and `trail-pulse-shader-root-readback.json`.
 
 ## BE configuration down-arrow gate — October 1
 
