@@ -2,7 +2,7 @@
 
 Status: active bounded static and isolated-execution contract
 Last updated: 2026-10-01
-Summary: the aggregate contact-normal test at `0x004fcc30` depends on a float spill that the current unmatched C++ reconstruction omits; authored boundary cases distinguish their decisions.
+Summary: the aggregate contact-normal test at `0x004fcc30` depends on a float spill; the mesh/sphere producer can return two contacts with an untouched or newly written third normal. Both have bounded original-code evidence.
 Source File: private reconstructed `bea-decomp/src/Unit.cpp` | Binary: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 The selected specimen is `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
@@ -30,8 +30,9 @@ At `0x004fcca1` the signed contact count comes from report `+0x80`. Normals star
 at `+8` with a 16-byte stride and XYZ in the first three float32 words. The
 per-contact loop tests `-Z > float32(0.89)`; any success admits the contact.
 If none succeeds and the count exceeds one, `0x004fcce3..0x004fcd2a` sums
-**exactly the first three normals**, including when the count is two. Validity
-of the unused third entry for that case is a separate caller question.
+**exactly the first three normals**, including when the count is two. The
+mesh/sphere producer does not guarantee that the third entry is zero, as the
+separate producer experiment below establishes.
 
 The accumulated Y is stored as float32 at `0x004fcd2c`, then reloaded for the
 length calculation. Accumulated X and Z remain on the x87 stack. The code
@@ -75,6 +76,53 @@ helper driver; `native-x87.py` is the rerunnable experiment, and
 `native/receipt.json` has SHA-256
 `5aee572fc271e2d3a9c0c55f6f0693ae9546df3832913e623d728cb8da18148f`.
 
+## Mesh/sphere producer — October 1 recheck
+
+The lead separately reproduced full original and compiled
+`CMeshCollisionVolume::CollideWithSphere` bodies at `0x004ac6e0` in Unicorn.
+The original `ResolveContact` and vector/mesh helpers execute; the geometry
+query at `0x004ac4a0` supplies a declared sequence of contacts and misses, and
+the motion-controller query returns zero. Thus this measures response to a
+contact sequence, not whether actual triangles generate that sequence.
+
+At `0x004ad421..0x004ad442`, the resolver writes a normal at
+`report + 8 + 16 * report.count`. The caller increments count only after the
+resolution and slide-direction checks (`0x004acd55..0x004acd5e`). Two paths
+therefore return count two with different third-slot behavior:
+
+- Two successful contacts followed by a miss leave all 16 bytes of slot two
+  unchanged. Two distinct initial byte patterns reproduced that retention.
+- A third blocking contact writes slot two before returning with count still
+  two. The authored third normal was proportional to `(-1,-1,1)`.
+
+This also disproved an assignment in the reconstruction: clearing the
+accumulated hit after a successful resolution. Retail clears the part-loop
+register at `0x004acd5c`, while retaining the hit local subsequently tested at
+`0x004acd7b`. Removing the erroneous assignment restores the return value and
+movement publication after one or two successes followed by a miss.
+
+The lead reproduced 48 runs: original, former candidate and corrected
+candidate across eight paths and two storage patterns. The corrected candidate
+agrees on return, complete report and movement bytes, and dependency sequence
+in all 16 scenarios; the former candidate differs in four. Executed-address
+bounds, unused-code traps, return/stack, preserved registers and canaries are
+checked. All 31 existing exact addresses and three vtables survive the source
+change, but the producer's complete body still does not match retail.
+
+Dispatcher stores at `0x004266f1..0x00426759` initialize scalar report fields
+and relative movement, without initializing the normal array. On an admitted
+result, `0x004268bf` writes report `+0 = 1`; calls at `0x004268cb` and
+`0x004268de` receive that same report pointer. A preceding callback may mutate
+it; no claim here covers every callback or report producer.
+
+Private reproduction owner:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/report-normal-slot-20261001/`.
+`root-reproduction.json` SHA-256 is
+`a3ad28737868b6b26d09a1b9544552dc938fa04096130cad5a8eff84d0faad19`.
+The adjacent lead owner `integration-root-20261001/readback.json` binds the
+freshly compiled and relocated producer to the exercised candidate. These are
+emulator experiments, separate from the native x87 threshold experiment above.
+
 ## Limits and next falsifier
 
 This disproves the claim that the omitted spill is merely cosmetic. It does
@@ -85,7 +133,9 @@ word was not observed. Test vectors are authored inputs, not captured contacts.
 
 For reconstruction, preserve the observed rounding boundary and fixed
 three-normal sum; a generic normalize operation is not yet demonstrated to be
-interchangeable. The next cheap static check is the report producer's handling
-of a two-contact report. Runtime reachability requires an admitted captured
-report and its actual x87 control word, followed by replay of the exact values
-through both blocks. Full body matching remains a separate open task.
+interchangeable. The next bounded check is actual triangle generation of a
+two-contact sequence and the report contents at each callback. Runtime
+reachability requires an admitted captured report and its actual x87 control
+word, followed by replay of the exact values through both blocks. The authored
+storage patterns are not claimed to be ordinary retail stack contents. Full
+body matching remains a separate open task.

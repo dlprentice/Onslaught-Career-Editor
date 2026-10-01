@@ -1,7 +1,7 @@
 # Battle Engine weapon stores, charge and firing state
 
 Status: active static contract for the rebuild's player weapons
-Last updated: 2026-09-30 (current-mode lookup re-derived and bounded reconstruction comparison; earlier findings retain their dates)
+Last updated: 2026-10-01 (aim reference and no-selection behavior re-derived; earlier findings retain their dates)
 Summary: the Aquila's ammo and heat stores, when a shot spends them, cooling, the
 Missile Pod and Pulse Cannon Pod charge law, what an empty store blocks, and what
 `IsFiring` counts.
@@ -152,6 +152,51 @@ its receipt pins source, COFF, parser, specimen and linked candidate. The lead's
 independent result is `local-data/weapon-mode-root-20260930/results.json`.
 Reproduce with the existing `local-data/venv/bin/python -B`, the owner's
 `probe.py`, and `--out` naming a new private output directory.
+
+## Aim transform — October 1 recheck
+
+At `0x00509140`, the reconstruction's aim-transform routine constructs both
+target-minus-origin displacement and primary-orientation velocity. These are
+different inputs: the displacement occupies stabilized frame `+0x2c`, while
+the orientation column multiplied by round speed occupies `+0x3c`
+(`0x0050917b`, `0x005091e8`). On the relative-limit path, both Magnitude calls
+receive the velocity (`0x00509257`, `0x0050928f`); both elevation numerators
+load its Z component (`0x00509271`, `0x005092ad`). The old reconstructed source
+incorrectly used target displacement and described velocity as unused.
+When weapon `+0x98` is nonzero, the bounds instead come directly from mode
+`+0x7c/+0x80` (`0x00509246..0x00509255`).
+
+There is also a no-selection behavior that must not be replaced silently with
+a convenient default angle. Target height is stored at frame `+0x24` at
+`0x00509208`. A winning scan angle replaces it at `0x00509337` or
+`0x0050936f`; the value is then passed as pitch to `MakeRotationF` at
+`0x0050939a..0x005093b0`. With no accepted angle, the previous height reaches
+that call. This establishes the machine behavior, not whether original C++
+intentionally initialized pitch or used an uninitialized local sharing storage.
+
+The lead reproduced 19 original-code prefix cases and 19 negative controls
+that redirect the four velocity displacements to the target delta. Nine bound
+pairs differ; all nine absolute-limit controls remain unchanged. Five further
+original-code runs reach the matrix-construction call: reversed/equal bounds
+and zero-speed cases retain heights `40`, `-3`, `9`, and `40` as pitch, while
+a normal selection control replaces height with approximately `-0.4` radians.
+
+These finite authored cases run actual math and scan instructions in Unicorn
+with control word `0x037f` and attachment accessors supplying explicit data.
+They stop before matrix construction/publication. They are not a full-candidate
+equivalence test, an observation of actual authored game modes, or a retail
+playthrough. The source now uses velocity elevation and explicitly retains
+height when no angle wins. All 43 existing exact weapon functions survive;
+this aim function itself remains unmatched.
+
+Private lead owner:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/weapon-aim-root-20261001/`.
+The rerunnable `aim-prefix-probe.py` and `aim-fallback-probe.py` write receipts
+with SHA-256 `4a78c512675038f253021c8017059bcafa7bcc86db79452dea4db03a0b2b6628`
+and `538518d9facf1af3113195cac0a93586a3b9f1b990d3f14b352d45dee5f15b81`.
+The next falsifier is a complete candidate comparison with admitted real mode
+and attachment inputs, followed by a controlled retail observation of any
+claimed gameplay consequence.
 
 ## Fire, empty stores and locks
 

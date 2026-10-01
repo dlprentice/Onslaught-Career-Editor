@@ -75,6 +75,15 @@ camera corrections preserve returned temporary lifetimes. A separate
 [contact-normal experiment](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__Hit.md)
 reproduces decision differences caused by the unmatched candidate's float arithmetic at the slope
 threshold. These are authored numerical boundaries, not observed gameplay contacts; that body remains open.
+Cached mesh-pose composition and triangle-prism admission now also pass complete section/relocation checks.
+The former corrects the order of two orientations. Separate original-code comparisons corrected the
+mesh/sphere caller's lost accumulated-hit flag and segment-hit numerator order; those full bodies remain
+unmatched. The mesh producer can return count two with the third normal untouched or already replaced by
+a blocking third contact. Actual triangle generation and callback reachability remain open.
+The [weapon contract](reverse-engineering/game-mechanics/battle-engine-weapon-stores.md#aim-transform--october-1-recheck)
+now records relative aiming limits based on barrel velocity and the observed retained-height fallback when
+no pitch is selected. The source corrections preserve existing exact matches, without claiming complete
+candidate equivalence or observed gameplay.
 The cockpit composition-order correction has bounded original-code evidence but leaves its two bodies
 unmatched. A damage-report index is now snapshotted before a virtual query, as retail does; the affected
 subblock is ordinarily unreachable under stable memory, and only an explicit isolated intervention exposes
