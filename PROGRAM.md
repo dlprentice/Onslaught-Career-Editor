@@ -200,12 +200,17 @@ text measurement, reconnect rendering, console selection, particle allocation, r
 unit-definition destruction, [declaration shader constants](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#declaration-shader-constants--october-1)
 [buggy/tentacle root transforms](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#buggy-and-tentacle-root-transforms--october-1),
 [hive-boss transforms](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#hive-boss-cylinder-transforms--october-1),
-[word wrapping and message-log input](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#word-wrapping-and-message-log-input--october-1)
-and the [non-mesh particle pass](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#non-mesh-particle-pass--october-1).
+[word wrapping and message-log input](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#word-wrapping-and-message-log-input--october-1),
+the [non-mesh particle pass](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#non-mesh-particle-pass--october-1),
+[particle update and sphere-trigger containment](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#particle-update-and-sphere-trigger-containment--october-1),
+and [Unit provider selection](reverse-engineering/binary-analysis/unit-battleengine-gameplay-static-contract.md#unit-provider-selection--october-1).
 Earlier unique matches survive. The particle object no longer emits an unused constructor;
 its shared implementation remains exact elsewhere. The
 [shadow projection-owner correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#shadow-projection-owner--october-1)
-is a separate partial correction and adds no whole-function credit.
+is a separate partial correction and adds no whole-function credit. The same limit applies to
+[Mech debris arithmetic](reverse-engineering/binary-analysis/unit-battleengine-gameplay-static-contract.md#mech-debris-arithmetic--october-1),
+[debrief bracket scale](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#debriefing-bracket-scale--october-1)
+and [palette darkening ownership](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#palette-darkening-owner--october-1).
 The private README owns the current score and exact byte/relocation receipts; these static
 matches are not live gameplay, resource-loading or graphics-device acceptance.
 The separately reproduced [compass coordinate correction](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#compass-coordinate-association--october-1)

@@ -1,10 +1,26 @@
 # HUD / frontend overlay static contract
 
 Status: bounded retail static evidence; not visual proof
-Last updated: 2026-10-01 (word wrapping and message-log input match; bounded pulse evidence retained)
+Last updated: 2026-10-01 (debriefing foreground scale corrected; word-wrap and message-log matches retained)
 Summary: specimen-bound frontend input, color and coordinate corrections; complete function matches and isolated calculations remain distinct from player acceptance.
 Evidence: MEASURED — October 1 native compass and font fragments, isolated menu runs and full-section/relocation matches, plus September 30 font and scale-menu readback; August HUD claims were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+## Debriefing bracket scale — October 1
+
+The foreground bracket calls inside debriefing Render (`0x00456dd0`) use raw
+scale; only their shadows use `scale * 1.05`. At `0x00457636` and `0x0045785b`,
+the foreground loads read `[esp+0x3c]` after eleven pushed arguments: the
+original raw-scale slot at stable ESP plus `0x10`, not the shadow product at
+plus `0x14`. The reconstruction now preserves this distinction for both calls.
+
+The lead recompiled the correction and checked the decoded stack operands.
+All 25 other callable sections across the debrief/modal pair and twenty unique
+exact controls survive. The complete renderer remains unmatched, so this is a
+bounded operand correction with no additional whole-function credit. No frame
+was rendered; visual scale and presentation acceptance remain open. Private
+root receipt:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/debrief-root-readback.json`.
 
 ## Word wrapping and message-log input — October 1
 

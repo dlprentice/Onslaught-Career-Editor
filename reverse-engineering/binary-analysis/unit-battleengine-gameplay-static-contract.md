@@ -1,14 +1,51 @@
 # Unit / BattleEngine / gameplay static contract
 
 Status: bounded retail static map; not runtime gameplay proof
-Last updated: 2026-10-01 (squad registration call and list-link writes rechecked)
-Summary: retained gameplay evidence routing plus a fresh, bounded squad-registration correction.
-Evidence: MEASURED — October 1 pristine instruction reads of squad registration and Add/Append; the other sections retain their July 16 evidence limits.
+Last updated: 2026-10-01 (Unit provider selection matches; Mech debris arithmetic corrected)
+Summary: retained gameplay routing plus specimen-bound provider, debris and squad-registration findings.
+Evidence: MEASURED — October 1 whole-section/relocation match, bounded original-code arithmetic and squad instruction reads; the retained map sections keep their July 16 evidence limits.
 Specimen: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 This contract routes the retained Unit/BattleEngine evidence without repeating
 the retired wave ledger. Function-level notes under [`functions/`](functions/)
 remain the detailed evidence owners.
+
+## Unit provider selection — October 1
+
+Reconstructed `0x004fb840` matches its complete 1,104-byte section, 1,099-byte
+body and all 27 relocations. Source-local spawner accessors and the selection
+block after the active-weapon guard recover the initial iterator's stack
+lifetime; the later outer iterator reuses that storage. Selection phases and
+scoring remain in retail order. These source groupings are reconstructed,
+not recovered original helper names.
+
+The lead freshly compiled and bound every reference, preserving all 240 other
+callable graphs across Unit and UnitAI and all nine vtables. The extra emitted
+iterator was already globally exact. This settles the compiled method, not
+live targeting or full Unit behavior. Other Unit/UnitAI misses remain open.
+Private root `unit-provider-root/final-readback.json` under the owner below
+contains the independent readback.
+
+## Mech debris arithmetic — October 1
+
+Retail's debris-velocity fragment `[0x004a000c,0x004a0059)` keeps the scaled Z
+product on x87 until doubling and bias subtraction finish. The former vector
+expression rounded that product to float first. Calling the existing vector
+setter with the scaled components recovers the original materialization order.
+
+The lead executed the original fragment and freshly compiled correction in
+9,216 bounded integer/precision/rounding cases. The old version differs in
+2,184 Z results; the correction agrees in XYZ and x87 status in all admitted
+cases. A control inserting only the intermediate float store/reload reproduces
+the former XYZ results. With all integer components `-99` and PC53 nearest,
+the old Z bits are `bdd0a3d6`, versus retail/corrected `bdd0a3d7`.
+
+The full `0x0049fdb0` function remains unmatched. PRNG calls, all combinations
+of inputs, live control-word reachability and world effects were not exercised.
+All nineteen exact controls and twenty other callable graphs survive. Private
+root receipts are `mech-root-static-readback.json` and
+`mech-velocity-root-native/receipt.json`, under
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`.
 
 ## Squad registration order — October 1
 

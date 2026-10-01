@@ -1,7 +1,7 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-10-01 (hive transforms and particle pass match; shadow projection ownership corrected)
+Last updated: 2026-10-01 (particle update and sphere trigger match; palette ownership corrected)
 Summary: specimen-bound rendering and collision contracts, with bounded corrections to arithmetic association, float stores and ordered admission.
 Evidence: MEASURED — specimen instructions, whole-section/relocation matches and bounded native calculations and buffer comparisons; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -11,6 +11,45 @@ mesh geometry, and collision bridges used by asset tooling and rebuild planning.
 Current corrected metadata is owned by the
 [Ghidra guide](../ghidra/README.md) and `developer_state.json`'s selected live authority.
 Static evidence does not by itself establish runtime rendering or layout parity.
+
+## Particle update and sphere-trigger containment — October 1
+
+Reconstructed particle update `0x004cb920` now matches its whole 272-byte section,
+266-byte body and eight relocations. The retained vector-constructor call at
+`0x004cb96a` materializes the scaled displacement before position addition. This
+closes the previously demonstrated 16-of-48-case rounding discrepancy through
+identical compiled instructions and the same constructor; no new execution
+sample is claimed. Source-local frame, position and registration responsibilities
+recover the call boundary without changing shared headers or compiler flags.
+All 31 other callable sections and references remain unchanged.
+
+Sphere-trigger `Hit` (`0x004e5700`) matches all 320 section bytes, its 315-byte
+body and 22 relocations. Containment reset and clock assignment share a helper
+scope; the nested iterator remains a call as in retail. The lead also verified
+the associated 62-byte exception handler and 56-byte unwind record, with seven
+and four references respectively. All thirteen other sphere-trigger callables
+and fifteen Radar callables remain unchanged. The newly emitted shared iterator
+was already exact elsewhere and earns no extra unique-function credit.
+
+These are full compiled matches, not live particle or trigger acceptance.
+Private root receipts under the owner below are `particle-step-root-readback.json`
+and `sphere-trigger-root/readback.json`.
+
+## Palette darkening owner — October 1
+
+The darkening loop at `0x0054ed80`–`0x0054ee33` reads and writes the receiver's
+internal palette. Its source is `this + 4*k`; its three destination channels are
+at `this + 4*(colours+k)`. The later copy at `0x0054eeb5` exports that palette.
+The former reconstruction darkened the output buffer, which this copy would
+overwrite. The corrected operand follows the receiver slot, distinct from the
+output-pointer slot, throughout the loop.
+
+The lead reproduced the static correction with a fresh build, preserving all
+26 target reference identities, eleven other callable sections and nine exact
+controls. The complete `Palletize` body remains unmatched; no image conversion
+ran. Complete compiled matching and a controlled conversion comparison remain
+separate open checks. Private root `palette-owner-root-readback.json` records
+the decoded operands and preservation checks.
 
 ## Hive-boss cylinder transforms — October 1
 
@@ -55,7 +94,7 @@ section and 108 relocations; this adds no whole-function credit. A complete
 match and a controlled receiver-identity observation remain separate falsifiers.
 Private root `shadow-projection-root-readback.json` records the evidence.
 
-All three root receipts are under
+The root receipts above are under
 `bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`.
 
 ## Buggy and tentacle root transforms — October 1
