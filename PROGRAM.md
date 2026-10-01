@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-30 (RE at David's requested handoff; differential checks repaired; broader audit unfinished; rebuild and companion paused)
+Last updated: 2026-09-30 (decompilation handed to Codex at David's request; differential checks repaired; broader audit unfinished; rebuild and companion paused)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -59,23 +59,56 @@ owns the score and the matched-function list, and this file keeps only the plan.
   identical-code folding keeps a shared name. A reconstruction label may go in as a
   comment that says it is one, never as the function's name.
 
-Current state. The lead and its peer sessions work from `bea-decomp` main, whose README owns the
-score, the matched list, the findings and the failed alternatives; per-function notes sit above each
-near miss in the source.
-- **What remains.** Every game function has source except one out-of-line copy (`00449560`); the rest
-  compile but differ in inlining, register choice or instruction order. The README's "Findings" start
-  with VC6's measured inline rule (per-callee size caps, a per-caller budget, the order sites are
-  spent), the main lever for the inlining class, and with retail's maths header bracketing each
-  product in its sums, which settled the term-order cluster on September 30. The linker's 32 import thunks at `0055d5e0` (jump
-  stubs into the game's DLLs: DirectSound, AVIFile, zlib, Ogg Vorbis, version.dll) are library code,
-  verified against the import table and counted apart from the game functions.
+Current state (September 30 handover). The five-peer run ended at David's request so that Codex can take the
+next run. Every peer branch is merged and pushed. `bea-decomp` main's README owns the score, the matched list, the
+findings and the failed alternatives; per-function notes sit above each near miss in the source.
+- **What remains.** Every game function has source except the out-of-line `CEulerAngles` constructor
+  (`00449560`); the rest compile but differ. The README's "Open near-misses" opens with where the work stands:
+  - the remaining near misses by class: inline decisions, same-call size differences, instruction order or layout,
+    and register choice only;
+  - what to try first in each class;
+  - each lane's leads, with measured states.
+
+  The peers' full notes, patches and inline tables are in `bea-decomp/local-data/handover-20260930-lead/`.
+  The README's "Findings" start with VC6's inline decision, which Peer A decoded from c2.dll and validated against
+  the compiler's own log:
+  - each function has a `max(1000, 2 × size)` budget;
+  - callees of size 40 or less are free;
+  - nested sites split what is left;
+  - each source edit has a measured size cost.
+
+  They then cover retail's maths header bracketing each product in its sums, which settled the term-order cluster
+  on September 30. The linker's 32 import thunks at
+  `0055d5e0` are library code: jump stubs into the game's DLLs (DirectSound, AVIFile, zlib, Ogg Vorbis,
+  version.dll), verified against the import table and counted apart from the game functions.
+- **Next lever.** Decode VC6's instruction scheduler from c2.dll the way the inliner was decoded, and validate it
+  first on the pure-reorder rows the README lists. The register allocator comes after it. Until then:
+  - run `tools/permuter/readbatch.py` and `tools/scans/readform.py --noreads --inplace` over the rows;
+  - run the `tools/inline` searches over the call-list rows.
+
+  An edit counts only when the original plausibly had it; budget-only padding stays forbidden.
 - **Judge and tools.** A compiled section shorter than retail's body cannot match, vtable identities
   join the relocation-conflict check, and the DirectX and VC6 include trees are pinned.
   `tools/equiv.py` is a bounded differential falsifier: both bodies run at the retail address in
   separate emulators, and faults, unresolved dependencies, unsupported ABIs and incomplete coverage are
-  inconclusive; randomized agreement never closes a body. The permuter, the inline-rule experiments
-  and the near-miss scanners are in `tools/`. The harness compiles and compares objects; it does not
-  link a replacement executable, and the original project, PCH and link settings remain unknown.
+  inconclusive; randomized agreement never closes a body. The inline tools, the permuter
+  and readform families, the near-miss scanners and the fleet scripts that merged five lanes
+  (`tools/fleet/README.md`) are in `tools/`, listed in bea-decomp's `AGENTS.md`. The inline tools' logging copy
+  of C2.DLL is rebuilt from the pinned toolchain into ignored `local-data`. The harness compiles and compares
+  objects; it does not link a replacement executable, and the original project, PCH and link settings remain
+  unknown.
+- **Behaviour the matching corrected in the reconstruction.** Retail's bytes overruled the draft source in five
+  places:
+  - at top speed, `CDropship::Move` flies along its heading at its current speed;
+  - CMCMech ProcessMovement tests `force`;
+  - `CHud::RenderTargetIndicator` uses `stricmp` on the Thunderhead mesh, which takes the imposter while every
+    other target lights and turns;
+  - CMechGuide Unknown3 replans only when its destination moves;
+  - SMechShared's constructor clears its five tables.
+
+  bea-decomp's README ("A near miss can be a wrong reconstruction") and commits `50f5a0b`, `9747e43` and
+  `deb9d71` hold the evidence. Whether the rebuild's contracts carry any of the draft behaviour has not been
+  checked.
 - **Contracts the decompilation corrected (September 30).** Static reads and bounded original-code
   cases; none establishes live presentation or player acceptance:
   - input and settings: [mouse recentering constant](reverse-engineering/source-code/frontend/controller-system.md#september-30-mouse-recentering-byte-match),
@@ -96,10 +129,13 @@ near miss in the source.
     [scale-menu rendering](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#generic-scale-menu-rendering--september-30).
 - **Ghidra.** Name promotions `decomp-names`, `decomp-names-2` and `decomp-names-3` (evidence in
   `local-lab/…/re-audit-20260926/decomp-names*/`; the batch-3 folder holds the caller-witness and
-  shared-body screens to reuse). Open flow defect: Ghidra treats `0042c750` as non-returning, so
-  `004b7d90`'s body omits the `ret` at `004b7e0a`.
-- Codex's helper worktrees (`bea-decomp/.worktrees/codex-*`) retain frozen, ignored experiments; do not
-  replay their commits or delete their evidence.
+  shared-body screens to reuse). A fourth batch waits: only about eight new names have a released
+  caller under the rule above, and a wider batch needs another naming rule first. Open flow defect:
+  Ghidra treats `0042c750` as non-returning, so `004b7d90`'s body omits the `ret` at `004b7e0a`.
+- The six lane worktrees (`bea-decomp/.worktrees/{frontend,world,units,engine,peere,lead}`) are clean and merged.
+  The 110 scratch trees were removed after their diffs were saved (deletion queue, September 30). Codex's helper
+  worktrees (`bea-decomp/.worktrees/codex-*`) retain frozen, ignored experiments; do not replay their commits or
+  delete their evidence.
 The recorded live authority remains selected by `developer_state.json`. Do not replay the old
 prepared-cohort queue or mistake isolated original-code probes for full game acceptance.
 
