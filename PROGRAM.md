@@ -65,8 +65,15 @@ with complete section/relocation matches. The Euler-angle constructor was alread
 its annotation; that coverage omission is corrected. The confirmation-menu event handler and central Unit
 movement update now match too. A shared float-angle wrapper closes the camera update and infantry
 initialization, with the complete score retaining every earlier matched symbol.
+The tentacle spline, Wingman startup and normal-squad member-transfer routine now also match their
+complete sections and relocations. The last creates a squad and transfers an existing unit; its inherited
+"SpawnMembers" label did not establish new-unit spawning. These interfaces are reconstructed, not recovered
+original source text or runtime acceptance.
 The cockpit composition-order correction has bounded original-code evidence but leaves its two bodies
-unmatched; all integrations preserve earlier exact matches. The private README owns the current counts.
+unmatched. A damage-report index is now snapshotted before a virtual query, as retail does; the affected
+subblock is ordinarily unreachable under stable memory, and only an explicit isolated intervention exposes
+the former difference. The existing damage contract records that limit. All integrations preserve earlier
+exact matches. The private README owns the current counts.
 `bea-decomp` main's README owns the score, matched list, findings and failed alternatives; per-function notes
 sit above each near miss in the source.
 - **What remains.** Every game-function row now has an emitted candidate; the remaining bodies compile but
@@ -96,7 +103,10 @@ sit above each near miss in the source.
   instruction order. Infantry initialization also matches, with no prior exact symbol lost. The earlier
   Reset/sprite cases remain unresolved. This is not a complete scheduler model or a recovered retail
   dependency graph; the private README owns the evidence and limits. The full graph builder and register
-  allocator remain open. In parallel:
+  allocator remain open. A bounded Mine trace now locates its pointer/reference register difference before
+  scheduling: the reference carrier receives EAX earlier, while the pointer carrier receives EDX later;
+  all scheduling-region orders remain the same. The lead reproduced the frozen compiler observations,
+  without inferring a general allocation rule. In parallel:
   - run `tools/permuter/readbatch.py` and `tools/scans/readform.py --noreads --inplace` over the rows;
   - run the `tools/inline` searches over the call-list rows.
 
