@@ -109,9 +109,14 @@ The cylinder line body is already exact. The Goodies requirement-text builder no
 its whole section and every relocation through the existing direct PC text lookup; menu rendering
 acceptance is separate.
 The [options-list recheck](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#options-list-title-return--october-1)
-also corrects a return-value snapshot across callbacks, with 27 isolated integer-tail runs and
-explicitly unproved live reachability. The radio-message constructor now matches its entire
-section and all relocations; portrait rendering and audio remain separate acceptance work.
+corrects the callback snapshot and now closes the entire renderer's section/relocation match
+through natural local lifetimes. Bounded null-title and text-measurement cases retain explicit
+reachability, rounding and device limits. The radio-message constructor also matches exactly;
+portrait rendering and audio remain separate acceptance work.
+The [imposter quad](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#imposter-quad-coordinates-and-precision--october-1)
+now matches its entire section and all relocations after correcting reversed V coordinates
+and premature rounding. Native buffer comparisons distinguish the previous errors; live visual
+acceptance remains separate.
 The [ballistic caller experiment](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-b-ballistic-height-and-prediction--october-1)
 now binds prediction to horizontal range while height uses current Unit positions, and confirms the
 ballistic return skips the world query. These are 84 original-code calls with explicit providers;

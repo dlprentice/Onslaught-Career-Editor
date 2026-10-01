@@ -1,8 +1,8 @@
 # HUD / frontend overlay static contract
 
 Status: bounded retail static evidence; not visual proof
-Last updated: 2026-10-01 (menu title snapshot and message construction; August HUD map retained)
-Summary: menu title return preserves a pointer from before callbacks; message construction and Goodies requirement text match exactly; bounded font and scale-menu contracts remain.
+Last updated: 2026-10-01 (complete options-list renderer and message construction; August HUD map retained)
+Summary: options-list rendering matches its complete compiled section and relocations, including title snapshots and scratch reuse; message construction and Goodies requirement text also match; player acceptance remains separate.
 Evidence: MEASURED — October 1 isolated menu-tail runs and full-section/relocation matches, plus September 30 font and scale-menu readback; August HUD claims were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
@@ -74,15 +74,78 @@ and real callback implementations are excluded; their code is not executed by th
 probe. This demonstrates the consequence of the ordering under intervention, not
 that a live retail callback changes or invalidates the title.
 
-The full renderer remains unmatched (1,232-byte section, 39 relocations); all 18
-prior exact controls and 22 other callable sections/relocation destinations are
-preserved. Lead private evidence is
+That snapshot-only correction left the renderer unmatched; the subsequent complete
+match below supersedes that state. All 18 prior exact controls and 22 other callable
+sections/relocation destinations were preserved. Lead private evidence is
 `bea-decomp/.worktrees/codex-equiv-20260930/local-data/menu-title-root-20261001/`,
 particularly `root-readback.json` and `tail/receipt.json` (SHA-256
 `fa3b7e716f5a129c655e69ebfa96b6d0eeeef01eba70de58b2ec31701aae381e`).
 For implementation, preserve the snapshot boundary. The cheapest remaining
 reachability check traces actual confirmation/action implementations and their
 title ownership; no player-visible menu defect is claimed from this probe alone.
+
+### Complete renderer and failed text measurement
+
+The subsequent source correction matches all 1,216 section bytes and 41 relocations
+(1,207-byte retail body plus nine padding bytes). A natural panel-sizing helper
+restores the width scan's First/Next calls at `0x004a48d2` and `0x004a48ea` while
+the height scans remain inline. Giving its first `SIZE` a width-only scope and the
+later title `SIZE` a caller scope restores retail stack reuse. A named title X
+restores argument scheduling. The earlier title snapshot remains in place.
+
+The frame correction has a concrete boundary consequence. Actual GetTextExtent
+at `0x00540680` returns false without writing output when text is null. The panel
+caller ignores that result; its first `SIZE` aliases an earlier height-sum scratch
+word. The old reconstruction used a different unwritten slot. With an authored
+80-high, 20-wide item and zero-initialized stack, retail and the corrected source
+supply panel `(x,y,width,height) = (267,178,106,123)`; the earlier source supplied
+`(300,178,40,123)`.
+
+The lead reproduced 36 isolated prefix runs: twelve states on each of retail,
+snapshot-only source and corrected source. Five of six null-title states distinguish
+the old source; every corrected state agrees. Real GetTextExtent and pointer-set
+instructions execute, with explicit font lookup, clearing and item-dimension
+substitutions. The probe stops before drawing. Valid-title controls use an empty
+UTF-16 string and a ready font; live null-title reachability remains unproved.
+This emitted-code match is not a portable C++ guarantee for reading uninitialized
+storage. Trace actual loaded text and confirmation-menu construction to settle
+whether normal play can reach the failed-measurement state.
+
+Private lead evidence:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/menu-frame-root-20261001/readback.json`;
+prefix receipt SHA-256
+`69c4eb25a6380871a16d5ea4520ab4baadae023dd3cecf60c9192b7c80c88b87`.
+All 18 previous exact controls and 22 other callable bodies/relocation targets remain
+intact. This closes the compiled renderer mismatch, not player or visual acceptance.
+
+## Text measurement admission and rounding — October 1
+
+The retail text-measurement routine `0x00540680` rejects null text or null output
+before accessing font fields (`0x0054068a`–`0x0054069a`), returning false without
+writing `SIZE`. Empty non-null text instead succeeds with width zero and one row's
+height. Newline resets row width and adds a row height, then still measures the
+remapped newline glyph (`0x00540754`–`0x0054078f`); carriage return skips glyph
+measurement. Width and height conversions at `0x005407ff` and `0x0054080d` use
+`FISTP qword`, then copy the low 32 bits. They honor the current x87 rounding mode;
+a language cast that always truncates is not a general replacement.
+
+The lead freshly compiled the reconstruction and reproduced 1,032 native i386
+comparisons, using actual byte-matched character-map initialization and remapping
+bodies at `0x00465c10` and `0x00465cf0`. Return values, dimensions, exception flags,
+input/map memory, ABI and x87 state agree in the authored ready-font cases.
+These cover 43 fixtures, PC24/53/64, all four rounding modes and two stack fills.
+Three numerical/branch mutations are detected in 144, 24 and 726 cases respectively;
+missing remapper and excluded texture initialization refuse execution.
+
+The full measurement routine remains unmatched (448-byte section, 433-byte retail
+body, 87 differing positions); all 14 existing object controls are preserved.
+The cases do not establish behavior for arbitrary remappers, aliases, malformed
+strings, nonfinite coordinates or actual font assets. Missing texture enters
+initialization, which was excluded rather than modeled as a false return.
+GDI/D3D initialization, live rounding state and visual text acceptance remain open.
+Private lead receipt:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/font-extent-root-20261001/native-v2/receipt.json`,
+SHA-256 `5887039c1a011a199c4e8b112e4b817fabf3a72be2380fc5bd3fd77f3d58fa63`.
 
 ## Message construction and Goodies requirement text — October 1
 

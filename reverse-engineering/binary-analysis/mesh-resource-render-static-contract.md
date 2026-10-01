@@ -1,9 +1,9 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-10-01 (sphere distance association and exact line-test closure)
-Summary: trail-point counts depend on the retail sum order and floating-point mode; emitter loading resolves an index to a pointer compared by effect lookup; collision and mesh-loading contracts retain their measured limits. Retained engine/resource slices are historical leads.
-Evidence: MEASURED — September 30 RTTI, vtable and instruction readback, whole-section byte matches, bounded original-code collision calculations and native trail-count arithmetic slices; older slices were not reverified in this pass.
+Last updated: 2026-10-01 (exact imposter quad, sphere and cylinder arithmetic rechecks)
+Summary: the imposter quad corrects texture-coordinate order and intermediate precision and now matches exactly; collision, trail, emitter and mesh-loading contracts retain their measured limits. Retained engine/resource slices are historical leads.
+Evidence: MEASURED — specimen instructions, whole-section/relocation matches and bounded native calculations and buffer comparisons; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 This contract consolidates the retained engine/frame, render-state, resource,
@@ -365,6 +365,54 @@ Lead private evidence is
 `b07ef298c8bc904b1ed557fbeb01c4ddd8b05a27388ef14c01fd41f47b00d554`.
 The next numerical falsifier is the retained translated-origin Z witness; live caller precision,
 nonfinite inputs, aliases and world contact reachability remain separate questions.
+
+## Imposter quad coordinates and precision — October 1
+
+The quad builder at `0x00542f90` receives texture coordinates from the frame record
+at offsets `+00,+08,+04,+0c`; the caller's pushes at `0x00543845`–`0x0054386e`
+establish the argument order `u0,v0,u1,v1`. The retail vertex stores establish:
+
+| Corner position | Texture coordinates |
+| --- | --- |
+| `(position-right)-up` | `(u0,v0)` |
+| `(position+right)-up` | `(u1,v0)` |
+| `(position+right)+up` | `(u1,v1)` |
+| `(position-right)+up` | `(u0,v1)` |
+
+The former reconstruction reversed V on all four corners. The same corner order
+and triangles (`i,i+1,i+2`, then `i+2,i+3,i`) rule out a compensating winding change.
+Both buffer routes share these stores. A second defect rounded the first
+`position-right` vector to float32 before subtracting up. Retail retains these
+three intermediates on x87 at `0x00543069`–`0x00543090`; the other corners have
+different constructor/materialization boundaries and must not all be flattened.
+
+The lead reproduced 828 complete native i386 calls per version with four actual,
+independently byte-matched helpers: vector construction, position assignment and
+both buffer-pointer getters. Finite authored positions at PC24/53/64, two fills,
+both buffer routes and three starting offsets produce 774 differences in the old
+source, 288 after the UV correction alone, and zero after the precision correction.
+The buffer offsets include an exact index-capacity boundary. A changed-sign control
+differs in 474 cases. Missing-constructor, unlocked-buffer and vertex/index-resize
+controls refuse execution rather than count partial runs as agreement.
+
+A natural three-component aggregate with parenthesized values subsequently restores
+the remaining instruction scheduling. The lead freshly reproduced all 880 compiled
+section bytes and 20 relocations against the 866-byte retail body and its padding;
+the final candidate also agrees in all 828 cases. All 25 prior exact controls and
+29 other callable bodies/relocation targets remain intact. This identifies compiled
+behavior, not the unique original source text.
+
+The harness uses prelocked, adequately sized memory buffers. Real device locking,
+resizing, error handling, arbitrary aliases/nonfinite inputs and actual rendering
+remain outside its boundary. It checks buffer and input memory, ABI registers,
+stack guards and x87 control/depth, not every memory access or all floating-status
+semantics. A useful visual follow-up captures a known non-symmetric imposter frame
+and its emitted vertices together; no such live observation is claimed here.
+
+Private lead evidence:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/imposter-correction-root-20261001/`,
+with `exact-readback.json`, `native-exact/receipt.json`, the pre-correction witnesses
+and capacity refusal controls. No Ghidra state changed during this correction.
 
 ## Baseline Static System Slices
 
