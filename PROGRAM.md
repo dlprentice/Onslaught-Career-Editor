@@ -108,6 +108,10 @@ discrepancies. Initial-Z precision at translated origins remains a demonstrated 
 The cylinder line body is already exact. The Goodies requirement-text builder now also matches
 its whole section and every relocation through the existing direct PC text lookup; menu rendering
 acceptance is separate.
+The [options-list recheck](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#options-list-title-return--october-1)
+also corrects a return-value snapshot across callbacks, with 27 isolated integer-tail runs and
+explicitly unproved live reachability. The radio-message constructor now matches its entire
+section and all relocations; portrait rendering and audio remain separate acceptance work.
 The [ballistic caller experiment](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-b-ballistic-height-and-prediction--october-1)
 now binds prediction to horizontal range while height uses current Unit positions, and confirms the
 ballistic return skips the world query. These are 84 original-code calls with explicit providers;

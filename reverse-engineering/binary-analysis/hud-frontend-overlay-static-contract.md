@@ -1,9 +1,9 @@
 # HUD / frontend overlay static contract
 
 Status: bounded retail static evidence; not visual proof
-Last updated: 2026-09-30 (Goodies text rounding and scale-menu renderer; August HUD map retained)
-Summary: the Goodies text call preserves fractional Y coordinates; the generic scale-menu renderer distinguishes current and committed values and preserves separate alpha products.
-Evidence: MEASURED — September 30 original-code font cases and caller readback, plus the scale-menu full-section/relocation match; August HUD claims were not reverified in this pass.
+Last updated: 2026-10-01 (menu title snapshot and message construction; August HUD map retained)
+Summary: menu title return preserves a pointer from before callbacks; message construction and Goodies requirement text match exactly; bounded font and scale-menu contracts remain.
+Evidence: MEASURED — October 1 isolated menu-tail runs and full-section/relocation matches, plus September 30 font and scale-menu readback; August HUD claims were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 ## Goodies text preserves fractional Y — September 30
@@ -55,6 +55,54 @@ establish a visible defect in its currently live-applied options bars, whose val
 committed each change. No fresh game or Godot rendering was inspected. A useful presentation falsifier
 is a genuinely deferred bar with differing current/committed values, sampled at known platform times;
 player-visible colors and timing remain runtime acceptance work.
+
+## Options-list title return — October 1
+
+At the options-list renderer `0x004a4810`, DeferredRender returns at `0x004a4c53`.
+The load at `0x004a4c57` saves `this+4` (the title pointer) into EDI before the
+confirmation query and button-action callbacks. Both return paths (`0x004a4c91`
+and `0x004a4cbc`) return that saved pointer. The reconstruction previously reread
+the field after those calls; it now snapshots it at the retail boundary.
+
+The lead reproduced 27 isolated x86 integer-tail runs: nine scenarios on each of
+the original, previous and corrected tails. Explicit callback substitutions either
+leave the title unchanged or replace it during confirmation/action handling. Six
+changing-dependency cases distinguish the old reread; the corrected result agrees
+with retail in every case. Callback receivers, arguments, ordering, final memory,
+stack balance and canaries agree. Earlier rendering, floating-point calculations
+and real callback implementations are excluded; their code is not executed by the
+probe. This demonstrates the consequence of the ordering under intervention, not
+that a live retail callback changes or invalidates the title.
+
+The full renderer remains unmatched (1,232-byte section, 39 relocations); all 18
+prior exact controls and 22 other callable sections/relocation destinations are
+preserved. Lead private evidence is
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/menu-title-root-20261001/`,
+particularly `root-readback.json` and `tail/receipt.json` (SHA-256
+`fa3b7e716f5a129c655e69ebfa96b6d0eeeef01eba70de58b2ec31701aae381e`).
+For implementation, preserve the snapshot boundary. The cheapest remaining
+reachability check traces actual confirmation/action implementations and their
+title ownership; no player-visible menu defect is claimed from this probe alone.
+
+## Message construction and Goodies requirement text — October 1
+
+The radio-message constructor `0x004b71e0` now matches all 288 section bytes,
+including its 16 relocations (277-byte retail body). Selecting the first speaker's
+portrait through the frame member already assigned zero restores the observed
+late table load. A different flat-storage source form yields the same exact body,
+so the result proves compiled behavior rather than unique original source text.
+The table read still precedes its clear; these checks do not establish prior
+allocation contents or what later rendering observes. All 35 previous exact
+address/symbol pairs and 44 other callable sections are preserved.
+
+The Goodies requirement-text builder `0x0045a940` also matches its full 736-byte
+section and 60 relocations (726-byte body). Both text lookups call `0x004f2580`;
+using the existing direct PC lookup removes a forwarding wrapper without changing
+the targets. The separate Goodies renderer remains unmatched. Lead private owners
+in `bea-decomp/.worktrees/codex-equiv-20260930/local-data/` are
+`messagebox-ctor-root-20261001/` and `goodies-match-root-20261001/`, each with a
+fresh compiled `final-readback.json`. These checks do not establish visual or
+audio acceptance.
 
 ## Retained August HUD map
 
