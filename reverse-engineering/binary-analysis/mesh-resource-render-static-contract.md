@@ -1,7 +1,7 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-10-01 (trail normalization and texture constants/width; earlier bounded corrections retained)
+Last updated: 2026-10-01 (complete texture activation match and trail name gate; bounded corrections retained)
 Summary: specimen-bound rendering and collision contracts, with bounded corrections to arithmetic association, float stores and ordered admission.
 Evidence: MEASURED — specimen instructions, whole-section/relocation matches and bounded native calculations and buffer comparisons; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -11,6 +11,26 @@ mesh geometry, and collision bridges used by asset tooling and rebuild planning.
 Current corrected metadata is owned by the
 [Ghidra guide](../ghidra/README.md) and `developer_state.json`'s selected live authority.
 Static evidence does not by itself establish runtime rendering or layout parity.
+
+## Trail renderer name gate — October 1
+
+At `0x004c8ca7`, trail rendering (`0x004c8520`) calls the case-insensitive CRT
+comparison at `0x00568390` for `Blue Trail Large`. This follows a separate,
+case-sensitive fifth-index character check for uppercase `T`. The reconstructed
+case-sensitive full-string comparison rejected names that retail accepts.
+
+The lead freshly compiled the correction and reproduced its 32-byte gate with
+all three references checked. A bounded native test executes only the admitted
+gate and the CRT's locale-zero ASCII path, replacing RenderAll with a count stub.
+Across 16,407 authored cases (all ASCII letter-case combinations plus rejection
+controls), 8,191 old differences become zero, with no new differences.
+`blue Trail large` passes; lowercase `t` at the quick-filter position still fails.
+All 35 other callable sections and their references remain unchanged.
+
+The complete trail renderer remains unmatched. Non-ASCII text, nonzero locale
+and the real render flush remain untested; those are the next behavior falsifiers.
+Private root evidence under the owner below: `trail-name-root-native/receipt.json`
+and `font-render-reconnect-console-root-readback.json`.
 
 ## Trail basis normalization — October 1
 
@@ -55,11 +75,16 @@ the unsigned draft emitted logical shifts. Only two compiled instruction bytes
 change, with every relocation preserved. This proves the operation's signedness,
 not that negative dimensions occur in admitted resources.
 
-Both full functions remain unmatched. In particular, a structural activation
-draft has identical non-relocation bytes but reverses two ENGINE field operands;
-it receives no exact-match credit. No resource decoding or graphics device ran.
-Private lead proof: `startup-render-texture-root-readback.json` under the owner
-above. A complete resource/device comparison remains the runtime falsifier.
+Mipmap construction remains unmatched. Texture activation now matches its complete
+1,536-byte compiled section and all 89 relocations after restoring matrix lifetimes,
+return paths and the near-plane getter's float value boundary. The product and
+subtraction both read far/near at `0x0089cdd4`/`0x0089cdd0`, against the independently
+consistent ENGINE base `0x0089c9a0`. This closes the previous structural draft's two
+reversed references; all 44 other callable sections and their targets are preserved.
+No resource decoding or graphics device ran. Private lead proofs under the owner
+above: `startup-render-texture-root-readback.json` (earlier correction) and
+`texture-activation-root-readback.json` (complete match). Resource/device behavior
+remains the runtime falsifier.
 
 ## Projected-texture coordinate count — October 1
 
@@ -76,7 +101,8 @@ Active shader configuration and rendered results were not inspected here.
 
 The lead freshly compiled both sources and isolated one changed instruction byte.
 All 37 exact object controls, 88 target relocation records and 160 other object sections
-remain unchanged. The full activation function remains unmatched. No D3D device,
+remain unchanged. That intermediate activation draft was unmatched; the complete
+match above supersedes that status. No D3D device,
 graphics driver, game or Godot executed. A useful presentation falsifier is a mode-3
 texture with different third/fourth transformed coordinates, observing the actual stage
 state and projection under the retail shader configuration.

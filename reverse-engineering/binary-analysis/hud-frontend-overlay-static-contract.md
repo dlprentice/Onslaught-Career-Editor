@@ -1,7 +1,7 @@
 # HUD / frontend overlay static contract
 
 Status: bounded retail static evidence; not visual proof
-Last updated: 2026-10-01 (BE configuration input gate and light colors; earlier bounded rechecks retained)
+Last updated: 2026-10-01 (complete text-measurement match; BE configuration and bounded rechecks retained)
 Summary: specimen-bound frontend input, color and coordinate corrections; complete function matches and isolated calculations remain distinct from player acceptance.
 Evidence: MEASURED — October 1 native compass and font fragments, isolated menu runs and full-section/relocation matches, plus September 30 font and scale-menu readback; August HUD claims were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -233,8 +233,11 @@ These cover 43 fixtures, PC24/53/64, all four rounding modes and two stack fills
 Three numerical/branch mutations are detected in 144, 24 and 726 cases respectively;
 missing remapper and excluded texture initialization refuse execution.
 
-The full measurement routine remains unmatched (448-byte section, 433-byte retail
-body, 87 differing positions); all 14 existing object controls are preserved.
+The subsequent direct texture-lookup entry correction now matches all 448 compiled
+section bytes and six relocations (433 body bytes plus padding), preserving all 14
+earlier exact controls and the other 17 callable sections. The lead reproduced this
+stock build in `font-render-reconnect-console-root-readback.json` under the private
+`geometry-gate-resume-20261001` owner. The earlier 87-position mismatch is closed.
 The cases do not establish behavior for arbitrary remappers, aliases, malformed
 strings, nonfinite coordinates or actual font assets. Missing texture enters
 initialization, which was excluded rather than modeled as a false return.
