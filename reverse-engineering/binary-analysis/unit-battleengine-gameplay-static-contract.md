@@ -1,14 +1,48 @@
 # Unit / BattleEngine / gameplay static contract
 
 Status: bounded retail static map; not runtime gameplay proof
-Last updated: 2026-10-01 (dive-bomber bank-sign arithmetic corrected; provider and debris findings retained)
-Summary: retained gameplay routing plus specimen-bound provider, debris and squad-registration findings.
+Last updated: 2026-10-01 (dropship threshold and dive-bomber bank-sign arithmetic corrected)
+Summary: retained gameplay routing plus specimen-bound aircraft arithmetic, provider, debris and squad-registration findings.
 Evidence: MEASURED — October 1 whole-section/relocation match, bounded original-code arithmetic and squad instruction reads; the retained map sections keep their July 16 evidence limits.
 Specimen: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 This contract routes the retained Unit/BattleEngine evidence without repeating
 the retired wave ledger. Function-level notes under [`functions/`](functions/)
 remain the detailed evidence owners.
+
+## Dropship landing-turn threshold — October 1
+
+Move (`0x00447120`) compares its wrapped yaw difference against
+`double(0.1f)`, approximately `0.10000000149011612`, stored at `0x005d8c38`.
+The reconstructed double literal `0.1` was different. Correcting it to `0.1f`
+preserves the compiled instruction sections of all 45 callables; only the
+threshold reference at Move section offset `+0x51a` changes. All 44 other
+callable graphs, 36 existing exact results and six vtables remain unchanged.
+
+The lead freshly compiled both forms, independently read the constant, and
+executed the original and candidate 111-byte fragments
+`[0x004475dc,0x0044764b)`. These load the float32 headings, wrap their difference
+and select the threshold branch. Seven constant references are bound to their
+retail counterparts; only the old threshold payload differs. Among 87 authored
+finite cases across PC24/53/64 nearest-rounding modes, the old form differs
+from retail in twelve decisions: six each at PC53 and PC64, none at PC24.
+The correction agrees in every admitted case. Inverting the branch reverses
+all 87 decisions; register, stack and x87 guards also pass.
+
+For example, at PC53 nearest, yaw `0.10000000149011612` and target
+`4.656612873077393e-10` take the callback-side branch in retail and the
+correction, but not the former source. The callback itself is not executed.
+The fragments omit preceding Move branches, callbacks, the later speed block
+and world state. Neither these inputs nor PC53/64 are measurements of live
+game state. The full function remains unmatched, including the speed-sum
+association and Z-square lifetime. The next falsifier is a full-function
+comparison with admitted dependencies and separately observed live precision;
+fragment agreement does not establish either.
+
+Private root receipts under
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+`dropship-threshold-root/readback.json` and
+`dropship-threshold-root/native-root-v1/receipt.json`.
 
 ## Dive-bomber bank sign — October 1
 

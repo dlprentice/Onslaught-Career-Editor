@@ -221,6 +221,14 @@ matches yet; live-state reachability remains unproved.
 The [compressed-texture fallback correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#compressed-texture-format-fallbacks--october-1)
 restores two missing format cases. The separate [compass rounding correction](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#compass-direction-rounding--october-1)
 removes 1,749 differences in 8,118 bounded arithmetic cases. Both complete callers remain unmatched.
+The [mesh detail and interface recheck](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#mesh-surface-detail-and-interface-identities--october-1)
+corrects distance to camera zoom in the detail divisor and separates the snow-density slot from
+the imposter-frame selector. The [map fallback correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#map-trace-fallback-logging--october-1)
+restores the actual logger and saved length argument. These are partial source corrections;
+whole-function matching and live rendering/collision behavior remain open.
+The [dropship threshold recheck](reverse-engineering/binary-analysis/unit-battleengine-gameplay-static-contract.md#dropship-landing-turn-threshold--october-1)
+restores a float-promoted threshold, removing twelve decision differences in 87 bounded native
+cases. The complete movement function and live precision/reachability remain open.
 The private README owns the current score and exact byte/relocation receipts; these static
 matches are not live gameplay, resource-loading or graphics-device acceptance.
 The separately reproduced [compass coordinate correction](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#compass-coordinate-association--october-1)

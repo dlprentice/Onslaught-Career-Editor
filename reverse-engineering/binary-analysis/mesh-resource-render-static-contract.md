@@ -1,7 +1,7 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-10-01 (resource reads, render descriptors and texture initialization match; compressed fallbacks corrected)
+Last updated: 2026-10-01 (mesh detail input, render-interface identities and map fallback logging corrected)
 Summary: specimen-bound rendering and collision contracts, with bounded corrections to arithmetic association, float stores and ordered admission.
 Evidence: MEASURED — specimen instructions, whole-section/relocation matches and bounded native calculations and buffer comparisons; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -11,6 +11,69 @@ mesh geometry, and collision bridges used by asset tooling and rebuild planning.
 Current corrected metadata is owned by the
 [Ghidra guide](../ghidra/README.md) and `developer_state.json`'s selected live authority.
 Static evidence does not by itself establish runtime rendering or layout parity.
+
+## Mesh surface detail and interface identities — October 1
+
+`CRTMesh::Render` (`0x004dcba0`) uses camera zoom in the surface-detail divisor,
+not camera-to-object distance. Let `E` be ESP after the prologue's two register
+pushes. The camera result is stored at `E+8` (`0x004dcc2b`), optionally replaced
+with `1.0f`, and read again for LOD at `0x004dccf9`. Distance occupies `E+0xc`.
+After the additional push at `0x004dcd57`, the detail load `[esp+0xc]`
+(`0x004dcdcc`) therefore reads camera zoom. The reconstruction now uses
+`100 - MESH_SURFACE_LOD_BIAS / (zoom * 10) * lod` before the existing conversion
+and clamp. The earlier explanation as merely swapped compiler stack slots was
+incorrect. Live camera values and the active floating-point mode remain unmeasured.
+
+The same function's two virtual calls (`0x004dce40`, `0x004dce4c`) use
+`IRenderableThing` slot 24 (`+0x60`), publish the second result at `0x009c68d0`,
+then render with flag `0x10`. Retail registration strings at `0x00631fa8` and
+`0x00631fbc` identify the guard as `cg_snowlayerenable`. Slot 27 (`+0x6c`) instead
+selects an imposter frame: calls at `0x00488aad` and `0x0055a66a` index 24-byte
+frame records. CThing's interface table (`0x005df550`) has the same zero-return
+body in both slots; CTree's (`0x005dd960`) distinguishes slot 27 with
+`0x004f6540`, which clears its orientation-selection flag and returns
+`((complete_object_address >> 4) & 3)`.
+
+The reconstructed source had transposed the two method identities. Declarations,
+the CTree override and the frame-index callers now consistently name slot 24
+`GetSnowDensity` and slot 27 `GetRenderImposterNo`. Physical slots and established
+call targets are preserved. Stuart's pinned `5352a81c` `thing.h` supplies both
+names, but its missing base-interface header prevents a claim about the original
+identifier spelling. Ghidra metadata and frozen name projections were not changed.
+
+The lead freshly built the two caller corrections separately and together:
+46 other callable graphs and all 35 ordered reference meanings survive. The
+coordinated identity rename preserves 556 callable graphs and 214 exact results
+across eight focused objects, after the explicit symbol-name substitution. The
+whole renderer remains unmatched. Its corrected arithmetic still omits retail's
+otherwise-unread square-root store at `0x004dcce9`; exception/status effects of
+that store remain open. No renderer or game ran, and actual receiver/branch
+reachability remains unproved. Private root receipts under
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/render-map-root/`:
+`mesh-root-v1/readback.json` and `identity-swap/readback.json`.
+
+## Map trace fallback logging — October 1
+
+The fallback in map line tracing (`0x00490a40`) calls `CDebugLog::AddMessage`
+at `0x00441740`, with the independently bound `LOG` receiver at `0x0066f580`.
+The reconstruction previously called the empty `DebugTrace` body at `0x0040c640`.
+Its first floating argument is the saved line length, not `position.Y`:
+the square-root result is stored at frame offset `+0x28` (`0x00490ad1`) and
+reloaded at `0x00490dac` after sixteen bytes of argument-stack adjustment.
+The argument order is receiver, format, length promoted to double, step promoted
+to double, check count and current check. The 90-byte format at `0x0062d964`
+is unchanged.
+
+The lead freshly compiled both versions, the logger and an existing logger
+caller. Exact initializer/body/caller witnesses independently bind the receiver,
+callee and empty trace; 22 explicit operand correspondences bind the changed
+caller without relaxing the whole-function checker. All seventeen existing Map
+matches and both vtables survive. The corrected 976-byte section still differs
+from retail, including the length reload before step multiplication, a nested
+vector-constructor call and return scheduling. No logger, file write or game
+execution occurred. The remaining falsifier is a controlled trace comparison
+that observes the rounded step, recursive result and logging arguments together.
+Private root receipt: `map/root-reproduction/readback.json` under the owner above.
 
 ## Buffered resource reads — October 1
 
