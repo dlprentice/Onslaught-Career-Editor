@@ -134,6 +134,11 @@ and narrowly checked scratch providers. Full archive compatibility remains open.
 fixes two reconstructed acos calls that retail implements with asin and closes a false-acceptance
 path in the checker. The Unit event handler also matches its complete 400-byte section and all
 20 relocations, preserving the two scheduler overloads and RNG ordering.
+The [auto-aim update](reverse-engineering/game-mechanics/battle-engine-aiming.md#october-1-complete-auto-aim-update-match)
+now matches its entire section and all relocations; target search and launch-position bodies remain open.
+The [settings conversion follow-up](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#october-1-original-integer-tweak-conversion)
+executes the original integer-tweak setter in 217 complete-reader cases, preserving the retail conversion
+and changed-value reset decision. Remaining callback models and real device/save acceptance remain explicit.
 The [shadow-plane correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#static-shadow-plane-admission--october-1)
 restores numerator accumulation order and removes 152 observed admission differences in 1,950 native
 cases. The subsequent 2,025 complete-body cases remove all 100 observed final-result differences with

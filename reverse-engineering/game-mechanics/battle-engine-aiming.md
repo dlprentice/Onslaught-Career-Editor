@@ -1,7 +1,7 @@
 # Battle Engine auto-aim, launch position and Gun emitters
 
 Status: active static contract for the rebuild's player shots
-Last updated: 2026-09-30 (cockpit composition-order correction; target-admission and earlier emitter evidence retained)
+Last updated: 2026-10-01 (complete auto-aim update byte match; earlier target-admission and emitter evidence retained)
 Summary: how the Battle Engine picks an auto-aim target and blends its aim offsets,
 where each player round starts (the cockpit mesh's Gun emitters) and in which
 direction, and which state that depends on.
@@ -103,6 +103,27 @@ binding does not validate their entire behavior or establish a defect in the pau
 Machine code proves the passed address and dispatch slot, not whether the original C++ declaration
 spelled its output parameter as a pointer or reference. Other observations and asset measurements
 on this page retain their earlier evidence dates; no desktop/runtime acceptance was performed.
+
+### October 1 complete auto-aim update match
+
+The private reconstruction of `UpdateAutoAim` (`0x0040b120`) now matches the entire
+1,344-byte section, its 1,330-byte body and all 41 independently bound relocations.
+The last difference was the prediction-speed magnitude sum at `0x0040b283`–`0x0040b291`.
+Naming the existing launch vector before applying the orientation makes VC6 retain
+retail's addition order without changing the shared maths implementation. This is a
+reconstructed source form, not evidence of the original variable name or spelling.
+
+The fresh focused build preserves 189 prior exact matches and all 253 other callable
+sections and relocation identities. The complete build adds this one unique address
+with no lost matched symbols or relocation conflicts. This settles this compiled
+body; `HandleAutoAim`, `GetLaunchPosition`, actual target availability, update cadence
+and player-visible tracking still need their own evidence. No game or Godot window ran.
+
+Private lead owner:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/autoaim-root-20261001/`.
+`readback.json` SHA-256:
+`3f5d42e0893671dd208f07c4b95df33d5eaf5feec0cd2a622a133339e1350adf`.
+The complete-build comparison is `bea-decomp/local-data/codex-continuation-20260930/autoaim-reproduction.json`.
 
 ## Launch position and direction
 

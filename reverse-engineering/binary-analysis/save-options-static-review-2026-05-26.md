@@ -1,7 +1,7 @@
 # Save, options and startup compatibility contract
 
 Status: active bounded contract; comprehensive compatibility recheck in progress
-Last updated: 2026-09-30
+Last updated: 2026-10-01
 Summary: independently rechecked startup/serialization behavior and explicit remaining save/settings compatibility boundaries.
 Evidence: MEASURED — selected pristine instructions and the isolated execution below; inherited subsystem summaries remain subject to recheck.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -47,6 +47,39 @@ its pinned source/COFF inputs are adjacent. The lead's actual output is
 `bea-decomp/local-data/career-compatibility-root-20260930/results.json`. Independent review checked the anchors,
 ABI boundaries and controls before the lead rerun. Extending the callback boundary to original tweak/audio
 implementations is a stronger falsifier; no save or settings file was created or modified by these probes.
+
+## October 1 original integer-tweak conversion
+
+The lead freshly compiled the options reader and reproduced 217 native i386 cases
+through the complete original/candidate bodies, now executing the actual
+`CTweakSLONG::Set` at `0x00528ad0` instead of the earlier conversion model. The
+serialized integer goes through binary32 before the setter converts it to a signed
+64-bit integer and stores its low 32 bits. The changed-value comparison then uses
+that stored value, with the branch at `0x00420edb` controlling the reset request.
+
+The tested landscape-detail field includes integer/float boundaries, both signs,
+four rounding directions and masked PC24/53/64. Under round-to-nearest,
+16,777,217 becomes 16,777,216; 2,147,483,647 becomes the bit pattern `0x80000000`,
+without clamping. If the old live value already equals the converted value, this
+setting does not request a reset even when its serialized bits differ. Conversion
+changes 145 of the authored cases. Inverting only the retail changed-value branch
+changes 216 reset results; the device-null control remains unchanged.
+
+All 217 original/candidate output records agree, including authored global pages,
+callback observations, input/canaries, preserved registers and x87 control/status/tag.
+The source keeps all 47 focused exact controls, but this reader remains unmatched:
+1,072 candidate bytes against the 1,155-byte retail body. Preset, language and audio
+reload callbacks remain explicit recording models; audio reinitialization traps.
+The original mode-key packer and warning-state setter execute. These authored
+extremes do not establish normal menu reachability, device behavior, live FPU state,
+aliasing safety or complete save compatibility. No save or settings file was changed.
+The next useful falsifier replaces a remaining callback model in the composed reader
+under an admitted real-options input, preserving its original bytes.
+
+Private lead owner:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/career-tweak-native-root-20261001/`.
+`v02/receipt.json` SHA-256:
+`d505219ce6314284de26eab4d974258b03baaf01ebd3c94c688a67bc9bd8c80b`.
 
 ## September 27 options-callback entry to persistence
 
