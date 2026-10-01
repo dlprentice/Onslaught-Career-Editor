@@ -1,7 +1,7 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-10-01 (mesh detail input, render-interface identities and map fallback logging corrected)
+Last updated: 2026-10-01 (landscape-shadow renderer matches; mesh detail and map fallback corrections retained)
 Summary: specimen-bound rendering and collision contracts, with bounded corrections to arithmetic association, float stores and ordered admission.
 Evidence: MEASURED — specimen instructions, whole-section/relocation matches and bounded native calculations and buffer comparisons; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -11,6 +11,27 @@ mesh geometry, and collision bridges used by asset tooling and rebuild planning.
 Current corrected metadata is owned by the
 [Ghidra guide](../ghidra/README.md) and `developer_state.json`'s selected live authority.
 Static evidence does not by itself establish runtime rendering or layout parity.
+
+## Landscape-shadow renderer — October 1
+
+Reconstructed `CShadows::RenderLandscapeShadows` (`0x00553960`) matches its
+complete 2,064-byte section, 2,059-byte body and all 197 relocations. Expressing
+the projected V coordinate with the negative Y scale removes one internal
+compiler node and puts the fourth device-pointer push in the preceding
+scheduling region, recovering retail's push at `0x00553e31`.
+
+The lead freshly compiled the correction and bound every reference: 109
+placements witnessed by other exact code, 73 references to already exact
+callees, eleven literal payloads and four proven library references. All 43
+other callable graphs and 31 existing focused matches survive. An isolated
+logging compiler preserves the stock output and confirms the region change;
+no production compiler flags changed. This proves compiled identity under
+the checker contract, not original source spelling, actual draw submissions
+or visual parity. No game or graphics device ran.
+
+Private root evidence in
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/shadow-transform-order-root/`:
+`final/readback.json` and `scheduler-readback.json`.
 
 ## Mesh surface detail and interface identities — October 1
 

@@ -226,6 +226,9 @@ corrects distance to camera zoom in the detail divisor and separates the snow-de
 the imposter-frame selector. The [map fallback correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#map-trace-fallback-logging--october-1)
 restores the actual logger and saved length argument. These are partial source corrections;
 whole-function matching and live rendering/collision behavior remain open.
+The [landscape-shadow renderer](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#landscape-shadow-renderer--october-1)
+now matches its whole section and all 197 relocations after resolving the last compiler-region
+boundary. Actual graphics-device and visual acceptance remain separate.
 The [dropship threshold recheck](reverse-engineering/binary-analysis/unit-battleengine-gameplay-static-contract.md#dropship-landing-turn-threshold--october-1)
 restores a float-promoted threshold, removing twelve decision differences in 87 bounded native
 cases. The complete movement function and live precision/reachability remain open.
