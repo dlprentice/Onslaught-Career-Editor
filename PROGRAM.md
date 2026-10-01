@@ -196,7 +196,7 @@ the player's weapon-charge update, [destructible-part break and rubble handling]
 the battle-line pulse, collision-sector updates, scratch text conversion, Unit Euler smoothing,
 mech initialization, texture deserialization, texture-state cleanup, display-mode enumeration,
 arrow/cuboid rendering, mesh-buffer initialization, main rendering, texture activation,
-text measurement, reconnect rendering, console selection and particle allocation.
+text measurement, reconnect rendering, console selection, particle allocation and render-state reset.
 All earlier matched symbols survive.
 The private README owns the current score and exact byte/relocation receipts; these static
 matches are not live gameplay, resource-loading or graphics-device acceptance.
@@ -217,6 +217,10 @@ matches completely; the other bounded corrections alone add no whole-function cr
 The [trail renderer's name gate](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#trail-renderer-name-gate--october-1)
 now preserves retail's case-insensitive full comparison and uppercase quick filter; the full renderer
 and actual render flush remain open.
+The [fourth gamut plane](reverse-engineering/binary-analysis/functions/gcgamut.cpp.md#fourth-plane-z-dependence--october-1)
+now preserves retail's reuse of the first plane's shifted apex Z. Fresh instruction/relocation
+readback and 18 bounded full-body emulation cases support that correction; the full function
+remains unmatched and actual culling behavior was not observed.
 
 Continue from the private README's current findings and retained **October 1 handback leads**, not an
 older handoff queue:

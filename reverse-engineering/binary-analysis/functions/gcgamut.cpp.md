@@ -1,5 +1,9 @@
 # gcgamut.cpp
 
+Status: current fourth-plane correction; older overview and saved metadata retained as historical leads
+Last updated: 2026-10-01
+Summary: specimen-bound fourth-plane Z dependence, bounded comparison, and historical gamut notes.
+
 > Graphics Context Gamut - view frustum visibility culling system
 > Debug path: `[maintainer-local-source-export-root]\gcgamut.cpp` (0x0062c968)
 
@@ -7,7 +11,9 @@
 
 gcgamut.cpp implements the CGamut class, which handles view frustum visibility calculations for the rendering system. The "gamut" determines which grid cells are visible from the camera's perspective, enabling efficient culling of off-screen objects.
 
-Wave383 note: the live Ghidra project now has saved signatures/comments/tags for the four CGamut targets below. The Stuart source tree does not currently provide the `gcgamut.cpp` body, so this page treats retail Ghidra read-back as authority and keeps structure/argument names conservative.
+The Wave383 metadata and overview below are inherited historical reports, not a fresh audit of the live
+database or proof of their semantic labels. The October 1 recheck establishes the specific dataflow below
+from the pristine executable. The unreleased source names remain reconstruction labels.
 
 The system works by:
 1. Computing the camera's view frustum as a set of 5 corner points
@@ -15,7 +21,43 @@ The system works by:
 3. Rasterizing the visible area onto a 64x64 grid
 4. Storing min/max height values per grid cell for visibility testing
 
-## Wave383 Saved Ghidra Status
+## Fourth-plane Z dependence — October 1
+
+Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+This is a correction to the private reconstruction of `004742a0`, not a live Ghidra mutation.
+
+The four solves do not use interchangeable apex values. Retail copies the first apex Z into
+`[esp+78]` at `004742c3`, and a separate fourth-apex copy into `[esp+c8]` at `00474478`.
+When the first determinant is nonzero, `00474b77` replaces the first value with its normal-offset Z.
+The fourth solve then subtracts that updated first value at `00474d74` and `00474d9f`, while
+subtracting the fourth-apex value at `00474d83` and `00474db1`. No intervening store replaces
+either input. The old reconstruction instead used the fourth apex in all four numerator terms.
+
+The corrected candidate retains that dependency. A fresh pinned-compiler build preserves all
+15 earlier exact functions in the object and all 16 other callable sections/references. Its
+10,112-byte section still differs in 527 positions; all 196 aligned literal relocations were
+checked independently against the specimen. This correction earns no whole-function match.
+
+The lead reproduced 18 full-body Unicorn cases with finite prepared five-point inputs, 9-by-9
+grid bounds and control word `027f`, including first-plane and fourth-plane zero determinants.
+No external calls or stubs were used. Corrected slopes and output spans agree with retail in
+all 18; the former draft agrees in two slope cases and eight span cases. One input changes
+24 output-span bytes: fourth slopes become approximately `-0.9364469051, -1.6899201870`,
+instead of the draft's `-0.8529411554, -1.8235293627`.
+
+Private evidence: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`
+contains `gamut-root-static-readback.json`, `gamut-root-retail-prologue-solves.asm`,
+`gamut-root-witness.py` and `gamut-root-witness.json`. Frozen baseline/candidate inputs and rejected
+probes remain in the aircraft worktree's `local-data/gamut-resume-20261001/`.
+
+Limits: these are static findings and bounded emulation, not native-game observations or general
+equivalence. Fourth-normal summation order and stack/register differences remain open. The next
+falsifier is complete section/relocation agreement or a prepared case exposing a remaining output
+difference. Actual culling/rendering effects require a controlled game observation; no desktop or
+renderer was used.
+
+## Historical Wave383 Saved Ghidra Status
 
 | Address | Saved signature | Evidence |
 | --- | --- | --- |

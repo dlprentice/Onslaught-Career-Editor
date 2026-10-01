@@ -254,7 +254,6 @@ reverse-engineering/binary-analysis/functions/game.cpp/con_remotecameraon.md
 reverse-engineering/binary-analysis/functions/game.cpp/con_resetmemsizes.md
 reverse-engineering/binary-analysis/functions/game.cpp/con_win.md
 reverse-engineering/binary-analysis/functions/game.cpp/lookup_FMV.md
-reverse-engineering/binary-analysis/functions/gcgamut.cpp.md
 reverse-engineering/binary-analysis/functions/monitor.h/CMonitor__Process.md
 reverse-engineering/binary-analysis/functions/monitor.h/CMonitor__UpdateFlightWalkerTransitionState.md
 reverse-engineering/binary-analysis/functions/scheduledevent.cpp/CScheduledEvent__Set.md
