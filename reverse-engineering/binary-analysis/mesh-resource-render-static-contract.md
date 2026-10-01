@@ -1,7 +1,7 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-09-30 (trail-point arithmetic and emitter/effect part pointers)
+Last updated: 2026-10-01 (sphere distance association and exact line-test closure)
 Summary: trail-point counts depend on the retail sum order and floating-point mode; emitter loading resolves an index to a pointer compared by effect lookup; collision and mesh-loading contracts retain their measured limits. Retained engine/resource slices are historical leads.
 Evidence: MEASURED — September 30 RTTI, vtable and instruction readback, whole-section byte matches, bounded original-code collision calculations and native trail-count arithmetic slices; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -250,7 +250,7 @@ and cylinder collision/line response (`0x0043fe20`, `0x00440510`) with actual by
 helpers and no stubs. These are bounded emulator experiments over authored records, not a running
 retail game or proof of function equivalence.
 
-Sphere line admission has an open reconstruction defect. For radius 1, zero relative position and
+The September 30 sphere-line candidate had a reconstruction defect, corrected by the current exact body. For radius 1, zero relative position and
 segment `(1,1,0)` to `(-0.5,1,0)`, retail materializes the scaled displacement before addition
 through its constructor call at `0x004e4cf7`. Its closest point is `(0,1,0)` and admission is true.
 The candidate's earlier inlining retains closest-point X=`-2^-25` at PC53/64 and returns false.
@@ -259,8 +259,10 @@ reject radial endpoint-only contact when the projection lies outside the segment
 and cast-only experiments did not reliably restore the boundary, so no forced source fix is retained.
 Nine controls detect invalid execution/dependencies and a strict-versus-inclusive tangency mutant.
 Degenerate outside/tangent division, nonfinite inputs, hardware exceptions and live FPU mode remain open.
-The next source falsifier is recovery of the two retail constructor-call boundaries while retaining
-the already-exact vector helpers and all earlier Sphere matches.
+The October 1 fresh compile now matches all 480 section bytes, including all four relocations, for
+`0x004e4b90` (479-byte retail body). The old draft and its rejected fixes remain historical evidence;
+the constructor boundaries and earlier Sphere matches are preserved. Exact body matching does not
+establish the caller's live precision or the runtime questions above.
 
 Cylinder's 55 sampled cases agree in defined outputs across two stack-fill patterns at declared
 PC64/RN. They preserve behavior that should not be replaced with idealized collision geometry:
@@ -290,6 +292,41 @@ Private frozen probes are `bea-decomp/.worktrees/codex-career-nearmiss-20260930/
 (SHA-256 `60339772c35dcb6ea86e28aef2014df2515476beac0d9c60e386ef6b48514936`).
 Independent lead results are `bea-decomp/local-data/sphere-line-root-20260930/comparison.json`
 and `bea-decomp/local-data/cylinder-boundaries-root-20260930/comparison.json`.
+
+## Sphere response arithmetic — October 1
+
+The complete original `0x004e4e00` entry and freshly compiled reconstruction were executed natively
+with five byte-verified retail vector helpers, explicit PC24/53/64 control words, and finite nonaliased
+volume/movement records. The old candidate differed in final XYZ movement or position in 148 of 4,512
+cases (77 deep-response and 71 shallow-threshold cases, all PC24). Return and stopped flags agreed;
+the largest observed XYZ difference was approximately 0.02186.
+
+Retail combines XY squared distance before adding Z squared at `0x004e4f2d` and `0x004e52ca`.
+The old reconstruction's `MagnitudeSq()` emitted `(Y² + Z²) + X²`; using XY magnitude plus Z squared
+restores the retail association, including the compiler-reused deep-contact distance. Fresh native
+execution of the compiled correction removes all 148 observed differences with identical inputs and
+retail outputs. PC53/64 continue to agree in these samples. The entire function remains unmatched:
+its 1,552-byte section (1,537-byte retail body) retains 43 differing nonrelocation byte positions.
+Other operand scheduling and normal/relative-speed expressions are still unresolved.
+
+The probe verifies nonvolatile registers, stack position/canaries, x87 stack/control-word preservation,
+and unchanged volume/report inputs. Defined XYZ outputs, stopped flags and return are compared;
+copied uninitialized vector padding is excluded. Three coarse-tangency controls change results, and
+removing an admitted vector constructor fails. All 17 prior exact address/symbol pairs (15 unique
+functions) and the 19 other callable bodies in the object remain unchanged.
+
+These are bounded original-code comparisons, not equivalence, observed gameplay or evidence of the
+caller's live control word. Nonfinite inputs, exceptional arithmetic and other rounding modes remain
+outside these samples. The [startup precision contract](../contracts/render-platform/CD3DApplication__Initialize3DEnvironment__0052af00.md#precision-setup--october-1-instruction-recheck)
+explains why PC24 deserves testing without claiming it has been measured at this caller.
+
+Lead private owners in `bea-decomp/.worktrees/codex-equiv-20260930/local-data/` are
+`sphere-root-20261001/` (baseline) and `sphere-correction-root-20261001/` (fresh compiled correction).
+The latter's `native/receipt.json` SHA-256 is
+`23a9ffe5a4509e9a1e02382aeda646596d19b05298c2885c7d0719527a610fb4`;
+input SHA-256 is `45b993e1d8266cc3d73b6faffd1aabc9641da9c91a9bcda24fddc738803e0fd5`.
+Whole-build readback preserves all earlier exact matches. The useful next falsifier is an unresolved
+arithmetic block exercised at its actual caller's measured precision and contact state.
 
 ## Baseline Static System Slices
 

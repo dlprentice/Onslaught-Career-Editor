@@ -73,8 +73,9 @@ Closest-edge selection, desired weapon pitch, and both remaining third-person ca
 fresh complete-section/relocation checks. The geometry correction preserves addition association; the
 camera corrections preserve returned temporary lifetimes. A separate
 [contact-normal experiment](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__Hit.md)
-reproduces decision differences caused by the unmatched candidate's float arithmetic at the slope
-threshold. These are authored numerical boundaries, not observed gameplay contacts; that body remains open.
+first exposed decision differences caused by the candidate's float arithmetic at the slope threshold;
+the complete-body correction and native readback below now close that reconstruction defect. These
+are authored numerical boundaries, not observed gameplay contacts.
 Cached mesh-pose composition and triangle-prism admission now also pass complete section/relocation checks.
 The former corrects the order of two orientations. Separate original-code comparisons corrected the
 mesh/sphere caller's lost accumulated-hit flag and segment-hit numerator order; those full bodies remain
@@ -97,7 +98,10 @@ The [Unit contact handler](reverse-engineering/binary-analysis/functions/Unit.cp
 now matches its entire section and all relocations; its earlier 13,839 native threshold cases have no
 corrected decision differences. The [startup precision recheck](reverse-engineering/contracts/render-platform/CD3DApplication__Initialize3DEnvironment__0052af00.md#precision-setup--october-1-instruction-recheck)
 confirms that retail omits the Direct3D preservation flag. PC24/nearest after creation is justified by
-the API contract, while live control words and reset behavior remain unmeasured.
+the API contract, while live control words and reset behavior remain unmeasured. The [sphere-response recheck](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#sphere-response-arithmetic--october-1)
+then corrects squared-distance association, removing all 148 observed PC24 movement differences in
+4,512 native cases. That full body remains unmatched; the previously discrepant sphere line body is
+now exact, and all earlier matches are preserved.
 The cockpit composition-order correction has bounded original-code evidence but leaves its two bodies
 unmatched. A damage-report index is now snapshotted before a virtual query, as retail does; the affected
 subblock is ordinarily unreachable under stable memory, and only an explicit isolated intervention exposes
