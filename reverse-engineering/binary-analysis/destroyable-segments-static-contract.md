@@ -1,13 +1,59 @@
 # Destroyable Segments Static Contract
 
-Status: active static contract map
-Last updated: 2026-06-07
+Status: active contract with a dated inherited subsystem map
+Last updated: 2026-10-01 (Break snapshots and callback boundary reproduced)
+Summary: retail segment-break ordering; the broader June 7 subsystem map retains its earlier evidence limits.
 
-Saved Ghidra metadata, xrefs, instructions, and decompile read-back support the
-five segment/controller anchors described below. This is a static subsystem map,
-not runtime damage, break, rubble, pickup, layout, patch, or rebuild proof.
+The October 1 section below is a fresh instruction read and bounded original-code
+comparison. The broader map retains its June 7 evidence and labels; it has not been
+revalidated wholesale and is not gameplay, rubble, pickup or reconstruction proof.
 
-## Static Contract
+## Break snapshots and callbacks — October 1
+
+Specimen: pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+The base Break body at `0x00442b20` is 534 bytes, ending at `0x00442d36`.
+
+After setting the segment's `+0x38` flag, clearing health `+0x0c` and setting the
+controller's changed flag, retail obtains the render mesh. It captures the selected
+mesh-part pointer at `0x00442b82` and its child count at `0x00442b89`. Effect queries
+and the later spawner walk keep that captured part; each iteration still reloads
+that part's children-array pointer. A callback changing the mesh's part table or
+the segment's part index therefore differs from changing the captured part itself.
+
+The private source formerly repeated the part-table lookup. It now preserves the
+retail snapshot, snapshots the owner before the temporary-set constructor, reads
+the spawner mount before `MapMountName` (`0x00442c5c` before `0x00442c62`), and
+walks the temporary removal set through its own cursor at `+8`
+(`0x00442cd0`–`0x00442d09`). These are measured instruction-order corrections;
+they do not assert that the actual callbacks replace parts or alter mount IDs.
+
+The lead rebuilt both sources and reproduced fourteen complete-body cases with
+authored separate objects and explicit `GetRTMesh`, `FindEffect` and `GetEffect`
+providers. Four interventions replace a part-table entry or part index after the
+first effect query: the old source's later callback arguments differ from retail;
+the corrected source agrees. Controls change the captured part's child pointer
+or count instead, and cover null mesh/render objects and missing/null effects.
+The actual original empty-set constructor, empty removal and empty child-scheduling
+paths execute. A second run clobbers provider caller-saved registers/flags and
+reproduces identical observations; receiver state, stack, preserved registers,
+exception-chain restoration and unchanged FPU state are checked.
+
+The complete candidate is still unmatched: 544 section bytes and eleven relocations,
+with fourteen differences in early integer setup. All 41 existing exact controls,
+four vtables and fifty other callable sections/relocations survive. Nonempty spawner
+removal, actual particle kills, allocating paths, nonempty child scheduling and
+exception unwinding were not executed. Full gameplay reachability and equivalence
+remain open; the intervention is a falsifier of the old load order, not retail
+observation of a changing mesh.
+
+Private lead evidence under `bea-decomp/.worktrees/codex-equiv-20260930/`:
+`local-data/destroyable-break-root-20261001/accepted/receipt.json` and
+`callback-v01/receipt.json` (SHA-256
+`3ab42b2ed8aaafc91664e6cb0b6aa750e947315b08efefc7d2496d403a4db7e9`);
+`callback-poison-v01/receipt.json` records the additional ABI control.
+
+## Inherited static map — June 7
 
 The retail static evidence maps destroyable segments as a vtable-driven damage/break/rubble subsystem under `DestructableSegmentsController.cpp`. The source-file inventory contains the debug path name, but the matching Stuart source body is not present in the current reference tree, so source-body identity remains unproven.
 

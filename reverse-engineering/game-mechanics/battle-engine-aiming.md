@@ -1,7 +1,7 @@
 # Battle Engine auto-aim, launch position and Gun emitters
 
 Status: active static contract for the rebuild's player shots
-Last updated: 2026-10-01 (complete update match and native visibility-call correction; earlier emitter evidence retained)
+Last updated: 2026-10-01 (complete target-search and update matches; native range and visibility checks)
 Summary: how the Battle Engine picks an auto-aim target and blends its aim offsets,
 where each player round starts (the cockpit mesh's Gun emitters) and in which
 direction, and which state that depends on.
@@ -141,7 +141,8 @@ Its root owner is `local-data/map-water-root-20261001/native-v01/receipt.json`
 in the same private RE worktree.
 
 All 190 exact controls and 253 other callable sections/relocations remain unchanged.
-The corrected caller still has a 2,272-byte section versus the 2,290-byte retail body.
+That visibility-only draft had a 2,272-byte section versus the 2,290-byte retail body;
+the complete target-search correction below now closes its section/relocation match.
 The extra reconstructed `GetThingOverCrossHair` routine has no established retail
 address; a scan instruction-validates twelve direct calls to the dispatcher but does
 not establish that routine, so its defaults remain unmodified. Full target admission,
@@ -153,30 +154,49 @@ Private root reproduction under the `bea-decomp` RE worktree:
 `callee-readback.json` and `default-caller-readback.json` record the instruction reads
 and caller inventory. The specimen is the hash-pinned pristine executable above.
 
-### October 1 feature-range arithmetic remains open
+### October 1 complete target-search match and feature range
 
-The feature branch's range calculation has a separate demonstrated discrepancy.
+`HandleAutoAim` (`0x0040b6d0`) now matches its entire 2,304-byte compiled section,
+including its 2,290-byte body and all 79 independently read-back relocations. Its
+18-byte exception body and 40-byte unwind metadata match too. The prior visibility
+argument correction remains intact. The fresh focused build retains all 190 earlier
+exact controls and all 253 other callable sections and relocation identities.
+
 Retail `0x0040bbec`–`0x0040bc32` rounds the X/Y displacements to binary32, retains
-the Z subtraction in extended precision, and sums `Z² + X² + Y²`. Its later pitch
+the Z subtraction in extended precision, and sums `(Z² + X²) + Y²`. Its later pitch
 calculation calls `Magnitude` (`0x004026b0`) on the stored vector at `0x0040bcc8`.
-The private candidate instead retains X for one multiply, rounds Z/Y and reuses
-its earlier square sum for the later square root. Those calculations cannot be
-assumed interchangeable.
+The old private candidate retained X for one multiply, rounded Z/Y and reused its
+earlier square sum for the later square root. A typed reference adapter for the
+existing slot-90 target-position calls and a separate feature squared-distance
+operation now reproduce the retail instructions. These are reconstructed interfaces,
+not recovered original helper names or source text.
 
-The lead reproduced 1,143 native range-admission slices on finite authored coordinates:
-eight differences each at PC53/PC64, none in these PC24 cases. With target Z = 1,
-origin Z = −2⁻²⁴ and maximum range 1, retail rejects and the candidate admits.
-An X-axis counterpart disagrees in the opposite direction. A diagnostic reload of
-retail's stored Z exposes the lost-precision boundary; an inverted upper-bound
-branch changes 908 decisions. Source variants remain rejected, so this arithmetic
-defect is still open despite the separately accepted visibility-argument correction.
+The lead ran 1,179 native range-admission slices under masked nearest PC24/53/64:
+all 22 old discrepancies become zero. The earlier target-Z = 1, origin-Z = −2⁻²⁴,
+maximum-range = 1 witness is fixed. Thirty-six added cases isolate sum association;
+the adapter-only intermediate still fails six, including two under PC24. Zeroing
+either small coordinate removes these differences. A diagnostic Z reload changes
+eight decisions, and an inverted upper-bound branch changes 944. The new candidate
+uses the lead's freshly compiled object, not the helper's reported match.
 
-Only the range decision is observed. Target filters, `GetCentrePos`, callback
-reachability, subsequent angle tests, target selection and live FPU configuration
-are outside the experiment. Private root receipt:
+Whole-section matching settles this compiled body. The native experiment observes
+only range admission: filters, `GetCentrePos`, callbacks, subsequent angle tests,
+live target availability and FPU configuration remain outside its execution. The
+exception dispatcher is freshly identified from pinned LIBCMT over two complete
+regions (209 bytes/four relocations); its three supporting owners' 27 deeper
+relocation fields and input-dependent indirect dispatch remain explicit limits.
+This is neither complete exception-runtime validation nor retail/Godot play acceptance.
+
+Private lead owner under `bea-decomp/.worktrees/codex-equiv-20260930/`:
+
+- `local-data/handleautoaim-match-root-20261001/readback.json`, SHA-256
+  `d9609c9131406a83264375d6be9e2bcd0af5d7c5401506911eab0334c6b55374`.
+- `local-data/handleautoaim-match-root-20261001/accepted-native-v01/receipt.json`, SHA-256
+  `2f0d016bd42875a2054c903a802c541a56e1029965e341c90b13690addfe83cc`.
+
+The earlier 1,143-case counterexample receipt remains at
 `local-data/handleautoaim-root-20261001/feature-range-v01/receipt.json`, SHA-256
 `28d9cc5a4844f6f79741d2970fcfb3296d94593dcc283495024a4ae07668adde`.
-Its inputs and original/candidate/control outputs reproduce the worker's frozen bytes.
 
 ### October 1 complete auto-aim update match
 
@@ -190,8 +210,8 @@ reconstructed source form, not evidence of the original variable name or spellin
 The fresh focused build preserves 189 prior exact matches and all 253 other callable
 sections and relocation identities. The complete build adds this one unique address
 with no lost matched symbols or relocation conflicts. This settles this compiled
-body; `HandleAutoAim`, `GetLaunchPosition`, actual target availability, update cadence
-and player-visible tracking still need their own evidence. No game or Godot window ran.
+body; target search now also matches as recorded above. `GetLaunchPosition`, actual
+target availability, update cadence and player-visible tracking retain their separate limits. No game or Godot window ran.
 
 Private lead owner:
 `bea-decomp/.worktrees/codex-equiv-20260930/local-data/autoaim-root-20261001/`.

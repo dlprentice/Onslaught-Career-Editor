@@ -135,18 +135,25 @@ fixes two reconstructed acos calls that retail implements with asin and closes a
 path in the checker. The Unit event handler also matches its complete 400-byte section and all
 20 relocations, preserving the two scheduler overloads and RNG ordering.
 The [auto-aim update](reverse-engineering/game-mechanics/battle-engine-aiming.md#october-1-complete-auto-aim-update-match)
-now matches its entire section and all relocations; target search and launch-position bodies remain open.
+now matches its entire section and all relocations; the target search now matches too, while launch-position remains open.
 The [visibility-call recheck](reverse-engineering/game-mechanics/battle-engine-aiming.md#october-1-visibility-call-correction)
 corrects three unchecked default arguments in the private target-search caller, reproducing retail
 argument bytes in isolated native execution while preserving its existing exact controls.
-Separate native comparisons leave [feature-range arithmetic](reverse-engineering/game-mechanics/battle-engine-aiming.md#october-1-feature-range-arithmetic-remains-open)
-and [flak admission/lifespan rounding](reverse-engineering/contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md#flak-arithmetic-discrepancies--october-1)
-as demonstrated source gaps with precise falsifiers; partial improvements were not accepted as fixes.
+The [complete target-search correction](reverse-engineering/game-mechanics/battle-engine-aiming.md#october-1-complete-target-search-match-and-feature-range)
+now reproduces the entire section, all 79 relocations and local exception metadata; native range
+admission agrees in 1,179 cases, removing 22 old discrepancies. The
+[flak distance correction](reverse-engineering/contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md#flak-arithmetic-discrepancies--october-1)
+removes all 403 observed admission differences while preserving the existing exact controls. Its later
+lifespan rounding still differs in 439 cases and the full firing body remains unmatched.
 The [Pod aiming recheck](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__BallisticAimState.md)
 corrects the historical owner description and reproduces 5,940 full-body native cases with actual
 gravity/Euler helpers. Original and candidate agree, including an unwritten pitch when the search
 never improves its sentinel and an unwritten fourth velocity word. Shipped-state reachability and
 the remaining whole-section mismatch stay open.
+The [segment-break correction](reverse-engineering/binary-analysis/destroyable-segments-static-contract.md#break-snapshots-and-callbacks--october-1)
+preserves retail's mesh-part/owner/mount snapshots and temporary-set cursor. Four old callback-trace
+discrepancies disappear in fourteen controlled cases; actual shipping callback mutation and full
+destruction behavior remain unproved.
 The [settings conversion follow-up](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#october-1-original-integer-tweak-conversion)
 executes the original integer-tweak setter in 217 complete-reader cases, preserving the retail conversion
 and changed-value reset decision. Remaining callback models and real device/save acceptance remain explicit.

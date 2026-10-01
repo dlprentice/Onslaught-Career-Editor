@@ -1,7 +1,7 @@
 # ProjectileBurst__SpawnFromCurrentPreset
 
 Status: active static contract, instruction-level (replaces the 2026-08-23 factory draft)
-Last updated: 2026-10-01 (native flak arithmetic discrepancies; prior whole-body evidence retains its date)
+Last updated: 2026-10-01 (flak distance corrected; lifespan rounding remains open)
 Summary: one burst event of a weapon: the Battle Engine spend gate, then per round of the volley the emitter, aim, launch angle, two inaccuracy draws, target, locks, round Init, effects, clip ejection and recoil, in retail order.
 Evidence: MEASURED — the September 25 body instruction record and physics value maps; October 1 native flak arithmetic fragments compared with a fresh reconstructed object. No complete-body runtime replay.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -84,21 +84,23 @@ One call is one burst event. In order:
 
 ## Flak arithmetic discrepancies — October 1
 
-The fresh private reconstruction remains unmatched: a 3,744-byte candidate section
-versus the 3,772-byte retail body, with 43 exact controls in the object. The lead
-reproduced two actual numerical discrepancies, not merely different instruction scheduling.
+The first fresh private build exposed two numerical discrepancies, not merely different
+instruction scheduling. The distance correction below closes one; lifespan rounding remains
+open. Its 3,776-byte candidate section is still unmatched against the 3,772-byte retail
+body, preserving the previous 43 exact controls and five vtables.
 
 At `0x005073c9`–`0x0050744b`, retail rounds each target-minus-launch-position component
 to binary32 through the actual vector constructor `0x00401ec0`. It accumulates squared
 components as `(Y² + Z²) + X²`, takes the square root and stores the distance as binary32
 at `0x00507433`. The strict admission compares **raw round-data speed (`+0x2c`) ×
-initialized lifespan > stored distance**. The candidate retains extended subtraction
-results and uses `(X² + Y²) + Z²`.
+initialized lifespan > stored distance**. The old candidate retained extended subtraction
+results and used `(X² + Y²) + Z²`. The current source materializes all three components
+through the separately exact subtraction helper and groups the squared-distance sum.
 
 After the admitted branch's random draw, retail stores `flakInaccuracy × distance`
 to binary32 at `0x00507481`, then uses that rounded error in the lifespan expression.
-The candidate retains the product in extended precision. Native original/candidate
-fragments produce the following differences on finite authored inputs:
+The candidate still retains that product in extended precision. The initial native
+original/candidate fragments produced these differences on finite authored inputs:
 
 | Observation | Cases | PC24 differences | PC53 differences | PC64 differences |
 | --- | ---: | ---: | ---: | ---: |
@@ -117,8 +119,21 @@ after the random call with an explicitly supplied nonnegative random integer.
 No generator, callback, allocation, complete burst, shipping configuration or live
 FPU state is exercised. Threshold neighbors were selected from original distances.
 These are useful falsifiers for source repair; they do not establish occurrence in
-player gameplay. The current private source remains unchanged: tested partial fixes
-do not yet reproduce both materialization and summation safely.
+player gameplay.
+
+The lead freshly compiled the distance correction and reran all 10,824 cases:
+all 403 admission differences and 1,209 distance differences disappear. A separate
+2,187-case signed-zero/Inf/qNaN/sNaN run also agrees. The candidate reverses the inner
+Y²/Z² operands, so these samples do not establish arbitrary NaN-payload equivalence.
+All 61 other callable sections and recursive relocation identities remain unchanged.
+A vector-constructor site elsewhere in SpawnRound now expands inline; 3,009 guarded
+finite matrix cases preserve nine outputs and observed exceptions, while changing
+one multiply to addition changes 3,006 results. The newly emitted exact subtraction
+copy is already matched elsewhere and adds no unique-function credit.
+
+The later lifespan problem persists unchanged: 215 PC53 and 224 PC64 differences,
+zero in these PC24 cases, and all 45 zero-inaccuracy controls agree. No complete
+SpawnRound match or full burst/RNG acceptance is claimed.
 
 Root evidence in `bea-decomp/.worktrees/codex-equiv-20260930/`:
 
@@ -127,9 +142,17 @@ Root evidence in `bea-decomp/.worktrees/codex-equiv-20260930/`:
 - `local-data/weapon-spawn-root-20261001/native-error-v12/receipt.json`, SHA-256
   `74f0f5d4ea3ac589b63a953326bc24bc1671f686f2c1b789393b3f1c6e428183`.
 
-The root fresh object's outputs reproduce the research worker's frozen output hashes.
-Repair must preserve these original-code boundaries and the remaining exact controls;
-fewer disagreements on a sample is insufficient acceptance.
+Corrected-distance root evidence:
+
+- `local-data/weapon-flak-fix-root-20261001/distance-v01/receipt.json`, SHA-256
+  `c4e8effe2335fb00377956cf8ab04392b437ed8cd1a8e05de5d78b002ae94c4c`.
+- `local-data/weapon-flak-fix-root-20261001/error-v01/receipt.json`, SHA-256
+  `d00fb2dbf6d545a032336edc711acd1df872a54dcc1fb24380502caf549c5719`.
+- `local-data/weapon-flak-fix-root-20261001/specials-v02/receipt.json`, SHA-256
+  `45e80c09c66e1aaf9dab4a1ba3b2e2b875f5c81d3831c0a4cd54fafd7652ddec`.
+
+The next falsifier is the same lifespan corpus against a source form that emits the
+actual binary32 error store. Preserve the corrected distance and other exact controls.
 
 ## Error / edge behavior
 - A null `CreateProjectile` result skips that round's draws, lock, Init and recoil, and the loop continues.
