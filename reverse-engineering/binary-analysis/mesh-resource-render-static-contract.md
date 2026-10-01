@@ -1,7 +1,7 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-10-01 (shader constants match and trail signed-zero correction; bounded corrections retained)
+Last updated: 2026-10-01 (buggy/tentacle transforms and shader constants match; bounded corrections retained)
 Summary: specimen-bound rendering and collision contracts, with bounded corrections to arithmetic association, float stores and ordered admission.
 Evidence: MEASURED — specimen instructions, whole-section/relocation matches and bounded native calculations and buffer comparisons; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -11,6 +11,28 @@ mesh geometry, and collision bridges used by asset tooling and rebuild planning.
 Current corrected metadata is owned by the
 [Ghidra guide](../ghidra/README.md) and `developer_state.json`'s selected live authority.
 Static evidence does not by itself establish runtime rendering or layout parity.
+
+## Buggy and tentacle root transforms — October 1
+
+The private reconstruction now matches both complete `GetPartTransform`
+sections: buggy `0x004944d0` and tentacle `0x0049e660`. Each is 1,136 bytes
+with 33 relocations; their body lengths are 1,127 and 1,131 bytes respectively.
+The lead recompiled both sources and checked every relocation independently.
+All 74 other callable sections and their recursive references remain unchanged,
+including the already matched tentacle spline.
+
+The shared source pattern separates root-basis initialization from construction
+and sets the origin through the existing vector setter. That reproduces the
+first identity row's expansion, the next two constructor calls and the later
+position interpolation. A basis helper alone leaves the latter constructor
+out of line; the paired initialization form closes both whole sections.
+These helper boundaries and names are reconstructed, not recovered source text.
+
+This does not close either controller's Init method or establish rendered
+motion, live timing or whole-controller parity. No game or renderer ran.
+Private root evidence under
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+`buggy-tentacle-root-readback.json` and `buggy-tentacle-root-check.log`.
 
 ## Declaration shader constants — October 1
 

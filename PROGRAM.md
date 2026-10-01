@@ -197,7 +197,8 @@ the battle-line pulse, collision-sector updates, scratch text conversion, Unit E
 mech initialization, texture deserialization, texture-state cleanup, display-mode enumeration,
 arrow/cuboid rendering, mesh-buffer initialization, main rendering, texture activation,
 text measurement, reconnect rendering, console selection, particle allocation, render-state reset,
-unit-definition destruction and [declaration shader constants](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#declaration-shader-constants--october-1).
+unit-definition destruction, [declaration shader constants](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#declaration-shader-constants--october-1)
+and [buggy/tentacle root transforms](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#buggy-and-tentacle-root-transforms--october-1).
 All earlier matched symbols survive.
 The private README owns the current score and exact byte/relocation receipts; these static
 matches are not live gameplay, resource-loading or graphics-device acceptance.
