@@ -332,9 +332,9 @@ Retail combines XY squared distance before adding Z squared at `0x004e4f2d` and 
 The old reconstruction's `MagnitudeSq()` emitted `(Y² + Z²) + X²`; using XY magnitude plus Z squared
 restores the retail association, including the compiler-reused deep-contact distance. Fresh native
 execution of the compiled correction removes all 148 observed differences with identical inputs and
-retail outputs. PC53/64 continue to agree in these samples. The entire function remains unmatched:
-its 1,552-byte section (1,537-byte retail body) retains 43 differing nonrelocation byte positions.
-Other operand scheduling and normal/relative-speed expressions are still unresolved.
+retail outputs. PC53/64 continue to agree in these samples. After that first correction, the unmatched
+1,552-byte section (1,537-byte retail body) retained 43 differing nonrelocation byte positions.
+The expanded comparison below exposes a further relative-speed defect in that candidate.
 
 The probe verifies nonvolatile registers, stack position/canaries, x87 stack/control-word preservation,
 and unchanged volume/report inputs. Defined XYZ outputs, stopped flags and return are compared;
@@ -354,6 +354,37 @@ The latter's `native/receipt.json` SHA-256 is
 input SHA-256 is `45b993e1d8266cc3d73b6faffd1aabc9641da9c91a9bcda24fddc738803e0fd5`.
 Whole-build readback preserves all earlier exact matches. The useful next falsifier is an unresolved
 arithmetic block exercised at its actual caller's measured precision and contact state.
+
+### Expanded relative-speed comparison
+
+At `0x004e4fa3`, retail combines relative speed as `(X² + Z²) + Y²`; the earlier reconstruction
+emits `(Z² + Y²) + X²`. Asymmetric small Y/Z velocity components expose the difference. The lead
+reproduced 23,160 complete original/candidate calls with the same five retail vector helpers:
+132 defined-output differences in the baseline, all PC24, and none in the corrected candidate.
+Changing only the speed instruction block in a private diagnostic also removes all 132 differences;
+that diagnostic is evidence of cause, not a patch to the preserved specimen.
+
+The source uses the explicit speed association and the existing vector `Normalise` method. The shallow
+normalization's 81-byte block agrees with retail after resolving constants; the deep zero/reciprocal tail
+agrees over 68 bytes. The deep X/Y load order still differs. Its normalization substitution is not an
+independently demonstrated deep-path fix: it preserves the tested behavior and compiler emission of an
+already exact scale helper. The candidate remains unmatched, with a 1,536-byte section and different
+frame/scheduling decisions. A larger raw byte-difference count does not erase the demonstrated speed fix.
+
+The expanded fixtures cover the earlier controls, disparate-scale velocities, translated moving pairs,
+and shallow/deep contacts under explicit PC24/53/64 nearest rounding. Return, defined XYZ positions and
+velocities, stopped flags, untouched volumes/report, preserved registers, stack/canaries, x87 stack/control
+word and exception flags are compared. Copied vector padding is excluded. A coarse-admission mutation
+changes 21 results; removing an admitted constructor exits with the expected refusal. The lead verified
+the original entry, its 15 alignment NOPs, all five helpers and the constant region against the specimen.
+This remains finite, nonaliased authored-input evidence with one stack-fill pattern; live precision,
+world reachability and general equivalence are not established.
+
+Frozen inputs and replayer: `bea-decomp/.worktrees/codex-resume-collision-20261001/local-data/`
+`collision-resume-20261001/replay-sphere.py --suite random --out NEW_OUTPUT`. Lead execution is in
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/sphere-random-root-20261001/`;
+the adjacent `geometry-gate-resume-20261001/sphere-original-readback.json` records the specimen readback.
+The exact vector helpers are `0x00401ec0`, `0x0040d150`, `0x0041ad10`, `0x004404f0` and `0x00490900`.
 
 ## Cylinder response arithmetic — October 1
 

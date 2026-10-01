@@ -1,10 +1,37 @@
 # HUD / frontend overlay static contract
 
 Status: bounded retail static evidence; not visual proof
-Last updated: 2026-10-01 (loading-screen text selection corrected; font and options-list rechecks; August HUD map retained)
-Summary: loading-screen text selection is corrected against original instructions and six language tables; options-list rendering matches its complete compiled section and relocations; player acceptance remains separate.
-Evidence: MEASURED — October 1 native font loops, isolated menu runs and full-section/relocation matches, plus September 30 font and scale-menu readback; August HUD claims were not reverified in this pass.
+Last updated: 2026-10-01 (compass coordinate rounding reproduced; loading-screen, font and options-list rechecks retained)
+Summary: compass fixed offsets precede heading displacement; loading-screen text selection is corrected; options-list rendering matches its complete compiled section and relocations; player acceptance remains separate.
+Evidence: MEASURED — October 1 native compass and font fragments, isolated menu runs and full-section/relocation matches, plus September 30 font and scale-menu readback; August HUD claims were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+## Compass coordinate association — October 1
+
+The original argument fragment at `0x00485ccc`–`0x00485d37` in `CHud::RenderWeaponPanel`
+(`0x004858d0`) adds the fixed offsets before the heading displacement: Y is
+`((ny - 128) + 48) + dy`; X adds 17, then 48, then `dx` to its base coordinate.
+The former reconstruction let VC6 add `dy` before 48 and `dx` before 48. Explicitly grouping
+the fixed coordinates restores these instruction associations.
+
+The lead recompiled the correction and reproduced 6,171 native fragment cases using finite authored
+states and explicit round-nearest x87 PC24/53/64. All 15 outgoing draw-argument words agree after
+the correction; the former expression differs in 146 PC24 cases. For `ny=96`, `dx=float(0.1)`,
+`dy=float(-0.1)` and zero X offsets, retail/corrected Y is `0x417e6666`; the old Y is
+`0x417e6668`. Stack movement/canaries, nonvolatile registers, x87 stack/control word and absence
+of nonprecision exceptions were checked. The old expression supplies a consequential negative control.
+
+This does not execute upstream sine/cosine, `GetBottom`, a draw call or the game. The caller's live
+precision and visible consequences are unmeasured. The whole function remains unmatched; its opposite
+order of X-global reads, cosine materialization and other scheduling differences remain open. All
+55 exact functions in the affected three-object check survive, and all 37 other HUD callable sections
+and their relocations are unchanged.
+
+Private reproduction: `bea-decomp/.worktrees/codex-resume-frontend-20261001/local-data/`
+`frontend-resume-20261001/native-coordinate.py --out NEW_OUTPUT`, with frozen inputs in `coordinate/`
+and lead results in `coordinate/root-reproduction-v01/`. The lead verified the frozen retail fragment
+and constants against the specimen and both candidate objects against fresh local compilation.
+The next falsifier is a complete caller invocation spanning trigonometry and the actual device state.
 
 ## Loading-screen text selection — October 1
 
