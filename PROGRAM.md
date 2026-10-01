@@ -83,8 +83,12 @@ sit above each near miss in the source.
   on September 30. The linker's 32 import thunks at
   `0055d5e0` are library code: jump stubs into the game's DLLs (DirectSound, AVIFile, zlib, Ogg Vorbis,
   version.dll), verified against the import table and counted apart from the game functions.
-- **Next lever.** Decode VC6's instruction scheduler from c2.dll the way the inliner was decoded, and validate it
-  first on the pure-reorder rows the README lists. The register allocator comes after it. Until then:
+- **Next lever.** Follow the compiler's actual dependency and lifetime differences on the remaining reorder
+  rows. A bounded scheduler decode now reproduces the 81-IR-node region limit, unsigned ready-list ordering
+  and default priority formula; lead controls retain every emitted function section and relocation in two
+  target objects. Neither inspected near miss crosses that region limit. This is not a complete scheduler
+  model or a recovered retail dependency graph. The private README owns the evidence and limits; the full
+  graph builder and register allocator remain open. In parallel:
   - run `tools/permuter/readbatch.py` and `tools/scans/readform.py --noreads --inplace` over the rows;
   - run the `tools/inline` searches over the call-list rows.
 
