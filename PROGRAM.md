@@ -69,6 +69,12 @@ The tentacle spline, Wingman startup and normal-squad member-transfer routine no
 complete sections and relocations. The last creates a squad and transfers an existing unit; its inherited
 "SpawnMembers" label did not establish new-unit spawning. These interfaces are reconstructed, not recovered
 original source text or runtime acceptance.
+Closest-edge selection, desired weapon pitch, and both remaining third-person camera queries now pass
+fresh complete-section/relocation checks. The geometry correction preserves addition association; the
+camera corrections preserve returned temporary lifetimes. A separate
+[contact-normal experiment](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__Hit.md)
+reproduces decision differences caused by the unmatched candidate's float arithmetic at the slope
+threshold. These are authored numerical boundaries, not observed gameplay contacts; that body remains open.
 The cockpit composition-order correction has bounded original-code evidence but leaves its two bodies
 unmatched. A damage-report index is now snapshotted before a virtual query, as retail does; the affected
 subblock is ordinarily unreachable under stable memory, and only an explicit isolated intervention exposes

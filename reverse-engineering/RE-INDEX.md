@@ -1,9 +1,12 @@
 # Reverse-Engineering Index
 
 Status: active — the RE evidence front door
-Last updated: 2026-09-27 (Jet Charge interface correction completed; broader audit remains)
+Last updated: 2026-10-01 (contact-normal rounding falsifier recorded; broader audit remains)
 Summary: where RE evidence lives, what each store is authoritative for, and the
 rules a claim about the shipped binary has to meet before it is written down.
+The [Unit contact-normal contract](binary-analysis/functions/Unit.cpp/CUnit__Hit.md)
+records a freshly reproduced native numerical disagreement in an unmatched
+reconstruction, with admission guards and runtime reachability limits explicit.
 Select complete-RE campaign authority only through `developer_state.json` →
 `current_re_authority`; it owns generation, exact geometry, READY/reducer pins,
 grades, verify command, and next-valid generation. Select the preserved tracked
