@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-30 (decompilation continuation integrated; all game rows emit candidates; broader audit unfinished; rebuild and companion paused)
+Last updated: 2026-10-01 (decompilation continuation integrated; all game rows emit candidates; broader audit unfinished; rebuild and companion paused)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -59,10 +59,12 @@ owns the score and the matched-function list, and this file keeps only the plan.
   identical-code folding keeps a shared name. A reconstruction label may go in as a
   comment that says it is one, never as the function's name.
 
-Current state (September 30 continuation). Codex reproduced the five-peer handover baseline, then integrated
+Current state (October 1 continuation). Codex reproduced the five-peer handover baseline, then integrated
 the spawner update, its name-to-unit lookup, the Sentinel firing update, Mine update and Unit preparation
 with complete section/relocation matches. The Euler-angle constructor was already emitted exactly but lacked
-its annotation; that coverage omission is corrected. The confirmation-menu event handler now matches too.
+its annotation; that coverage omission is corrected. The confirmation-menu event handler and central Unit
+movement update now match too. A shared float-angle wrapper closes the camera update and infantry
+initialization, with the complete score retaining every earlier matched symbol.
 The cockpit composition-order correction has bounded original-code evidence but leaves its two bodies
 unmatched; all integrations preserve earlier exact matches. The private README owns the current counts.
 `bea-decomp` main's README owns the score, matched list, findings and failed alternatives; per-function notes
@@ -88,10 +90,13 @@ sit above each near miss in the source.
   version.dll), verified against the import table and counted apart from the game functions.
 - **Next lever.** Follow the compiler's actual dependency and lifetime differences on the remaining reorder
   rows. A bounded scheduler decode now reproduces the 81-IR-node region limit, unsigned ready-list ordering
-  and default priority formula; lead controls retain every emitted function section and relocation in two
-  target objects. Neither inspected near miss crosses that region limit. This is not a complete scheduler
-  model or a recovered retail dependency graph. The private README owns the evidence and limits; the full
-  graph builder and register allocator remain open. In parallel:
+  and default priority formula; lead controls retain every emitted function section and relocation in the
+  inspected objects. This led to a concrete shared-header result: VC6's float `atan2f` wrapper in Azimuth
+  moves the camera's final matrix multiply into the copy-setup scheduling region, reproducing retail's
+  instruction order. Infantry initialization also matches, with no prior exact symbol lost. The earlier
+  Reset/sprite cases remain unresolved. This is not a complete scheduler model or a recovered retail
+  dependency graph; the private README owns the evidence and limits. The full graph builder and register
+  allocator remain open. In parallel:
   - run `tools/permuter/readbatch.py` and `tools/scans/readform.py --noreads --inplace` over the rows;
   - run the `tools/inline` searches over the call-list rows.
 
