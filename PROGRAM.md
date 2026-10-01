@@ -93,6 +93,11 @@ The [control-binding contract](reverse-engineering/binary-analysis/functions/Con
 now also records 482 agreeing key-capture cases and ten failure controls, using actual helpers with explicit
 disabled-sound/C-locale fixtures. The full key-capture function remains unmatched; physical input and
 serialized settings compatibility are not established by those cases.
+The [Unit contact handler](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__Hit.md#exact-reconstruction-correction--october-1)
+now matches its entire section and all relocations; its earlier 13,839 native threshold cases have no
+corrected decision differences. The [startup precision recheck](reverse-engineering/contracts/render-platform/CD3DApplication__Initialize3DEnvironment__0052af00.md#precision-setup--october-1-instruction-recheck)
+confirms that retail omits the Direct3D preservation flag. PC24/nearest after creation is justified by
+the API contract, while live control words and reset behavior remain unmeasured.
 The cockpit composition-order correction has bounded original-code evidence but leaves its two bodies
 unmatched. A damage-report index is now snapshotted before a virtual query, as retail does; the affected
 subblock is ordinarily unreachable under stable memory, and only an explicit isolated intervention exposes

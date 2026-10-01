@@ -2,7 +2,7 @@
 
 Status: accepted authored-data and bounded Unit static admission; the rebuild code it describes was
 retired on 2026-09-26 (see "Rebuild pointers")
-Last updated: 2026-09-26 (rebuild pointers: the separate World 110 owners retired; 2026-09-25 Level 100 carry-over and Turret 03 fire-control correction; construction admission dated 2026-09-07)
+Last updated: 2026-10-01 (precision-helper wording rechecked; dated construction and retired rebuild evidence unchanged)
 Verdict: until 2026-09-26, Core admitted all 40 exact World-110 RLWD initial-object rows as one
 immutable ordered seed projection with closed type-specific tails. These are
 serialized constructor inputs, not 40 actors, a registry, or a session. The
@@ -254,8 +254,11 @@ specifies single precision and nearest rounding without that flag. That API
 contract makes carrying the CRT's precision forward unjustified; it does not
 measure this installation's Proton/device behavior. CreateDevice and Reset
 (`0x52b28d`, resize `0x52b781`) remain external boundaries. The inspected
-application load path does not reassert a standing control word. Temporary CRT
-conversion/math and texture-parser changes restore their caller's state.
+application load path does not reassert a standing control word. The October 1
+[precision recheck](../contracts/render-platform/CD3DApplication__Initialize3DEnvironment__0052af00.md#precision-setup--october-1-instruction-recheck)
+confirms the inspected conversion helper's rounding restoration and a temporary
+object's precision restoration. The old “texture-parser” identity is not relied
+on; those paths do not prove preservation across every callback or library exit.
 
 The decisive future witness is the first BSWD pine at `0x4f6080`, reached from
 the explicit-tree call `0x50ced8` (return `0x50cedb`): capture the raw x87 control

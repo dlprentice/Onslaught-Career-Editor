@@ -2,7 +2,7 @@
 
 Status: active bounded static and isolated-execution contract
 Last updated: 2026-10-01
-Summary: the aggregate contact-normal test at `0x004fcc30` depends on a float spill; the mesh/sphere producer can return two contacts with an untouched or newly written third normal. Both have bounded original-code evidence.
+Summary: the corrected contact handler now matches its complete compiled body, preserving the observed float spill and fixed three-normal sum; mesh/sphere producer reachability remains bounded separately.
 Source File: private reconstructed `bea-decomp/src/Unit.cpp` | Binary: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 The selected specimen is `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
@@ -46,9 +46,9 @@ virtual `+0x110` at `0x004fcd90..0x004fcda3`. Both the admitted and rejected
 paths finally call `0x004f4480` with partner and report. These call destinations
 are static facts; their side effects were not executed in this experiment.
 
-## Reproduced numerical difference
+## Reproduced numerical difference — former candidate
 
-The lead freshly compiled and relocated the current candidate, then reproduced
+The lead freshly compiled and relocated the former candidate, then reproduced
 the helper's native i386 experiment. It executes original instructions from
 `0x004fcce3` to admission `0x004fcd90` or rejection `0x004fcda9`, and the
 corresponding candidate block. Other bytes of the code page are `INT3` guards.
@@ -65,9 +65,8 @@ These normals do not satisfy the earlier individual `0.89` threshold.
 A separate three-opcode intervention widens only the retail Y spill and its
 two reads to float64. That removes all `0x037f`/`0x027f` decision differences;
 588 `0x007f` differences remain. A threshold-to-one negative control changes
-5,646 decisions. Neither intervention is an implementation fix. The current
-candidate still fails whole-function matching, and no replacement arithmetic
-has been accepted.
+5,646 decisions. Neither intervention is an implementation fix. That candidate failed whole-function
+matching. The subsequent source correction below supersedes its open status.
 
 Private reproduction owner:
 `bea-decomp/.worktrees/codex-equiv-20260930/local-data/unit-hit-root-20261001/`.
@@ -75,6 +74,27 @@ Private reproduction owner:
 helper driver; `native-x87.py` is the rerunnable experiment, and
 `native/receipt.json` has SHA-256
 `5aee572fc271e2d3a9c0c55f6f0693ae9546df3832913e623d728cb8da18148f`.
+
+## Exact reconstruction correction — October 1
+
+The source now shares a downward vector between the per-contact and aggregate slope tests,
+with a named float for the first-contact dot result. That ordinary source/value lifetime
+restores the Y rounding and normalized X/Y stores above. The lead independently rebuilt it:
+**all 400 emitted section bytes and all nine relocations match the pristine body**. Its
+relocated SHA-256 is `df4d10d55db50d359a9d34e782e3f8202aedb62e6ada17dd0a21c574a8c9a0ca`.
+Every one of the 166 preceding exact Unit address/symbol pairs is retained; the other 214
+callable sections retain their bytes and relocation referents, allowing local-label renumbering.
+
+The corrected threshold block also reran the same 13,839 authored native cases. No decision
+differs at any of the three selected precisions; the threshold control still changes 5,646
+cases. This closes the reconstructed function's demonstrated arithmetic gap. It does not
+establish captured contact inputs, live precision, original source spelling or player parity.
+In particular, the exact retail code still sums three normals when the count is two.
+
+Private owner: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/unit-hit-match-root-20261001/`.
+`readback.json` records the fresh compile and nine targets; `native/receipt.json` SHA-256 is
+`9b45d9e6e039ba119d4b8c1aad58e64cc066af72ea1d090db47532179388e9bc`.
+The original driver and historical mismatches above remain preserved.
 
 ## Mesh/sphere producer — October 1 recheck
 
@@ -138,4 +158,4 @@ two-contact sequence and the report contents at each callback. Runtime
 reachability requires an admitted captured report and its actual x87 control
 word, followed by replay of the exact values through both blocks. The authored
 storage patterns are not claimed to be ordinary retail stack contents. Full
-body matching remains a separate open task.
+body matching is now closed for this function; the caller/producer runtime questions remain.

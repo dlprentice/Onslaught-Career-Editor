@@ -1,7 +1,7 @@
 # CD3DApplication__Initialize3DEnvironment
 
 Status: active — instruction recheck and bounded original-code execution; full device acceptance open
-Last updated: 2026-09-30
+Last updated: 2026-10-01
 Summary: retail device creation/reset, mode-pointer lifetime and failed-init cleanup, with modeled API boundaries and inherited packet material identified separately.
 Evidence: MEASURED — pristine instructions and 23 bounded original/candidate execution cases; earlier packet/decompile metadata remains historical evidence, not runtime proof.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -119,6 +119,45 @@ behavior, HAL-to-REF recursion, cursor/query paths, actual virtual bodies and fu
 unexecuted. Six FindMode loops plus their preferred-format exit trampoline independently match
 528 bytes without relocations; that does not make either enclosing function exact. The current
 candidate section is 2,144 padded bytes, with 2,129 executable bytes versus retail's 2,132.
+
+## Precision setup — October 1 instruction recheck
+
+The lead re-derived the CRT-to-device chain from the selected pristine specimen. CRT entry
+`00560181` reaches the function pointer at `006532e8` through `00560226`/`0055dd7b`; its stored
+value is `0055da76`. The precision helper `00560cb1` passes `(0x10000, 0x30000)` to `0056947e`.
+The pinned x86 VC6 `FLOAT.H` identifies those as `_PC_53` and `_MCW_PC`. Its inspected mask
+combination requests 53-bit precision while preserving the public rounding and exception-mask
+settings. This request is not proof of the later gameplay precision.
+
+WinMain calls device setup at `0051236e`. At `005290ba`, SDK version 31 goes through thunk
+`005be622` and the verified `d3d9.dll!Direct3DCreate9` import at `005d8348`. Enumeration writes
+flags `0x50`, `0x40`, `0x80` or `0x20` at `00529c21`, `00529cf8`, `00529dd2` and `00529ea9`;
+`00529b09` copies the selected value into mode `+0x0c`. Creation loads it at `0052b2be`,
+optionally ORing `0x100` from the boolean at `00662f3d`. Neither possibility contains
+`D3DCREATE_FPU_PRESERVE` (`0x2`, checked in the pinned D3D9 header).
+
+Microsoft documents that Direct3D initialization sets the calling thread to single precision
+and nearest rounding unless preservation is requested. **PC24/nearest after creation is therefore
+an inference from these flags and the API contract, not a measured raw control word.** Carrying
+the CRT PC53 request forward unchanged is not justified.
+[Microsoft's thread-state guidance](https://learn.microsoft.com/en-us/windows/win32/dxtecharts/top-issues-for-windows-titles#manipulation-of-the-floating-point-control-word),
+[creation flags](https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dcreate).
+
+Reset calls at `0052b28d` and `0052b781` receive presentation parameters, with no behavior-flag
+argument. The reviewed [Reset contract](https://learn.microsoft.com/en-us/windows/win32/api/d3d9/nf-d3d9-idirect3ddevice9-reset)
+does not establish the x87 word after reset. Library code can temporarily change it too:
+`0055e128` saves/restores rounding around integer conversion; the object at `005896bd` saves
+the public word at `+0x88` and requests PC53, with precision restoration at `005897ea`.
+These inspected paths do not prove restoration on every library, callback or DLL path.
+
+The lead verified all 23 input range hashes and independently decoded the 27 critical instruction
+assertions, plus the import/pointer chain and pinned headers. Private readback:
+`bea-decomp/local-data/fpu-startup-root-20261001/readback-v02.json`, SHA-256
+`0b55a5da558e89b6d0c55d24b8924226ff734462e9c3b49e362ad55ebb3c1630`.
+No game/device call ran. The decisive remaining observation is control word **and thread identity**
+before/after creation and both reset sites, then at the tested collision/projectile entries.
+Windows and the installed Proton/DXVK path must be measured separately; authored arithmetic
+witnesses do not establish Level 100 reachability.
 
 ## Runtime corroboration (TTD, bounded)
 No TTD execution row exists for this VA in the bounded `ttd-deep-mine/values.tsv` corpus. This absence is not a dormancy claim and supplies no runtime semantic proof.
