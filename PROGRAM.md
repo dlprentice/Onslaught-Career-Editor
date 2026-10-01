@@ -60,14 +60,17 @@ owns the score and the matched-function list, and this file keeps only the plan.
   comment that says it is one, never as the function's name.
 
 Current state (September 30 continuation). Codex reproduced the five-peer handover baseline, then integrated
-the spawner update and its name-to-unit lookup with complete section/relocation matches. The Euler-angle
-constructor was already emitted exactly but lacked its annotation; that coverage omission is corrected.
+the spawner update, its name-to-unit lookup, the Sentinel firing update, Mine update and Unit preparation
+with complete section/relocation matches. The Euler-angle constructor was already emitted exactly but lacked
+its annotation; that coverage omission is corrected. The confirmation-menu event handler now matches too.
+The cockpit composition-order correction has bounded original-code evidence but leaves its two bodies
+unmatched; all integrations preserve earlier exact matches. The private README owns the current counts.
 `bea-decomp` main's README owns the score, matched list, findings and failed alternatives; per-function notes
 sit above each near miss in the source.
 - **What remains.** Every game-function row now has an emitted candidate; the remaining bodies compile but
   differ. The README's "Open near-misses" opens with where the work stands:
   - the remaining near misses by class: inline decisions, same-call size differences, instruction order or layout,
-    and register choice only;
+    and zero normalized shape distance (which can still hide different branch targets);
   - what to try first in each class;
   - each lane's leads, with measured states.
 
@@ -120,7 +123,8 @@ sit above each near miss in the source.
   - input and settings: [mouse recentering constant](reverse-engineering/source-code/frontend/controller-system.md#september-30-mouse-recentering-byte-match),
     [options reader](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#september-30-reconstructed-options-reader-comparison);
   - weapons and aiming: [current-mode lookup](reverse-engineering/game-mechanics/battle-engine-weapon-stores.md#current-mode-lookup--september-30-recheck),
-    [call binding](reverse-engineering/game-mechanics/battle-engine-aiming.md#september-30-call-binding-recheck);
+    [call binding](reverse-engineering/game-mechanics/battle-engine-aiming.md#september-30-call-binding-recheck),
+    [cockpit composition order](reverse-engineering/game-mechanics/battle-engine-aiming.md#cockpit-composition-order--september-30-recheck);
   - meshes, rendering and collision: [named-mesh interface](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#named-mesh-render-interface--september-30),
     [segment-contact precision](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#segment-contact-precision--september-30),
     [segment approach](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#segment-facing-and-approach--september-30),

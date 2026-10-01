@@ -1,7 +1,7 @@
 # Battle Engine auto-aim, launch position and Gun emitters
 
 Status: active static contract for the rebuild's player shots
-Last updated: 2026-09-30 (target-admission dispatch and null-data recheck; earlier emitter evidence retained)
+Last updated: 2026-09-30 (cockpit composition-order correction; target-admission and earlier emitter evidence retained)
 Summary: how the Battle Engine picks an auto-aim target and blends its aim offsets,
 where each player round starts (the cockpit mesh's Gun emitters) and in which
 direction, and which state that depends on.
@@ -9,7 +9,8 @@ Evidence: MEASURED static reads of the pristine specimen; the shipped cockpit an
 drone meshes through the repository CMSH parser; `default physics.dat` and the
 Aquila configuration. A read-only research pass traced the functions. The RE lane
 re-checked the cone constants, the offset blend, the absence of a fresh trace in
-`GetLaunchPosition` and the cockpit mesh name at their addresses. No runtime capture.
+`GetLaunchPosition` and the cockpit mesh name at their addresses. The composition-order subsection adds
+bounded isolated original-code execution; no retail runtime capture.
 Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
 `m_cockpit2.msh.aya` SHA-256 prefix `008b9292`; `m_FA_F24_training.msh.aya` SHA-256
@@ -202,12 +203,50 @@ Launch positions therefore depend on the render fraction (`0x008a9e44`) and the
 render counter (`0x008a9aac`), not only on simulation state.
 
 
+## Cockpit composition order — September 30 recheck
+
+The final composition inside both `CCockpit::ProcessWalker` (`0x00424ca0`) and
+`ProcessJet` (`0x004250f0`) is **base orientation × newly computed rotation**.
+Each starts by copying the base matrix at cockpit `+0xb0` into `+0x2c`. In Walker,
+`0x004250ca` puts the `+0x2c` receiver in ECX for the matrix product at
+`0x004250cc` → `0x0040d320`; the local yaw/pitch/roll matrix is the right operand.
+Jet's inlined product at `0x004252cb`–`0x004253e4` independently carries that order.
+This describes the inner cockpit tilt S, before the separate world composition B·S above.
+The decompilation previously reversed these operands and has been corrected; neither
+complete update body is yet a byte match.
+
+The lead reproduced 16 finite isolated cases against the pristine specimen named in
+this document: Walker and Jet, four authored base matrices, and two angle/state sets,
+with x87 control word `0x027f`. The corrected source agrees on every XYZ matrix float
+bit and the two eased slope values at `+0xa4`/`+0xa8`. The old order fails all 12
+nonidentity-base controls; the smallest maximum matrix-element difference is
+`0.2323758602142334`. All four identity controls conceal the reversal. For example,
+a quarter-turn-Z base in the first Jet case gives maximum error `0.3819820359349251`
+with the old order and zero with the correction.
+
+Walker was restricted to nonwalking, airborne updates by making its `IsWalking`
+and `IsOnGround` queries return false. Other called helpers execute unchanged
+retail instructions; Jet needs neither substitution. The lead also checked normal
+return, stack canaries, nonvolatile registers, preserved x87 control word, and that
+candidate bytes fit their original function slots. Unused candidate tails were
+poisoned rather than filled with leftover retail instructions. Matrix padding is
+outside the compared output. These cases do not establish the complete Walker law,
+all floating-point behavior, or player-visible cockpit motion.
+
+Private reproduction: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/cockpit-root-20261001/`,
+`composition_probe.py` and `composition-probe.json`; source correction originated
+in private commit `faea76d`. The constructor initializes the base matrix to identity.
+A nonidentity base's reachability in ordinary gameplay has **not** been established;
+the authored controls demonstrate why the general operand-order contract matters,
+not that an earlier screenshot must have looked wrong.
+
 ## Open questions
 
 | Question | Cheapest falsifier |
 | --- | --- |
 | How the render fraction and counter at launch time behave in a fixed-step replay | Log `0x008a9e44` and `0x008a9aac` at the launch call `0x00506bca` in a copied runtime |
-| The walker tilt S inside `0x00424ca0` | Static read, or dump cockpit `+0x2c` during a walker capture |
+| Complete walker tilt S inside `0x00424ca0`, including walking and terrain paths | Extend the isolated cases to those branches, then compare cockpit `+0x2c` during a copied-runtime walker capture |
+| Whether the base matrix at cockpit `+0xb0` becomes nonidentity in normal play | Trace writes to the base matrix, then watch it through turning, damage and morphing in a copied runtime |
 | The second pose path `0x004b0fb0`, used without a pose cache or with render counter ≤ 1 | Static read of `0x004b0fb0` |
 | Whether script-spawned drones have `+0x214` = 1 at their first auto-aim query | Read it at spawn in a copied runtime |
 | Whether the CRTCutscene object (`0x005dea38`) traced by `cockpit-world-matrix-static-2026-07-26.md` is a second cockpit renderable beside this CRTMesh, or the same object misidentified | Read the cockpit's renderable fields after construction at `0x004244b0` |
