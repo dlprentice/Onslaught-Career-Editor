@@ -1,8 +1,8 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-10-01 (triangle travel-limit gate and expanded sphere-speed comparison; earlier render/collision rechecks retained)
-Summary: triangle travel admission stores a float32 squared limit and rejects unordered comparisons; sphere speed preserves XZ-then-Y arithmetic. Render and other collision slices retain their measured limits.
+Last updated: 2026-10-01 (polygon side-normal magnitude, triangle travel gate and sphere-speed comparisons)
+Summary: specimen-bound rendering and collision contracts, with bounded corrections to arithmetic association, float stores and ordered admission.
 Evidence: MEASURED — specimen instructions, whole-section/relocation matches and bounded native calculations and buffer comparisons; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
@@ -196,6 +196,44 @@ Preserve the adjusted receiver when translating render dispatch or object layout
 getter/receiver identity question; it does not demonstrate a current Godot defect, visible mesh selection,
 animation correctness or scene parity. A useful runtime falsifier would observe the complete-object
 pointer, interface pointer and selected mesh number together at a real render initialization boundary.
+
+## Polygon side-normal magnitude — October 1
+
+Within `CMeshPart::OptimizePolygons` at `0x004b31f0`, the neighbouring-face
+normal's magnitude calculation at `0x004b3727`–`0x004b3745` adds Y² and Z²
+before X², takes the square root, and stores float32. The former reconstruction
+added X² and Y² first. This is a rounding distinction, even though the real-number
+expressions are algebraically equivalent.
+
+A source-local cross-product/normalization helper expresses the retail grouping
+while retaining the existing extended intermediates and float store. The fresh
+compiled target changes only six x87 operand bytes; its other section bytes and
+all 33 relocation tuples remain unchanged. All 60 other callable sections retain
+their bytes and relocation meaning. Simpler helper forms that removed the store
+were rejected. The helper's original type/name is unknown, and shared vector math,
+the outer normal and the edge-length calculation are unchanged.
+
+The lead rebuilt the source, bound its fragment to the frozen candidate and
+reproduced the existing 43,062 authored float32 XYZ cases under six explicit x87
+precision/rounding settings. The old magnitude differs in 1,340 cases: 906 at
+PC24/nearest and 434 at PC24/toward-zero. Corrected captured output agrees with
+retail throughout, including the magnitude, retained XYZ, control/status/tag state
+and stack canaries. Thirty-six exact controls pass; replacing square root with
+absolute value changes 42,830 results as a negative control.
+
+This executes only the 30-byte arithmetic slice with authored incoming x87
+components. Cross-product reachability, normalized outputs, polygon-collapse
+decisions, thresholds and the live game's control word remain unmeasured. The
+complete function still does not match; its stack layout and edge-length square
+association remain open. A useful next falsifier starts from admitted mesh
+positions, observes the preceding cross product and follows normalization into
+the curvature/collapse comparison with the caller precision recorded.
+
+Private source/object readback:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/mesh-side-root-readback.json`.
+The unchanged corpus, frozen before/after objects and lead replay are under
+`bea-decomp/.worktrees/codex-resume-mesh-20261001/local-data/mesh-side-correction-20261001/`:
+`correction-frozen/` and `root-corrected-replay-20261001/receipt.json`.
 
 ## Triangle travel-limit admission — October 1
 

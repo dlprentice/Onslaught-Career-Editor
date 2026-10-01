@@ -188,17 +188,22 @@ Root reproduced its native endpoint cases. Existing exact controls are preserved
 integrated check. Public documentation remains on `codex/retail-re-20260919`; private source integrates
 on `bea-decomp` main. Do not assume the public main includes every RE-branch commit.
 
-David has resumed the decompilation with independent object scopes. Eleven further complete compiled
-matches are integrated and pushed to private main: the navigation segment query, sprite lifetime setup,
+David has resumed the decompilation with independent object scopes. Further complete compiled
+matches are integrated into private main: the navigation segment query, sprite lifetime setup,
 trail colour packing, colour interpolation, blob shadows, shadow view construction, animal destruction,
 the player's weapon-charge update, [destructible-part break and rubble handling](reverse-engineering/binary-analysis/destroyable-segments-static-contract.md#base-rubble-code-match--october-1),
-and the battle-line pulse. All earlier
-matched symbols survive. The private README owns the current score and exact byte/relocation receipts.
+the battle-line pulse, collision-sector updates, scratch text conversion, Unit Euler smoothing,
+mech initialization, texture deserialization and texture-state cleanup. All earlier matched symbols
+survive. The private README owns the current score and exact byte/relocation receipts; these static
+matches are not live gameplay, resource-loading or graphics-device acceptance.
 The separately reproduced [compass coordinate correction](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#compass-coordinate-association--october-1)
 fixes a bounded rounding difference but adds no whole-function credit.
 The [expanded sphere response comparison](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#expanded-relative-speed-comparison)
 finds and corrects a further speed-association difference in the finite native corpus; complete body
-matching and live-world acceptance remain open.
+matching and live-world acceptance remain open. The [polygon side-normal correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#polygon-side-normal-magnitude--october-1)
+likewise resolves the measured arithmetic slice while leaving the full function and mesh-state
+reachability open. Fresh [squad registration decoding](reverse-engineering/binary-analysis/unit-battleengine-gameplay-static-contract.md#squad-registration-order--october-1)
+corrects a head-insertion call to retail's tail append; this does not complete squad initialization.
 
 Continue from the private README's current findings and retained **October 1 handback leads**, not an
 older handoff queue:
