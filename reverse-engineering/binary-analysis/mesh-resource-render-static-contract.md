@@ -1,7 +1,7 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-10-01 (imposter orientation and centre-offset corrections; exact quad and collision rechecks)
+Last updated: 2026-10-01 (debug-arrow precision/callers; imposter, quad and collision rechecks)
 Summary: imposter orientation and centre-offset arithmetic are corrected; its quad matches exactly. Collision, trail, emitter and mesh-loading contracts retain their measured limits; older slices are historical leads.
 Evidence: MEASURED — specimen instructions, whole-section/relocation matches and bounded native calculations and buffer comparisons; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -450,6 +450,50 @@ Rotation receipt SHA-256 `6a43f46e4bda0c1e011e200a36d7dce58815232356dc7a810e9dbb
 offset receipt SHA-256 `9aeb7e86d28698f1f2c688995ce708c16d763b327b2b4cbde4eb71d1c78f7ac1`.
 The adjacent `render-font-root-20261001/readback.json` binds the final source and
 freshly compiled objects. Ghidra was not changed.
+
+## Retained debug-arrow arithmetic and indices — October 1
+
+The body at `0x0053df40`, reconstructed as `CDXEngine::RenderArrow`, retains the
+first vertex sum's X component in x87 until the origin is added
+(`0x0053e120`–`0x0053e149`). Its Y/Z components are rounded to float32 first.
+The reconstructed forwarding format-setter wrappers consumed enough inline budget
+to keep a vector constructor out of line and round X prematurely. Calling the actual
+format setters directly removes that extra boundary without adding fake operations.
+
+The lead freshly compiled and reproduced eighteen native finite cases with six
+inputs at PC24/53/64 and nearest-even rounding. Six old X differences, three each at
+PC53/64, become zero; Y/Z are unchanged. Adding only the premature X store/reload to
+retail reproduces every old result. The baseline executes the actual vector
+constructor. Explicit fragment-entry adapters, guard bytes, register/stack and x87
+checks bound the result. Upstream normalization, providers, GPU drawing and live
+control words are excluded. All thirty exact controls and 36 other callable sections
+and relocation targets survive. The full 752-byte section remains unmatched against
+the 734-byte retail body, with 188 differing positions and nineteen relocations.
+
+A separate fresh static read finds three decoded direct calls, at `0x004e9fc9`,
+`0x004ea110` and `0x004ea2f0`, all inside the squad-debug body `0x004e9f00`.
+Its constructor installs vtable `0x005df0f4`, whose slot 52 points there.
+The selected-squad dispatch at `0x00470681` precedes the developer-mode check;
+PostRender reaches that dispatcher at `0x0053ef91`. This is real retained code,
+but ordinary stock-player activation has not been established.
+
+The retail six-word index array also leaves element 4 unwritten. Its other elements
+are `[i0,i1,i2,i0,unknown,i3]` (`0x0053e1c3`–`0x0053e1f3`). Cached-buffer acquisition
+at `0x00501280` does not initialize that caller stack slot. AddIndices copies all
+twelve bytes (`0x00500b26`–`0x00500b2d`); Draw binds the buffer and forwards to the
+indexed-draw wrapper (`0x00500f25`/`0x00500f38`). With initially empty buffers this
+submits four vertices and two triangle-list primitives. Neither acquisition nor
+submission establishes that the unwritten index is valid. The reconstruction
+preserves this static behavior; no visible defect or device failure is claimed.
+
+Private lead owner:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/arrow-root-20261001/`.
+The native receipt `native-v08/receipt.json` has SHA-256
+`a096ffd7f37c2361550ecc5cd7e3d59f745d33f4d26d041e0d25b10d5c158875`;
+`readback.json` and `static-callers/` retain compiled and caller/buffer evidence.
+A cheap future runtime falsifier watches the selected-squad pointer and these three
+calls on an experimental game copy, then records the submitted index values.
+No renderer ran and no Ghidra database changed.
 
 ## Baseline Static System Slices
 

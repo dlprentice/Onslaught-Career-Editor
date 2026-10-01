@@ -1,9 +1,9 @@
 # CDXMemBuffer: retail file buffering and text I/O
 
 Status: active specimen-bound contract; dated historical records retained below
-Last updated: 2026-09-27
+Last updated: 2026-10-01 (bounded Read/Skip comparison; September 27 records retained)
 Summary: source method identities, measured receiver fields, retail/source differences,
-and bounded original-code evidence for line reading and failed writes. File/device
+and bounded original-code evidence for buffered reads, line reading and failed writes. File/device
 acceptance and complete save compatibility remain separate.
 Source File: `references/Onslaught/DXMemBuffer.cpp` | Binary: `BEA.exe.original.backup`
 
@@ -117,7 +117,8 @@ against cached capacity `+18`, while the requested amount comes from the shared
 global. Changing that global while buffers are open has not been proved safe.
 The unsigned pointer/end clamp precedes the signed-positive count test; this
 does not justify saying every negative count is ignored. These Read/Skip
-findings are static, distinct from the ReadString and Write/Close runs below.
+findings were static in the September 27 pass; the October 1 comparison below adds
+bounded execution evidence without claiming complete file compatibility.
 
 Filename-suffix comparison with the initial `.aya` string at `0x006318a0`
 selects compressed paths. Plain start-skip seeks whole configured buffer units,
@@ -144,8 +145,43 @@ When `+0c` is nonzero, refill compares the output-byte sum modulo 256 to the
 byte at `+10`; it is not CRC32. `+10` increments even when checking is disabled.
 The rechecked constructor/initializers do not populate a check-byte stream, so
 this conditional branch is not evidence of active sidecar validation in a
-normal initialized reader. Compressed decoding, check streams and real Windows
-I/O remain unexecuted by the experiments below.
+normal initialized reader. The October 1 comparison supplies an authored check
+stream and a modeled decompressor; the actual decoder DLL and real Windows I/O
+remain unexecuted.
+
+## Buffered-read comparison — October 1
+
+The lead freshly compiled the reconstructed Read and compared it with original
+instructions in 200 authored cases. The 192 nonnegative cases also compare state
+and provider-call order with the complete byte-matched Skip body, excluding only
+destination writes. Eight negative-size cases remain separate malformed-input
+observations. Eighty ready-memory states execute without any providers and have
+an independent byte-copy, pointer, count, EOF and position-wrap oracle.
+
+All admitted comparisons agree. Exact final-buffer exhaustion leaves EOF unchanged;
+overshoot sets it (`0x0054859e`–`0x005485ad`). The check cursor advances even when
+checking is disabled (`0x00548785`–`0x0054878e`). Packed refills may accumulate
+several chunks before reaching the shared read threshold. A later chunk-header
+failure after successful output returns the accumulated count without querying
+GetLastError (`0x005486cc`–`0x00548709`); data-read and decode failures have
+different paths. Eight negative controls detect changed EOF/check/refill behavior,
+missing providers, a wrong import relocation and incomplete execution.
+
+Refill cases use explicit ReadFile/GetLastError and Python-zlib models. The
+original C-locale `stricmp` body and import thunk execute; the original zlib DLL
+does not. The test uses an 8-byte read threshold and bounded authored buffers,
+not normal-size files, real sidecars or a full resource parser. Fatal-file handling
+is a terminal observation boundary; its body is not executed. These distinctions
+prevent treating modeled agreement as retail I/O or save compatibility.
+
+Read remains unmatched: a 688-byte compiled section versus the 686-byte retail
+body, with 460 differing positions. Thirteen exact object controls survive; no
+source behavior correction was demonstrated. Private lead evidence:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/dxmembuffer-read-root-20261001/`,
+`native-model-v1/receipt.json`, SHA-256
+`3e5e0d5df525c713e04affbb59c55d30b062f16aa6b2293201210c9caf301c17`.
+The next useful runtime falsifier is a disposable real packed-file read through
+the selected Windows API/DLL path with observed refill counts; it was not run.
 
 ## Text-reader edge cases — 67 original-code cases
 

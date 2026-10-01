@@ -119,6 +119,12 @@ and premature rounding. Its enclosing renderer now also corrects matrix operand 
 centre-offset association, with bounded native witnesses. The font glyph stream and demonstrated
 V-inset rounding defect are corrected within the limits of the [font contract](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#font-glyph-stream-and-v-inset-rounding--october-1).
 Full rendering and live visual acceptance remain separate.
+The [retained debug-arrow recheck](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#retained-debug-arrow-arithmetic-and-indices--october-1)
+corrects a component-rounding boundary and records an unwritten retail index without guessing its visual effect.
+The [particle-parser recheck](reverse-engineering/binary-analysis/tokenarchive-semantics-2026-08-11.md#allocation-and-scan-format-recheck--october-1)
+corrects a reference-allocation request and the old integer-format description. The
+[buffered-read comparison](reverse-engineering/binary-analysis/functions/DXMemBuffer.cpp.md#buffered-read-comparison--october-1)
+finds agreement only within its explicit memory/refill provider model; real Windows I/O remains untested.
 The [ballistic caller experiment](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-b-ballistic-height-and-prediction--october-1)
 now binds prediction to horizontal range while height uses current Unit positions, and confirms the
 ballistic return skips the world query. These are 84 original-code calls with explicit providers;

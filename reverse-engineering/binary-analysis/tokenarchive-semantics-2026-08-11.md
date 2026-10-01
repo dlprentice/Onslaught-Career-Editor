@@ -1,7 +1,7 @@
 # `CTokenArchive` particle grammar and reference semantics
 
 Status: active, bounded semantic recovery
-Last updated: 2026-08-11
+Last updated: 2026-10-01 (allocation-prefix and integer-format recheck; August corpus evidence retained)
 Evidence: MEASURED — complete pristine retail bodies, exact parser tables,
 particle-set files, callers, memory layout, and twelve normalized-identical PC
 demo twins; UNKNOWN — no retained `TokenArchive.cpp`, malformed-input runtime
@@ -53,7 +53,7 @@ for 27,186 token lines. The successful dispatch classes are:
 | Parse shape | Token IDs | Behavior |
 | --- | ---: | --- |
 | marker, no value | 2 | Accepts the file header and descriptor separator without a value output. |
-| direct integer | 47 | Requires the integer output and an initial second word, then parses `%d`. |
+| direct integer | 47 | Requires the integer output and an initial second word, then parses `%i`. |
 | direct float | 19 | Requires the float output and an initial second word, then parses `%f`. |
 | raw remainder string | 3 | Copies everything after the token name, preserving embedded spaces. |
 | reference name | 16 | Allocates the remaining name, returns a pending slot index, and defers object binding. |
@@ -69,6 +69,43 @@ for a new parser.
 Tokens 49..57 (`Start_*`, `End_*`, and `Transition_*` RGB components) multiply
 unreferenced numeric values by the exact retained approximately-`1/255`
 constant. All other numeric tokens retain their parsed units.
+
+## Allocation and scan-format recheck — October 1
+
+The integer scanner passes the string at `0x00633a24`, whose bytes are `%i` and
+a terminator (`0x004f586c`–`0x004f5876`). The earlier `%d` description above is
+corrected. This is a format-string finding; the numeric scanner itself was not
+executed by the new prefix experiment. The original guard structure remains:
+direct numeric branches check their output pointer and initial scan count;
+plain references check the string-output pointer/count and then write the integer
+output without its own null check. The float-reference branch enters its scanner
+at `0x004f59b7` without those guards. Later scan return values are ignored.
+
+Both reference branches request the remaining name length **plus two bytes**.
+For float references, the suffix begins at line plus token length plus value length
+plus two; `0x004f5a0e`–`0x004f5a19` counts through its terminator, increments once
+more and passes that size to the memory manager. The reconstruction used plus one
+for this branch. That discrepancy is corrected without claiming an overflow or
+visible effect: a conventional terminator-sized allocation can still hold the name,
+and the allocator's bucket behavior was not part of this check.
+
+Freshly compiled old/corrected candidates and original prefixes were compared on
+85 float-reference and 85 plain-reference states. All 85 former request differences
+are removed; the 85 controls remain equal. Five negative controls catch a removed
+increment, wrong suffix origin, escaped/incomplete execution and an unadmitted
+read. Inputs are authored scratch strings, including deliberately inconsistent
+states. Execution starts after classification/conversion and stops at allocator
+entry: no file reader, scanf, allocator, copied name or fixup resolver runs.
+All fifteen other callable sections/relocation targets remain unchanged and exact.
+ReadToken's 960-byte section still differs at 543 positions; it receives no exact
+match credit. The August corpus/demo comparisons were not rerun in this pass.
+
+Private lead evidence:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/tokenarchive-root-20261001/readback.json`
+and `allocation-v1/receipt.json` (SHA-256
+`c1fffd33dab5794f33c216438ff47cb5a613c988e8d012eef1a69adb963cde76`).
+Complete parser/allocator behavior remains open; a useful next falsifier compares
+the whole reader on a disposable particle-set copy with real numeric conversion.
 
 ## Deferred reference workspace
 
@@ -126,8 +163,9 @@ Their call graph does still prove the intended token/value symmetry for 140 of
 
 ## Boundary
 
-This closes the static semantics of the parser/resolver/formatter unit and its
-shipped corpus crosswalk. It does not prove malformed-file crash behavior,
+The August reproof records the static parser/resolver/formatter and corpus
+crosswalk; the October corrections above bound the claims freshly rechecked.
+These records do not prove malformed-file crash behavior,
 allocation failure, reference overflow, every downstream particle effect,
 console-format identity, or rebuild parity. The cheapest runtime falsifier for
 the unusual reference path remains a disposable particle-set copy containing a
