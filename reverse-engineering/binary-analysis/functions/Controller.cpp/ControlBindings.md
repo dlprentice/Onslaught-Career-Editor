@@ -1,10 +1,10 @@
 # Control Bindings (Options Entries)
 
 Status: active bounded contract; complete remap/input acceptance pending
-Last updated: 2026-09-30 (bounded RemapKey comparison; earlier preset evidence retains its scope)
-Summary: original preset execution establishes initialized-table replacement and device fallback; a separate reconstruction comparison bounds remapping of authored runtime bindings.
+Last updated: 2026-10-01 (bounded key-capture comparison; earlier preset/remap evidence retains its scope)
+Summary: original preset execution establishes initialized-table replacement and device fallback; separate reconstruction comparisons bound remapping and key capture on authored runtime bindings.
 Source File: binary-derived contract; no exact partial-source body asserted. Binary: pristine `BEA.exe.original.backup`.
-Evidence: MEASURED — selected pristine instructions, 20 direct preset controls and 19 composed loader controls; historical remap/UI mappings below remain subject to recheck.
+Evidence: MEASURED — selected pristine instructions, direct/composed preset controls and the separately dated remap/key-capture comparisons below; historical UI mappings retain their original limits.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 This documents the **0x20-byte “options entries”** block in `.bes` / `defaultoptions.bea` and the BEA.exe code that reads/writes it.
@@ -139,6 +139,46 @@ relocations and helper/switch hashes. The lead's rerun is
 existing `local-data/venv/bin/python -B`, the owner's `probe.py`, and `--out`
 naming a new private directory whose parent already exists.
 
+## Reconstructed key-capture comparison — October 1
+
+The lead re-derived `00456190` from the pristine instructions and compared it with a fresh reconstruction
+of `RemapKeyTrap`. **482 authored cases agree** on the complete binding/capture/preset state, release flag,
+key-sink pointer, low-byte true return and selected callback/preset/key-sink/sound event order. The cases
+include both valid input slots, mouse actions 58–77 with buttons 0–5, key-down admission, matched/unmatched
+release, Escape, the ignored Windows keys, character capture with matching/mismatching scan codes, and
+ignored/unknown event values. This does not claim every possible key, action, locale or device state.
+
+Actual original helpers execute with no function stubs. The key-sink wrappers `005159c0`/`005135f0`
+clear the pointer at `00889008`. The sound manager is explicitly disabled at `0089698c`, so the actual
+`00468770` wrapper and `004e1910`/`004e1940` early-return paths execute without a device. Character conversion
+executes the C-locale path of original `0055e673`, with `009d0998` explicitly zero. Nonzero sound/locale
+fixture controls are refused on entry to unadmitted paths. Those fixture choices are not measurements of
+current game initialization, audio behavior or non-C-locale behavior.
+
+The two bodies run at the same address in separate emulator images. Retail's 1,056-byte code body has
+switch data afterward; the candidate has 1,208 code bytes inside a 1,248-byte section. Its larger isolated
+range overlaps the retail binding setter's location. The candidate inlines every setter and does not execute
+that overwritten body; `004565d0..0045660e` is admitted only to the original run. This explicit boundary is
+not a linked-replacement test. Code/table reads, initialized stack scratch (104 bytes), writes, return slot,
+stack balance and saved registers are guarded.
+
+Ten controls detect a changed captured type, enabled sound, non-C locale, incomplete execution, an
+unadmitted BSS read, an uninitialized stack read, an out-of-bound stack write that preserves the canary value,
+execution of jump-table data, a false return and an unexpected call. No instruction-order, every-write-order,
+physical-input, whole-UI, serialized-file or full equivalence claim follows. The complete function remains
+unmatched; all 31 existing exact FEPControls bodies are retained.
+
+Private owner in `bea-decomp`: `.worktrees/codex-equiv-20260930/local-data/remap-keytrap-root-20261001/`.
+`final-v04/comparison.json` SHA-256 is
+`438898877c85728861117acd6ca5c7158bb99833b7ea302790fe6193e06ed545`;
+its `probe.snapshot.py` SHA-256 is
+`d0fb87d9fa965b9f808e7bdb5dd0ebc630a567372b3182ca6c4704f76e0d5bb4`.
+The probe pins the source/COFF inputs, binds relocations to inspected retail operands and reuses the frozen
+RemapKey memory/ABI guards. `probe.py --out NEW_DIRECTORY` runs with the existing private Unicorn Python;
+existing output directories are refused. The initial exploratory run stopped at an overly short setter
+extent; the corrected extent is independently visible through its `0045660d` return. The complete result
+reproduced after tightening scratch admission to the observed bound.
+
 ## When these bindings apply in the selected retail body
 
 This trips up testing if you only patch a `.bes` save:
@@ -201,7 +241,7 @@ Notes:
 | 0x00456630 | `CControllerDefinition__GetFlag1C` | Reads the control-definition byte flag at `this+0x1c` |
 | 0x00456640 | `CControllerDefinition__ClearFlag1C` | Clears the control-definition byte flag at `this+0x1c` |
 | 0x004540c0 | *(code label)* | Remap write-callback (plate comment in Ghidra) |
-| 0x00456190 | `Controls__RemapCaptureKeySink` *(descriptive identity; live Ghidra remains unchanged)* | Installed by `Controls__BeginRemapCapture`; handles remap events, duplicate clearing, and binding writes. A frontend Options trace observed 694 of 1,056 body bytes, so the exact callback ABI and unobserved branches remain open. |
+| 0x00456190 | `Controls__RemapCaptureKeySink` *(descriptive identity; live Ghidra remains unchanged)* | Installed by `Controls__BeginRemapCapture`; handles remap events, duplicate clearing, and binding writes. The October 1 isolated comparison bounds low-word key/event arguments, true low-byte return and selected paths; physical input, locale/audio behavior and general runtime acceptance remain open. The historical frontend trace covered 694 of 1,056 body bytes. |
 
 ## Wave 370 Saved-Ghidra Frontend Controls Corrections (2026-05-13)
 

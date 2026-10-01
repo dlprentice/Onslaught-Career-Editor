@@ -89,6 +89,10 @@ sections and relocations. Air/Carver guidance and virtual-keyboard layout initia
 three more complete bodies. A separate [projectile-distance recheck](reverse-engineering/contracts/round/CRound__SpawnConfiguredProjectile__004db150.md#squared-distance-comparison--october-1-recheck)
 corrects arithmetic order and reproduces a native x87 branch difference at explicitly selected 24-bit
 precision; that full function remains unmatched and live precision/reachability are unmeasured.
+The [control-binding contract](reverse-engineering/binary-analysis/functions/Controller.cpp/ControlBindings.md#reconstructed-key-capture-comparison--october-1)
+now also records 482 agreeing key-capture cases and ten failure controls, using actual helpers with explicit
+disabled-sound/C-locale fixtures. The full key-capture function remains unmatched; physical input and
+serialized settings compatibility are not established by those cases.
 The cockpit composition-order correction has bounded original-code evidence but leaves its two bodies
 unmatched. A damage-report index is now snapshotted before a virtual query, as retail does; the affected
 subblock is ordinarily unreachable under stable memory, and only an explicit isolated intervention exposes
