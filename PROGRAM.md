@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog; Linux development phase active; internal preparation complete
-Last updated: 2026-09-30 (decompilation handed to Codex at David's request; differential checks repaired; broader audit unfinished; rebuild and companion paused)
+Last updated: 2026-09-30 (decompilation continuation integrated; all game rows emit candidates; broader audit unfinished; rebuild and companion paused)
 Summary: remaining work, acceptance gates, and completed program items without the execution diary.
 
 The [standing goal](GOAL.md) keeps retail RE, the Godot rebuild, and the Godot
@@ -59,11 +59,13 @@ owns the score and the matched-function list, and this file keeps only the plan.
   identical-code folding keeps a shared name. A reconstruction label may go in as a
   comment that says it is one, never as the function's name.
 
-Current state (September 30 handover). The five-peer run ended at David's request so that Codex can take the
-next run. Every peer branch is merged and pushed. `bea-decomp` main's README owns the score, the matched list, the
-findings and the failed alternatives; per-function notes sit above each near miss in the source.
-- **What remains.** Every game function has source except the out-of-line `CEulerAngles` constructor
-  (`00449560`); the rest compile but differ. The README's "Open near-misses" opens with where the work stands:
+Current state (September 30 continuation). Codex reproduced the five-peer handover baseline, then integrated
+the spawner update and its name-to-unit lookup with complete section/relocation matches. The Euler-angle
+constructor was already emitted exactly but lacked its annotation; that coverage omission is corrected.
+`bea-decomp` main's README owns the score, matched list, findings and failed alternatives; per-function notes
+sit above each near miss in the source.
+- **What remains.** Every game-function row now has an emitted candidate; the remaining bodies compile but
+  differ. The README's "Open near-misses" opens with where the work stands:
   - the remaining near misses by class: inline decisions, same-call size differences, instruction order or layout,
     and register choice only;
   - what to try first in each class;
@@ -126,7 +128,8 @@ findings and the failed alternatives; per-function notes sit above each near mis
   - gameplay and interface: [unit damage](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__ApplyDamage.md),
     [free camera](reverse-engineering/binary-analysis/functions/game.cpp/CGame__ToggleFreeCameraOn.md),
     [relaxed-squad centroid](reverse-engineering/game-mechanics/spawner-squad-cycle.md#relaxed-squad-centroid--september-30-recheck),
-    [scale-menu rendering](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#generic-scale-menu-rendering--september-30).
+    [scale-menu rendering](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#generic-scale-menu-rendering--september-30),
+    [Goodies fractional text positioning](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#goodies-text-preserves-fractional-y--september-30).
 - **Ghidra.** Name promotions `decomp-names`, `decomp-names-2` and `decomp-names-3` (evidence in
   `local-lab/…/re-audit-20260926/decomp-names*/`; the batch-3 folder holds the caller-witness and
   shared-body screens to reuse). A fourth batch waits: only about eight new names have a released
