@@ -164,25 +164,39 @@ correction reduces this to 32. A half-pixel mutation differs in all 468 cases an
 a missing remapper refuses execution. Input/map memory, output guards, vertex and
 colour cursors, final XY and x87 state are checked.
 
-The remaining differences expose a separate precision boundary: retail stores the
+Those remaining differences exposed a separate precision boundary: retail stores the
 last V coordinate as float32 at `0x00540311` and reloads it at `0x0054032d` before
-calculating glyph height. The candidate retains extended precision. An authored
+calculating glyph height. The earlier candidate retained extended precision. An authored
 case with unit UV coordinates, V inset `2^-25`, texture height one and starting
 Y `.5` produces bottom Y zero in retail versus `-2^-25` in the candidate at
 PC53/64 nearest. Nonzero inset reachability is unproved; this is a conditional
 numerical defect, not an observed on-screen displacement.
 
-The complete candidate remains unmatched (1,552-byte section versus 1,581-byte
-retail body). All 14 previous exact object controls and 17 other callable
-sections/relocation destinations remain intact. Prefix and viewport conversion,
-flooring, buffer locking, device submission, arbitrary aliases/nonfinite inputs
-and actual rendering were excluded. The next numerical falsifier is the retained
-V-inset witness; a live follow-up must first establish the actual inset and FPU
-state at the caller.
+A subsequent source correction gives the local vertex writer references to the
+stored UV endpoints and copies their four-byte representations into its existing
+fields. Stock VC6 restores the early float32 store/reload without adding calls or
+output destinations; all 19 direct call targets retain their order. Fresh lead
+execution gives zero differences in the same 468 finite cases. A causal control
+removes only that rounding from the original instructions while retaining the
+stored UV: its complete normalized outputs reproduce the earlier candidate in
+all 468 cases, including the same 32 discrepancies.
 
-Private lead receipt:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/font-loop-root-20261001/native-v1/receipt.json`,
-SHA-256 `b7823166494f58996e7cea79b230abb85391352e68787fee03255cc71e46f60e`.
+Retail uses mixed integer and x87 UV transport; this representation-copy helper
+is a reconstruction, not the proven original spelling or identical instruction
+sequence. The complete candidate remains unmatched (1,552-byte section versus
+1,581-byte retail body). All 14 previous exact object controls and 17 other
+callable sections/relocation destinations remain intact. Prefix and viewport conversion,
+flooring, buffer locking, device submission, arbitrary aliases/nonfinite inputs
+and actual rendering were excluded. NaN payloads and unmasked exceptions are
+also untested. The retained V-inset witness now passes; a live follow-up must
+first establish the actual inset and FPU state at the caller.
+
+Private lead owner:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/font-loop-root-20261001/`.
+`readback-copy-v2.json` binds the fresh final source/object; the reproduced
+`native-copy-v1/receipt.json` has SHA-256
+`3155f770439a1c1f120e84b3032879ca372a66ab032a67e4237a4ace9086023a`.
+The earlier `native-v1/` preserves the corner-only result.
 
 ## Message construction and Goodies requirement text — October 1
 

@@ -116,8 +116,8 @@ portrait rendering and audio remain separate acceptance work.
 The [imposter quad](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#imposter-quad-coordinates-and-precision--october-1)
 now matches its entire section and all relocations after correcting reversed V coordinates
 and premature rounding. Its enclosing renderer now also corrects matrix operand order and
-centre-offset association, with bounded native witnesses. The font glyph stream is corrected,
-while its V-inset rounding boundary remains open in the [font contract](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#font-glyph-stream-and-v-inset-rounding--october-1).
+centre-offset association, with bounded native witnesses. The font glyph stream and demonstrated
+V-inset rounding defect are corrected within the limits of the [font contract](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#font-glyph-stream-and-v-inset-rounding--october-1).
 Full rendering and live visual acceptance remain separate.
 The [ballistic caller experiment](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-b-ballistic-height-and-prediction--october-1)
 now binds prediction to horizontal range while height uses current Unit positions, and confirms the
