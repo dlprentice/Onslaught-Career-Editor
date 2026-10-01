@@ -1,7 +1,7 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-10-01 (inverse-trig identities; debug-arrow, imposter, quad and collision rechecks)
+Last updated: 2026-10-01 (shadow plane admission; inverse-trig identities, debug-arrow, imposter and collision rechecks)
 Summary: imposter orientation and centre-offset arithmetic are corrected; its quad matches exactly. Collision, trail, emitter and mesh-loading contracts retain their measured limits; older slices are historical leads.
 Evidence: MEASURED — specimen instructions, whole-section/relocation matches and bounded native calculations and buffer comparisons; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -530,6 +530,44 @@ explosion orientation, shadow rendering or all other library identities.
 Lead readback: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/math-binding-root-20261001/readback.json`;
 library comparison receipt SHA-256:
 `a173dd413c384bacbed2215af09b8b2f9f43aab6384b0f2bd2c5a4d0bcd03e96`.
+
+## Static-shadow plane admission — October 1
+
+The triangle-ray body at `0x004ee410`, reconstructed as `CStaticShadow::RayHitsTriangle`,
+accumulates its plane numerator as the existing D term plus Z, then Y, then X
+(`0x004ee533`–`0x004ee549`). The reconstructed expression compiled as D plus Y,
+then X, then Z. Successive updates to D restore the retail order without introducing
+another float store, call or helper. Only six operand bytes change in the compiled
+section; all 22 relocation identities and 33 other callable sections remain unchanged.
+All 28 exact controls survive. The full 1,168-byte section remains unmatched, with
+38 nonrelocation differences rather than 44; no new exact function is counted.
+
+Fresh lead compilation and native i386 execution compare 650 authored finite
+triangle/endpoint fixtures at PC24/53/64, 1,950 cases per image. Execution begins at
+the actual function entry and stops at `0x004ee57d`, before intersection and angle
+processing. A harness sentinel records arrival at that continuation; it is not the
+function's final hit result. The old source differs in 472 parameter/intermediate
+observations and 152 plane-admission decisions; the correction differs in none.
+Decision differences are 120 at PC24 and sixteen each at PC53/64. Inverting the
+denominator-threshold branch changes 1,269 decisions, demonstrating that the probe
+observes rejection as well as admission. Input preservation, stack canaries,
+nonvolatile registers and x87 control/stack state are checked.
+
+One moderate finite witness starts exactly at a triangle vertex `(1,-0.75,0.3125)`.
+Retail obtains a slightly negative segment parameter and rejects it; the old source
+rounds to negative zero and admits it. This establishes an arithmetic boundary
+consequence, not a visible shadow defect or the fixture's occurrence in retail levels.
+The three later acos calls are correctly bound to `0x0055f380`, but no math helper or
+angle calculation executes in this prefix experiment. Full ray/triangle results,
+degenerate and nonfinite geometry, live control words and rendering remain open.
+The cheapest next falsifier executes the remaining angle stage with the actual CRT
+dependencies, then compares the final hit decision on these boundary fixtures.
+
+Private lead owner:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/staticshadow-root-20261001/`.
+`readback.json` records the fresh compiled comparison; `native-plane/receipt.json`
+has SHA-256 `9920a99d67783f330ad20c96fb7f2ee278a21e598f31b1a86969730516abd317`.
+No Ghidra database or renderer was opened.
 
 ## Baseline Static System Slices
 

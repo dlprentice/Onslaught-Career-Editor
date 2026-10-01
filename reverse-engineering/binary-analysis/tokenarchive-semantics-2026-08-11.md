@@ -1,11 +1,12 @@
 # `CTokenArchive` particle grammar and reference semantics
 
 Status: active, bounded semantic recovery
-Last updated: 2026-10-01 (allocation-prefix and original numeric-scanner recheck; August corpus evidence retained)
+Last updated: 2026-10-01 (composed numeric/header reader recheck; August corpus evidence retained)
 Evidence: MEASURED — complete pristine retail bodies, exact parser tables,
 particle-set files, callers, memory layout, and twelve normalized-identical PC
-demo twins; UNKNOWN — no retained `TokenArchive.cpp`, malformed-input runtime
-causality, allocation failure, and rebuild-wide particle parity.
+demo twins; October adds bounded original-code numeric/header comparisons.
+UNKNOWN — no retained `TokenArchive.cpp`, complete malformed-file behavior,
+allocation failure, and rebuild-wide particle parity.
 Verdict: the released particle token grammar, parser dispatch, deferred-reference
 resolver, and five compiled formatter stubs are recovered. The five functions
 named `Write*` do not actually serialize anything in the shipped PC builds.
@@ -135,10 +136,9 @@ Measured examples under those conditions:
   not establish ordinary content reachability or a portable parsing rule.
 
 Fresh instructions show ReadToken's initial call at `0x004f57dc` uses `%s %s`
-at `0x00625274`. The scanner accepts both words in `File_Version +.`; whether
-ReadToken then reports success with an unchanged numeric destination remains
-a useful composed falsifier. ReadToken itself and archive I/O did not execute
-in this experiment.
+at `0x00625274`. The scanner accepts both words in `File_Version +.`. The
+composed experiment below now tests ReadToken's subsequent result. ReadToken
+itself and archive I/O did not execute in this scanner-only experiment.
 
 Lead reproduction owner:
 `bea-decomp/.worktrees/codex-equiv-20260930/local-data/retail-sscanf-20261001/`.
@@ -146,6 +146,57 @@ Lead reproduction owner:
 `1328f00bccda3b44438b691f36c3daef9ac9e8fdff7325852948a9f42509a089`;
 `native-v04/receipt.json`:
 `95f748a72bb132a775c4342368a228ca16c95917b84b9b4cfb3be6eee9701a5d`.
+
+## Composed numeric and header reads — October 1
+
+The lead reproduced twelve authored ASCII streams through 38 complete ReadToken
+calls, executing original ReadLine `0x0048de00`, ReadString `0x00548820`, token-name
+lookup and the admitted CRT scanner. Input is an explicit ready-memory last block;
+refill, allocation and unadmitted code are refused. This is original code under
+Unicorn with control word `0x027f`, not a native complete-game run.
+
+The measured chain distinguishes a missing word from a failed numeric conversion:
+
+| Input sequence or case | Original ReadToken result |
+| --- | --- |
+| `File_Version 1.5`, then `File_Version +.` | Both return TRUE; the second retains float 1.5 despite the numeric scanner returning EOF. |
+| `File_Version` without a second word | FALSE; the numeric scanner is not called. |
+| `Num_Particle_Descriptors 010` | TRUE with integer eight. |
+| A valid integer, then `Num_Particle_Descriptors +` or `0xG` | TRUE with the previous integer unchanged. |
+| Header, then blank or EOF | Can return TRUE with the stale header token; a fresh empty buffer instead returns FALSE with token -1. |
+
+The initial lexical count is obtained at `0x004f57dc`, and the found token ID is
+written at `0x004f5838`. Direct numeric branches require both initial words but
+ignore their numeric scanner's return before returning TRUE at `0x004f587e`.
+Marker branches do not require a successful initial lexical count. Clearing just
+the saved token before the header/blank case removes stale-header acceptance;
+resetting the caller's float before the malformed value retains that new reset
+value instead. Artificially forcing the missing-word lexical count to two reaches
+the previous value buffer; this last case is an intervention, not ordinary behavior.
+Six refusal controls and these three interventions all behave as expected.
+
+A fresh candidate compile retains fifteen exact controls, but ReadToken itself
+remains unmatched: 960 section bytes and 49 relocations. Its complete calls agree
+with original on all twelve streams/38 calls and the nine controls. The comparison
+checks whole 1,000-byte named buffers, output bytes, file state, returns, ordered
+lookups/scans, ABI and x87 state. Candidate code, switch tables and its actual BSS
+ordering execute at separate addresses. All relocations are explicitly bound;
+original GetTokenName substitutes for the candidate only after its complete
+1,280-byte section and all 250 relocations freshly match. Altered token-name data
+and a wrong numeric format are rejected. The allocation-refusal case reaches the
+same seven-byte request for `Smoke`, corroborating the preceding allocation fix.
+
+These observations do not establish descriptor publication or complete particle
+archive compatibility. Repeated test calls after FALSE/EOF do not prove a production
+caller continues then. Caller reinitialization/exit conditions and downstream use
+are the next falsifiers; no real file, original save or game asset was modified.
+
+Private lead owner:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/readtoken-scanner-20261001/`.
+Original receipt `composition-v02/receipt.json` SHA-256:
+`25be4ba8c58e78535d2da04175a0139abc7fe5667d2d367e757ae0ab60ad2055`;
+fresh candidate comparison `comparison-v05/receipt.json`:
+`df634855aae4862dd022521d047491f295654b484c45391c25695f16fc0bce90`.
 
 ## Deferred reference workspace
 
