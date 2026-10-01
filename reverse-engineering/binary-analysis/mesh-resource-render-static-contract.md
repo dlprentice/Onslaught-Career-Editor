@@ -1,8 +1,8 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-10-01 (projected-texture count; shadow, inverse-trig, debug-arrow, imposter and collision rechecks)
-Summary: projected textures require four coordinates; imposter orientation and centre-offset arithmetic are corrected and its quad matches exactly. Other slices retain their measured limits.
+Last updated: 2026-10-01 (triangle travel-limit gate and expanded sphere-speed comparison; earlier render/collision rechecks retained)
+Summary: triangle travel admission stores a float32 squared limit and rejects unordered comparisons; sphere speed preserves XZ-then-Y arithmetic. Render and other collision slices retain their measured limits.
 Evidence: MEASURED — specimen instructions, whole-section/relocation matches and bounded native calculations and buffer comparisons; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
@@ -196,6 +196,39 @@ Preserve the adjusted receiver when translating render dispatch or object layout
 getter/receiver identity question; it does not demonstrate a current Godot defect, visible mesh selection,
 animation correctness or scene parity. A useful runtime falsifier would observe the complete-object
 pointer, interface pointer and selected mesh number together at a real render initialization boundary.
+
+## Triangle travel-limit admission — October 1
+
+The second projection path in `0x00478510` squares its distance and stores it as float32 at
+`0x00478b21`, before calling the original `MagnitudeSq` at `0x00478b37`. That 32-byte helper at
+`0x00477ba0` returns its x87 result without a caller-side float store. At `0x00478b3c`–`0x00478b45`,
+retail continues only when the returned squared magnitude is ordered greater-or-equal to the stored
+limit. Unordered comparisons take the rejection path.
+
+The previous reconstruction squared the distance after the helper call, retaining excess precision,
+and admitted unordered comparisons. A reconstructed inline predicate taking the squared limit by
+reference, with `squaredLimit <= move.MagnitudeSq()`, restores the observed storage and branch
+semantics under the pinned compiler. No independent helper entry or original source spelling is claimed.
+
+The lead executed original, prior and corrected post-projection instruction fragments with the actual
+byte-matched magnitude helper. Across 54 explicit PC24/53/64 cases, the prior candidate differs in
+17 decisions: five finite boundaries and twelve NaN cases. The correction agrees on all decisions,
+stored squared-limit bits and x87 status words. Projected-vector copies, stack canaries, control words
+and empty x87 state also agree. The admitted set includes zero, adjacent values, decimal equality,
+subnormal and large finite inputs, infinities and intentionally masked quiet/signaling NaNs. Inverting
+the original branch changes every decision, providing a consequential negative control.
+
+These cases start after projection with authored distance and movement; they do not prove ordinary
+triangle-entry reachability or complete collision behavior. The full function remains unmatched, and
+its stack layout, other inline boundaries and scheduling remain open. All other callable Geometry
+sections and relocations are unchanged. The next falsifier is a complete original/candidate invocation
+that reaches this gate from admitted triangle, sphere and motion inputs, with caller precision recorded.
+
+Private source/object pins, fresh compilation and replay are in
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+`native-range-helper-replay.py NEW_OUTPUT`, `range-helper-positive/` and `corrected-gate-native/`.
+The frozen previous candidate is retained under the earlier geometry-mask evidence owner. The original
+specimen and earlier frozen experiment were read, not modified.
 
 ## Segment contact precision — September 30
 

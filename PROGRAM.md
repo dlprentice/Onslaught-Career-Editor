@@ -188,10 +188,11 @@ Root reproduced its native endpoint cases. Existing exact controls are preserved
 integrated check. Public documentation remains on `codex/retail-re-20260919`; private source integrates
 on `bea-decomp` main. Do not assume the public main includes every RE-branch commit.
 
-David has resumed the decompilation with independent object scopes. Eight further complete compiled
+David has resumed the decompilation with independent object scopes. Eleven further complete compiled
 matches are integrated and pushed to private main: the navigation segment query, sprite lifetime setup,
-trail colour packing, colour interpolation, blob shadows, shadow view construction, animal destruction
-and the player's weapon-charge update. All earlier
+trail colour packing, colour interpolation, blob shadows, shadow view construction, animal destruction,
+the player's weapon-charge update, [destructible-part break and rubble handling](reverse-engineering/binary-analysis/destroyable-segments-static-contract.md#base-rubble-code-match--october-1),
+and the battle-line pulse. All earlier
 matched symbols survive. The private README owns the current score and exact byte/relocation receipts.
 The separately reproduced [compass coordinate correction](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#compass-coordinate-association--october-1)
 fixes a bounded rounding difference but adds no whole-function credit.
@@ -201,10 +202,11 @@ matching and live-world acceptance remain open.
 
 Continue from the private README's current findings and retained **October 1 handback leads**, not an
 older handoff queue:
-- Geometry `0x00478510`: root reproduced the 17/54 native post-projection gate discrepancies involving
-  the squared-limit store and unordered branch. Five are finite boundary cases, twelve unordered.
-  No fix is accepted; full-entry geometric reachability remains untested. Compound scalar reuse and
-  an inline square helper were ineffective, so the earlier materialization proposal is not a repair.
+- Geometry `0x00478510`: the [travel-limit correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#triangle-travel-limit-admission--october-1)
+  restores the squared-limit store and ordered branch. Root reproduced all 17 prior discrepancies
+  and removes them in the same 54 post-projection cases. Full-entry geometric reachability and whole
+  function matching remain open. Earlier compound scalar reuse and square-helper forms were ineffective;
+  the accepted predicate boundary is a different, explicitly reconstructed interface.
 - The examined weapon-getter family already expands its helpers and performs both registry walks.
   The shared emitted lookup structure is a register/lifetime lead, not a demonstrated inline cutoff.
 - The frozen clustering study is measured before the new navigation match. Its vector-constructor

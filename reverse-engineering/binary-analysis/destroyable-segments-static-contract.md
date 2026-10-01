@@ -1,8 +1,8 @@
 # Destroyable Segments Static Contract
 
 Status: active contract with a dated inherited subsystem map
-Last updated: 2026-10-01 (Break snapshots and callback boundary reproduced)
-Summary: retail segment-break ordering; the broader June 7 subsystem map retains its earlier evidence limits.
+Last updated: 2026-10-01 (Break and base SpawnRubble match complete compiled sections)
+Summary: retail segment-break ordering and complete Break/SpawnRubble code matches; the broader June 7 map retains its earlier limits.
 
 The October 1 section below is a fresh instruction read and bounded original-code
 comparison. The broader map retains its June 7 evidence and labels; it has not been
@@ -39,19 +39,45 @@ paths execute. A second run clobbers provider caller-saved registers/flags and
 reproduces identical observations; receiver state, stack, preserved registers,
 exception-chain restoration and unchanged FPU state are checked.
 
-The complete candidate is still unmatched: 544 section bytes and eleven relocations,
-with fourteen differences in early integer setup. All 41 existing exact controls,
-four vtables and fifty other callable sections/relocations survive. Nonempty spawner
-removal, actual particle kills, allocating paths, nonempty child scheduling and
-exception unwinding were not executed. Full gameplay reachability and equivalence
-remain open; the intervention is a falsifier of the old load order, not retail
-observation of a changing mesh.
+The later source-lifetime correction closes the fourteen early integer-setup
+differences: a controller-owner accessor and named child pointer now produce the
+complete 544-byte section with all eleven relocations matching retail. The owner
+accessor reads the existing controller field at `+0x10`; its spelling is reconstructed.
+The earlier snapshot and cursor corrections remain intact. Nonempty spawner removal,
+actual particle kills, allocating paths, nonempty child scheduling and exception
+unwinding were not executed by the bounded callback experiment. Full gameplay
+reachability remains open; the intervention is a falsifier of the old load order,
+not retail observation of a changing mesh. Exact code matching does not broaden
+that experiment's runtime coverage.
 
 Private lead evidence under `bea-decomp/.worktrees/codex-equiv-20260930/`:
 `local-data/destroyable-break-root-20261001/accepted/receipt.json` and
 `callback-v01/receipt.json` (SHA-256
 `3ab42b2ed8aaafc91664e6cb0b6aa750e947315b08efefc7d2496d403a4db7e9`);
 `callback-poison-v01/receipt.json` records the additional ABI control.
+
+## Base rubble code match — October 1
+
+The same pristine specimen's base `SpawnRubble` at `0x00442f60` now matches its
+complete 1,168-byte compiled section, including padding, and all 43 relocations;
+the instruction body is 1,153 bytes. The reconstructed source retains the
+bounding-box reloads after each random-number call, uses the existing engine
+damage wrapper, and expresses the transformed box point and velocity scaling
+with the lifetimes that reproduce the retail expansion. The inline box-point
+helper is a reconstruction interface, not a recovered original source name.
+
+The lead rebuilt and read back both targets against retail. All 98 other baseline
+callable sections in the segment/controller objects retain their bytes and
+recursive relocation identities. Two newly emitted helper copies were already
+matched elsewhere and receive no additional unique-function credit. The integrated
+corpus preserves earlier exact matches. This is static executable-backed evidence;
+no rubble rendering, random distribution in a live world, pickup behavior or
+gameplay acceptance was measured in this pass.
+
+Private root receipts in `bea-decomp/.worktrees/codex-equiv-20260930/`:
+`local-data/geometry-gate-resume-20261001/segment-message-root-readback.json` and
+`segment-message-sections.json`. Frozen source, objects and patch evidence are in
+`bea-decomp/.worktrees/codex-resume-aircraft-20261001/local-data/segment-resume-20261001/`.
 
 ## Inherited static map — June 7
 
