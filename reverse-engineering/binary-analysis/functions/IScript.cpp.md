@@ -1,8 +1,8 @@
 # IScript function map
 
 Status: active static function map
-Last updated: 2026-09-27 (event-listener identities, including MessageBox and UnitAI; earlier behavior limits retained)
-Summary: mission-script runtime shape, reviewed call contracts and released console waypoint behavior.
+Last updated: 2026-10-01 (nearest-visited fallback indexing rechecked; earlier listener and waypoint limits retained)
+Summary: mission-script runtime shape, reviewed call contracts and waypoint behavior, including the byte-matched nearest-visited fallback's asymmetric probe.
 Source File: `C:\dev\ONSLAUGHT2\MissionScript\IScript.cpp` (SEH `__FILE__`
 pointer `0x0064fa40` read out of `IScript__PostEvent`) | Binary: BEA.exe,
 SHA-256
@@ -165,6 +165,39 @@ these instruction findings do not establish a new runtime or rebuild result.
 | `0x004beea0` | `CExplosionInitThing__SimplifyGridPathByLineOfSight` | `53 55 8b5c240c 56 8bf1 57 8b7e0c 4f 7831 … e836d6ffff 85c0 7503 4f 79cf … e8c8d5ffff … c20400` | `thiscall` `ret 4`. `this` = out-struct (`+0xc` count, `+0x10`/`+0x18` X/Y bytes). Arg = occupancy (`ebx` from `[0x00809db8]`). Two `E8` to `OccupancyBitplane__IsGridSegmentBlocked` `0x004bc510` (label). Pass 1: from `count-1` down, while EAX=0 (clear) drop; then compact and `sub [+0xc]`. Pass 2: from 0 up against cell 0, same. Sole inbound `E8` `0x004be40a`. Table class not a COLOC — do not promote. HIGH on ABI, both calls, count shrink. |
 | `0x004bc510` | `OccupancyBitplane__IsGridSegmentBlocked` | `83ec10 8b542414 53 55 56 85d2 57 894c241c 0f8c9a010000 … 33c0 5b 83c410 c21000 / b801000000 5b 83c410 c21000` | `thiscall` `ret 0x10`. `this` = bitplane. Four int args `(A0,B0,A1,B1)` in `[0,0xff]` or EAX=1. Same cell → EAX=0, no read. Else swap each axis so min≤max and walk the **min→max** diagonal (slope = abs(dminor)/abs(dmajor), always ≥0): A-major samples `bitplane[(A>>3)*256+B] & (1<<(A&7))` from `minA` to `maxA`; B-major the same from `minB` to `maxB`. **Bit clear or OOB → EAX=1 (blocked); every sampled bit set → EAX=0 (clear).** Opposite-sign ΔA/ΔB therefore tests the other box diagonal. A-major tests dest; B-major skips dest. Three `E8`: `0x004be254` (start→dest; EAX=0 stores a 1-cell dest path), `0x004beed5` / `0x004bef43` (trim). HIGH. |
 | `0x00533840` | `IScript__FinishedPlayingAnim` | `568bf1 8b4638 85c0 7453 50 b9e0c58900 e8bb600000 8b4638 8d4e28 50 e86f23fbff … c3` | Zero-arg `ret`. If `[this+0x38]==0` return. Else `CopyState(+0x38)`, `CSPtrSet__Remove(+0x28)`, delete, `[this+0x38]=0`, then Reset on LEVEL_LOST else `GotoInstruction([0x0089c7f4])`. Same resume as HandleMessage 2001. Only `E8` is `CComplexThing__FinishedPlayingCurrentAnimation` `0x004f45a7`. HIGH. |
+
+### Nearest-visited fallback indexing — October 1
+
+The fallback at `0x004beb30` is reconstructed as `COccupancyGrid::FindNearestVisited`;
+that source label does not establish the original name or change the saved Ghidra owner.
+For each radius, it scans the top/bottom sides before the left/right sides. The right-side
+cost lookup at `0x004bec65` uses `originalEndX + completedXIterator`, where the completed
+top/bottom iterator is `originalEndX + radius + 1`. Its admission bounds and returned X
+still use `originalEndX + radius`. The old reconstruction incorrectly used that latter
+expression for the lookup too. Preserve the distinction when reproducing retail behavior.
+
+The lead freshly compiled the corrected source and matched all 512 section bytes and
+18 independently anchored address words (497-byte retail body). All 39 prior exact
+controls and 49 other callable sections remain intact. The function's own compiler
+debug record changes only its procedure length from 508 to 497; other sections remain
+unchanged. This does not promote a name, prototype or comment into Ghidra.
+
+Complete native i386 execution of 26 authored grids yields 19 differing old destinations
+and zero corrected differences. Changing only retail's index register at `0x004bec65`
+from EBX (completed iterator) to EBP (radius) reproduces every old result. With destination
+`(5,127)`, visited cell `(11,127)` and another at `(5,125)`, retail returns `(5,127)` while
+the old reconstruction returns `(5,125)`. The right-side probe can therefore select an
+endpoint whose own cost cell was not the one inspected.
+
+The native runs use the complete original body without substituted callees and check
+stack balance, callee-saved registers and unchanged grid memory. Invalid starts, integer
+overflow and probes outside the 256-by-256 allocation are excluded; real pathfinding
+and whether authored levels reach the examples remain open. A useful runtime falsifier
+is a recorded failed path-search input with the destination and visited-cost grid intact.
+Private lead evidence:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/navigation-root-20261001/readback.json`
+and `native/receipt.json`, SHA-256
+`7f2a995d59868a3e9a4d33d11b1756879de40d8f31413a86ec00e649e27838f7`.
 
 ### The three message arms (byte-exact)
 

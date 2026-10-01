@@ -1,10 +1,52 @@
 # HUD / frontend overlay static contract
 
 Status: bounded retail static evidence; not visual proof
-Last updated: 2026-10-01 (font stream and rounding recheck; complete options-list renderer; August HUD map retained)
-Summary: options-list rendering matches its complete compiled section and relocations, including title snapshots and scratch reuse; message construction and Goodies requirement text also match; player acceptance remains separate.
+Last updated: 2026-10-01 (loading-screen text selection corrected; font and options-list rechecks; August HUD map retained)
+Summary: loading-screen text selection is corrected against original instructions and six language tables; options-list rendering matches its complete compiled section and relocations; player acceptance remains separate.
 Evidence: MEASURED — October 1 native font loops, isolated menu runs and full-section/relocation matches, plus September 30 font and scale-menu readback; August HUD claims were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+## Loading-screen text selection — October 1
+
+At `0x0042cd4b`–`0x0042cd67`, the loading-screen renderer reads the byte at
+`0x0066e8c0`. Zero selects text ID `0x003848a7`; any nonzero byte selects
+`0x07dea02c`. The authored text-name table identifies these as `IG_LOADING2`
+and `FETX_PRESS_START`. The private reconstruction had mistyped the second ID
+as `0x07dae02c` and now uses the retail value.
+
+All six inspected version-three language tables contain the correct ID at record
+327 and loading ID at record 1897; none contains the mistyped ID. English resolves
+them to “Press START button” and “Loading...”. The original lookup `0x004f2580`
+logs an absent ID and returns the start of its text pool (`0x004f25d2`–`0x004f25f0`),
+which contains `**Undefined String**` in these files. This is the pool prefix, not
+the first indexed record. Retail's loader computes that pool as file base plus
+`16 + 12 * count` for these version-three files (`0x004f2401`–`0x004f2408`).
+
+The lead executed the original and fresh before/after selection fragments for all
+256 flag values with two register/carry seeds. The old version differs in 510 of
+512 cases; the corrected version agrees throughout. Eighteen separate calls to the
+actual original lookup, using the three IDs and six real tables, reproduce the
+selected strings and missing-ID logging. Only logging is a recording substitute;
+it checks its arguments and clobbers caller-saved registers. The source lookup was
+also freshly compiled and matches its complete section and relocations. Stack,
+callee-saved registers and unchanged input data were checked.
+
+This establishes the selection and lookup behavior, not a complete renderer run.
+The caller first requires bottom text enabled and a valid font. Mode 3 then replaces
+the selected pointer with PC text ID `0xdc` (`0x0042cd72`–`0x0042cd83`), so the
+incorrect placeholder need not be drawn in that mode. Actual loading-route
+reachability, drawing and visual acceptance remain open. A useful falsifier is a
+controls-pause loading state with bottom text enabled, a valid font and mode other
+than 3, observing the ID and resulting text.
+
+Private lead evidence is
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/loading-text-root-20261001/`:
+`readback.json`, `selection-v02/assets.json` (individual file hashes and offsets),
+and `selection-v02/receipt.json` (SHA-256
+`0de97f1e4632611013781ed37ba904b105ee6a1d7616508d7f95d942261ee3df`).
+The correction changes two instruction bytes, retaining 61 exact console controls,
+all 147 target relocations and all 318 other object sections. The full loading-screen
+renderer remains unmatched. No game, Godot, font or graphics device was run.
 
 ## Goodies text preserves fractional Y — September 30
 

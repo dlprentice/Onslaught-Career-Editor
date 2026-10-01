@@ -1,8 +1,8 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-10-01 (shadow plane admission; inverse-trig identities, debug-arrow, imposter and collision rechecks)
-Summary: imposter orientation and centre-offset arithmetic are corrected; its quad matches exactly. Collision, trail, emitter and mesh-loading contracts retain their measured limits; older slices are historical leads.
+Last updated: 2026-10-01 (projected-texture count; shadow, inverse-trig, debug-arrow, imposter and collision rechecks)
+Summary: projected textures require four coordinates; imposter orientation and centre-offset arithmetic are corrected and its quad matches exactly. Other slices retain their measured limits.
 Evidence: MEASURED — specimen instructions, whole-section/relocation matches and bounded native calculations and buffer comparisons; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
@@ -11,6 +11,32 @@ mesh geometry, and collision bridges used by asset tooling and rebuild planning.
 Current corrected metadata is owned by the
 [Ghidra guide](../ghidra/README.md) and `developer_state.json`'s selected live authority.
 Static evidence does not by itself establish runtime rendering or layout parity.
+
+## Projected-texture coordinate count — October 1
+
+Texture activation `0x005588f0`, mode 3, pushes `0x104` at `0x00558e7c` before
+calling `0x00513820` with stage zero and state `0x18` (`D3DTSS_TEXTURETRANSFORMFLAGS`).
+The pinned DirectX 9 SDK header defines this as `D3DTTFF_COUNT4 | D3DTTFF_PROJECTED`.
+The private reconstruction used COUNT3, emitting `0x103`; it now uses COUNT4.
+
+For fixed-function texture processing, projected coordinates are divided by the last
+selected component. Four versus three therefore selects a different projective divisor;
+this API consequence is distinct from an observed image defect. See Microsoft's
+[texture-coordinate processing contract](https://learn.microsoft.com/en-us/windows/win32/direct3d9/texture-coordinate-processing).
+Active shader configuration and rendered results were not inspected here.
+
+The lead freshly compiled both sources and isolated one changed instruction byte.
+All 37 exact object controls, 88 target relocation records and 160 other object sections
+remain unchanged. The full activation function remains unmatched. No D3D device,
+graphics driver, game or Godot executed. A useful presentation falsifier is a mode-3
+texture with different third/fourth transformed coordinates, observing the actual stage
+state and projection under the retail shader configuration.
+
+Private readback:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/texture-projection-root-20261001/state-readback.json`,
+SHA-256 `367c39ffda7f2e79753c4985235422493bc423e29456d3dbf01a993c43db5aba`.
+The receipt binds the pristine instructions and pinned `d3d9types.h` identity;
+`readback.json` records the before/after object comparison.
 
 ## Trail-point count and arithmetic order — September 30
 

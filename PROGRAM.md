@@ -177,6 +177,31 @@ the former difference. The existing damage contract records that limit. All inte
 exact matches. The private README owns the current counts.
 `bea-decomp` main's README owns the score, matched list, findings and failed alternatives; per-function notes
 sit above each near miss in the source.
+
+**October 1 safe handback, requested by David.** The final accepted source changes correct
+[loading-text selection](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#loading-screen-text-selection--october-1),
+match the complete [nearest-visited fallback](reverse-engineering/binary-analysis/functions/IScript.cpp.md#nearest-visited-fallback-indexing--october-1),
+and correct the [projected-texture coordinate count](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#projected-texture-coordinate-count--october-1).
+The first and last remain partial function corrections; only the fallback adds a whole-function match.
+Root reproduced its native endpoint cases. Existing exact controls are preserved; the private main's
+`local-data/codex-continuation-20260930/handback-score.log` and `handback-reproduction.json` own the final
+integrated check. Public documentation remains on `codex/retail-re-20260919`; private source integrates
+on `bea-decomp` main. Do not assume the public main includes every RE-branch commit.
+
+Resume from the private README's **October 1 handback leads**, not an older handoff queue:
+- Geometry `0x00478510` has a new helper-reported 17/54 native comparison discrepancy involving the
+  squared-limit store and unordered branch. No fix is accepted; root has not rerun this latest probe.
+- The examined weapon-getter family already expands its helpers and performs both registry walks.
+  The shared emitted lookup structure is a register/lifetime lead, not a demonstrated inline cutoff.
+- The frozen clustering study is measured before the new navigation match. Its vector-constructor
+  call-count differences run in both directions, so one global expansion change is not justified.
+  Geometry/flak/cylinder materialization defects also do not support blanket rounding.
+
+Private experiment owners and replay commands are in that README. All helpers stopped with clean
+source worktrees; no experiment or Ghidra promotion remains in progress. No database, desktop or
+Godot session was opened for this handback. The saved Ghidra/recovery authority was read, not freshly
+reverified. Rebuild and companion remain paused.
+
 - **What remains.** Every game-function row now has an emitted candidate; the remaining bodies compile but
   differ. The README's "Open near-misses" opens with where the work stands:
   - the remaining near misses by class: inline decisions, same-call size differences, instruction order or layout,
