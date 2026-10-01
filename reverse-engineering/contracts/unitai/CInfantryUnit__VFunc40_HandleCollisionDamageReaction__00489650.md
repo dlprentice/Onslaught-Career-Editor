@@ -1,13 +1,32 @@
 # CInfantryUnit__VFunc40_HandleCollisionDamageReaction
 
 Status: active static contract (factory draft); audited 2026-09-26, corrections below
-Last updated: 2026-09-26 (RE audit: verified corrections added)
+Last updated: 2026-10-01 (orientation fallback independently bound; full damage function remains unmatched)
 Summary: specimen-bound static contract for `CInfantryUnit__VFunc40_HandleCollisionDamageReaction` at `0x00489650`; packet-described behavior is retained with explicit unknowns and no promotion claim.
-Evidence: MEASURED — READY packet/decompile, structured edges, closure identity, and independently recomputed pristine body bytes; runtime and source limits remain explicit.
+Evidence: MEASURED — October 1 pristine fallback operand and independently matching initializer references; retained packet/decompile and September 26 audit limits remain explicit.
 Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Source File: not_applicable (no current source-crosswalk row) | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 > Address: `0x00489650`
+
+## Orientation fallback correction — October 1
+
+At `0x004898d7`, retail selects the matrix at `0x0083d9c0` when the ammunition
+source lacks complex-thing orientation. The independently matching initializer
+at `0x004f3310` binds this to `CThing::sIdMatrix`. Infantry's separate identity
+matrix is at `0x0067a688`, independently bound by initializer `0x00488ae0`.
+Both initializers match their complete 208-byte sections and references.
+
+The reconstruction now uses the existing `CThing::GetOrientation()` accessor.
+Its previous hand-written fallback selected the Infantry-local matrix. The
+fresh root build changes only relocation `+0x288`; the complete 1,264-byte
+candidate instruction section is unchanged. All 44 other Infantry callable
+sections and the existing exact controls survive. Both matrices have the same
+initialized values; no actual gameplay difference or live reachability was
+observed. The full Damage function remains unmatched and earns no new credit.
+
+Private root readback:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/infantry-fallback-root/readback.json`.
 
 ## Audit corrections (2026-09-26)
 

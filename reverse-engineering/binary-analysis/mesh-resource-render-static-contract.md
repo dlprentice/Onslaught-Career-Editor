@@ -1,7 +1,7 @@
 # Mesh, resource, and render static contract
 
 Status: active static map
-Last updated: 2026-10-01 (particle update and sphere trigger match; palette ownership corrected)
+Last updated: 2026-10-01 (resource reads, render descriptors and texture initialization match; compressed fallbacks corrected)
 Summary: specimen-bound rendering and collision contracts, with bounded corrections to arithmetic association, float stores and ordered admission.
 Evidence: MEASURED — specimen instructions, whole-section/relocation matches and bounded native calculations and buffer comparisons; older slices were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -11,6 +11,64 @@ mesh geometry, and collision bridges used by asset tooling and rebuild planning.
 Current corrected metadata is owned by the
 [Ghidra guide](../ghidra/README.md) and `developer_state.json`'s selected live authority.
 Static evidence does not by itself establish runtime rendering or layout parity.
+
+## Buffered resource reads — October 1
+
+Reconstructed `CDXMemBuffer::Read` (`0x00548570`) now matches its complete
+688-byte section, 686-byte body and all sixteen relocations. The source seeded
+from Stuart's pinned `5352a81c` file retained a permanently disabled `if (0)`
+direct/DMA-read branch. Removing that block changes VC6 register allocation and
+scheduling while preserving the executable buffered copy, refill, check-byte
+and EOF paths. It does not establish the original source spelling.
+
+The lead freshly compiled both forms and checked ten references through prior
+exact controls, five through PE imports and one through the exact `.aya`
+literal. All 21 other callable graphs are unchanged; only Read and its FPO
+record change. `InitFromFile` still differs in twenty stack-slot byte positions.
+This closes a static byte-match gap, not Windows file-I/O or save-compatibility
+acceptance. Private root receipt:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/dxmembuffer-read-root/readback.json`.
+
+## Render descriptors and texture initialization — October 1
+
+Render-data initialization (`0x00515fb0`) now matches its complete 1,184-byte
+section, 1,181-byte body and 89 relocations. Entries 0, 8 and 22 write their
+metadata before copying their own default names. All 68 global references bind
+through earlier exact bodies; the other 21 references name identical literals.
+All 42 other emitted callables and three exact vtables remain unchanged.
+
+Texture-device initialization (`0x00557a90`) matches all 2,896 section bytes,
+its 2,489-byte body and 193 relocations. Separate animated/static status-buffer
+lifetimes, the existing device accessor, the mip-filter value and the success
+query/tagging scope reproduce the retail instructions. The lead rebuilt and
+checked internal targets, literals, PE imports, annotated callees and consistent
+prior exact references. Two newly encountered library identities were also
+compared directly with the pinned Microsoft libraries; their dependency graphs
+were not re-audited. All 44 other callable graphs survive. CTexture's mapping
+still reports no unique retail vtable; this match does not settle that question.
+
+These are compiled identities under the decompilation checker's stated contract,
+not device execution, successful asset loading or recovered source spelling.
+Private root receipts under
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+`resource-texture-root/PCRTID/readback.json` and
+`resource-texture-root/DXTexture/readback.json`.
+
+## Compressed texture format fallbacks — October 1
+
+Both fallback switches in `LoadFrame` (`0x00557300`) map texture enum index 6
+(DXT1) to R5G6B5 (`0x17`) and index 7 (DXT2) to A4R4G4B4 (`0x1a`). Index 8
+(DXT4) keeps its format (`0x34545844`). The original jump tables are at
+`0x005579a0` and `0x005579cc`; the corresponding DXT1/DXT2 branch entries are
+`0x005574fd`/`0x00557504` and `0x005575cc`/`0x005575d3`.
+
+The reconstruction's conversion helper previously omitted the compressed cases.
+The lead checked all six retail branch values and the fresh compiled fallback
+switches. All 41 exact controls and 44 other callable graphs survive, including
+the newly matched initialization function. `LoadFrame` remains unmatched, and
+no texture conversion or device call ran. A controlled resource-load comparison
+with admitted DXT1/DXT2 inputs remains the runtime falsifier. Private root receipt:
+`resource-texture-root/fallback/readback.json` under the owner above.
 
 ## Particle update and sphere-trigger containment — October 1
 

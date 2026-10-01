@@ -203,7 +203,9 @@ unit-definition destruction, [declaration shader constants](reverse-engineering/
 [word wrapping and message-log input](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#word-wrapping-and-message-log-input--october-1),
 the [non-mesh particle pass](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#non-mesh-particle-pass--october-1),
 [particle update and sphere-trigger containment](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#particle-update-and-sphere-trigger-containment--october-1),
-and [Unit provider selection](reverse-engineering/binary-analysis/unit-battleengine-gameplay-static-contract.md#unit-provider-selection--october-1).
+[Unit provider selection](reverse-engineering/binary-analysis/unit-battleengine-gameplay-static-contract.md#unit-provider-selection--october-1),
+[render descriptors and texture initialization](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#render-descriptors-and-texture-initialization--october-1),
+and [buffered resource reads](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#buffered-resource-reads--october-1).
 Earlier unique matches survive. The particle object no longer emits an unused constructor;
 its shared implementation remains exact elsewhere. The
 [shadow projection-owner correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#shadow-projection-owner--october-1)
@@ -211,6 +213,14 @@ is a separate partial correction and adds no whole-function credit. The same lim
 [Mech debris arithmetic](reverse-engineering/binary-analysis/unit-battleengine-gameplay-static-contract.md#mech-debris-arithmetic--october-1),
 [debrief bracket scale](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#debriefing-bracket-scale--october-1)
 and [palette darkening ownership](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#palette-darkening-owner--october-1).
+The [infantry fallback](reverse-engineering/contracts/unitai/CInfantryUnit__VFunc40_HandleCollisionDamageReaction__00489650.md#orientation-fallback-correction--october-1)
+now selects the independently bound retail matrix. The
+[dive-bomber banking correction](reverse-engineering/binary-analysis/unit-battleengine-gameplay-static-contract.md#dive-bomber-bank-sign--october-1)
+removes 67 opposite-sign results in 336 bounded original-code cases. Neither whole function
+matches yet; live-state reachability remains unproved.
+The [compressed-texture fallback correction](reverse-engineering/binary-analysis/mesh-resource-render-static-contract.md#compressed-texture-format-fallbacks--october-1)
+restores two missing format cases. The separate [compass rounding correction](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#compass-direction-rounding--october-1)
+removes 1,749 differences in 8,118 bounded arithmetic cases. Both complete callers remain unmatched.
 The private README owns the current score and exact byte/relocation receipts; these static
 matches are not live gameplay, resource-loading or graphics-device acceptance.
 The separately reproduced [compass coordinate correction](reverse-engineering/binary-analysis/hud-frontend-overlay-static-contract.md#compass-coordinate-association--october-1)

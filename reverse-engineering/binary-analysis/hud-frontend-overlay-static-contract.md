@@ -1,7 +1,7 @@
 # HUD / frontend overlay static contract
 
 Status: bounded retail static evidence; not visual proof
-Last updated: 2026-10-01 (debriefing foreground scale corrected; word-wrap and message-log matches retained)
+Last updated: 2026-10-01 (compass cosine materialization corrected; earlier coordinate correction retained)
 Summary: specimen-bound frontend input, color and coordinate corrections; complete function matches and isolated calculations remain distinct from player acceptance.
 Evidence: MEASURED — October 1 native compass and font fragments, isolated menu runs and full-section/relocation matches, plus September 30 font and scale-menu readback; August HUD claims were not reverified in this pass.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -98,6 +98,32 @@ Private lead evidence under
 `bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
 `frontend-gate-root-replay/receipt.json` and `trail-frontend-device-root-readback.json`.
 
+## Compass direction rounding — October 1
+
+The earlier compass coordinate experiment began after trigonometry. A separate
+upstream recheck now establishes that the weapon-panel instructions store cosine
+to float32 at `0x00485c5f`, reload it at `0x00485c6d`, then multiply by -45. The
+former scalar source expression kept the extended cosine. A source-local
+direction value restores the retail materialization without volatile storage,
+assembly, compiler-flag changes or another emitted callable.
+
+The lead freshly compiled both versions and executed the original
+`[0x00485c4e,0x00485c7b)` fragment and corresponding candidate slices for 8,118
+authored finite-yaw cases at round-nearest PC24/53/64. Both displacement words
+and exception flags agree after correction. Before correction, Y differs in
+1,749 cases, 583 per precision mode; X agrees. Changing FCOS to FSIN rejects
+8,115 cases. Stack/canaries, nonvolatile registers, x87 control, empty stack and
+absence of nonprecision exceptions are checked.
+
+All 37 other callable graphs and 26 exact controls survive. The full renderer
+still has 53 differing byte positions and earns no new match credit. Orientation
+retrieval, draw arguments, device execution, live control words and gameplay
+reachability are outside this fragment experiment. The coordinate association
+below is retained; a full caller invocation remains the useful next falsifier.
+Private lead owner:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/hud-compass-root/`;
+receipts `final-readback.json` and `native-v01/receipt.json`.
+
 ## Compass coordinate association — October 1
 
 The original argument fragment at `0x00485ccc`–`0x00485d37` in `CHud::RenderWeaponPanel`
@@ -115,7 +141,8 @@ of nonprecision exceptions were checked. The old expression supplies a consequen
 
 This does not execute upstream sine/cosine, `GetBottom`, a draw call or the game. The caller's live
 precision and visible consequences are unmeasured. The whole function remains unmatched; its opposite
-order of X-global reads, cosine materialization and other scheduling differences remain open. All
+order of X-global reads and other scheduling differences remain open; the upstream cosine
+materialization is corrected by the separate recheck above. All
 55 exact functions in the affected three-object check survive, and all 37 other HUD callable sections
 and their relocations are unchanged.
 

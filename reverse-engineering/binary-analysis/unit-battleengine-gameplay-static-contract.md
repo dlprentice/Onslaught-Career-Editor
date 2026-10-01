@@ -1,7 +1,7 @@
 # Unit / BattleEngine / gameplay static contract
 
 Status: bounded retail static map; not runtime gameplay proof
-Last updated: 2026-10-01 (Unit provider selection matches; Mech debris arithmetic corrected)
+Last updated: 2026-10-01 (dive-bomber bank-sign arithmetic corrected; provider and debris findings retained)
 Summary: retained gameplay routing plus specimen-bound provider, debris and squad-registration findings.
 Evidence: MEASURED — October 1 whole-section/relocation match, bounded original-code arithmetic and squad instruction reads; the retained map sections keep their July 16 evidence limits.
 Specimen: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -9,6 +9,30 @@ Specimen: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766
 This contract routes the retained Unit/BattleEngine evidence without repeating
 the retired wave ledger. Function-level notes under [`functions/`](functions/)
 remain the detailed evidence owners.
+
+## Dive-bomber bank sign — October 1
+
+The guide at `0x00446840` chooses the bank sign from a dot product. Retail's
+`[0x00446b64,0x00446b93)` fragment accumulates component products as `(Z+Y)+X`;
+the former reconstruction used `(Y+X)+Z`. Cancellation can change the sign.
+Binding the earlier destination height by const reference recovers the retail
+operand order without a shared-header or compiler change.
+
+The lead freshly compiled both versions and executed the original and candidate
+47-byte fragments in 336 authored finite states. Before correction, 37 PC24,
+21 PC53 and nine PC64 cases select the opposite sign. The corrected fragment
+is byte-identical after its zero-constant relocation is independently bound,
+and all admitted outputs agree. Reversing the branch flips every sign while
+preserving the surviving heading; register, stack and x87 guards pass.
+
+This experiment admits a clamped bank magnitude of `0.5`, finite orientation
+and destination vectors, and explicit round-to-nearest control words. It does
+not run the preceding callbacks, atan2/clamping, world queries or full update,
+nor establish live reachability or the game's active control word. The full
+guide remains unmatched. Nineteen other callable graphs, all 41 guide reference
+identities and thirteen exact controls survive. Private root evidence under
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+`dive-bank-root/readback.json` and `dive-bank-root/native-bank/receipt.json`.
 
 ## Unit provider selection — October 1
 
