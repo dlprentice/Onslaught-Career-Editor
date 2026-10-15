@@ -3,7 +3,7 @@
 Status: active canonical synthesis of the pinned Stuart Gillam source corpus and
 its current reverse-engineering/rebuild use; the source files remain the
 line-level primary evidence
-Last updated: 2026-09-27 (GenericSPtrSet current identity refreshed; earlier synthesis retains its limits)
+Last updated: 2026-10-15 (licence boundary: the source is GPL version 3 only; earlier synthesis retains its limits)
 Verdict: **The pinned `references/Onslaught` drop is an exceptionally valuable
 but incomplete architecture corpus: 106 C/C++ files (52 `.cpp`, 54 headers),
 50,266 physical source lines, 1,354,693 source bytes, 254 distinct quoted
@@ -229,8 +229,9 @@ therefore be decided from the text and retail evidence, not Git dates.
 
 ### License and provenance boundary
 
-- The source root carries GPLv3. The `rebuild/` lane is GPL-3.0-or-later,
-  source- and RE-informed, and explicitly not clean-room.
+- The source root carries GPLv3 with no "any later version" notice, so it is version 3 only. The `rebuild/` lane
+  is distributed as a whole under GPL-3.0-only (files adapting this source are marked so; see
+  `rebuild/PROVENANCE.md`), source- and RE-informed, and explicitly not clean-room.
 - The repository's root MIT license does not relicense either the pinned source
   or `rebuild/`.
 - Four Direct3D framework files preserve Microsoft sample copyright notices:
