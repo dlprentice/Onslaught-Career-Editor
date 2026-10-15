@@ -151,7 +151,8 @@ authored animation without them:
 This mapping is not part of the format. It is how the companion's exporter (`companion/OnslaughtToolkit.Godot/Assets/GltfExport.cs`)
 reproduces the game. Evaluated by the glTF rules from the exported files, every node of every exported
 animation at every sample matches the composition above: 158 animations and 124,822 node poses, with a worst
-error of 5e-7.
+error of 5e-7 (`python tools/gltf_pose_check.py --game GAME_FOLDER --exports EXPORTS`, over the exports a
+`Development/AssetCheck.cs` run keeps with `ASSET_KEEP=all`).
 
 - **Nodes.** One node per part, parented as `PRNT` says. A node's rest transform is its key at virtual
   frame 0.

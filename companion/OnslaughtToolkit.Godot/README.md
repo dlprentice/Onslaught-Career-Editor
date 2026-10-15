@@ -143,6 +143,19 @@ notices careers and settings the game saved, reads them again, backs them up if 
 backups are on (after the game closed), and shows the latest. Changes you have not saved
 are never thrown away for this; the companion says so instead.
 
+## Known limits
+
+- Nothing has been run on Windows; the Windows package is cross-exported and inspected only.
+- Nobody has clicked through the app by hand or listened to its music and voices.
+- The model preview shows each model at its first frame; the app never plays an animation. On
+  2026-10-16, playing the exported animations inside a headless Godot (a development check, not the
+  app) aborted the engine with an internal error and then crashed its crash handler, so the
+  development probe only counts the animations and skins Godot's importer reads, and the pose
+  check runs outside Godot (`tools/gltf_pose_check.py`). Copies play in Blender.
+- The handedness conversion follows the game's culling convention; no mirrored text on a model
+  has been checked against it.
+- Behavior after a power loss during a write is not proven (see below).
+
 ## How files stay safe
 
 Home makes three promises, and the code keeps them:
