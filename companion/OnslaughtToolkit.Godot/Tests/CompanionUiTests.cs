@@ -459,6 +459,9 @@ internal static class CompanionUiTests
         app.Navigate("lore");
         check.That(!app.Status.Failed && app.Status.Label.Text.Length == 0, "a page's message does not follow you to another page");
         app.Navigate("music");
+        check.That(app.Music.Load(app.Music.Items.First(item => item.Kind == OnslaughtToolkit.Companion.Media.AudioKind.Voice)) &&
+            !app.Music.PlayPause.Disabled && app.Music.Player.Stream is AudioStreamOggVorbis { } tone && Math.Abs(tone.GetLength() - 0.5) < 0.01,
+            "a real Ogg Vorbis voice line loads and can play (the fake install's half-second tone)");
         check.That(!app.Music.Load(app.Music.Items.First(item => !item.Playable)) && app.Music.Player.Stream is null,
             "a Bink cutscene is listed but not played");
         await Frame(tree);
