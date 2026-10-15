@@ -112,6 +112,10 @@ public partial class CompanionApp : Control
         {
             Navigate("edit");
             EditCareer.AddGoodie(index);
+        }, path =>
+        {
+            Navigate("assets");
+            Assets.Reveal(path);
         });
         Cheats = new CheatsPage(Services);
         Settings = new SettingsPage(Services);

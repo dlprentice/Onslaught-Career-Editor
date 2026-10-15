@@ -7,7 +7,8 @@ Each archive must be the LVLR prefix and one GDIE chunk that ends exactly at the
 must carry the archive's own number and the type the game's number rule gives. An image Goodie names one texture,
 and a model Goodie names its textures and its mesh. Every name must resolve to exactly one installed file by the
 game's own path rule. Video and level Goodies carry no content; the report lists the file or level the game picks for
-each from its number. The install is only read.
+each from its number. GOODIE_CONTENT is a SHA-256 over one "number type item | item" line per archive, for comparison
+with the companion's reader. The install is only read.
 
 Run:  python ./tools/goodie_resource_walk.py --game GAME_FOLDER    (or set BEA_GAME to the game folder)
 """
@@ -200,7 +201,7 @@ def main(argv: list[str] | None = None) -> int:
     shelf = {str(p.relative_to(resources)).lower(): p for folder in ("dxtntextures", "textures", "meshes")
              for p in (resources / folder).glob("*.aya")}
     videos = {str(p.relative_to(Path(args.game) / "data" / "video")).lower()[:-4] for p in (Path(args.game) / "data" / "video").rglob("*.vid")}
-    digest, failures, tally = hashlib.sha256(), [], {}
+    digest, content, failures, tally = hashlib.sha256(), hashlib.sha256(), [], {}
     references = set()
     for path in files:
         raw = path.read_bytes()
@@ -239,11 +240,13 @@ def main(argv: list[str] | None = None) -> int:
             shown.append(f"video/{video}.vid")
         if kind == LEVEL:
             shown.append(f"level {level_number(number)}")
+        content.update(f"{number} {kind} {' | '.join(shown)}\n".encode())
         if args.list:
             print(f"GOODIE {number:3d} {TYPE_NAMES.get(kind, kind):5s} " + " | ".join(shown))
     counts = ", ".join(f"{name} {count}" for name, count in sorted(tally.items()))
     print(f"GOODIE_WALK: {len(files) - len(failures)} of {len(files)} archives clean; {counts}; "
           f"{len(references)} distinct installed files referenced; manifest {digest.hexdigest()}")
+    print(f"GOODIE_CONTENT {content.hexdigest()}")
     for failure in failures[:40]:
         print("FAIL " + failure)
     return 1 if failures else 0

@@ -139,10 +139,42 @@ public partial class AssetCheck : SceneTree
                 }
                 GD.Print($"PCM_BANK {Path.GetFileName(bank)} {Convert.ToHexString(whole.GetHashAndReset()).ToLowerInvariant()} ({samples.Count} samples)");
             }
+            // Every Goodie archive through the companion's reader, hashed as tools/goodie_resource_walk.py hashes it.
+            int goodies = 0, goodieFailures = 0;
+            using (System.Security.Cryptography.IncrementalHash content = System.Security.Cryptography.IncrementalHash.CreateHash(System.Security.Cryptography.HashAlgorithmName.SHA256))
+            {
+                for (int number = 0; number < 1000; number++)
+                {
+                    if (!File.Exists(Path.Combine(game, "data", "resources", GoodieResources.ArchiveName(number)))) continue;
+                    goodies++;
+                    try
+                    {
+                        GoodieContent goodie = GoodieResources.Read(game, number);
+                        IEnumerable<string> shown = goodie.Kind switch
+                        {
+                            GoodieKind.Video => ["video/" + goodie.Video],
+                            GoodieKind.Level => [$"level {goodie.Level}"],
+                            _ => goodie.Files,
+                        };
+                        content.AppendData(System.Text.Encoding.UTF8.GetBytes($"{number} {(int)goodie.Kind} {string.Join(" | ", shown)}\n"));
+                        if (goodie.Missing.Count > 0)
+                        {
+                            goodieFailures++;
+                            GD.PrintErr($"FAIL Goodie {number}: missing {string.Join(", ", goodie.Missing)}");
+                        }
+                    }
+                    catch (Exception error) when (error is IOException or InvalidDataException)
+                    {
+                        goodieFailures++;
+                        GD.PrintErr($"FAIL Goodie {number}: {error.Message}");
+                    }
+                }
+                GD.Print($"GOODIE_CONTENT {Convert.ToHexString(content.GetHashAndReset()).ToLowerInvariant()} ({goodies} archives, {goodieFailures} failures)");
+            }
             GD.Print($"ASSET_ANIMATION: Godot's importer read {animations} animations and {skins} skins from the exports");
             GD.Print($"ASSET_EXPORT: {exported} models exported to glTF, {imported} read back by Godot's importer, {unresolved} texture " +
                 $"lookups unresolved; {textures} of {library.Textures.Count} textures decoded and encoded as PNG");
-            exit = failures == 0 && mismatched == 0 && imported == exported && textureFailures == 0 && unresolved == 0 ? 0 : 1;
+            exit = failures == 0 && mismatched == 0 && imported == exported && textureFailures == 0 && unresolved == 0 && goodieFailures == 0 ? 0 : 1;
         }
         finally
         {

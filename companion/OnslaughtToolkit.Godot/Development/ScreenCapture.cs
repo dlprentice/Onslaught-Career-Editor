@@ -74,14 +74,28 @@ public partial class ScreenCapture : SceneTree
         await Settle();
 
         FakeInstall install = FakeInstall.Create(Path.Combine(work, "install"), File.ReadAllBytes(fixture));
+        AssetTests.WriteGoodies(install.Game);
         (SubViewport viewport, CompanionApp app) = await Start(size, work, "game", [fake ? install.SteamRoot : _steamRoot]);
         for (int frame = 0; frame < 600 && app.Workspace.Session is null; frame++) await Settle();
         await Shot(viewport, label, "home-first-run");
         app.Navigate("summary");
         await Shot(viewport, label, "summary");
         app.Navigate("goodies");
-        app.Goodies.Cells[2].EmitSignal(BaseButton.SignalName.Pressed);
-        await Shot(viewport, label, "goodies");
+        // A picture, a model and a video Goodie, shown even where the open career has not earned them.
+        foreach ((int number, string name) in new[] { (2, "goodies"), (8, "goodies-model"), (201, "goodies-video") })
+        {
+            app.Goodies.Cells[number].EmitSignal(BaseButton.SignalName.Pressed);
+            if (app.Goodies.ShowAnyway.Visible) app.Goodies.ShowAnyway.EmitSignal(BaseButton.SignalName.Pressed);
+            await Reveal(app.Goodies.Cells[number]);
+            await Shot(viewport, label, name);
+        }
+        if (app.Workspace.Session?.Analysis.Goodies.FirstOrDefault(goodie => goodie.Shown &&
+            goodie.State is not (Careers.GoodieState.New or Careers.GoodieState.Old)) is { } unearned)
+        {
+            app.Goodies.Cells[unearned.Index].EmitSignal(BaseButton.SignalName.Pressed);
+            await Reveal(app.Goodies.Cells[unearned.Index]);
+            await Shot(viewport, label, "goodies-unearned");
+        }
 
         app.Navigate("edit");
         app.EditCareer.Rows[0].Target.Value = 123456;

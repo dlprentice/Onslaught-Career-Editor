@@ -517,6 +517,53 @@ internal static class CompanionUiTests
         app.Assets.Kind.Select(0);
         app.Assets.Kind.EmitSignal(OptionButton.SignalName.ItemSelected, 0);
         await Frame(tree);
+        await GoodieContents(app, tree, install, check);
+    }
+
+    /// <summary>What a Goodie shows, from synthetic Goodie archives in the fake install; the fixture career has Goodie 228 locked.</summary>
+    private static async Task GoodieContents(CompanionApp app, SceneTree tree, FakeInstall install, Checks check)
+    {
+        AssetTests.WriteGoodies(install.Game);
+        app.Navigate("goodies");
+        app.Goodies.Cells[0].EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(app.Goodies.Content?.Kind == GoodieKind.Image && app.Goodies.ContentImage is { } picture && picture.GetWidth() == 4 &&
+            app.Goodies.ContentText.StartsWith("A picture: meshtex/test", StringComparison.Ordinal) && app.Goodies.OpenAsset.Visible,
+            "an earned picture Goodie shows its picture from the install");
+        app.Goodies.OpenAsset.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(app.Current == app.Assets && app.Assets.Texture is { Width: 4 } &&
+            app.Assets.Selected?.Path.EndsWith("meshtex%test.tga(0)A8R8G8B8.aya", StringComparison.Ordinal) == true && !app.Assets.Save.Disabled,
+            "Open in Art & sound shows that picture there, ready to save");
+        app.Navigate("goodies");
+        app.Goodies.Cells[8].EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(app.Goodies.Content?.Kind == GoodieKind.Model && app.Goodies.ContentText.Contains("A 3D model: testmodel, with 1 texture") &&
+            app.Goodies.ContentImage is null, "a model Goodie names its model");
+        app.Goodies.OpenAsset.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(app.Current == app.Assets && app.Assets.Model?.Parts.Count == 2, "Open in Art & sound shows that model there");
+        app.Navigate("goodies");
+        app.Goodies.Cells[228].EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(app.Goodies.Content is null && app.Goodies.ShowAnyway.Visible && !app.Goodies.OpenAsset.Visible &&
+            app.Goodies.ContentText.StartsWith("Not earned", StringComparison.Ordinal), "an unearned Goodie stays hidden until asked");
+        app.Goodies.ShowAnyway.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(app.Goodies.Content?.Kind == GoodieKind.Video && !app.Goodies.ShowAnyway.Visible &&
+            app.Goodies.ContentText.Contains("data/video/cutscenes/28.vid") && app.Goodies.ContentText.Contains("missing video/cutscenes/28.vid"),
+            "Show it anyway names the cutscene it plays, and says the install lacks it");
+        app.Goodies.Cells[66].EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(app.Goodies.ContentText.Contains("race level 901"), "a race-level Goodie names its level");
+        app.Goodies.Cells[228].EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(app.Goodies.ShowAnyway.Visible, "choosing another Goodie hides an unearned one again");
+
+        // The gallery's change button for a slot the game never shows: the message must survive the move to Edit career.
+        app.Goodies.Cells[72].EmitSignal(BaseButton.SignalName.Pressed);
+        app.Goodies.ChangeInCopy.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(app.Current == app.EditCareer && app.Status.Failed &&
+            app.Status.Label.Text.Contains("Goodie 072 is never shown in the game's gallery"), "the hidden-Goodie message survives the move to Edit career");
+        app.Status.Clear();
+        app.EditCareer.AddGoodie(73);
+        check.That(app.Status.Label.Text.Contains("Goodie 073 is never shown in the game's gallery, so its state is kept as it is."),
+            "adding a never-shown Goodie says so");
+        app.Navigate("goodies");
+        app.Goodies.Cells[2].EmitSignal(BaseButton.SignalName.Pressed);
+        await Frame(tree);
     }
 
     private static async Task DriveLore(CompanionApp app, SceneTree tree, List<string> openedUrls, Checks check)

@@ -1,7 +1,7 @@
 # Onslaught Toolkit companion
 
 Status: C# application built entirely in code on Godot 4.8 dev6 .NET, organised around the player: careers, Goodies, editing, cheats, game settings, backups, music, voices, lore, and the game's models and textures; Linux executed checks, Windows runtime acceptance pending
-Last updated: 2026-10-16 (Art & sound: glTF, PNG and WAV copies; no replacement without an atomic exchange; failures after a write reported as possible changes; former AppCore sources moved in)
+Last updated: 2026-10-16 (Goodies show what they hold; Art & sound: glTF, PNG and WAV copies; no replacement without an atomic exchange; failures after a write reported as possible changes; former AppCore sources moved in)
 Summary: the MIT companion for Battle Engine Aquila players: it opens on their game and careers, shows progress and Goodies, changes careers and settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, plays and explains the game's own music, voices and lore, and saves copies of its models (glTF) and textures (PNG).
 
 The companion is for players. It opens on their game and careers, and everything it
@@ -24,7 +24,7 @@ editor-authored scene, and `npm run build` refuses to stage one.
 | [Game](Game/) | Steam library discovery, the game folder and its files, the companion's remembered choices and backup folder (`GameFolder`), and the game's own text read from the install (`GameText`, `GameTextCatalog`) |
 | [Options](Options/) | The `defaultoptions.bea` reader and editor (`OptionsFile`) and the physical-key table |
 | [Media](Media/) | The game's music, voice lines and cutscene list (`GameAudio`) |
-| [Assets](Assets/) | The game's models, textures and bank sounds: the `.aya` envelope (`AyaContainer`), the mesh reader (`CmshReader`), DDS decoding (`DdsTexture`), the sound banks (`XapBank`), the install's lists (`AssetLibrary`), glTF export (`GltfExport`) and new-file-only exports (`ExportFiles`) |
+| [Assets](Assets/) | The game's models, textures and bank sounds: the `.aya` envelope (`AyaContainer`), the mesh reader (`CmshReader`), DDS decoding (`DdsTexture`), the sound banks (`XapBank`), what each Goodie holds (`GoodieResources`), the install's lists (`AssetLibrary`), glTF export (`GltfExport`) and new-file-only exports (`ExportFiles`) |
 | [Lore](Lore/) | The embedded lore library, its Markdown renderer and the campaign's mission list (`CampaignLoreComposer`) |
 | [Ui](Ui/) | The Flight-deck theme and icons, the shell, career cards, the save-choice dialog, the game's art read from the install (`GameArt`) and one class per page |
 | [Tests](Tests/) | Every behavioral contract, run headlessly inside Godot |
@@ -98,7 +98,16 @@ itself, read-only.
 - **Goodies**: the 230 Goodies the game's gallery shows, row by row as on its wall, in the
   game's colours (gold new, blue viewed), with filters and, for each, its title from your
   game's text, its unlock rule and how that rule is known. Slots 071–073 are stored and can
-  be earned but never shown; they are listed apart and always kept as they are.
+  be earned but never shown; they are listed apart and always kept as they are. **What it
+  shows** reads the Goodie from your install, as
+  reverse-engineering/asset-formats/goodie-resources.md describes:
+  - a picture is shown;
+  - a model is named;
+  - both open in Art & sound, which saves copies;
+  - a video names its cutscene file (Bink video: watch it in the game);
+  - a race level names its level.
+
+  A Goodie the open career has not earned stays hidden until you press **Show it anyway**.
 - **Edit career**: kill counts (only the three count bytes; the fourth is kept) and Goodies
   (unlock every Goodie, or pick them). Your changes are listed in words; the exact bytes
   are shown on request. **Save changes…** offers a new career in your game (named by you),

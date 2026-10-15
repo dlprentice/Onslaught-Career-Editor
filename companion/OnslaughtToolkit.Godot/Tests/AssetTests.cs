@@ -24,6 +24,82 @@ internal static class AssetTests
         Exports(Path.Combine(outputDirectory, "asset-exports"), check);
         Animation(check);
         Sounds(check);
+        Goodies(Path.Combine(outputDirectory, "asset-goodies"), check);
+    }
+
+    /// <summary>A Goodie archive's inflated stream: the resource prefix, then GDIE and GDAT around the content.</summary>
+    internal static byte[] GoodieStream(int number, GoodieKind kind, byte[] content) =>
+        [.. Chunk("LVLR", Ints(103)), .. Chunk("TARG", Ints(1)), .. Chunk("AYAD", new byte[24]),
+         .. Chunk("GDIE", Chunk("GDAT", [.. Ints(number, (int)kind), .. content]))];
+
+    /// <summary>A texture reference: the 344-byte record (name, size, one frame, A8R8G8B8, compressible) and its TFRM.</summary>
+    internal static byte[] GoodieTexture(string name)
+    {
+        byte[] record = Record(344, new() { [172] = 4, [176] = 4, [312] = 1, [324] = 4 });
+        Encoding.ASCII.GetBytes(name).CopyTo(record, 8);
+        record[340] = 1;
+        return Chunk("DXTX", [.. Chunk("CTEX", record), .. Chunk("TFRM", Ints(1))]);
+    }
+
+    internal static byte[] GoodieModel(int number, string backdrop, string[] textures, string mesh)
+    {
+        byte[] reference = new byte[309];
+        Encoding.ASCII.GetBytes(mesh).CopyTo(reference, 0);
+        BinaryPrimitives.WriteInt32LittleEndian(reference.AsSpan(300), 10002);
+        byte[] names = [.. new[] { backdrop }.Concat(textures).SelectMany(name => Chunk("TXTR", GoodieTexture(name)))];
+        return GoodieStream(number, GoodieKind.Model,
+            [.. Chunk("MDAT", Ints(textures.Length + 1)), .. names, .. Chunk("MESH", Chunk("PMSH", Chunk("PMS2", reference)))]);
+    }
+
+    /// <summary>
+    /// Puts a synthetic model, a texture and Goodie archives into a game folder: picture Goodies 000–007 and model
+    /// Goodie 008, all naming those two files.
+    /// </summary>
+    internal static void WriteGoodies(string gameRoot)
+    {
+        string resources = Path.Combine(gameRoot, "data", "resources");
+        Directory.CreateDirectory(Path.Combine(resources, "meshes"));
+        Directory.CreateDirectory(Path.Combine(resources, "dxtntextures"));
+        File.WriteAllBytes(Path.Combine(resources, "meshes", "m_testmodel.msh.aya"), Member(TwoPartMesh()));
+        File.WriteAllBytes(Path.Combine(resources, "dxtntextures", "meshtex%test.tga(0)A8R8G8B8.aya"), Member(Dxt1Texture()));
+        for (int number = 0; number < 8; number++)
+            File.WriteAllBytes(Path.Combine(resources, GoodieResources.ArchiveName(number)),
+                Member(GoodieStream(number, GoodieKind.Image, GoodieTexture("meshtex\\test.tga"))));
+        File.WriteAllBytes(Path.Combine(resources, GoodieResources.ArchiveName(8)),
+            Member(GoodieModel(8, "meshtex\\test.tga", ["meshtex\\test.tga"], "testmodel.msh")));
+    }
+
+    private static void Goodies(string root, Checks check)
+    {
+        check.That(GoodieResources.Parse(GoodieStream(3, GoodieKind.Image, GoodieTexture("goodies\\ca_x.tga")), 3, GoodieKind.Image)
+            .SequenceEqual(["dxtntextures/goodies%ca_x.tga(0)A8R8G8B8.aya"]), "an image Goodie names its picture on the texture shelf");
+        check.That(GoodieResources.Parse(GoodieModel(8, "goodies\\bg.tga", ["meshtex\\a.tga"], "f_be1.msh"), 8, GoodieKind.Model)
+            .SequenceEqual(["dxtntextures/goodies%bg.tga(0)A8R8G8B8.aya", "dxtntextures/meshtex%a.tga(0)A8R8G8B8.aya", "meshes/m_f_be1.msh.aya"]),
+            "a model Goodie names its backdrop, its textures and its mesh");
+        string longName = "goodies\\" + new string('x', 70) + ".tga";
+        string cut = GoodieResources.Parse(GoodieStream(3, GoodieKind.Image, GoodieTexture(longName)), 3, GoodieKind.Image)[0];
+        check.That(cut.Length == "dxtntextures/".Length + 65 && cut.EndsWith("x.aya", StringComparison.Ordinal),
+            "a long texture file name is cut to 65 characters as the game cuts it");
+        check.That(Throws(() => GoodieResources.Parse(GoodieStream(4, GoodieKind.Image, GoodieTexture("x")), 3, GoodieKind.Image)) &&
+            Throws(() => GoodieResources.Parse([.. GoodieStream(3, GoodieKind.Image, GoodieTexture("x")), 0], 3, GoodieKind.Image)),
+            "an archive for another Goodie, or with bytes left over, is refused");
+        check.That(GoodieResources.KindOf(0) == GoodieKind.Image && GoodieResources.KindOf(12) == GoodieKind.Image &&
+            GoodieResources.KindOf(8) == GoodieKind.Model && GoodieResources.KindOf(76) == GoodieKind.Model &&
+            GoodieResources.KindOf(66) == GoodieKind.Level && GoodieResources.KindOf(75) == GoodieKind.Video &&
+            GoodieResources.KindOf(200) == GoodieKind.Image && GoodieResources.KindOf(232) == GoodieKind.Video,
+            "Goodie types follow the game's number rule");
+        check.That(GoodieResources.VideoOf(205) == "cutscenes/05.vid" && GoodieResources.VideoOf(232) == "cutscenes/33.vid" &&
+            GoodieResources.LevelOf(66) == 901 && GoodieResources.LevelOf(70) == 905, "videos and race levels follow the Goodie number");
+        WriteGoodies(root);
+        GoodieContent model = GoodieResources.Read(root, 8);
+        GoodieContent video = GoodieResources.Read(root, 228);
+        check.That(model.Missing.Count == 0 && model.Mesh == "meshes/m_testmodel.msh.aya" && video.Missing.SequenceEqual(["video/cutscenes/28.vid"]),
+            "a Goodie's files resolve in the install, and a missing video is reported");
+        Directory.CreateDirectory(Path.Combine(root, "data", "video"));
+        File.WriteAllBytes(Path.Combine(root, "data", "video", "gill_m_on_a_fork.vid"), [0x42]);
+        check.That(GoodieResources.Read(root, 75).Missing.Count == 0 &&
+            GoodieResources.Resolve(Path.Combine(root, "data"), "VIDEO/GILL_M_on_a_fork.vid") == Path.Combine(root, "data", "video", "gill_m_on_a_fork.vid"),
+            "names match the install without regard to case, as the game's file system matches them");
     }
 
     /// <summary>A synthetic two-sample bank: one 2-sample beep (codes 4 and 0) and one silent sample.</summary>

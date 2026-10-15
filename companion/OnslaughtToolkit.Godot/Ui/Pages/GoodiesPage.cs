@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 using Godot;
+using OnslaughtToolkit.Companion.Assets;
 using OnslaughtToolkit.Companion.Careers;
 using OnslaughtToolkit.Companion.Game;
 
@@ -7,8 +8,9 @@ namespace OnslaughtToolkit.Companion.Ui;
 
 /// <summary>
 /// The open career's Goodies laid out as the game's gallery wall, row by row, in the game's own colours,
-/// with each unlock rule and how far the evidence for it goes. Slots 071–073, which the wall never shows,
-/// are listed apart. Read-only; a change is prepared on Edit a copy.
+/// with each unlock rule and how far the evidence for it goes, and what each Goodie shows: its picture, model, cutscene
+/// or race level, read from the player's install. Slots 071–073, which the wall never shows, are listed apart.
+/// Read-only; a change is prepared on Edit a copy, and copies of pictures and models are saved from Art &amp; sound.
 /// </summary>
 internal sealed class GoodiesPage : Page
 {
@@ -28,6 +30,11 @@ internal sealed class GoodiesPage : Page
     private readonly CareerWorkspace _workspace;
     private readonly GameLibrary _game;
     private readonly Action<int> _changeInCopy;
+    private readonly Action<string> _openAsset;
+    private readonly Label _contentText;
+    private readonly TextureRect _contentImage;
+    private string? _contentFile;
+    private bool _revealed;
     private readonly Label _empty, _summary;
     private readonly CareerCards _choose;
     private readonly VBoxContainer _grid;
@@ -39,9 +46,9 @@ internal sealed class GoodiesPage : Page
     private readonly List<Button> _filterButtons = [];
     private int _filter;
 
-    internal GoodiesPage(AppServices app, Action<int> changeInCopy) : base("goodies", "Goodies", "goodies")
+    internal GoodiesPage(AppServices app, Action<int> changeInCopy, Action<string> openAsset) : base("goodies", "Goodies", "goodies")
     {
-        (_workspace, _game, _changeInCopy) = (app.Workspace, app.Game, changeInCopy);
+        (_workspace, _game, _changeInCopy, _openAsset) = (app.Workspace, app.Game, changeInCopy, openAsset);
         HBoxContainer layout = Build.Row(16);
         layout.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
         Root = layout;
@@ -71,7 +78,11 @@ internal sealed class GoodiesPage : Page
         _detail.CustomMinimumSize = new Vector2(330, 0);
         _detail.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         _detail.SizeFlagsVertical = Control.SizeFlags.ShrinkBegin;
-        layout.Add(_detail);
+        // The detail panel scrolls on its own, so a tall picture never pushes the page past the window.
+        (ScrollContainer detailScroll, VBoxContainer detailColumn) = Build.Scroller(0);
+        detailScroll.CustomMinimumSize = new Vector2(344, 0);
+        layout.Add(detailScroll);
+        detailColumn.Add(_detail);
         _detailTitle = detail.Add(Build.Heading("Goodie"));
         _detailName = detail.Add(Build.Text("", "Strong"));
         _detailState = detail.Add(Build.Text("", "Data"));
@@ -82,6 +93,26 @@ internal sealed class GoodiesPage : Page
         ChangeInCopy.Icon = Icons.Get("edit");
         ChangeInCopy.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
         ChangeInCopy.Pressed += () => _changeInCopy(Selected);
+
+        detail.Add(Build.Eyebrow("What it shows"));
+        _contentText = detail.Add(Build.Text(""));
+        _contentImage = detail.Add(new TextureRect
+        {
+            ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            CustomMinimumSize = new Vector2(0, 200), Visible = false,
+        });
+        HBoxContainer contentActions = detail.Add(Build.Row(8));
+        ShowAnyway = contentActions.Add(Build.Button("Show it anyway", tooltip: "Shows what this Goodie holds, though this career has not earned it."));
+        ShowAnyway.Pressed += () =>
+        {
+            _revealed = true;
+            ShowContent(Selected);
+        };
+        OpenAsset = contentActions.Add(Build.Button("Open in Art & sound", tooltip: "Shows it in Art & sound, where you can turn it and save a copy."));
+        OpenAsset.Pressed += () =>
+        {
+            if (_contentFile is string file) _openAsset(file);
+        };
         ShowEmpty();
     }
 
@@ -93,6 +124,11 @@ internal sealed class GoodiesPage : Page
     internal string DetailEvidence => _detailEvidence.Text;
     internal string DetailRule => _detailRule.Text;
     internal Button ChangeInCopy { get; }
+    internal Button ShowAnyway { get; }
+    internal Button OpenAsset { get; }
+    internal string ContentText => _contentText.Text;
+    internal Texture2D? ContentImage => _contentImage.Visible ? _contentImage.Texture : null;
+    internal GoodieContent? Content { get; private set; }
 
     internal void ShowSession(SaveSession session)
     {
@@ -125,6 +161,7 @@ internal sealed class GoodiesPage : Page
     internal void Select(int index)
     {
         if (_workspace.Session is not SaveSession session || index < 0 || index >= _cells.Length) return;
+        if (index != Selected) _revealed = false;
         Selected = index;
         // Setting a toggle without a signal does not release the rest of its group, so do it here.
         for (int cell = 0; cell < _cells.Length; cell++) _cells[cell].SetPressedNoSignal(cell == index);
@@ -141,6 +178,79 @@ internal sealed class GoodiesPage : Page
         ChangeInCopy.Disabled = !goodie.Shown;
         ChangeInCopy.TooltipText = goodie.Shown ? "Adds this Goodie to Edit career, where you save the change."
             : "The game never shows this slot, so its state is kept.";
+        ShowContent(index);
+    }
+
+    /// <summary>What the Goodie shows, from the install: hidden behind "Show it anyway" until this career has earned it.</summary>
+    private void ShowContent(int index)
+    {
+        Content = null;
+        _contentFile = null;
+        _contentImage.Visible = false;
+        _contentImage.Texture = null;
+        ShowAnyway.Visible = OpenAsset.Visible = false;
+        if (_workspace.Session is not SaveSession session) return;
+        if (_game.Folder is not GameFolder folder)
+        {
+            _contentText.Text = "Choose your game folder on Home to see what this Goodie shows.";
+            return;
+        }
+        bool earned = session.Analysis.Goodies[index].State is GoodieState.New or GoodieState.Old;
+        if (!earned && !_revealed)
+        {
+            _contentText.Text = "Not earned in this career yet, so it stays hidden here too.";
+            ShowAnyway.Visible = true;
+            return;
+        }
+        GoodieContent content;
+        try
+        {
+            content = GoodieResources.Read(folder.Root, index);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            _contentText.Text = "This Goodie's file in your game could not be read: " + error.Message;
+            return;
+        }
+        Content = content;
+        string resources = Path.Combine(folder.Root, "data", "resources");
+        string missing = content.Missing.Count == 0 ? "" : "\nYour game is missing " + string.Join(", ", content.Missing) + ".";
+        switch (content.Kind)
+        {
+            case GoodieKind.Image:
+                _contentFile = GoodieResources.Resolve(resources, content.Image!);
+                _contentText.Text = "A picture: " + AssetLibrary.TextureTitle(Path.GetFileName(content.Image!)) + missing;
+                if (_contentFile is not null) ShowPicture(_contentFile);
+                break;
+            case GoodieKind.Model:
+                _contentFile = GoodieResources.Resolve(resources, content.Mesh!);
+                _contentText.Text = $"A 3D model: {AssetLibrary.ModelTitle(Path.GetFileName(content.Mesh!))}, " +
+                    $"with {Build.Count(content.Files.Count - 2, "texture")} and a backdrop. Open it to turn it and see its animations." + missing;
+                break;
+            case GoodieKind.Video:
+                _contentText.Text = $"A video: data/video/{content.Video}. It is Bink video, which the companion cannot play; " +
+                    "watch it in the game's gallery." + missing;
+                break;
+            default:
+                _contentText.Text = $"A race level: the game's gallery starts race level {content.Level}.";
+                break;
+        }
+        OpenAsset.Visible = _contentFile is not null && content.Missing.Count == 0;
+    }
+
+    private void ShowPicture(string path)
+    {
+        try
+        {
+            DdsImage image = DdsTexture.Decode(AyaContainer.Inflate(File.ReadAllBytes(path)));
+            _contentImage.Texture = ImageTexture.CreateFromImage(AssetsPage.ToImage(image));
+            _contentImage.Visible = true;
+            _contentText.Text += $" · {image.Width} × {image.Height}";
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            _contentText.Text += "\nThe picture could not be read: " + error.Message;
+        }
     }
 
     private void ApplyFilter(int filter)

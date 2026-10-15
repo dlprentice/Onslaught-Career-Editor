@@ -21,7 +21,7 @@ internal sealed class AssetsPage : Page
     private readonly Node3D _stage;
     private readonly Camera3D _camera;
     private AssetLibrary? _library;
-    private IReadOnlyList<GameAsset> _shown = [];
+    private List<GameAsset> _shown = [];
     private Node? _previewScene;
     private readonly AudioStreamPlayer _player;
 
@@ -153,6 +153,31 @@ internal sealed class AssetsPage : Page
         for (int i = 0; i < _shown.Count; i++)
             Build.TableRow(List, root, _shown[i].Title, _shown[i].Group, Size(_shown[i].Size)).SetMetadata(0, i);
     }
+
+    /// <summary>
+    /// Lists the kind of file at <paramref name="path"/> (a model or texture in the install), selects it and opens it. Returns
+    /// false if the install's listing has no such file.
+    /// </summary>
+    internal bool Reveal(string path)
+    {
+        if (_library is null) return false;
+        int kind = _library.Models.Any(asset => SamePath(asset.Path, path)) ? 0 : 1;
+        Kind.Select(kind);
+        Search.Text = "";
+        ShowList();
+        int index = _shown.FindIndex(asset => SamePath(asset.Path, path));
+        if (index < 0) return false;
+        for (TreeItem? row = List.GetRoot()?.GetFirstChild(); row is not null; row = row.GetNext())
+        {
+            if (row.GetMetadata(0).AsInt32() != index) continue;
+            row.Select(0);
+            List.ScrollToItem(row);
+            break;
+        }
+        return Open(_shown[index]);
+    }
+
+    private static bool SamePath(string a, string b) => string.Equals(Path.GetFullPath(a), Path.GetFullPath(b), StringComparison.Ordinal);
 
     /// <summary>Reads the chosen model or texture and shows it. Returns false, with the reason shown, if it cannot be read.</summary>
     internal bool Select(TreeItem? row)
@@ -315,7 +340,7 @@ internal sealed class AssetsPage : Page
         return ImageTexture.CreateFromImage(image);
     }
 
-    private static Image ToImage(DdsImage image) => Image.CreateFromData(image.Width, image.Height, false, Image.Format.Rgba8, image.Rgba);
+    internal static Image ToImage(DdsImage image) => Image.CreateFromData(image.Width, image.Height, false, Image.Format.Rgba8, image.Rgba);
 
     private static byte[] Png(DdsImage image) => ToImage(image).SavePngToBuffer();
 

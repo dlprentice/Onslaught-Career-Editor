@@ -17,7 +17,10 @@ byte-matching decompilation:
 - `CMesh::Deserialize`, `0x004aab90`;
 - `MakeCutsceneName`, `0x0046d810`, and `CDXFMV::Play`, `0x0053f190`.
 
-The archives were walked with [`tools/goodie_resource_walk.py`](../../tools/goodie_resource_walk.py).
+The archives were walked with [`tools/goodie_resource_walk.py`](../../tools/goodie_resource_walk.py). The companion's
+separate C# reader resolves every archive the same way: both print the content digest
+`f4ddfbbe3c2df24b734efaeb4e5d1228538dcbb36b055380c11c01c723015a5e`, a SHA-256 over one
+"number type item | item" line per archive.
 Specimen: retail addresses cite `BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`. The corpus is the installed
 `data/resources/goodie_NN_res_PC.aya`, 232 files; their manifest digest (SHA-256 over `name sha256` lines in
@@ -126,7 +129,9 @@ A video Goodie plays `data\video\<name>.vid` (Bink video) full-screen:
 | 201–231 | `cutscenes\NN`, where NN is the Goodie number minus 200, two digits |
 | 232 | `cutscenes\33` |
 
-For a cutscene, `MakeCutsceneName` falls back to `cutscenes\NN_small` when `NN.vid` is missing. Every installed
+The game's file names are matched without regard to case, as on Windows: Goodie 75 asks for `GILL_M_on_a_fork`, and
+the install holds `gill_m_on_a_fork.vid`. A reader on a case-sensitive file system must match the same way. For a
+cutscene, `MakeCutsceneName` falls back to `cutscenes\NN_small` when `NN.vid` is missing. Every installed
 cutscene from 01 to 31, and 33, is present. Goodies 209, 212–216, 228 and 231 play without localisation. The
 other cutscene Goodies pass the player's language to the video opener; how the opener uses it is an open
 question. Goodies 75 and 77 are not localised.
