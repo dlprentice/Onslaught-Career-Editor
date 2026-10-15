@@ -3,6 +3,7 @@
 Status: active format contract — Ogg framing and installed media census complete;
 XAP/SFX semantics bounded; end-to-end playback graph open
 Date: 2026-08-22
+Last updated: 2026-10-16 (XAP layout and decode settled in xap-sample-bank.md)
 Verdict: Ogg framing/metadata and XAP/SFX identity joins are bounded across the
 installed corpus; full decode and playback behavior remain open.
 Evidence: MEASURED — mirror-index heads/counts rechecked for 3,057 Ogg, five XAP,
@@ -19,7 +20,7 @@ retail VAs cite `BEA.exe.original.backup`, SHA-256
 | --- | ---: | --- | --- |
 | Music Ogg Vorbis | 10 | 38,822,467 bytes, 43.946 min | stereo 44.1 kHz metadata |
 | Voice Ogg Vorbis | 3,047 | 116,136,138 bytes | mono 44.1 kHz metadata across five lanes |
-| XAP sample banks | 5 | 164 `PSMP` records each | common names/order; selected ADPCM decode |
+| XAP sample banks | 5 | 164 `PSMP` records each | layout and decode complete ([xap-sample-bank.md](xap-sample-bank.md)) |
 | `sounds.sfx` | 1 | 170 text records | exact catalog-to-bank identity relation |
 
 All **3,057** Ogg files total 154,958,605 bytes and approximately 3.565 hours.
@@ -61,8 +62,9 @@ The complete bank join establishes:
 - selected English records use a high-nibble-first IMA-style ADPCM decode;
 - decoded-duration estimates assume the observed 44.1 kHz mono 16-bit target.
 
-Those facts do not yet supply a reusable five-bank decoder, complete record
-field layout, malformed-input behavior, or playback semantics.
+The complete record layout, the decode and the playback rate are in
+[xap-sample-bank.md](xap-sample-bank.md): every one of the 820 samples decodes, byte-identically to a reference
+build of the game's matched decoder, to 16-bit mono PCM at 44,100 Hz.
 
 ## `sounds.sfx` text catalog
 
@@ -108,8 +110,6 @@ See [game-binaries.md](game-binaries.md) for hashes and complete export tables.
 
 - Validate every Ogg page checksum and decode every packet with an independent
   decoder before claiming complete media integrity.
-- Recover the full `PSMP` record schema and decode all five banks byte-bounded,
-  including localized and invariant samples.
 - Trace one SFX effect from text row through bank lookup, buffer creation,
   DirectSound3D state, and audible output.
 - Prove American-versus-English voice fallback and exact case-folding with
