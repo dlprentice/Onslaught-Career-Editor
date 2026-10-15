@@ -1,0 +1,12 @@
+{
+  "_comment": "The per-function oracle's spec. A group is one VC6 driver exe: adapter source (private, in local-data), the matched decomp objects it links, and the images (byte blobs of real objects) its adapters read. A function names the retail address it ports, its generator and its C# adapter. See README.md.",
+  "groups": {
+    "heightfield": { "adapter": "heightfield.cpp", "objects": ["HeightField.obj"], "images": ["hf"] },
+    "thing": { "adapter": "thing.cpp", "objects": ["thing.obj"], "images": [] }
+  },
+  "functions": {
+    "HeightField.Collide": { "group": "heightfield", "retail": "0x0047eb80", "gen": "hf_position", "count": 6000 },
+    "HeightField.Normal":  { "group": "heightfield", "retail": "0x0047ec60", "gen": "hf_position", "count": 6000 },
+    "Thing.GetCentrePos":  { "group": "thing", "retail": "0x004f3ac0", "gen": "thing_centre", "count": 8000 }
+  }
+}
