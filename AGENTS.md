@@ -20,7 +20,7 @@ A preservation project for *Battle Engine Aquila* (2003). Since 2026-10-15 (Davi
 - **The native source port is in progress and private**, in `bea-decomp`, for Windows and Linux.
 - **The companion is active and public**: the Godot .NET toolkit for careers, saves, backups, settings, music and
   lore, in this repository.
-- **The Godot rebuild is parked** at tag `archive/godot-rebuild-20260926`; `rebuild/` stays as reference.
+- **The Godot rebuild is parked**; `rebuild/` on main is its parked state and stays as reference.
 
 This public repository holds the companion, documentation of the game (formats, behaviours, findings as prose and
 specs), our own tools, the AppCore patching core the companion's mod manager will build on, and the parked rebuild.
@@ -28,7 +28,8 @@ It does not hold the Ghidra database, decompiler output, retail binaries or data
 Ghidra checkpoint, `developer_state.json` and the Ghidra/TTD/campaign machinery moved on 2026-10-15 to the private
 repository `dlprentice/onslaught-re-archive` (clone `~/Projects/game-dev/onslaught-re-archive`), which also keeps the
 decompiler passages scrubbed from public documents. The WinUI shell, its UI tests and the CLI were removed the same
-day; Git history keeps them until the public history is flattened.
+day. The public history was flattened to a single root afterwards; the full earlier history (every old branch,
+tag and pull-request head) is in the private RE archive as a verified bundle and under `refs/old/*`.
 [`GOAL.md`](GOAL.md) states the outcomes, [`PROGRAM.md`](PROGRAM.md) is the work queue and
 [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) says what is demonstrated today.
 
@@ -48,19 +49,21 @@ launches. Any agent may work here, Claude Code included; subagents and peer sess
 | Companion | `claude/companion-csharp-20260925` | `.worktrees/companion-csharp-20260925` | Active. C# only and built in code: no GDScript, one-node entry scene. The sidebar is Home, Your career (a Summary with a campaign map, Goodies, Edit career, Cheats), Your game (Game settings, Backups), Extras (Music & voices, Lore) and Advanced, folded away. Every game write is a choice in one dialog, made after a verified backup and never while the game runs; automatic backups; it catches up when the game closes. A mod manager built on the AppCore patching core, including patching the installed `BEA.exe`, is a later phase. Windows execution, a human click-through and listening to the audio remain. |
 | Game documentation and tools | `main` (short branches merged into it) | any checkout | Formats, mechanics, saves, assets, function notes and contracts under `reverse-engineering/`, and the tools under `tools/`. New findings come from the decompilation and are written as prose and specs, never as decompiler output. |
 | Decompilation and native port | private | `~/Projects/game-dev/bea-decomp` | Decompilation done (5,482/5,482); native source port in progress. Its own README and guide govern it; nothing from it is copied here. |
-| Rebuild (parked) | tag `archive/godot-rebuild-20260926` | none | Parked 2026-10-15 by David: the faithful cross-platform game is now the native source port of the byte-matching decompilation (bea-decomp); any later remake forks that port. At the tag the Godot rebuild is C# and built in code; it wins Level 100 through its player-input surface with a deterministic tape and builds World 110 in Core from retail data (not playable in its host). Its last gate (`npm run check:rebuild`) passed at the tag. `rebuild/` stays on main as reference; no further work is planned. |
+| Rebuild (parked) | `rebuild/` on main (old tag `archive/godot-rebuild-20260926` in the private RE archive) | none | Parked 2026-10-15 by David: the faithful cross-platform game is now the native source port of the byte-matching decompilation (bea-decomp); any later remake forks that port. At the tag the Godot rebuild is C# and built in code; it wins Level 100 through its player-input surface with a deterministic tape and builds World 110 in Core from retail data (not playable in its host). Its last gate (`npm run check:rebuild`) passed at the tag. `rebuild/` stays on main as reference; no further work is planned. |
 
 The former reverse-engineering lane (`codex/retail-re-20260919`, Ghidra) and the former rebuild lane and its
 checkout (`codex/godot-editor-48-20260919`, `.worktrees/godot-editor-48-20260919`) no longer exist as working
-lanes. The parked rebuild is at tag `archive/godot-rebuild-20260926`; `npm run check:rebuild` still runs from a
-checkout of it (`export BEA_LOCAL_LAB=$REPO/local-lab` first).
+lanes. `rebuild/` on main is the parked rebuild (identical to its old tag except the parked documents and the
+root-marker test fix); its gate `npm run check:rebuild` last passed at the tag and has not been rerun on main
+(`export BEA_LOCAL_LAB=$REPO/local-lab` first).
 
 To resume the companion, work in its checkout (`REPO=~/Projects/game-dev/Onslaught-Career-Editor`), then
 `git pull` and `git merge main`: `npm run build` and `npm test`; `npm run capture:companion-godot` renders every
 screen at two sizes through `godot-offscreen` (add `-- --beside-gpu-jobs` to render beside an NVIDIA job, queued on
 the shared iGPU lock); `npm run dev` opens a window. Keep Godot headless unless David has released the desktop.
 
-The tag `archive/camera-core-resume-20260912` keeps the unmerged 2026-09-12 C# camera draft. Unique ignored data
+The unmerged 2026-09-12 C# camera draft is the old tag `archive/camera-core-resume-20260912`, now in the private
+RE archive under `refs/old/tags/`. Unique ignored data
 from retired worktrees is in `local-data/test-runs/retired-worktrees-20260925/` and
 `local-data/test-runs/retired-worktrees-20261015/`.
 

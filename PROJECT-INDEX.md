@@ -31,7 +31,7 @@ flowchart LR
 ```
 
 The arrows are source dependencies, not priority. The companion is the active product; the rebuild is
-parked at tag `archive/godot-rebuild-20260926`. The companion is a C# application built in code and owns its file-safety
+parked (`rebuild/` keeps its parked state). The companion is a C# application built in code and owns its file-safety
 source; the AppCore patching core compiles that same file.
 The MIT companion has no dependency on the GPL rebuild or private retail assets.
 

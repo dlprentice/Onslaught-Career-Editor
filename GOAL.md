@@ -18,7 +18,7 @@ in Git history and the private RE archive.
 - **The companion is the public product.** A polished Godot .NET toolkit for Linux and Windows, for players: careers,
   Goodies, settings, backups, music, voices and lore, and later a mod manager built on the AppCore patching core,
   with no known data-loss path.
-- **The Godot rebuild is parked** at tag `archive/godot-rebuild-20260926` and kept as reference.
+- **The Godot rebuild is parked**; `rebuild/` keeps its parked state as reference.
 - **This repository documents the game in public**: formats, behaviours and findings as prose and specs, with our
   own tools. It carries no Ghidra database, decompiler output, retail binaries or data, or decomp source.
 

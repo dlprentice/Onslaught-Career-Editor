@@ -8,7 +8,7 @@ in Git and the private RE archive; they are not current operating instructions.
 
 The public product is the Godot companion. The byte-matching decompilation (private `bea-decomp`) is complete and is
 the reverse-engineering authority; its native port is in progress and private. The Godot rebuild is parked at tag
-`archive/godot-rebuild-20260926`. The AppCore patching core is kept for the companion's future mod manager.
+its parked state stays in `rebuild/`. The AppCore patching core is kept for the companion's future mod manager.
 
 ## Retail behaviour findings — save, settings and startup
 
@@ -220,7 +220,7 @@ companion does not use AppCore yet. The CLI was removed with the WinUI shell.
 ## Reconstruction
 
 **Parked 2026-10-15.** David parked the Godot rebuild in favour of a native source port of the byte-matching
-decompilation. What follows is its demonstrated state at tag archive/godot-rebuild-20260926; it is not active work.
+decompilation. What follows is its demonstrated state when parked (the old tag archive/godot-rebuild-20260926, now in the private RE archive); it is not active work.
 
 [`rebuild/`](rebuild/README.md) is a GPL-3.0-or-later, source- and RE-informed
 reconstruction lane. `OnslaughtRebuild.Core` owns fixed-step simulation,
@@ -800,7 +800,7 @@ static and runtime differences decide where the Steam release diverged.
 
 The companion has no published release yet; `npm run export:companion-godot -- --platform both` builds Linux and
 Windows packages that bundle their .NET runtime. The retired WinUI app's last release, the unsigned portable
-Windows ZIP `v1.0.11`, is still on the Releases page and is no longer maintained. No package includes the retail
+Windows ZIP `v1.0.11` (tag `winui-v1.0.11`), is still on the Releases page and is no longer maintained. No package includes the retail
 executable, the original assets, saves, a Ghidra database or the rebuild client. Repository licenses do not cover
 retail game data; future releases keep that user-supplied boundary.
 

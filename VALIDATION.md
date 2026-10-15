@@ -13,14 +13,16 @@ Linux is the active development and native Godot host. `npm test` runs the compa
 C# contract suite (career codec, media inventory, protected adapter, publication races
 and the code-built interface) and its launcher tests without opening a window. `npm run build` and
 `npm run dev` build/run the Godot .NET companion. The latter opens a window.
-The parked rebuild keeps its native Linux build/run/smoke/capture commands, which run from a checkout of tag
-`archive/godot-rebuild-20260926`; live input checks need an available desktop. Source and headless tests alone do
+The parked rebuild keeps its native Linux build/run/smoke/capture commands (last run at its parking point, the old
+tag `archive/godot-rebuild-20260926`); live input checks need an available desktop. Source and headless tests alone do
 not establish native input, audio, focus or full tutorial behavior.
 
 Dated entries below are history. Those that name the Ghidra campaign, `developer_state.json` or tools now in the
 private RE archive (`dlprentice/onslaught-re-archive`) describe checks that no longer run here. Paths beginning
 `.worktrees/godot-editor-48-20260919/local-data/` now live under
 `local-data/test-runs/retired-worktrees-20261015/godot-editor-48-20260919-local-data/` in the canonical checkout.
+Commit ids cited below predate the 2026-10 history flatten; they resolve in the private RE archive's bundle and
+`refs/old/*`, not in this repository.
 
 The WinUI shell, its UI tests, the Windows-targeted CLI and the ZIP procedure were
 removed on 2026-10-15; dated entries below that name them are history. The unused

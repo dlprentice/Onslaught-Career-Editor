@@ -47,13 +47,14 @@ it is copied into this repository.
 
 ### Repository
 
-- The public history is to be flattened to a single new root after this cleanup lands, with a hash-verified
-  private bundle of the full history kept first (approved by David; the lead runs it).
+- The public history was flattened to a single new root (approved by David); the full earlier history is a
+  verified bundle and `refs/old/*` in the private RE archive. The third-party fork and GitHub's pull-request refs
+  still hold the old history; whether to ask GitHub Support to purge the PR refs is David's decision.
 - A later rename of the repository toward the "Onslaught CE" name is a separate, coordinated task.
 
 ## Parked
 
-- **The Godot rebuild** (parked 2026-10-15 at tag `archive/godot-rebuild-20260926`): World 110 generalization
+- **The Godot rebuild** (parked 2026-10-15; `rebuild/` on main): World 110 generalization
   (former P7) and player-input replay tapes (former P8) are parked with it. At the tag the cold-start route wins
   Level 100 through player input and its tape replays deterministically; World 110 is built in Core from retail
   data but is not playable in the Godot host. See [rebuild/README.md](rebuild/README.md).

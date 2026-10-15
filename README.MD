@@ -13,8 +13,7 @@ Onslaught Toolkit is a preservation project for *Battle Engine Aquila* (2003, Lo
 - **The companion is active and public.** It is a Godot .NET app for players: it opens on their game and careers,
   shows progress and Goodies, edits careers and settings only after a verified backup and a clear choice, keeps
   automatic backups that can be put back, and plays and explains the game's own music, voices and lore.
-- **The Godot rebuild is parked** at tag `archive/godot-rebuild-20260926`; [`rebuild/`](rebuild/README.md) stays
-  as reference.
+- **The Godot rebuild is parked**; [`rebuild/`](rebuild/README.md) holds its parked state as reference.
 
 This repository holds the companion, documentation of the game (formats, behaviours and findings as prose and
 specs), our own tools, the AppCore patching core the companion's future mod manager builds on, and the parked
@@ -28,8 +27,8 @@ retail game, its assets, names, or trademarks.
 
 The companion has no published release yet; build it from source (below). It needs your own installation of the
 game to work on your careers, settings and media. The older Windows-only WinUI toolkit on the
-[Releases](https://github.com/dlprentice/Onslaught-Career-Editor/releases) page (v1.0.11 and earlier) is retired
-and no longer maintained.
+[Releases](https://github.com/dlprentice/Onslaught-Career-Editor/releases) page (v1.0.11, tag `winui-v1.0.11`) is
+retired and no longer maintained; its source is in the project's private pre-flatten history.
 
 ## Where things live
 
@@ -78,7 +77,7 @@ for a change and [`CONTRIBUTING.md`](CONTRIBUTING.md) sets contribution boundari
 | Companion build, run, test, capture, export | `npm run build:companion-godot`; `npm run run:companion-godot`; `npm run test:companion-godot`; `npm run capture:companion-godot`; `npm run export:companion-godot -- --platform both` |
 | AppCore patching core | `npm run test:appcore` |
 | Tool checks | Affected cases in `python tools/<name>_tests.py`; all of them with `npm run test:tools` |
-| Parked rebuild | From a checkout of tag `archive/godot-rebuild-20260926`: `npm run check:rebuild` (see [rebuild/README.md](rebuild/README.md)) |
+| Parked rebuild | `npm run check:rebuild` (last passed at the parking point; see [rebuild/README.md](rebuild/README.md)) |
 
 The companion launcher puts scratch, logs and user data under the canonical checkout's `local-data/companion/`,
 including from a Git worktree.
