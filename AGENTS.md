@@ -42,11 +42,12 @@ launches. Any agent may work here, Claude Code included; subagents and peer sess
 
 ## Lanes
 
-`main` is the integration branch; a lane merges into it only when its own checks pass.
+`main` is the integration branch; a lane merges into it only when its own checks pass. Lane branches start from
+the flattened main; never merge a pre-flatten branch.
 
 | Lane | Branch | Checkout | State |
 | --- | --- | --- | --- |
-| Companion | `claude/companion-csharp-20260925` | `.worktrees/companion-csharp-20260925` | Active. C# only and built in code: no GDScript, one-node entry scene. The sidebar is Home, Your career (a Summary with a campaign map, Goodies, Edit career, Cheats), Your game (Game settings, Backups), Extras (Music & voices, Lore) and Advanced, folded away. Every game write is a choice in one dialog, made after a verified backup and never while the game runs; automatic backups; it catches up when the game closes. A mod manager built on the AppCore patching core, including patching the installed `BEA.exe`, is a later phase. Windows execution, a human click-through and listening to the audio remain. |
+| Companion | `claude/companion-20261015` | `.worktrees/companion-csharp-20260925` | Active. C# only and built in code: no GDScript, one-node entry scene. The sidebar is Home, Your career (a Summary with a campaign map, Goodies, Edit career, Cheats), Your game (Game settings, Backups), Extras (Music & voices, Lore) and Advanced, folded away. Every game write is a choice in one dialog, made after a verified backup and never while the game runs; automatic backups; it catches up when the game closes. A mod manager built on the AppCore patching core, including patching the installed `BEA.exe`, is a later phase. Windows execution, a human click-through and listening to the audio remain. |
 | Game documentation and tools | `main` (short branches merged into it) | any checkout | Formats, mechanics, saves, assets, function notes and contracts under `reverse-engineering/`, and the tools under `tools/`. New findings come from the decompilation and are written as prose and specs, never as decompiler output. |
 | Decompilation and native port | private | `~/Projects/game-dev/bea-decomp` | Decompilation done (5,482/5,482); native source port in progress. Its own README and guide govern it; nothing from it is copied here. |
 | Rebuild (parked) | `rebuild/` on main (old tag `archive/godot-rebuild-20260926` in the private RE archive) | none | Parked 2026-10-15 by David: the faithful cross-platform game is now the native source port of the byte-matching decompilation (bea-decomp); any later remake forks that port. At the tag the Godot rebuild is C# and built in code; it wins Level 100 through its player-input surface with a deterministic tape and builds World 110 in Core from retail data (not playable in its host). Its last gate (`npm run check:rebuild`) passed at the tag. `rebuild/` stays on main as reference; no further work is planned. |
