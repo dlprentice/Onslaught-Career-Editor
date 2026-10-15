@@ -22,6 +22,30 @@ internal static class AssetTests
         Cmsh(check);
         Dds(check);
         Exports(Path.Combine(outputDirectory, "asset-exports"), check);
+        Animation(check);
+    }
+
+    /// <summary>A part with two keys and one mode exports one animation whose samples are the keys, timed by the mode's rate.</summary>
+    private static void Animation(Checks check)
+    {
+        CmshMesh mesh = CmshReader.Read(TwoPartMesh(animated: true))[0];
+        byte[] glb = GltfExport.Write(mesh, _ => null, _ => []);
+        GltfDocument document = new();
+        GltfState state = new();
+        bool read = document.AppendFromBuffer(glb, "", state) == Error.Ok;
+        check.That(read && state.GetAnimations().Count == 1, "A mode whose keys move exports one animation Godot reads.");
+        string json = Encoding.UTF8.GetString(glb, 20, BinaryPrimitives.ReadInt32LittleEndian(glb.AsSpan(12)));
+        check.That(json.Contains("\"startFrame\":0") && json.Contains("\"frameScaler\":1") && json.Contains("\"name\":\"wave\""),
+            "The animation keeps the mode's name and records its frames.");
+        check.That(Math.Abs(GltfExport.Duration(mesh.Modes[0]) - 1f) < 1e-6f, "A mode's duration is 1 / (20 × rate) seconds.");
+
+        // A reflected key becomes a rotation with a scale of -1 on Z, and the two rebuild the reflected axes.
+        MeshBasis mirror = new(new Vector3(-1, 0, 0), Vector3.UnitY, Vector3.UnitZ);
+        (Vector3 t, System.Numerics.Quaternion r, Vector3 scale) = GltfExport.Trs(new PartTransform(mirror, Vector3.Zero));
+        Vector3 x = Vector3.Transform(Vector3.UnitX * scale.X, r), z = Vector3.Transform(Vector3.UnitZ * scale.Z, r);
+        Vector3 wantX = GltfExport.Convert(mirror.Apply(GltfExport.Back(Vector3.UnitX))), wantZ = GltfExport.Convert(mirror.Apply(GltfExport.Back(Vector3.UnitZ)));
+        check.That(scale == new Vector3(1, 1, -1) && t == Vector3.Zero && Vector3.Distance(x, wantX) < 1e-5f && Vector3.Distance(z, wantZ) < 1e-5f,
+            "A reflected key exports as a rotation and a negative scale that rebuild it exactly.");
     }
 
     private static void Aya(Checks check)
@@ -98,19 +122,20 @@ internal static class AssetTests
     }
 
     /// <summary>A root part keyed at (1, 0, 0) with a 2-triangle strip, and a child turned 90° about Z keyed at (0, 2, 0).</summary>
-    internal static byte[] TwoPartMesh()
+    internal static byte[] TwoPartMesh(bool animated = false)
     {
         byte[] rotate = Floats(0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0), identity = Floats(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0);
         byte[] Part(byte[] orientation, float[] position, int? parent, bool geometry)
         {
-            Dictionary<int, int> fields = new() { [0xB8] = 1, [0xBC] = 1, [0x10C] = 1, [0xC8] = 1 };
+            int keys = animated && parent is not null ? 2 : 1;
+            Dictionary<int, int> fields = new() { [0xB8] = keys, [0xBC] = keys, [0x10C] = 1, [0xC8] = 1 };
             if (parent is not null) fields[0x98] = 1;
             List<byte> body = [.. Chunk("CMSP", Record(316, fields))];
             if (parent is int p) body.AddRange(Chunk("PRNT", Ints(p)));
             body.AddRange(Box());
-            body.AddRange(Chunk("VHFM", [0]));
-            body.AddRange(Chunk("HORI", orientation));
-            body.AddRange(Chunk("HPOS", Floats(position[0], position[1], position[2], 0)));
+            body.AddRange(Chunk("VHFM", keys == 2 ? [0, 1] : [0]));
+            body.AddRange(Chunk("HORI", keys == 2 ? [.. orientation, .. orientation] : orientation));
+            body.AddRange(Chunk("HPOS", keys == 2 ? Floats(position[0], position[1], position[2], 0, 0, 3, 0, 0) : Floats(position[0], position[1], position[2], 0)));
             List<byte> vb = [.. Chunk("CMVB", Record(296, geometry ? new() { [0x108] = 1, [0x114] = 36 } : []))];
             if (geometry)
             {
@@ -125,9 +150,18 @@ internal static class AssetTests
             body.AddRange(Chunk("PMVB", [.. vb]));
             return Chunk("MESP", [.. body]);
         }
-        List<byte> stream = [.. Chunk("CMSH", Record(372, new() { [0x15C] = 2 })), .. Chunk("CMST", [])];
+        List<byte> stream = [.. Chunk("CMSH", Record(372, new() { [0x15C] = 2, [0x14] = animated ? 1 : 0 })), .. Chunk("CMST", [])];
         stream.AddRange(Part(rotate, [1, 0, 0], null, geometry: true));
         stream.AddRange(Part(identity, [0, 2, 0], 0, geometry: false));
+        if (animated)
+        {
+            // One mode, "wave": id 1000, frames 0..1, one frame per tick (rate 0.05 → 1 second).
+            byte[] mode = new byte[36];
+            Encoding.ASCII.GetBytes("wave").CopyTo(mode, 0);
+            Ints(1000, 0, 1, 1).CopyTo(mode, 16);
+            BitConverter.GetBytes(0.05f).CopyTo(mode, 32);
+            stream.AddRange(Chunk("CAMD", mode));
+        }
         stream.AddRange(Box());
         return [.. stream];
     }

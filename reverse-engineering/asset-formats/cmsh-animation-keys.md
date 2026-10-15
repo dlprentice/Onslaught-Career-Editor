@@ -2,6 +2,7 @@
 
 Status: active format contract — key convention, frame selection, interpolation and mode timing for PC meshes
 Date: 2026-10-16
+Last updated: 2026-10-16 (the skeletal path reads `last`; the companion's glTF export checked pose by pose)
 Verdict: a part's keys (`HORI`, `HPOS`, chosen through `VHFM`) are relative to its parent. Composing them from the
 root with column vectors (`position = Pp + Op·p`, `orientation = Op·O`) reproduces every cached model-space frame
 in the installed corpus: 143,871 `CPOS` positions and 141,044 `CORI` orientations, all within single-precision
@@ -71,6 +72,17 @@ virtual frames can hold the same key. To evaluate frame `f` with fraction `t` (`
    - `p = p[k0] + (p[k1] − p[k0]) · t`
    - `O = O[k0] + (O[k1] − O[k0]) · t`
 
+The bones of a **skeletal part** are sampled by the skinned draw in `CMeshRenderer::RenderMeshCore`, `0x00549570`,
+with two differences:
+- the frame is taken modulo `vframe_count` rather than clamped;
+- the next frame wraps to the mode's `start` once it passes the mode's `last`, rather than wrapping to 0 or
+  holding.
+
+That draw also builds each bone's palette entry from the bone at frame 0 and at the current frame, both relative
+to the skeletal part's own current transform (see
+[cmsh-matrix-normal-deformation.md](cmsh-matrix-normal-deformation.md)). Every installed skeletal part and its
+ancestors hold one key, so the part's own transform never changes.
+
 The interpolated matrix is not re-orthonormalised: between two different rotations it is slightly shorter than
 a rotation. This is the game's behaviour.
 
@@ -136,7 +148,11 @@ authored animation without them:
 
 ## Mapping to glTF (guidance)
 
-This mapping is not part of the format. It is how the companion's exporter is meant to reproduce the game:
+This mapping is not part of the format. It is how the companion's exporter (`companion/OnslaughtToolkit.Godot/Assets/GltfExport.cs`)
+reproduces the game. Evaluated by the glTF rules from the exported files, every node of every exported
+animation at every sample matches the composition above: 158 animations and 124,822 node poses, with a worst
+error of 5e-7 (`python tools/gltf_pose_check.py --game GAME_FOLDER --exports EXPORTS`, over the exports a
+`Development/AssetCheck.cs` run keeps with `ASSET_KEEP=all`).
 
 - **Nodes.** One node per part, parented as `PRNT` says. A node's rest transform is its key at virtual
   frame 0.
@@ -158,8 +174,9 @@ This mapping is not part of the format. It is how the companion's exporter is me
 
 ## Open questions
 
-- **`last`.** Why `last` is `start + frame_scaler` in some modes and one less in others. Nothing in the
-  evaluation path reads it. Falsifier: its readers outside drawing, for example the cutscene code.
+- **`last`.** Why `last` is `start + frame_scaler` in some modes and one less in others. Only the skeletal
+  draw reads it (above), as the wrap point of the next frame. Falsifier: an installed skeletal mode whose
+  interpolation across its last frame visibly depends on the difference.
 - **Scripted speed.** Scripted `PlayAnimation` calls may set a speed other than the mode's rate. Falsifier:
   the script command's handler.
 - **Reflected keys.** Whether the 920 reflected keys are deliberate mirroring or an authoring artefact. Their

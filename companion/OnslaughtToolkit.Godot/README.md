@@ -129,8 +129,11 @@ itself, read-only.
   public format documents (`reverse-engineering/asset-formats/cmsh-fields.md` and
   `cmsh-animation-keys.md`); the game's left-handed, Z-down model space is converted to
   glTF's right-handed, Y-up one. Copies are new files only, never written into the game
-  folder or the backups. Skeletons and animations are not exported yet; a skeletal model is
-  saved in its bind pose.
+  folder or the backups. A copy carries the model's animations, one per animation mode, with
+  the mode's frames in each animation's `extras`, and its skeleton as a glTF skin. The game
+  does not bend normals with the bones, while glTF viewers do, so lighting on a moving limb
+  can differ slightly from the game. Between frames, glTF turns keys smoothly where the game
+  blends them as matrices, so the two agree exactly only at each frame.
 - **Advanced**: **Compare careers** lists every differing byte between two careers, named
   by region; **Raw values** shows the stored values read-only, including both players' god
   flags.
@@ -139,6 +142,19 @@ When the game closes while the companion is open, or you come back to the compan
 notices careers and settings the game saved, reads them again, backs them up if automatic
 backups are on (after the game closed), and shows the latest. Changes you have not saved
 are never thrown away for this; the companion says so instead.
+
+## Known limits
+
+- Nothing has been run on Windows; the Windows package is cross-exported and inspected only.
+- Nobody has clicked through the app by hand or listened to its music and voices.
+- The model preview shows each model at its first frame; the app never plays an animation. On
+  2026-10-16, playing the exported animations inside a headless Godot (a development check, not the
+  app) aborted the engine with an internal error and then crashed its crash handler, so the
+  development probe only counts the animations and skins Godot's importer reads, and the pose
+  check runs outside Godot (`tools/gltf_pose_check.py`). Copies play in Blender.
+- The handedness conversion follows the game's culling convention; no mirrored text on a model
+  has been checked against it.
+- Behavior after a power loss during a write is not proven (see below).
 
 ## How files stay safe
 
