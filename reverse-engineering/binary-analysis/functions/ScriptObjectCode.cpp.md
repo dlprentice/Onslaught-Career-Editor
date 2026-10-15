@@ -1,0 +1,366 @@
+# ScriptObjectCode.cpp Function Analysis
+
+Summary: preserved mapping history with current deleting-entry identities distinguished.
+Status: retired evidence; current identities linked below
+Last updated: 2026-09-27 (compiler deleting-entry identity recheck)
+> **Superseded for current byte contracts (2026-08-17).** The active
+> byte-level map is [`CScriptObjectCode.cpp.md`](CScriptObjectCode.cpp.md)
+> (CopyState/Reset/CallEvent/CallEventDirect/GotoInstruction/Run, measured
+> against the pristine `74154bfa…` specimen). This page is retained for the
+> Wave1189 and name-correction receipts and the VM schema pointer only; its
+> wave accounting prose is historical and must not be read as a current
+> census.
+
+Wave1189 current-risk update: Wave1189 (`wave1189-missionscript-bytecode-iscript-current-risk-review`) re-read and normalized comments/tags for `CMissionScriptObjectCode__ClearFields_Thunk` plus adjacent bytecode/IScript context as part of `7 MissionScript bytecode/IScript current-risk rows`. `CAsmInstruction__SpawnFromOpcode already accounted by Wave1120` and was not counted again. Static closure remains `6411/6411 = 100.00%` with `0 / 0 / 0` debt; Wave1108 current focused accounting is `808/1179 = 68.53%`; current focused candidates: 1169; live regenerated current focused candidates: 1169; remaining active focused work: 371; current risk candidates: 6166; fresh Ghidra export; comment/tag normalization; `updated=7 skipped=0`; `comment_only_updated=7`; `tags_added=63`; final dry updated=0 skipped=7; no rename; no signature change; no function-boundary change; no executable-byte change; Independent read-only review used; no Cursor/Composer. `CMissionScriptObjectCode__ClearFields_Thunk` is called by `CHud__ShutDown` and jumps to `CMissionScriptObjectCode__ClearFields`, keeping this row as a HUD script-field-block teardown bridge; adjacent active anchors include `CInstructionOP_PLUS__VFunc_00_0052e180`, `CInstructionOP_MINUS__VFunc_00_0052e1d0`, `CInstructionOP_MULTIPLY__VFunc_00_0052e220`, `CInstructionOP_DIVIDE__VFunc_00_0052e270`, `CInstructionOP_CMP__VFunc_00_0052e330`, `IScript__Constructor`, `CScriptObjectCode__GetTop`, `CComplexThing__SetScript`, datatype vtable slot +0x04, datatype vtable slot +0x08, datatype vtable slot +0x0c, datatype vtable slot +0x10, datatype vtable slot +0x18, `script_state+0x218`, `script_object_code+0x68`, and vtable 0x005e4f08. Fresh exports verified `7 xref rows`, `208 instruction rows`, and `7 decompile rows`. Backup: `[maintainer-local-ghidra-backup-root]\BEA_20260606-164704_post_wave1189_missionscript_bytecode_iscript_current_risk_review_verified`; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction. Static reconstruction target: rebuild-grade static contracts as a rebuild-grade specification for a future independent reconstruction aiming at no noticeable difference; exact field-block/object-code concrete layout, exact source-body identity, runtime MissionScript behavior, runtime HUD/script teardown behavior, BEA patching behavior, rebuild parity, and no-noticeable-difference parity remain separate proof. Probe token anchor: Wave1189; wave1189-missionscript-bytecode-iscript-current-risk-review; 808/1179 = 68.53%; 7 MissionScript bytecode/IScript current-risk rows; current focused candidates: 1169; live regenerated current focused candidates: 1169; remaining active focused work: 371; current risk candidates: 6166; fresh Ghidra export; comment/tag normalization; updated=7 skipped=0; comment_only_updated=7; tags_added=63; final dry updated=0 skipped=7; no rename; no signature change; no function-boundary change; no executable-byte change; Independent read-only review used; no Cursor/Composer; CAsmInstruction__SpawnFromOpcode already accounted by Wave1120; CInstructionOP_PLUS__VFunc_00_0052e180; CInstructionOP_MINUS__VFunc_00_0052e1d0; CInstructionOP_MULTIPLY__VFunc_00_0052e220; CInstructionOP_DIVIDE__VFunc_00_0052e270; CInstructionOP_CMP__VFunc_00_0052e330; IScript__Constructor; CMissionScriptObjectCode__ClearFields_Thunk; CScriptObjectCode__GetTop; CComplexThing__SetScript; CHud__ShutDown; datatype vtable slot +0x04; datatype vtable slot +0x08; datatype vtable slot +0x0c; datatype vtable slot +0x10; datatype vtable slot +0x18; script_state+0x218; script_object_code+0x68; vtable 0x005e4f08; 0 / 0 / 0; 6411/6411 = 100.00%; 7 xref rows; 208 instruction rows; 7 decompile rows; [maintainer-local-ghidra-backup-root]\BEA_20260606-164704_post_wave1189_missionscript_bytecode_iscript_current_risk_review_verified; wave1108-current-risk-rank; current-risk denominator; focused threshold `15`; not Wave911 reconstruction; rebuild-grade static contracts; no noticeable difference; rebuild-grade specification.
+
+The retained `missionscript-vm-datatype-opcode-schema.v1.json` preserves the
+static VM handoff around `0x00539b00 CScriptObjectCode__Run`, including opcode
+dispatch, the `10000` instruction limit, stack anchors, and
+`CAsmInstruction__ExecuteCall` indexing the `0x0064ce20` descriptor table's
+handler field at `+0x30`. This is not runtime VM execution proof.
+
+The current static contract records the event path
+`IScript__ScheduleEvent` → `CScriptEventNB__PostEvent` →
+`CEventFunction__Execute` → `CScriptObjectCode__CallEventDirect`.
+Runtime dispatch outcomes and exact object-code/event layouts remain separate
+proof.
+
+`CMissionScriptObjectCode__StartLoadAsync` and
+`CMissionScriptObjectCode__LoadAsync` load script object code through a
+`CDXMemBuffer`; packed-versus-loose source selection remains runtime-unproven.
+
+**Source File:** `[maintainer-local-source-export-root]\MissionScript\ScriptObjectCode.cpp` | Binary: BEA.exe (historical map; the current measured deleting entry is scoped above)
+**Analysis Date:** December 2025
+**Binary:** BEA.exe (Steam release)
+
+> **September 27 deleting-entry recheck:** `0x00535330 CVM__scalar_deleting_dtor`. The compiler-entry audit (private RE archive: `reverse-engineering/ghidra/README.md`) binds these entries to pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`, using the exact wrapper, raw RTTI holders and normal-path CMonitor teardown chain. This verifies entry identity; it does not revalidate every older cleanup, prototype or runtime claim.
+
+Historical table spellings below remain unchanged; the identities above supersede them.
+<!-- ghidra-name-drift-accepted: 0x00535330 CVM__scalar_deleting_dtor (2026-09-27) -->
+
+## Name corrections — 2026-07-28
+
+Superseded in place against `ghidra-function-name-table-2026-07-27.tsv`, the
+2026-07-27 headless export of the live maintainer Ghidra project. The evidence
+grade, and the limits of what a corrected name does and does not establish, are
+stated once at [the area index](_index.md#the-name-corrections-of-2026-07-28).
+Old cell text is quoted below rather than deleted, so a reader who remembers the
+withdrawn label can tell it was corrected and not lost.
+
+| Address | Superseded label | Current name | Correction |
+| --- | --- | --- | --- |
+| `0x00538ea0` | `CScriptObjectCode__scalar_deleting_dtor` | `CMissionScriptObjectCode__scalar_deleting_dtor` | class prefix moved; suffix unchanged |
+| `0x00538ec0` | `CScriptObjectCode__CScriptObjectCode` | `CMissionScriptObjectCode__ctor` | class prefix and suffix both moved |
+| `0x005391a0` | `CScriptObjectCode__Destructor` | `CMissionScriptObjectCode__dtor` | class prefix and suffix both moved |
+| `0x00539ca0` | `CMissionScriptObjectCode__LoadAsync` | `CXBOXAsyncCache__LoadAsync` | class prefix moved; suffix unchanged |
+
+Where a row's **suffix** moved rather than only its class prefix, the behavioural
+text beside it in this note was written for the old name. This sweep corrected
+names against the export and re-derived no behaviour, so read any such gloss as
+unverified against the new name until it is re-measured.
+
+---
+
+## Overview
+
+This file implements the **script virtual machine (VM)** for mission scripting in Battle Engine Aquila. It contains two main classes:
+
+1. **CScriptObjectCode** - Base class implementing the stack-based bytecode interpreter
+2. **CMissionScriptObjectCode** - Derived class for mission-specific script loading
+
+The VM is a **stack-based interpreter** with:
+- 128-entry stack (0x80 slots)
+- 10,000 instruction limit per execution (infinite loop protection)
+- Support for cloning/copying script state
+- Event-driven execution model
+
+## Classes Identified
+
+### CScriptObjectCode
+
+Base class for script execution. The serialized code object contains:
+- Bytecode instruction array (inline CFlexArray)
+- Symbol table for variables
+- Event function list (CSPtrSet)
+
+The operand stack and execution state (instruction pointer, flags) live in a
+separate VM runtime structure (see Key Structures below).
+
+**RTTI String:** Not directly found (base class)
+
+**VTable evidence:** Wave587 treats only slot `0x005e4f54[0]` as proven for `CScriptObjectCode__scalar_deleting_dtor`. The surrounding bytes quickly enter unrelated/RTTI/float-looking data, so `0x005e4f54` is not a proven full vtable boundary.
+
+### CMissionScriptObjectCode
+
+Derived class for mission scripts. Adds:
+- Async loading support via CChunker
+- File path storage (0x100 bytes at offset 0x20)
+- Buffer size management
+- A separate retail cleanup helper at `0x004f7440` frees the two pointer slots of an object-code record owned by `CMissionScriptObjectCode__ClearFields`
+
+**RTTI String:** `.?AVCMissionScriptObjectCode@@` at `0x00650020`
+
+**VTable Address:** `0x005e4f5c`; Wave588 treats only slot `0x005e4f5c[0]` as proven for `CMissionScriptObjectCode__LoadAsync`. Adjacent slot read-back crosses into `CDXBattleLine` evidence, so the full vtable boundary remains unproven.
+
+### CVM Static Cleanup Wrapper
+
+Wave583 identified two adjacent CVM stack cleanup rows near the script object-code range. The exact CVM source class identity/layout remains unproven; the saved names are based on retail decompile, xref, vtable-slot, and instruction read-back.
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| `0x00535330` | `CVM__ScalarDeletingDestructor` | Vtable-slot scalar deleting destructor wrapper at `0x005e4f20`; calls `CVM__Destructor`, tests `flags&1`, optionally frees `this`, and returns `this` |
+| `0x00535350` | `CVM__Destructor` | Destructor body; clears the embedded script stack via `CScriptObjectCode__ClearStack(this+0x0c)` and calls `CMonitor__Shutdown(this)` |
+
+## Functions
+
+### CScriptObjectCode Class (22 functions)
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| `0x00538ec0` | `CMissionScriptObjectCode__ctor` | Constructor - reads bytecode from buffer, creates instruction array, symbol table, event functions |
+| `0x00538ea0` | `CMissionScriptObjectCode__scalar_deleting_dtor` | Scalar deleting destructor (calls Destructor then frees memory) |
+| `0x005391a0` | `CMissionScriptObjectCode__dtor` | Destructor - frees instructions, event functions, symbol table |
+| `0x00539040` | `CScriptObjectCode__Clone` | Creates a deep copy of the script object with cloned instructions and state |
+| `0x005392a0` | `CScriptObjectCode__CollectSpawnThings` | Scans instructions for "SpawnThing" opcodes and adds to world mesh list |
+| `0x00539350` | `CScriptObjectCode__RestoreStack` | Restores stack state from a saved state buffer |
+| `0x005393e0` | `CScriptObjectCode__ClearStack` | Clears entire stack, calling destructors on all elements |
+| `0x00539420` | `CScriptObjectCode__Push` | Pushes value onto stack (max 128 entries) |
+| `0x00539470` | `CScriptObjectCode__Pop` | Pops and returns top value from stack |
+| `0x005394a0` | `CScriptObjectCode__RemoveTop` | Pops and destroys top value (calls destructor) |
+| `0x005394e0` | `CScriptObjectCode__GetTop` | Returns stack value at offset from top |
+| `0x00539510` | `CScriptObjectCode__ClearSymbolTable` | Frees all entries in symbol table |
+| `0x005395b0` | `CScriptObjectCode__CloneSymbolTable` | Creates copy of symbol table for cloned scripts |
+| `0x00539760` | `CScriptObjectCode__GetInstruction` | Returns instruction at given index |
+| `0x00539770` | `CScriptObjectCode__ReadSymbolTable` | Reads symbol table from buffer (name, type, flags) |
+| `0x005398d0` | `CScriptObjectCode__InitRuntime` | Initializes runtime state fields to zero |
+| `0x00539910` | `CScriptObjectCode__CopyState` | Copies execution state from another instance |
+| `0x00539980` | `CScriptObjectCode__Reset` | Resets VM state (wrapper for ClearStack) |
+| `0x00539990` | `CScriptObjectCode__CallEvent` | Calls event handler by index with parameters |
+| `0x00539a60` | `CScriptObjectCode__CallEventDirect` | Calls event at specific instruction address |
+| `0x00539ae0` | `CScriptObjectCode__GotoInstruction` | Sets instruction pointer and runs |
+| `0x00539b00` | `CScriptObjectCode__Run` | **Main VM execution loop** - fetches and executes instructions |
+
+### CMissionScriptObjectCode Class (6 functions plus cleanup helper)
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| `0x00539c80` | `CMissionScriptObjectCode__CMissionScriptObjectCode` | Constructor - initializes fields |
+| `0x00539ca0` | `CXBOXAsyncCache__LoadAsync` | Async load completion handler |
+| `0x00539dc0` | `CAsyncCache__LoadFile` | Starts async script file loading |
+| `0x00539f00` | `CMissionScriptObjectCode__InitFields` | Zero-initializes all instance fields |
+| `0x00539f30` | `CMissionScriptObjectCode__ClearFields_Thunk` | One-instruction jump thunk into `CMissionScriptObjectCode__ClearFields` |
+| `0x00539f40` | `CMissionScriptObjectCode__ClearFields` | Frees all dynamically allocated fields |
+| `0x004f7440` | `CMissionScriptObjectCode__FreeObjectIfPresent` | Wave546 static cleanup helper: frees object-code record pointer slots `+0x00` and `+0x04` through global memory manager `0x009c3df0`; called by `ClearFields` before freeing the enclosing allocation |
+
+### Wave588 Static Read-Back
+
+Wave588 saved the CMissionScriptObjectCode async/field-block tranche from `0x00539c80` through `0x00539f40`: constructor, async load slot, async start helper, HUD script-field-block init, ClearFields jump thunk, and ClearFields body.
+
+Saved signatures:
+
+| Address | Wave588 saved signature (historical) |
+| --- | --- |
+| `0x00539c80` | `void * __fastcall CMissionScriptObjectCode__CMissionScriptObjectCode(void * this)` |
+| `0x00539ca0` | `void __thiscall CMissionScriptObjectCode__LoadAsync(void * this)` |
+| `0x00539dc0` | `void __thiscall CMissionScriptObjectCode__StartLoadAsync(void * this, char * filename, int buffer_size)` |
+| `0x00539f00` | `void __fastcall CMissionScriptObjectCode__InitFields(void * field_block)` |
+| `0x00539f30` | `void __fastcall CMissionScriptObjectCode__ClearFields_Thunk(void * field_block)` |
+| `0x00539f40` | `void __fastcall CMissionScriptObjectCode__ClearFields(void * field_block)` |
+
+Read-back evidence: `ApplyMissionScriptObjectCodeWave588.java` dry/apply/final dry reported `updated=0 skipped=6 renamed=0 would_rename=1 missing=0 bad=0`, then `updated=6 skipped=0 renamed=1 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=6 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. Post exports verified `6` metadata rows, `6` tag rows, `7` xref rows, `534` instruction rows, `6` decompile rows, and `64` vtable rows.
+
+Important boundaries:
+
+- `CMissionScriptObjectCode__CMissionScriptObjectCode` is reached from `CFEPMultiplayerStart__ctor`, calls `CWaitingThread__ctor_base`, installs pointer `0x005e4f5c`, and clears the path byte at `this+0x20`.
+- Only slot `0x005e4f5c[0]` is proven for `CMissionScriptObjectCode__LoadAsync`; adjacent slot read-back crosses into `CDXBattleLine__scalar_deleting_dtor`, so the full vtable boundary remains unproven.
+- `CMissionScriptObjectCode__LoadAsync` closes prior buffer state, allocates a `CDXMemBuffer`, initializes it from the stored path, and clears the first path byte before returning.
+- `CMissionScriptObjectCode__StartLoadAsync` has `RET 0x8` evidence for `filename` and `buffer_size`, waits for the current thread, copies the filename, stores buffer size, and starts the async worker.
+- `CMissionScriptObjectCode__InitFields`, `CMissionScriptObjectCode__ClearFields_Thunk`, and `CMissionScriptObjectCode__ClearFields` are documented as HUD script-field-block helpers because their observed xrefs are `CHud__Init` and `CHud__ShutDown`; this does not prove a full `CMissionScriptObjectCode` instance layout.
+
+Post-Wave588 queue telemetry: `6093` total functions, `3006` commented, `3087` commentless, `1359` exact-undefined signatures, `1116` `param_N` signatures, comment-backed proxy `3006/6093 = 49.34%`, strict clean-signature proxy `2960/6093 = 48.58%`, and next head `0x0053a050 CDXBattleLine__Constructor`.
+
+This is static retail Ghidra evidence only; exact `CMissionScriptObjectCode`, HUD field-block, async-cache, object-code-record, and file path ownership layouts, source identity, runtime mission-script/Goodie/HUD behavior, full vtable boundary, BEA patching, and rebuild parity remain deferred.
+
+### Wave587 Static Read-Back
+
+Wave587 saved the CScriptObjectCode core VM tranche from `0x00538ea0` through `0x00539b00`: constructor, clone/destructor, SpawnThing scan, stack helpers, symbol-table helpers, runtime-state helpers, event-call helpers, and the VM run loop.
+
+Saved signatures:
+
+| Address | Wave587 saved signature (historical) |
+| --- | --- |
+| `0x00538ea0` | `void * __thiscall CScriptObjectCode__scalar_deleting_dtor(void * this, byte delete_flags)` |
+| `0x00538ec0` | `void * __thiscall CScriptObjectCode__CScriptObjectCode(void * this, void * bytecode_reader)` |
+| `0x00539040` | `void * __fastcall CScriptObjectCode__Clone(void * script_object_code)` |
+| `0x005391a0` | `void __fastcall CScriptObjectCode__Destructor(void * script_object_code)` |
+| `0x005392a0` | `void __fastcall CScriptObjectCode__CollectSpawnThings(void * script_object_code)` |
+| `0x00539350` | `void * __thiscall CScriptObjectCode__RestoreStack(void * this, void * saved_stack)` |
+| `0x005393e0` | `void __fastcall CScriptObjectCode__ClearStack(void * stack)` |
+| `0x00539420` | `void __thiscall CScriptObjectCode__Push(void * this, void * value)` |
+| `0x00539470` | `void * __fastcall CScriptObjectCode__Pop(void * stack)` |
+| `0x005394a0` | `void __fastcall CScriptObjectCode__RemoveTop(void * stack)` |
+| `0x005394e0` | `void * __thiscall CScriptObjectCode__GetTop(void * this, int offset_from_top)` |
+| `0x00539510` | `void __fastcall CScriptObjectCode__ClearSymbolTable(void * symbol_table)` |
+| `0x005395b0` | `void * __fastcall CScriptObjectCode__CloneSymbolTable(void * symbol_table)` |
+| `0x00539760` | `void * __thiscall CScriptObjectCode__GetInstruction(void * this, int instruction_index)` |
+| `0x00539770` | `void * __thiscall CScriptObjectCode__ReadSymbolTable(void * this, void * bytecode_reader)` |
+| `0x005398d0` | `void __fastcall CScriptObjectCode__InitRuntime(void * runtime_state)` |
+| `0x00539910` | `void * __thiscall CScriptObjectCode__CopyState(void * this, void * source_state)` |
+| `0x00539980` | `void __fastcall CScriptObjectCode__Reset(void * stack)` |
+| `0x00539990` | `void __thiscall CScriptObjectCode__CallEvent(void * this, void * script_object_code, int event_index, void * * params, int param_count)` |
+| `0x00539a60` | `void __thiscall CScriptObjectCode__CallEventDirect(void * this, void * script_object_code, int instruction_index, void * * params, int param_count)` |
+| `0x00539ae0` | `void __thiscall CScriptObjectCode__GotoInstruction(void * this, int instruction_index)` |
+| `0x00539b00` | `void __fastcall CScriptObjectCode__Run(void * runtime_state)` |
+
+Read-back evidence: `ApplyScriptObjectCodeWave587.java` dry/apply/final dry reported `updated=0 skipped=22 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=22 skipped=0 renamed=0 would_rename=0 missing=0 bad=0`, then `updated=0 skipped=22 renamed=0 would_rename=0 missing=0 bad=0`, with `REPORT: Save succeeded`. Post exports verified `22` metadata rows, `22` tag rows, `105` xref rows, `2662` instruction rows, `22` decompile rows, and `64` vtable rows.
+
+Important boundaries:
+
+- `CScriptObjectCode__CScriptObjectCode` is reached from `CWorld__LoadScriptEvents`, reads instruction objects through `CAsmInstruction__SpawnFromOpcode`, calls `CScriptObjectCode__ReadSymbolTable`, and creates `CEventFunction` records.
+- `CScriptObjectCode__Clone` is reached from `CWorld__CloneScriptObjectCodeByName` and clones instructions, symbol-table entries, event functions, and selected state fields.
+- Stack helpers use the observed count at `+0x200`; the saved comments keep exact stack value type and owner layout open.
+- `CScriptObjectCode__GetInstruction` is kept as the current saved name, but the body only proves ECX as the instruction-array/flex-array pointer, not a full object instance.
+- `CScriptObjectCode__CallEvent` and `CScriptObjectCode__CallEventDirect` both call `CScriptObjectCode__Run`; instruction read-back confirms `RET 0x10` on each helper.
+- `CScriptObjectCode__Run` records recursive-run protection, debug trace logging, the 10000-instruction limit, final stack-size check, and cleanup through `CScriptObjectCode__RemoveTop`.
+- For vtable evidence, only slot `0x005e4f54[0]` is treated as proven; the full vtable boundary remains unproven.
+
+Post-Wave587 queue telemetry: `6093` total functions, `3000` commented, `3093` commentless, `1365` exact-undefined signatures, `1116` `param_N` signatures, comment-backed proxy `3000/6093 = 49.24%`, strict clean-signature proxy `2954/6093 = 48.48%`, and next head `0x00539c80 CMissionScriptObjectCode__CMissionScriptObjectCode`.
+
+This is static retail Ghidra evidence only; exact `CScriptObjectCode`, runtime-state, stack-value, symbol-table, event-table, bytecode, and instruction-array layouts, source identity, script corpus coverage, runtime mission-script behavior, BEA patching, and rebuild parity remain deferred.
+
+### Wave583 Static Read-Back
+
+Wave583 saved `0x00535330` as `void * __thiscall CVM__ScalarDeletingDestructor(void * this, byte flags)` and `0x00535350` as `void __thiscall CVM__Destructor(void * this)`.
+
+The scalar-deleting wrapper is referenced by vtable slot `0x005e4f20`; decompile read-back calls `CVM__Destructor(this)`, tests `flags&1`, optionally calls `CDXMemoryManager__Free(&DAT_009c3df0,this)`, returns `this`, and instruction read-back confirms `RET 0x4`.
+
+The destructor body is called by the wrapper and raw callsite `0x005398c5`; instruction read-back shows `LEA ECX, [ESI + 0xc]` before `CScriptObjectCode__ClearStack`, then `CMonitor__Shutdown(this)`. This is static retail Ghidra evidence only; exact CVM source class identity/layout, exception-handler semantics, runtime mission-script behavior, BEA patching, and rebuild parity remain deferred.
+
+### Wave546 Static Cleanup Helper
+
+Wave546 saved `0x004f7440` as `void __fastcall CMissionScriptObjectCode__FreeObjectIfPresent(void * object_code)`. The body treats `ECX` as the object-code record, frees `*(object_code+0x00)` and `*(object_code+0x04)` through `CDXMemoryManager__Free(&DAT_009c3df0, ...)`, and returns.
+
+The only observed xref is `CMissionScriptObjectCode__ClearFields`: it checks its object-code pointer for non-null, calls this helper, frees the enclosing object-code allocation, and clears the owner field. This is static retail Ghidra evidence only; exact object-code layout, allocation ownership, source identity, runtime mission-script behavior, and rebuild parity remain open.
+
+## Key Structures
+
+### CScriptObjectCode (code object, serialized; constructor 0x00538ec0)
+
+| Offset | Size | Field | Description |
+|--------|------|-------|-------------|
+| 0x000 | 4 | vtable | 0x005e4f54 |
+| 0x004 | 0x10 | mInstructions | Inline CFlexArray of CAsmInstruction* (mData@+0x04, mCapacity@+0x08, mCount@+0x0C, mGrowth@+0x10) |
+| 0x014 | 0x34 | mEventIPs | 13 serialized dwords; CallEvent (0x00539990) reads the event instruction pointer at +0x14 + event_index*4 |
+| 0x048 | 0x10 | mEventFunctions | CSPtrSet; the constructor appends one CEventFunction* per serialized event record |
+| 0x058 | 4 | mSymbolTable | CSymtab*, allocated and read by the constructor (ScriptObjectCode.cpp line 0x39) |
+| 0x05C | 4 | mRunInitializer | Serialized; when non-zero, CallEvent runs the VM once from instruction 0 (guarded by +0x6C) and then dispatches the event either way |
+| 0x060 | 4 | mDebugMode | Serialized; enables per-instruction trace logging |
+| 0x064 | 4 | mInstructionCountCopy | Instruction count, copied by the constructor from the CFlexArray count at +0x0C; destructor loop bound (0x005391a0) |
+| 0x068 | 4 | — | Schema anchor `script_object_code+0x68` (see missionscript-vm-datatype-opcode-schema.v1.json) |
+| 0x06C | 4 | mInitialized | 0 in the constructor; set to 1 after the one-time initializer run |
+
+### VM runtime state (the `this` of CallEvent/Run/Push; separate structure)
+
+| Offset | Size | Field | Description |
+|--------|------|-------|-------------|
+| 0x000 | 4 | vtable | CVM vtable 0x005e4f20; its destructor (0x00535350) clears the stack at +0x00C |
+| 0x008 | 4 | mCodeObject | Current CScriptObjectCode*, stored by CallEvent |
+| 0x00C | 0x200 | mStack[128] | Operand stack (128 x 4 bytes) |
+| 0x20C | 4 | mStackCount | Stack depth; CallEvent's "stack not empty" check |
+| 0x210 | 4 | mIsRunning | VM currently executing flag |
+| 0x214 | 4 | mIP | Instruction pointer |
+| 0x218 | 4 | mFlags | Execution flags |
+| 0x21C | 4 | mSavedStackSize | Copy of mStackCount at call entry |
+| 0x220 | 4 | mAbort | Abort execution flag |
+| 0x224 | 4 | mCallDepth | Nested call counter |
+
+Field evidence (decompile read-back, canonical Ghidra project): the constructor (0x00538ec0) inits the flex array at `+0x04` and the CSPtrSet at `+0x48`, reads 13 dwords into `+0x14`, stores the symbol table at `+0x58`, reads `+0x60` then `+0x5C` from the buffer, and copies the flex count into `+0x64`. `CallEvent` (0x00539990) runs the initializer once when `object+0x6C == 0 && object+0x5C != 0` (setting `+0x6C` to 1 afterwards), then loads the event IP from `object+0x14 + event_index*4` into `vm+0x214` and runs; its stack checks use `vm+0x20C`, its call-entry save uses `vm+0x21C`, and `Push` operates on `vm+0x0C`. `mIP@+0x214` matches the `missionscript-vm-datatype-opcode-schema.v1.json` instruction-pointer anchor.
+
+### CMissionScriptObjectCode Additional Fields
+
+| Offset | Size | Field | Description |
+|--------|------|-------|-------------|
+| 0x01C | 4 | mChunker | CChunker* for async loading |
+| 0x020 | 256 | mFilePath | Script file path string |
+| 0x124 | 4 | mBufferSize | Read buffer size |
+
+## Error Messages
+
+These error strings provide insight into the VM's error handling:
+
+| String | Function | Meaning |
+|--------|----------|---------|
+| `FATAL ERROR: Stack out of memory` | Push | Stack overflow (>128 entries) |
+| `FATAL ERROR: Pop called on empty stack` | Pop | Stack underflow |
+| `FATAL ERROR: RemoveTop called on empty stack` | RemoveTop | Stack underflow |
+| `FATAL ERROR: Stack item does not exist in call to GetTop - %d` | GetTop | Invalid stack index |
+| `FATAL ERROR: stack not empty on call` | CallEvent | Stack corruption check |
+| `FATAL ERROR: stack was different size when exiting` | Run | Stack balance check |
+| `FATAL ERROR: Infinite loop in sc` | Run | >10000 instructions executed |
+| `ERROR: VM tryin to run VM whilst` | Run | Recursive VM entry |
+
+## VM Execution Model
+
+1. **Event-driven**: Scripts respond to events (OnCreate, OnUpdate, OnDamage, etc.)
+2. **Stack-based**: Operands pushed/popped for instruction execution
+3. **Bytecode**: Instructions are `CAsmInstruction` objects with opcode + operands
+4. **Safety limits**:
+   - 128 stack entries max
+   - 10,000 instructions per event call
+   - Re-entry protection
+
+### Instruction Loop (Run)
+
+```
+while (opcode != 0x17 /*END*/ || callDepth > 0) && !abort:
+    opcode = instruction[IP].GetOpcode()
+    IP++
+    instruction.Execute()
+
+    if (debugMode):
+        print("-> %4d stack size = %d flags = %d", executedInstructionIndex, stackSize, flags)
+
+    iterationCount++
+    if (iterationCount > 10000):
+        error("Infinite loop")
+        abort = true
+```
+
+The first printed value is the just-executed, pre-increment instruction index:
+the loop saves it before advancing `runtime+0x214`. This was closed dynamically
+on 2026-08-02. In a disposable Level 100 copy, changing only stock
+`Setup.trailerA` from `0` to exactly `1` produced 136 deterministic lines for
+indices 1 through 136 in two replications; unchanged value `0` and exact-compare
+control value `2` produced none, and a disabled logger gate produced no file.
+The constructor reads serialized `trailerA` into object `+0x60`; all 762 shipped
+records set it to zero. The hash-bound local proof is
+`local-lab/vm-trace-pilot-2026-08-02/vm-trace.ready.json`, SHA-256
+`ad373947273ad083c9c37a53aba876e28399cba26821ae067df59d207e4ced09`.
+That boundary includes two value-2 exact-compare controls and a byte-identically
+replayed `SURVIVED` generic-refuter report (16/16 rules, four predictions, two
+eliminated rivals, discriminating `n = 6`, two replications).
+This proves a copied-runtime instruction/stack-depth/flags instrument, not
+retail-default logging or unperturbed timing.
+
+## Related Files
+
+- `DataType.cpp` - CDataType base class for typed values
+- `EventFunction.cpp` - CEventFunction event handler implementation
+- `Script.cpp` - Higher-level script management
+- `IScript.cpp` - Script interface definitions
+
+## Notable Discoveries
+
+1. **SpawnThing Collection**: The `CollectSpawnThings` function scans bytecode for spawn instructions (opcode 0x18) to pre-load assets
+
+2. **Debug Mode**: serialized `trailerA` becomes object offset `0x60`; exact
+   value `1` enables per-instruction trace logging, while shipped records use `0`
+
+3. **Clone Support**: Scripts can be cloned for multiple concurrent instances (important for spawned entities)
+
+4. **Async Loading**: Mission scripts support background loading via the chunker system
+
+## Cross-References
+
+- Called by: `CScript`, `CMission`, various game systems
+- Calls: `CAsmInstruction::Execute`, `CDataType` hierarchy, `CEventFunction`

@@ -1,0 +1,226 @@
+# CMonitor / GenericSPtrSet function map
+
+Status: active static function map
+Last updated: 2026-09-27 (walker helper identities reconciled; earlier evidence retains its stated limits)
+Summary: retained monitor/reader evidence with current GenericSPtrSet identities and bounded container behavior.
+Source File: `C:\dev\ONSLAUGHT2\Monitor.h` (SEH `__FILE__` pointer `0x00622b80`
+read out of `AddDeletionEvent`) | Binary: BEA.exe, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+Evidence: MEASURED — every byte below was re-read from the pristine specimen at
+file offset VA − 0x400000. Earlier byte-level measurements below retain their own dates and limits.
+The September 26 third label cohort rechecks the destructor thunk and updates
+its SYSTEM caller identities; it does not remeasure every retained claim.
+
+## September 27 container recheck
+
+The identity cohort (private RE archive: `reverse-engineering/ghidra/README.md`)
+rechecks fourteen complete pristine container bodies and eleven caller spans;
+the object constructor and static pool Init are distinct. Only the selected
+container behavior and names are refreshed here, not every older monitor claim.
+Copy/assignment/search stop at null items; assignment clears before copying,
+including self-assignment. Next dereferences its current cursor before checking
+its successor; RemoveAll leaves the iterator unchanged. The [42-case experiment](../../../VALIDATION.md#original-pointer-list-operations--september-27)
+executes five container bodies on authored valid lists, not full monitor lifetime
+or allocator behavior. Static free-chain walks do not prove safety for nodes
+still attached to active lists or corrupt/overflowing pool state.
+
+## Functions
+
+| Address | Name | Byte evidence | Contract (confidence) |
+| --- | --- | --- | --- |
+| `0x00401000` | `CGenericActiveReader__SetReader` | `56 8bf1 57 8b7c240c 8b06 3bf8 7421 85c0 740f 8b4004 85c0 7408 56 8bc8 e8af4b0e00 85ff 893e 7408 56 8bcf e811000000 5f 5e c20400` at file offset `0x00001000` | `ret 4`. `this` is a one-dword `CGenericActiveReader` whose `[this+0]` is `mToRead`. `edi = arg` (new `CMonitor*`). If `arg == [this]` return. If old `mToRead` and `[mToRead+4]` (the deletion set) are live, `GenericSPtrSet__Remove` (`0x004e5bd0`) the **reader cell** (`push esi`) from that set — it does **not** call `DeleteDeletionEvent`. Then `[this] = arg`. If `arg != 0`, `push esi; ecx = arg; call AddDeletionEvent` (`0x00401040`). HIGH. 164 direct `E8`. Script assign uses this on `CThingPtr+4` (`0x0052f440`). |
+| `0x00401040` | `CMonitor__AddDeletionEvent` | `6aff 68260f5d00 64a100000000 50 64892500000000 51 57 8bf9 8b4704 85c0 753f 56 6a18 68802b6200 6a5e 6a10 b9f03d9c00 e86a801400 8bf0 … 8bce e8b1470e00 … 897704 … 8b442418 8b4f04 50 e8d4490e00 … c20400` | Installs an SEH frame (second slot `0x005d0f26`). If `[this+4]` is null it lazily allocates **0x10** bytes via `CDXMemoryManager__Alloc(size 0x10, type 0x5e, file, line)` (manager `0x009c3df0`; type `0x5e` = 94 = `MEMTYPE_DELETION_CALLBACK_LIST`, `MemoryManager.h:147`; `__FILE__` `0x00622b80` = `Monitor.h`, line `0x18` = 24; argument order per `MemoryManager.h:268`), runs `GenericSPtrSet__ctor` (`0x004e5840`), stores it at `[this+4]`; then `GenericSPtrSet__Add` (`0x004e5a80`) the stack arg and `ret 4`. HIGH: one lazy 0x10-byte `CSPtrSet` (four dwords, `SPtrSet.h:49-52`) per monitor at `+4`. The arg is the pointer stored as the wrapper-node payload; Shutdown writes `dword [arg] = 0`. |
+| `0x0042d9b0` | `CMonitor__DeleteDeletionEvent` | `8b4904 85c9 740a 8b442404 50 e80f820b00 c20400` | If `[this+4]` is non-null, `GenericSPtrSet__Remove` (`0x004e5bd0`) the argument; `ret 4`. HIGH: the named pair to `AddDeletionEvent`. `SetReader` and `CThingPtrDataType` dtor **inline** the same `Remove` and do not call this. |
+| `0x00466120` | `CMonitor__ctor` | `8bc1 c7400400000000 c700d4925d00 c3` | Zeroes `[this+4]` (the deletion-event set) and installs the vtable `0x005d92d4`. HIGH. |
+| `0x00419a20` | `CMonitor__scalar_deleting_dtor` | `56 8bf1 e818120a00 f644240801 740b 56 b9f03d9c00 e8e6f71200 8bc6 5e c20400` | Calls `CMonitor__Shutdown` (`0x004bac40`), then if the `flags & 1` deleting flag is set frees `this` through `CDXMemoryManager__Free` (manager `0x009c3df0`); `ret 4`. HIGH. |
+| `0x004bac40` | `CMonitor__dtor_base` | `56 8bf1 57 8b4604 c706d4925d00 85c0 7453 8b08 85c9 894808 7404 8b01 eb02 33c0 85c0 7420 c70000000000 … e88e45f7ff 57 b9f03d9c00 e883e50800 c7460400000000 5f 5e c3` | Installs base vtable `0x005d92d4`. If `[this+4]` is live, walks the set (`cursor` at `set+8`) and for each wrapper does `mov dword [payload], 0` — `payload = [node+0]` is the `AddDeletionEvent` arg. Then `GenericSPtrSet__RemoveAll_thunk` (`0x0042f220`, a `jmp` to `0x004e5c60`), `CDXMemoryManager__Free` the 0x10-byte set, `[this+4]=0`. HIGH. This is `ToReadDied` for a reader cell (`[reader] = mToRead = 0`) and a null of `node[0]` for a listener node. |
+| `0x004bacb0` | `CMonitor__Shutdown_Core` | `56 57 8bf9 8b4704 85c0 7453 8b08 … c70000000000 … e82445f7ff 56 b9f03d9c00 e819e50800 c7470400000000 5f 5e c3` | Same death-walk / Clear / Free / `[this+4]=0` as `Shutdown`, but does **not** install the base vtable. HIGH. Used by subclasses that have already swapped the vptr. |
+| `0x004e5840` | `GenericSPtrSet__ctor` | `8bc1 33c9 8908 894804 89480c c3` | Zeroes `+0` (head), `+4` (tail), and `+0xC` (count) of the 0x10-byte object a monitor allocates (`+8` is the iterator). HIGH. |
+| `0x004e5a80` | `GenericSPtrSet__Add` | `a134d18300 56 85c0 8bf1 7512 … 6a08 b9f03d9c00 e8e6350600 8b16 8b4c2408 895004 8908 8b560c 8906` | `ret 4`. Recycles an 8-byte wrapper from free-list `0x0083d130` or `Alloc`s 8 (`SPtrSet.cpp:0xb7`). `[node+4] = old head`; `[node+0] = arg`; `[set+0] = node`. HIGH: the deletion set stores **wrappers**, not the arg itself. |
+| `0x004e5c60` | `GenericSPtrSet__RemoveAll` | `8b410c 33d2 3bc2 7421 8b4104 3bc2 740b 56 8b3530d18300 897004 5e 8b01 a330d18300 8911 895104 89510c c3` at file offset `0x000e5c60` | Zero-arg `ret`. If `count` (`+0xc`) is 0, return. Else splice the live chain onto free-list `0x0083d130` (`[tail+4] = old_free` when tail live; `[0x0083d130] = old head`) and zero `+0` / `+4` / `+0xc`. Does **not** call `CDXMemoryManager__Free` per node. HIGH. `0x0042f220` is a 5-byte `jmp` to this body (now separately named `GenericSPtrSet__RemoveAll_thunk`); CMonitor death-walk calls the thunk. |
+| `0x004e5990` | `GenericSPtrSet__ClearAnyDynamicCreatedNodes` | `56 8b3530d18300 57 33ff 85f6 7444 8b0d34d18300 8bc6 8b7604 3bc1 7211 8b1538d18300 8d14d1 3bc2 7304 8bf8 eb20 85ff 7405 897704 eb06 893530d18300 50 b9f03d9c00 e848380600 … c3` | Zero-arg `ret` (cdecl). Walks free-list `0x0083d130`. Pool is `[0x0083d134, 0x0083d134 + 0x0083d138*8)`. In-range nodes stay; out-of-range nodes are unlinked and `CDXMemoryManager__Free`d. HIGH. Sole `E8` is `CGame__Shutdown` `0x0046c9e9`. These are the overflow wrappers AddToHead allocs after the "creating nodes dynamicaly" warning (`0x00632774`). |
+| `0x004e59f0` | `GenericSPtrSet__Init` | `a134d18300 85c0 7413 6850276300 … 8b742408 6889000000 6830276300 8d04f500000000 6a4c 50 b9f03d9c00 e8b1360600 8bd6 a334d18300 … 891538d18300 … 890d30d18300 … c3` | `cdecl`, one arg = slot count. If `[0x0083d134]` already set, print `Warning: Initilise SptrSet twice` (`0x00632750`) and `ret`. Else `Alloc(count*8)` (`SPtrSet.cpp:0x89`, pool `0x4c`), `[0x0083d134]=base`, `[0x0083d138]=count`, `[0x0083d130]=base`, then chain `[slot_i+4]=slot_{i+1}` and last next=0. HIGH. Sole `E8` is `SYSTEM__Init` `0x004efb58` with `push 0x9c40` (40000 slots, 320000 bytes). |
+| `0x004e5910` | `GenericSPtrSet__Shutdown` | `8b0d30d18300 85c9 7441 8b1534d18300 57 8bc1 8b4904 3bc2 890d30d18300 720d 8b3d38d18300 8d3cfa 3bc7 7217 50 … e8d8380600 … 52 … e8b4380600 c70534d1830000000000 c70530d1830000000000 c3` | Zero-arg. Walks the free list: overflow nodes `Free`d, in-pool nodes skipped; then `Free`s the pool block and zeroes `0x0083d134` / `0x0083d130`. HIGH. Sole image ref is `JMP` `0x004f01ec` inside `SYSTEM__Shutdown`. |
+
+## UnitAI retained-target lifecycle closure (2026-08-28)
+
+The generic protocol now closes the deletion behavior of the retained target
+cell at PC `CUnitAI+0x0C`. Exact independently rehashed PC retail bodies are:
+
+| Routine | Half-open range | Bytes | SHA-256 |
+| --- | ---: | ---: | --- |
+| `CGenericActiveReader__SetReader` | `[0x00401000,0x00401034)` | 52 | `5540848cb8c7cd9fd46fc6a2d068b76527166c61510dd33c36b2c4dc1e41dca2` |
+| `CMonitor__AddDeletionEvent` | `[0x00401040,0x004010BE)` | 126 | `b9d3c4afa0c93e5eccdcfbdfabc974da517d24c4172fde6f3a65628127701017` |
+| `CMonitor__Shutdown` | `[0x004BAC40,0x004BACA7)` | 103 | `3f174f5a2ca14159ac4a5141ed32b7f292d79f9d0efe899eaeb9c3f1c4087adf` |
+| `CMonitor__Shutdown_Core` | `[0x004BACB0,0x004BAD11)` | 97 | `7aecffb5d16a1cc59dcf5028c33829c934b9493ae843408e92569d5009ccd3dc` |
+| `CUnitAI` destructor body | `[0x00415080,0x0041511F)` | 159 | `4eeff7ba5b60311f0543c6c3891609aeed34d97db49511e91c9289830d0d054d` |
+
+`SetReader(R,N)` is an exact same-target no-op. Otherwise it removes the
+reader-cell address `R` from the old target's set when present, stores `N`
+through `R`, then adds `R` to the head of `N`'s reverse set when non-null:
+**detach old -> publish new/null -> attach new**. `AddToHead` makes the reverse
+death walk newest-registration-first. Ordinary SetReader use cannot duplicate
+a membership because same-target assignment returns before insertion, although
+the underlying pointer set itself has no duplicate guard.
+
+During target shutdown the monitor walks that reverse set without removing
+nodes and writes zero directly through every stored reader-cell address. Only
+after all cells are zero does it clear/free the set and zero `target+4`. This is
+out of band relative to UnitAI selection but synchronous inside target shutdown
+before deletion; it invokes no UnitAI callback. Therefore target death changes
+`CUnitAI+0x0C` without changing adjacent gate/result cells `+0x10`, `+0x18`, or
+`+0x1C`.
+
+The PC retail `CUnitAI` destructor performs the reciprocal operation. It
+unregisters outbound reader cells `+0x28`, `+0x24`, then `+0x0C`, without
+publishing null into storage that is itself dying. It next calls its own monitor
+shutdown to invalidate inbound readers. PC demo reproduces the whole protocol;
+both mapped Xbox builds close the target-death walk but not the exact UnitAI
+destructor mapping; all three PS2 releases reproduce the rebind order, while
+their monitor death walk and UnitAI destructor remain open. (These demo, Xbox
+and PS2 comparisons name no specimen path, hash or address here or in an owner
+found by the 2026-09-26 audit; treat them as unverified until each specimen and
+range is pinned.)
+
+Pinned `activereader.cpp` (SHA-256
+`b47e66767d767cfa934e95e54a5e0da2a9891c47652d491ce4944d0bc4e2a944`)
+names the architecture and same ordering. Its pre-registration
+`MEM_MANAGER.DoesExist` call is absent from PC retail/demo, the mapped Xbox
+sequence, and the three exact PS2 setters; the release bytes own that
+divergence.
+
+[`RetailActiveReaderGraph`](../../../rebuild/OnslaughtRebuild.Core/RetailActiveReaderGraph.cs)
+preserves the ordinary deterministic protocol with stable reader-cell
+identities, newest-first target invalidation, UnitAI outbound-destruction order,
+and one membership per pair. Concrete pointer/storage lifetime, allocation,
+and calling target shutdown before object removal remain adapter duties. A
+safe copied-runtime watchpoint on `+0x0C/+0x10/+0x18/+0x1C` during one target
+shutdown is the cheapest remaining causal falsifier; no retained trace yet
+captures that exact death write.
+
+## Shared destructor thunk — September 26
+
+`0x0046dbc0` is now `CMonitor__dtor_thunk`: its five-byte body tail-jumps
+to `CMonitor__dtor_base` at `0x004bac40`. Callers include the two global
+destructors at `0x0046dbb0`/`0x004729c0`, the deleting-destructor wrapper
+at `0x0053f160` (call `0x0053f163`), and unwind funclets. This establishes
+shared base destruction, not exclusive ownership by CWaitForStart or
+CGameInterface and not linker folding. The former Shutdown_Thunk label was
+misleading. Exact scope and readback are in the
+third label cohort (private RE archive: `reverse-engineering/ghidra/README.md`).
+
+`00414010` is the walker part’s LoseWeaponCharge, not a Monitor method: it
+selects the current weapon, guards null, then clears charge at `+0x60`.
+The September 27 helper audit removes it from this family.
+
+## Family roster (named in live Ghidra, not yet byte-mapped here)
+
+`CMonitor__UpdateSoundEventPlaybackForReader` (`0x00409950`),
+`CMonitor__ToggleAttachedObjectFlag300` (`0x0040e840`),
+`CMonitor__UpdateTrackedList_59C` (`0x0040e940`),
+`CMonitor__FlushTrackedList_1D4` (`0x0040eb50`),
+`CMonitor__UpdateTrackedList_620` (`0x0040ebf0`),
+`CMonitor__SpawnParticleEffectFromIndexedListInHeightBand` (`0x004ef120`),
+`CMonitor__UpdateTrackedRenderPair` (`0x005078f0`).
+
+`CMonitor__SampleHeightfieldNormalAtXY` (`0x0047ec60`) is **not** unmapped:
+the dedicated note is
+[`HeightField.cpp/CMonitor__SampleHeightfieldNormalAtXY.md`](HeightField.cpp/CMonitor__SampleHeightfieldNormalAtXY.md).
+Do not add a second contract here.
+
+## Callers (direct `E8` rel32, whole-image scan)
+
+| Target | Call site | Pushes | Owner |
+| --- | --- | --- | --- |
+| `AddDeletionEvent` | `0x0040102a` | `esi` = the reader cell (`this` of SetReader) | `CGenericActiveReader__SetReader` |
+| `AddDeletionEvent` | `0x00418f39` | `eax` = `[this+4]` reader cell; `ecx` = ctor arg | `CThing3rdPersonCamera__ctor` (CActiveReader ctor shape: `[cell]=to_read` then Add) |
+| `AddDeletionEvent` | `0x00538a85` | `edi` = 0x11-byte listener node (`node[0]=listener`); `ecx` = listener | `CScriptEventNB__RegisterEventListener` |
+| `DeleteDeletionEvent` | `0x0042d94d` | | `CController__dtor` |
+| `DeleteDeletionEvent` | `0x004d69c5` | | `CRadarWarningReceiver__Update` |
+| `DeleteDeletionEvent` | `0x0053880b` | the listener node | `CScriptEventNB__ClearListenerEntry` |
+| `SetReader` | `0x0052f440` | `eax` = `rhs->vtable[+0x40]()` (thing*); `ecx` = `&CThingPtr+4` | `CThingPtrDataType__Print` (table name; body is assign) |
+
+`SetReader` itself has 164 direct `E8` sites (engine-wide `CActiveReader` re-points). The three `AddDeletionEvent` sites are the only ones; the `RegisterEventListener` hit-path inlines the lazy-alloc + `AddToHead` and does not `E8` `0x00401040`.
+
+So the `+4` set is the lifecycle behind both `CActiveReader` watches and named-event listener nodes: register with `AddToHead`, clear with `Remove` / `DeleteDeletionEvent`, and on monitor death zero the payload's first dword then free the set. `GenericSPtrSet__Add` has 72 direct call sites and is the shared workhorse list.
+
+## Script assign (`CThingPtr+4` is the reader)
+
+Independently re-read 2026-08-18 from specimen `74154bfa…`.
+`CThingPtrDataType` vtable `0x005e4df8[+0x14] = 0x0052f430` (table name Print):
+
+```
+esi = this
+call [rhs->vtable+0x40]     ; thing*
+push eax
+lea ecx, [esi+4]            ; embedded CGenericActiveReader
+call 0x00401000             ; SetReader
+ret 4
+```
+
+`CThingPtrDataType` dtor `0x0052f570` inlines the same unlink (`[this+4]` is `mToRead`; `push &this+4`; `GenericSPtrSet__Remove([mToRead+4], reader)`) and does not call `DeleteDeletionEvent`. Clone `0x0052f470` writes `[clone+4] = [src+4]` and, if the thing has no set yet, lazy-allocs the 0x10-byte `CSPtrSet` (type `0x5e`, `MissionScript\..\Monitor.h` `0x0064ccb0`, line 24; `0x0052f4d6-0x0052f4df`) then `AddToHead`s the clone's reader cell — the same Monitor.h:24 pattern, not an `E8` to `AddDeletionEvent`.
+
+Pinned GPL `references/Onslaught/activereader.cpp` names the architecture
+(`RemoveDeletionEvent(this)` / `AddDeletionEvent(this)` / `ToReadDied`
+`{ mToRead = NULL }`) and is **not** the retail proof. Retail `SetReader`
+inlines `GenericSPtrSet__Remove` instead of calling `DeleteDeletionEvent`.
+
+## `AddDeletionEvent` retained-runtime boundary (2026-08-24)
+
+The dedicated contract is
+[`CMonitor__AddDeletionEvent__00401040.md`](../../contracts/engine-world/CMonitor__AddDeletionEvent__00401040.md).
+Its retained-evidence audit is **RED for C2**; Generation 32 remains
+`C1_CANDIDATE_PARTIAL` / `OPEN_EXECUTED`, and no VERIFIED count changes here.
+
+Two independent, hash-bound coverage recordings (Level-512 opening trace
+`3D3A118F…4808` and Level-521 native take 4 `45AB0429…74AC2`) execute exactly
+`[0x00401040,0x00401091)` plus `[0x00401093,0x004010be)`: 124 of the 126 body
+bytes. Against the exact disassembly this proves that each recording contains
+execution of the successful lazy-allocation body through `GenericSPtrSet__ctor` and
+the `[this+4]` store, plus execution of the common insertion/return bytes. The
+only unobserved instruction is the two-byte allocation-failure `XOR ESI,ESI`
+at `0x00401091`.
+
+That coverage is a byte union, not a call envelope. The retained call-context
+catalog has no target row for `AddDeletionEvent`, `DeleteDeletionEvent`, or
+`GenericSPtrSet__Add`. Two READY SetReader slices carry independent null-rebind
+envelopes, but neither reads old/new set state. Therefore retained evidence
+does **not** prove AddDeletionEvent receiver continuity, reader-cell identity,
+`monitor+0x04` before/after values, an already-initialized insertion, wrapper
+payload equality through `0x004010bb`, or a removal can-fail control. Static
+source analogy and call sites do not fill those runtime cells.
+
+## Open questions (cheapest falsifier first)
+
+- CLOSED 2026-08-18 — the `AddDeletionEvent` `ret 4` dword is the pointer
+  stored as `CSPtrSet` wrapper payload. Shutdown/Shutdown_Core write
+  `dword [payload] = 0`. Measured identities: (1) `CGenericActiveReader*`
+  (`SetReader`, camera ctor) so `mToRead` is cleared; (2) the 0x11-byte
+  listener node (`RegisterEventListener` miss path) so `node[0]` (the
+  listener) is cleared. No runtime probe required.
+- The vtable `0x005d92d4`'s RTTI descriptor: CLOSED — COLOC `0x0060cbe0` at
+  `0x005d92d0` (`vtable-4`) → TD `0x00622bd8` = `.?AVCMonitor@@`, with bases
+  `CMonitor` and `IListener` (`.?AVIListener@@`). Script-cluster subclasses
+  named by the same walk: `CEventFunction`, `IScript`, `CVM`,
+  `CPostEventData`, `CScriptEventNB` (see `CScriptEventNB.cpp.md`). The
+  vftable-cohort65 subclass census is CLOSED: of the 59 unique classes,
+  exactly five derive from `CMonitor` (`CAnimation`, `CFearGrid`,
+  `CHLCollisionDetector`, `CMessageBox`, `IScript`); the other 54 do not.
+  Independently re-walked 2026-08-18 against pristine `74154bfa…` (every
+  census.tsv `col_ptr` → COL → TD → CHD → BaseClassArray; 59/59 agree;
+  receipt `local-lab/hermes-kanban-campaign-2026-08-18/cmonitor-census/`).
+  A child's full-image count of 167 proper subclasses was **not** re-counted
+  here.
+- `CSPtrSet` 8-byte wrapper ownership: CLOSED 2026-08-18.
+  `GenericSPtrSet__Init` (`0x004e59f0`) initializes pool
+  base `0x0083d134` / count `0x0083d138`. The earlier only-writer claim
+  was false for the base: Shutdown clears it at `0x004e596c`. Sole `E8`:
+  `SYSTEM__Init` `0x004efb58`
+  pushes `0x9c40` (40000). `AddToHead` recycles `0x0083d130` or
+  allocs 8 (`SPtrSet.cpp:0xb7`, increments `0x0083d13c`, prints
+  `0x00632774`). `Clear` (`0x004e5c60`) returns the chain to that
+  free list. `ClearAnyDynamicCreatedNodes` (`0x004e5990`) `Free`s
+  overflow nodes — sole caller `CGame__Shutdown` `0x0046c9e9`.
+  `GenericSPtrSet__Shutdown` (`0x004e5910`) `Free`s overflow + the pool
+  block; `JMP` from `SYSTEM__Shutdown`.
+  CMonitor death-walk `Free`s only the 0x10-byte set.

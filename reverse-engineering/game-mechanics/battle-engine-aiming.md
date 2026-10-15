@@ -1,0 +1,367 @@
+# Battle Engine auto-aim, launch position and Gun emitters
+
+Status: active static contract for the rebuild's player shots
+Last updated: 2026-10-01 (complete target-search and update matches; native range and visibility checks)
+Summary: how the Battle Engine picks an auto-aim target and blends its aim offsets,
+where each player round starts (the cockpit mesh's Gun emitters) and in which
+direction, and which state that depends on.
+Evidence: MEASURED static reads of the pristine specimen; the shipped cockpit and
+drone meshes through the repository CMSH parser; `default physics.dat` and the
+Aquila configuration. A read-only research pass traced the functions. The RE lane
+re-checked the cone constants, the offset blend, the absence of a fresh trace in
+`GetLaunchPosition` and the cockpit mesh name at their addresses. The composition-order subsection adds
+bounded isolated original-code execution; no retail runtime capture.
+Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
+`m_cockpit2.msh.aya` SHA-256 prefix `008b9292`; `m_FA_F24_training.msh.aya` SHA-256
+prefix `48876552`.
+
+Retail `HandleAutoAim` (`0x0040b6d0`) and `UpdateAutoAim` (`0x0040b120`) follow
+`BattleEngine.cpp:2446-2613` and `:2366-2443` in order and gates. The event cadence
+and draws are in the
+[final-wave contract](level100-final-drone-wave.md#crosshair-and-auto-aim-refresh).
+Battle Engine fields (`BattleEngine.h:406-416`):
+- `+0x4c8` crosshair unit, `+0x4d0` last crosshair line report, `+0x4e0` auto-aim
+  target;
+- aim offsets, desired / current / old: yaw `+0x4e4`/`+0x4e8`/`+0x4ec`, pitch
+  `+0x4f0`/`+0x4f4`/`+0x4f8`;
+- tracking `+0x4fc`-`+0x50c`; `+0x528` cockpit; `+0x574` player.
+
+## Which weapons auto-aim
+
+`IsSmart` is weapon-profile `+0x30` (`CWeaponSmart`, default 0), read at
+`0x0040b80d`; with 0 the search is skipped. `CanPredict` is current-mode `+0xb0`
+(`CWeaponPredictive`, default 0). Only the two Vulcans search:
+
+| Weapon | Smart | Predictive | Round speed |
+| --- | ---: | ---: | ---: |
+| Mech Vulcan Cannon (jet) | 1 | 1 | 60.0 (Mech Air Bullet) |
+| Mech Twin Vulcan Cannon (walker) | 1 | 1 | 60.0 (Mech Bullet) |
+| Pulse Cannon Pod | 0 | 0 | — |
+| Missile Pod | 0 | 0 | — |
+
+## Candidate search
+
+- **Walk.** MapWho around the Battle Engine's XY (`0x00491ea0`/`0x00492020`):
+  - radius = the current mode's maximum range, 100.0 by default for all four
+    modes, or 1000.0 when not positive;
+  - levels 4 down to 0 (cells 8 to 128);
+  - per level, cells from floor-int(c − r − cell/2) to floor-int(c + r + cell/2)
+    (`fistp`), y outer and x inner;
+  - each cell's list from its head, newest first; no distance filter in the walk.
+- **Gates, in source order** (`0x0040b8b9-0x0040b94a`). These use direct field tests and the side-test helper.
+  The Target Drone result is given in brackets.
+  - side test `0x004fd3d0` [passes once its script sets it enemy];
+  - not dying;
+  - an air unit (type `0x400`) only with a predictive weapon [passes];
+  - IsBig, profile `+0x124` (`CUnitBig`, default 0) [0]; a null profile means false;
+  - active, unit `+0x214` [1];
+  - nexus `+0x228` and weakpoint `+0x22c`, from mesh parts [0 and 0];
+  - lockable, profile `+0x114` (`CUnitLockable`, default 1) [1]; a null profile means true.
+    This is a direct profile test, **not virtual slot 104 `CanBeLocked`**. The latter has a
+    separate Carver override with additional conditions.
+- **Unit slots used.** 90 is the aim point; for a `CPlane` that is `CThing::GetCentrePos`,
+  pos + (0, 0, BBOX-origin z) = pos + (0, 0, −0.02630952) for the drone. 91 is
+  stealth (0.0 for units), 105 is on-scanner (1) and 27 is velocity (`+0x7c`).
+- **Range.** Accepted when minRange² ≤ dist² ≤ tempMax². tempMax = (1 − stealth ×
+  0.01) × maxRange, halved when off the scanner.
+- **Cone.** Angles are measured against the body forward, orientation × (0, 1, 0),
+  without the aim offsets. angleDiff = |yaw diff| + |pitch diff|, yaw
+  −atan2(dx, dy) and pitch asin(dz/|d|), wrapped at ±π/2 by 2π.
+  - The bound starts at 0.2, or 0.8 with a predictive weapon (`0x0040b879`/`0x0040b88d`).
+  - It falls back to 0.2 when the target's |velocity|² is below 0.010000001.
+  - A candidate must be strictly inside the bound, which then becomes its
+    angleDiff. The smallest angle wins, and the first visited wins a tie.
+- **Visibility.** The winner is kept only when
+  `FindFirstThingToHitLine(Battle Engine → aim point, self, level 1, mesh flag 1,
+  ignore rounds 0x4, map flag 1, allowed types -1)` returns a thing hit, and the thing is that target
+  (`0x0040bf1d`). Trees are not ignored here, unlike the crosshair trace.
+- **Prediction and tracking** (`UpdateAutoAim`, every Move from `0x00409637`):
+  - lead time t = |(target + target velocity) − origin| / |orientation × (0,
+    speed, 0)| × 20.0;
+  - tracking engages when |yaw| + |pitch| exceeds 0.2;
+  - the offsets then move half way: old ← current, then current += (desired −
+    current) × 0.5 for yaw and pitch (`0x0040b5f7-0x0040b646`).
+
+Measured differences from the available pinned source include stealth × 0.01 instead
+of / 100, the 6003 due-time addition order and summation orders. Missing source headers
+and default arguments require their own retail evidence, as the visibility recheck below demonstrates.
+
+### September 30 call-binding recheck
+
+Fresh reads of the pristine instructions confirm virtual aim-point slot 90 at `0x0040b95c`
+and `0x0040be40`, scanner slot 105 at `0x0040b9cb`, and Feature lockable slot 71 at
+`0x0040bbbc`. Feature slot 71 (`0x00510140`) unconditionally reads its data pointer at
+`+0xe4` and returns the raw four-byte field at data `+0x14`; there is no null-data fallback.
+Feature allegiance is the direct `+0xec` load at `0x0040bbca`. The unit's null-profile
+branches are at `0x0040b904`–`0x0040b914` and `0x0040b938`–`0x0040b948`.
+
+This caught unfinished bindings in the private C++ reconstruction: nine direct-call sites
+still targeted declaration-only helpers instead of the retail virtual calls or inline reads.
+Those bindings are corrected, including weapon-profile Smart/AdjustAim reads through weapon
+`+0xa4`. The large auto-aim and launch-position functions remain unmatched; corrected call
+binding does not validate their entire behavior or establish a defect in the paused Godot lane.
+Machine code proves the passed address and dispatch slot, not whether the original C++ declaration
+spelled its output parameter as a pointer or reference. Other observations and asset measurements
+on this page retain their earlier evidence dates; no desktop/runtime acceptance was performed.
+
+### October 1 visibility-call correction
+
+The private reconstructed `HandleAutoAim` caller relied on unchecked shared defaults
+and passed collision level 2, excluded-type mask 0 and map flag 0. The actual retail
+pushes at `0x0040becc`–`0x0040bed8` pass **1, 4 and 1**. The correction supplies
+these values explicitly in this caller; it does not change unrelated shared defaults.
+
+Fresh instruction reads of `FindFirstThingToHitLine` (`0x0050b030`, `ret 0x54`)
+establish the relevant semantics:
+
+| Entry-stack offset | Retail value | Use in the dispatcher |
+| --- | ---: | --- |
+| `+0x40` | 0 | Disables the enum-only first-hit early return (`0x0050b497`). |
+| `+0x44` | 1 | Permits the mesh path when the collision-flags condition selects it (`0x0050b349`). |
+| `+0x48` | 1 | Level 2 would enter the mesh-volume path directly; other levels require the flags/permission test (`0x0050b324`). |
+| `+0x4c` | 4 | Skips a candidate when its type intersects this mask (`0x0050b1bd`). |
+| `+0x50` | 1 | Forwarded into the map trace at `0x00490a40`; exactly 1 enables its additional water-level threshold test (`0x00490ba7`). |
+| `+0x54` | `0xffffffff` | Allows every type bit through the separate inclusion-mask test (`0x0050b1cc`). |
+
+The lead reproduced native i386 execution of the original, old candidate and corrected
+caller suffixes through the actual exact line-copy constructor (`0x004098e0`). The
+dispatch boundary captures all arguments, line bytes and report initialization. Retail
+and corrected results agree apart from the legitimate report pointer's frame offset;
+the old candidate exposes the three wrong argument values. The dispatcher itself is
+an observation stop in this experiment, not a modeled collision result.
+
+A separate native experiment executes the original 29-byte map predicate at
+`0x00490ba7`–`0x00490bc3`: only flag 1 enables `position.Z >= map[+0x1034]`.
+Flags 0, 2 and -1 bypass that water-level branch. All 168 finite authored cases
+across masked PC24/53/64 agree with those reads; changing the admitted flag from 1
+to 2 changes sixty branch decisions. Terrain sampling, recursive refinement,
+water-level loading and the composed visibility outcome are outside this experiment.
+Its root owner is `local-data/map-water-root-20261001/native-v01/receipt.json`
+in the same private RE worktree.
+
+All 190 exact controls and 253 other callable sections/relocations remain unchanged.
+That visibility-only draft had a 2,272-byte section versus the 2,290-byte retail body;
+the complete target-search correction below now closes its section/relocation match.
+The extra reconstructed `GetThingOverCrossHair` routine has no established retail
+address; a scan instruction-validates twelve direct calls to the dispatcher but does
+not establish that routine, so its defaults remain unmodified. Full target admission,
+visibility outcomes and retail/Godot play acceptance remain separate.
+
+Private root reproduction under the `bea-decomp` RE worktree:
+`local-data/handleautoaim-root-20261001/call-boundary/receipt.json`, SHA-256
+`d9a4fdfc019dd6dedab7e39d95770a899bc460ed8e2143bd3436c83cdd0cc780`;
+`callee-readback.json` and `default-caller-readback.json` record the instruction reads
+and caller inventory. The specimen is the hash-pinned pristine executable above.
+
+### October 1 complete target-search match and feature range
+
+`HandleAutoAim` (`0x0040b6d0`) now matches its entire 2,304-byte compiled section,
+including its 2,290-byte body and all 79 independently read-back relocations. Its
+18-byte exception body and 40-byte unwind metadata match too. The prior visibility
+argument correction remains intact. The fresh focused build retains all 190 earlier
+exact controls and all 253 other callable sections and relocation identities.
+
+Retail `0x0040bbec`–`0x0040bc32` rounds the X/Y displacements to binary32, retains
+the Z subtraction in extended precision, and sums `(Z² + X²) + Y²`. Its later pitch
+calculation calls `Magnitude` (`0x004026b0`) on the stored vector at `0x0040bcc8`.
+The old private candidate retained X for one multiply, rounded Z/Y and reused its
+earlier square sum for the later square root. A typed reference adapter for the
+existing slot-90 target-position calls and a separate feature squared-distance
+operation now reproduce the retail instructions. These are reconstructed interfaces,
+not recovered original helper names or source text.
+
+The lead ran 1,179 native range-admission slices under masked nearest PC24/53/64:
+all 22 old discrepancies become zero. The earlier target-Z = 1, origin-Z = −2⁻²⁴,
+maximum-range = 1 witness is fixed. Thirty-six added cases isolate sum association;
+the adapter-only intermediate still fails six, including two under PC24. Zeroing
+either small coordinate removes these differences. A diagnostic Z reload changes
+eight decisions, and an inverted upper-bound branch changes 944. The new candidate
+uses the lead's freshly compiled object, not the helper's reported match.
+
+Whole-section matching settles this compiled body. The native experiment observes
+only range admission: filters, `GetCentrePos`, callbacks, subsequent angle tests,
+live target availability and FPU configuration remain outside its execution. The
+exception dispatcher is freshly identified from pinned LIBCMT over two complete
+regions (209 bytes/four relocations); its three supporting owners' 27 deeper
+relocation fields and input-dependent indirect dispatch remain explicit limits.
+This is neither complete exception-runtime validation nor retail/Godot play acceptance.
+
+Private lead owner under `bea-decomp/.worktrees/codex-equiv-20260930/`:
+
+- `local-data/handleautoaim-match-root-20261001/readback.json`, SHA-256
+  `d9609c9131406a83264375d6be9e2bcd0af5d7c5401506911eab0334c6b55374`.
+- `local-data/handleautoaim-match-root-20261001/accepted-native-v01/receipt.json`, SHA-256
+  `2f0d016bd42875a2054c903a802c541a56e1029965e341c90b13690addfe83cc`.
+
+The earlier 1,143-case counterexample receipt remains at
+`local-data/handleautoaim-root-20261001/feature-range-v01/receipt.json`, SHA-256
+`28d9cc5a4844f6f79741d2970fcfb3296d94593dcc283495024a4ae07668adde`.
+
+### October 1 complete auto-aim update match
+
+The private reconstruction of `UpdateAutoAim` (`0x0040b120`) now matches the entire
+1,344-byte section, its 1,330-byte body and all 41 independently bound relocations.
+The last difference was the prediction-speed magnitude sum at `0x0040b283`–`0x0040b291`.
+Naming the existing launch vector before applying the orientation makes VC6 retain
+retail's addition order without changing the shared maths implementation. This is a
+reconstructed source form, not evidence of the original variable name or spelling.
+
+The fresh focused build preserves 189 prior exact matches and all 253 other callable
+sections and relocation identities. The complete build adds this one unique address
+with no lost matched symbols or relocation conflicts. This settles this compiled
+body; target search now also matches as recorded above. `GetLaunchPosition`, actual
+target availability, update cadence and player-visible tracking retain their separate limits. No game or Godot window ran.
+
+Private lead owner:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/autoaim-root-20261001/`.
+`readback.json` SHA-256:
+`3f5d42e0893671dd208f07c4b95df33d5eaf5feec0cd2a622a133339e1350adf`.
+The complete-build comparison is `bea-decomp/local-data/codex-continuation-20260930/autoaim-reproduction.json`.
+
+## Launch position and direction
+
+`GetLaunchPosition` (`0x0040c990`, Battle Engine slot 75) starts from the Gun
+emitter's world pose, then:
+- It continues only when (orientation × (0, 1, 0)) · (emitter orientation × (0, 1, 0))
+  > 0.9 (`0x005d8bb0`). Battle Engine weapons mount with index −1, so the first
+  vector is the plain body orientation.
+- It also needs `CWeaponAdjustAim` (weapon-profile `+0x28`), default 1
+  (`0x0042f6a9`). None of the four weapons sets it.
+- It reuses the last crosshair line report (class `+0x4d8`, distance `+0x4dc`) and
+  never traces again. The only writer of that report is the 6002 event.
+- The hit point is view + (end − view) × distance / |end − view|, where end =
+  view + (view orientation × auto-aim matrix) × (0, 200, 0).
+- The launch direction is `FMatrix(−atan2(dx, dy), asin(dz/|d|), 0)` from the
+  emitter to that point, so it carries no roll.
+- With no report (class 0) it is the full orientation matrix `+0x3c` times the
+  auto-aim matrix `FMatrix(+0x4e8, +0x4f4, 0)` (`0x0040d0b7-0x0040d0c7`, product
+  `0x0040d320`, orientation on the left).
+  - `+0x3c` is rebuilt every Move by `UpdateRotation` (`0x00407a50`, called at
+    `0x004095d1`) as `FMatrix(yaw + cos(R)·yawShake, pitch + cos(R)·pitchShake,
+    roll + cos(R)·rollShake)` (`0x00408000-0x0040806a`), so it includes the jet's
+    roll and the shake term (`BattleEngine.cpp:1222-1224`).
+  - Element [i][j] sums the three terms O[i][k]·A[k][j] on the x87 in this k
+    order, then stores a float: [0][0] (1 + 0) + 2; [1][1], [1][2] and [2][1]
+    (0 + 2) + 1; every other element (2 + 1) + 0.
+- A third branch (`0x0040cad7-0x0040cef7`) serves ballistic rounds
+  (`CRoundGravity` nonzero, not beam or torpedo, `0x0040d0f0`):
+  `FMatrix(yaw +0x114 + +0x4e8, solved or −π/4 pitch, 0)`. No Aquila round sets
+  gravity, so the Aquila never takes it.
+- An emitter position of exactly (0, 0, 0) falls back to the Battle Engine's
+  position and orientation.
+
+The burst spawner then applies the launch angle and jitter
+([burst contract](../contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md)).
+
+## Gun emitters
+
+The emitters belong to the cockpit's render mesh: `+0x528` → slot 4 `0x004258f0` →
+`[cockpit+0x8c]`, a CRTMesh (vtable `0x005deb1c`). For the Aquila Prototype that
+is `cockpit2.msh` (configuration offset `0x3cd`), in both walker and jet modes.
+Morphing only changes its animation: `flytowalk`/`walktofly`, then `walk`/`fly`.
+
+- **Lookup.** `0x004dd160` → `0x004aa820` scans the mesh's emitter table (12
+  records, stride `0x150`), matching the name case-insensitively and the selector
+  exactly.
+- **Selectors per weapon:** Pulse Cannon Pod 1; Missile Pod 4, 3, 5, 2, 6; Twin
+  Vulcan 9-12; Mech Vulcan 13-14. There are no Gun 7 or 8 emitters.
+- **Model-space pose:** each part's HPOS/HORI pose, lerped between the poses VHFM
+  selects for floor(frame) and the next frame. Frame = start + count × t, with t
+  lerped between cockpit `+0x128` and `+0x124` by the render fraction. The pose is
+  composed from the root (R = R_parent·R_local, p = R_parent·p_local + p_parent).
+  CPOS/CORI are not read on this path.
+- **Animations (CAMD):** walktofly frames 26-50, flytowalk 1-25, walk 25, fly 0.
+  A Battle Engine built in jet mode gets frame 0.
+- **World pose:** p = M·p_model + P and R = M·R_model, where:
+  - P = lerp(old pos `+0x8c` + cockpit `+0x1c`, pos `+0x1c` + cockpit `+0xc`
+    (shake), render fraction) (cockpit slot 0 `0x00425430`);
+  - M = orthonormalise(lerp(B_old·S_old, B·S, render fraction)), with B the
+    orientation `+0x3c` and B_old `+0x9c` (cockpit slot 1 `0x004254f0`);
+  - S is the cockpit tilt: identity at start, a walker bob `0x00424ca0`,
+    otherwise decaying `0x004250f0`.
+- **Model-space positions.** The emitter's pose is its part's cached pose,
+  indexed by the record's part index (`0x004b4e86-0x004b4ecc`); the record adds
+  no offset. Composed from HPOS/HORI at virtual frame 0 (fly) and 25 (walk) and
+  rounded to single precision. Model space uses the Battle Engine's own axes (the
+  world pose is M·p + P with M from `+0x3c`, no flip): y forward and z down, as in
+  the world, so negative z is up. The ground meshes measured for the probe table
+  (tank, truck, warehouse, icebergs, city buildings) all have their BBOX at
+  negative z, above their origin; the Target Tank's spans z −0.73 to −0.04.
+
+  | Gun | Part | Fly (frame 0) | Walk (frame 25) |
+  | ---: | --- | --- | --- |
+  | 1 | Emit01 | (9.170048e-05, 0.0842639282, −0.25803259) | same |
+  | 2 | Emit02 | (−0.0883527175, 0.0539725572, −0.210329518) | same |
+  | 3 | Emit03 | (−0.0564851314, 0.0684210137, −0.227710307) | same |
+  | 4 | Emit04 | (0.000359148398, 0.0829063728, −0.247448772) | same |
+  | 5 | Emit05 | (0.0454145856, 0.0701522902, −0.228438199) | same |
+  | 6 | Emit06 | (0.0874229595, 0.0560657121, −0.211728841) | same |
+  | 9 | Emit09 | (−0.234618425, 0.0414116606, 0.00570841506) | (−0.23461841, 0.274871588, 0.00570840016) |
+  | 10 | Emit10 | (−0.235591888, 0.0416897312, 0.0558486059) | (−0.235591874, 0.275149643, 0.055848591) |
+  | 11 | Emit11 | (0.224845171, 0.0414696708, 0.00569987856) | (0.224845186, 0.274929583, 0.00569986831) |
+  | 12 | Emit12 | (0.223871738, 0.0416897163, 0.0558485687) | (0.223871753, 0.275149643, 0.0558485575) |
+  | 13 | Emit13 | (−0.0824229494, −0.0204110984, 0.185880587) | same |
+  | 14 | Emit14 | (0.0788260475, −0.0204110984, 0.185880199) | same |
+
+  Guns 1-6 hang from `hood`, Guns 9-10 from `Object03`, Guns 11-12 from
+  `Object01`, Guns 13-14 from the root. Only Guns 9-12 move between the poses.
+  Gun 1 therefore sits 258 mm above the cockpit origin and Guns 13-14 186 mm below
+  it.
+  Every emitter's forward axis stays within about 10° of the body's (y ≥ 0.984),
+  so the 0.9 dot test passes unless the cockpit tilt is large. The values were
+  composed in double precision by `rebuild/tools/cmsh_static_preview.py`; the
+  runtime pose cache (`0x004b4cd0`) composes on the x87 and may differ in the
+  last bits.
+
+Launch positions therefore depend on the render fraction (`0x008a9e44`) and the
+render counter (`0x008a9aac`), not only on simulation state.
+
+
+## Cockpit composition order — September 30 recheck
+
+The final composition inside both `CCockpit::ProcessWalker` (`0x00424ca0`) and
+`ProcessJet` (`0x004250f0`) is **base orientation × newly computed rotation**.
+Each starts by copying the base matrix at cockpit `+0xb0` into `+0x2c`. In Walker,
+`0x004250ca` puts the `+0x2c` receiver in ECX for the matrix product at
+`0x004250cc` → `0x0040d320`; the local yaw/pitch/roll matrix is the right operand.
+Jet's inlined product at `0x004252cb`–`0x004253e4` independently carries that order.
+This describes the inner cockpit tilt S, before the separate world composition B·S above.
+The decompilation previously reversed these operands and has been corrected; neither
+complete update body is yet a byte match.
+
+The lead reproduced 16 finite isolated cases against the pristine specimen named in
+this document: Walker and Jet, four authored base matrices, and two angle/state sets,
+with x87 control word `0x027f`. The corrected source agrees on every XYZ matrix float
+bit and the two eased slope values at `+0xa4`/`+0xa8`. The old order fails all 12
+nonidentity-base controls; the smallest maximum matrix-element difference is
+`0.2323758602142334`. All four identity controls conceal the reversal. For example,
+a quarter-turn-Z base in the first Jet case gives maximum error `0.3819820359349251`
+with the old order and zero with the correction.
+
+Walker was restricted to nonwalking, airborne updates by making its `IsWalking`
+and `IsOnGround` queries return false. Other called helpers execute unchanged
+retail instructions; Jet needs neither substitution. The lead also checked normal
+return, stack canaries, nonvolatile registers, preserved x87 control word, and that
+candidate bytes fit their original function slots. Unused candidate tails were
+poisoned rather than filled with leftover retail instructions. Matrix padding is
+outside the compared output. These cases do not establish the complete Walker law,
+all floating-point behavior, or player-visible cockpit motion.
+
+Private reproduction: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/cockpit-root-20261001/`,
+`composition_probe.py` and `composition-probe.json`; source correction originated
+in private commit `faea76d`. The constructor initializes the base matrix to identity.
+A nonidentity base's reachability in ordinary gameplay has **not** been established;
+the authored controls demonstrate why the general operand-order contract matters,
+not that an earlier screenshot must have looked wrong.
+
+## Open questions
+
+| Question | Cheapest falsifier |
+| --- | --- |
+| How the render fraction and counter at launch time behave in a fixed-step replay | Log `0x008a9e44` and `0x008a9aac` at the launch call `0x00506bca` in a copied runtime |
+| Complete walker tilt S inside `0x00424ca0`, including walking and terrain paths | Extend the isolated cases to those branches, then compare cockpit `+0x2c` during a copied-runtime walker capture |
+| Whether the base matrix at cockpit `+0xb0` becomes nonidentity in normal play | Trace writes to the base matrix, then watch it through turning, damage and morphing in a copied runtime |
+| The second pose path `0x004b0fb0`, used without a pose cache or with render counter ≤ 1 | Static read of `0x004b0fb0` |
+| Whether script-spawned drones have `+0x214` = 1 at their first auto-aim query | Read it at spawn in a copied runtime |
+| Whether the CRTCutscene object (`0x005dea38`) traced by `cockpit-world-matrix-static-2026-07-26.md` is a second cockpit renderable beside this CRTMesh, or the same object misidentified | Read the cockpit's renderable fields after construction at `0x004244b0` |

@@ -1,0 +1,179 @@
+# ProjectileBurst__SpawnFromCurrentPreset
+
+Status: active static contract, instruction-level (replaces the 2026-08-23 factory draft)
+Last updated: 2026-10-01 (flak distance corrected; lifespan rounding remains open)
+Summary: one burst event of a weapon: the Battle Engine spend gate, then per round of the volley the emitter, aim, launch angle, two inaccuracy draws, target, locks, round Init, effects, clip ejection and recoil, in retail order.
+Evidence: MEASURED — the September 25 body instruction record and physics value maps; October 1 native flak arithmetic fragments compared with a fresh reconstructed object. No complete-body runtime replay.
+Specimen: pristine `BEA.exe.original.backup`, 2,506,752 bytes, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+Source File: not in the pinned GPL drop (no `Weapon.cpp`); Battle Engine callees crosswalk to `references/Onslaught/BattleEngine.cpp:1094-1116` and `:2713-2737` | Binary: BEA.exe, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+
+> Address: `0x005069f0`
+
+The caller `0x00506930` is now `CWeapon__HandleEvent` (formerly
+`CWeapon__HandleFireBurstEvent`), established by the
+listener identity audit (private RE archive: `reverse-engineering/ghidra/README.md`).
+This name correction does not revalidate the burst-body or runtime claims below.
+
+## Identity
+- Body `[0x005069f0,0x005078ab]`, 3,772 bytes ending in `ret` (`c3`); raw pristine-body SHA-256 `124b166f80acecc01ae2bf18b876c7c1202015aea1ba2b8303414fde973f8e5d`, recomputed 2026-09-25.
+- Callers: `CWeapon__HandleEvent` (`0x005069b6`) and `ProjectileBurst__SpawnFromPercentBucketFallback` (`0x00506143`).
+- Three Battle Engine callees had saved names that described them poorly; the RE record audit renamed them in the working project on 2026-09-26: `CBattleEngine__WeaponFired` (was `CanSpawnBurstForResolvedEntry`), `CBattleEngine__RecoilWeapon` (was `RandomizeBurstOffsetsAndAccumulateRange`) and `CBattleEngine__AddShockShake` (was `RandomizeOffsets4B8_4C0`). The tracked 2026-08-31 table still has the old names. `CBattleEngine__DisplayLock` is the source name (`BattleEngine.cpp:980-993`): it tests whether the weapon is the current part's weapon. The asin helper `0x0055dcb0` is `CRT__AsinDispatch_ST0` in the working project.
+
+## Calling convention
+`__thiscall` with the firing `CWeapon` in `ecx` (kept in `ebp`), no stack arguments, one `ret`. Returns in `eax`.
+
+## Prototype and parameter semantics
+```c
+int __thiscall ProjectileBurst__SpawnFromCurrentPreset(CWeapon *weapon);
+```
+- `weapon+0x08` owner; `+0xa0` current mode, the charge-level mode record; `+0x70` launch-sequence counter; `+0x74` launch-angle counter; `+0x80` fixed-orientation flag; `+0x30` weapon orientation (12 dwords); `+0x2c` weapon target; `+0x84` a four-dword vector copied into the round's init payload.
+- Mode fields use the weapon-mode map in `reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md`: `+0x00` `CWeaponClip`, `+0x18` round, `+0x34` `CWeaponInaccuracy`, `+0x40` `CWeaponPower`, `+0x48` `CWeaponVolleySize`, `+0xac` `CWeaponTrack`, `+0xb4` `CWeaponSoundPerBurst`, `+0xb8`/`+0xbc` muzzle light and radius.
+
+## Return value meaning
+1 when at least one round of the volley was created and initialised; 0 when the Battle Engine spend gate refuses, the weapon has no mode, the volley size is not positive, or every `CreateProjectile` returned null.
+
+## Globals read/written
+- `0x008a9d9c`: the gameplay generator for every `Random__NextLCGAbs` call here, and for the three draws of `AddShockShake`.
+- `0x00896988` sound manager (`CSoundManager__PlayEffect` `0x004e1940`), `0x009c63e8` particle manager (`0x004cb3d0`), `0x0089c9a0` muzzle-light owner (`0x0044a610`), `0x00855040`-`0x0085504c` a four-float vector passed to the particle manager, `0x00672fd0` event time (through callees).
+
+## Callees relied on / callers
+- Gate and recoil: `0x0040c2e0` (`WeaponFired`: jet part `0x00412050`, then walker part `0x004140d0`; success clears `+0x5d8`, the source's `mStealth = 0`), `0x0040c340` (`RecoilWeapon`), which calls `0x00407940` (`AddShockShake`).
+- Rounds: `CWorldPhysicsManager__CreateProjectile` `0x0050f7a0`, `CInitThing__ctor` `0x0048dcf0`, round slot 9 Init, `CRound__SetTargetReaderIfAllowed` `0x004daab0`.
+- Aim: owner slot 75 (Battle Engine `CBattleEngine__GetLaunchPosition` `0x0040c990`; units `0x004fc3c0`), owner slot 27 (`0x00404120`, the velocity `+0x7c`), owner slot 81 (Battle Engine `0x004071b0` `GetCurrentTarget`; units `0x004175e0`, AI `+0x13c` target `+0xc` or null), `ProjectileBurstPreset__GetListEntryIdByIndex` `0x005078b0`, `CThing__GetCentrePos` `0x004f3ac0`, asin `0x0055dcb0`, `0x005099a0` (beam speed), Euler matrices `0x004062d0` and `0x004f8140`.
+- Locks: `0x00407310` then `CBattleEngine__FireLock` `0x00407060`.
+- Effects: `0x004cb3d0`, `0x004097a0`, `0x0044a610`, `OID__CreateObject` `0x004bf090` (clip), `0x0044a930`.
+
+## Behavior summary
+One call is one burst event. In order:
+
+1. A Battle Engine owner (thing type bit `0x8`) must pass `WeaponFired` (`0x00506a1f`); a refusal returns 0 before any draw, round, lock or recoil.
+2. No mode: return 0. A mode with a launch sample (`+0xc`) and `CWeaponSoundPerBurst` 0 plays it once (`0x00506a96`).
+3. `CWeaponVolleySize` not positive: return. Otherwise, for each round of the volley (`0x00506aaa`-`0x0050788b`):
+   1. `CreateProjectile(mode round)`; null skips to the next round with no draw.
+   2. Launch-sequence counter `+0x70` +1, reset to 0 when not below the sequence count `+0x58`; slot `[counter]` of the list at `+0x4c` is the emitter index (`0x005078b0`, 0 for a missing slot). `CWeaponLaunchSequence` pairs (index, emitter) fill slot index − 1 with fistp(emitter) (`0x00435a00`). Launch-angle counter `+0x74` +1, reset at `+0x68`. The weapon constructor sets both counters to −1 (`0x00505e7b`), so a new weapon's first round uses the first slots.
+   3. Owner slot 75 fills the launch position and orientation for that emitter.
+   4. With weapon `+0x80`, the weapon orientation `+0x30` replaces it, first re-aimed at the weapon target's centre (yaw −atan2(dx, dy), pitch asin(dz/|d|)) when `CWeaponTrack` is set, a target exists and the round is gravity-free, beam or torpedo. Only `0x00509140` sets the flag (`0x0050945f`, together with the aim orientation, aim point `+0x84` and target `+0x2c`), and only AI code reaches it (through `0x004fb650`), so player weapons never use it.
+   5. `CWeaponLaunchAngle` triples (index, a, b) fill slot index − 1 of the list at `+0x5c` with (a, b) (`0x00435b50`). A found slot gives `Mat34__SetFromEulerAngles(yaw a, pitch b, roll 0)` (`0x004062d0`). With no slot, including every mode that has no entries, the matrix is `0x004f8140(0, 1, 0)`, the integer-angle constructor in units of 2π/4096. That is a pitch of 2π/4096, with words rows (`3f800000 0 0`, `0 3f7fffec bac90fd6`, `0 3ac90fd6 3f7fffec`). Speed is `CRoundVelocity` × 0.05, or `0x005099a0` for a beam.
+   6. Two draws, pitch then yaw (`0x00506e0a`, `0x00506e3e`): ((r mod 65536) × 2/65536 − 1) × `CWeaponInaccuracy`, taken whatever the inaccuracy.
+   7. The launch basis is orientation × angle × jitter, each product row by column (`0x00506ed1-0x005070db`, then `0x005070e0-0x005072d0`), with jitter = `FMatrix(yaw second draw, pitch first draw, 0)`. The velocity is speed × the basis's column 1 (the local forward axis), and the round's orientation is the basis. Start position = launch position + owner velocity (slot 27); allegiance = owner `+0x138`; life = `CRoundLifeSpan`.
+   8. Target = owner slot 81. The round's owner reader `+0xec` = owner.
+   9. `CRoundFlak` round (`+0x4c`) with a target and speed × life > distance: one draw resets the life (`0x00507453`).
+   10. Battle Engine owner: player `+0x574` → `+0x34` += 1, then `FireLock(target)` (`0x005074c9`) when `0x00407310` finds this weapon current.
+   11. `SetTargetReaderIfAllowed(target, 0)`, then the round's Init with the payload (`CRound::Init`, `0x004d8410`):
+       - It calls `CActor::Init` (`0x004d867b`), which takes one shared draw for the move phase and queues MOVE.
+       - It queues event 4000 at now + the payload life span (`0x004d86a6`).
+       - For a gravity-free round with zero turn rate that does not hug the ground, it predicts the terrain hit along the launch line and queues event 4001 (`0x004d89cb`).
+       - A seek-mode-1 round then takes one more draw and queues 4003 (`0x004daf8e`).
+   12. Muzzle effect per emitter slot, then the muzzle light when `+0xb8` is not −1.
+   13. `CWeaponClip`: create object `0x15` and take three draws (`0x005076f6`-`0x00507710`).
+   14. Battle Engine owner: `RecoilWeapon` (`0x00507871`).
+
+`RecoilWeapon` calls `AddShockShake(CWeaponPower)` and adds 2 × power to `+0x604` (`BattleEngine.cpp:2732-2737`). `AddShockShake` (`BattleEngine.cpp:1094-1116`):
+- returns when the amount is below the double 0.001 (`0x00407944`, constant `0x005d8bc8`);
+- caps the amount at 0.75 (`0x005d8bc4`);
+- takes three draws, each (r mod 32)/(16/amount) − amount, into yaw `+0x4b8`, pitch `+0x4bc` and roll `+0x4c0`, and zeroes `+0x4c4`;
+- calls the cockpit object `+0x528` when present (`0x004247a0`, which draws from CRT `rand` `0x0055dbfe`, not the gameplay stream), then the rumble.
+
+`CWeaponPower` defaults to 0 (`CWeaponModeStatement__Create`, `0x0042fb81`), so the Mech Vulcan Cannon and Mech Twin Vulcan Cannon take no shake draws. Mech Pulse Cannon Charged (0.03), Charged 2 (0.05) and both Micro Missile modes (0.01) take three per round.
+
+`CBattleEngine::Damage` (`0x0040ab75`-`0x0040abc2`) computes the other shake:
+- diff = (life before − life after) × 0.125, halved when shields `+0x100` are nonzero and capped at 0.25;
+- `AddShockShake(diff)` takes three draws once diff ≥ 0.001, a life loss of at least 0.008 without shields;
+- vibration then adds min(diff, 0.05) × 50;
+- life, shields and energy are restored after the shake when `+0x15c` (`mVulnerable`) is 0.
+
+## Flak arithmetic discrepancies — October 1
+
+The first fresh private build exposed two numerical discrepancies, not merely different
+instruction scheduling. The distance correction below closes one; lifespan rounding remains
+open. Its 3,776-byte candidate section is still unmatched against the 3,772-byte retail
+body, preserving the previous 43 exact controls and five vtables.
+
+At `0x005073c9`–`0x0050744b`, retail rounds each target-minus-launch-position component
+to binary32 through the actual vector constructor `0x00401ec0`. It accumulates squared
+components as `(Y² + Z²) + X²`, takes the square root and stores the distance as binary32
+at `0x00507433`. The strict admission compares **raw round-data speed (`+0x2c`) ×
+initialized lifespan > stored distance**. The old candidate retained extended subtraction
+results and used `(X² + Y²) + Z²`. The current source materializes all three components
+through the separately exact subtraction helper and groups the squared-distance sum.
+
+After the admitted branch's random draw, retail stores `flakInaccuracy × distance`
+to binary32 at `0x00507481`, then uses that rounded error in the lifespan expression.
+The candidate still retains that product in extended precision. The initial native
+original/candidate fragments produced these differences on finite authored inputs:
+
+| Observation | Cases | PC24 differences | PC53 differences | PC64 differences |
+| --- | ---: | ---: | ---: | ---: |
+| Strict flak-adjustment admission | 10,824 total | 141 | 131 | 131 |
+| Stored lifespan after the error calculation | 7,245 total | 0 | 215 | 224 |
+
+For one PC24 admission witness, retail distance `810.126708984375` equals the supplied
+speed-times-life threshold and skips adjustment; candidate distance `810.1266479492188`
+enters it. Inverting the retail admission branch flips every exercised decision.
+All 45 zero-inaccuracy controls agree in the lifespan experiment. Stack/canary,
+source-field, control-word and empty-x87-stack checks pass; the distance experiment
+executes the original vector constructor rather than substituting a numeric helper.
+
+The admission cases begin after the flak/non-null-target tests. Lifespan cases begin
+after the random call with an explicitly supplied nonnegative random integer.
+No generator, callback, allocation, complete burst, shipping configuration or live
+FPU state is exercised. Threshold neighbors were selected from original distances.
+These are useful falsifiers for source repair; they do not establish occurrence in
+player gameplay.
+
+The lead freshly compiled the distance correction and reran all 10,824 cases:
+all 403 admission differences and 1,209 distance differences disappear. A separate
+2,187-case signed-zero/Inf/qNaN/sNaN run also agrees. The candidate reverses the inner
+Y²/Z² operands, so these samples do not establish arbitrary NaN-payload equivalence.
+All 61 other callable sections and recursive relocation identities remain unchanged.
+A vector-constructor site elsewhere in SpawnRound now expands inline; 3,009 guarded
+finite matrix cases preserve nine outputs and observed exceptions, while changing
+one multiply to addition changes 3,006 results. The newly emitted exact subtraction
+copy is already matched elsewhere and adds no unique-function credit.
+
+The later lifespan problem persists unchanged: 215 PC53 and 224 PC64 differences,
+zero in these PC24 cases, and all 45 zero-inaccuracy controls agree. No complete
+SpawnRound match or full burst/RNG acceptance is claimed.
+
+Root evidence in `bea-decomp/.worktrees/codex-equiv-20260930/`:
+
+- `local-data/weapon-spawn-root-20261001/native-admission-v06/receipt.json`, SHA-256
+  `e8cb8ec356f2d2b35f75921cefa4442676d8f411a248ab84c9cb617b476bd10c`.
+- `local-data/weapon-spawn-root-20261001/native-error-v12/receipt.json`, SHA-256
+  `74f0f5d4ea3ac589b63a953326bc24bc1671f686f2c1b789393b3f1c6e428183`.
+
+Corrected-distance root evidence:
+
+- `local-data/weapon-flak-fix-root-20261001/distance-v01/receipt.json`, SHA-256
+  `c4e8effe2335fb00377956cf8ab04392b437ed8cd1a8e05de5d78b002ae94c4c`.
+- `local-data/weapon-flak-fix-root-20261001/error-v01/receipt.json`, SHA-256
+  `d00fb2dbf6d545a032336edc711acd1df872a54dcc1fb24380502caf549c5719`.
+- `local-data/weapon-flak-fix-root-20261001/specials-v02/receipt.json`, SHA-256
+  `45e80c09c66e1aaf9dab4a1ba3b2e2b875f5c81d3831c0a4cd54fafd7652ddec`.
+
+The next falsifier is the same lifespan corpus against a source form that emits the
+actual binary32 error store. Preserve the corrected distance and other exact controls.
+
+## Error / edge behavior
+- A null `CreateProjectile` result skips that round's draws, lock, Init and recoil, and the loop continues.
+- The flak draw and the three clip draws occur only as stated. None of the Level 100 player, drone or turret weapons names a clip or fires a flak round.
+- `WeaponFired`'s store spending is the parts' own (`0x00412050`, `0x004140d0`) and is outside this body.
+
+## Runtime corroboration (TTD, bounded)
+- The 2026-08-23 draft recorded coverage presence of this body in 7/10, 7/10, 8/10, 2/10, 5/10, 5/11, 2/7, 1/4 and 2/3 sessions of `contract-round-impact` batches 1-9 (level openings, Level 521 native runs and the Level 742 pilot); batch 10 had no coverage bitmap. Coverage proves execution only.
+- No capture has replayed the per-round order, the draw count or the recoil in this contract.
+- Original-code control `local-data/test-runs/player-launch-20260925/euler_constructors_control.py` ran the unchanged `0x004f8140` (with `0x00401ec0`, `0x00401f10`, `0x0040d320`) and `0x004062d0` under control words `0x027f` and `0x007f`. At zero, and at 1 or 1024 units on one axis, under both control words, the nine basis words of `0x004f8140(a, b, c)` equal `0x004062d0(a·t, b·t, c·t)` with t = float(2π/4096), up to the sign of zero words. The (100, 200, 300) case has no exactly matching float case in the receipt, so other angles are not established: each cosine is of the product as computed, and the sine is of the float32-rounded product for the third and second arguments (`0x004f8174-0x004f8182`, `0x004f81fb-0x004f826e`) but of the unrounded product for the first (`0x004f83e4-0x004f83f8`). The integer version writes all 12 destination words; each row's fourth word is copied from an unwritten stack word of the basis multiply `0x0040d320` (0, 0 and `0x004f8458` in the control). Receipt `euler-run-9ks6dz5x/euler_constructors.json` SHA-256 `39dbcff3f0f68ac810e39b66df3c5cee86ac78b4585cd1fa741d1e63f7dfbe59`; ELF SHA-256 `be7485fd4de1f9f7286061afbee26e0ea38feffe0c09501e8118525a693ea328`.
+
+## Evidence
+- Pristine specimen objdump over the body and the callees named above, 2026-09-25.
+- Constants read at their addresses: 0.05 `0x005d8584`, 2/65536 `0x005d8de4`, 1.0 `0x005d8568`, 0.001 (double) `0x005d8bc8`, 0.75 `0x005d8bc4`, 16.0 `0x005d8bc0`, 0.125 `0x005d8c4c`, 0.25 `0x005d858c`, 0.5 `0x005d85ec`, 50.0 `0x005d85d0`.
+- Mode defaults: `CWeaponModeStatement__Create` `0x0042fa80` (burst and volley 1, power 0, yaw tolerance 0.5, maximum locks 5, lock range 40, lock radius 10, sound per burst 1, muzzle light −1).
+- Weapon-mode field offsets: `reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md`.
+- Level 100 use: `reverse-engineering/game-mechanics/level100-final-drone-wave.md`.
+
+## Confidence
+2 — every branch, draw site, callee and product named here was read from the pristine body, and the two Euler constructors were executed unchanged; the full init-payload layout was not re-derived and the spawner itself has not been replayed.
+
+## Unresolved questions
+- The full init-payload layout. Cheapest falsifier: an original-code run of this body with a synthetic weapon, owner and round, comparing the payload against a model.
+- The launch-position providers `0x0040c990` and `0x004fc3c0` and the parts' `WeaponFired` stores are separate contracts.

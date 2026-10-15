@@ -1,0 +1,459 @@
+# Controller System
+
+Status: active — mixed source reference and bounded retail evidence
+Last updated: 2026-09-30
+Summary: controller architecture and retail differences; the keyboard queries
+and POV neutral comparison were rechecked on September 26, while other sections
+retain their own dated evidence and limitations. The September 27 joystick and
+recording recheck supplies exact retail guards, scales and transfer counts.
+September 30 byte matching resolves the mouse-recentering arithmetic and constants.
+Evidence: MEASURED — bounded retail keyboard recheck and the dated evidence below;
+the separate pinned-source architecture is a reference, not proof of retail parity.
+Specimen: pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
+
+The current [keyboard contract](../../binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-26-keyboard-recheck)
+uses pristine SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+and controlled original-code experiments. It supersedes the older held-state
+interpretation of the third key table and the consume-on-first-query shorthand.
+Source interfaces are not literal retail signatures.
+
+The [joystick and recording recheck](../../binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-27-joystick-and-recording-recheck)
+also distinguishes the 18-slot retail interface from the 15-slot source layout.
+The joystick routines scale without clamping; their signed pad guards and
+RightY's early flag access must not be inferred from the source implementation.
+Static recording transfers three button words, without the source's additional
+four analogue fields. Physical device timing and complete playback remain untested.
+
+## PC Controller System (PCController.cpp/h)
+
+> Analysis added December 2025
+
+**Purpose**: Platform-specific input handling for PC, including gamepad/joystick support, keyboard mappings, and the debug key system that enabled developer cheats in internal builds.
+
+### Class Structure
+
+The controller system uses a platform abstraction pattern:
+
+```
+CController (base class, Controller.h/cpp)
+    ├── CPCController (PC - DirectInput)
+    ├── CPS2Controller (PlayStation 2)
+    └── CXBOXController (Xbox)
+```
+
+**CPCController** inherits from **CController** and provides PC-specific implementations for:
+
+| Virtual Method | PC Implementation |
+|----------------|-------------------|
+| `GetJoyButtonOnce()` | `LT.JoyButtonOnce()` - DirectInput single press |
+| `GetJoyButtonOn()` | `LT.JoyButtonOn()` - DirectInput held state |
+| `GetJoyButtonRelease()` | `LT.JoyButtonRelease()` - DirectInput release detect |
+| `GetKeyOnce()` | `PLATFORM.KeyOnce()` - Keyboard single press |
+| `GetKeyOn()` | `PLATFORM.KeyOn()` - Keyboard held state |
+| `GetJoyAnalogueLeftX/Y()` | Joystick left stick (normalized -1.0 to 1.0) |
+| `GetJoyAnalogueRightX/Y()` | Joystick right stick (normalized -1.0 to 1.0) |
+| `RecordControllerState()` | Write input state to file |
+| `ReadControllerState()` | Read input state from file |
+
+### Retail mappings and their evidence limits
+
+In the Steam `BEA.exe`, the PC controller vtable at `0x005e48e0` points to concrete helpers for joystick/keyboard queries and record/playback support.
+
+Note: these are safe to re-verify via address-level read-back after any Ghidra restart/deadlock; do not assume symbol names persisted without checking.
+
+| Address | Symbol | Behavior |
+|---------|--------|----------|
+| 0x005147b0 | `CPCController__GetJoyButtonOnce` | Returns true when `old == 0` and `current != 0` for `state[pad] + 0x30 + button` (`old @ 0x00888fa4`, `current @ 0x00888f94`) |
+| 0x005147f0 | `CPCController__GetJoyButtonOn` | Returns true when `current != 0` for `state[pad] + 0x30 + button` (`current @ 0x00888f94`) |
+| 0x00514810 | `CPCController__GetJoyButtonRelease` | Returns true when `old != 0` and `current == 0` for `state[pad] + 0x30 + button` (`old @ 0x00888fa4`, `current @ 0x00888f94`) |
+| 0x00514850 | `CPCController__GetKeyOnce` | Clears `0x00888d94[key]`, but remembers queries in a 32-entry list; repeated queries can remain true until the cursor resets. See the current keyboard contract. |
+| 0x00514890 | `CPCController__GetKeyOn` | Returns `0x00888c94[key]` (per-key held state) |
+| 0x00514870 | `CPCController__GetKeyState3` (neutral saved name) | Returns the nonconsuming release-event byte `0x00888e94[key]`; keyup sets it, and separate table clearing resets it. Historical method spelling remains unknown. |
+| 0x00514640 | `CPCController__GetJoyAnalogueLeftX` | Reads joystick state `+0x00` and scales by `0.001` |
+| 0x00514670 | `CPCController__GetJoyAnalogueLeftY` | Reads joystick state `+0x04` and scales by `0.001` |
+| 0x005146a0 | `CPCController__GetJoyAnalogueRightX` | Reads joystick state `+0x08` and scales by `0.001` |
+| 0x005146d0 | `CPCController__GetJoyAnalogueRightY` | Reads joystick state `+0x14`, centers at `32768`, scales by `1/32768` (guarded) |
+| 0x005148b0 | `CPCController__GetJoyPovX` | `sin(POV * 0.00017453294)`; returns 0 when the low 16 bits are `0xffff` (`CMP AX,FFFF` at `0x005148c1`) |
+| 0x00514900 | `CPCController__GetJoyPovY` | `-cos(POV * 0.00017453294)`; returns 0 when the low 16 bits are `0xffff` (`0x00514911`) |
+| 0x0042d9d0 | `CController__Flush` | Copies button bitfields into `Old`, clears current, calls `DoMappings` (vtable+`0x3c`) |
+| 0x0042db40 | `CController__DoMappings` | Main mapping engine (push_type switch) that drives `SendButtonAction` |
+| 0x00514720 | `CPCController__RecordControllerState` | Writes `mButtons1/2/3` into `DXMemBuffer` (3x4 bytes: `this+0x14/+0x18/+0x1c`) |
+| 0x00514760 | `CPCController__ReadControllerState` | Reads `mButtons1/2/3`; on EOF closes buffer and clears `mPlaying` (`this+0x161=0`) |
+
+**Retail deltas vs Stuart header**:
+- A third key-state vtable entry exists (`0x00514870`), absent from the pinned header. Its release-event meaning is now established from the retail writer and reader; it is not the held-state query.
+- Retail key virtuals receive ECX and one stack key. The pinned source's additional pad-number argument is absent. Held/release wrappers return a raw zero-extended byte; the mapper compares held with exactly 1 and release with nonzero.
+- The consumed-query list is separate from all three keyboard arrays. Clearing those arrays does not clear the list. The message pump has a reset-skipping early return, so its lifetime is not a universal frame boundary.
+- POV hat helpers exist (`0x005148b0`/`0x00514900`) and compute sin/cos from DirectInput POV degrees.
+
+### Steam mouse-axis mapping
+
+For mouse push types `0x0B..0x0E`, Steam `CController__DoMappings` at
+`0x0042DB40` computes the dispatched analogue axis as:
+
+```text
+clamp(g_MouseSensitivity * centeredCursorPixels * 0.004333333, -1, 1)
+```
+
+`Input__UpdateCursorCenterWithWindowScale` at `0x0042DA00` has a nominal `10/17`
+displacement-retention factor per update; integer conversion and its minimum-one-pixel
+nudge make that fraction an approximation. This is a displacement with
+gradual recentering, not a sign-only mouse event. Stuart's player path routes the
+axes to `BattleEngine::Rotate` and `BattleEngine::Pitch`; the corresponding
+walker inputs add `axis * GroundTurnRate/75` and `axis/117`, after which the
+BattleEngine retains angular velocity by `0.8` per released update.
+
+A no-input control and two uninterrupted app-owned Level 100 copies configured
+with sensitivity `1.5` through copied `defaultoptions.bea` repeated the same
+pointer/movement sequence without focus loss. Both active runs produced the
+same sampled yaw delta `-0.019985914`, pitch delta `-0.021745417`, and gait
+range `6.232587`. This bounds the released walker path for that sensitivity; it
+does not establish inversion, every sensitivity setting, or jet mouse response.
+
+### September 30 mouse-recentering byte match
+
+A fresh pinned-VC6 build matches all 272 bytes and every relocation of
+`0x0042da00` against the pristine specimen identified above. This is static
+instruction and constant evidence; no new physical mouse or live game test ran.
+The private source owner is `bea-decomp/src/Controller.cpp`; reproduction is
+`python -B tools/decomp.py check src/Controller.cpp -v` in that checkout.
+The root's integrated receipt is `bea-decomp/build/controller-root-check-20260930.txt`.
+
+The arithmetic uses float constants `0x3f333333` (approximately `0.7`) and
+`0x3f169697` (`0.5882353186607361`, at `0x005d97c4`). The latter is obtained by
+rounding `1.0 / 1.7` to float. Reciprocating an already rounded `1.7f` produces
+the adjacent value `0x3f169696`; that was an error in the previous decompilation
+candidate, despite its description as an eight-byte stack-layout miss.
+The coefficient multiplies the weighted cursor position before the previous
+coordinate is subtracted, followed by x87 `FISTP` at `0x0042daa4`/`0x0042dac6`.
+Preserve those operations and the active x87 conversion mode when translating
+this path; simplifying it to an ideal `7/17` displacement step is not byte-level evidence.
+
+The routine first honors the autoconfiguration guard. A reset centers both
+coordinates; gradual recentering additionally requires the axis-read flag.
+For each axis, a zero computed step away from center becomes one pixel toward
+center. It writes the updated coordinates and clears the axis-read flag.
+The matched reconstruction uses an adjacent two-integer cursor snapshot; exact
+compiler output does not prove the original local-variable names or source spelling.
+
+Six isolated original-body comparisons also bound the numerical consequence, with
+the window-size calls stubbed and only the reciprocal changed in emulator memory.
+At 24-bit precision with rounding toward negative infinity (`CW=0x047f`), center
+512 and initial coordinate 529 produce 521 with the previous coefficient versus
+522 with retail. At 24-bit precision with truncation (`CW=0x0c7f`), center 768 and
+coordinate 683 produce 717 versus 718. Both coordinate axes agreed and the
+axis-read flag cleared. Nearest-rounding controls at 24 and 53 bits (`0x007f`,
+`0x027f`) produce equal outputs for those inputs. The private script and results
+are `bea-decomp/build/controller-recenter-mode-probe-20260930.py` and `.json`.
+These are conditional instruction-level witnesses, not evidence that this live
+controller site uses either directed rounding mode or that a player saw a difference.
+
+### Debug Keyboard Shortcuts
+
+**Source/internal mapping with Steam caveat:** These debug-key bindings exist in internal/source code; in the Steam retail build analyzed here, their gameplay handlers are not observed as active:
+
+| Key | Virtual Button | Effect | Notes |
+|-----|----------------|--------|-------|
+| `V` | `BUTTON_TOGGLE_GOD_MODE` | Toggle god mode | **Internal builds only** |
+| `A` | `BUTTON_TOGGLE_FREE_CAMERA` | Toggle free camera | Debug camera mode |
+| `F` | `BUTTON_TOGGLE_FREE_CAMERA` | Toggle free camera | Alternate binding |
+| `U` | `BUTTON_WIN_LEVEL` | Force win current level | Instant victory |
+| `I` | `BUTTON_LOOSE_LEVEL` | Force lose current level | Instant defeat |
+| `S` | `BUTTON_SAVE_CAREER` | Save career | Debug save hotkey |
+| `L` | `BUTTON_LOAD_CAREER` | Load career | Debug load hotkey |
+| `Z` | `BUTTON_LOG_CAREER` | Log career to debug output | Debug dump |
+| `O` | `BUTTON_PAUSE` | Pause game in source/internal mapping | Retail default lacks O binding; copied patch proof now covers one bounded level-100 O/Enter pause-menu path |
+| `7` | `BUTTON_COMPLETE_ALL_OBJECTIVES` | Complete all objectives | Skip to win state |
+| `8` | `BUTTON_TOGGLE_DEBUG_SQUAD_BACKWARD` | Cycle debug squad backward | Debug visualization |
+| `9` | `BUTTON_TOGGLE_DEBUG_SQUAD_FORWARD` | Cycle debug squad forward | Debug visualization |
+| `4` | `BUTTON_TOGGLE_DEBUG_UNIT_BACKWARD` | Cycle debug unit backward | Debug visualization |
+| `5` | `BUTTON_TOGGLE_DEBUG_UNIT_FORWARD` | Cycle debug unit forward | Debug visualization |
+
+**Why V-key God Mode Doesn't Work in Retail:**
+
+The `BUTTON_TOGGLE_GOD_MODE` mapping exists in source code, but in the Steam retail build analyzed here we have not observed an active `GAME.ReceiveButtonAction()` path for it; current evidence suggests that case is disabled or compiled out in retail.
+
+**O-key pause caveat:** Source maps `O` to `BUTTON_PAUSE`, and source free-camera code handles `BUTTON_PAUSE` by toggling pause/unpause. Clean Steam retail copied-runtime diagnostics do not accept that as default Steam behavior: the 2026-06-18 held-`O` pause checks produced no `BUTTON_PAUSE`, no `CGame__Pause`, and no `CGame__UnPause`; the broader key-census diagnostic observed `onceScanO=01` but zero O-specific key queries in the active polling/mapping path. A follow-up active mapping-table dump decoded `47` retail rows from `0x008892dc`, found one pause row at index `34`, and classified it as `runtime-table-pause-row-present-without-o-slot`; slot0 was `inputCode=0`, `pushType=8`, `keyArg=1`, slot1 was disabled/sentinel-like, and no `O` key argument (`0x18` or `0x4f`) was present for pause. The copied-executable patch `pause_o_scan_initializer_experiment` changes that initializer byte to `0x18`; accepted copied-runtime CDB evidence now covers one bounded free-camera pause/unpause context plus one level-100 normal-gameplay path where `O` opens the pause menu and `ENTER` resumes. Second-`O` normal-gameplay unpause, broad pause-menu safety, and control feel remain unproven.
+
+### Virtual Button System
+
+The controller uses a **virtual button abstraction** layer. Physical inputs (keys, gamepad buttons) map to virtual buttons, which are then dispatched to the appropriate game system.
+
+**Debug Buttons (0-15)**: Special buttons that bypass normal control flow and go directly to `GAME.ReceiveButtonAction()`:
+
+| Constant | Value | Purpose |
+|----------|-------|---------|
+| `BUTTON_TOGGLE_GOD_MODE` | 0 | Toggle invincibility |
+| `BUTTON_TOGGLE_FREE_CAMERA` | 1 | Debug camera |
+| `BUTTON_ADVANCE_ONE_FRAME` | 2 | Frame advance (paused) |
+| `BUTTON_TOGGLE_DEBUG_SQUAD_FORWARD` | 3 | Debug visualization |
+| `BUTTON_TOGGLE_DEBUG_SQUAD_BACKWARD` | 4 | Debug visualization |
+| `BUTTON_TOGGLE_DEBUG_UNIT_FORWARD` | 5 | Debug visualization |
+| `BUTTON_TOGGLE_DEBUG_UNIT_BACKWARD` | 6 | Debug visualization |
+| `BUTTON_SKIP_CUTSCENE` | 7 | Skip cinematics |
+| `BUTTON_CONSOLE_MENU_UP` | 8 | Console navigation |
+| `BUTTON_CONSOLE_MENU_DOWN` | 9 | Console navigation |
+| `BUTTON_CONSOLE_MENU_SELECT` | 10 | Console navigation |
+| `BUTTON_WIN_LEVEL` | 11 | Force win |
+| `BUTTON_LOOSE_LEVEL` | 12 | Force lose |
+| `BUTTON_LOG_CAREER` | 13 | Career debug dump |
+| `BUTTON_COMPLETE_ALL_OBJECTIVES` | 14 | Instant objective completion |
+
+**Action Buttons (16+)**: Normal gameplay buttons that go to the controlled object:
+
+| Constant | Value | Purpose |
+|----------|-------|---------|
+| `BUTTON_MECH_CHANGE_ZOOM_IN` | 16 | Zoom in |
+| `BUTTON_MECH_CHANGE_ZOOM_OUT` | 17 | Zoom out |
+| `BUTTON_MECH_FIRE_GUN_POD` | 18 | Fire weapon |
+| `BUTTON_MECH_CHARGE_GUN_POD` | 19 | Charge weapon |
+| `BUTTON_MECH_CHANGE_WEAPON` | 20 | Cycle weapons |
+| `BUTTON_MECH_LANDING_JETS` | 21 | Landing jets |
+| `BUTTON_MECH_JET_AFTERBURNER` | 22 | Afterburner |
+| `BUTTON_MECH_YAW_LEFT` | 25 | Turn left |
+| `BUTTON_MECH_PITCH_UP` | 26 | Pitch up |
+| `BUTTON_MECH_YAW_RIGHT` | 27 | Turn right |
+| `BUTTON_MECH_PITCH_DOWN` | 28 | Pitch down |
+| `BUTTON_MECH_STRAFE_LEFT` | 29 | Strafe left |
+| `BUTTON_MECH_STRAFE_RIGHT` | 30 | Strafe right |
+| `BUTTON_MECH_FORWARD` | 31 | Move forward |
+| `BUTTON_MECH_BACKWARD` | 32 | Move backward |
+| `BUTTON_MECH_MORPH` | 33 | Transform walker/jet |
+| `BUTTON_PAUSE` | 56 | Pause game |
+| `BUTTON_HELP` | 57 | Help/objectives |
+| `TOTAL_BUTTONS` | 67 | Max button count |
+
+### Input Push Types
+
+The mapping system supports multiple input detection modes:
+
+| Type | Constant | Behavior |
+|------|----------|----------|
+| `BUTTON_ON` | 0 | True while held |
+| `BUTTON_ONCE` | 1 | True on first press only |
+| `BUTTON_RELEASE` | 2 | True on release |
+| `BUTTON_REPEAT` | 3 | Auto-repeat while held |
+| `ANALOGUE_PLUS` | 4 | Analog stick positive direction |
+| `ANALOGUE_MINUS` | 5 | Analog stick negative direction |
+| `ANALOGUE_PLUS_ACT_AS_BUTTON_REPEAT` | 6 | Analog as repeating button (positive) |
+| `ANALOGUE_MINUS_ACT_AS_BUTTON_REPEAT` | 7 | Analog as repeating button (negative) |
+| `KEY_ONCE` | 8 | Keyboard single press |
+| `KEY_ON` | 9 | Keyboard held state |
+
+### Controller Configurations (1-4)
+
+The game supports 4 controller layouts, switchable in options. Each configuration remaps the analog sticks:
+
+| Config | Left Stick | Right Stick | Morph | Landing Jets |
+|--------|------------|-------------|-------|--------------|
+| 1 | Strafe + Forward/Back | Yaw + Pitch | Button 2 | Button 1 |
+| 2 | Yaw + Pitch | Strafe + Forward/Back | Button 2 | Button 1 |
+| 3 | Strafe + Forward/Back | Yaw + Pitch | Button 1 | Button 2 |
+| 4 | Yaw + Pitch | Strafe + Forward/Back | Button 1 | Button 2 |
+
+**Retail evidence (Steam build, Feb 2026):** UI/control-hint rendering in `FUN_0047fb50` checks `mControllerConfigurationNum[1]` against `3` and `4`, consistent with configs where Morph/Landing-Jets bindings are swapped (and thus prompt mapping differs).
+
+**Configuration -1**: Applies to ALL configurations (shared bindings like debug keys, menu navigation).
+
+### Gamepad Button Numbers
+
+The source code uses numeric button indices that map to standard PC gamepad layouts:
+
+| Button # | Typical Mapping | Usage in BEA |
+|----------|-----------------|--------------|
+| 0 | A / Cross | Menu select (alternate) |
+| 1 | B / Circle | Menu select, Landing jets |
+| 2 | X / Square | Morph |
+| 3 | Y / Triangle | Help, Menu back |
+| 4 | LB / L1 | Change weapon (alternate) |
+| 5 | RB / R1 | Fire/charge weapon (alternate) |
+| 6 | LT / L2 | Change weapon, Cheat combo |
+| 7 | RT / R2 | Fire/charge weapon, Cheat combo |
+| 8 | Select/Back | Select button |
+| 9 | Start | Afterburner (held) |
+| 10 | L3 | - |
+| 11 | R3 | Pause/Start |
+| 12 | D-Pad Up | Menu up, Zoom in |
+| 13 | D-Pad Right | Config up |
+| 14 | D-Pad Down | Menu down, Zoom out |
+| 15 | D-Pad Left | Config down |
+
+### Analog Stick Constants
+
+| Constant | Value | Purpose |
+|----------|-------|---------|
+| `ANALOGUE_X1` | -1 | Left stick horizontal |
+| `ANALOGUE_Y1` | -2 | Left stick vertical |
+| `ANALOGUE_X2` | -3 | Right stick horizontal |
+| `ANALOGUE_Y2` | -4 | Right stick vertical |
+| `ANALOGUE_X_DEAD` | 0.36f | Horizontal deadzone (36%) |
+| `ANALOGUE_Y_DEAD` | 0.36f | Vertical deadzone (36%) |
+| `ANALOGUE_BUTTON_DEAD` | 0.3f | Analog-as-button threshold |
+| `ANALOGUE_ACT_AS_DIGITAL_THRESHOLD` | 0.9f | Analog to digital conversion |
+
+**Note**: The Xbox controllers required "really huge dead zones" (0.36) according to the source code comment.
+
+**These dead zones are a JOYSTICK rule and are NOT in the shipped PC image.**
+`Controller.cpp:227-233` applies `ANALOGUE_X_DEAD`/`ANALOGUE_Y_DEAD` to the four
+`GetJoyAnalogue*` axes only. The Steam build's look axis does not come from that
+path — it comes from the mouse case documented under "Steam mouse-axis mapping"
+above, whose only tests are the `±1.0` clamp and a sign gate at exactly `0.0`
+(VA `0x005D8BE0` = -1.0, `0x005D8568` = +1.0, `0x005D856C` = 0.0). Measured
+2026-07-30 in the pristine specimen
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`
+(sha256 `74154bfa…`, 2,506,752 bytes): the float32 `0.36` (`EC 51 B8 3E`) occurs
+**zero** times in the file.
+
+Consequence: **retail's look axis has no dead zone.** Its floor is a quantum —
+the cursor displacement is an integer pixel count (`DAT_0089BDA8`/`DAT_0089BDA4`
+are `int`, fed from `WM_MOUSEMOVE` in `ltshell.cpp:1058-1067`), so at the image's
+untouched sensitivity of `7.0` the reachable axis is the lattice
+`{0, ±30, ±61, ±91, …}` permille and nothing lies between zero and thirty.
+
+### Input Recording/Playback System
+
+The Steam image retains the controller-tape implementation, but it differs from
+the available source and its command-line entry points are dormant.
+
+| Retail function | Address | Released behavior |
+|-----------------|---------|-------------------|
+| `CController__StartRecording` | `0x0042D8A0` | Sets `this+0x160`, then opens the supplied filename for writing |
+| `CController__StartPlayback` | `0x0042D8C0` | Sets `this+0x161`, then opens the supplied filename for reading |
+| `CPCController__RecordControllerState` | `0x00514720` | Writes exactly three four-byte words from `this+0x14/+0x18/+0x1C` |
+| `CPCController__ReadControllerState` | `0x00514760` | Reads those same three words; EOF closes the buffer and clears playback |
+
+Each retail tick is therefore exactly 12 little-endian bytes:
+
+```text
+uint32 buttons_0_to_31
+uint32 buttons_32_to_63
+uint32 buttons_64_to_95
+```
+
+This corrects the earlier 28-byte account. `PCController.cpp` in the available
+source serializes the same three button words plus four analogue values, but the
+Steam functions contain only three I/O calls. A retail tape cannot reproduce
+analogue aim or movement.
+
+`CGame__PostLoadProcess` still tests the record/playback bytes at `0x00662F34`
+and `0x00662F36`, passes the shared filename buffer at `0x00662F4C`, and calls
+the two start functions. The Steam command-line parser does **not** contain the
+source build's `-record` or `-play` spellings or parser arms, however. The
+surviving fields are cleared by the `CLIParams` defaults constructor at
+`0x004239F0`; they require a debugger intervention or an exact safe-copy patch
+before the post-load path can activate them.
+
+The final complete 12-byte frame is consumed. The following attempted read sets
+EOF, closes playback, and clears its flag. Reject a tape unless its size is
+positive and divisible by 12; `StartPlayback` does not make an open failure safe
+and a missing file is not a valid negative control.
+
+Useful deterministic action masks are `0x00000080` in word 0 for skip-cutscene,
+`0x04000000` in word 1 for skip-panning, and `0x00080000` / `0x00040000` in word
+0 for charge / fire. These are exact static retail mappings. Controlled runtime
+playback remains the gate before claiming a reproducible natural combat chain.
+
+### Cheat Combo Detection
+
+The controller implements a shoulder button combo for activating the cheat input screen:
+
+```cpp
+// From Controller.cpp DoMappings()
+#ifdef E3BUILD
+if (IsButtonSet(BUTTON_LEFT1_FOR_TOGGLE) &&
+    IsButtonSet(BUTTON_RIGHT1_FOR_TOGGLE) &&
+    mAnaloguex1 < -0.6f &&
+    mAnaloguex2 >  0.6f)
+#else
+if (IsButtonSet(BUTTON_LEFT1_FOR_TOGGLE) &&
+    IsButtonSet(BUTTON_RIGHT1_FOR_TOGGLE))
+#endif
+{
+    SendButtonAction(BUTTON_FRONTEND_CHEAT, 0.0f);
+}
+```
+
+- **Normal builds**: Hold L1+R1 simultaneously
+- **E3 Build**: L1+R1 + push both sticks outward (harder to trigger accidentally)
+
+This explains how `!EVAH!` and `105770Y2` cheat codes are entered - the shoulder combo brings up a text input screen.
+
+### Inactivity Timer
+
+The controller tracks user inactivity for attract mode:
+
+| Constant/Member | Purpose |
+|-----------------|---------|
+| `mLastTimeAnythingPressed` | Timestamp of last input |
+| `mNonInteractiveSection` | True during cutscenes (pauses timer) |
+| `CLIPARAMS.mInactiveTimeout` | Timeout in milliseconds |
+| `InactivityMeansQuitGame()` | Returns true when timeout exceeded |
+
+Used in **Playable Demo** builds to return to attract mode when no input is detected.
+
+### Button Repeat System
+
+Auto-repeat for held buttons (menu navigation):
+
+| Constant | Value | Purpose |
+|----------|-------|---------|
+| `INITIAL_REPEAT_DELAY` | 0.5f | Delay before first repeat |
+| `REPEAT_DELAY` | 0.12f | Delay between subsequent repeats |
+
+### Connection to God Mode Investigation
+
+**Summary of Debug Key System Findings:**
+
+1. The `V` key is mapped to `BUTTON_TOGGLE_GOD_MODE` (virtual button 0)
+2. Debug buttons (0-15) are routed to `GAME.ReceiveButtonAction()` directly
+3. The handler in `CGame::ReceiveButtonAction()` processes the god mode toggle
+4. **In the Steam retail build analyzed here**, this handler is not currently observed as active (likely disabled/compiled out)
+
+Current evidence indicates that:
+- God mode WAS toggleable via `V` key in internal builds
+- The input mapping survived, but the handler did not
+- In the **source/internal build**, B4K42 save-name check is the only confirmed god mode path
+- In the Steam PC port, the equivalent name check is `Maladim`; later testing confirmed that it surfaces as `God OFF` / `God ON` under `Controller Options` and changes real combat-damage behavior
+- Memory trainers work because they bypass the input system entirely
+
+### Files Analyzed for This Section
+
+| File | Purpose |
+|------|---------|
+| `PCController.cpp` | PC controller implementation, button mappings table |
+| `PCController.h` | CPCController class definition |
+| `Controller.cpp` | Base controller class, input dispatch logic |
+| `Controller.h` | Virtual button constants, push types, mapping struct |
+
+---
+
+## Complete Virtual Button Constants (0-67)
+
+### Debug Buttons (0-15)
+
+| Constant | Value | Mapped Key |
+|----------|-------|------------|
+| `BUTTON_TOGGLE_GOD_MODE` | 0 | V |
+| `BUTTON_TOGGLE_FREE_CAMERA` | 1 | A, F |
+| `BUTTON_ADVANCE_ONE_FRAME` | 2 | - |
+| `BUTTON_TOGGLE_DEBUG_SQUAD_FORWARD` | 3 | 9 |
+| `BUTTON_TOGGLE_DEBUG_SQUAD_BACKWARD` | 4 | 8 |
+| `BUTTON_TOGGLE_DEBUG_UNIT_FORWARD` | 5 | 5 |
+| `BUTTON_TOGGLE_DEBUG_UNIT_BACKWARD` | 6 | 4 |
+| `BUTTON_SKIP_CUTSCENE` | 7 | Space |
+| `BUTTON_WIN_LEVEL` | 11 | U |
+| `BUTTON_LOOSE_LEVEL` | 12 | I |
+| `BUTTON_LOG_CAREER` | 13 | Z |
+| `BUTTON_COMPLETE_ALL_OBJECTIVES` | 14 | 7 |
+
+### NEW Debug Keys Not Previously Documented
+
+- `O` = source/internal pause mapping; clean/default Steam row remains not O-bound, while the patched copied-runtime row has one bounded level-100 proof where `O` opens the pause menu and `ENTER` resumes
+- `A` and `F` = Free camera toggle (two bindings!)
+- `8`/`9` = Debug squad cycling
+- `4`/`5` = Debug unit cycling
+- Numpad 2/8 = Debug console navigation
+
+---

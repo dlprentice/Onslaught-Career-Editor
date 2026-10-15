@@ -1,0 +1,249 @@
+# CUnit__HandleEvent
+
+> Address: `0x004F9820`
+
+Status: active static function note
+Last updated: 2026-10-01 (complete reconstruction match; earlier behavioral evidence keeps its stated limits)
+Source File: none — `Unit.cpp` is absent from `references/Onslaught/`
+(checked 2026-08-22) | Binary: BEA.exe pristine specimen
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+Summary: shared CUnit slot-0 event handler. It switches on signed 16-bit event
+IDs 4001–4005, with direct arms for 4001, 4003, 4004, and 4005; 4002 and all
+other values fall through `CActor__HandleEvent`. Event 4003 samples the two
+current cameras, gated by player existence, and consumes one shared random draw.
+Event `0x0fa4` (4004) calls
+`CUnit__SpawnProfileDropPickup` and then virtual slot 14. The proved
+CComponent/CGillMHead and CWarspite/CGillM/CThunderHead/CMech producer vtables
+resolve that slot to `CComplexThing__AddShutdownEvent`, so their delayed 4004
+is a drop-plus-shutdown-finalization trigger, not an unresolved no-op.
+Evidence: MEASURED — pristine identity, complete-body decode/hash, jump-table
+readback, whole-`.text` rel32 census, image-wide operand census, strict relevant
+vtable reads, current 8,329-row name table, and existing manager/thing owners.
+No Ghidra or rebuild owner changed.
+
+## September 26 virtual-method identity correction
+
+The reviewed virtual-identity cohort (private RE archive: `reverse-engineering/ghidra/README.md`) updates the current labels
+asserted below from pristine bytes and fixed RTTI slot identities. Earlier labels
+in dated prose and filenames are retained aliases; the cohort manifest preserves
+their exact mapping. This correction does not re-verify the rest of this note
+or certify its prototypes or runtime behavior.
+
+## Contract (byte-exact)
+
+The October 1 lead build independently reproduces the complete **400-byte compiled
+section**, including the 376-byte body below, padding and jump table, and all
+20 relocation targets. A single shared float delay local gives the compiler the
+retail stack lifetime. The 4005 arm still supplies float `-1` to the same scheduler
+overload; 4003 still consumes one RNG result after the camera calls and supplies
+its delay to the relative-time overload. The manager-time addition stays in that
+callee. All 167 earlier focused matches and 214 other callable sections and
+relocation identities are preserved.
+
+This proves a compiled reconstruction, not the original source spelling or a new
+runtime acceptance result. Earlier caller/vtable censuses were not rerun. Lead
+readback: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/unit-event-root-20261001/readback.json`;
+entire relocated-section SHA-256:
+`45af6746abfb3d9d258c77fb71bc27153f16c4e97d78180c69f73ef38fea8088`.
+
+Body `0x004f9820`–`0x004f9997` inclusive through the final `ret 4`,
+**376 bytes / 122 instructions**, raw SHA-256
+`89bc4639211037324016dcb9d7a20198cad82ce8e5981a936948ef4b4d513f13`.
+It has **6 outbound direct `E8`, 0 outbound `E9`, and 2 indirect call sites**.
+All branches remain in the body except the five-entry jump-table fetch from
+`0x004f9998`. Signature shape is
+`void __thiscall ...(CUnit *unit, CScheduledEvent *event)`: it reads the signed
+word at `[event+0x04]`, consumes one stack argument with `ret 4`, and returns no
+status.
+
+The dispatch index is `event_num - 4001`; values above unsigned index 4 use the
+default. The exact jump table is:
+
+| ID | Target | Bounded arm |
+| ---: | --- | --- |
+| 4001 (`0x0fa1`) | `0x004f9844` | call `CUnit__UpdateFireControlYawAndQueueEvent` |
+| 4002 (`0x0fa2`) | `0x004f9988` | default to `CActor__HandleEvent` |
+| 4003 (`0x0fa3`) | `0x004f98a8` | update `+0x110` from current-camera distance, then reschedule 4003 through `AddEvent_TimeFromNow` |
+| 4004 (`0x0fa4`) | `0x004f9972` | profile-drop pickup, then receiver slot 14 |
+| 4005 (`0x0fa5`) | `0x004f9854` | decrement `+0x218` by `+0x21c`, reschedule 4005 for `NEXT_FRAME` while positive, else clear it |
+
+The table describes static branch/callee effects; it does not assign missing
+source enum spellings to 4001, 4003, or 4005.
+
+## Event 4003: current cameras and shared random order
+
+The September 7 check compared all 122 W008 retained instruction rows with the
+pristine body above; every byte matched. An independent bounded `objdump`
+decode reproduced the 4003 arm. This pass did not rerun the older whole-image
+caller or operand censuses below. The half-open arm
+`[0x004f98a8,0x004f9972)` is 202 bytes, SHA-256
+`5be4b322eeeafb9628ddd2c315409a3c6ae2ec323af699786deb2664f4e60602`.
+
+The handler clears Unit `+0x110`, then visits exactly two slots in order.
+`CGame` is at `0x008a9a98`; player pointers at `+0x2a4/+0x2a8` gate current
+camera pointers at `+0x2c4/+0x2c8`. For each nonnull pair it calls camera
+virtual slot zero, `GetPos()`. The player and Battle Engine positions are not
+read by this arm. Pinned source `game.h:306–309` identifies the arrays and
+`Camera.h:22` identifies the camera slot. Retail independently confirms the
+camera getter at `0x0046f2c0` and setter at `0x004705e0`; the latter separates
+current cameras from old cameras at `+0x2d4` during free-camera mode.
+The getter's complete 14-byte body `[0x0046f2c0,0x0046f2ce)` has SHA-256
+`c8028c18d1710385cfaab47d500eb26dfc575803cb5aa28fc46ac7bc9a223cf1`.
+
+Using current Unit XYZ at `+0x1c/+0x20/+0x24`, the x87 arm computes
+`(dz*dz + dx*dx) + dy*dy`, without float stores for differences or the sum.
+For finite values, strict `<2500.0f` sets `+0x110=1`; equality does not.
+It still visits the second slot after a successful first comparison. This is
+not a line-of-sight or visibility query. Nonfinite/x87 exception behavior is
+outside this finite contract.
+
+Only after both possible camera callbacks, the handler consumes one shared
+gameplay RNG result. The signed remainder by 65,536 is multiplied by the exact
+float `2^-16`, then added to `3.0f` and stored as a float delay.
+`AddEvent_TimeFromNow` adds the then-current manager time and stores again.
+The tuple is `(4003, this Unit, priority 0, null data, incoming-event reuse)`.
+The constants were read at `0x005dfb70` (2500), `0x005d8d54` (`2^-16`) and
+`0x005d8cc0` (3). No separate random stream or constructor-time camera snapshot
+can substitute for those ordered reads. The resulting flag also gates the
+[attachment cache](CUnit__UpdateTransform.md); its value at first delivery
+depends on completed loading and preceding callbacks. This static contract
+does not establish a first-frame value or a live Core event consumer.
+
+## Event 0x0FA4 handler (byte-exact)
+
+At `0x004f9972`–`0x004f9985` the handler:
+
+1. calls `CUnit__SpawnProfileDropPickup 0x004fd230` on the receiver;
+2. reloads the receiver vtable and calls byte offset `+0x38` (slot 14);
+3. returns `void` with `ret 4`.
+
+Relevant strict vtable reads are:
+
+| Class / vtable | Slot 0 | Slot 14 |
+| --- | --- | --- |
+| CComponent / `0x005e3d40` | `CUnit__HandleEvent 0x004f9820` | `CComplexThing__AddShutdownEvent 0x004f43d0` |
+| CGillMHead / `0x005e41f8` | `CUnit__HandleEvent 0x004f9820` | `CComplexThing__AddShutdownEvent 0x004f43d0` |
+| CPod / `0x005dff8c` | `CUnit__HandleEvent 0x004f9820` | `CComplexThing__AddShutdownEvent 0x004f43d0` |
+| CWarspite / `0x005e0684` | `CUnit__HandleEvent 0x004f9820` | `CComplexThing__AddShutdownEvent 0x004f43d0` |
+| CGillM / `0x005e0b30` | `CUnit__HandleEvent 0x004f9820` | `CComplexThing__AddShutdownEvent 0x004f43d0` |
+| CThunderHead / `0x005e0fe0` | `CUnit__HandleEvent 0x004f9820` | `CComplexThing__AddShutdownEvent 0x004f43d0` |
+| CMech / `0x005e3074` | `CUnit__HandleEvent 0x004f9820` | `CComplexThing__AddShutdownEvent 0x004f43d0` |
+
+The CComponent scheduler therefore reaches this exact arm after its 7.0-second
+manager-clock delay. The separately closed
+[`CMech__VFunc_50_004a00a0`](../Mech.cpp/CMech__VFunc_50_004a00a0.md)
+producer reaches it after 3.5 seconds for each of the four Mech-family vtables
+above. The slot-14 callee calls the script event-id-3/delete path when
+applicable, sets TF_DECLARED_SHUTDOWN, and schedules thing-event 2000 at
+`NEXT_FRAME`; that downstream tuple and 2000 consumer are owned by
+[`CComplexThing.cpp.md`](../CComplexThing.cpp.md).
+
+## Event-4004 producer census
+
+The pristine image contains three little-endian `a4 0f 00 00` occurrences:
+
+| Immediate site | Owner / classification | Exact tuple context |
+| --- | --- | --- |
+| `0x0042898d` | [`CComponent__HandleTriggerEventAndMoveToOffset`](../Component.cpp/CComponent__HandleTriggerEventAndMoveToOffset.md) | `AddEvent_AtTime(4004, component, mTime+7.0f, 0, null, null)` at `0x00428997` |
+| `0x004a0103` | [`CMech__VFunc_50_004a00a0`](../Mech.cpp/CMech__VFunc_50_004a00a0.md) | after fresh `CGroundUnit__MarkDestroyedAndResetState` and `CUnit__ReleaseChildUnits`, `AddEvent_AtTime(4004, mech, mTime+3.5f, 0, null, null)` at `0x004a010d` |
+| `0x005c6928` | `_DXGetErrorString9A` | `mov ecx,0xfa4` in an HRESULT switch; not an event or scheduler call |
+
+Thus there are exactly **two** event-4004 producers in pristine `.text`, both
+self-targeting Unit-family destruction paths, and one unrelated HRESULT
+constant. This supports the behavioral label “delayed profile-drop plus
+shutdown finalization”; no absent `Unit.cpp` enum spelling is claimed.
+
+## Event-2000 default chain used by the cleanup helper
+
+[`CUnit__ResetDeploymentGraphAndScheduleEvent`](CUnit__ResetDeploymentGraphAndScheduleEvent.md)
+queues 2000 against the same CUnit. That value misses this 4001–4005 switch and
+uses the default call at `0x004f998b`:
+
+```text
+CUnit__HandleEvent
+  -> CActor__HandleEvent 0x004019e0 (2000 misses 3000/3001)
+  -> CComplexThing__HandleEvent 0x004f4300
+  -> 2000 SHUTDOWN arm
+  -> receiver virtual slot 2
+```
+
+CComponent, CGillMHead, CPod, CWarspite, CGillM, CThunderHead, and CMech slot-2
+entries are `CUnit__VFunc02_CleanupWorldLinksAndForward 0x004f95d0`. The shared event
+manager only delivers slot 0; the ID interpretation and these class effects
+belong to the handler chain.
+
+## Outbound calls
+
+| Site | Callee / role |
+| --- | --- |
+| `0x004f9847` | `CUnit__UpdateFireControlYawAndQueueEvent 0x004fb280` |
+| `0x004f9889` | `CEventManager__AddEvent_AtTime 0x0044b370` (4005) |
+| `0x004f9924` | `Random__NextLCGAbs 0x004de8d0`, used by the 4003 delay calculation |
+| `0x004f9964` | `CEventManager__AddEvent_TimeFromNow 0x0044b2d0` (4003) |
+| `0x004f9974` | `CUnit__SpawnProfileDropPickup 0x004fd230` (4004) |
+| `0x004f998b` | `CActor__HandleEvent 0x004019e0` (default) |
+| `0x004f98d3` | indirect global-object slot 0 in the bounded 4003 scan |
+| `0x004f997d` | receiver slot 14 in the 4004 arm |
+
+## References and slot ownership
+
+The whole-`.text` rel32 census finds four direct callers:
+
+| Site | Current name-table owner |
+| --- | --- |
+| `0x0040c29b` | `CBattleEngine__HandleEvent` default |
+| `0x0041512d` | `CBoat__HandleEvent` |
+| `0x00417e27` | `SharedUnitVFunc__HandleType1388Field74Resource_00417df0` |
+| `0x0044e250` | `CFenrir__HandleEvent` |
+
+Scheduled events normally arrive virtually, not through those calls. The
+image-wide operand census finds **28** `.rdata` dwords equal to `0x004f9820`,
+all slot-0 entries in the current static closure; the relevant CComponent,
+CGillMHead, CPod, and four Mech-family entries are listed above.
+
+## Manager boundary and failure behavior
+
+The manager delivers due records with `target->vtable[0](target, event)` and
+owns queue allocation/ordering. This handler owns numeric interpretation and
+Unit effects. All handler arms are source-void. A prior scheduler failure is
+not observable here because `AddEvent_AtTime` returns no success flag; likewise,
+this handler does not report whether its downstream slot-14 shutdown event was
+successfully queued.
+
+## Open questions
+
+- `Unit.cpp` and its event enum are absent, so the authored names of 4001,
+  4003, 4004, and 4005 remain unavailable. The 4004 behavioral effect is
+  byte-closed without inventing that spelling.
+- The profile-drop callee's concrete authored table/loot meaning and runtime
+  outcome remain bounded to its existing named static owner.
+- Runtime frequency and exact gameplay presentation of either 4004 producer,
+  and direct rebuild parity, are not established by this static chain.
+
+## Cheapest falsifier
+
+Any one of:
+
+- Raw body SHA-256 over `0x004f9820`–`0x004f9997` is not
+  `89bc4639…d513f13`, the body is not 376 bytes / 122 instructions, or the
+  final instruction stops being `ret 4`.
+- Jump-table entry 3 stops targeting `0x004f9972`, or that arm stops calling
+  `CUnit__SpawnProfileDropPickup` followed by receiver slot 14.
+- The 4004 operand census stops being the two scheduler pushes plus the one
+  unrelated HRESULT constant above.
+- CComponent/CGillMHead or any of the four Mech-family slot 0 / slot 14 pairs no
+  longer resolves to the named handler/callee pair above.
+- Event 2000 no longer follows the Unit → Actor → ComplexThing shutdown chain.
+
+## Reproduction
+
+Run read-only from the repository root after verifying the official specimen:
+
+```bash
+sha256sum ./local-lab/safe-copy-bea-pristine/BEA.exe.original.backup
+python ./tools/disasm_va.py ./local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x004f9820 --count 122 --bytes
+python ./tools/pe_read_va.py ./local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x004f9998 --count 20 --as u32
+python ./tools/call_xref_scan.py ./local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x004f9820 0x004019e0 0x004f4300
+python ./tools/operand_scan.py ./local-lab/safe-copy-bea-pristine/BEA.exe.original.backup 0x00000fa4 0x004f9820 --window 8
+```

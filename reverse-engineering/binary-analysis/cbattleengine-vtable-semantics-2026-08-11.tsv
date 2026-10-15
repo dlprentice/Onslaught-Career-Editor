@@ -1,0 +1,38 @@
+retail_va	demo_va	retail_current_name	semantic_label	abi_placement	body_bytes	instruction_count	raw_diff_instruction_count	normalized_diff_instruction_count	semantic_status	evidence_boundary
+0x00404dd0	0x00404e00	HYP__CBattleEngine__Init	CBattleEngine::Init	primary:9	2858	710	145	0	SOURCE_BODY	Pinned BattleEngine.cpp Init body and strict RTTI placement; demo pair is normalized-identical
+0x00405ed0	0x00405f50	CBattleEngine__VFunc_7_00405ed0	CBattleEngine::GetClassName	primary:7	6	2	1	0	SOURCE_MACRO	Returns the exact CBattleEngine class string used by the source class macro
+0x00405ef0	0x00405f70	CBattleEngine__VFunc_15_00405ef0	CBattleEngine::GetMaxVelocity	primary:15	7	2	1	0	SOURCE_INLINE	Returns the source-declared 35.0f constant
+0x00405f00	0x00405f80	CBattleEngine__VFunc_38_00405f00	CBattleEngine::SetThingType	primary:38	18	5	1	0	SOURCE_INLINE	OR mask and superclass tail call match the inline source override
+0x00405f20	0x00405fb0	CBattleEngine__VFunc_85_00405f20	CBattleEngine::SetInfinateEnergy	primary:85	28	6	0	0	SOURCE_INLINE	Preserves the source spelling; stores the flag and refills energy from configuration
+0x00405f40	0x00405fd0	CBattleEngine__VFunc_43_00405f40	CBattleEngine::GetSoundMaterial	primary:43	6	2	0	0	SOURCE_INLINE	Returns exact SM_BATTLE_ENGINE value 0x68
+0x00405f50	0x00405fe0	CBattleEngine__VFunc_91_00405f50	CBattleEngine::GetStealth	primary:91	7	2	0	0	SOURCE_INLINE	Returns the Battle Engine stealth field used by target-lock logic
+0x00405f60	0x00405ff0	HYP__CBattleEngine__scalar_deleting_dtor	CBattleEngine::~CBattleEngine [scalar deleting wrapper]	primary:1	32	11	3	0	RTTI_ABI	MSVC deleting-destructor wrapper around the source destructor; allocator ABI remains compiler-generated
+0x00405f80	0x00406020	HYP__CBattleEngine__Shutdown	CBattleEngine::Shutdown	primary:2	120	45	7	0	SOURCE_BODY	Damage-flash vibration smoke and superclass shutdown sequence match pinned source
+0x00406000	0x004060a0	CBattleEngine__VFunc_22_00406000	CBattleEngine::Activate	primary:22	29	6	3	0	SOURCE_BODY	Sets powered-up true and logs the exact Activating Battle Engine string
+0x00406020	0x004060c0	CBattleEngine__VFunc_23_00406020	CBattleEngine::Deactivate	primary:23	29	6	3	0	SOURCE_BODY	Sets powered-up false and logs the exact Deactivating Battle Engine string
+0x00406040	0x004060e0	CBattleEngine__GetTrackedPositionX_00406040	CBattleEngine::GetMaxLife / CBattleEngine::GetInitialLife	primary:78	10	3	0	0	SOURCE_FOLDED	Both source methods return configuration mLife and MSVC folds their identical bodies; the old CDXCompass owner label is false
+0x00406050	0x004060f0	CBattleEngine__VFunc_0_00406050	CBattleEngine::GetRenderPos	secondary-render:0	85	26	1	0	SOURCE_BODY	Secondary-this adjustment plus walker centre-of-gravity offset matches pinned source
+0x004060b0	0x00406150	HYP__CBattleEngine__GetRenderOrientation	CBattleEngine::GetRenderOrientation	secondary-render:1	531	168	8	0	SOURCE_BODY	Secondary-this adjustment and walker/morph yaw-only orientation match pinned source
+0x004071b0	0x00407250	CBattleEngine__GetCurrentTarget	CBattleEngine::GetCurrentTarget	primary:81	342	121	1	0	SOURCE_BODY	Source-named target reader and selection logic; exact runtime target choice remains path-dependent
+0x00407350	0x004073f0	CBattleEngine__Hit	CBattleEngine::Hit	primary:39	380	114	4	0	SOURCE_BODY	Pinned collision response body and separately recovered damage path
+0x004074d0	0x00407570	HYP__CBattleEngine__Gravity	CBattleEngine::Gravity	primary:45	79	19	7	0	SOURCE_BODY	State-dependent gravity law matches pinned source structure and literals
+0x00408150	0x004081f0	CBattleEngine__ProcessStateSwapAndDeathChecks	CBattleEngine::DeclareInWater	primary:69	97	33	6	0	SOURCE_BODY	Mesh-state fixup then dying explode/shutdown or water-altitude death gate exactly matches pinned source
+0x004081c0	0x00408260	HYP__CBattleEngine__Move	CBattleEngine::Move	primary:66	5522	1487	214	0	SOURCE_BODY	Full movement owner; demo and retail instruction shape is identical after address normalization
+0x00409de0	0x00409e90	CBattleEngine__VFunc_25_00409de0	CBattleEngine::GetLocalLastFrameMovement	primary:25	115	29	0	0	SOURCE_BODY	Subtracts standing-object movement from superclass last-frame movement exactly as source
+0x0040a560	0x0040a610	CBattleEngine__VFunc_101_0040a560	CBattleEngine::ConfirmedKill	primary:101	32	9	1	0	SOURCE_BODY	Muspell allegiance gate then player KilledEnemyThing callback matches pinned source
+0x0040a890	0x0040a940	CBattleEngine__Damage	CBattleEngine::Damage	primary:40	917	233	21	0	SOURCE_BODY	Shield life flash and damage-state owner; detailed contract retained in existing damage evidence
+0x0040bfd0	0x0040c080	HYP__CBattleEngine__StartDieProcess	CBattleEngine::StartDieProcess	primary:50	428	137	17	0	SOURCE_BODY	Source-named terminal transition owner; downstream presentation timing remains separately bounded
+0x0040c180	0x0040c230	HYP__CBattleEngine__HandleEvent	CBattleEngine::HandleEvent	primary:0	350	93	16	0	SOURCE_BODY	Source event dispatcher including death/pause and fade event handling
+0x0040c380	0x0040c430	CBattleEngine__VFunc_117_0040c380	CBattleEngine::GetCurrentWeapon	primary:117	31	6	1	0	SOURCE_BODY	Mode 3 selects jet part; all other modes select walker part exactly as source
+0x0040c720	0x0040c7d0	CBattleEngine__ResetAndSetActiveReader	CBattleEngine::DeclareOnObject	primary:70	38	14	3	0	SOURCE_BODY	Mesh-state fixup standing-object reader write and superclass callback match pinned source
+0x0040c750	0x0040c800	CBattleEngine__VFunc_68_0040c750	CBattleEngine::DeclareOnGround	primary:68	564	189	16	0	SOURCE_BODY	Ground collision dash exemption impact damage and jet damping match pinned source
+0x0040c990	0x0040ca40	HYP__CBattleEngine__GetLaunchPosition	CBattleEngine::GetLaunchPosition	primary:75	1888	483	36	0	SOURCE_BODY	Cockpit emitter fallback auto-aim and ballistic launch-position owner matches pinned source
+0x0040d530	0x0040d5e0	CBattleEngine__VFunc_36_0040d530	CBattleEngine::Render	primary:36	126	32	7	0	SOURCE_BODY	Stealth alpha/cloaked flag first-person visibility gate render call and alpha reset match source
+0x0040dc30	0x0040dce0	HYP__CBattleEngine__EnableWeapon	CBattleEngine::EnableWeapon	primary:102	37	13	1	0	SOURCE_BODY	Forwards the named weapon enable to walker and jet parts
+0x0040dc60	0x0040dd10	HYP__CBattleEngine__DisableWeapon	CBattleEngine::DisableWeapon	primary:103	37	13	1	0	SOURCE_BODY	Forwards the named weapon disable to walker and jet parts
+0x0040df80	0x0040e030	CBattleEngine__VFunc_16_0040df80	CBattleEngine::GetRadius	primary:16	28	8	4	0	SOURCE_BODY	Returns 1.0f multiplayer and 0.4f single-player exactly as source
+0x0040dfa0	0x0040e050	CBattleEngine__VFunc_48_0040dfa0	CBattleEngine::COfGHeight	primary:48	7	2	1	0	SOURCE_BODY	Returns the exact BATTLE_ENGINE_COFGHEIGHT source constant
+0x0040e7d0	0x0040e880	CBattleEngine__VFunc_104_0040e7d0	CBattleEngine::CanBeLocked	primary:104	99	35	3	0	SOURCE_BODY	Exact stealth jet-loop/roll and walker-special-move rejection gates
+0x0040e8e0	0x0040e990	CBattleEngine__IsNearGroundByTerrainProbe	CBattleEngine::GetThreat	primary:79	47	15	5	0	SOURCE_BODY	Terrain height minus 2.0f comparison returns 5.0f or zero exactly as source
+0x0040e910	0x0040e9c0	CBattleEngine__GetGroundedControlFactor	CBattleEngine::GetImportance	primary:80	42	16	3	0	SOURCE_BODY	On-ground and not-on-object gate returns 5.0f or zero exactly as source
+0x0040eeb0	0x0040ef60	HYP__CBattleEngine__FinishedPlayingCurrentAnimation	CBattleEngine::FinishedPlayingCurrentAnimation	primary:59	110	43	8	0	SOURCE_BODY	Transitions flytowalk/walktofly animation modes and always returns false as pinned source

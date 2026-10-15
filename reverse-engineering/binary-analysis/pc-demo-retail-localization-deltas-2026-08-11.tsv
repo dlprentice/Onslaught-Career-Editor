@@ -1,0 +1,6 @@
+language	id	retail_text	demo_text
+english	183	Couldn't start 3D graphics system. Please check that you have DirectX at least version 8 installed.	Couldn't start 3D graphics system. Please check that you have DirectX at least version 9 installed.
+french	183	Impossible de lancer l'affichage 3D. Vérifiez que DirectX 8 ou ultérieur est installé.	Impossible de lancer l'affichage 3D. Vérifiez que DirectX 9 ou ultérieur est installé.
+german	183	Die 3D-Grafikkarte konnte nicht initialisiert werden. Bitte vergewissern Sie sich, dass Sie DirectX Version 8 oder höher installiert haben.	Die 3D-Grafikkarte konnte nicht initialisiert werden. Bitte vergewissern Sie sich, dass Sie DirectX Version 9 oder höher installiert haben.
+spanish	183	No se puede iniciar el sistema de gráficos 3D. Comprobar que se tiene instalada, al menos, la versión 8 de DirectX.	No se puede iniciar el sistema de gráficos 3D. Comprobar que se tiene instalada, al menos, la versión 9 de DirectX.
+italian	183	Impossibile avviare il sistema di grafica 3D. Verificare che sia installata almeno la versione 8 di DirectX.	Impossibile avviare il sistema di grafica 3D. Verificare che sia installata almeno la versione 9 di DirectX.

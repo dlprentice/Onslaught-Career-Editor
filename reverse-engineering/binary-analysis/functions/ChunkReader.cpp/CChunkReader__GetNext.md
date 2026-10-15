@@ -1,0 +1,83 @@
+# CChunkReader__GetNext
+
+Status: active, bounded static and original-code function note
+Last updated: 2026-09-27
+Summary: complete PC body returns the first tag word, with either short read collapsed to zero; console receipts below remain historical.
+Source File: `references/Onslaught/chunker.cpp`, SHA-256
+`3eb76bf2628c4c4aeaa8ce32a33a06ecc5dc3c8cb47d5528acea641f530c6135`
+| Binary: BEA.exe, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+Evidence: MEASURED — independently re-read 2026-08-19 from official
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`. Twin
+`local-lab/pristine-verification-2026-07-26/pristine-target/BEA.exe`
+matches. The Ghidra database was not opened. Table name is a research
+label. `0x00548570` body is **not** this proof.
+
+> Address: `0x00423910`
+
+## September 27 PC recheck
+
+Fresh complete-body decoding reproduces the 65-byte body and hash below,
+including both signed short-read tests and the local tag return. The resource
+dispatcher consumes it at `0x004d7381` and `0x004d795d`; a zero result exits
+the loop. Eighteen isolated original-code cases now reproduce signed count
+admission, zero/high-bit tags and partial Size writes; an altered unsigned
+branch changes the supplied negative-count case. Buffer calls are intercepted.
+The [reader contract](../../../source-code/io/chunker-system.md#isolated-original-code-controls--september-27)
+owns the exact inputs, controls and limits. The reader-interface cohort (private RE archive: `reverse-engineering/ghidra/README.md`)
+subsequently corrected the saved convention to thiscall, retaining physical
+ECX input and the uint/EAX result. No console specimen was rechecked; the older
+inbound-call census remains an inherited result.
+
+## Contract
+
+`thiscall`. `ECX`→`ESI`. Zero stack args. Two bare `ret` (`c3`) at
+`0x00423933` (short first read) and `0x00423950`. Body
+`0x00423910`–`0x00423950` is 65 bytes, SHA-256
+`341f30201e4e65fa758a3a8cd664409d9384e71803663781a36c929c801529bb`.
+Two `E8`, both `0x00548570` (table label `CDXMemBuffer__Read`),
+zero `E9`.
+
+`tools/call_xref_scan.py` reports 107 inbound `.text` `E8`, zero
+`E9`. Already-pinned mixer sites among them:
+`0x0052319a` / `0x005231a1` / `0x005231bb` (InitSlot) and
+`0x00523373` / `0x00523393` (Init). The other 102 are **not**
+listed.
+
+`[this+8] = 0`. Then `ECX = [this+4]`, read 4 bytes into a scratch
+dword. If that call returns `< 4`: `EAX = 0`. Else a second 4-byte
+read puts Size at `this+0`; `EAX` returns the **first**, local tag word, forced
+to 0 when the second call returns signed `< 4`. Pinned source independently supplies the authored
+`CChunkReader::GetNext`, `ReadSinceChunk`, and `Size` identities.
+
+## PS2 correspondence
+
+Fresh streaming from the retained PS2 executables reproduces the same complete
+operation in three R5900 bodies:
+
+| Build | Range | Bytes | Raw SHA-256 |
+| --- | --- | ---: | --- |
+| Demo | `[0x00131F50,0x00131FB0)` | 96 | `3c4085907613d93f4bf0fd6fafb2c2f0cfcc5853142b3b188caa0c078793a1fac` |
+| Europe | `[0x00131F50,0x00131FB0)` | 96 | `6ddad968c37a76bbf69630cc31b82f4691eeb55d963ae4c7d8ffd7b84148bdc63` |
+| USA | `[0x001320A0,0x00132100)` | 96 | `9c3db77e9e77f6eae679073434797d4f83a31dfbfc843e530ddd6e151912e6e28` |
+
+Their relocation-normalized MIPS shape SHA-256 is
+`3d2ccbf6815292148559813176549357475c85244bda80f62afe6a0089544e4d`.
+Each resets `ReadSinceChunk`, requests exactly four tag bytes and then exactly
+four size bytes, and returns zero when either request is short. Consequently a
+clean EOF, a one-to-three-byte partial tag, and a complete tag followed by a
+zero-to-three-byte partial size are indistinguishable to the outer released
+resource loader, which takes its normal close/success path.
+
+Cheapest falsifier: file `0x00023910` is not
+`51 56 8b f1 8d 44 24 04 6a 04`, **or** `0x00023950` is not `c3`,
+**or** body SHA-256 is not `341f3020…29bb`, **or**
+`tools/call_xref_scan.py` on `0x00423910` is not `total: 107` all
+`E8`, **or** `0x0002391e` is not `c7 46 08 00 00 00 00`, **or**
+`0x00023925` is not `e8 46 4c 12 00`.
+
+## Functions
+
+| Address | Name | Byte evidence | Contract (confidence) |
+| --- | --- | --- | --- |
+| `0x00423910` | `CChunkReader__GetNext` | `5156 8bf1 … c7460800000000 e8464c1200 … 0f9cc1 49 23c1 59 c3` | thiscall; bare ret ×2; EAX 0 or 4-byte tag; `[+8]=0`; stream this=`[+4]`; 107 inbound E8. HIGH on ABI, both rets, those two slots, both E8 targets, inbound count. **Not** on the 102 unlist inbound or tag names. |

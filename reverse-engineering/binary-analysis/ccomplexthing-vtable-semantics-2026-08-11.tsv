@@ -1,0 +1,23 @@
+retail_va	demo_va	retail_current_name	semantic_label	abi_placement	body_bytes	instruction_count	raw_diff_instruction_count	normalized_diff_instruction_count	semantic_status	evidence_boundary
+0x004014d0	0x004014f0	CComplexThing__ReturnField64Offset10OrMinusOne_004014d0	CComplexThing::GetRealAnimIndex	secondary-render:7	15	7	0	0	SOURCE_INLINE	Adjusted this reads mAnimation and returns its animation index or -1 exactly as source
+0x004014e0	0x00401500	CComplexThing__IsObjectiveFlagSet	CComplexThing::IsObjective	primary:26	11	4	0	0	SOURCE_INLINE	Tests TF_MARKED_OBJECTIVE and canonicalizes the Boolean result
+0x00401500	0x00401520	CComplexThing__ReturnField64Offset14OrZero_00401500	render-interface slot 22 animation property	secondary-render:22	14	7	0	0	STATIC_DESCRIPTIVE	Adjusted this reads mAnimation field +0x14 or zero; retained source does not identify this retail-only override safely
+0x00401510	0x00401530	CComplexThing__ReturnField78_00401510	CComplexThing::GetName	primary:41	4	2	0	0	SOURCE_INLINE	Returns the mName field exactly as source
+0x00401520	0x00401540	CComplexThing__NoOpFiveArgs_00401520	CComplexThing::GoToPoint	primary:61	3	1	0	0	SOURCE_INLINE	Empty FVector-plus-override virtual matches the five-stack-argument ABI
+0x004040d0	0x004040f0	CComplexThing__CopyBlock34ToOut_004040d0	CComplexThing::GetRenderOrientation	secondary-render:1	23	10	0	0	SOURCE_INLINE	Adjusted secondary this copies mOrientation
+0x0043ea20	0x0043ea80	CComplexThing__GetRenderOrientation	CComplexThing::GetSoundOrientation / GetOldOrientation	primary:4,31	23	10	0	0	SOURCE_FOLDED	Both source methods copy mOrientation and share one primary-this body
+0x004f3ec0	0x004f3f40	CComplexThing__VFunc_7_004f3ec0	CComplexThing::GetClassName	primary:7	6	2	0	0	SOURCE_MACRO	Returns the exact CComplexThing class string
+0x004f3ed0	0x004f3f50	CComplexThing__VFunc_8_004f3ed0	CComplexThing::GetClassID	primary:8	6	2	0	0	SOURCE_MACRO	Returns the class-macro ID 0x28
+0x004f3ee0	0x004f3f60	CComplexThing__scalar_deleting_dtor	CComplexThing::~CComplexThing [scalar deleting wrapper]	primary:1	32	11	0	0	RTTI_ABI	MSVC deleting-destructor wrapper around the source destructor
+0x004f3fd0	0x004f4050	CComplexThing__Init	CComplexThing::Init	primary:9	321	108	0	0	SOURCE_BODY	Complex fields script animation/motion setup and superclass initialization match source order
+0x004f4120	0x004f41a0	CComplexThing__SetName	CComplexThing::SetName	primary:42	131	47	0	0	SOURCE_BODY	Owns old-name release copy and associated registration behavior
+0x004f41b0	0x004f4230	CComplexThing__Shutdown	CComplexThing::Shutdown	primary:2	113	37	0	0	SOURCE_BODY	Releases script animation controller and name then delegates shutdown
+0x004f4300	0x004f4380	CComplexThing__HandleEvent	CComplexThing::HandleEvent	primary:0	204	72	0	0	SOURCE_BODY	Complex event cases and superclass fallback match pinned source
+0x004f43d0	0x004f4450	CComplexThing__AddShutdownEvent	CComplexThing::AddShutdownEvent	primary:14	95	34	0	0	SOURCE_BODY	Mission-script notification and base shutdown scheduling match source
+0x004f4430	0x004f44b0	CComplexThing__StartDieProcess	CComplexThing::StartDieProcess	primary:50	45	19	0	0	SOURCE_BODY	Delegates base death transition and notifies the mission script on success
+0x004f4460	0x004f44e0	CComplexThing__TeleportOrientation	CComplexThing::TeleportOrientation	primary:21	21	9	0	0	SOURCE_BODY	Copies orientation and updates render position through the retained owner
+0x004f4480	0x004f4500	CComplexThing__Hit	CComplexThing::Hit	primary:39	29	9	0	0	SOURCE_BODY	Collision callback forwards the released hit contract
+0x004f44a0	0x004f4520	CComplexThing__SetAnimMode	CComplexThing::SetAnimMode(EAnimMode,BOOL,BOOL)	primary:60	136	41	0	0	SOURCE_BODY	Animation-presence gate and mode/reset/loop dispatch match source
+0x004f45a0	0x004f4620	CComplexThing__FinishedPlayingCurrentAnimation	CComplexThing::FinishedPlayingCurrentAnimation	primary:59	18	6	0	0	SOURCE_BODY	Returns the animation completion state or false without animation
+0x004f45c0	0x004f4640	CComplexThing__ForwardField64FloatOrZero_004f45c0	CComplexThing::GetRenderFrame	secondary-render:6	19	6	0	0	SOURCE_BODY	Adjusted this forwards animation frame or returns zero exactly as source
+0x004f45e0	0x004f4660	CComplexThing__SetVar	CComplexThing::SetVar	primary:62	31	9	0	0	SOURCE_BODY	Forwards named data to the retained mission script when present

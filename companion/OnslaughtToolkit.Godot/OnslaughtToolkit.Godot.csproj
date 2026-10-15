@@ -1,0 +1,27 @@
+<Project Sdk="Godot.NET.Sdk/4.8.0-dev.6">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RuntimeFrameworkVersion>8.0.30</RuntimeFrameworkVersion>
+    <RootNamespace>OnslaughtToolkit.Companion</RootNamespace>
+    <AssemblyName>OnslaughtToolkit.Godot</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <Deterministic>true</Deterministic>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <RestoreEnablePackagePruning>true</RestoreEnablePackagePruning>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Assets/**/*.cs;Careers/**/*.cs;Files/**/*.cs;Game/**/*.cs;Lore/**/*.cs;Media/**/*.cs;Options/**/*.cs;Ui/**/*.cs" />
+    <!-- The project's own lore articles and the reader's front door, embedded as text. -->
+    <EmbeddedResource Include="../../lore/*.md" LogicalName="lore/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="../../lore-book/BOOK.md" LogicalName="lore-book/BOOK.md" />
+    <!-- Contract tests and development entries (captures, license metadata) never enter a release export. -->
+    <Compile Include="Tests/**/*.cs;Development/**/*.cs" Condition="'$(Configuration)' != 'ExportRelease'" />
+  </ItemGroup>
+</Project>

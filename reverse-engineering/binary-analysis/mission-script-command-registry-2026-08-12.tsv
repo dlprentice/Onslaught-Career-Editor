@@ -1,0 +1,145 @@
+index	command	handlerVa	currentGhidraName	isFunctionEntry
+0	FollowWaypoint	0x00537D70	FUN_00537d70	True
+1	FollowWaypointWait	0x00537E40	FUN_00537e40	True
+2	SetSpeed	0x00453AC0	SharedVFunc__NoOp_Ret0C	True
+3	SpawnThing	0x00536CD0	IScript__SpawnThing	True
+4	Pause	0x00537C70	FUN_00537c70	True
+5	PostEvent	0x005383C0	IScript__ScheduleEvent	True
+6	Rand	0x00538230	FUN_00538230	True
+7	IsFriendly	0x00537FD0	IScript__IsFriendly	True
+8	LevelLost	0x005381A0	IScript__LevelLost	True
+9	LevelWon	0x005381E0	IScript__LevelWon	True
+10	PlaySample	0x005381F0	FUN_005381f0	True
+11	Print	0x00537AD0	FUN_00537ad0	True
+12	Exists	0x00536920	FUN_00536920	True
+13	Die	0x00535CD0	IScript__Die	True
+14	GetThingRef	0x005367C0	FUN_005367c0	True
+15	Activate	0x00535D50	FUN_00535d50	True
+16	PrintText	0x00537C40	IScript__PrintText	True
+17	AddMessage	0x00537410	IScript__PlaySound	True
+18	GetHealth	0x00535920	FUN_00535920	True
+19	SetTimer	0x005358E0	IScript__SetTimer	True
+20	GetDistToObj	0x00536070	FUN_00536070	True
+21	GetPlayer	0x005363E0	IScript__GetPlayerBattleEngine	True
+22	SetVisible	0x00535EA0		False
+23	SetObjective	0x00535ED0	FUN_00535ed0	True
+24	SetAIState	0x005361A0	FUN_005361a0	True
+25	IsA	0x00536350	FUN_00536350	True
+26	Teleport	0x005369B0	FUN_005369b0	True
+27	PlayCutscene	0x00535890	FUN_00535890	True
+28	PlayCharMessage	0x00537500	IScript__PlaySoundWithCallback	True
+29	Deactivate	0x00535D60	FUN_00535d60	True
+30	UnsetObjective	0x00535EE0	IScript__UnsetObjective	True
+31	IsObjective	0x00535EF0	FUN_00535ef0	True
+32	SetVulnerable	0x00535F70	FUN_00535f70	True
+33	NumContained	0x00535D70	FUN_00535d70	True
+34	HighlightHudPart	0x00535E60		False
+35	UnHighlightHudPart	0x00535E80		False
+36	PlayCharMessageWait	0x005375F0	IScript__PlaySoundWithFade	True
+37	GetWeaponAmmo	0x00535610		False
+38	GetWeaponName	0x00535670	IScript__GetThingName	True
+39	GetWeaponCharge	0x00535750		False
+40	GetNumUnits	0x00535590	FUN_00535590	True
+41	SetAllegiance	0x00535560	IScript__SetFactionForHierarchy_FromArg	True
+42	SetWindVector	0x00538300		False
+43	SetRainDensity	0x00538360		False
+44	SetSnowDensity	0x00538380	FUN_00538380	True
+45	SetLightningDensity	0x005383A0	IScript__SetLightningDensity	True
+46	SetHealth	0x00535C10		False
+47	GetRatioBattleLineNodes	0x005353A0	FUN_005353a0	True
+48	SetScript	0x00535C50	FUN_00535c50	True
+49	GetPos	0x00536C00	FUN_00536c00	True
+50	SpawnParticle	0x00536B70		False
+51	SetSegmentHealth	0x00535480		False
+52	SetAllSegmentsHealth	0x00535500		False
+53	PlayAnimation	0x00535160	FUN_00535160	True
+54	PlayAnimationWait	0x005351D0		False
+55	GetMapHeight	0x00534AC0	ScriptCommand__SampleStaticShadowHeight_00534ac0	True
+56	GetWaterHeight	0x00534B30	FUN_00534b30	True
+57	GetX	0x00534B80	IScript__GetVectorX	True
+58	GetY	0x00534C10	IScript__GetVectorY	True
+59	GetZ	0x00534CA0	IScript__GetVectorZ	True
+60	SetX	0x00534D30	FUN_00534d30	True
+61	SetY	0x00534DC0		False
+62	SetZ	0x00534E50	FUN_00534e50	True
+63	SetGoalPoint	0x00534EE0	FUN_00534ee0	True
+64	GetSafePos	0x005350B0		False
+65	GetComponent	0x005349B0	FUN_005349b0	True
+66	CreatePosition	0x00534910	FUN_00534910	True
+67	GetFloatRand	0x00538290		False
+68	SetVar	0x005348F0	FUN_005348f0	True
+69	Damage	0x005348C0	FUN_005348c0	True
+70	GameTime	0x00534770	FUN_00534770	True
+71	IsEnemy	0x00538060		False
+72	Land	0x005361D0	FUN_005361d0	True
+73	SpawnersEmpty	0x00535A90	FUN_00535a90	True
+74	Dive	0x005361F0	IScript__Dive	True
+75	Surface	0x00536210	FUN_00536210	True
+76	InitVariable	0x00536230	FUN_00536230	True
+77	SetVariable	0x00536260	FUN_00536260	True
+78	ShutdownVariable	0x00536330	FUN_00536330	True
+79	Shutdown	0x00535D00	FUN_00535d00	True
+80	GetEnergy	0x00535BB0	FUN_00535bb0	True
+81	GetVariable	0x005362A0	IScript__GetWorldTextSlotTimerValue	True
+82	Retreat	0x00535D30	IScript__Retreat	True
+83	PrimaryObjectiveComplete	0x005343E0	IScript__PrimaryObjectiveComplete	True
+84	SecondaryObjectiveComplete	0x00534410	IScript__SecondaryObjectiveComplete	True
+85	AddScore	0x005343C0	IScript__AddScore	True
+86	Attack	0x00535FA0	IScript__Attack	True
+87	PrimaryObjectiveFailed	0x00534440	IScript__PrimaryObjectiveFailed	True
+88	SecondaryObjectiveFailed	0x00534470	IScript__SecondaryObjectiveFailed	True
+89	GetAngle	0x00534680		False
+90	PlayPCharMessage	0x005377E0	IScript__PlaySoundWithPriority	True
+91	PlayPCharMessageWait	0x005378E0	IScript__PlaySoundWithFadeAndPriority	True
+92	GetInitialHealth	0x00535A30	FUN_00535a30	True
+93	SpawnersInUse	0x00535AF0		False
+94	SetSpawnScript	0x00535CA0	SetSpawnScript	True
+95	Stop	0x00534F30		False
+96	Deploy	0x00534F70		False
+97	Undeploy	0x00534F90		False
+98	EnableWeapon	0x00534FB0	IScript__SetThingValueViaVFunc198_FromArg	True
+99	DisableWeapon	0x00534FE0	IScript__SetThingValueViaVFunc19C_FromArg	True
+100	EnableFlightMode	0x00535070	IScript__EnableFlightMode	True
+101	DisableFlightMode	0x00535090	FUN_00535090	True
+102	GetSquad	0x005365C0	FUN_005365c0	True
+103	GetTarget	0x005366C0		False
+104	Normalise	0x00534500		False
+105	Magnitude	0x005345D0	IScript__GetVectorLength	True
+106	LevelLostString	0x005381C0	IScript__LevelLostString	True
+107	IsFiring	0x00535B50		False
+108	IsNumberBetween	0x005347B0	IScript__CheckValueInRange	True
+109	SetSegmentVulnerable	0x00534300		False
+110	SetAllSegmentsVulnerable	0x00534390	FUN_00534390	True
+111	GetRealHealth	0x005359D0	FUN_005359d0	True
+112	SwitchMessagesOn	0x005342C0		False
+113	SwitchMessagesOff	0x005342E0		False
+114	Goto3PointPanCamera	0x00533B70	IScript__Create3PointPanCamera	True
+115	Goto4PointPanCamera	0x00533EB0	IScript__Create4PointPanCamera	True
+116	GotoPlayerCamera	0x005342B0		False
+117	GetConfiguration	0x005357B0	IScript__GetThingTypeName	True
+118	AddHelpMessage	0x00533B30	FUN_00533b30	True
+119	SetGoodieState	0x00533A70	IScript__SetGoodieState	True
+120	GetGoodieState	0x00533AA0	IScript__GetGoodieState	True
+121	MPDeclarePlayerWon	0x00533A40	FUN_00533a40	True
+122	MPDeclareGameDrawn	0x00533A60	IScript__MPDeclareGameDrawn	True
+123	SetSlot	0x005338D0	IScript__SetSlot	True
+124	GetSlot	0x005339A0	IScript__GetSlotBitValue	True
+125	InJetMode	0x005380F0		False
+126	SetPlayerLives	0x005338A0	IScript__SetPlayerLives	True
+127	Launch	0x005344A0	FUN_005344a0	True
+128	HalfDestroy	0x00534370	FUN_00534370	True
+129	SetVelocity	0x00534340		False
+130	TriggerHitEffect	0x00536CA0	IScript__TriggerHitEffect	True
+131	GetNumber	0x00535980		False
+132	SpawnEscapePod	0x005371E0		False
+133	SetSlotSave	0x00533900	IScript__SetSlotSave	True
+134	ResetSegmentHealth	0x005354C0		False
+135	SetPos	0x00536C70	IScript__SetPos	True
+136	SetLockable	0x00533950	FUN_00533950	True
+137	ToggleCockpit	0x00533980	IScript__ToggleCockpit	True
+138	SetStealth	0x00535530	IScript__SetThingFloatViaVFunc1C8_FromArg	True
+139	TeleportOrientation	0x00536A60	FUN_00536a60	True
+140	EnableSpawner	0x00535010	IScript__SetThingValueViaEngineHelper4FE390_FromArg	True
+141	DisableSpawner	0x00535040	IScript__SetThingValueViaEngineHelper4FE3F0_FromArg	True
+142	SetName	0x00535C70	IScript__SetName	True
+143	IsOverWater	0x00538150		False

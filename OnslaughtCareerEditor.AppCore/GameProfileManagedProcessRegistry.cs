@@ -1,0 +1,544 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+
+namespace OnslaughtCareerEditor.AppCore
+{
+    public sealed record GameProfileRegisteredProcess(
+        GameProfileManagedProcess Process,
+        string AppOwnedProfilesRoot);
+
+    public sealed class GameProfileManagedProcessRegistry
+    {
+        public const string LeaseFileName = "onslaught-managed-processes.json";
+        public const string LeaseSchemaVersion = "winui-managed-safe-copy-processes.v1";
+        public const string LeaseFolderMismatch =
+            "A managed copy must stay in this registry's profile folder.";
+        public const string CopyFolderMissing = "That copy folder could not be found.";
+        public const string CopyCannotUseLink = "That copy cannot use a shortcut or link.";
+        public const string CopyProcessNotRegistered = "That copy is not registered with this session.";
+        public const string CopyBeaMustStayInside = "That copy's BEA.exe must stay in the copy.";
+        public const string ManagedCopyNeedsProfileFolder = "A managed copy needs an app-owned profile folder.";
+        public const string ManagedCopyLeaseOutOfDate = "That managed copy's session details are out of date.";
+        public const string ManagedCopyLeaseRowsMissing = "That managed copy's session details are missing their process rows.";
+
+        private readonly object _gate = new();
+        private readonly Dictionary<int, GameProfileRegisteredProcess> _processes = new();
+        private readonly string? _leasePath;
+        private readonly string? _leaseProfilesRoot;
+
+        public GameProfileManagedProcessRegistry(string? leasePath = null)
+        {
+            _leasePath = string.IsNullOrWhiteSpace(leasePath)
+                ? null
+                : Path.GetFullPath(leasePath);
+            _leaseProfilesRoot = _leasePath is null
+                ? null
+                : Path.GetDirectoryName(_leasePath);
+
+            LoadPersistedLeases();
+        }
+
+        public IReadOnlyList<GameProfileRegisteredProcess> Snapshot()
+        {
+            lock (_gate)
+            {
+                return _processes.Values
+                    .OrderBy(row => row.Process.StartedAt)
+                    .ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Only the leases whose process is genuinely still running, newest first.
+        ///
+        /// <see cref="Snapshot"/> returns what was written down, which is not the same thing:
+        /// leases live on disk, so one survives the game being quit from its own menu, the game
+        /// crashing, and the app being restarted. Anything that asks "is a copy running right now"
+        /// and answers from <see cref="Snapshot"/> will say yes long after it is not - which is how
+        /// Home came to offer a Stop button that stopped nothing.
+        ///
+        /// Read-only, like <see cref="TryResolveLiveManagedProcess"/>: it closes no process and
+        /// deletes no lease. Use <see cref="PruneDeadLeases"/> when the dead ones should actually
+        /// go.
+        /// </summary>
+        public IReadOnlyList<GameProfileRegisteredProcess> SnapshotLive(
+            IGameProfileProcessLivenessProbe? probe = null)
+        {
+            GameProfileRegisteredProcess[] candidates;
+            lock (_gate)
+            {
+                candidates = _processes.Values
+                    .OrderByDescending(row => row.Process.StartedAt)
+                    .ToArray();
+            }
+
+            return candidates
+                .Where(candidate => GameProfileRuntimeService.IsManagedProcessLive(candidate.Process, probe))
+                .ToArray();
+        }
+
+        public bool TryGetLatest(out GameProfileRegisteredProcess registered)
+        {
+            lock (_gate)
+            {
+                registered = _processes.Values
+                    .OrderByDescending(row => row.Process.StartedAt)
+                    .FirstOrDefault()!;
+                return registered is not null;
+            }
+        }
+
+        /// <summary>
+        /// The newest registered safe copy that is genuinely still running, verified with
+        /// the same identity check the stop path uses. Unlike <see cref="TryGetLatest"/>
+        /// this never reports a lease whose process has already gone, so a lease that
+        /// outlived its process - or outlived the whole app session, since leases are
+        /// written to disk - cannot be mistaken for a running game.
+        ///
+        /// This is a read-only query. It never closes a process and never deletes a safe
+        /// copy folder.
+        /// </summary>
+        public bool TryResolveLiveManagedProcess(
+            out GameProfileRegisteredProcess registered,
+            IGameProfileProcessLivenessProbe? probe = null)
+        {
+            GameProfileRegisteredProcess[] candidates;
+            lock (_gate)
+            {
+                candidates = _processes.Values
+                    .OrderByDescending(row => row.Process.StartedAt)
+                    .ToArray();
+            }
+
+            foreach (GameProfileRegisteredProcess candidate in candidates)
+            {
+                if (GameProfileRuntimeService.IsManagedProcessLive(candidate.Process, probe))
+                {
+                    registered = candidate;
+                    return true;
+                }
+            }
+
+            registered = null!;
+            return false;
+        }
+
+        /// <summary>
+        /// Drops every lease whose process is no longer the one that was registered, and
+        /// returns those dropped leases so a caller can report exactly which copied game
+        /// ended. Leases survive on disk across app restarts, so without this the app's
+        /// idea of "a safe copy is running" silently rots.
+        ///
+        /// Pruning forgets a record and rewrites the lease file. It never closes a
+        /// process, and it never touches or deletes the safe copy folder itself.
+        /// </summary>
+        public IReadOnlyList<GameProfileRegisteredProcess> PruneDeadLeases(
+            IGameProfileProcessLivenessProbe? probe = null)
+        {
+            GameProfileRegisteredProcess[] snapshot;
+            lock (_gate)
+            {
+                snapshot = _processes.Values
+                    .OrderBy(row => row.Process.StartedAt)
+                    .ToArray();
+            }
+
+            var dead = new List<GameProfileRegisteredProcess>();
+            foreach (GameProfileRegisteredProcess registered in snapshot)
+            {
+                if (!GameProfileRuntimeService.IsManagedProcessLive(registered.Process, probe))
+                {
+                    dead.Add(registered);
+                }
+            }
+
+            if (dead.Count == 0)
+                return Array.Empty<GameProfileRegisteredProcess>();
+
+            lock (_gate)
+            {
+                foreach (GameProfileRegisteredProcess registered in dead)
+                {
+                    if (_processes.TryGetValue(registered.Process.ProcessId, out GameProfileRegisteredProcess? current) &&
+                        current.Process.StartedAt.ToUniversalTime().Ticks == registered.Process.StartedAt.ToUniversalTime().Ticks)
+                    {
+                        _processes.Remove(registered.Process.ProcessId);
+                    }
+                }
+
+                PersistLeasesNoThrow();
+            }
+
+            return dead;
+        }
+
+        public void Register(GameProfileManagedProcess process, string appOwnedProfilesRoot)
+        {
+            if (string.IsNullOrWhiteSpace(appOwnedProfilesRoot))
+                throw new InvalidOperationException(ManagedCopyNeedsProfileFolder);
+
+            if (!LeaseRootMatches(appOwnedProfilesRoot))
+                throw new InvalidOperationException(LeaseFolderMismatch);
+
+            if (!TryBuildRegisteredProcess(process, appOwnedProfilesRoot, out GameProfileRegisteredProcess registered))
+                throw new InvalidOperationException(CopyBeaMustStayInside);
+
+            lock (_gate)
+            {
+                _processes[registered.Process.ProcessId] = registered;
+                PersistLeasesNoThrow();
+            }
+        }
+
+        public void Forget(GameProfileManagedProcess process)
+        {
+            lock (_gate)
+            {
+                _processes.Remove(process.ProcessId);
+                PersistLeasesNoThrow();
+            }
+        }
+
+        public GameProfileStopResult Stop(
+            GameProfileManagedProcess process,
+            IGameProfileProcessRunner? runner = null,
+            TimeSpan? gracefulTimeout = null)
+        {
+            GameProfileRegisteredProcess registered;
+            lock (_gate)
+            {
+                if (!_processes.TryGetValue(process.ProcessId, out registered!))
+                {
+                    return new GameProfileStopResult(false, process.ProcessId, CopyProcessNotRegistered);
+                }
+            }
+
+            GameProfileStopResult result = GameProfileRuntimeService.StopCopiedProfile(
+                registered.Process,
+                registered.AppOwnedProfilesRoot,
+                runner,
+                gracefulTimeout);
+
+            if (result.Success)
+            {
+                Forget(registered.Process);
+            }
+
+            return result;
+        }
+
+        public IReadOnlyList<GameProfileStopResult> StopAll(
+            IGameProfileProcessRunner? runner = null,
+            TimeSpan? gracefulTimeout = null)
+        {
+            GameProfileRegisteredProcess[] snapshot;
+            lock (_gate)
+            {
+                snapshot = _processes.Values.ToArray();
+            }
+
+            var results = new List<GameProfileStopResult>();
+            foreach (GameProfileRegisteredProcess registered in snapshot)
+            {
+                results.Add(Stop(registered.Process, runner, gracefulTimeout));
+            }
+
+            return results;
+        }
+
+        private void LoadPersistedLeases()
+        {
+            if (string.IsNullOrWhiteSpace(_leasePath) || !File.Exists(_leasePath))
+                return;
+
+            bool shouldRewrite = false;
+            try
+            {
+                using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(_leasePath));
+                JsonElement root = doc.RootElement;
+                string? schemaVersion = root.TryGetProperty("schemaVersion", out JsonElement schemaEl)
+                    ? schemaEl.GetString()
+                    : null;
+                if (!string.Equals(schemaVersion, LeaseSchemaVersion, StringComparison.Ordinal))
+                {
+                    shouldRewrite = true;
+                    throw new InvalidOperationException(ManagedCopyLeaseOutOfDate);
+                }
+
+                if (!root.TryGetProperty("processes", out JsonElement processesEl) ||
+                    processesEl.ValueKind != JsonValueKind.Array)
+                {
+                    shouldRewrite = true;
+                    throw new InvalidOperationException(ManagedCopyLeaseRowsMissing);
+                }
+
+                lock (_gate)
+                {
+                    foreach (JsonElement processEl in processesEl.EnumerateArray())
+                    {
+                        if (!TryParsePersistedLease(processEl, out GameProfileManagedProcess? process, out string appOwnedProfilesRoot) ||
+                            process is null ||
+                            !LeaseRootMatches(appOwnedProfilesRoot) ||
+                            !TryBuildRegisteredProcess(process, appOwnedProfilesRoot, out GameProfileRegisteredProcess registered))
+                        {
+                            shouldRewrite = true;
+                            continue;
+                        }
+
+                        _processes[registered.Process.ProcessId] = registered;
+                    }
+
+                    if (shouldRewrite)
+                        PersistLeasesNoThrow();
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException)
+            {
+                lock (_gate)
+                {
+                    _processes.Clear();
+                    PersistLeasesNoThrow();
+                }
+            }
+        }
+
+        private static bool TryParsePersistedLease(
+            JsonElement processEl,
+            out GameProfileManagedProcess? process,
+            out string appOwnedProfilesRoot)
+        {
+            process = null;
+            appOwnedProfilesRoot = string.Empty;
+
+            if (!TryGetInt32(processEl, "processId", out int processId) || processId <= 0 ||
+                !TryGetString(processEl, "executablePath", out string executablePath) ||
+                !TryGetString(processEl, "workingDirectory", out string workingDirectory) ||
+                !TryGetString(processEl, "manifestPath", out string manifestPath) ||
+                !TryGetString(processEl, "appOwnedProfilesRoot", out appOwnedProfilesRoot) ||
+                !TryGetDateTimeOffset(processEl, "startedAt", out DateTimeOffset startedAt))
+            {
+                return false;
+            }
+
+            string[] arguments = Array.Empty<string>();
+            if (processEl.TryGetProperty("arguments", out JsonElement argsEl) &&
+                argsEl.ValueKind == JsonValueKind.Array)
+            {
+                arguments = argsEl.EnumerateArray()
+                    .Where(argEl => argEl.ValueKind == JsonValueKind.String)
+                    .Select(argEl => argEl.GetString())
+                    .Where(arg => !string.IsNullOrWhiteSpace(arg))
+                    .Select(arg => arg!)
+                    .ToArray();
+            }
+
+            process = new GameProfileManagedProcess(
+                processId,
+                executablePath,
+                workingDirectory,
+                arguments,
+                startedAt,
+                manifestPath);
+            return true;
+        }
+
+        private static bool TryGetString(JsonElement el, string propertyName, out string value)
+        {
+            value = string.Empty;
+            if (!el.TryGetProperty(propertyName, out JsonElement propertyEl) ||
+                propertyEl.ValueKind != JsonValueKind.String)
+            {
+                return false;
+            }
+
+            value = propertyEl.GetString() ?? string.Empty;
+            return !string.IsNullOrWhiteSpace(value);
+        }
+
+        private static bool TryGetInt32(JsonElement el, string propertyName, out int value)
+        {
+            value = 0;
+            return el.TryGetProperty(propertyName, out JsonElement propertyEl) &&
+                propertyEl.ValueKind == JsonValueKind.Number &&
+                propertyEl.TryGetInt32(out value);
+        }
+
+        private static bool TryGetDateTimeOffset(JsonElement el, string propertyName, out DateTimeOffset value)
+        {
+            value = default;
+            return el.TryGetProperty(propertyName, out JsonElement propertyEl) &&
+                propertyEl.ValueKind == JsonValueKind.String &&
+                DateTimeOffset.TryParse(propertyEl.GetString(), out value);
+        }
+
+        private static bool TryBuildRegisteredProcess(
+            GameProfileManagedProcess process,
+            string appOwnedProfilesRoot,
+            out GameProfileRegisteredProcess registered)
+        {
+            registered = null!;
+            try
+            {
+                if (process.ProcessId <= 0 ||
+                    string.IsNullOrWhiteSpace(appOwnedProfilesRoot) ||
+                    string.IsNullOrWhiteSpace(process.ExecutablePath) ||
+                    string.IsNullOrWhiteSpace(process.WorkingDirectory) ||
+                    string.IsNullOrWhiteSpace(process.ManifestPath))
+                {
+                    return false;
+                }
+
+                string appRoot = NormalizeExistingDirectory(appOwnedProfilesRoot);
+                string workingDirectory = NormalizeExistingDirectory(process.WorkingDirectory);
+                if (!IsStrictlyUnderRoot(workingDirectory, appRoot))
+                    return false;
+
+                string executablePath = Path.GetFullPath(process.ExecutablePath);
+                string manifestPath = Path.GetFullPath(process.ManifestPath);
+                string expectedExePath = Path.GetFullPath(Path.Combine(workingDirectory, "BEA.exe"));
+                string expectedManifestPath = Path.GetFullPath(Path.Combine(workingDirectory, "onslaught-profile-manifest.json"));
+                if (!string.Equals(executablePath, expectedExePath, StringComparison.OrdinalIgnoreCase) ||
+                    !string.Equals(manifestPath, expectedManifestPath, StringComparison.OrdinalIgnoreCase) ||
+                    !File.Exists(executablePath) ||
+                    !File.Exists(manifestPath))
+                {
+                    return false;
+                }
+
+                RejectExistingReparseAncestors(appRoot, "app-owned playable copied game folder root");
+                RejectExistingReparseAncestors(workingDirectory, "managed playable copied game folder");
+                RejectReparsePoint(workingDirectory, "managed playable copied game folder");
+                RejectReparsePoint(executablePath, "managed playable copied game folder executable");
+                RejectReparsePoint(manifestPath, "managed playable copied game folder manifest");
+
+                var normalizedProcess = new GameProfileManagedProcess(
+                    process.ProcessId,
+                    executablePath,
+                    workingDirectory,
+                    process.Arguments?.ToArray() ?? Array.Empty<string>(),
+                    process.StartedAt,
+                    manifestPath);
+                registered = new GameProfileRegisteredProcess(normalizedProcess, appRoot);
+                return true;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+            {
+                return false;
+            }
+        }
+
+        private bool LeaseRootMatches(string appOwnedProfilesRoot)
+        {
+            if (string.IsNullOrWhiteSpace(_leaseProfilesRoot))
+                return true;
+
+            try
+            {
+                string expectedRoot = NormalizeExistingDirectory(_leaseProfilesRoot);
+                string actualRoot = NormalizeExistingDirectory(appOwnedProfilesRoot);
+                return string.Equals(expectedRoot, actualRoot, StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+            {
+                return false;
+            }
+        }
+
+        private void PersistLeasesNoThrow()
+        {
+            if (string.IsNullOrWhiteSpace(_leasePath))
+                return;
+
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(_leasePath)!);
+                var payload = new
+                {
+                    SchemaVersion = LeaseSchemaVersion,
+                    WrittenAt = DateTimeOffset.UtcNow,
+                    Processes = _processes.Values
+                        .OrderBy(row => row.Process.StartedAt)
+                        .Select(row => new
+                        {
+                            row.Process.ProcessId,
+                            row.Process.ExecutablePath,
+                            row.Process.WorkingDirectory,
+                            Arguments = row.Process.Arguments.ToArray(),
+                            row.Process.StartedAt,
+                            row.Process.ManifestPath,
+                            row.AppOwnedProfilesRoot,
+                        })
+                        .ToArray(),
+                };
+
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                };
+                File.WriteAllText(_leasePath, JsonSerializer.Serialize(payload, options));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+            {
+                // The in-memory registry is still authoritative for this app session.
+            }
+        }
+
+        private static string NormalizeExistingDirectory(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path))
+                throw new DirectoryNotFoundException(CopyFolderMissing);
+
+            return Path.GetFullPath(path)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        }
+
+        private static bool IsStrictlyUnderRoot(string path, string root)
+        {
+            string normalizedPath = NormalizeForPrefix(path);
+            string normalizedRoot = NormalizeForPrefix(root);
+            return !string.Equals(
+                    normalizedPath.TrimEnd(Path.DirectorySeparatorChar),
+                    normalizedRoot.TrimEnd(Path.DirectorySeparatorChar),
+                    StringComparison.OrdinalIgnoreCase) &&
+                normalizedPath.StartsWith(normalizedRoot, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string NormalizeForPrefix(string path)
+        {
+            return Path.GetFullPath(path)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                + Path.DirectorySeparatorChar;
+        }
+
+        private static void RejectReparsePoint(string path, string label)
+        {
+            FileAttributes attributes = File.GetAttributes(path);
+            if ((attributes & FileAttributes.ReparsePoint) != 0)
+                throw new InvalidOperationException(CopyCannotUseLink);
+        }
+
+        private static void RejectExistingReparseAncestors(string path, string label)
+        {
+            string fullPath = Path.GetFullPath(path);
+            string? current = Directory.Exists(fullPath)
+                ? fullPath
+                : Path.GetDirectoryName(fullPath);
+
+            while (!string.IsNullOrWhiteSpace(current))
+            {
+                if (Directory.Exists(current))
+                    RejectReparsePoint(current, label);
+
+                string? parent = Path.GetDirectoryName(current);
+                if (string.Equals(parent, current, StringComparison.OrdinalIgnoreCase))
+                    break;
+
+                current = parent;
+            }
+        }
+    }
+}

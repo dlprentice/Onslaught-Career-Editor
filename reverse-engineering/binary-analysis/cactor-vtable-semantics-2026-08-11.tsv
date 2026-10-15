@@ -1,0 +1,19 @@
+retail_va	demo_va	retail_current_name	semantic_label	abi_placement	body_bytes	instruction_count	raw_diff_instruction_count	normalized_diff_instruction_count	semantic_status	evidence_boundary
+0x004011e0	0x004011f0	HYP__CActor__Init	CActor::Init	primary:9	485	148	6	0	SOURCE_BODY	Initializes contact times velocity old pose fidelity counter and first movement event around the superclass call
+0x00401530	0x00401550	CActor__VFunc_7_00401530	CActor::GetClassName	primary:7	6	2	1	0	SOURCE_MACRO	Returns the exact CActor class string emitted by the source class macro
+0x00401540	0x00401560	CActor__VFunc_38_00401540	CActor::SetThingType	primary:38	15	4	0	0	SOURCE_INLINE	Stores the input OR the inherited thing mask and THING_TYPE_ACTOR exactly as source
+0x00401550	0x00401570	HYP__CActor__GetLocalLastFrameMovement	CActor::GetLocalLastFrameMovement	primary:25	42	11	0	0	SOURCE_INLINE	Returns current position minus old position as the source inline declares
+0x00401580	0x004015a0	CActor__VFunc_64_00401580	CActor::Stop	primary:64	61	15	0	0	SOURCE_INLINE	Zeros the velocity FVector; the fourth copied dword is structure padding rather than another semantic component
+0x004015c0	0x004015e0	HYP__CActor__scalar_deleting_dtor	CActor::~CActor [scalar deleting wrapper]	primary:1	32	11	3	0	RTTI_ABI	MSVC deleting-destructor wrapper around the source destructor
+0x004015e0	0x00401600	HYP__CActor__Move	CActor::Move	primary:66	794	242	18	0	SOURCE_BODY	Saves old pose integrates velocity resolves terrain water slide bounce contact and sector movement in source order
+0x00401900	0x00401920	HYP__CActor__MoveTo	CActor::MoveTo	primary:19	13	4	1	0	SOURCE_BODY	Preserves the actor old-position policy and delegates position movement to CComplexThing
+0x00401910	0x00401930	HYP__CActor__Teleport	CActor::Teleport	primary:20	145	55	2	0	SOURCE_BODY	Captures the previous sector sets old position delegates teleport and notifies collision seeking on sector change
+0x004019b0	0x004019d0	HYP__CActor__TeleportOrientation	CActor::TeleportOrientation	primary:21	36	14	1	0	SOURCE_BODY	Copies the supplied matrix to old orientation then delegates current-orientation teleport
+0x004019e0	0x00401a00	HYP__CActor__HandleEvent	CActor::HandleEvent	primary:0	367	117	6	0	SOURCE_BODY	Dispatches MOVE and LF_MOVE with profiling and rescheduling then delegates all other events
+0x00401be0	0x00401c00	HYP__CActor__GetRenderPos	CActor::GetRenderPos	secondary-render:0	108	27	1	0	SOURCE_BODY	Interpolates old to current position using the frame render fraction
+0x00401c50	0x00401c70	HYP__CActor__GetRenderOrientation	CActor::GetRenderOrientation	secondary-render:1	618	183	10	0	SOURCE_BODY	Interpolates old to current orientation using GetFractionTime with the platform-specific source path normalized
+0x00401f70	0x00401f90	HYP__CActor__IsOnGround	CActor::IsOnGround	primary:67	34	10	2	0	SOURCE_BODY	Returns whether event time minus the last-ground timestamp is strictly less than 0.15f
+0x00402000	0x00402020	HYP__CActor__DeclareOnGround	CActor::DeclareOnGround	primary:68	12	3	1	0	SOURCE_BODY	Writes current event-manager time to the last-ground field
+0x00402010	0x00402030	HYP__CActor__DeclareInWater	CActor::DeclareInWater	primary:69	12	3	1	0	SOURCE_BODY	Writes current event-manager time to the last-water field
+0x00402020	0x00402040	HYP__CActor__DeclareOnObject	CActor::DeclareOnObject	primary:70	14	3	1	0	SOURCE_BODY	Writes current event-manager time to the last-standing-object field; the pointer parameter is intentionally unused
+0x00402030	0x00402050	HYP__CActor__StickToGround	CActor::StickToGround	primary:18	41	15	1	0	SOURCE_BODY	Delegates terrain placement then synchronizes old position to the resulting current position

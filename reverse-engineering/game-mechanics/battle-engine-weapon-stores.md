@@ -1,0 +1,501 @@
+# Battle Engine weapon stores, charge and firing state
+
+Status: active static contract for the rebuild's player weapons
+Last updated: 2026-10-01 (aim reference and no-selection behavior re-derived; earlier findings retain their dates)
+Summary: the Aquila's ammo and heat stores, when a shot spends them, cooling, the
+Missile Pod and Pulse Cannon Pod charge law, what an empty store blocks, and what
+`IsFiring` counts.
+Evidence: MEASURED static reads of the pristine specimen and the shipped data; a
+read-only research pass traced the functions and the RE lane re-checked the store
+table, both spend paths, the cooling loop, `Charge`, the jet charge gate and both
+`IsFiring` bodies at their addresses. The dated September 27 sections separately
+record fresh complete-body checks and isolated original-code runs. No whole-game
+runtime capture or player acceptance is claimed.
+Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`;
+`data/battle engine configurations.dat`, 1,514 bytes, SHA-256 prefix `58722b12a04cae97`;
+`data/default physics.dat`, SHA-256
+`e1fb3dedbeb29b4b4151da2c8cbbdc940b716b1a2321e1d6a9ba1542c74ada14`.
+
+The Battle Engine and part functions match the pinned GPL source
+(`BattleEngine.cpp`, `BattleEngineJetPart.cpp`, `BattleEngineWalkerPart.cpp`,
+`BattleEngineDataManager.cpp`). `CWeapon` is not in that drop; its behaviour below
+comes from the bytes.
+
+## Stores
+
+The Aquila Prototype record (configuration file offset `0x2d2`, version 12) lists six
+(heat flag, value) pairs at `0x35f`:
+
+| Store | Kind | Capacity | Used by |
+| ---: | --- | ---: | --- |
+| 0 | ammo | 2000 | Mech Vulcan Cannon (jet, consumption 1), Mech Twin Vulcan Cannon (walker, 2) |
+| 1 | ammo | 100 | none of the Aquila's weapons |
+| 2 | heat | 150 | Pulse Cannon Pod (walker primary, consumption 4, charge rate 10); Pulse Cannon Pod Aug (0) |
+| 3 | ammo | 200 | Missile Pod (jet, consumption 1, charge rate 8) |
+| 4, 5 | heat | 100 | none |
+
+The loader `0x00510800` reads the file. `CBattleEngineData::Initialise`
+(`0x0040f590`) defaults every store to heat 0 and value 1000.0
+(`0x0040f741-0x0040f75b`, `BattleEngineDataManager.cpp:55-59`). `Load` (`0x0040f980`)
+reads each store's heat flag into configuration `+0x70+4n` and its value into
+`+0x88+4n` (`0x0040fee8-0x0040ff0e`, `:357-362`). `CBattleEngine::Init`
+(`0x0040572f-0x0040577f`, `BattleEngine.cpp:303-312`) and `UpdateConfiguration`
+(`0x0040c650`, `:2923-2932`) clear overheat and start ammo stores full and heat stores
+at 0.
+
+## Spending and cooling
+
+- **Once per burst event.** The burst spawner calls `CBattleEngine::WeaponFired`
+  (`0x0040c2e0`) once, before its volley loop
+  ([burst contract](../contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md)).
+  The spend is not tied to a round being created. A Mech Vulcan event spends 1 and
+  fires 2 bullets; a Twin Vulcan event spends 2 and fires 4; each Missile Pod event
+  spends 1 and fires one missile (volley 1).
+- **Jet ammo** (`0x0041215d-0x00412192`): value −= consumption, clamped at 0.
+- **Jet heat** (`0x00412135-0x00412155`): value += consumption − `kWeaponCoolRate`.
+  Walker heat paths add the full consumption (list `0x00414110-0x00414154`,
+  primary `0x004141dc-0x00414226`, Aug `0x00414304-0x00414381`), as in the source.
+  A shot refused for heat sets overheat, calls `WeaponOverheated` and returns 0.
+- **`kWeaponCoolRate`** is the integer 1, held twice: `0x00622f08` (read only by
+  Move, `0x004095ed`) and `0x006236a4` (read only by jet `WeaponFired`,
+  `0x0041214a`). Nothing writes either.
+- **Cooling** (`CBattleEngine::Move` `0x004095d6-0x00409633`, `:1708-1718`). Every
+  Move, each heat store's value goes down by 1.0. A result below 0 becomes 0;
+  otherwise overheat clears when the value is strictly below 0.75 × capacity
+  (`0x005d8bc4`). No branch in Move skips the loop.
+- **Refill.** Ammo never regenerates over time. `CBattleEngine::Rearm`
+  (`0x0040ac50`, `:2256-2275`) adds amount × capacity, clamped. Its only caller is the
+  round-hit handler at `0x004d8d07`, for a hit on a Battle Engine (type bit `0x8`)
+  by a round with `CRoundRearm`. Only the `Repair Pad` round carries it (200).
+
+## Charge
+
+- `CWeapon::Charge` (`0x005068f0`) adds the weapon's charge rate (profile `+0x08`)
+  to `+0x60` when any charge level 1-4 exists and the charge is below 400.0.
+- The jet part (`0x00411cd4-0x00411d4b`) and walker part (`0x00413d91-0x00413e04`)
+  call it only while the charge is below 100 × the highest present level: 100 for
+  both pods.
+- The Missile Pod's charge runs 0, 8, …, 96, 104 and stops. Level 1 (Salvo) needs
+  trunc(round(charge)/100) = 1, which first happens at 104, on the 13th charge call.
+- Both pods share this path. An ammo store costs nothing while charging; the Pulse
+  pod's heat store gains its consumption per charge call (jet
+  `0x00411d62-0x00411d98`, walker `0x00413e1e-0x00413e53`).
+- `ReadyToCharge` (`0x0050a080`) is true with no mode yet or once now > `+0x64`.
+- `ReadyToFire` (`0x00509f70`; the tracked 2026-08-31 name table still calls it
+  `TargetProfileContext__IsEligibleByDistanceBucketOrRange`):
+  - with a current mode (`+0xa0`), true only when now > `+0x64` strictly
+    (`0x00509f81-0x00509f8f`), with no charge or ammo condition;
+  - with no mode yet, true when a charge level from trunc(round(`+0x60`)/100)
+    down to 0 names a mode that exists in the mode list `0x008553ec`
+    (`0x00509fa2-0x0050a066`), with no time test.
+- The charge resets to 0 at `0x0041203b` (the earlier jet-side finding),
+  `0x00414019` (**walker LoseWeaponCharge**, not FireWeapon),
+  `0x00411f96` (the newly selected weapon in `ChangeWeapon`) and `0x0050602a`
+  (`CWeapon::Fire`).
+
+## Current-mode lookup — September 30 recheck
+
+The pristine specimen above was read again for `00509e90..00509f6e` (222 bytes,
+SHA-256 `8ebe2891b1cc4bc9f033481cba0789765880bbc0aeceebeb49f495caa93a42d7`).
+`GetCurrentMode` is the reconstruction's name; neither weapon.cpp nor weapon.h
+exists in the pinned Stuart release. This section establishes the lookup, not
+an original source spelling or all of its inlined callers.
+
+- `00509e93..00509eb5` loads charge at weapon `+60`, converts it with x87
+  `FISTP` to a signed 64-bit stack value, then uses its low signed DWORD for
+  integer division by 100. The conversion obeys the incoming rounding control;
+  the body does not set it. Earlier `round(charge)` notation is not a claim that
+  a host language's default rounding or truncating cast is compatible.
+- The initial read at `00509ec4` selects weapon-data `+0c + 4*level` before any
+  lower-bound check. There is no upper clamp in this body. Valid cases here use
+  the five authored slots; malformed charge observations do not establish game
+  reachability or safe handling of every value.
+- Each lookup resets the shared mode registry's iterator at list `+8` to its
+  first node (`00509ed1`, repeated at `00509f25`). It compares the requested
+  index with traversal position, rather than a mode object's ID. A null item
+  terminates that traversal even when another node follows. The reported list
+  size is not read by this walk.
+- Failure decrements the level and retries from the first node. The signed
+  lower-bound test at `00509f0c` occurs after decrement; failure below zero
+  returns null. A successful search leaves the shared iterator at the selected
+  node. Replacing this with a local iterator would omit observed state changes.
+
+The original and reconstructed bodies were executed at the same retail address
+in separate emulators, with no calls or stubs admitted. The candidate is 138
+instruction bytes in a 144-byte section; its unused original-code tail was not
+available for execution. Its two registry relocations were bound to the actual
+`008553ec` instruction operands. Both bodies had explicit execution/read/write
+bounds, return/stack and preserved-register checks, and memory canaries.
+
+The lead independently reran **57 finite in-array comparisons** covering all
+five levels, ordered fallback, missing/out-of-list modes, empty and null-item
+lists, stale iterator reset and four explicit rounding controls around charge
+boundaries. Six malformed-input witnesses are separate: four adjacent-field
+reads and two precisely declared first-read faults. Ten negative controls
+detected wrong cutoff/decrement, wrong rounding control, unresolved/corrupted
+relocations, unexpected calls, unrelated faults and incomplete/escaped runs.
+
+**Emulator limit:** Unicorn omitted expected x87 exception/status flags for
+fractional and nonfinite conversion. Twelve NaN/Infinity cases were refused.
+Fractional cases establish only selection/memory observations under the declared
+emulator controls; agreement on captured x87 registers is not a live-retail
+exception-status result. No whole-game FPU mode, weapon firing, CanLock behavior,
+device/player acceptance or complete equivalence is established. The compiled
+GetCurrentMode section still does not match retail.
+
+Private owner, relative to `~/Projects/game-dev/bea-decomp`:
+`.worktrees/codex-career-nearmiss-20260930/build/weapon-mode-review-20260930/`.
+The frozen script SHA-256 is
+`fe4bc36d1c5e3f4242881331be4e069153474ac4046e78edb0836891b03484ec`;
+its receipt pins source, COFF, parser, specimen and linked candidate. The lead's
+independent result is `local-data/weapon-mode-root-20260930/results.json`.
+Reproduce with the existing `local-data/venv/bin/python -B`, the owner's
+`probe.py`, and `--out` naming a new private output directory.
+
+## Aim transform — October 1 recheck
+
+At `0x00509140`, the reconstruction's aim-transform routine constructs both
+target-minus-origin displacement and primary-orientation velocity. These are
+different inputs: the displacement occupies stabilized frame `+0x2c`, while
+the orientation column multiplied by round speed occupies `+0x3c`
+(`0x0050917b`, `0x005091e8`). On the relative-limit path, both Magnitude calls
+receive the velocity (`0x00509257`, `0x0050928f`); both elevation numerators
+load its Z component (`0x00509271`, `0x005092ad`). The old reconstructed source
+incorrectly used target displacement and described velocity as unused.
+When weapon `+0x98` is nonzero, the bounds instead come directly from mode
+`+0x7c/+0x80` (`0x00509246..0x00509255`).
+
+There is also a no-selection behavior that must not be replaced silently with
+a convenient default angle. Target height is stored at frame `+0x24` at
+`0x00509208`. A winning scan angle replaces it at `0x00509337` or
+`0x0050936f`; the value is then passed as pitch to `MakeRotationF` at
+`0x0050939a..0x005093b0`. With no accepted angle, the previous height reaches
+that call. This establishes the machine behavior, not whether original C++
+intentionally initialized pitch or used an uninitialized local sharing storage.
+
+The lead reproduced 19 original-code prefix cases and 19 negative controls
+that redirect the four velocity displacements to the target delta. Nine bound
+pairs differ; all nine absolute-limit controls remain unchanged. Five further
+original-code runs reach the matrix-construction call: reversed/equal bounds
+and zero-speed cases retain heights `40`, `-3`, `9`, and `40` as pitch, while
+a normal selection control replaces height with approximately `-0.4` radians.
+
+These finite authored cases run actual math and scan instructions in Unicorn
+with control word `0x037f` and attachment accessors supplying explicit data.
+They stop before matrix construction/publication. They are not a full-candidate
+equivalence test, an observation of actual authored game modes, or a retail
+playthrough. The source now uses velocity elevation and explicitly retains
+height when no angle wins. All 43 existing exact weapon functions survive;
+this aim function itself remains unmatched.
+
+Private lead owner:
+`bea-decomp/.worktrees/codex-equiv-20260930/local-data/weapon-aim-root-20261001/`.
+The rerunnable `aim-prefix-probe.py` and `aim-fallback-probe.py` write receipts
+with SHA-256 `4a78c512675038f253021c8017059bcafa7bcc86db79452dea4db03a0b2b6628`
+and `538518d9facf1af3113195cac0a93586a3b9f1b990d3f14b352d45dee5f15b81`.
+The next falsifier is a complete candidate comparison with admitted real mode
+and attachment inputs, followed by a controlled retail observation of any
+claimed gameplay consequence.
+
+## Fire, empty stores and locks
+
+- `CWeapon::Fire` (`0x00506010`; named so in the working project, though the tracked
+  2026-08-31 table still says `ProjectileBurst__SpawnFromPercentBucketFallback`) resolves the level from
+  round(charge)/100 with fallback, then sets the mode.
+  - It sets the reload deadline `+0x64` to now + `CWeaponReloadTime` (`0x0050611a`),
+    zeroes the burst counter `+0x6c`, and zeroes Battle Engine `+0x5e0`, the source's
+    `mCurrentTarget` (`0x00506137`).
+  - It then spawns the first burst (`0x00506143`), plays the launch sound, sets
+    `+0x6c` to 1 and queues event 5001 at now + `CWeaponBurstDelay`
+    (`0x005061ae-0x005061d8`).
+  - The 5001 handler (`0x00506930`) spawns while `+0x6c` is below the mode's burst
+    size, increments `+0x6c` after each spawn (`0x005069c3`), and does nothing while
+    the owner is dying (`0x00506948`).
+  - Retail quirk: Fire rewrites charge, level `+0x68` and mode `+0xa0` before its
+    reload check. A second trigger press during a salvo therefore switches the rest
+    of that burst to the launcher mode, because the handler reads the mode through
+    `+0x68` (`0x00506952`).
+- **Empty store and firing.** `FireWeapon` (`0x00409f20`, `:1958-1970`) has no ammo
+  check, so Fire still resets the charge, sets the reload and runs the burst counter.
+  Every burst event is refused in `WeaponFired`: no round, draw, lock or recoil. Each
+  refusal refreshes `mAmmoDepletedTime` (`+0x608`) when it is more than 8.0 s old,
+  and Move then plays `hud_ammunition_depleted`.
+- **Empty store and charging.** Charging exits with an ammo store at or below 0
+  (`0x00411cbc-0x00411cce`). `ChangeWeapon` skips a weapon whose consumption
+  exceeds its store (`0x00411f3a-0x00411f49`).
+- **Empty store and locks.** `CanWeaponFire` is false (jet `0x00412570`: ammo
+  value > 0, or heat below capacity and not overheated; the walker version
+  `0x00414630` also checks active). So `HandleLocks` drops every lock each frame
+  and acquires none.
+- **`WeaponOverheated`** (`0x0040f110`) only sets `mWeaponOverheatedTime`
+  (`+0x60c`) to now when that is more than 4.0 s old. Its callers set the store's
+  overheat flag first. `ChargeWeapon` additionally clears slow movement and forces a
+  Fire (jet `0x00411da7-0x00411e5b`, walker `0x00413e61-0x00413e9a`).
+- **`Charged()`** is weapon `+0x68 > 0`. A charged heat-weapon shot returns before
+  the overheat test and costs no heat.
+
+## Firing state
+
+The parts' shared `IsFiring` (`0x00414b30`) walks the part's weapon list at `+0x00`
+and returns 1 when any weapon's `CWeapon::IsFiring` (`0x0050a290`) holds: a current
+mode, `+0x6c` nonzero and `+0x6c` below the mode's `CWeaponBurstSize`. The walker's
+primary and Aug weapons are not in that list. A Missile Pod burst therefore counts
+from its first missile until its last spawns: 0.4 s for the launcher, 0.45 s for the
+salvo. Burst-size-1 weapons (both Vulcans) never count. `HandleLocks` asks the jet
+part in state 3 and the walker part otherwise, so a pod burst during a transform to
+walker is not seen.
+
+## September 27 walker recheck
+
+The September 27 recheck freshly decoded the walker bodies from the pristine
+specimen above, against source commit `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`.
+It confirms these implementation boundaries:
+
+- GetCurrentWeapon (`00414030`) can repair the selected index and mutates the
+  list cursor. ChangeWeapon clears the **newly selected** weapon's charge, then
+  may auto-zoom out. Its initial selected weapon is dereferenced without a null
+  guard; no general empty-configuration safety is established.
+- `00414019` is the store inside the 17-byte body `[00414010,00414021)`, SHA-256
+  `338009a0afe409a13acfbba66d573a8981e8905526707547eec79b1f7884de34`.
+  It selects a weapon, guards null and clears `+0x60`, matching source
+  LoseWeaponCharge at lines 602–606. Its former Monitor label is now corrected
+  to LoseWeaponCharge; it must not be treated as firing.
+- The ammo-count getter uses `FISTP QWORD` at `0041449d`, then returns the low
+  DWORD. It does not change the x87 rounding control locally. A truncating cast
+  is therefore not an established equivalent. The ammo-percentage getter caps
+  only above one; it has no lower clamp or zero-capacity guard.
+- IsEnergyWeapon and IsWeaponOverheated return the full stored DWORD from
+  `+0x55c` and `+0x544`, respectively. WeaponFired does not check active state;
+  successful augmented handling clears value `+0x2f8`, not active flag `+0x2fc`.
+- HandleLocks calls walker CanWeaponFire at `004065db`, then separately calls
+  weapon ReadyToFire at `00406817`. The store gate alone is not complete firing
+  readiness. For finite values, heat needs store below capacity and zero
+  overheat. Its `TEST AH,1` at `00414673` also admits a masked unordered
+  comparison through that first test; the ammo path's `TEST AH,41h` rejects
+  unordered. Do not replace both instruction predicates with one generic
+  floating-point comparison without bounding the inputs.
+
+Private complete-body/caller evidence is under
+`local-data/test-runs/re-audit-20260926/walker/`. `Weapon.cpp` and `Weapon.h` are
+absent from the pinned source drop. This pass does not revalidate every earlier
+weapon-helper claim, all unordered floating comparisons, burst timing or a
+retail gameplay run.
+
+## Isolated selection and admission — September 27
+
+A native i386 probe executed the unchanged pristine bodies at `00414030`
+(GetCurrentWeapon), `00414630` (CanWeaponFire), `00414610` (attachment integer)
+and `004145f0` (icon pointer), at their original addresses with no intercepted
+helpers. All **90 cases** and **four altered-copy controls** passed. The inputs
+were authored valid acyclic lists, weapon/profile records and stores; they were
+not original saves or a running game.
+
+- Thirteen selection cases, repeated through each of the four entries, cover
+  empty lists, primary and augmented selection, nonzero full-DWORD flags,
+  index zero without a primary, later indices, invalid indices and null-item
+  termination. EAX and exact cursor/index mutations agree with the static
+  contract. Invalid-index fallback does not retry augmented selection.
+- Thirty-eight further CanWeaponFire cases cover inactive/full-DWORD active,
+  ammo versus heat, full-DWORD overheat, below/equal/above capacity, zero and
+  negative stores, infinities and masked quiet NaNs. They run under authored
+  x87 control words `037f` and `007f`, not measured retail control state.
+  A masked unordered heat comparison admits the comparison gate when not
+  overheated; the ammo gate rejects it. Equality to heat capacity and zero
+  ammunition both refuse.
+- The attachment getter returns profile `+0x38` as a full integer, including
+  the supplied non-enum sentinel. The icon getter returns the distinct pointer
+  at `+0x04`. No icon dereference or HUD rendering is exercised.
+
+Every case checks the entire authored memory region, preserved registers,
+stack balance, x87 stack balance and unchanged control word. Only selection's
+expected cursor/index mutations are allowed. Four one-byte changes in separate
+probe executables are detected: wrong attachment field, reversed augmented
+selection, heat admitting equality and ammo admitting zero. The initial heat
+control used NaN, which does not distinguish `TEST AH,1` from `TEST AH,41h`
+under the following JZ; that insufficient control was retained and replaced
+with equality. The unchanged-body expectations were not altered.
+
+Private driver: `local-data/test-runs/re-audit-20260926/walker/original_selection_stores.py`,
+SHA-256 `d5f8e1722d9c905b98ce55948f38b4bcf43eb232370c8fb65fdf068f593d1320`.
+Inputs, outputs, original ELF, changed copies and `result.json`:
+`local-data/test-runs/re-audit-20260926/walker/selection-stores-l5vyw197/`.
+The four body hashes are recorded in that receipt and the relevant function
+notes. This does not prove corrupt-list safety, complete Weapon layout,
+ReadyToFire behavior, device/input cadence or retail gameplay. The unchanged
+retail executable, real saves and both protected Ghidra owners were not used
+as runtime outputs.
+
+## September 27 jet recheck
+
+The complete JetPart helper bodies and their actual caller transports were
+re-read from the same pristine specimen, against pinned source
+`BattleEngineJetPart.cpp:638–1089`. These results qualify the earlier prose:
+
+- Jet GetCurrentWeapon (`00412610`) walks from index zero, mutates cursor `+8`
+  and returns null for an absent selection. It **does not repair the selected
+  index or fall back to another weapon**, unlike Walker. Null items terminate
+  the walk; corrupt/cyclic lists remain outside the established contract.
+- Jet CanWeaponFire (`00412570`) checks stores without testing weapon `+9c`.
+  Jet FireWeapon (`00411b90`, call `00411be4`) and ChargeWeapon (`00411bf0`,
+  gate `00411c51–00411c59`) **do test that active DWORD**. A passing store gate
+  therefore does not show that a disabled weapon fires. HandleLocks calls
+  store eligibility and weapon readiness separately.
+- Chargeability scans **four** profile entries `+10/+14/+18/+1c`, corresponding
+  to charge levels 1–4. The highest-charge scan visits **five** entries
+  `+0c..+1c`, levels 0–4. The earlier Charge note's five-entry description for
+  the first loop is wrong. Initial ammo and maximum-charge admission reject
+  unordered comparisons; the later heat-capacity C0 test admits unordered
+  while overheat is clear. Finite-value source reasoning alone omits that
+  distinction. No change to a charging constant is justified by this audit.
+- ChangeWeapon (`00411e70`) dereferences the old selection's zoom profile
+  before a null guard, then cycles active affordable weapons. Selection is
+  written before **the newly selected weapon's charge is cleared** at
+  `00411f96`; zoom comparison follows. Consumption-versus-store admission
+  (`00411f3a–00411f49`) also accepts unordered. Valid initial selection remains
+  a premise, rather than demonstrated empty-configuration safety.
+- WeaponFired (`00412050`) matches the passed pointer anywhere in the jet
+  list, not just the current weapon, and does not test active. Signed charged
+  count `+68 > 0` lets heat shots succeed before the store/overheat tests.
+  For ordinary heat admission it adds consumption minus the integer cooling
+  global; for ammo it subtracts consumption and clamps the negative/unordered
+  result. These callback semantics are distinct from permission to initiate Fire.
+- Ammo count (`00412240`) uses `FISTP QWORD` at `004122a1`, then returns its
+  low DWORD. It does not set the x87 control word. Nearest-even or truncation
+  is an ambient-state premise requiring evidence, not a universal cast rule.
+  The percentage getter clamps only above one; flag getters return full
+  DWORDs. Existing ST0 return annotations are not newly proved by ST0 alone.
+
+The nine Jet/main identity and interface corrections (private RE archive: `reverse-engineering/ghidra/README.md`)
+are live. Fire, AmmoCount, localized Name, Enable, Disable and CountActiveWeapons
+now carry JetPart identities; the three main Enable/Disable/Count wrappers carry
+their source identities. Enable/Disable always forward Walker then Jet, whereas
+Count chooses Jet only in state 3. Name comparisons use bytes and are case-sensitive.
+Three explicit ECX annotations now use automatic thiscall; their physical
+transport and return widths are preserved. Charge's receiver (private RE archive: `reverse-engineering/ghidra/README.md`)
+now also uses automatic thiscall: ECX comes from main+0x57c in the actual
+mode-3 dispatcher; no incoming EDX or stack argument is consumed. All seven
+returns use bare RET. This is an annotation correction with unchanged transport.
+The localized result's existing short-pointer type does not prove its full
+representation or lifetime.
+
+Two implementation follow-ups are recorded for the paused rebuild lane. The
+remark in `RetailWeaponSelection.cs` saying an inactive current jet weapon can
+still fire should describe only store eligibility; its adjacent `00414610`
+icon citation now refers to the proven attachment getter. Also,
+`Level100PlayerWeaponRuntime.AdvanceCharge` uses a time-only helper, while
+original ReadyToCharge (`0050a080`, freshly checked 35-byte body SHA-256
+`1ba024f1f14e38bee454b5d72c39f2cf64257e446a5bcf2e98fa117df64052f9`)
+admits null current mode `+a0` without checking time. `RetailWeaponCharge`
+already models that branch. Whether runtime initialization excludes this case
+is an integration question, not an established gameplay failure. The remaining
+PARITY question about `00509f70` is likewise integration of its documented
+mode/no-mode distinction, rather than a missing static read. No rebuild code
+was changed. The source's float GetWeaponReadiness remains unlocated; neither
+Boolean readiness helper supplies a defensible substitute identity.
+
+Private complete-body/source/caller packets are under
+`local-data/test-runs/re-audit-20260926/jet/`: `helper-bodies-v1.json`,
+`helper-callers-v1.json` and `readiness-bodies-v1.json`. These retain exact
+body lengths/hashes and source pins. Saved labels and model agreement were
+not identity evidence. They do not revalidate every earlier burst or asset claim.
+
+## Isolated jet selection and admission — September 27
+
+The unchanged bodies at `00412610` (selection), `00412570` (store eligibility),
+`00412520` (attachment) and `004124d0` (icon) executed at their original addresses
+in the existing native i386/seccomp probe pattern. All **90 cases and four
+altered-copy controls passed**. The loaded spans total **357 pristine bytes**;
+there are no intercepted helpers.
+
+Thirteen list/selection cases run through each entry (52 cases). Nineteen further
+store cases run under both authored masked x87 modes `037f` and `007f` (38 cases):
+inactive/noncanonical active flags, heat/ammo, overheat, equality, negative/zero
+values, infinities and quiet NaNs. That is 71 cases under `037f` and 19 under
+`007f`, not every case under both. Each case checks EAX, all 8,192 authored memory
+bytes, exact cursor changes, unchanged selected index, preserved registers,
+stack balance and x87 control/stack state. The results distinguish Jet's null
+return from Walker's fallback and confirm that Jet's store gate ignores active.
+They also distinguish raw icon pointers from attachment integers.
+
+The four separate one-byte controls change the selection equality branch,
+attachment field, heat equality admission or zero-ammo admission; each produces
+a detected difference. The initial run passed its baseline cases but could not
+locate a control opcode because Jet uses ECX where Walker uses EAX. That run and
+driver remain retained; correcting the locator changed no oracle or baseline
+expectation. Independent review decoded every retained input/output and ELF
+span; it did not rerun the binaries.
+
+Driver: `local-data/test-runs/re-audit-20260926/jet/original_selection_stores.py`,
+SHA-256 `62d9c741317341e70019d61ac62437d034ce0e51052993bc079f3695707a9eb2`.
+Receipts: `local-data/test-runs/re-audit-20260926/jet/selection-stores-4dq8psvd/`.
+This establishes only authored valid storage, small acyclic lists, a fixed
+store index and the supplied floating-point cases. It does not establish
+complete firing admission, corrupt-list safety, lifetime, retail x87 state,
+input cadence, rendered output or whole-game parity.
+
+## Default held/release bindings — September 27
+
+Fresh pristine initializer and controller-body reads resolve the default
+mapping: **action 19 charges while held; action 18 fires on release**, subject
+to the mapping and recipient admission gates. These are initialized table
+values, not a read of the user's current settings. All action, category and
+button numbers in this table are decimal; scan codes and addresses are hex.
+
+| Initialized table | Charge, action 19 | Fire, action 18 | Initializer calls |
+| --- | --- | --- | --- |
+| Runtime defaults | category 15, mouse button 0; record `00889418` | category 17, mouse button 0; record `00889438` | `005142e7`, `005142fb` |
+| Dual preset | category 15/button 0, plus category 9/key scan `003a`; record `00677c30` | category 17/button 0, plus category 10/key scan `003a`; record `00677c50` | `00453585`, `0045359f` |
+| Joystick fallback | category 0/button 7; record `00677a10` | category 2/button 7; record `00677a30` | `00453707`, `0045371b` |
+
+The actual CPC receiver is bound by constructor `005145f0`, vtable `005e48e0`
+and RTTI descriptor `0063df60` (`CPCController`). DoMappings at `0042db40`
+dispatches those categories through table `0042e340`:
+
+- Mouse held reads byte `0089bdf5`; release reads latch `0089bdfc`.
+  Admitted message `0201` sets held; message `0202` clears held and sets release at
+  `0052378a–00523792`. Polling also ORs previous held into the release latch
+  on an unpressed sample at `0042d5a6–0042d5c3`. Mapping does not consume
+  that latch; `00523db0` clears it.
+- Keyboard held uses slot `+0x1c → 00514890 → 00515970` and requires the
+  byte result to equal one. Release uses `+0x20 → 00514870 → 00513a80`,
+  zero-extends the release byte and accepts nonzero. These read distinct
+  arrays at `00888c94` and `00888e94`; the queries do not clear release.
+  Key-message handling updates them, and `00512470` clears release state.
+- Joystick held uses `+0x10 → 005147f0`, normalizing the current button byte
+  to zero/one. Release uses `+0x14 → 00514810`, accepting previous nonzero
+  and current zero. Sampler `00513370` establishes the two buffer roles;
+  actual device sampling success is a separate question.
+
+Admitted digital mapping supplies **1.0f**. `SendButtonAction` at `0042e4d0`
+sets the action's suppression bit before recipient/pause admission; even a
+rejected delivery therefore suppresses another normal attempt through a
+second binding until those masks are cleared. `Flush` at `0042d9d0` copies
+current masks into the previous-state fields, clears current masks, then
+dispatches DoMappings. The
+Player recipient routes action 18 at `004d32d4` to FireWeapon `00409f20`
+and action 19 at `004d32cd` to ChargeWeapon `00409ef0`.
+
+This supports repeated held-charge dispatch across eligible mapping passes,
+not a claim of one call per rendered frame. A release predicate can also
+remain true across passes until sampling or latch clearing advances. The
+older partial source's zero digital value and keyboard argument counts must
+not replace the retail transport.
+
+Root independently decoded the complete bodies and checked the dispatch
+tables, initializer arguments and predicate/routing paths. Private evidence:
+`local-data/test-runs/re-audit-20260926/walker/fire-binding-bodies-v1.json`,
+SHA-256 `68ce70188a87fb5448ae9ee668d1778d3895218d49a679ac350368d955b31923`,
+plus `control-binding-bodies-v1.json` and the Player caller packet in that
+owner. This pass did not launch the game, inspect current settings or measure
+input cadence. Source comparisons use `Controller.cpp:148,258–315,443–486`,
+`PCController.h:21`, `PCController.cpp:80` and `Player.cpp:390` at the pinned
+commit above; raw retail dispatch decides where they differ.
+
+## Open questions
+
+| Question | Cheapest falsifier |
+| --- | --- |
+| Which x87 control/status state reaches the current-mode lookup in the running game, and whether fractional charge reaches the tested boundaries | Trace the control word, charge bits and lookup result in a copied retail runtime; compare values immediately around the level boundaries. The emulator comparison does not settle exception flags. |
+| How sampling, release-latch clearing and Flush interleave during actual gameplay, including held-charge/released-fire call frequency | In a copied runtime, trace the sampler, clear routines and `0042d9d0`, alongside `00409ef0`/`00409f20`; compare mapping passes with event and rendered frames |
+| Whether Level 100's Health Pad fires `Repair Pad` rounds at the player (reload 30 s, range 7) | Read the repair-pad AI update's firing conditions |

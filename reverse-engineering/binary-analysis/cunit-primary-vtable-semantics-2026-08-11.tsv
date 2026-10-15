@@ -1,0 +1,47 @@
+slot	retail_target_va	demo_target_va	retail_current_name	semantic_label	semantic_status	evidence_boundary
+71	0x00405db0	0x00405e20	SharedVFunc__NoOpRet8_00405db0	unknown_virtual_ret8	OPEN_NAME	Exact no-op body with two stack arguments; shared folding prevents an owner-specific global name
+72	0x00405dc0	0x00405e30	CUnit__ReturnFloat005d858c_00405dc0	default_scalar_0_25	EXACT_BEHAVIOR_NAME_OPEN	Returns exact float32 0.25; historical source name is absent
+73	0x00405dd0	0x00405e40	CUnit__ReturnFloat005d8b9c_00405dd0	velocity_decay_multiplier_0_98	STATIC_CALLSITE	Returns exact float32 0.980000019 and multiplies all three accumulated velocity components in CUnit motion update
+74	0x004fc080	0x004fc140	CUnit__TrySpawnOrFinalizeAttachedUnit	try_spawn_or_finalize_attached_unit	STATIC_DESCRIPTIVE	Body and state writes are bounded; exact historical source name is absent
+75	0x004fc3c0	0x004fc480	CUnit__ResolveField17cVectorContext_004fc3c0	GetLaunchPosition	SOURCE_OVERRIDE	CBattleEngine override at 0x0040C990 matches the pinned GetLaunchPosition source body and signature
+76	0x00405de0	0x00405e50	CUnit__TestField168Or214OrFlag2c_00405de0	unit_transition_readiness_predicate	STATIC_DESCRIPTIVE	Exact field predicate is known; exact historical source name is absent
+77	0x004fa4b0	0x004fa570	HYP__CUnit__SmoothEulerTowardTargetAndBuildMatrix	smooth_euler_toward_target_and_build_matrix	STATIC_DESCRIPTIVE	Transform inputs writes and ordering are bounded
+78	0x004f9a10	0x004f9ad0	CUnit__GetField178CachedHealthOrField164C0Float_004f9a10	get_cached_or_configured_life	STATIC_DESCRIPTIVE	Returns cached field 0x178 when present or unit-data field 0xC0
+79	0x004175c0	0x004175d0	CUnit__ReturnField164FloatF4_004175c0	GetThreat	SOURCE_OVERRIDE	CBattleEngine override at 0x0040E8E0 exactly matches pinned GetThreat source and fixes the base unit-data field at 0xF4
+80	0x004175d0	0x004175e0	CUnit__ReturnField164FloatF8_004175d0	GetImportance	SOURCE_OVERRIDE	CBattleEngine override at 0x0040E910 exactly matches pinned GetImportance source and fixes the base unit-data field at 0xF8
+81	0x004175e0	0x004175f0	CUnit__ReturnField13cCOrZero_004175e0	GetCurrentTarget	SOURCE_OVERRIDE	CBattleEngine override at 0x004071B0 occupies the pinned GetCurrentTarget slot
+82	0x00405e10	0x00405e80	CUnit__SetField1f0One_00405e10	set_deploy_requested	STATIC_DESCRIPTIVE	Writes one to unit field 0x1F0; CBoat override starts its deploying animation
+83	0x00405e20	0x00405e90	CUnit__ClearField1f0_00405e20	clear_deploy_requested	STATIC_DESCRIPTIVE	Clears unit field 0x1F0; CBoat override starts its undeploying animation
+84	0x004fc000	0x004fc0c0	HYP__CUnit__CanDeployNow	CanDeployNow	STATIC_DESCRIPTIVE	Predicate and consulted state are bounded; exact historical source name remains uncorroborated
+85	0x00417600	0x00417610	CUnit__SetField160_00417600	SetInfinateEnergy	SOURCE_OVERRIDE	Pinned spelling retained; CBattleEngine override stores the flag then refills energy from its configuration maximum
+86	0x004fbcb0	0x004fbd70	HYP__CUnit__UpdateDeployStateAndChargeEffects	update_deploy_state_and_charge_effects	STATIC_DESCRIPTIVE	State machine calls effects and writes are bounded
+87	0x004fc170	0x004fc230	CUnit__FinalizeSpawnAndAdvanceState	finalize_spawn_and_advance_state	STATIC_DESCRIPTIVE	Spawn finalization and state writes are bounded
+88	0x004fc4e0	0x004fc5a0	HYP__CUnit__UpdateTransform	update_unit_transform	STATIC_DESCRIPTIVE	Transform computation and output writes are bounded
+89	0x004fd440	0x004fd500	CUnit__TestField17c19cReadiness_004fd440	has_ready_linked_member	STATIC_DESCRIPTIVE	Exact linked-list traversal and readiness tests are known; historical source name is absent
+90	0x004fd4d0	0x004fd590	CUnit__SelectTarget	GetTargetablePos	SOURCE_CALLSITE	Pinned UpdateAutoAim and HandleAutoAim source call this exact virtual with an output vector; the old SelectTarget label is wrong
+91	0x004bfc60	0x00401430	SharedVFunc__ReturnFloatZero_004bfc60	GetStealth	SOURCE_CALLSITE	Pinned targeting and lock source multiply range by 1-GetStealth/100 at this exact slot; shared body folding forbids a global owner rename
+92	0x004fb270	0x004fb330	CUnit__ReturnField114Float_004fb270	return_unit_field_0x114_float	EXACT_BEHAVIOR_NAME_OPEN	Exact field read is known; historical semantic name is absent
+93	0x00459990	0x00404110	CFrontEndPage__DeActiveNotification	unit_noop_virtual_93	OPEN_NAME	One-byte RET body is compiler-folded with unrelated classes
+94	0x00405e60	0x00405ed0	CUnit__ReturnFloat005d8ba0_00405e60	default_scalar_2_0	EXACT_BEHAVIOR_NAME_OPEN	Returns exact float32 2.0; historical source name is absent
+95	0x004f9260	0x004f9300	CUnit__BuildField164ContextAndCreatePickup_004f9260	create_configured_pickup_context	STATIC_DESCRIPTIVE	Configured pickup construction and arguments are bounded
+96	0x004f9490	0x004f9530	HYP__CUnit__SpawnConfiguredPickupIfAboveWater	spawn_configured_pickup_if_above_water	STATIC_DESCRIPTIVE	Water gate spawn call and state consequences are bounded
+97	0x004014a0	0x00405f40	SharedVFunc__Return1_004014a0	unit_true_virtual_97	OPEN_NAME	Constant true body is compiler-folded with unrelated virtual meanings
+98	0x004fda90	0x004fdb50	CUnit__FindActiveMemberByField18c_004fda90	find_active_linked_member	STATIC_DESCRIPTIVE	Exact field-0x18C traversal and active-member return are bounded
+99	0x004fdc10	0x0051aad0	CFrontEndPage__Init_ReturnTrue	unit_true_virtual_99	OPEN_NAME	Constant true body is compiler-folded with unrelated virtual meanings
+100	0x004fdd00	0x004fddb0	CUnit__SetField244ModeAndDispatchF4_004fdd00	set_unit_mode_and_dispatch	STATIC_DESCRIPTIVE	Mode write and forwarded dispatch are bounded
+101	0x004fe030	0x004fe0e0	HYP__CUnit__QueueCooldownMessageForCompatibleTrigger	queue_compatible_trigger_effect	STATIC_DESCRIPTIVE	Compatibility gate event/effect selection and cooldown writes are bounded
+102	0x004fe2b0	0x004fe360	CUnit__MarkField17cEntriesForName_004fe2b0	EnableWeapon	SOURCE_OVERRIDE	CBattleEngine override at 0x0040DC30 exactly forwards EnableWeapon to walker and jet parts as in pinned source
+103	0x004fe310	0x004fe3c0	CUnit__ClearField17cNameMatchAndRefreshSupport_004fe310	DisableWeapon	SOURCE_OVERRIDE	CBattleEngine override at 0x0040DC60 exactly forwards DisableWeapon to walker and jet parts as in pinned source
+104	0x00417630	0x00417640	CUnit__ReturnObject114OrOne_00417630	CanBeLocked	SOURCE_OVERRIDE	CBattleEngine override at 0x0040E7D0 exactly matches pinned stealth loop roll and walker-special gates
+105	0x004014a0	0x00405f40	SharedVFunc__Return1_004014a0	OnScanner	SOURCE_CALLSITE	Pinned HandleAutoAim halves range when this slot is false; shared body folding forbids a global owner rename
+106	0x004bfc60	0x00401430	SharedVFunc__ReturnFloatZero_004bfc60	unit_zero_virtual_106	OPEN_NAME	Constant zero body is compiler-folded with unrelated virtual meanings
+107	0x004fe540	0x004fe5f0	CUnit__AccumulateForwardedCommandScore	accumulate_forwarded_command_score	STATIC_DESCRIPTIVE	Forwarded score accumulation inputs and writes are bounded
+108	0x004014a0	0x00405f40	SharedVFunc__Return1_004014a0	unit_true_virtual_108	OPEN_NAME	Constant true body is compiler-folded with unrelated virtual meanings
+109	0x00405e70	0x00405ee0	CUnit__IsField168Null_00405e70	is_unit_data_pointer_null	EXACT_BEHAVIOR_NAME_OPEN	Exact field-0x168 null predicate is known; historical source name is absent
+110	0x00405e80	0x00405ef0	SharedVFunc__WriteZeroVectorRet04_00405e80	write_zero_vector	EXACT_BEHAVIOR_NAME_OPEN	Writes an exact zero vector to the output; shared folding prevents an owner-specific global name
+111	0x004fe5c0	0x004fe670	CUnit__ReturnField164B4ScaledByMode_004fe5c0	get_profile_scalar_b4_scaled_by_mode	STATIC_DESCRIPTIVE	Exact unit-data field scale and mode branch are bounded
+112	0x00405ea0	0x00405f10	CUnit__ReturnFloat005d8578_00405ea0	default_scalar_0_05	EXACT_BEHAVIOR_NAME_OPEN	Returns exact float32 0.05; historical source name is absent
+113	0x00405eb0	0x00405f20	CUnit__CopyVector1cToOut_00405eb0	copy_world_position	STATIC_DESCRIPTIVE	Copies object fields 0x1C..0x24 to an output vector
+114	0x004014c0	0x00405930	SharedVFunc__NoOpOneArg_004014c0	unit_noop_virtual_114	OPEN_NAME	No-op one-argument body is compiler-folded with unrelated classes
+115	0x004014a0	0x00405f40	SharedVFunc__Return1_004014a0	unit_true_virtual_115	OPEN_NAME	Constant true body is compiler-folded with unrelated virtual meanings
+116	0x004fe5f0	0x004fe6a0	CUnit__ScheduleEvent7d0WithMinusOne_004fe5f0	schedule_event_0x7D0_with_minus_one	STATIC_DESCRIPTIVE	Exact event ID argument and ordering are bounded; event semantic name remains open

@@ -1,0 +1,148 @@
+{
+  "attempts": [
+    {
+      "attempt": 1,
+      "integrity": {
+        "cleanupConfirmed": true,
+        "foregroundMaintained": true,
+        "keyUpConfirmed": true,
+        "receiptRevalidated": true
+      },
+      "metrics": {
+        "baselineB95Speed": 5.322100608703471,
+        "baselineEndpointDisplacement": 2.0783809995918205,
+        "normalizedResponse": {
+          "100ms": 0.9068892542980151,
+          "200ms": 0.9149145667433208,
+          "350ms": 0.9830645045209021,
+          "500ms": 0.9891653433344677
+        },
+        "releaseLatencyMs": {
+          "lower": 60,
+          "upper": 90
+        },
+        "responseLatencyMs": {
+          "lower": 0,
+          "upper": 70
+        },
+        "responseThreshold": 5.8543106695738185,
+        "steadySlope": 0.8635454263853384,
+        "steadySpeed": 11.431062261882612,
+        "velocityHoldToBaselineRatio": 2.490841022647785
+      },
+      "receiptSha256": "0f17fbb029c2a1ec5364199c992b59fd166eb22fa71725cd18deeedb89cb1026",
+      "runDigest": "6ed4c310a974eaba0f436c28609ed58f9c2f0c371616336a099a26c58ac65216",
+      "sampleCounts": {
+        "baseline": 50,
+        "hold": 200,
+        "release": 75
+      }
+    },
+    {
+      "attempt": 2,
+      "integrity": {
+        "cleanupConfirmed": true,
+        "foregroundMaintained": true,
+        "keyUpConfirmed": true,
+        "receiptRevalidated": true
+      },
+      "metrics": {
+        "baselineB95Speed": 5.012007552247741,
+        "baselineEndpointDisplacement": 1.8803778093442705,
+        "normalizedResponse": {
+          "100ms": 0.9037238892683924,
+          "200ms": 0.9223167421349701,
+          "350ms": 0.9424585450324517,
+          "500ms": 0.9591852699057141
+        },
+        "releaseLatencyMs": {
+          "lower": 0,
+          "upper": 80
+        },
+        "responseLatencyMs": {
+          "lower": 70,
+          "upper": 100
+        },
+        "responseThreshold": 5.5132083074725164,
+        "steadySlope": 0.4474040156862114,
+        "steadySpeed": 11.431229179119594,
+        "velocityHoldToBaselineRatio": 2.7738496891664672
+      },
+      "receiptSha256": "0a696d88c26eef3b765f8923dc69433558b5558f66f61023f63d111197fad5a6",
+      "runDigest": "674543275890d762b972ef375eda9cafd1da34f18460f54a6c89b89937519a35",
+      "sampleCounts": {
+        "baseline": 50,
+        "hold": 200,
+        "release": 75
+      }
+    }
+  ],
+  "claim": "scalar-jet-forward-thrust-response",
+  "envelope": {
+    "normalizedResponse": {
+      "100ms": {
+        "lower": 0.8537238892683924,
+        "upper": 0.9568892542980152
+      },
+      "200ms": {
+        "lower": 0.8649145667433208,
+        "upper": 0.9723167421349701
+      },
+      "350ms": {
+        "lower": 0.8924585450324517,
+        "upper": 1.0330645045209021
+      },
+      "500ms": {
+        "lower": 0.909185269905714,
+        "upper": 1.0391653433344676
+      }
+    },
+    "releaseLatencyMs": {
+      "lower": 0,
+      "upper": 90
+    },
+    "responseLatencyMs": {
+      "lower": 0,
+      "upper": 100
+    },
+    "steadySlope": {
+      "lower": 0.4274040156862114,
+      "upper": 0.8835454263853384
+    },
+    "steadySpeed": {
+      "lower": 10.859509148788,
+      "upper": 12.002790638076
+    }
+  },
+  "metricUnits": {
+    "latency": "milliseconds",
+    "position": "retail-world-coordinate-unit",
+    "ratio": "unitless",
+    "speed": "retail-world-coordinate-units-per-second",
+    "speedSlope": "retail-world-coordinate-units-per-second-squared"
+  },
+  "nonclaims": [
+    "No actor-relative or camera-relative direction is measured.",
+    "No walker, grounded, terrain, turning, or full vehicle-parity behavior is claimed.",
+    "Morph into jet is harness-proven only as state-gate setup (states 1 then 3); morph dynamics are not characterized.",
+    "Timing is bounded to the ten millisecond sampling cadence.",
+    "No physical-distance conversion is established.",
+    "No scalar authorizes deterministic-Core behavior without a separate accepted translation policy.",
+    "No conversion from QPC seconds or milliseconds to deterministic-Core ticks is established.",
+    "Physics-update period and actor-velocity units are hypothesized from source and static evidence and inferred from position edges; they are not a proven retail tick identity.",
+    "Jet baseline may include residual thruster cruise; thrust is accepted relative to that idle, not absolute zero.",
+    "Late-hold energy or terrain collapse is excluded from the mid-hold steady window; it is not a steady-speed claim.",
+    "Response-latency envelope is wider than walker because the threshold is relative to residual airspeed, not a near-static baseline."
+  ],
+  "privateEvidenceLabel": "jet-p06",
+  "sampling": {
+    "baselineMs": 500,
+    "cadenceMs": 10,
+    "clock": "query-performance-counter",
+    "holdMs": 2000,
+    "releaseMs": 750,
+    "timingPrecisionMs": 10
+  },
+  "schemaVersion": "battleengine-jet-forward-scalar-response.v1",
+  "status": "two-accepted-fresh-attempts"
+}

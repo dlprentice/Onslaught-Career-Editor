@@ -1,0 +1,183 @@
+{
+  "schemaVersion": "first-flight-camera-movement-morph-contract-candidate.v1",
+  "status": "candidate-static-runtime-required",
+  "title": "First Flight camera, movement, and morph behavior contract candidate",
+  "scope": "A public-safe acceptance shape for the smallest retail observations that can improve First Flight movement without treating static identity or reference source as runtime behavior proof.",
+  "evidenceAuthority": {
+    "sourceHypothesis": "Stuart source may supply architecture, naming, and expected control-flow hypotheses only.",
+    "steamStaticCorroboration": "Reviewed Steam-static evidence may establish bounded released-code identity, ownership, and topology only.",
+    "copiedRuntimeMeasurement": "Controlled observations of a verified copied executable are required for player-visible behavior, values, direction, timing, and causality.",
+    "rebuild": "The rebuild consumes an accepted contract and cannot corroborate retail behavior by agreeing with itself."
+  },
+  "provenance": {
+    "sourceRevision": "5352a81cdb838b145a57f7febc5d9fc4b0129ebb",
+    "steamStaticInputs": [
+      "battleengine-movement-static-crosswalk-2026-07-12.md",
+      "battleengine-morph-runtime-observer-design-2026-07-12.md",
+      "ghidra-reviewed-correction-plan-2026-07-13.json"
+    ],
+    "copiedRuntimeEvidence": "none accepted for these observation rows"
+  },
+  "rebuildChangeAuthorized": false,
+  "retry13Authorized": false,
+  "observationOrder": [
+    "camera_reference_frame",
+    "walker_directional_response",
+    "jet_directional_response",
+    "morph_request_result_correlation"
+  ],
+  "observations": [
+    {
+      "id": "camera_reference_frame",
+      "sourceHypothesis": {
+        "status": "hypothesis-only",
+        "summary": "Movement intent may be transformed through the active view or actor frame before reaching BattleEngine movement."
+      },
+      "steamStaticCorroboration": {
+        "status": "accepted-bounded-static",
+        "summary": "Camera access and mouse-look routines are identified, while the reviewed movement cluster establishes a separate BattleEngine movement owner; their player-visible directional relationship is not statically proven.",
+        "anchors": [
+          "0x00407540 CGame__UpdateMouseLookAngles",
+          "0x004081c0 CBattleEngine__Move"
+        ]
+      },
+      "copiedRuntimeMeasurement": {
+        "status": "required-not-measured",
+        "requiredObservations": [
+          "Hold the same single directional input from two clearly separated camera headings in otherwise matched fresh runs.",
+          "Record camera forward/right axes and actor displacement direction at input start and after a short stable window.",
+          "Retain only normalized vectors, event order, and identity/integrity results in public evidence."
+        ]
+      },
+      "tolerances": {
+        "status": "not-established",
+        "acceptanceRule": "Set angular and displacement tolerances only from repeat copied-runtime observations; do not infer them from rebuild output or source constants."
+      },
+      "rebuildRequirement": {
+        "status": "blocked-until-runtime-accepted",
+        "consumers": ["First Flight input adapter", "deterministic movement intent"],
+        "requirement": "Use the accepted retail reference frame for directional intent while keeping camera presentation outside deterministic simulation truth."
+      },
+      "nonclaims": [
+        "No camera-relative movement behavior is proven yet.",
+        "No FOV, sensitivity, smoothing, inversion, or camera timing value is claimed."
+      ]
+    },
+    {
+      "id": "walker_directional_response",
+      "sourceHypothesis": {
+        "status": "hypothesis-only",
+        "summary": "Walker movement should respond directionally to transformed intent and update walk-cycle state from local velocity."
+      },
+      "steamStaticCorroboration": {
+        "status": "accepted-bounded-static",
+        "summary": "BattleEngine dispatches the walker path, and the accepted walker helper projects velocity into local space for walk-cycle advancement.",
+        "anchors": [
+          "0x004081c0 CBattleEngine__Move",
+          "0x00412ad0 CBattleEngineWalkerPart__UpdateWalkCycle"
+        ]
+      },
+      "copiedRuntimeMeasurement": {
+        "status": "required-not-measured",
+        "requiredObservations": [
+          "From a stable walker state, apply one forward or lateral input without morphing.",
+          "Record normalized input, actor basis, displacement direction, speed samples, grounded state, and event timestamps.",
+          "Repeat enough matched runs to distinguish response direction from incidental terrain drift."
+        ]
+      },
+      "tolerances": {
+        "status": "not-established",
+        "acceptanceRule": "Derive directional, latency, and speed envelopes from accepted repeats on bounded terrain; no single run freezes a constant."
+      },
+      "rebuildRequirement": {
+        "status": "blocked-until-runtime-accepted",
+        "consumers": ["OnslaughtRebuild.Core movement"],
+        "requirement": "Match the accepted walker response direction and bounded response envelope without importing presentation animation into Core."
+      },
+      "nonclaims": [
+        "No walker acceleration, top speed, turn rate, animation phase, or terrain-friction value is established.",
+        "Static walk-cycle ownership is not runtime handling proof."
+      ]
+    },
+    {
+      "id": "jet_directional_response",
+      "sourceHypothesis": {
+        "status": "hypothesis-only",
+        "summary": "Jet movement should combine transformed intent with flight, near-ground, and friction behavior owned by the JetPart path."
+      },
+      "steamStaticCorroboration": {
+        "status": "accepted-bounded-static",
+        "summary": "The accepted JetPart movement owner reaches ground-effect and friction helpers, but static topology does not establish player-visible response values.",
+        "anchors": [
+          "0x00410c50 CBattleEngineJetPart__Move",
+          "0x00411630 CBattleEngineJetPart__HandleGroundEffect",
+          "0x00411aa0 CBattleEngineJetPart__GetFriction"
+        ]
+      },
+      "copiedRuntimeMeasurement": {
+        "status": "required-not-measured",
+        "requiredObservations": [
+          "Begin from a stable verified jet state and apply one directional input over bounded terrain.",
+          "Record normalized input, camera and actor bases, displacement and velocity directions, altitude band, grounded state, and event timestamps.",
+          "Use separate matched observations for ordinary flight and near-ground behavior before attributing a ground-effect difference."
+        ]
+      },
+      "tolerances": {
+        "status": "not-established",
+        "acceptanceRule": "Derive direction, latency, speed, and altitude-band envelopes from accepted repeats; keep ordinary-flight and near-ground tolerances separate."
+      },
+      "rebuildRequirement": {
+        "status": "blocked-until-runtime-accepted",
+        "consumers": ["OnslaughtRebuild.Core movement"],
+        "requirement": "Match only accepted jet directional-response envelopes; treat ground effect and friction as separate requirements when evidence supports them."
+      },
+      "nonclaims": [
+        "No jet acceleration, top speed, energy cost, stall, friction, or ground-effect constant is established.",
+        "Accepted helper identities do not establish runtime magnitude or causality."
+      ]
+    },
+    {
+      "id": "morph_request_result_correlation",
+      "sourceHypothesis": {
+        "status": "hypothesis-only",
+        "summary": "A transform action requests a BattleEngine morph whose success or rejection changes the movement mode reached by later updates."
+      },
+      "steamStaticCorroboration": {
+        "status": "accepted-bounded-static",
+        "summary": "The player action receiver, BattleEngine morph owner, and corrected movement owners form a candidate request-to-update path; no accepted runtime correlation exists.",
+        "anchors": [
+          "0x004d3110 CPlayer__ReceiveButtonAction",
+          "0x0040a580 CBattleEngine__Morph",
+          "0x004081c0 CBattleEngine__Move",
+          "0x00410c50 CBattleEngineJetPart__Move"
+        ]
+      },
+      "copiedRuntimeMeasurement": {
+        "status": "required-not-measured",
+        "requiredObservations": [
+          "After simpler camera and single-mode movement observations, correlate one exact transform request with observable mode before and after the request.",
+          "Record success or rejection, transition start/end if observable, energy, shield, velocity, grounded and stall state, and event timestamps.",
+          "Use a new bounded observation design; the prior three-role Retry 13 is not authorized."
+        ]
+      },
+      "tolerances": {
+        "status": "not-established",
+        "acceptanceRule": "Establish categorical success/rejection and timing/state tolerances only after an accepted, repeatable copied-runtime observation."
+      },
+      "rebuildRequirement": {
+        "status": "blocked-until-runtime-accepted",
+        "consumers": ["OnslaughtRebuild.Core mode transition"],
+        "requirement": "Replace synthetic instant switching only when an accepted contract defines request outcome, observable transition, state effects, and tolerances."
+      },
+      "nonclaims": [
+        "No transform success condition, duration, cost, cooldown, state enum, or rejection cause is established.",
+        "No animation, audio, effect, weapon eligibility, or mission interaction is claimed."
+      ]
+    }
+  ],
+  "globalNonclaims": [
+    "This candidate is not an accepted retail behavior contract and authorizes no rebuild change.",
+    "The 6,411-function metadata audit and reviewed correction wave are not parity proof.",
+    "No whole-game, handling, camera, controls, weapon, mission, animation, audio, or presentation parity is claimed."
+  ]
+}

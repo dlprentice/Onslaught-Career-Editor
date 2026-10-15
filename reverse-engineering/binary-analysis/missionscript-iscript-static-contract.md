@@ -1,0 +1,63 @@
+# MissionScript / IScript static contract
+
+Status: bounded static evidence; not runtime script proof
+Last updated: 2026-07-29
+
+This document is the implementation-facing owner for retail MissionScript and
+IScript static evidence. Historical fixture plans and command-effect rollups are
+available in Git history; the retained schemas and corpus indexes below are the
+current sources.
+
+## Evidence owners
+
+- The exact
+  `144-entry native registry` (private RE archive: `reverse-engineering/ghidra-functions.md`)
+  records the corrected `0x0064ce20` table base, `0x40` stride, name field at
+  `+0x00`, handler field at `+0x30`, and all 144 distinct
+  `FollowWaypoint`-through-`IsOverWater` names and handlers.
+- [`missionscript-vm-datatype-opcode-schema.v1.json`](missionscript-vm-datatype-opcode-schema.v1.json)
+  records the bounded opcode, datatype, and VM inventory.
+- The PC demo/retail opcode-factory lineage (private RE archive: `reverse-engineering/binary-analysis/pc-demo-retail-asm-instruction-lineage-2026-08-11.md`)
+  independently fixes all 27 factory cases to paired strict RTTI instruction
+  classes and slot-0 executors while keeping eight runtime effects open.
+- [`functions/IScript.cpp.md`](functions/IScript.cpp.md),
+  [`functions/ScriptObjectCode.cpp.md`](functions/ScriptObjectCode.cpp.md), and
+  [`functions/EventFunction.cpp.md`](functions/EventFunction.cpp.md) retain
+  function-level identities and call relationships.
+- [`../game-assets/msl-scripting.md`](../game-assets/msl-scripting.md) retains
+  reusable syntax and representative corpus observations. Per-level counts and
+  mappings are queried from the source corpus when needed instead of being
+  tracked as generated inventories.
+
+## Static surfaces
+
+| Surface | Bounded static contract |
+| --- | --- |
+| Command registry | `ScriptCommandRegistry__InitBuiltins` associates known command names with descriptor slots and handler entries. Exact descriptor field layout and arity remain incomplete. |
+| VM dispatch | `CAsmInstruction__SpawnFromOpcode` creates 27 exact strict-RTTI instruction families for serialized opcodes `0x00..0x1a`; `CDataType__CreateFromType` creates datatype families; `CScriptObjectCode__Run` and `CInstructionOP_CALL__ExecuteCall` form the interpreter/call spine. Eight executor effects remain open. |
+| Event lifecycle | `IScript__ScheduleEvent` → `CScriptEventNB__PostEvent` → `CEventFunction__Execute` → `CScriptObjectCode__CallEventDirect` is the static event path. |
+| Script loading | `CMissionScriptObjectCode__StartLoadAsync` and `CMissionScriptObjectCode__LoadAsync` load script object code through a `CDXMemBuffer`; packed-versus-loose source selection remains a runtime question. |
+| Object bridge | `GetThingRef` and `SpawnThing` bridge scripts to world/thing/spawner systems; corpus name matches do not prove runtime object identity or spawning. |
+| Save bridge | `SetGoodieState` / `GetGoodieState` use one-based script indices. For supported displayable entries, `save_index = script_index - 1` and the true-view dword offset is `0x1F46 + 4 * save_index`. Reserved Goodie rows remain preserve-only. |
+| Player/HUD/audio commands | Static handler/name evidence exists for score, stealth, cockpit, objective, message, audio, HUD, variable, camera, vector/range, and thing-value families. It does not prove visible/audible effects. |
+
+Representative descriptor families include slot operations, objective outcome,
+message/audio, Goodie state, camera/position, vector/range helpers, thing-value
+helpers, HUD/variable display, and player-state/score. The current exact
+registry contains 144 distinct names and handlers; older generated schema
+geometry that began at the first handler field is retained only in Git history.
+
+## Corpus use
+
+Copied mission inputs are allowed only as ignored local evidence. Public files
+retain aggregate command/event/name usage and case-sensitive tokens. Corpus
+presence establishes that a token occurs in a copied sample; it does not prove
+which resource the retail runtime selects or what the command does at runtime.
+
+## Claim boundary
+
+This contract supports parsers, schema work, save-index disambiguation, and
+scoped reconstruction planning. It does not prove runtime MissionScript
+execution, command effects, event outcomes, mission win/loss behavior, visible
+HUD/camera output, audio playback, live loose-script selection, exact concrete
+layouts, source-body identity, executable patch behavior, or rebuild parity.

@@ -1,0 +1,69 @@
+{
+  "attempts": [
+    {
+      "attempt": 1,
+      "integrity": {
+        "cleanupConfirmed": true,
+        "foregroundMaintained": true,
+        "keyUpConfirmed": true,
+        "receiptRevalidated": true
+      },
+      "metrics": {
+        "sampleCount": 200,
+        "steadyEnergyRatePerSec": -0.4971824758044694
+      },
+      "receiptSha256": "554f0f002722a14733e868de99b38a55f3eb4878a33cf702b6e538a03de72b3a",
+      "runDigest": "25d287642037b5bbe41a5ce3eedfbed152da92c668246db6446b347258bf01d4",
+      "sampleCounts": {
+        "hold": 200
+      }
+    },
+    {
+      "attempt": 2,
+      "integrity": {
+        "cleanupConfirmed": true,
+        "foregroundMaintained": true,
+        "keyUpConfirmed": true,
+        "receiptRevalidated": true
+      },
+      "metrics": {
+        "sampleCount": 200,
+        "steadyEnergyRatePerSec": -0.5366311540437417
+      },
+      "receiptSha256": "6ac3473d37fd1a5b15ac1a402863eadbc909b794bdf41948e951624b5250b97c",
+      "runDigest": "7766ca93be1fd7cf0b354a45f1325bd3db0374646cf01b7c52ae3e8f23d7643e",
+      "sampleCounts": {
+        "hold": 200
+      }
+    }
+  ],
+  "claim": "scalar-jet-energy-drain-rate",
+  "envelope": {
+    "steadyEnergyRatePerSec": {
+      "lower": -0.562476494789947,
+      "upper": -0.47133713505826413
+    }
+  },
+  "metricUnits": {
+    "energyRate": "retail-energy-units-per-second"
+  },
+  "nonclaims": [
+    "Rate is signed: negative means drain during jet thrust hold.",
+    "Offset BattleEngine+0xFC is a steam-static hypothesis proven only by correlated dual-accept drain, not full layout completeness.",
+    "Not walker ground regen, shield rates, fire energy cost, or cloak burn.",
+    "Source config mEnergy/mMaxAirEnergyCost defaults are not Core authority.",
+    "Core agreement does not re-prove retail."
+  ],
+  "offsetHypothesis": {
+    "battleEngineEnergy": "0xFC"
+  },
+  "privateEvidenceLabel": "energy-p02",
+  "sampling": {
+    "clock": "query-performance-counter",
+    "measure": "energy",
+    "pollApproxMs": 10,
+    "vehicle": "jet"
+  },
+  "schemaVersion": "battleengine-jet-energy-drain-scalar-response.v1",
+  "status": "two-accepted-fresh-attempts"
+}
