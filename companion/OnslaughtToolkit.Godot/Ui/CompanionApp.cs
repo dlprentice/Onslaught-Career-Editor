@@ -110,8 +110,8 @@ public partial class CompanionApp : Control
         EditCareer = new EditCareerPage(Services);
         Goodies = new GoodiesPage(Services, index =>
         {
-            EditCareer.AddGoodie(index);
             Navigate("edit");
+            EditCareer.AddGoodie(index);
         });
         Cheats = new CheatsPage(Services);
         Settings = new SettingsPage(Services);
@@ -239,6 +239,7 @@ public partial class CompanionApp : Control
     internal void Navigate(string key)
     {
         if (!_pages.TryGetValue(key, out Page? page)) return;
+        if (Current is not null && Current != page) Status.Clear();
         if (Current is not null) Current.Root.Visible = false;
         Current = page;
         page.Root.Visible = true;

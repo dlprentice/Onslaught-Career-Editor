@@ -121,12 +121,15 @@ internal static class CompanionUiTests
             "career bytes open on the stored values");
         string other = Path.Combine(Path.GetDirectoryName(install.Game)!, "compare-other.bes");
         byte[] otherBytes = File.ReadAllBytes(app.Workspace.Session!.Path);
+        byte before = otherBytes[0x23F6];
         otherBytes[0x23F6] ^= 0x10;
         File.WriteAllBytes(other, otherBytes);
         Outcome<CareerComparison> compared = await app.Bytes.CompareAsync(other);
+        TreeItem? changed = app.Bytes.Differences.GetRoot()?.GetFirstChild();
         check.That(compared.Value is { Bytes.ChangedBytes: 1 } && app.Bytes.View.Selected == 1 && app.Bytes.Differences.Visible &&
-            !app.Bytes.Values.Visible && app.Bytes.Differences.GetRoot()?.GetChildCount() == 1,
-            "comparing switches to the differences and lists the one changed byte");
+            !app.Bytes.Values.Visible && app.Bytes.Differences.GetRoot()?.GetChildCount() == 1 && changed is not null &&
+            changed.GetText(0) == "0x23F6" && changed.GetText(2) == $"{before:X2}" && changed.GetText(3) == $"{before ^ 0x10:X2}",
+            "comparing switches to the differences and lists the one changed byte: offset 0x23F6, its original and its other value");
         app.Bytes.ShowView(0);
     }
 
@@ -452,6 +455,10 @@ internal static class CompanionUiTests
         check.That(app.Music.Items.Count == 3 && app.Music.List.GetRoot()?.GetChildCount() == 3, "music, voices and cutscenes are listed");
         check.That(!app.Music.Load(app.Music.Items.First(item => item.Kind == OnslaughtToolkit.Companion.Media.AudioKind.Music)) &&
             app.Music.PlayPause.Disabled, "a file without a Vorbis header is refused and cannot play");
+        check.That(app.Status.Failed && app.Status.Label.Text.Contains("may be damaged"), "the refusal says the file may be damaged");
+        app.Navigate("lore");
+        check.That(!app.Status.Failed && app.Status.Label.Text.Length == 0, "a page's message does not follow you to another page");
+        app.Navigate("music");
         check.That(!app.Music.Load(app.Music.Items.First(item => !item.Playable)) && app.Music.Player.Stream is null,
             "a Bink cutscene is listed but not played");
         await Frame(tree);

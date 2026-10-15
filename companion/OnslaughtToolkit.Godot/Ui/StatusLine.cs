@@ -23,6 +23,9 @@ internal sealed class StatusLine
     internal StatusKind Kind { get; private set; } = StatusKind.Info;
     internal bool Failed => Kind == StatusKind.Failure;
 
+    /// <summary>Empties the footer's message; a message belongs to the page that showed it.</summary>
+    internal void Clear() => Show("", StatusKind.Info);
+
     internal void Show(string message, bool failed = false) => Show(message, failed ? StatusKind.Failure : StatusKind.Info);
 
     internal void Show(string message, StatusKind kind)

@@ -113,7 +113,7 @@ internal sealed class MusicPage : Page
             _player.Stream = null;
             PlayPause.Disabled = Stop.Disabled = true;
             _position.Editable = false;
-            _status.Show(item.Playable ? $"{Path.GetFileName(item.Path)} is not a playable Ogg Vorbis file." :
+            _status.Show(item.Playable ? $"{Path.GetFileName(item.Path)} can't be played: it isn't a complete Ogg Vorbis file, so it may be damaged. Steam's \"Verify integrity of game files\" restores the original." :
                 "Cutscenes are Bink video; they cannot be played here.", item.Playable ? StatusKind.Failure : StatusKind.Info);
             return false;
         }
