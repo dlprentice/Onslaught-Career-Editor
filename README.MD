@@ -100,8 +100,8 @@ the reviewed exception to the no-save rule. See [`SECURITY.md`](SECURITY.md) and
 ## Evidence and provenance
 
 [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) is the front door to the game documentation.
-Findings name the specimen, capture, test or source line they rest on. Stuart Gillam's source in the pinned
-[`references/Onslaught`](references/Onslaught) submodule is a source reference, not proof of retail behaviour.
+Findings name the specimen, capture, test or source line they rest on. Stuart's source release (GitHub `stuart73/Onslaught`) in the
+pinned [`references/Onslaught`](references/Onslaught) submodule is a source reference, not proof of retail behaviour.
 Earlier Ghidra-era records, the tracked Ghidra checkpoint and the campaign machinery are kept privately.
 
 The lore library begins at [`lore/_index.md`](lore/_index.md); [`lore-book/BOOK.md`](lore-book/BOOK.md) is a short

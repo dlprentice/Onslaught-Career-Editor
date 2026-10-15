@@ -27,7 +27,7 @@ in Git history and the private RE archive.
 Every behaviour claim needs a capture, byte comparison, focused test, or pinned source reference. The decompilation
 is cited by function, never quoted. A name, one observed call or a model report alone is insufficient. Static
 evidence establishes identities and structures; only controlled runtime evidence establishes causality and values.
-Stuart Gillam's partial GPL source in `references/Onslaught` is a source reference, not proof of retail behaviour.
+Stuart's partial GPL source release (GitHub `stuart73/Onslaught`, in `references/Onslaught`) is a source reference, not proof of retail behaviour.
 Unknowns are written as open questions with the cheapest falsifier.
 
 ## Safeguards

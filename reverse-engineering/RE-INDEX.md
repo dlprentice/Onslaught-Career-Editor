@@ -5,8 +5,8 @@ Last updated: 2026-10-15 (decompilation is the authority; Ghidra campaign record
 Summary: where the documentation of Battle Engine Aquila lives, what each store covers, and the rules a claim about the shipped game has to meet before it is written down.
 
 This tree documents *Battle Engine Aquila* as prose and specs: file formats, save and options layouts, mechanics,
-assets and mission data, per-function notes and behaviour contracts, patch analyses, and notes on Stuart Gillam's
-pinned source. Since 2026-10-15 the byte-matching decompilation of the retail executable (private `bea-decomp`,
+assets and mission data, per-function notes and behaviour contracts, patch analyses, and notes on Stuart's pinned
+source release (GitHub `stuart73/Onslaught`, in `references/Onslaught`). Since 2026-10-15 the byte-matching decompilation of the retail executable (private `bea-decomp`,
 5,482 of 5,482 functions) is the authority behind these documents; new findings cite its functions and never quote
 its code.
 
@@ -21,7 +21,7 @@ notes are history.
 
 - Static names, types, strings, and call relationships prove only the structures
   they directly demonstrate.
-- Stuart Gillam's source and the AYA extractor are references, not proof of the
+- Stuart's source release (`references/Onslaught`) and the AYA extractor are references, not proof of the
   Steam executable's implementation or complete format support.
 - Controlled copied-runtime observations establish only the measured behavior
   and specimen described by their evidence.
