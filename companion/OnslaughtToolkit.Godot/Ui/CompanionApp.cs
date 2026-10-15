@@ -74,8 +74,7 @@ public partial class CompanionApp : Control
     internal BackupsPage Backups { get; private set; } = null!;
     internal MusicPage Music { get; private set; } = null!;
     internal LorePage Lore { get; private set; } = null!;
-    internal ComparePage Compare { get; private set; } = null!;
-    internal StoredValuesPage RawValues { get; private set; } = null!;
+    internal CareerBytesPage Bytes { get; private set; } = null!;
     internal AssetsPage Assets { get; private set; } = null!;
 
     /// <summary>Whether the game was running at the last check; the header says so while it is.</summary>
@@ -119,8 +118,7 @@ public partial class CompanionApp : Control
         Backups = new BackupsPage(Services);
         Music = new MusicPage(Game, Status);
         Lore = new LorePage(Game, Status, openUrl);
-        Compare = new ComparePage(Workspace, Status, popups);
-        RawValues = new StoredValuesPage(Workspace);
+        Bytes = new CareerBytesPage(Workspace, Status, popups);
         Assets = new AssetsPage(Services);
         NavGroup[] groups =
         [
@@ -128,7 +126,7 @@ public partial class CompanionApp : Control
             new("Your career", [Summary, Goodies, EditCareer, Cheats]),
             new("Your game", [Settings, Backups]),
             new("Extras", [Music, Lore, Assets]),
-            new("Advanced", [Compare, RawValues], Folds: true),
+            new("Advanced", [Bytes], Folds: true),
         ];
 
         VBoxContainer frame = this.Add(Build.Column(0));
@@ -327,11 +325,10 @@ public partial class CompanionApp : Control
     {
         if (Workspace.Session is not SaveSession session) return;
         EditCareer.ShowSession(session);
-        RawValues.ShowSession(session);
+        Bytes.ShowSession(session);
         Summary.ShowSession(session);
         Goodies.ShowSession(session);
         Cheats.ShowSession(session);
-        Compare.Reset();
         // A career the player opens from Home takes them to it; the one opened at startup does not move them.
         if (Current == Home && !_quietOpen) Navigate("summary");
         ShowCareerMenu();
@@ -429,7 +426,7 @@ public partial class CompanionApp : Control
     {
         CareerMenu.Disabled = Workspace.Busy;
         EditCareer.UpdateActions();
-        Compare.Refresh();
+        Bytes.Refresh();
         if (Current == Backups) Backups.Refresh();
         if (Current == Cheats) Cheats.Refresh();
         RefreshHeader();

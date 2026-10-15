@@ -77,7 +77,7 @@ never overlaps another job on the Intel GPU (David allowed this on 2026-09-26).
 The sidebar groups the pages the way a player thinks about them: **Home**; **Your
 career** (Summary, Goodies, Edit career, Cheats); **Your game** (Game settings, Backups);
 **Extras** (Music & voices, Lore, Art & sound); and **Advanced**, folded away
-(Compare careers, Raw values). The header names the page, shows **Game running** while the game
+(Career bytes). The header names the page, shows **Game running** while the game
 is open, and switches careers (or opens a career file, Ctrl+O). While Edit career or Game
 settings has unsaved changes, a bar under the page counts them and offers Save (Ctrl+S)
 and Undo.
@@ -137,9 +137,9 @@ itself, read-only.
   does not bend normals with the bones, while glTF viewers do, so lighting on a moving limb
   can differ slightly from the game. Between frames, glTF turns keys smoothly where the game
   blends them as matrices, so the two agree exactly only at each frame.
-- **Advanced**: **Compare careers** lists every differing byte between two careers, named
-  by region; **Raw values** shows the stored values read-only, including both players' god
-  flags.
+- **Advanced**: **Career bytes** shows, read-only, either the open career's stored values
+  (including both players' god flags) or, after you choose another career, every byte that
+  differs between the two, named by region.
 
 When the game closes while the companion is open, or you come back to the companion, it
 notices careers and settings the game saved, reads them again, backs them up if automatic

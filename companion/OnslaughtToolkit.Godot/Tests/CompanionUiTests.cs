@@ -114,8 +114,20 @@ internal static class CompanionUiTests
         app.Goodies.Cells[72].EmitSignal(BaseButton.SignalName.Pressed);
         check.That(app.Goodies.DetailEvidence.StartsWith("The game's gallery has no place", StringComparison.Ordinal) &&
             app.Goodies.ChangeInCopy.Disabled, "Goodie 072, which the gallery never shows, says so and cannot be changed");
-        check.That(app.RawValues.Tree.GetRoot()?.GetChildren().Count(row => row.GetText(0).Contains("god flag")) == 2,
+        check.That(app.Bytes.Values.GetRoot()?.GetChildren().Count(row => row.GetText(0).Contains("god flag")) == 2,
             "raw values show both players' god flags");
+        app.Navigate("bytes");
+        check.That(app.Bytes.Values.Visible && !app.Bytes.Differences.Visible && !app.Bytes.CompareButton.Visible,
+            "career bytes open on the stored values");
+        string other = Path.Combine(Path.GetDirectoryName(install.Game)!, "compare-other.bes");
+        byte[] otherBytes = File.ReadAllBytes(app.Workspace.Session!.Path);
+        otherBytes[0x23F6] ^= 0x10;
+        File.WriteAllBytes(other, otherBytes);
+        Outcome<CareerComparison> compared = await app.Bytes.CompareAsync(other);
+        check.That(compared.Value is { Bytes.ChangedBytes: 1 } && app.Bytes.View.Selected == 1 && app.Bytes.Differences.Visible &&
+            !app.Bytes.Values.Visible && app.Bytes.Differences.GetRoot()?.GetChildCount() == 1,
+            "comparing switches to the differences and lists the one changed byte");
+        app.Bytes.ShowView(0);
     }
 
     private static async Task Edit(CompanionApp app, SwitchableSaveFiles files, SceneTree tree, FakeInstall install, string fixture,

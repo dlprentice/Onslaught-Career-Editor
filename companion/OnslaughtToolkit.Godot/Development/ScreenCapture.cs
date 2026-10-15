@@ -161,15 +161,16 @@ public partial class ScreenCapture : SceneTree
         app.Lore.Search.Text = "";
         app.Lore.Search.EmitSignal(LineEdit.SignalName.TextChanged, "");
 
-        app.Navigate("compare");
+        app.Navigate("bytes");
+        app.Bytes.ShowView(0);
+        await Shot(viewport, label, "advanced-stored-values");
         string other = Path.Combine(work, "other.bes");
         byte[] otherBytes = File.ReadAllBytes(fixture);
         otherBytes[0x23F6] ^= 0x10;
         File.WriteAllBytes(other, otherBytes);
-        await app.Compare.CompareAsync(other);
+        await app.Bytes.CompareAsync(other);
         await Shot(viewport, label, "advanced-compare");
-        app.Navigate("raw");
-        await Shot(viewport, label, "advanced-raw-values");
+        app.Bytes.ShowView(0);
         app.Navigate("assets");
         app.Assets.Refresh();
         await Shot(viewport, label, "extras-models");
