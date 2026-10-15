@@ -455,6 +455,8 @@ internal static class CompanionUiTests
         Directory.CreateDirectory(Path.Combine(resources, "dxtntextures"));
         File.WriteAllBytes(Path.Combine(resources, "meshes", "m_testmodel.msh.aya"), AssetTests.Member(AssetTests.TwoPartMesh()));
         File.WriteAllBytes(Path.Combine(resources, "dxtntextures", "meshtex%test.tga(0)A8R8G8B8.aya"), AssetTests.Member(AssetTests.Dxt1Texture()));
+        Directory.CreateDirectory(Path.Combine(install.Game, "data", "sounds"));
+        File.WriteAllBytes(Path.Combine(install.Game, "data", "sounds", "sounds_english_pc.xap"), AssetTests.SoundBank());
         await app.Game.RescanAsync();
         app.Navigate("assets");
         await Frame(tree);
@@ -480,6 +482,16 @@ internal static class CompanionUiTests
         byte[] pngBytes = png.Ok && File.Exists(png.Path) ? File.ReadAllBytes(png.Path) : [];
         check.That(png.Ok && pngBytes.Length > 8 && pngBytes[0] == 137 && pngBytes[1] == 80 && pngBytes[2] == 78 && pngBytes[3] == 71,
             "the texture is saved as a PNG in the chosen folder");
+        app.Assets.Kind.Select(2);
+        app.Assets.Kind.EmitSignal(OptionButton.SignalName.ItemSelected, 2);
+        TreeItem? sound = app.Assets.List.GetRoot()?.GetChildCount() == 2 ? app.Assets.List.GetRoot()!.GetChild(0) : null;
+        check.That(sound?.GetText(0) == "Hud/beep" && sound.GetText(1) == "English", "bank sounds are listed by name and language");
+        check.That(app.Assets.Select(sound) && app.Assets.Sound?.Length == 2 && app.Assets.Play.Visible && !app.Assets.Play.Disabled,
+            "a sound opens and can be played");
+        ExportReceipt wav = app.Assets.SaveCopy(chosen);
+        byte[] wavBytes = wav.Ok && File.Exists(wav.Path) ? File.ReadAllBytes(wav.Path) : [];
+        check.That(wav.Ok && Path.GetFileName(wav.Path) == "Hud_beep (English).wav" && wavBytes.Length == 48 && wavBytes[0] == (byte)'R',
+            "the sound is saved as a WAV named with its language");
         app.Assets.Kind.Select(0);
         app.Assets.Kind.EmitSignal(OptionButton.SignalName.ItemSelected, 0);
         await Frame(tree);

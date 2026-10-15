@@ -6,7 +6,7 @@ reverse-engineering/asset-formats/xap-sample-bank.md, decode every sample, and p
 Each bank must end exactly where its last sample ends. Every sample's 4-bit IMA ADPCM data is decoded to 16-bit
 mono PCM; the report counts samples, names and decoded seconds per bank (at the game's 44,100 Hz), and pins the banks
 with a manifest digest (SHA-256 over sorted "name sha256" lines). With --pcm-digests it also prints one SHA-256 per
-decoded sample, for comparison with another decoder. The install is only read.
+decoded sample and one over each bank's decoded PCM in order, for comparison with another decoder. The install is only read.
 
 Run:  python ./tools/xap_bank_walk.py --game GAME_FOLDER    (or set BEA_GAME to the game folder)
 """
@@ -112,8 +112,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"XAP_BANK {path.name}: magic {magic!r}, {len(samples)} samples, {len(names)} distinct names, "
               f"{seconds:.1f} s of audio, {odd} odd PCM sizes")
         if args.pcm_digests:
+            whole = hashlib.sha256()
             for name, size, packed in samples:
-                print(f"  PCM {path.name} {name} {hashlib.sha256(decode_ima(packed, size // 2)).hexdigest()}")
+                pcm = decode_ima(packed, size // 2)
+                whole.update(pcm)
+                print(f"  PCM {path.name} {name} {hashlib.sha256(pcm).hexdigest()}")
+            print(f"PCM_BANK {path.name} {whole.hexdigest()}")
     print(f"XAP_WALK: {len(banks) - len(failures)} of {len(banks)} banks parse to their exact end; manifest {digest.hexdigest()}")
     for failure in failures:
         print("FAIL " + failure)

@@ -126,6 +126,19 @@ public partial class AssetCheck : SceneTree
                     GD.PrintErr($"FAIL {Path.GetFileName(texture.Path)}: {error.Message}");
                 }
             }
+            foreach (string bank in Directory.GetFiles(Path.Combine(game, "data", "sounds"), "*.xap").Order(StringComparer.Ordinal))
+            {
+                using System.Security.Cryptography.IncrementalHash whole = System.Security.Cryptography.IncrementalHash.CreateHash(System.Security.Cryptography.HashAlgorithmName.SHA256);
+                IReadOnlyList<XapSample> samples = XapBank.Read(File.ReadAllBytes(bank));
+                foreach (XapSample sample in samples)
+                {
+                    short[] pcm = XapBank.Decode(sample);
+                    byte[] bytes = new byte[pcm.Length * 2];
+                    Buffer.BlockCopy(pcm, 0, bytes, 0, bytes.Length);
+                    whole.AppendData(bytes);
+                }
+                GD.Print($"PCM_BANK {Path.GetFileName(bank)} {Convert.ToHexString(whole.GetHashAndReset()).ToLowerInvariant()} ({samples.Count} samples)");
+            }
             GD.Print($"ASSET_ANIMATION: Godot's importer read {animations} animations and {skins} skins from the exports");
             GD.Print($"ASSET_EXPORT: {exported} models exported to glTF, {imported} read back by Godot's importer, {unresolved} texture " +
                 $"lookups unresolved; {textures} of {library.Textures.Count} textures decoded and encoded as PNG");

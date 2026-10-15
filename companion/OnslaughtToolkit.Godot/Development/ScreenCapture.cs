@@ -186,6 +186,13 @@ public partial class ScreenCapture : SceneTree
                 app.Assets.Select(textures.FirstOrDefault(row => row.GetText(0) == used) ?? textures[0]);
                 await Shot(viewport, label, "extras-texture-preview");
             }
+            app.Assets.Kind.Select(2);
+            app.Assets.Kind.EmitSignal(OptionButton.SignalName.ItemSelected, 2);
+            if (app.Assets.List.GetRoot()?.GetChildren() is { Count: > 0 } sounds)
+            {
+                app.Assets.Select(sounds.FirstOrDefault(row => row.GetText(0).Contains("Ammunition", StringComparison.OrdinalIgnoreCase)) ?? sounds[0]);
+                await Shot(viewport, label, "extras-sound");
+            }
             app.Assets.Kind.Select(0);
             app.Assets.Kind.EmitSignal(OptionButton.SignalName.ItemSelected, 0);
         }

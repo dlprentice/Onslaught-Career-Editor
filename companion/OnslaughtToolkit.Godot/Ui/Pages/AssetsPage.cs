@@ -6,8 +6,8 @@ using OnslaughtToolkit.Companion.Game;
 namespace OnslaughtToolkit.Companion.Ui;
 
 /// <summary>
-/// The game's own models and textures, read from the player's install: a preview of each, and copies saved as glTF
-/// (models) or PNG (textures) into a folder the player chooses. The game is only read; exports never go into the game
+/// The game's own models, textures and sound effects, read from the player's install: a preview of each, and copies
+/// saved as glTF (models), PNG (textures) or WAV (sound effects) into a folder the player chooses. The game is only read; exports never go into the game
 /// folder or the backups, and never replace a file.
 /// </summary>
 internal sealed class AssetsPage : Page
@@ -23,8 +23,9 @@ internal sealed class AssetsPage : Page
     private AssetLibrary? _library;
     private IReadOnlyList<GameAsset> _shown = [];
     private Node? _previewScene;
+    private readonly AudioStreamPlayer _player;
 
-    internal AssetsPage(AppServices services) : base("assets", "Models & textures", "models")
+    internal AssetsPage(AppServices services) : base("assets", "Art & sound", "models")
     {
         _services = services;
         HBoxContainer layout = Build.Row(16);
@@ -35,9 +36,10 @@ internal sealed class AssetsPage : Page
         left.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         _empty = left.Add(Build.Text("Choose your game folder on Home to see its models and textures.", "Muted"));
         HBoxContainer filters = left.Add(Build.Row(10));
-        Kind = filters.Add(new OptionButton { TooltipText = "Show the game's 3D models or its textures" });
+        Kind = filters.Add(new OptionButton { TooltipText = "Show the game's 3D models, its textures or its sound effects" });
         Kind.AddItem("Models", 0);
         Kind.AddItem("Textures", 1);
+        Kind.AddItem("Sound effects", 2);
         Kind.ItemSelected += _ => ShowList();
         Search = filters.Add(new LineEdit { PlaceholderText = "Search by name", ClearButtonEnabled = true, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
         Search.TextChanged += _ => ShowList();
@@ -82,8 +84,25 @@ internal sealed class AssetsPage : Page
         _textureView.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         _details = body.Add(Build.Text("", "Muted"));
         HBoxContainer actions = body.Add(Build.Row(10));
+        Play = actions.Add(Build.Button("Play", disabled: true));
+        Play.Visible = false;
+        _player = body.Add(new AudioStreamPlayer { VolumeDb = Mathf.LinearToDb(0.8f) });
+        _player.Finished += () => Play.Text = "Play";
+        Play.Pressed += () =>
+        {
+            if (_player.Playing)
+            {
+                _player.Stop();
+                Play.Text = "Play";
+            }
+            else if (_player.Stream is not null)
+            {
+                _player.Play();
+                Play.Text = "Stop";
+            }
+        };
         Save = actions.Add(Build.Button("Save a copy…", "Primary", disabled: true));
-        Save.TooltipText = "Models are saved as glTF (.glb), which Blender and most 3D tools open; textures as PNG.";
+        Save.TooltipText = "Models are saved as glTF (.glb), which Blender and most 3D tools open; textures as PNG; sound effects as WAV.";
         _result = body.Add(Build.Text("Copies are saved only into a folder you choose, never into your game or backups, and never " +
             "over an existing file.", "Faint"));
         FolderDialog = services.Popups.Add(Build.FilePicker("Choose a folder to save the copy in", FileDialog.FileModeEnum.OpenDir));
@@ -93,12 +112,15 @@ internal sealed class AssetsPage : Page
     }
 
     internal override Control Root { get; }
-    internal override string Subtitle => _library is null ? "The game's 3D models and textures, from your install"
-        : $"{Build.Count(_library.Models.Count, "model")} · {Build.Count(_library.Textures.Count, "texture")}";
+    internal override string Subtitle => _library is null ? "The game's 3D models, textures and sound effects, from your install"
+        : $"{Build.Count(_library.Models.Count, "model")} · {Build.Count(_library.Textures.Count, "texture")} · " +
+          Build.Count(_library.Sounds.Count, "sound effect");
     internal OptionButton Kind { get; }
     internal LineEdit Search { get; }
     internal Tree List { get; }
     internal Button Save { get; }
+    internal Button Play { get; }
+    internal short[]? Sound { get; private set; }
     internal FileDialog FolderDialog { get; }
     internal GameAsset? Selected { get; private set; }
     internal CmshMesh? Model { get; private set; }
@@ -126,7 +148,7 @@ internal sealed class AssetsPage : Page
         TreeItem root = List.CreateItem();
         if (_library is null) return;
         string search = Search.Text.Trim();
-        _shown = (Kind.Selected == 1 ? _library.Textures : _library.Models)
+        _shown = (Kind.Selected switch { 1 => _library.Textures, 2 => _library.Sounds, _ => _library.Models })
             .Where(asset => search.Length == 0 || asset.Title.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
         for (int i = 0; i < _shown.Count; i++)
             Build.TableRow(List, root, _shown[i].Title, _shown[i].Group, Size(_shown[i].Size)).SetMetadata(0, i);
@@ -144,11 +166,28 @@ internal sealed class AssetsPage : Page
         Selected = asset;
         Model = null;
         Texture = null;
+        Sound = null;
         ClearPreview();
         _title.Text = asset.Title;
         Save.Disabled = true;
         try
         {
+            if (asset.Kind == AssetKind.Sound)
+            {
+                IReadOnlyList<XapSample> samples = XapBank.Read(File.ReadAllBytes(asset.Path));
+                if (asset.Index < 0 || asset.Index >= samples.Count) throw new InvalidDataException("the sample is no longer in its bank");
+                XapSample sample = samples[asset.Index];
+                Sound = XapBank.Decode(sample);
+                _details.Text = $"{sample.Seconds:0.00} s · 44,100 Hz mono · {asset.Group} sound bank";
+                byte[] pcm = new byte[Sound.Length * 2];
+                Buffer.BlockCopy(Sound, 0, pcm, 0, pcm.Length);
+                _player.Stream = new AudioStreamWav { Data = pcm, Format = AudioStreamWav.FormatEnum.Format16Bits, MixRate = XapBank.SampleRate, Stereo = false };
+                Play.Visible = true;
+                Play.Disabled = false;
+                Save.Disabled = false;
+                Save.Text = "Save as WAV…";
+                return true;
+            }
             byte[] inflated = AyaContainer.Inflate(File.ReadAllBytes(asset.Path));
             if (asset.Kind == AssetKind.Model)
             {
@@ -184,14 +223,16 @@ internal sealed class AssetsPage : Page
     /// <summary>Saves the selected model or texture into <paramref name="folder"/> as a new file.</summary>
     internal ExportReceipt SaveCopy(string folder)
     {
-        if (Selected is null || (Model is null && Texture is null)) return new ExportReceipt(false, "Choose a model or texture first.");
+        if (Selected is null || (Model is null && Texture is null && Sound is null)) return new ExportReceipt(false, "Choose a model, texture or sound first.");
         string stem = string.Concat(Selected.Title.Select(c => char.IsLetterOrDigit(c) || c is '-' or '_' or ' ' ? c : '_')).Trim();
         if (stem.Length == 0) stem = "asset";
         ExportReceipt receipt;
         try
         {
-            byte[] bytes = Model is not null ? GltfExport.Write(Model, LoadTexture, Png) : Png(Texture!);
-            receipt = ExportFiles.Write(folder, stem + (Model is not null ? ".glb" : ".png"), bytes,
+            (byte[] bytes, string extension) = Model is not null ? (GltfExport.Write(Model, LoadTexture, Png), ".glb")
+                : Sound is not null ? (XapBank.Wav(Sound), ".wav") : (Png(Texture!), ".png");
+            if (Sound is not null) stem += $" ({Selected.Group})";
+            receipt = ExportFiles.Write(folder, stem + extension, bytes,
                 [_services.Game.Folder?.Root, _services.Backups.Folder]);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidDataException)
@@ -250,6 +291,10 @@ internal sealed class AssetsPage : Page
 
     private void ClearPreview()
     {
+        _player.Stop();
+        _player.Stream = null;
+        Play.Text = "Play";
+        Play.Visible = false;
         _previewScene?.QueueFree();
         _previewScene = null;
         _modelView.Visible = false;

@@ -23,6 +23,27 @@ internal static class AssetTests
         Dds(check);
         Exports(Path.Combine(outputDirectory, "asset-exports"), check);
         Animation(check);
+        Sounds(check);
+    }
+
+    /// <summary>A synthetic two-sample bank: one 2-sample beep (codes 4 and 0) and one silent sample.</summary>
+    internal static byte[] SoundBank()
+    {
+        List<byte> bank = [.. Encoding.ASCII.GetBytes("PCXP"), .. BitConverter.GetBytes(2)];
+        foreach ((string name, int bytes, byte[] packed) in new[] { ("Hud\\beep", 4, new byte[] { 0x40 }), ("Hud\\quiet", 8, new byte[] { 0, 0 }) })
+            bank.AddRange([.. Encoding.ASCII.GetBytes("PSMP"), .. Encoding.ASCII.GetBytes(name.PadRight(64, '\0')), .. BitConverter.GetBytes(bytes), .. packed]);
+        return [.. bank];
+    }
+
+    private static void Sounds(Checks check)
+    {
+        IReadOnlyList<XapSample> samples = XapBank.Read(SoundBank());
+        check.That(samples.Count == 2 && samples[0].Name == "Hud\\beep" && samples[1].PcmBytes == 8, "A sound bank reads its samples by name.");
+        check.That(XapBank.Decode(samples[0]).SequenceEqual(new short[] { 7, 8 }), "Bank samples decode as IMA ADPCM, high nibble first.");
+        byte[] wav = XapBank.Wav([7, 8]);
+        check.That(wav.Length == 48 && Encoding.ASCII.GetString(wav, 0, 4) == "RIFF" && BinaryPrimitives.ReadInt32LittleEndian(wav.AsSpan(24)) == 44100 &&
+            BinaryPrimitives.ReadInt16LittleEndian(wav.AsSpan(44)) == 7, "A WAV copy is 16-bit mono at 44,100 Hz.");
+        check.That(Throws(() => XapBank.Read([.. SoundBank(), 0])), "A bank with bytes after its last sample is refused.");
     }
 
     /// <summary>A part with two keys and one mode exports one animation whose samples are the keys, timed by the mode's rate.</summary>

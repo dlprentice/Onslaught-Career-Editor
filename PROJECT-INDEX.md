@@ -76,8 +76,8 @@ through Steam, notices when its careers change and reads its text through
 the folder's files, the remembered choices and the backup folder;
 [`OptionsFile`](companion/OnslaughtToolkit.Godot/Options/OptionsFile.cs) owns the options block;
 [`GameAudio`](companion/OnslaughtToolkit.Godot/Media/GameAudio.cs) lists the game's music and
-voice lines, and the [models and textures](companion/OnslaughtToolkit.Godot/Assets/AssetLibrary.cs) browser
-reads the game's models and textures and saves glTF and PNG copies; [`LoreLibrary`](companion/OnslaughtToolkit.Godot/Lore/LoreLibrary.cs)
+voice lines, and the [art and sound](companion/OnslaughtToolkit.Godot/Assets/AssetLibrary.cs) browser
+reads the game's models, textures and sound effects and saves glTF, PNG and WAV copies; [`LoreLibrary`](companion/OnslaughtToolkit.Godot/Lore/LoreLibrary.cs)
 embeds `lore/` and `lore-book/BOOK.md`. In the interface,
 [`AppServices`](companion/OnslaughtToolkit.Godot/Ui/AppServices.cs) is what every page may use
 (including career naming), [`SaveChoice`](companion/OnslaughtToolkit.Godot/Ui/SaveChoice.cs)

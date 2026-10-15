@@ -1,7 +1,7 @@
 # Onslaught Toolkit companion
 
 Status: C# application built entirely in code on Godot 4.8 dev6 .NET, organised around the player: careers, Goodies, editing, cheats, game settings, backups, music, voices, lore, and the game's models and textures; Linux executed checks, Windows runtime acceptance pending
-Last updated: 2026-10-16 (Models & textures: glTF and PNG copies; no replacement without an atomic exchange; failures after a write reported as possible changes; former AppCore sources moved in)
+Last updated: 2026-10-16 (Art & sound: glTF, PNG and WAV copies; no replacement without an atomic exchange; failures after a write reported as possible changes; former AppCore sources moved in)
 Summary: the MIT companion for Battle Engine Aquila players: it opens on their game and careers, shows progress and Goodies, changes careers and settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, plays and explains the game's own music, voices and lore, and saves copies of its models (glTF) and textures (PNG).
 
 The companion is for players. It opens on their game and careers, and everything it
@@ -24,7 +24,7 @@ editor-authored scene, and `npm run build` refuses to stage one.
 | [Game](Game/) | Steam library discovery, the game folder and its files, the companion's remembered choices and backup folder (`GameFolder`), and the game's own text read from the install (`GameText`, `GameTextCatalog`) |
 | [Options](Options/) | The `defaultoptions.bea` reader and editor (`OptionsFile`) and the physical-key table |
 | [Media](Media/) | The game's music, voice lines and cutscene list (`GameAudio`) |
-| [Assets](Assets/) | The game's models and textures: the `.aya` envelope (`AyaContainer`), the mesh reader (`CmshReader`), DDS decoding (`DdsTexture`), the install's lists (`AssetLibrary`), glTF export (`GltfExport`) and new-file-only exports (`ExportFiles`) |
+| [Assets](Assets/) | The game's models, textures and bank sounds: the `.aya` envelope (`AyaContainer`), the mesh reader (`CmshReader`), DDS decoding (`DdsTexture`), the sound banks (`XapBank`), the install's lists (`AssetLibrary`), glTF export (`GltfExport`) and new-file-only exports (`ExportFiles`) |
 | [Lore](Lore/) | The embedded lore library, its Markdown renderer and the campaign's mission list (`CampaignLoreComposer`) |
 | [Ui](Ui/) | The Flight-deck theme and icons, the shell, career cards, the save-choice dialog, the game's art read from the install (`GameArt`) and one class per page |
 | [Tests](Tests/) | Every behavioral contract, run headlessly inside Godot |
@@ -76,7 +76,7 @@ never overlaps another job on the Intel GPU (David allowed this on 2026-09-26).
 
 The sidebar groups the pages the way a player thinks about them: **Home**; **Your
 career** (Summary, Goodies, Edit career, Cheats); **Your game** (Game settings, Backups);
-**Extras** (Music & voices, Lore, Models & textures); and **Advanced**, folded away
+**Extras** (Music & voices, Lore, Art & sound); and **Advanced**, folded away
 (Compare careers, Raw values). The header names the page, shows **Game running** while the game
 is open, and switches careers (or opens a career file, Ctrl+O). While Edit career or Game
 settings has unsaved changes, a bar under the page counts them and offers Save (Ctrl+S)
@@ -122,10 +122,13 @@ itself, read-only.
   reading order, a section outline, search, Back, Forward and Home (Alt+Left, Alt+Right;
   Ctrl+F searches), the map of Allium from your game's manual, and the manual itself in
   your browser. The campaign's mission list is read from your game's text, never shipped.
-- **Models & textures** lists the game's 213 model files and 847 textures from your install,
+- **Art & sound** lists the game's 213 model files, 847 textures and its sound effects (the
+  164 samples of each language's sound bank) from your install,
   previews each (a model as it stands at its first frame, a texture over a checkerboard) and
   saves a copy into a folder you choose: a model as binary glTF (`.glb`, with its textures
-  embedded; Blender and most 3D tools open it), a texture as PNG. The readers follow the
+  embedded; Blender and most 3D tools open it), a texture as PNG, a sound effect as WAV (16-bit
+  mono at 44,100 Hz, decoded as reverse-engineering/asset-formats/xap-sample-bank.md describes);
+  a sound can also be played. The readers follow the
   public format documents (`reverse-engineering/asset-formats/cmsh-fields.md` and
   `cmsh-animation-keys.md`); the game's left-handed, Z-down model space is converted to
   glTF's right-handed, Y-up one. Copies are new files only, never written into the game
