@@ -222,7 +222,7 @@ companion does not use AppCore yet. The CLI was removed with the WinUI shell.
 **Parked 2026-10-15.** David parked the Godot rebuild in favour of a native source port of the byte-matching
 decompilation. What follows is its demonstrated state when parked (the old tag archive/godot-rebuild-20260926, now in the private RE archive); it is not active work.
 
-[`rebuild/`](rebuild/README.md) is a GPL-3.0-or-later, source- and RE-informed
+[`rebuild/`](rebuild/README.md) is a GPL-3.0-only (as a whole), source- and RE-informed
 reconstruction lane. `OnslaughtRebuild.Core` owns fixed-step simulation,
 snapshots, state hashing, and command-tape replay without presentation,
 filesystem, clock, process, network, or GPU dependencies.
