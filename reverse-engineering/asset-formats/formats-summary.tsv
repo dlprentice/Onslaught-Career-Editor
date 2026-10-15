@@ -5,6 +5,7 @@ cmsh-mesh-and-animation	213	CMeshPart__LoadFromStream=0x004B27A0; CDXMeshVB__Loa
 dds-texture-in-aya	847	LoadTextureFromFile=0x00557300; Deserialize=0x00559BE0; BuildDdsSurfaceNodeTree=0x0057BF1F; fallback decoder=0x0057CA6A	header-mip-chain-and-alpha-census-complete-render-open
 ogg-vorbis	3057	import thunks=0x0055D5FE..0x0055D688; COggLoader/OggVorbisStream/COggFileRead owner families	framing-metadata-bounded-full-decode-open
 xap-sample-bank	5	CPCSoundManager::LoadSampleBank=0x00517D00; LoadSampleFromBuffer=0x005172A0; DecodeADPCM=0x00517FA0	layout-and-decode-complete
+goodie-resource-gdie	232	CFEPGoodies::Deserialise=0x0045C870; StartLoadingGoody=0x0045C9F0; CDXTexture::LoadFrame=0x00557300; CMesh::Deserialize=0x004AAB90	layout-and-content-mapping-complete
 sfx-text-catalog	1	source owner CEffect::LoadSFXFile; exact retail VA unknown	catalog-bank-bijection-bounded
 bink-video	66	CDXFrontEndVideo__Open=0x005412E0; InitVideo=0x00541430; Render=0x00541790; Update=0x00541D30	container-media-census-bounded
 language-dat-v3	6	CText__Init=0x004F21F0; CText__GetStringById=0x004F2580	layout-and-id-census-complete

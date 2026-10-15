@@ -3,7 +3,7 @@
 Status: active format contract — complete outer/tag census; most payload schemas
 remain owner-specific or open
 Date: 2026-08-28
-Last updated: 2026-09-27 (resource-dispatch names and evidence limits; corpus receipts retain their original dates)
+Last updated: 2026-10-16 (Goodie archive names corrected to two digits; GDIE layout in goodie-resources.md)
 Verdict: all 301 streams and 23,884 top-level tags are accounted for; the
 numeric WRES Unit/Feature instance join and released PS2 texture-page runtime
 boundary are bounded, while most other payload schemas and world dependencies
@@ -21,7 +21,7 @@ retail VAs cite `BEA.exe.original.backup`, SHA-256
 The **301** files are:
 
 - 66 numeric `NNN_res_PC.aya` level archives;
-- 232 contiguous `goodie_0_res_PC.aya` through `goodie_231_res_PC.aya`;
+- 232 contiguous `goodie_00_res_PC.aya` through `goodie_231_res_PC.aya` (the number has at least two digits);
 - `base_res_PC.aya`, `Frontend_res_PC.aya`, and `Loading_res_PC.aya`.
 
 They occupy 86,646,042 stored bytes, use 485 AYA zlib members, and inflate to
@@ -459,7 +459,8 @@ coverage claim.
 
 - Each Goodie archive has the four outer chunks `LVLR`, `TARG`, `AYAD`, `GDIE`.
   Filename indices align with save Goodies slots 0–231; terminal slot 232 maps to
-  cutscene 33 and has no PC archive.
+  cutscene 33 and has no PC archive. The `GDIE` layout, and what each Goodie
+  shows, is in [goodie-resources.md](goodie-resources.md).
 - Each of the 66 numeric archives has a same-number MissionScripts directory and
   world-header record, but the reverse sets are larger. Shared numeric IDs prove
   a relation, not execution or selection.

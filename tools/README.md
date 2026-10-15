@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-16 (glTF pose check, sound-bank walk and texture census; Ghidra, campaign and Windows runtime-probe tools moved to the private RE archive; WinUI tools removed)
+Last updated: 2026-10-16 (glTF pose check, sound-bank walk, texture census and Goodie walk; Ghidra, campaign and Windows runtime-probe tools moved to the private RE archive; WinUI tools removed)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the parked rebuild through guarded extraction,
@@ -114,6 +114,8 @@ writes at all, to ignored local paths. Their findings are documented under
   every byte (with `--compose`, it also checks every cached frame against the composed keys);
   `dds_census.py` checks every installed texture's DDS header against its stored mip chain and classifies its alpha
   (see [`asset-formats/dds-texture.md`](../reverse-engineering/asset-formats/dds-texture.md));
+  `goodie_resource_walk.py` walks the Goodie archives and resolves what each Goodie shows (see
+  [`asset-formats/goodie-resources.md`](../reverse-engineering/asset-formats/goodie-resources.md));
   `xap_bank_walk.py` walks and decodes the sound banks (see
   [`asset-formats/xap-sample-bank.md`](../reverse-engineering/asset-formats/xap-sample-bank.md));
   `gltf_pose_check.py` evaluates the companion's glTF exports by the glTF rules and compares every node of every
