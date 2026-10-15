@@ -7,13 +7,24 @@ namespace OnslaughtToolkit.Companion.Development;
 /// <summary>
 /// Reads every installed mesh with the companion's reader and prints the counts tools/cmsh_grammar_walk.py prints, and
 /// the same composition check, so the two independent readers can be compared. It then exports every mesh to glTF and
-/// reads each export back with Godot's own glTF importer, and decodes every texture and encodes it as PNG. A few
+/// reads each export back with Godot's own glTF importer (counting the animations and skins it finds), and decodes every texture and encodes it as PNG. A few
 /// exports are kept in the test output folder for inspection. The game folder comes from BEA_GAME and
 /// is only read: <c>BEA_GAME=GAME python tools/companion_godot.py test --script Development/AssetCheck.cs</c>.
 /// </summary>
 public partial class AssetCheck : SceneTree
 {
-    public override void _Initialize()
+    private bool _ran;
+
+    // The checks run on the first frame, with the engine fully started.
+    public override bool _Process(double delta)
+    {
+        if (_ran) return false;
+        _ran = true;
+        Run();
+        return false;
+    }
+
+    private void Run()
     {
         int exit = 1;
         try
@@ -35,11 +46,13 @@ public partial class AssetCheck : SceneTree
                 string? path = library.FindTexture(name);
                 return decoded[name] = path is null ? null : DdsTexture.Decode(AyaContainer.Inflate(File.ReadAllBytes(path)));
             }
-            int exported = 0, imported = 0, unresolved = 0;
+            int exported = 0, imported = 0, unresolved = 0, animations = 0, skins = 0;
             CmshCounts counts = new();
             int files = 0, failures = 0, positions = 0, orientations = 0, mismatched = 0;
             double worstPosition = 0, worstOrientation = 0;
-            foreach (string file in Directory.GetFiles(folder, "*.aya").Order(StringComparer.Ordinal))
+            string only = System.Environment.GetEnvironmentVariable("ASSET_ONLY") ?? "";
+            foreach (string file in Directory.GetFiles(folder, "*.aya").Order(StringComparer.Ordinal)
+                .Where(f => only.Length == 0 || Path.GetFileName(f).Contains(only, StringComparison.OrdinalIgnoreCase)))
             {
                 files++;
                 try
@@ -54,13 +67,16 @@ public partial class AssetCheck : SceneTree
                     exported++;
                     GltfDocument document = new();
                     GltfState state = new();
-                    if (document.AppendFromBuffer(glb, "", state) == Error.Ok && document.GenerateScene(state) is Node scene)
+                    if (document.AppendFromBuffer(glb, "", state) == Error.Ok && document.GenerateScene(state) is Node3D scene)
                     {
                         imported++;
+                        animations += state.GetAnimations().Count;
+                        skins += state.GetSkins().Count;
                         scene.Free();
                     }
                     else GD.PrintErr($"FAIL {Path.GetFileName(file)}: Godot could not import the export");
-                    if (output.Length > 0 && Path.GetFileName(file) is "m_arachnid.msh.aya" or "m_ftrooper.msh.aya" or "m_be_trans.msh.aya")
+                    bool keepAll = System.Environment.GetEnvironmentVariable("ASSET_KEEP") == "all";
+                    if (output.Length > 0 && (keepAll || Path.GetFileName(file) is "m_arachnid.msh.aya" or "m_ftrooper.msh.aya" or "m_be_trans.msh.aya"))
                         File.WriteAllBytes(Path.Combine(output, Path.GetFileName(file)[..^8] + ".glb"), glb);
                     foreach (CmshMesh mesh in meshes)
                         for (int p = 0; p < mesh.Parts.Count; p++)
@@ -110,6 +126,7 @@ public partial class AssetCheck : SceneTree
                     GD.PrintErr($"FAIL {Path.GetFileName(texture.Path)}: {error.Message}");
                 }
             }
+            GD.Print($"ASSET_ANIMATION: Godot's importer read {animations} animations and {skins} skins from the exports");
             GD.Print($"ASSET_EXPORT: {exported} models exported to glTF, {imported} read back by Godot's importer, {unresolved} texture " +
                 $"lookups unresolved; {textures} of {library.Textures.Count} textures decoded and encoded as PNG");
             exit = failures == 0 && mismatched == 0 && imported == exported && textureFailures == 0 && unresolved == 0 ? 0 : 1;

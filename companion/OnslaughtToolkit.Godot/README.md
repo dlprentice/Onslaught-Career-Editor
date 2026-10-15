@@ -129,8 +129,11 @@ itself, read-only.
   public format documents (`reverse-engineering/asset-formats/cmsh-fields.md` and
   `cmsh-animation-keys.md`); the game's left-handed, Z-down model space is converted to
   glTF's right-handed, Y-up one. Copies are new files only, never written into the game
-  folder or the backups. Skeletons and animations are not exported yet; a skeletal model is
-  saved in its bind pose.
+  folder or the backups. A copy carries the model's animations, one per animation mode, with
+  the mode's frames in each animation's `extras`, and its skeleton as a glTF skin. The game
+  does not bend normals with the bones, while glTF viewers do, so lighting on a moving limb
+  can differ slightly from the game. Between frames, glTF turns keys smoothly where the game
+  blends them as matrices, so the two agree exactly only at each frame.
 - **Advanced**: **Compare careers** lists every differing byte between two careers, named
   by region; **Raw values** shows the stored values read-only, including both players' god
   flags.
