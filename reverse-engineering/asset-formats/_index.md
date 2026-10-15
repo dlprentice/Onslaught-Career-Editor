@@ -2,7 +2,7 @@
 
 Status: active contract set
 Date: 2026-08-23
-Last updated: 2026-10-16 (CMSH grammar and fields; XAP bank layout and decode)
+Last updated: 2026-10-16 (CMSH grammar and fields; XAP bank layout and decode; DDS mip-chain census)
 Summary: routes every measured retail data/root-binary family to a bounded
 format contract, count, decoder anchor, and explicit unknown ledger.
 Evidence: MEASURED — counts were recomputed from the read-only
@@ -54,7 +54,7 @@ non-additive.
 | LVLR resource streams | [lvlr-archive.md](lvlr-archive.md) | 301 | tag census complete; schemas partial |
 | Numeric WRES Unit/Feature placements | [wres-instance-join.md](wres-instance-join.md) | 66 archives / 4,090 joins | definition, transform, state, physics mesh, and named-CMSH edge bounded |
 | CMSH meshes + embedded animation | [cmsh-mesh.md](cmsh-mesh.md) + [grammar and fields](cmsh-fields.md) + [animation/usage](cmsh-animation-usage.md) + [position skinning](cmsh-matrix-palette-skinning.md) + [typed matrix/normal law](cmsh-matrix-normal-deformation.md) | 213 | complete PC grammar and record layouts; framing, pose lanes, bone indices, typed bind/current palette order, released position/normal laws, and selected usage bounded |
-| DDS textures + texture-backed fonts | [dds-texture.md](dds-texture.md) | 847 | header census complete |
+| DDS textures + texture-backed fonts | [dds-texture.md](dds-texture.md) | 847 | header, mip-chain and alpha census complete |
 | Ogg/XAP/SFX audio | [ogg-audio.md](ogg-audio.md) + [XAP banks](xap-sample-bank.md) | 3,057 + 5 + 1 | Ogg framing and identity joins bounded; XAP layout and decode complete |
 | Bink video | [bink-video.md](bink-video.md) | 66 | container/media census bounded |
 | Localization DAT/TXT/STF | [localization-text.md](localization-text.md) | 6 + 130 + 96 | DAT layout strong; loose selection open |

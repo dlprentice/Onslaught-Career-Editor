@@ -1,10 +1,12 @@
 # DDS-in-AYA texture contract
 
-Status: active format contract — complete AYA/DDS header census; pixel and
-render semantics remain bounded
+Status: active format contract — complete AYA/DDS header census and a complete
+stored mip-chain and alpha census; render semantics remain bounded
 Date: 2026-08-22
-Verdict: all 847 AYA/DDS headers are accounted for; mip/pixel, font, upload,
-and render fidelity remain bounded or open.
+Last updated: 2026-10-16 (mip-chain and alpha census of all 847 textures)
+Verdict: all 847 AYA/DDS headers are accounted for, and every file's payload is
+exactly the mip chain its header declares, in one of four pixel formats; font,
+upload, and render fidelity remain bounded or open.
 Evidence: MEASURED — all 847 texture rows in
 `G:\bea-asset-mirror\INDEX.jsonl` were re-aggregated read-only. Retail VAs are
 static routes from named pristine-binary notes.
@@ -94,6 +96,49 @@ Static routes show ownership and format dispatch, not decoded-pixel correctness.
   level-zero output metadata. Derived PNGs are not specimen evidence and are not
   tracked.
 
+## Mip-chain and alpha census (2026-10-16)
+
+`python tools/dds_census.py --game GAME_FOLDER` re-read every installed texture
+(manifest digest over sorted `shelf/name sha256` lines:
+`65b8c8c74e513d23b5ddd1f059a28759699bf14b17eb20b6ef85e11b34acc8e5`) and checked each
+file's DDS header against its stored bytes. All 847 pass with no exception:
+
+- the payload after the 128-byte header is exactly the sum of the declared mip
+  levels for the declared format: DXT1 blocks are 8 bytes, DXT2 blocks 16, and
+  A1R5G5B5 and A8R8G8B8 pixels 2 and 4 bytes;
+- the header's linear size (or pitch) equals the top level's size, the mipmap
+  cap agrees with the mip count, and no file is a cube map or volume;
+- every width and height is a power of two (739 square, 108 not);
+- every mipmapped file carries the full chain down to one pixel along its longer
+  side; 593 files have a single level.
+
+| Shelf and format | Files |
+| --- | ---: |
+| `dxtntextures` DXT1 | 212 |
+| `dxtntextures` DXT2 | 588 |
+| `textures` A1R5G5B5 | 38 |
+| `textures` A8R8G8B8 | 9 |
+
+| Mip levels | Files |
+| --- | ---: |
+| 1 | 593 |
+| 5 / 6 / 7 / 8 | 2 / 14 / 32 / 40 |
+| 9 / 10 / 11 | 57 / 105 / 4 |
+
+Alpha at the top level:
+
+| Format | Opaque | On/off only | Graded |
+| --- | ---: | ---: | ---: |
+| DXT1 | 212 | 0 | — |
+| DXT2 | 190 | 208 | 190 |
+| A1R5G5B5 | 0 | 38 | — |
+| A8R8G8B8 | 0 | 2 | 7 |
+
+No DXT1 texture uses DXT1's transparent colour, so every DXT1 texture is opaque.
+The companion decodes the top level of all 847 (its `Development/AssetCheck.cs`
+probe). The lower mip levels are sized exactly but their pixels have not been
+decoded or compared with the top level.
+
 ## Fonts and text rendering
 
 The mirror contains no loose `.ttf`, `.otf`, or other standalone font-file
@@ -105,8 +150,8 @@ shipped external font file exists.
 
 ## Open questions and falsifiers
 
-- Decode and compare every mip level, alpha mode, and RGB-mask family; header
-  success alone is not visual fidelity.
+- Decode every lower mip level and compare it with its top level; the census
+  proves their sizes, not their pixels.
 - Establish exact colour-space, premultiplication, sampler, and upload behavior
   with a controlled render capture on copied assets.
 - Prove path flattening, 65-character-looking truncation, collision, case, and
@@ -118,5 +163,6 @@ shipped external font file exists.
 
 ## Claim boundary
 
-All 847 wrappers and DDS headers are accounted for. Complete mip/pixel decode,
-font layout, GPU upload, render state, and parity remain open.
+All 847 wrappers, DDS headers and stored mip chains are accounted for, with their
+formats and alpha use. Lower-level pixel content, DXT2 premultiplication at render
+time, font layout, GPU upload, render state, and parity remain open.
