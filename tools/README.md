@@ -112,7 +112,7 @@ writes at all, to ignored local paths. Their findings are documented under
 - Meshes: `cmsh_grammar_walk.py` walks PC CMSH streams with the grammar in
   [`asset-formats/cmsh-fields.md`](../reverse-engineering/asset-formats/cmsh-fields.md) and proves it accounts for
   every byte (with `--compose`, it also checks every cached frame against the composed keys);
-  `dds_census.py` checks every installed texture's DDS header against its stored mip chain and classifies its alpha
+  `dds_census.py` checks every installed texture's DDS header against its stored mip chain, classifies its alpha and, with `--mips`, checks every lower level
   (see [`asset-formats/dds-texture.md`](../reverse-engineering/asset-formats/dds-texture.md));
   `goodie_resource_walk.py` walks the Goodie archives and resolves what each Goodie shows (see
   [`asset-formats/goodie-resources.md`](../reverse-engineering/asset-formats/goodie-resources.md));

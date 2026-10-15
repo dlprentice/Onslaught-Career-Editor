@@ -62,6 +62,41 @@ class CensusTests(unittest.TestCase):
         self.assertEqual(census.alpha_use("DXT2", opaque, 4, 4), "none")
         self.assertEqual(census.alpha_use("DXT2", graded, 4, 4), "graded")
 
+    def test_levels_decode_as_rgba(self):
+        # A DXT1 block of red (c0) and blue (c1): selectors 0 and 1 alternate along each row.
+        block = struct.pack("<HHI", 0xF800, 0x001F, 0x44444444)
+        image = census.decode_level("DXT1", block, 4, 4)
+        self.assertEqual(image[0, 0].tolist(), [255, 0, 0, 255])
+        self.assertEqual(image[0, 1].tolist(), [0, 0, 255, 255])
+        bgra = bytes([10, 20, 30, 40])
+        self.assertEqual(census.decode_level("A8R8G8B8", bgra, 1, 1)[0, 0].tolist(), [30, 20, 10, 40])
+        self.assertEqual(census.decode_level("A1R5G5B5", struct.pack("<H", 0xFC00), 1, 1)[0, 0].tolist(), [255, 0, 0, 255])
+
+    def test_an_exact_box_chain_has_no_difference(self):
+        import numpy as np
+        top = np.zeros((2, 4, 4), np.uint8)
+        top[:, :2] = 200
+        top[..., 3] = 255
+        middle = census.reduce_2x2(top).astype(np.uint8)
+        bottom = census.reduce_2x2(middle).astype(np.uint8)
+        self.assertEqual(middle.shape, (1, 2, 4))
+        self.assertEqual(census.mip_errors([top, middle, bottom]), [(0.0, 0.0), (0.0, 0.0)])
+
+    def test_the_alpha_rule_counts_opaque_parents(self):
+        import numpy as np
+        top = np.full((2, 4, 4), 255, np.uint8)
+        top[:, :2, 3] = [[255, 0], [0, 0]]       # one opaque parent of four
+        top[:, 2:, 3] = [[255, 255], [0, 0]]     # two of four
+        level = np.full((1, 2, 4), 255, np.uint8)
+        level[0, 0, 3] = 0
+        counts = [[0, 0] for _ in range(5)]
+        self.assertTrue(census.alpha_rule([top, level], counts))
+        self.assertEqual(counts[1], [0, 1])
+        self.assertEqual(counts[2], [1, 1])
+        graded = top.copy()
+        graded[0, 0, 3] = 128
+        self.assertFalse(census.alpha_rule([graded, level], [[0, 0] for _ in range(5)]))
+
 
 if __name__ == "__main__":
     unittest.main()

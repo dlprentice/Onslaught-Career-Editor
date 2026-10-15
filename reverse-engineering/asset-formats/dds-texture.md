@@ -1,9 +1,10 @@
 # DDS-in-AYA texture contract
 
-Status: active format contract — complete AYA/DDS header census and a complete
-stored mip-chain and alpha census; render semantics remain bounded
+Status: active format contract — complete AYA/DDS header census, a complete
+stored mip-chain and alpha census, and a check of every lower mip level's pixels;
+render semantics remain bounded
 Date: 2026-08-22
-Last updated: 2026-10-16 (mip-chain and alpha census of all 847 textures)
+Last updated: 2026-10-16 (mip-chain and alpha census of all 847 textures; every lower mip level decoded and checked)
 Verdict: all 847 AYA/DDS headers are accounted for, and every file's payload is
 exactly the mip chain its header declares, in one of four pixel formats; font,
 upload, and render fidelity remain bounded or open.
@@ -136,8 +137,50 @@ Alpha at the top level:
 
 No DXT1 texture uses DXT1's transparent colour, so every DXT1 texture is opaque.
 The companion decodes the top level of all 847 (its `Development/AssetCheck.cs`
-probe). The lower mip levels are sized exactly but their pixels have not been
-decoded or compared with the top level.
+probe).
+
+## Lower mip levels (2026-10-16)
+
+`python tools/dds_census.py --game GAME_FOLDER --mips` decodes every stored level of
+the 254 mipmapped textures. It compares each level with a 2×2 box reduction of the
+decoded level above it.
+
+Colour follows that reduction closely. The table gives the worst mean absolute RGB
+difference (0–255) for any level in each size band, by the level's smaller side:
+
+| Level size | Worst mean RGB difference |
+| --- | ---: |
+| 64 px and up | 8.88 |
+| 16–32 px | 11.44 |
+| 4–8 px | 20.27 |
+| 1–2 px | 20.54 |
+
+The larger differences are confined to levels of 8 pixels or fewer, where one
+compressed block holds the whole level in four colours. Enlarged side by side, those
+tiny levels show the same image, with regions shifted by about a pixel or hues
+moved: `meshtex\f_trooperd`'s 8×8 level, for example, or
+`meshtex\FB_hangertop01`'s 4×4 level. The colours are what a box filter followed by
+per-level compression would give; the exact filter is open.
+
+Alpha in lower levels is not averaged. Consider the 232 mipmapped textures whose
+alpha is only on or off: 19 with cut-outs such as `meshtex\Dead Tree 01_Branches`,
+and the fully opaque rest. In every level below the top of every one of them, a
+pixel is opaque exactly when at least two of its four parent pixels in the level
+above are opaque, and transparent otherwise:
+
+| Opaque parents | Stored opaque |
+| ---: | ---: |
+| 0 | 0 of 113,043 |
+| 1 | 0 of 5,679 |
+| 2 | 10,040 of 10,040 |
+| 3 | 6,514 of 6,514 |
+| 4 | 11,735,708 of 11,735,708 |
+
+That is the parents' average alpha thresholded at one half, inclusive. So cut-outs
+stay solid as they shrink, and their opaque share grows toward the smallest level.
+`Dead Tree 01_Branches` goes from 10% opaque at 256×256 to 50% at 2×2 and fully
+opaque at 1×1. Lower levels of the 22 textures with graded alpha were measured for
+colour only.
 
 ## Fonts and text rendering
 
@@ -150,12 +193,15 @@ shipped external font file exists.
 
 ## Open questions and falsifiers
 
-- Decode every lower mip level and compare it with its top level; the census
-  proves their sizes, not their pixels.
+- Which filter made the lower levels' colour, and does it work on DXT2's
+  premultiplied values? The cheapest falsifier is to reproduce one chain from its top
+  level with candidate filters and compare the compressed blocks.
 - Establish exact colour-space, premultiplication, sampler, and upload behavior
   with a controlled render capture on copied assets.
-- Prove path flattening, 65-character-looking truncation, collision, case, and
-  fallback precedence by file-I/O trace rather than filename inference.
+- Path flattening, the 65-character cut, the `mustbe_` prefix and the DXTn fallback
+  are now read from the matched loader (`CDXTexture::LoadFrame`, `0x00557300`;
+  [goodie-resources.md](goodie-resources.md)). Collision and case behaviour, and
+  the precedence at run time, still want a file-I/O trace.
 - Identify which nine uncompressed assets feed font/HUD owners and map glyph
   metrics to texture regions.
 - Keep malformed DDS tests outside the pristine shelf and use a fail-closed
@@ -164,5 +210,7 @@ shipped external font file exists.
 ## Claim boundary
 
 All 847 wrappers, DDS headers and stored mip chains are accounted for, with their
-formats and alpha use. Lower-level pixel content, DXT2 premultiplication at render
-time, font layout, GPU upload, render state, and parity remain open.
+formats and alpha use. Every lower level's colour tracks a 2×2 reduction of the
+level above, and on/off alpha follows the at-least-two-of-four rule without
+exception. The exact colour filter, DXT2 premultiplication at render time, font
+layout, GPU upload, render state, and parity remain open.
