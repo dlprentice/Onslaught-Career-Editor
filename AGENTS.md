@@ -68,9 +68,11 @@ queue, [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) what is demonstrated
   simulation (recorded per unit in `rebuild/PROVENANCE.md`); it consumes locally materialized retail data but never
   contains retail executables, decompiler output or separately licensed material. The companion is MIT. Neither
   merges with private retail material into one licensing boundary.
-- The rebuild's simulation (`OnslaughtRebuild.Parity`) stays deterministic and free of presentation, filesystem,
-  clock, process, network and GPU APIs ([DETERMINISM.md](rebuild/DETERMINISM.md)). Tests compare it with recorded
-  references Present by Present; missing references, empty selections and new skips are not passes.
+- The rebuild's simulation (`OnslaughtRebuild.Parity`) is deterministic given its inputs: the tape, the retail data
+  and options files it reads as the game does, and the virtual clock. It never reads wall time, locale, environment or
+  thread scheduling, and it has no presentation, process, network or GPU dependency (the earlier `Core`'s stricter
+  contract is [DETERMINISM.md](rebuild/DETERMINISM.md)). Tests compare it with recorded references Present by
+  Present; missing references, empty selections and new skips are not passes.
 - C# only, built in code: no `.gd` files, no editor-authored scenes or resources (a `.tscn` only as a one-node entry
   wrapper), shader source in C# strings, one production owner per subsystem. Repository tooling stays Python.
 - Reviews by other agents or models are optional input to reproduce, not authority
