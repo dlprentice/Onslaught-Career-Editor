@@ -1,7 +1,7 @@
 # Onslaught Toolkit
 
 Status: active — the project overview
-Last updated: 2026-10-15 (decomp done and private; native port in progress; companion active; Godot rebuild parked; Ghidra and WinUI removed)
+Last updated: 2026-10-21 (Godot rebuild active as a scoped proof of concept; companion paused)
 Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
 
 Onslaught Toolkit is a preservation project for *Battle Engine Aquila* (2003, Lost Toys).
@@ -10,13 +10,15 @@ Onslaught Toolkit is a preservation project for *Battle Engine Aquila* (2003, Lo
   project's reverse-engineering authority. It is planned for publication as "Onslaught CE": GPL-3.0 source and
   binaries, no game files, once its native port plays like retail.
 - **The native source port is in progress** (private, Windows and Linux).
-- **The companion is active and public.** It is a Godot .NET app for players: it opens on their game and careers,
+- **The companion is the public player app** (development paused until new requirements). It is a Godot .NET app: it opens on their game and careers,
   shows progress and Goodies, edits careers and settings only after a verified backup and a clear choice, keeps
   automatic backups that can be put back, and plays and explains the game's own music, voices and lore.
-- **The Godot rebuild is parked**; [`rebuild/`](rebuild/README.md) holds its parked state as reference.
+- **The Godot rebuild is active as a scoped proof of concept**: startup to exit 1:1 with retail, level 100 playable
+  to completion. [`rebuild/README.md`](rebuild/README.md) describes it and [`rebuild/PARITY.md`](rebuild/PARITY.md)
+  records its measured parity.
 
 This repository holds the companion, documentation of the game (formats, behaviours and findings as prose and
-specs), our own tools, the AppCore patching core the companion's future mod manager builds on, and the parked
+specs), our own tools, the AppCore patching core the companion's future mod manager builds on, and the Godot
 rebuild. It holds no game files, Ghidra database, decompiler output or decomp source.
 
 This is an unofficial community project. It is not affiliated with or endorsed by the game's publishers or rights
@@ -40,7 +42,7 @@ retired and no longer maintained; its source is in the project's private pre-fla
 | [`lore/`](lore/_index.md) | The canonical lore and history library, embedded in the companion |
 | [`tools/`](tools/README.md) | Format decoders, asset exporters, capture analysis and the repository's checks |
 | [`patches/`](patches/README.md) | The executable-patch and safe-copy profile catalogs |
-| [`rebuild/`](rebuild/README.md) | The parked GPL Godot reconstruction, kept as reference |
+| [`rebuild/`](rebuild/README.md) | The GPL Godot rebuild: `OnslaughtRebuild.Parity` (simulation) and `OnslaughtRebuild.Host` (presentation); the earlier Core/Client/Godot projects are reference |
 
 [`PROJECT-INDEX.md`](PROJECT-INDEX.md) maps source ownership and dependencies;
 [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) says what is demonstrated today and what is not.
@@ -77,7 +79,7 @@ for a change and [`CONTRIBUTING.md`](CONTRIBUTING.md) sets contribution boundari
 | Companion build, run, test, capture, export | `npm run build:companion-godot`; `npm run run:companion-godot`; `npm run test:companion-godot`; `npm run capture:companion-godot`; `npm run export:companion-godot -- --platform both` |
 | AppCore patching core | `npm run test:appcore` |
 | Tool checks | Affected cases in `python tools/<name>_tests.py`; all of them with `npm run test:tools` |
-| Parked rebuild | `npm run check:rebuild` (last passed at the parking point; see [rebuild/README.md](rebuild/README.md)) |
+| Rebuild | The Parity suite and Host build with the reference environment in [rebuild/README.md](rebuild/README.md#working-lane); the earlier `npm run check:rebuild` gate covers only the reference projects |
 
 The companion launcher puts scratch, logs and user data under the canonical checkout's `local-data/companion/`,
 including from a Git worktree.

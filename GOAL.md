@@ -1,24 +1,28 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-10-15 (David's new direction: decomp done and private, native port, companion active, Godot rebuild parked)
+Last updated: 2026-10-21 (Godot rebuild active again as a scoped proof of concept; companion paused)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
-narrow or mark this objective complete. Earlier directions (the Ghidra campaign and the Godot 1:1 rebuild) remain
-in Git history and the private RE archive.
+narrow or mark this objective complete. The earlier Ghidra campaign remains in Git history and the private RE
+archive.
 
-## The direction (David, 2026-10-15)
+## The direction (David, 2026-10-15, with the rebuild reactivated the same day)
 
 - **Reverse engineering is done by decompilation.** The byte-matching decompilation of the retail executable
   (private `bea-decomp`, 5,482 of 5,482 functions) is the authority on what the game does. It is planned for
   publication as "Onslaught CE": GPL-3.0 source and binaries, no game files, once its native port plays like retail.
 - **The faithful game is a native source port** of that decompilation, in progress and private, for Windows and
   Linux. A later remake, if any, forks that port.
-- **The companion is the public product.** A polished Godot .NET toolkit for Linux and Windows, for players: careers,
-  Goodies, settings, backups, music, voices and lore, and later a mod manager built on the AppCore patching core,
-  with no known data-loss path.
-- **The Godot rebuild is parked**; `rebuild/` keeps its parked state as reference.
+- **The Godot rebuild is active as a scoped proof of concept**: a C# reimplementation on Godot 4.8 dev6 .NET that
+  is 1:1 with retail from startup to exit, with level 100 playable to completion (win, loss and retry) and the
+  career it writes identical to retail's. `OnslaughtRebuild.Parity` owns the simulation and `OnslaughtRebuild.Host`
+  the presentation; parity is measured against retail and native-port recordings Present by Present, as
+  [`rebuild/PARITY.md`](rebuild/PARITY.md) records.
+- **The companion is the public product**, currently paused until David sets new requirements. A polished Godot .NET
+  toolkit for Linux and Windows, for players: careers, Goodies, settings, backups, music, voices and lore, and later
+  a mod manager built on the AppCore patching core, with no known data-loss path.
 - **This repository documents the game in public**: formats, behaviours and findings as prose and specs, with our
   own tools. It carries no Ghidra database, decompiler output, retail binaries or data, or decomp source.
 

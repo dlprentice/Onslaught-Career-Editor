@@ -1,14 +1,16 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-15 (decompilation done and private; Godot rebuild parked; Ghidra campaign archived privately; WinUI removed; companion file-safety changes)
+Last updated: 2026-10-21 (Godot rebuild active as a scoped proof of concept; companion paused; the earlier fixed-point rebuild's state relabelled as history)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
 
-The public product is the Godot companion. The byte-matching decompilation (private `bea-decomp`) is complete and is
-the reverse-engineering authority; its native port is in progress and private. The Godot rebuild is parked at tag
-its parked state stays in `rebuild/`. The AppCore patching core is kept for the companion's future mod manager.
+The public player product is the Godot companion, whose development is paused until new requirements. The
+byte-matching decompilation (private `bea-decomp`) is complete and is the reverse-engineering authority; its native
+port is in progress and private. The Godot rebuild is active as a scoped proof of concept (level 100, startup to
+exit); its measured parity is in [rebuild/PARITY.md](rebuild/PARITY.md). The AppCore patching core is kept for the
+companion's future mod manager.
 
 ## Retail behaviour findings — save, settings and startup
 
@@ -219,8 +221,18 @@ companion does not use AppCore yet. The CLI was removed with the WinUI shell.
 
 ## Reconstruction
 
-**Parked 2026-10-15.** David parked the Godot rebuild in favour of a native source port of the byte-matching
-decompilation. What follows is its demonstrated state when parked (the old tag archive/godot-rebuild-20260926, now in the private RE archive); it is not active work.
+**Active: the parity-core proof of concept.** David reactivated the rebuild on 2026-10-15 as a scoped proof of
+concept: startup to exit 1:1 with retail, level 100 playable to completion. `OnslaughtRebuild.Parity` (a float-exact
+C# port of the decompilation's simulation) owns the simulation and `OnslaughtRebuild.Host` the presentation, with an
+experimental live mode. What it demonstrates, measured Present by Present against retail and native-port recordings,
+and what remains open are recorded in [rebuild/PARITY.md](rebuild/PARITY.md) rather than repeated here; the Parity
+suite's setup is in [rebuild/README.md](rebuild/README.md#working-lane). Test success there does not establish
+audible audio, visual equality, physical input or a completed tutorial.
+
+**History: the earlier fixed-point rebuild.** On 2026-10-15 David first parked this fixed-point rebuild in favour of a
+native source port, then restarted the lane around the parity core above. What follows is the fixed-point rebuild's
+demonstrated state at the old tag archive/godot-rebuild-20260926 (now in the private RE archive); it is reference,
+not active work.
 
 [`rebuild/`](rebuild/README.md) is a GPL-3.0-only (as a whole), source- and RE-informed
 reconstruction lane. `OnslaughtRebuild.Core` owns fixed-step simulation,

@@ -1,16 +1,16 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-10-15 (WinUI shell, UI tests and CLI removed; Ghidra and RE machinery moved to the private RE archive; rebuild parked; the companion reads and exports the game's models and textures)
+Last updated: 2026-10-21 (rebuild active: Parity and Host projects added to the map; companion paused)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository: the companion, the AppCore patching core, the game documentation, tools and the
-parked rebuild.
+Godot rebuild.
 
 This index answers **where code and responsibility live**. It does not restate
 what is currently proved or working. Use [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md)
 for demonstrated capability, [`GOAL.md`](GOAL.md) for the direction,
 [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) for the game documentation, and
-[`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) for the parked rebuild's evidence and licence boundary. The
+[`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) for the rebuild's evidence and licence boundary. The
 decompilation and native port live in the private `bea-decomp`; the Ghidra checkpoint and campaign machinery in the
 private `onslaught-re-archive`. Do not embed volatile counts here.
 
@@ -23,15 +23,18 @@ flowchart LR
     T --> L["Companion readers: game text, Goodie rules, cheat names, lore mission list"]
     A["AppCore patching core"] --> B
     AT["AppCore tests"] --> A
-    G["Godot renderer/input"] --> RC["Rebuild Client"]
+    HO["Rebuild Host (Godot)"] --> P["Rebuild Parity simulation"]
+    PT["Parity tests"] --> P
+    G["Earlier Godot renderer/input"] --> RC["Rebuild Client"]
     G --> RCore["Rebuild Core"]
     H["Headless replay"] --> RC
     H --> RCore
     RC --> RCore
 ```
 
-The arrows are source dependencies, not priority. The companion is the active product; the rebuild is
-parked (`rebuild/` keeps its parked state). The companion is a C# application built in code and owns its file-safety
+The arrows are source dependencies, not priority. The rebuild is the active lane: `OnslaughtRebuild.Parity` owns the
+simulation and `OnslaughtRebuild.Host` the presentation; the earlier Core, Client, Headless and Godot projects are
+reference material. The companion is the public player product, paused until new requirements. The companion is a C# application built in code and owns its file-safety
 source; the AppCore patching core compiles that same file.
 The MIT companion has no dependency on the GPL rebuild or private retail assets.
 
@@ -40,7 +43,10 @@ The MIT companion has no dependency on the GPL rebuild or private retail assets.
 | [`OnslaughtToolkit.Godot`](companion/OnslaughtToolkit.Godot/README.md) | Godot .NET C# application built in code: interface, theme, career codec, the game's music and voices, model and texture readers with glTF and PNG export, file safety and its in-process adapter, with its contract tests. No GDScript, editor-authored scene or AppCore assembly. |
 | [`OnslaughtCareerEditor.AppCore`](OnslaughtCareerEditor.AppCore/OnslaughtCareerEditor.AppCore.csproj) | .NET 8/10 patching core kept as the model for the companion's future mod manager: executable patch plans and guarded application, the installed-game write authorization, safe copies and the save/options services they need. No project reference or package; it compiles the companion's `FileMutationSafety.cs`. Not built into the companion. |
 | [`OnslaughtCareerEditor.AppCore.Tests`](OnslaughtCareerEditor.AppCore.Tests/OnslaughtCareerEditor.AppCore.Tests.csproj) | AppCore behavior and safety tests, run whole by `npm run test:appcore`; eight Windows-path or retail-file cases fail on Linux. |
-| [`OnslaughtRebuild.Core`](rebuild/OnslaughtRebuild.Core/OnslaughtRebuild.Core.csproj) | Parked. Deterministic simulation truth; no presentation, filesystem, clock, process, network, or GPU dependency. |
+| [`OnslaughtRebuild.Parity`](rebuild/OnslaughtRebuild.Parity/OnslaughtRebuild.Parity.csproj) | The rebuild's simulation owner: a float-exact C# port of the decompilation's simulation, deterministic, with no presentation, filesystem, clock, process, network, or GPU dependency. No project references. |
+| [`OnslaughtRebuild.Parity.Tests`](rebuild/OnslaughtRebuild.Parity.Tests/OnslaughtRebuild.Parity.Tests.csproj) | Parity tests against recorded retail and native-port references ([rebuild/README.md](rebuild/README.md#working-lane)); references Parity. |
+| [`OnslaughtRebuild.Host`](rebuild/OnslaughtRebuild.Host/OnslaughtRebuild.Host.csproj) | The rebuild's presentation owner: a Godot .NET project built in code that draws the parity core and supplies input; references Parity. |
+| [`OnslaughtRebuild.Core`](rebuild/OnslaughtRebuild.Core/OnslaughtRebuild.Core.csproj) | Earlier fixed-point rebuild, kept as reference. Deterministic simulation truth; no presentation, filesystem, clock, process, network, or GPU dependency. |
 | [`OnslaughtRebuild.Client`](rebuild/OnslaughtRebuild.Client/OnslaughtRebuild.Client.csproj) | Input-to-fixed-step and presentation-lifecycle adapter; references Core. |
 | [`OnslaughtRebuild.Godot`](rebuild/OnslaughtRebuild.Godot/OnslaughtRebuild.Godot.csproj) | Rendering, audio, native integration, and player input; references Client and Core. |
 
@@ -113,7 +119,7 @@ that used them.
 | `local-lab/` | Ignored machine-local evidence: retail safe copies, historical campaign generations, captures, reviewer reports, frozen proof graphs, the retired working Ghidra project and `rebuild-godot/` staging. It is a real directory inside the Archive B checkout; fresh clones and child worktrees lack it. [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) owns canonical absolute-path / `BEA_LOCAL_LAB` routing; consult relevant `local-lab/INDEX.md` sections for the retained corpus. |
 | `local-data/` | The real ignored repository child for `host-attestations/`, current retail/media inputs, operational outputs and grouped `recovered/` packages; its `AGENTS.md` owns the internal map. Unused `windows-vm/` and `vm-media/` staging was retired. `_recovered-worktrees/` and `windows-profile-2026-08-28/` retain protected historical Ghidra material in place. `local-proofs/` remains a reserved ignored/publication-denied name, not a current data owner. |
 | `.artifacts/` | Ignored legacy validation, screenshot and publish output. It may contain unique evidence; preserve coupled tool paths, put new general-purpose output in `local-data/`, and use the migration deletion queue for authorized retirement. |
-| [`rebuild/`](rebuild/README.md) | The parked GPL-licensed reconstruction, kept as reference; provenance, determinism, and parity contracts are subtree-owned. |
+| [`rebuild/`](rebuild/README.md) | The GPL-licensed Godot rebuild (Parity simulation, Host presentation) and the earlier fixed-point projects kept as reference; provenance, determinism, and parity contracts are subtree-owned. |
 | [`tools/`](tools/README.md) | Format decoders, asset export, capture analysis, the companion and Godot launchers, and the documentation and safety gates. Root [`package.json`](package.json) owns commands. |
 | [`patches/`](patches/README.md) | The only active executable-patch and safe-copy profile catalogs. AppCore owns planning and guarded application. |
 | [`tests_shared/`](tests_shared/fixtures/README.md) | Narrow reviewed cross-project fixtures; never a dumping ground for retail saves or assets. |
@@ -136,8 +142,8 @@ wrong — fix the rows, not the document.
 | Where does our code and responsibility live? | This index |
 | What is known about the retail game? | [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) and its routed documents; the private decompilation is the authority behind them |
 | How are retail function/behavior contracts graded and located? | [`CONTRACTS.md`](CONTRACTS.md) |
-| What evidence may enter the parked rebuild? | [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) |
-| What makes the parked rebuild deterministic, and what was parity? | [`rebuild/DETERMINISM.md`](rebuild/DETERMINISM.md), [`rebuild/PARITY.md`](rebuild/PARITY.md) |
+| What evidence may enter the rebuild? | [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) |
+| What makes the rebuild deterministic, and what is its measured parity? | [`rebuild/DETERMINISM.md`](rebuild/DETERMINISM.md), [`rebuild/PARITY.md`](rebuild/PARITY.md) |
 | Where does ignored machine-local evidence live? | [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md); on this host the canonical checkout's real `local-lab/` directory |
 | Which validation command applies? | [`VALIDATION.md`](VALIDATION.md) and [`package.json`](package.json) |
 | What shipped, per release? | [`CHANGELOG.md`](CHANGELOG.md) (the retired WinUI app's releases) |
@@ -145,7 +151,7 @@ wrong — fix the rows, not the document.
 ### Lane front doors
 
 - **Game documentation:** [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md)
-- **Parked rebuild:** [`rebuild/README.md`](rebuild/README.md) +
+- **Rebuild:** [`rebuild/README.md`](rebuild/README.md) +
   [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md)
 - **Machine-local evidence lane:** [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md)
   + canonical-checkout `local-lab/INDEX.md`

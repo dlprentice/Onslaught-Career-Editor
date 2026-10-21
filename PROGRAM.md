@@ -1,8 +1,8 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-15 (decompilation done and private; native port in progress; companion active; Godot rebuild parked; repository cleaned)
-Summary: the open work, its acceptance gates, and what was closed or parked, without an execution diary.
+Last updated: 2026-10-21 (Godot rebuild active with its open queue; companion paused)
+Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
 [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) and checks in [VALIDATION.md](VALIDATION.md). The queue that
@@ -11,16 +11,38 @@ the campaign's records are in the private `dlprentice/onslaught-re-archive`.
 
 ## Open work
 
-### Companion — active
+### Godot rebuild — active (scoped proof of concept)
+
+David reactivated the rebuild on 2026-10-15: startup to exit 1:1 with retail, with level 100 playable to completion
+(win, loss and retry) and the career written after a win identical to retail's. `OnslaughtRebuild.Parity` owns the
+simulation and `OnslaughtRebuild.Host` the presentation (experimental live mode `HOST_LIVE=1`); the earlier
+Core/Client/Godot projects are reference material. Parity is measured Present by Present against retail and
+native-port recordings; [rebuild/PARITY.md](rebuild/PARITY.md) records the milestones and what is measured, and
+[rebuild/README.md](rebuild/README.md#working-lane) the working branch, clone and reference environment.
+
+Open, in priority order:
+
+- The tutorial win: a level 100 route driven by ordinary player inputs through every target group, zone and the
+  genuine win, then end-level data, the save and the debrief, compared across retail, the native port and the
+  rebuild.
+- The trainer route's first LIFE divergence from the native port at P16206: find the first differing collision input
+  or writeback and fix that operation.
+- The controls and display Apply paths (display reset, joystick, the remaining options) that still stop a run.
+- The remaining motion controllers and the incomplete BattleEngine coverage.
+- The Host's front end, debrief and retry flow, actual audio output, display reset and live input, with moving-footage
+  review.
+
+### Companion — paused
 
 The companion is a C# application built in code on Godot 4.8 dev6 .NET and organised around players: careers
 with a campaign map, Goodies, career editing, cheats, game settings, automatic backups that can be put back, music
 and voices, and lore (see its [README](companion/OnslaughtToolkit.Godot/README.md)). Every write into the game is a
 choice made after a verified backup, never while the game runs.
 [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore) records
-what is proven.
+what is proven. Development paused after the Goodies and mip work (branch `claude/companion-20261015`); it resumes
+when David sets new requirements.
 
-Open:
+Open when it resumes:
 
 - A human click-through, listening to the music and voices, and running the Windows package. The portable write
   path has run only on Linux; Windows cross-export and package checks do not establish Windows execution.
@@ -52,12 +74,13 @@ it is copied into this repository.
   still hold the old history; whether to ask GitHub Support to purge the PR refs is David's decision.
 - A later rename of the repository toward the "Onslaught CE" name is a separate, coordinated task.
 
-## Parked
+## Paused
 
-- **The Godot rebuild** (parked 2026-10-15; `rebuild/` on main): World 110 generalization
-  (former P7) and player-input replay tapes (former P8) are parked with it. At the tag the cold-start route wins
-  Level 100 through player input and its tape replays deterministically; World 110 is built in Core from retail
-  data but is not playable in the Godot host. See [rebuild/README.md](rebuild/README.md).
+- **The earlier fixed-point rebuild's queue** (Core/Client/Godot, paused 2026-10-15 when the rebuild restarted around
+  the parity core): World 110 generalization (former P7) and player-input replay tapes (former P8). Its final state is
+  described in [rebuild/README.md](rebuild/README.md#the-earlier-rebuild-history). The active rebuild's scope is level
+  100 only.
+- **The companion** (above), until David sets new requirements.
 
 ## Closed
 
