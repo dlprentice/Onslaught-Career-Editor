@@ -82,7 +82,10 @@ internal static class FileSafetyTests
         if (OperatingSystem.IsWindows()) Windows(root, check);
     }
 
-    /// <summary>The Windows-only members: path forms, handle errors, directory locks and the staged-file quarantine.</summary>
+    /// <summary>
+    /// The Windows-only members: path forms, handle errors, directory locks, the staged-file quarantine, an output
+    /// sharing the copied file's data, and a subst drive into a game folder.
+    /// </summary>
     private static void Windows(string root, Checks check)
     {
         (string Path, string Expected)[] forms =
@@ -160,6 +163,43 @@ internal static class FileSafetyTests
             created => { if (!CreateHardLink(alias, created, IntPtr.Zero)) throw new Win32Exception(Marshal.GetLastWin32Error()); }).Dispose());
         check.That(hardlinked is IOException or InvalidOperationException && File.Exists(alias) && new FileInfo(alias).Length == 0 && !File.Exists(aliased),
             "A staged file that gains a hard link before it is written is refused, and nothing is written through the link.");
+
+        // An output that is a hard link to the file being copied is refused before anything is written through it.
+        string source = System.IO.Path.Combine(root, "copy-source.bes"), sourceAlias = System.IO.Path.Combine(root, "copy-output.bes");
+        byte[] sourceBytes = [0x42, 0x45, 0x41];
+        File.WriteAllBytes(source, sourceBytes);
+        if (!CreateHardLink(sourceAlias, source, IntPtr.Zero)) check.Fail("A hard link could not be made: " + new Win32Exception(Marshal.GetLastWin32Error()).Message);
+        else
+        {
+            Exception? aliasOfSource = Catch(() => FileMutationSafety.BeginGeneratedVacant(sourceAlias, source).Dispose());
+            check.That(aliasOfSource is IOException or InvalidOperationException && !aliasOfSource.Message.Contains("hardlink", StringComparison.OrdinalIgnoreCase) &&
+                File.ReadAllBytes(source).AsSpan().SequenceEqual(sourceBytes),
+                "An output that shares the copied file's data is refused, and the copied file keeps its bytes: " + aliasOfSource?.Message);
+        }
+
+        // A subst drive pointing into a game folder is resolved to the game folder and refused there.
+        string substGame = System.IO.Path.Combine(root, "subst-game"), substSaves = System.IO.Path.Combine(substGame, "savegames");
+        Directory.CreateDirectory(System.IO.Path.Combine(substGame, "data"));
+        Directory.CreateDirectory(substSaves);
+        File.WriteAllBytes(System.IO.Path.Combine(substGame, "BEA.exe"), [0x4D, 0x5A]);
+        char? drive = FreeDriveLetter();
+        (int created, string createdOutput) = drive is char letter ? Subst(letter, substSaves) : (-1, "No free drive letter from P to Z.");
+        if (created != 0) check.Fail("A subst drive could not be made: " + createdOutput);
+        else
+        {
+            try
+            {
+                Exception? throughSubst = Catch(() => FileMutationSafety.BeginGeneratedVacant($"{drive}:\\output.bes", source).Dispose());
+                check.That(throughSubst is InvalidOperationException && throughSubst.Message == FileMutationSafety.OutputInsideGameFolder &&
+                    !File.Exists(System.IO.Path.Combine(substSaves, "output.bes")),
+                    "An output on a subst drive that points into a game folder is refused as inside the game folder: " + throughSubst?.Message);
+            }
+            finally
+            {
+                (int removed, string removedOutput) = Subst(drive!.Value, null);
+                if (removed != 0) check.Fail("The test's subst drive could not be removed: " + removedOutput);
+            }
+        }
     }
 
     private static bool Plain(string message, string label) =>
@@ -190,6 +230,35 @@ internal static class FileSafetyTests
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
         {
             return false;
+        }
+    }
+
+    private static char? FreeDriveLetter()
+    {
+        for (char drive = 'Z'; drive >= 'P'; drive--)
+            if (!Directory.Exists($"{drive}:\\")) return drive;
+        return null;
+    }
+
+    /// <summary>Maps a drive letter to a folder with subst.exe, or removes the mapping when the folder is null.</summary>
+    private static (int ExitCode, string Output) Subst(char drive, string? target)
+    {
+        System.Diagnostics.ProcessStartInfo start = new("subst.exe")
+        {
+            UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
+        };
+        start.ArgumentList.Add($"{drive}:");
+        start.ArgumentList.Add(target ?? "/D");
+        try
+        {
+            using System.Diagnostics.Process process = System.Diagnostics.Process.Start(start) ?? throw new InvalidOperationException("subst.exe did not start.");
+            string output = process.StandardOutput.ReadToEnd() + process.StandardError.ReadToEnd();
+            process.WaitForExit();
+            return (process.ExitCode, output);
+        }
+        catch (Exception error) when (error is InvalidOperationException or Win32Exception)
+        {
+            return (-1, error.Message);
         }
     }
 
