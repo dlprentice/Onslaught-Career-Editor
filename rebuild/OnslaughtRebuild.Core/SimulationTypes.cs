@@ -104,15 +104,9 @@ public enum Level100PlayerWeapon : byte
 /// installed executable, which is patched) the launch body
 /// `ProjectileBurst__SpawnFromCurrentPreset` at 0x005069f0 issues exactly one
 /// `CSoundManager::PlayEffect` before it enters the spawn loop:</para>
-/// <code>
-/// 0x00506a91  b9 88 69 89 00           MOV  ECX, 0x00896988   ; CSoundManager
-/// 0x00506a96  e8 a5 ae fd ff           CALL 0x004e1940        ; PlayEffect
-/// 0x00506a9b  8b 43 48                 MOV  EAX,[EBX+0x48]    ; CWeaponVolleySize
-/// 0x00506aa2  3b c7                    CMP  EAX,EDI
-/// 0x00506aa4  0f 8e e7 0d 00 00        JLE  0x00507891        ; skip empty volley
-/// 0x00506aaa  ...                                             ; LOOP HEAD
-/// 0x0050788b  0f 8c 19 f2 ff ff        JL   0x00506aaa        ; back edge
-/// </code>
+/// <para>it calls PlayEffect (<c>0x004e1940</c>) on the sound manager (<c>0x00896988</c>) at <c>0x00506a96</c>, then
+/// loads the volley size from <c>[EBX+0x48]</c> (<c>0x00506a9b</c>) and skips an empty volley (<c>0x00506aa4</c>,
+/// to <c>0x00507891</c>); the loop head is <c>0x00506aaa</c>, and its back edge at <c>0x0050788b</c> returns there.</para>
 /// <para>The volley-size load is at a HIGHER address than the call and the back
 /// edge targets 0x00506aaa, so the sound is issued once per release and the
 /// loop then creates <c>[weaponMode+0x48]</c> rounds. `+0x48` is
