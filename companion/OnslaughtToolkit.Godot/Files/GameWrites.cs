@@ -328,7 +328,7 @@ public static partial class GameInstaller
 /// a replaced file is swapped with <see cref="File.Replace(string, string, string?, bool)"/>, which keeps
 /// the displaced file under a temporary name so it can be compared with the backed-up original and the
 /// swap undone if another program changed it in between. On Windows the folder's ancestors are held by
-/// the linked safety source's directory locks. Tests run this same path on Linux to check its logic; it
+/// FileMutationSafety's directory locks. Tests run this same path on Linux to check its logic; it
 /// has not been executed on Windows.
 /// </summary>
 internal static class PortableInstall
@@ -445,8 +445,8 @@ internal static class PortableInstall
 }
 
 /// <summary>
-/// The Linux side of a game-folder write, on descriptor-relative, link-refusing handles reused from the
-/// linked safety source (LinuxSaveNative). New files are published with a no-clobber link; replaced
+/// The Linux side of a game-folder write, on descriptor-relative, link-refusing handles from the
+/// companion's safety source (LinuxSaveNative). New files are published with a no-clobber link; replaced
 /// files are swapped with renameat2(RENAME_EXCHANGE) so the displaced file can be identified and the
 /// swap undone if it was not the backed-up original. Where the filesystem has no exchange, a replacement is
 /// refused before anything changes; new files are still published.

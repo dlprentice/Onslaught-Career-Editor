@@ -1,16 +1,17 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-22 (relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (the companion is Onslaught Companion and works with the original game only; AppCore patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
 
-The companion is the player toolkit and the future CE launcher; its development is paused until new requirements.
+The companion, Onslaught Companion, is the player app for the original game and the future Onslaught CE launcher; its
+development is paused until new requirements.
 The byte-matching decompilation (private) is complete and is the reverse-engineering authority; its native port is
 published separately as Onslaught CE (link added at release), and this document does not measure it. The Godot rebuild is active as a scoped proof of concept (level 100, startup to
-exit); its measured parity is in [rebuild/PARITY.md](rebuild/PARITY.md). The AppCore patching core is kept for the
-companion's future mod manager.
+exit); its measured parity is in [rebuild/PARITY.md](rebuild/PARITY.md). The AppCore patching core is retired:
+executable patching and copied-install safe launch are not planned, and nothing uses AppCore.
 
 ## Retail behaviour findings — save, settings and startup
 
@@ -143,7 +144,12 @@ built entirely in code on **Godot 4.8.dev6.mono.official.8898c2b3d**. Its one sc
 attaches the root script; the build refuses GDScript, saved resources and multi-node
 scenes. David approved its feature set and Flight-deck look on 2026-09-25; on 2026-09-26
 he asked for it to be built around players: easy to find your way, easy on the eyes, and
-safe for their game and saves. Its sidebar follows that:
+safe for their game and saves.
+
+**Which game it works with:** today only the original game, the Steam or retail install that holds `BEA.exe`. It reads
+and writes that install's `savegames/*.bes` and `defaultoptions.bea`, and Play starts it through Steam. It does not read
+Onslaught CE's own career folder or launch CE, and its backups cover only the original game; it does refuse to write
+into the game folder while CE runs and to save a copy into CE's folder. Its sidebar:
 
 - **Home** finds the game through Steam (native, Flatpak or Snap on Linux; the registry
   on Windows) or a chosen folder, checks `BEA.exe` against the Steam release by SHA-256,
@@ -156,30 +162,39 @@ safe for their game and saves. Its sidebar follows that:
   rules and how each rule is known (071–073 are stored but never shown); Edit career for
   kill counts and Goodies; Cheats for a byte-identical copy named to switch on the three
   cheats seen working in the Steam game.
-- **Your game**: Game settings (the defaults or any career's own: sound, invert, vibration,
-  controller layout, mouse sensitivity, screen shape and keys captured from a key press)
+- **Your game**: Game settings (the defaults the game reads at start, or the copy each career
+  stores, which the game does not apply when that career loads: sound, invert, vibration,
+  controller layout, mouse sensitivity, screen shape and keys captured from a key press, in
+  the two binding slots each action has)
   and Backups (automatic backups when the companion opens and after the game closes, only
   when something changed; Back up now; every set, with Put back for each file).
 - **Extras**: Music & voices plays the soundtrack and voice lines from the install with
   the game's transcripts (Bink cutscenes are listed only); Lore reads the repository's lore
-  offline with search, the map of Allium from the player's manual and the manual itself.
-- **Advanced**, folded away: Compare careers, Raw values and Media files.
+  offline with search, the map of Allium from the player's manual and the manual itself;
+  Art & sound lists the install's models, textures and bank sound effects, previews them and
+  saves copies (models as glTF, textures as PNG, sounds as WAV).
+- **Advanced**, folded away: Career bytes (the open career's stored values, or the bytes that
+  differ from another career).
 
 A change reaches the game only through one dialog that offers a new career, replacing the
 one that was opened, or a copy elsewhere. Before anything in the game changes, every career
 and the settings file are copied to a verified backup set; nothing is written while it finds
-`BEA.exe` running (on Linux, seen on 2026-09-26 to find the Steam game's own process under
-Proton and nothing else); a
+`BEA.exe` or Onslaught CE running, checked before the backup and again just before the swap (on
+Linux, the `BEA.exe` rule was seen on 2026-09-26 to find the Steam game's own process under
+Proton and nothing else; the CE rule follows the port's packaging and has not been seen
+against a running CE); a
 file the game saved since it was opened is not replaced; the new file is swapped in (on Linux
 an atomic exchange that swaps back if the displaced file is not the one backed up; elsewhere
-`File.Replace` with the same comparison) and verified. When the game closes, or the player
+`File.Replace` with the same comparison) and verified. A file is put back from Backups only if it
+still matches the SHA-256 its backup recorded and only into the game folder that backup came
+from. Switching careers or closing with unsaved changes asks first. When the game closes, or the player
 comes back to the companion, it reads what the game saved and shows the latest, keeping any
 unsaved changes; while changes are unsaved, a bar under the page keeps Save in reach. Every label style outside the banner measures at least 4.5:1 against the
 surfaces it sits on.
 
 The in-process [ProtectedSaveFiles](companion/OnslaughtToolkit.Godot/Files/ProtectedSaveFiles.cs)
 adapter uses the companion's own `SaveLabFileTransaction` and `FileMutationSafety` (moved byte for byte from
-AppCore on 2026-10-15). Linux publication retains
+AppCore; the date is in the companion's [PROVENANCE](companion/OnslaughtToolkit.Godot/PROVENANCE.md)). Linux publication retains
 no-follow handles, physical identities, unnamed staging and no-clobber linking.
 Malformed or changed inputs and conflicting outputs are refused; uncertain publication
 never becomes a success receipt or an automatic deletion. There is no helper process or
@@ -192,16 +207,18 @@ companion can read; other files are skipped and counted.
 
 **Evidence:** the lane's commit messages from 2026-09-26 record each check: `npm test`
 (one C# contract suite inside headless Godot, including the portable write path run on
-Linux, and the launcher's own cases), renders of every screen at 1280×800 and 1920×1080
+Linux, and the development runner's own cases), renders of every screen at 1280×800 and 1920×1080
 reviewed first-hand, the problems that review found fixed, covered by tests, re-rendered and
 reviewed again, and Linux and Windows packages exported, with the Linux package started and
 quit cleanly under an isolated home. The earlier approved-workflow receipts are
 in [their validation section](VALIDATION.md#companion-approved-workflows--september-26) and
 the migration's in [its section](VALIDATION.md#companion-c-migration--september-25).
-**Windows execution (the portable write path has run only on Linux), a human click-through
-and listening to the audio remain pending.** Patching the installed `BEA.exe` is a later
-phase; mission, rank and link edits are not offered; no legacy feature parity or retail
-gameplay acceptance is implied.
+Art & sound and the Goodies page's "What it shows" are covered by the contract suite on
+synthetic models, textures, a sound bank and Goodie archives; no dated receipt for them is
+recorded here. **Windows execution (the portable write path has run only on Linux), a human
+click-through and listening to the audio remain pending.** The companion does not patch
+`BEA.exe` and that is not planned; mission, rank and link edits are not offered; no legacy
+feature parity or retail gameplay acceptance is implied.
 
 ## Retired WinUI toolkit
 
@@ -209,15 +226,18 @@ The Windows-only WinUI 3 shell, its UI tests, the maintainer CLI and the portabl
 packaging were removed on 2026-10-15; the Godot companion replaced them. Their source,
 demonstrated features and receipts remain in Git history.
 
-## AppCore patching core
+## AppCore patching core (retired)
 
-`OnslaughtCareerEditor.AppCore` is kept as the model for the companion's future mod
-manager: executable patch plans, guarded application, the installed-game write
-authorization, safe copies, and the save/options services they use. It targets .NET 8
-and 10 and compiles the companion's `FileMutationSafety.cs`. On Linux on 2026-10-15
+`OnslaughtCareerEditor.AppCore` is the retired WinUI app's core: executable patch plans,
+guarded application, the installed-game write authorization, copied-install "safe launch"
+profiles, and the save/options services they use. Executable patching and safe launch are
+not planned for the companion (Onslaught CE replaces them and never modifies the install);
+AppCore stays in the tree only until its save-layout test facts are ported into the
+companion's tests. It targets .NET 8 and 10 and compiles the companion's
+`FileMutationSafety.cs`. On Linux on 2026-10-15
 `npm run test:appcore` ran 1,229 tests per framework: 1,221 passed and 8 failed, all
 eight Windows-path or retail-file cases that already failed before the reduction. The
-companion does not use AppCore yet. The CLI was removed with the WinUI shell.
+companion does not use AppCore. The CLI was removed with the WinUI shell.
 
 ## Reconstruction
 
@@ -812,9 +832,10 @@ static and runtime differences decide where the Steam release diverged.
 
 The companion has no published release yet; `npm run export:companion-godot -- --platform both` builds Linux and
 Windows packages that bundle their .NET runtime. The retired WinUI app's last release, the unsigned portable
-Windows ZIP `v1.0.11` (tag `winui-v1.0.11`), is still on the Releases page and is no longer maintained. No package includes the retail
+Windows ZIP `v1.0.11` (tag `winui-v1.0.11`), is still on the Releases page and is no longer maintained; its
+executable patching and safe launch are not in the current companion and are replaced by Onslaught CE. No package includes the retail
 executable, the original assets, saves, a Ghidra database or the rebuild client. Repository licenses do not cover
 retail game data; future releases keep that user-supplied boundary.
 
-Use `npm run` for the current command surface: `npm test` checks the companion; `npm run test:appcore` the AppCore
+Use `npm run` for the current command surface: `npm test` checks the companion; `npm run test:appcore` the retired AppCore
 patching core.

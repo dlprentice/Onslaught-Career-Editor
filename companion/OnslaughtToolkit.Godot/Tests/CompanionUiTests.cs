@@ -61,7 +61,11 @@ internal static class CompanionUiTests
             "Home finds the game through Steam and shows its career");
         check.That(app.Workspace.Session?.Path == install.Career && app.Current == app.Home && app.CareerMenu.Text == "Career One",
             "the most recent career opens by itself, read-only, without leaving Home");
-        check.That(app.Status.Game.Text.Contains("changed BEA.exe"), "the status bar says the test executable is not the Steam release");
+        check.That(app.Status.Game.Text.Contains("differs from the Steam release") && app.Home.HeroStatus.StartsWith("Original game", StringComparison.Ordinal),
+            "the status bar and Home say the test executable is the original game but not the Steam release");
+        check.That(app.Sidebar.Root.FindChildren("*", nameof(Label), true, false).OfType<Label>().Any(label => label.Text == "COMPANION") &&
+            app.Home.Promises.Count == 3 && app.Home.Promises[0].Text.Contains("original game") && app.Home.Promises[1].Text.Contains("Onslaught CE"),
+            "the sidebar names Onslaught Companion and Home's promises say they cover the original game, and CE while it runs");
         check.That(app.Home.AskingAboutBackups, "Home asks once whether to keep automatic backups");
         check.That(app.Home.ShowsGameArt && app.Home.Manual.Visible, "Home shows the game's own art and offers its manual when the install has them");
         check.That(!app.Sidebar.IsOpen("Advanced") && app.Sidebar.Items.Count == app.Pages.Count,
@@ -113,7 +117,7 @@ internal static class CompanionUiTests
             "an unchecked rule says it comes from the source only, and exactly one cell is selected");
         app.Goodies.Cells[72].EmitSignal(BaseButton.SignalName.Pressed);
         check.That(app.Goodies.DetailEvidence.StartsWith("The game's gallery has no place", StringComparison.Ordinal) &&
-            app.Goodies.ChangeInCopy.Disabled, "Goodie 072, which the gallery never shows, says so and cannot be changed");
+            app.Goodies.ChangeGoodie.Disabled, "Goodie 072, which the gallery never shows, says so and cannot be changed");
         check.That(app.Bytes.Values.GetRoot()?.GetChildren().Count(row => row.GetText(0).Contains("god flag")) == 2,
             "raw values show both players' god flags");
         app.Navigate("bytes");
@@ -275,7 +279,7 @@ internal static class CompanionUiTests
         // A Goodie chosen in the gallery arrives on Edit career and changes only its own four bytes.
         app.Navigate("goodies");
         app.Goodies.Cells[2].EmitSignal(BaseButton.SignalName.Pressed);
-        app.Goodies.ChangeInCopy.EmitSignal(BaseButton.SignalName.Pressed);
+        app.Goodies.ChangeGoodie.EmitSignal(BaseButton.SignalName.Pressed);
         GoodieState before = app.Workspace.Session!.Analysis.Goodies[2].State;
         check.That(app.Current == app.EditCareer && edit.GoodieTargets.ContainsKey(2) && edit.GoodiePickers.Count == 1,
             "a Goodie chosen in the gallery is added to Edit career");
@@ -472,6 +476,14 @@ internal static class CompanionUiTests
     {
         app.Navigate("assets");
         check.That(app.Assets.List.GetRoot()?.GetChildCount() == 0, "with no models in the install, the models list is empty");
+        // An install with sound banks but no models or textures still offers its sounds.
+        Directory.CreateDirectory(Path.Combine(install.Game, "data", "sounds"));
+        File.WriteAllBytes(Path.Combine(install.Game, "data", "sounds", "sounds_english_pc.xap"), AssetTests.SoundBank());
+        await app.Game.RescanAsync();
+        app.Navigate("assets");
+        await Frame(tree);
+        check.That(app.Assets.Kind.Visible && app.Assets.List.Visible && app.Assets.Search.Visible,
+            "an install with sound effects but no models or textures still shows the list, so its sounds can be chosen");
         string resources = Path.Combine(install.Game, "data", "resources");
         Directory.CreateDirectory(Path.Combine(resources, "meshes"));
         Directory.CreateDirectory(Path.Combine(resources, "dxtntextures"));
@@ -554,7 +566,7 @@ internal static class CompanionUiTests
 
         // The gallery's change button for a slot the game never shows: the message must survive the move to Edit career.
         app.Goodies.Cells[72].EmitSignal(BaseButton.SignalName.Pressed);
-        app.Goodies.ChangeInCopy.EmitSignal(BaseButton.SignalName.Pressed);
+        app.Goodies.ChangeGoodie.EmitSignal(BaseButton.SignalName.Pressed);
         check.That(app.Current == app.EditCareer && app.Status.Failed &&
             app.Status.Label.Text.Contains("Goodie 072 is never shown in the game's gallery"), "the hidden-Goodie message survives the move to Edit career");
         app.Status.Clear();

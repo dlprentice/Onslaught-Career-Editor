@@ -2,7 +2,7 @@
 config_version=5
 
 [application]
-config/name="Onslaught Toolkit"
+config/name="Onslaught Companion"
 run/main_scene="res://Main.tscn"
 config/features=PackedStringArray("4.8", "C#", "GL Compatibility")
 config/use_custom_user_dir=true

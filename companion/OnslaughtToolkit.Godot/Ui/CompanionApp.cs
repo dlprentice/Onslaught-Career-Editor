@@ -148,7 +148,7 @@ public partial class CompanionApp : Control
         PageTitle = titles.Add(Build.Heading("", "Title"));
         PageSubtitle = titles.Add(Build.Text("", "Muted", wrap: false, clip: true));
         RunningBadge = header.Add(Build.Text("Game running", "Warn", wrap: false));
-        RunningBadge.TooltipText = "Battle Engine Aquila is running. The companion won't write into its folder until you close it.";
+        RunningBadge.TooltipText = "The original game or Onslaught CE is running. The companion won't write into the game folder until it closes.";
         RunningBadge.SizeFlagsVertical = SizeFlags.ShrinkCenter;
         RunningBadge.Visible = false;
         VBoxContainer career = header.Add(Build.Column(2));
@@ -392,7 +392,8 @@ public partial class CompanionApp : Control
     }
 
     private string GameLine() => Game.Busy ? "Checking the game folder…" : Game.Folder is GameFolder folder
-        ? (_running ? "Game running" : folder.Executable.State == ExecutableState.Retail ? "Steam version found" : "Game found (changed BEA.exe)")
+        ? (_running ? "Game running" : folder.Executable.State == ExecutableState.Retail ? "Original game (Steam, unmodified)"
+            : "Original game (BEA.exe differs from the Steam release)")
         : "No game folder";
 
     private void ShowCareerMenu()

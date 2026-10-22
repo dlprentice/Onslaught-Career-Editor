@@ -28,8 +28,8 @@ public interface IProtectedSaveFiles
 }
 
 /// <summary>
-/// The companion's narrow OS file-safety boundary. It links the existing
-/// SaveLabFileTransaction and FileMutationSafety source unchanged: no-follow opens, physical
+/// The companion's narrow OS file-safety boundary, on the companion's own SaveLabFileTransaction and
+/// FileMutationSafety source (AppCore compiles the same FileMutationSafety file): no-follow opens, physical
 /// identity checks, unnamed staging, no-clobber publication and verified reopen. Each call owns
 /// and releases its handles before returning. A running transaction must not be abandoned or
 /// reported as failed merely because a caller stopped waiting.

@@ -173,10 +173,8 @@ internal sealed class SummaryPage : Page
             row.Add(Build.Text(career.Kills[category].ToString("N0"), "Mono", wrap: false, width: 72)).HorizontalAlignment = HorizontalAlignment.Right;
         }
 
-        LinkCensus links = career.LinkCensus;
-        _routeLine.Text = $"Hover a mission for its name. A route not taken is the game's own record of the path you did not " +
-            $"follow, not damage. {links.Complete} routes open, {links.AlternateRoutes} not taken, {links.Locked} still closed" +
-            (links.Unknown > 0 ? $", {links.Unknown} with values the companion does not recognise." : ".");
+        // The link counts are on Career bytes; the map itself shows the routes.
+        _routeLine.Text = "Hover a mission for its name.";
     }
 
     private (Label Value, Label Detail, ProgressBar Meter) Stat(string name, string detail = "")

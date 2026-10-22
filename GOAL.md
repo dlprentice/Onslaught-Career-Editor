@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-10-21 (decompilation done; port preview published separately as Onslaught CE; rebuild PoC in progress; companion paused)
+Last updated: 2026-10-22 (the companion is Onslaught Companion, the future CE launcher; exe patching and safe launch retired; earlier: decompilation done, port preview published separately as Onslaught CE, rebuild PoC in progress)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
@@ -20,9 +20,12 @@ archive.
   career it writes identical to retail's. `OnslaughtRebuild.Parity` owns the simulation and `OnslaughtRebuild.Host`
   the presentation; parity is measured against retail and native-port recordings Present by Present, as
   [`rebuild/PARITY.md`](rebuild/PARITY.md) records.
-- **The companion is the player toolkit and the future CE launcher**, paused until David sets new requirements. A Godot .NET
-  toolkit for Linux and Windows, for players: careers, Goodies, settings, backups, music, voices and lore, and later
-  a mod manager built on the AppCore patching core, with no known data-loss path.
+- **The companion, Onslaught Companion, is the player app and the future Onslaught CE launcher**, paused until David
+  sets new requirements. A Godot .NET app for Linux and Windows, for players: careers, Goodies, settings, backups,
+  music, voices and lore, with no known data-loss path. Today it works with the original game; next it finds, launches
+  and updates Onslaught CE and manages CE's careers and settings. Original-game save editing stays, with protected
+  writes; executable patching and copied-install safe launch are retired, and enhancements belong in CE as opt-in
+  options.
 - **This repository documents the game in public**: formats, behaviours and findings as prose and specs, with our
   own tools. It carries no Ghidra database, decompiler output, retail binaries or data, or decomp source.
 

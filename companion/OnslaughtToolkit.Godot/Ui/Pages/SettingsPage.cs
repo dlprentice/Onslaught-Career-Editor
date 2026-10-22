@@ -8,10 +8,11 @@ using OnslaughtToolkit.Companion.Options;
 namespace OnslaughtToolkit.Companion.Ui;
 
 /// <summary>
-/// The game's settings: audio, controls, mouse, screen shape and keys. The game keeps them in its default
-/// settings file and in every career (loading a career copies that career over the defaults), so the
-/// player picks which to change. Files open read-only; saving into the game backs up first and only
-/// replaces a file the game has not changed since it was opened.
+/// The game's settings: audio, controls, mouse, screen shape and keys. The game reads its default settings
+/// file when it starts; every career also stores a copy, which the game does not apply when the career loads
+/// and may overwrite at its next save of that career (save-format.md, Options entries). The player picks which
+/// to change. Files open read-only; saving into the game backs up first and only replaces a file the game has
+/// not changed since it was opened.
 /// </summary>
 internal sealed class SettingsPage : Page
 {
@@ -45,8 +46,9 @@ internal sealed class SettingsPage : Page
         Root = Bar.Wrap(_scroll);
 
         (PanelContainer which, VBoxContainer whichBody) = Build.Card("Which settings");
-        whichBody.Add(Build.Text("The game starts with its default settings. Each career also keeps its own, and loading a career " +
-            "in the game uses that career's settings from then on. Pick the one to change.", "Muted"));
+        whichBody.Add(Build.Text("The game starts with its default settings. Each career also stores a copy of the settings; the game " +
+            "does not apply that copy when the career loads, and may overwrite it the next time it saves the career. Pick the one " +
+            "to change.", "Muted"));
         HBoxContainer sourceRow = whichBody.Add(Build.Row(10));
         Source = sourceRow.Add(new OptionButton { CustomMinimumSize = new Vector2(360, 0) });
         Source.ItemSelected += item => OpenSelected((int)item);
@@ -100,7 +102,8 @@ internal sealed class SettingsPage : Page
         GridContainer keyGrid = keyBody.Add(new GridContainer { Columns = 3 });
         keyGrid.AddThemeConstantOverride("h_separation", 16);
         keyGrid.AddThemeConstantOverride("v_separation", 6);
-        foreach (string heading in new[] { "Action", "Player 1", "Player 2" }) keyGrid.Add(Build.Eyebrow(heading));
+        // The two binding slots; which player (if either) the game gives each one has not been checked in the game.
+        foreach (string heading in new[] { "Action", "Slot 1", "Slot 2" }) keyGrid.Add(Build.Eyebrow(heading));
         foreach (BindingAction action in OptionsFile.Actions)
         {
             keyGrid.Add(Build.Text($"{action.Group} · {action.Name}", "", wrap: false, width: 220));
@@ -122,7 +125,6 @@ internal sealed class SettingsPage : Page
             ShowKeys();
             Refresh();
         };
-        keyBody.Add(Build.Text("A new Transform key was seen working in the game; the other keys are stored the same way.", "Faint"));
         _needsFile.Add(content.Add(keys));
 
         (PanelContainer summary, VBoxContainer summaryBody) = Build.Card("Your changes");
@@ -313,7 +315,7 @@ internal sealed class SettingsPage : Page
             }
             foreach (GameFile career in game.Careers.Where(file => file.Supported))
             {
-                Source.AddItem($"Settings in {career.DisplayName}");
+                Source.AddItem($"Copy stored in {career.DisplayName} (not applied when it loads)");
                 _sourcePaths.Add(career.Path);
             }
         }
@@ -421,7 +423,8 @@ internal sealed class SettingsPage : Page
             button.ThemeTypeVariation = "";
             BindingRow? row = reading.Bindings.FirstOrDefault(row => row.EntryId == entryId);
             button.Text = row is null ? "Not set" : OptionsFile.Describe(row.Slot(slot).Device, row.Slot(slot).Key);
-            button.TooltipText = row is null ? "" : "Click, then press a key to change it. " + OptionsFile.Raw(row.Slot(slot).Device, row.Slot(slot).Key) + ".";
+            button.TooltipText = row is null ? "" : "Click, then press a key to change it. " + OptionsFile.Raw(row.Slot(slot).Device, row.Slot(slot).Key) +
+                ". A new Transform key was seen working in the game; the other keys are stored the same way.";
         }
     }
 

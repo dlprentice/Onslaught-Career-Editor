@@ -38,7 +38,7 @@ internal static class OptionsTests
         KeyChoice t = KeyTable.For(Key.T)!;
         int transform = read.Bindings.Single(row => row.EntryId == 0x21).Offset;
         OptionsEdit keyEdit = Edit(edit => edit.Keys[(0x21, 1)] = t);
-        Only(original, keyEdit, [transform + 0x18, transform + 0x1C], check, "player 2 transform key");
+        Only(original, keyEdit, [transform + 0x18, transform + 0x1C], check, "slot 2 transform key");
         if (OptionsFile.Preview(original, keyEdit).Value is OptionsPlan plan)
         {
             check.That(U(plan.Bytes, transform + 0x18) == 8 && U(plan.Bytes, transform + 0x1C) == (('T' << 16) | 0x14u) &&
@@ -60,7 +60,7 @@ internal static class OptionsTests
         byte[] preset = original.ToArray();
         BinaryPrimitives.WriteUInt16LittleEndian(preset.AsSpan(0x26BE + 8), 1);
         check.That(OptionsFile.Preview(preset, keyEdit).Value is OptionsPlan custom && BinaryPrimitives.ReadUInt16LittleEndian(custom.Bytes.AsSpan(0x26BE + 8)) == 0,
-            "Changing a key sets the control scheme to custom so the game keeps it.");
+            "Changing a key sets the control scheme index to 0.");
         check.That(KeyTable.For(Key.W)?.Packed == U(original, read.Bindings.Single(row => row.EntryId == 0x1F).Offset + 0x1C) ||
             read.Bindings.Single(row => row.EntryId == 0x1F).Slot1Device != 9, "The key table packs W the way the game wrote it.");
 

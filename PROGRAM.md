@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-22 (relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (the companion's next step is the CE launcher and manager; exe patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
@@ -49,18 +49,21 @@ Open when it resumes:
 
 - A human click-through, listening to the music and voices, and running the Windows package. The portable write
   path has run only on Linux; Windows cross-export and package checks do not establish Windows execution.
-- The mod manager, built on the AppCore patching core: patching the installed `BEA.exe` with a preview, a verified
-  backup and restore, through `BinaryPatchEngine.AuthorizeInstalledGameWrite`. Then, at David's direction, showing
-  the Goodies' own contents, media replacement and a public release.
+- The Onslaught CE launcher and manager: find, launch and update Onslaught CE; show and edit CE's careers and
+  settings in CE's own folder, with the same protected writes and per-game backups; say which game is running. The
+  original game's save and settings editing stays, with protected writes. Executable patching and the WinUI app's
+  copied-install safe launch are retired; AppCore goes once its test facts are ported into the companion's tests.
+  Any media replacement would be a CE option (for example a CE user-data override folder), not a file swap in an
+  install. Then, at David's direction, a public release.
 
-Keep the companion's application code, the rebuild and private retail data separate. No unrelated launcher, store or
-community features are planned.
+Keep the companion's application code, the rebuild and private retail data separate. Beyond launching and managing
+Onslaught CE, no store, account or community features are planned.
 
 ### Game documentation — ongoing
 
 Write what the decompilation establishes as prose and specs under [`reverse-engineering/`](reverse-engineering/RE-INDEX.md),
-citing functions rather than quoting code. The companion's next features (patches, Goodie contents, media) are the
-first consumers. Sections whose decompiler listings moved to the private archive on 2026-10-15 keep a pointer and,
+citing functions rather than quoting code. The companion's CE work (careers, settings, launch) is the next
+consumer. Sections whose decompiler listings moved to the private archive on 2026-10-15 keep a pointer and,
 where needed, a short summary; a fuller prose description is welcome wherever a reader needs one.
 
 ### Decompilation and native port — private

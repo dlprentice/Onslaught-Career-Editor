@@ -10,7 +10,7 @@ namespace OnslaughtToolkit.Companion.Ui;
 /// The open career's Goodies laid out as the game's gallery wall, row by row, in the game's own colours,
 /// with each unlock rule and how far the evidence for it goes, and what each Goodie shows: its picture, model, cutscene
 /// or race level, read from the player's install. Slots 071–073, which the wall never shows, are listed apart.
-/// Read-only; a change is prepared on Edit a copy, and copies of pictures and models are saved from Art &amp; sound.
+/// Read-only; a change is prepared on Edit career, and copies of pictures and models are saved from Art &amp; sound.
 /// </summary>
 internal sealed class GoodiesPage : Page
 {
@@ -29,7 +29,7 @@ internal sealed class GoodiesPage : Page
 
     private readonly CareerWorkspace _workspace;
     private readonly GameLibrary _game;
-    private readonly Action<int> _changeInCopy;
+    private readonly Action<int> _changeGoodie;
     private readonly Action<string> _openAsset;
     private readonly Label _contentText;
     private readonly TextureRect _contentImage;
@@ -46,9 +46,9 @@ internal sealed class GoodiesPage : Page
     private readonly List<Button> _filterButtons = [];
     private int _filter;
 
-    internal GoodiesPage(AppServices app, Action<int> changeInCopy, Action<string> openAsset) : base("goodies", "Goodies", "goodies")
+    internal GoodiesPage(AppServices app, Action<int> changeGoodie, Action<string> openAsset) : base("goodies", "Goodies", "goodies")
     {
-        (_workspace, _game, _changeInCopy, _openAsset) = (app.Workspace, app.Game, changeInCopy, openAsset);
+        (_workspace, _game, _changeGoodie, _openAsset) = (app.Workspace, app.Game, changeGoodie, openAsset);
         HBoxContainer layout = Build.Row(16);
         layout.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
         Root = layout;
@@ -89,10 +89,10 @@ internal sealed class GoodiesPage : Page
         detail.Add(Build.Eyebrow("How the game unlocks it"));
         _detailRule = detail.Add(Build.Text(""));
         _detailEvidence = detail.Add(Build.Text("", "Muted"));
-        ChangeInCopy = detail.Add(Build.Button("Change this Goodie…", tooltip: "Adds this Goodie to Edit career, where you save the change."));
-        ChangeInCopy.Icon = Icons.Get("edit");
-        ChangeInCopy.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
-        ChangeInCopy.Pressed += () => _changeInCopy(Selected);
+        ChangeGoodie = detail.Add(Build.Button("Change this Goodie…", tooltip: "Adds this Goodie to Edit career, where you save the change."));
+        ChangeGoodie.Icon = Icons.Get("edit");
+        ChangeGoodie.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
+        ChangeGoodie.Pressed += () => _changeGoodie(Selected);
 
         detail.Add(Build.Eyebrow("What it shows"));
         _contentText = detail.Add(Build.Text(""));
@@ -123,7 +123,7 @@ internal sealed class GoodiesPage : Page
     internal int Selected { get; private set; } = -1;
     internal string DetailEvidence => _detailEvidence.Text;
     internal string DetailRule => _detailRule.Text;
-    internal Button ChangeInCopy { get; }
+    internal Button ChangeGoodie { get; }
     internal Button ShowAnyway { get; }
     internal Button OpenAsset { get; }
     internal string ContentText => _contentText.Text;
@@ -175,8 +175,8 @@ internal sealed class GoodiesPage : Page
         _detailState.Text = GoodieFacts.StateName(goodie.State);
         _detailRule.Text = GoodieFacts.Rule(index);
         _detailEvidence.Text = GoodieFacts.Describe(GoodieFacts.Evidence(index));
-        ChangeInCopy.Disabled = !goodie.Shown;
-        ChangeInCopy.TooltipText = goodie.Shown ? "Adds this Goodie to Edit career, where you save the change."
+        ChangeGoodie.Disabled = !goodie.Shown;
+        ChangeGoodie.TooltipText = goodie.Shown ? "Adds this Goodie to Edit career, where you save the change."
             : "The game never shows this slot, so its state is kept.";
         ShowContent(index);
     }

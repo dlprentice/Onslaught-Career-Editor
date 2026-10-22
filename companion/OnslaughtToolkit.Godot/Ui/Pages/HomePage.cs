@@ -60,7 +60,7 @@ internal sealed class HomePage : Page
         _heroStatus.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
         heroColumn.Add(Build.Spacer(0, expand: true));
         HBoxContainer heroActions = heroColumn.Add(Build.Row(10));
-        Play = heroActions.Add(Build.Button("Play", "Primary", "Starts Battle Engine Aquila through Steam."));
+        Play = heroActions.Add(Build.Button("Play", "Primary", "Starts the original Battle Engine Aquila through Steam."));
         Play.Icon = Icons.Get("play");
         ChooseFolder = heroActions.Add(Build.Button("Choose game folder…", "", "The folder that contains BEA.exe and the data folder."));
         ChooseFolder.Icon = Icons.Get("folder");
@@ -87,8 +87,8 @@ internal sealed class HomePage : Page
         (PanelContainer safety, VBoxContainer safetyBody) = Build.Card("Your safety net", 10);
         (_askBackups, VBoxContainer ask) = Build.Panel("CautionNotice", 8);
         ask.Add(Build.Text("Keep automatic backups?", "Strong"));
-        ask.Add(Build.Text("When the companion opens, and when you close the game while it is open, it copies your careers and " +
-            "settings to a backup folder if anything changed. Nothing is ever deleted.", "Muted"));
+        ask.Add(Build.Text("When the companion opens, and when you close the original game while it is open, it copies that game's " +
+            "careers and settings to a backup folder if anything changed. Nothing is ever deleted.", "Muted"));
         HBoxContainer askActions = ask.Add(Build.Row(10));
         TurnOnBackups = askActions.Add(Build.Button("Turn on automatic backups", "Primary"));
         NotNow = askActions.Add(Build.Button("Not now"));
@@ -103,9 +103,9 @@ internal sealed class HomePage : Page
         safetyBody.Add(_backupsOn);
         foreach (string promise in new[]
         {
-            "Nothing in your game changes without a backup first.",
-            "Nothing is written while the game is running.",
-            "Any earlier version can be put back from Backups.",
+            "Nothing in your original game changes without a backup first.",
+            "Nothing is written into it while it or Onslaught CE is running.",
+            "Any earlier version of its careers and settings can be put back from Backups.",
         })
         {
             HBoxContainer line = safetyBody.Add(Build.Row(10));
@@ -282,13 +282,14 @@ internal sealed class HomePage : Page
         {
             string version = folder.Executable.State switch
             {
-                ExecutableState.Retail => "Steam version",
-                ExecutableState.Different => "Your game (its BEA.exe has been changed or is another version)",
-                _ => "Your game (BEA.exe is missing or unreadable)",
+                ExecutableState.Retail => "Original game (Steam, unmodified)",
+                ExecutableState.Different => "Original game (its BEA.exe differs from the Steam release; on Steam, Verify integrity of " +
+                    "game files restores it)",
+                _ => "Original game (BEA.exe is missing or unreadable)",
             };
             string backups = sets.Count == 0 ? "not backed up yet" : $"last backed up {Build.When(sets[0].Created)}";
             _heroStatus.Text = $"{version}  ·  {Build.Count(folder.Careers.Count, "career")}  ·  {backups}" +
-                (_app.GameRunning() ? "\nThe game is running. The companion won't write into it until you close it." : "");
+                (_app.GameRunning() ? "\nThe game or Onslaught CE is running. The companion won't write into the game folder until it closes." : "");
         }
 
         bool? auto = _app.Game.Settings.Load().AutoBackup;

@@ -54,14 +54,14 @@ internal sealed class EditCareerPage : Page
         goodieBody.Add(Build.Text("Unlock every Goodie at once, or pick them one by one on the Goodies page. Unlocked Goodies show " +
             "gold in the game's gallery until you look at them.", "Muted"));
         HBoxContainer goodieActions = goodieBody.Add(Build.Row(10));
-        UnlockAll = goodieActions.Add(Build.Button("Unlock every Goodie"));
+        const string goodieEvidence = "The game loaded and showed a change made this way to Goodie 002; the other Goodies are stored " +
+            "the same way.";
+        UnlockAll = goodieActions.Add(Build.Button("Unlock every Goodie", tooltip: goodieEvidence));
         UnlockAll.Icon = Icons.Get("goodies");
         Button pick = goodieActions.Add(Build.Button("Pick on the Goodies page", "Link"));
         pick.Pressed += () => _app.Navigate("goodies");
         ClearGoodies = goodieActions.Add(Build.Button("Clear Goodie changes", "Link"));
         _goodieRows = goodieBody.Add(Build.Column(6));
-        goodieBody.Add(Build.Text("The game loaded and showed a change made this way to Goodie 002; the other Goodies are stored the " +
-            "same way.", "Faint"));
         _needsCareer.Add(content.Add(goodies));
 
         (PanelContainer summary, VBoxContainer summaryBody) = Build.Card("Your changes");

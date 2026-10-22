@@ -1,24 +1,37 @@
-# Onslaught Toolkit companion
+# Onslaught Companion
 
 Status: paused (since 2026-10-16, until new requirements); C# application built entirely in code on Godot 4.8 dev6 .NET, organised around the player: careers, Goodies, editing, cheats, game settings, backups, music, voices, lore, and the game's models and textures; Linux executed checks, Windows runtime acceptance pending
-Last updated: 2026-10-22 (relicensed GPL-3.0-only; lore CC BY-SA 4.0)
-Summary: the GPL-3.0-only companion for Battle Engine Aquila players: it opens on their game and careers, shows progress and Goodies, changes careers and settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, plays and explains the game's own music, voices and lore, and saves copies of its models (glTF) and textures (PNG).
+Last updated: 2026-10-22 (named Onslaught Companion; works with the original game only, safety promises scoped to it; relicensed GPL-3.0-only, lore CC BY-SA 4.0)
+Summary: Onslaught Companion, the GPL-3.0-only app for Battle Engine Aquila players: today it works with the original game's Steam or retail install; it opens on that game and its careers, shows progress and Goodies, changes careers and settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, plays and explains the game's own music, voices and lore, and saves copies of its models (glTF), textures (PNG) and sound effects (WAV).
 
-The companion is for players. It opens on their game and careers, and everything it
+Onslaught Companion is for players. It opens on their game and careers, and everything it
 changes in the game is backed up first and can be put back. Retail reverse engineering, the
 faithful game (the native source port, published separately as Onslaught CE; link added at
 release) and the GPL Godot rebuild have separate owners; this project neither launches nor
-depends on the rebuild. It is planned to become the CE launcher later. Tools for looking at
-raw bytes are kept, folded away under Advanced.
+depends on the rebuild. Tools for looking at raw bytes are kept, folded away under Advanced.
+
+## Which game it works with
+
+Today the companion works with **the original game only**: the Steam or retail install that
+holds `BEA.exe`. It reads and writes that install's `savegames/*.bes` careers and its
+`defaultoptions.bea`, and its Play button asks Steam to start the original game. It does not
+yet read Onslaught CE's own career folder (`~/.local/share/onslaught-ce`, or
+`%APPDATA%\Onslaught CE` on Windows), cannot launch Onslaught CE, and backs up only the
+original game's careers and settings. It does know when Onslaught CE is running and then
+writes nothing into the game folder, because CE reads the same install, and it refuses to save
+a copy into CE's folder. Making it the Onslaught CE launcher and manager is the next step
+(see below).
 
 ## Working lane
 
 Development is paused (since 2026-10-16) until David sets new requirements; no branch is
-active. The next item, the mod/patch manager on the AppCore patching core, waits until the
-native port has a playable build, and will then target both the port's and retail's
-executables. On resume, start from `main` in a worktree of an internal-disk clone (the
-familiar checkout lives on a USB drive and takes light I/O only) and run this project's
-`npm test`.
+active. The next item is making the companion the Onslaught CE launcher and manager: find,
+launch and update CE, and show and edit its careers and settings in CE's own folder.
+Original-game career and settings editing stays, with the same protected writes. Executable
+patching and the copied-profile "safe launch" of the retired WinUI app are retired, not
+planned; enhancements to the game belong in Onslaught CE as opt-in options. On resume, start
+from `main` in a worktree of an internal-disk clone (the familiar checkout lives on a USB drive
+and takes light I/O only) and run this project's `npm test`.
 
 ## Layout
 
@@ -30,9 +43,9 @@ editor-authored scene, and `npm run build` refuses to stage one.
 | Folder | Owner of |
 | --- | --- |
 | [Careers](Careers/) | The career byte codec (`CareerSave`), immutable open snapshots (`SaveSession`), the open/publish/compare/install workflow (`CareerWorkspace`), each Goodie's rule and evidence (`GoodieFacts`, `GoodieUnlockRequirementService`) and cheat names (`CheatCodeCatalog`, `CheatSaveNameComposer`) |
-| [Files](Files/) | The protected OS file boundary (`ProtectedSaveFiles` on `SaveLabFileTransaction` and `FileMutationSafety`), its worker thread, and game-folder writes: backup sets, the running-game check and the verified write on Linux and elsewhere (`GameWrites`) |
+| [Files](Files/) | The protected OS file boundary (`ProtectedSaveFiles` on `SaveLabFileTransaction` and `FileMutationSafety`), its worker thread, and game-folder writes in `GameWrites.cs`: the running-game check (`GameProcess`), backup sets (`Backups`) and the verified write on Linux and elsewhere (`GameInstaller`) |
 | [Game](Game/) | Steam library discovery, the game folder and its files, the companion's remembered choices and backup folder (`GameFolder`), and the game's own text read from the install (`GameText`, `GameTextCatalog`) |
-| [Options](Options/) | The `defaultoptions.bea` reader and editor (`OptionsFile`) and the physical-key table |
+| [Options](Options/) | The settings block's reader and editor (`OptionsFile`), for `defaultoptions.bea` and the copy each career stores, and the physical-key table (`KeyTable`) |
 | [Media](Media/) | The game's music, voice lines and cutscene list (`GameAudio`) |
 | [Assets](Assets/) | The game's models, textures and bank sounds: the `.aya` envelope (`AyaContainer`), the mesh reader (`CmshReader`), DDS decoding (`DdsTexture`), the sound banks (`XapBank`), what each Goodie holds (`GoodieResources`), the install's lists (`AssetLibrary`), glTF export (`GltfExport`) and new-file-only exports (`ExportFiles`) |
 | [Lore](Lore/) | The embedded lore library, its Markdown renderer and the campaign's mission list (`CampaignLoreComposer`) |
@@ -63,7 +76,8 @@ is copied.
 
 `npm test` runs `Tests/CompanionTestRunner.cs` against an owned copy of the one tracked
 [real-save fixture](../../tests_shared/fixtures/README.md) and a game-shaped folder built
-from tiny original bytes, then the launcher's own checks. It covers the codec on the real
+from tiny original bytes, then the development runner's own checks (`tools/companion_godot.py`,
+which builds, tests, captures, runs and exports the companion). It covers the codec on the real
 bytes, Goodie edits, settings edits and the key table, the protected adapter and six Linux
 publication races, Steam discovery, the game's text on a synthetic language table,
 backups, automatic backups and writes into the game on both the Linux and the portable
@@ -87,8 +101,8 @@ never overlaps another job on the Intel GPU (David allowed this on 2026-09-26).
 The sidebar groups the pages the way a player thinks about them: **Home**; **Your
 career** (Summary, Goodies, Edit career, Cheats); **Your game** (Game settings, Backups);
 **Extras** (Music & voices, Lore, Art & sound); and **Advanced**, folded away
-(Career bytes). The header names the page, shows **Game running** while the game
-is open, and switches careers (or opens a career file, Ctrl+O). While Edit career or Game
+(Career bytes). The header names the page, shows **Game running** while the original game
+or Onslaught CE is open, and switches careers (or opens a career file, Ctrl+O). While Edit career or Game
 settings has unsaved changes, a bar under the page counts them and offers Save (Ctrl+S)
 and Undo.
 
@@ -125,13 +139,17 @@ itself, read-only.
 - **Cheats**: a byte-identical copy of the career whose name switches on the cheats seen
   working in the Steam game (`MALLOY`, `TURKEY`, `Maladim`), added to your game or saved
   elsewhere.
-- **Game settings**: the game's default settings or any career's own (loading a career in
-  the game uses its settings): sound and music volume; invert flight and walking,
-  vibration and controller layout for each player; mouse sensitivity (the game's own slider
-  steps) and screen shape; keyboard keys captured from a key press. Controller and mouse
-  bindings are kept unless replaced; language and display mode are kept.
-- **Backups**: automatic backups (when the companion opens and after the game closes while
-  it is open, only when something changed), the folder (`Battle Engine Aquila Backups` in
+- **Game settings**: the game's default settings (`defaultoptions.bea`, which the game reads
+  when it starts), or the copy of the settings each career stores. The game does not apply a
+  career's copy when that career loads, and may overwrite it the next time it saves the
+  career ([save-format.md](../../reverse-engineering/save-file/save-format.md#options-entries)).
+  It edits sound and music volume; invert flight and walking, vibration and controller layout
+  for each player; mouse sensitivity (the game's own slider steps) and screen shape; and
+  keyboard keys captured from a key press, in the two binding slots each action has (Slot 1
+  and Slot 2; which slot the game gives to which player has not been checked in the game).
+  Controller and mouse bindings are kept unless replaced; language and display mode are kept.
+- **Backups** (of the original game's careers and settings): automatic backups (when the
+  companion opens and after the game closes while it is open, only when something changed), the folder (`Battle Engine Aquila Backups` in
   Documents unless you choose another), Back up now, and every backup set, newest first,
   with why it was made and **Put back** for each file.
 - **Music & voices** plays the soundtrack and voice lines from your install, grouped by
@@ -160,7 +178,7 @@ itself, read-only.
   (including both players' god flags) or, after you choose another career, every byte that
   differs between the two, named by region.
 
-When the game closes while the companion is open, or you come back to the companion, it
+When the original game closes while the companion is open, or you come back to the companion, it
 notices careers and settings the game saved, reads them again, backs them up if automatic
 backups are on (after the game closed), and shows the latest. Changes you have not saved
 are never thrown away for this; the companion says so instead.
@@ -180,7 +198,8 @@ are never thrown away for this; the companion says so instead.
 
 ## How files stay safe
 
-Home makes three promises, and the code keeps them:
+Home makes three promises about your original game (its Steam or retail install), and the
+code keeps them:
 
 - **Nothing in your game changes without a backup first.** Only a career in `savegames/`
   or `defaultoptions.bea` is ever written. First, every career and settings file the companion
@@ -197,24 +216,38 @@ Home makes three promises, and the code keeps them:
   in place fails (the flush, the read-back, the clean-up), the companion says the file may
   have changed and leaves it as it is, with the backup named; it never reports that as
   nothing written, and never deletes or retries it.
-- **Nothing is written while the game is running.** A write is refused while `BEA.exe`
-  runs. On Linux a process counts as the game when its name is `BEA.exe`, when the program
-  it runs (its first argument) is `BEA.exe`, or when it is a Wine loader given `BEA.exe`; a
-  tool that only names the file further along its command line does not count. On
+- **Nothing is written while the game is running.** A write is refused while the original
+  game or Onslaught CE runs (CE reads the same install's careers). The check is made before
+  the backup and again just before the new file is swapped in. On Linux a process counts as
+  the original game when its name is `BEA.exe`, when the program it runs (its first argument)
+  is `BEA.exe`, or when it is a Wine loader given `BEA.exe`; a tool that only names the file
+  further along its command line does not count. It counts as Onslaught CE when the program
+  it runs is CE's launcher (`onslaught-ce-launch`, or `onslaught-ce.exe` on Windows), or is
+  named `bea` (`bea.exe`) and sits in a folder that also holds that launcher, as an Onslaught
+  CE package lays it out; a program called `bea` anywhere else does not count. On Windows the
+  check looks for processes named `BEA` (which includes CE's `bea.exe`) or `onslaught-ce`. The
+  CE rule follows the port's packaging and has not yet been seen against a running CE. On
   2026-09-26, with the Steam game running under Proton, the check found exactly the game's own process (`BEA.exe`, argv[0] `S:\steamapps\common\Battle Engine
   Aquila\BEA.exe`) and not Steam's launcher shim, the Proton script or the runtime wrapper;
   `python tools/companion_godot.py test --script Development/RunningCheck.cs` prints what it sees.
 - **Any earlier version can be put back from Backups.** Putting a file back is itself a
-  write into the game, so it backs up the current files first.
+  write into the game, so it backs up the current files first. The file is put back only if
+  its bytes still match the SHA-256 the backup's manifest recorded, and only into the game
+  folder the backup was made from; a backup from another game folder is listed but cannot be
+  put back. Automatic backups compare against the newest backup of the same game folder.
 
 Everything else only reads. Careers and settings open read-only as verified snapshots. A
 copy saved elsewhere is always a **new** file: publication re-checks the source's identity
 and content, stages and verifies every byte, publishes without replacing any existing file,
 and reopens the result to compare it with the plan. Malformed inputs, changed sources,
 linked paths, existing destinations and unavailable protected access fail closed; neither
-copies nor writes into the game have an ordinary write fallback. File dialogs cannot
+copies nor writes into the game have an ordinary write fallback. A copy is never saved inside a
+game folder (one holding `BEA.exe` and `data/`) or inside Onslaught CE's own folder
+(`BEA_USER_DIR` when set, else `$XDG_DATA_HOME/onslaught-ce`, else
+`~/.local/share/onslaught-ce`; `%APPDATA%\Onslaught CE` on Windows). File dialogs cannot
 delete files or create folders. An uncertain result says a file may exist; it is never deleted or reported as verified. File
-work runs on one worker thread, and closing waits for it.
+work runs on one worker thread, and closing waits for it. Switching careers or closing the
+companion while Edit career or Game settings holds unsaved changes asks first.
 
 On Windows the same writes use portable .NET file calls: a new file is moved into place
 without replacing anything, and a replaced file is swapped with `File.Replace`, which keeps
@@ -234,8 +267,10 @@ does with the file. These checks do not prove behavior after power loss.
 [ProtectedSaveFiles](Files/ProtectedSaveFiles.cs) is built on
 [`SaveLabFileTransaction.cs`](Files/SaveLabFileTransaction.cs) and
 [`FileMutationSafety.cs`](Files/FileMutationSafety.cs), the file-safety source the
-retired WinUI application's AppCore library used, moved here unchanged on 2026-10-16
-(`Files/SafetyCompatibility.cs` supplies the two constants they still name). On Linux it opens sources descriptor-relative
+retired WinUI application's AppCore library used, moved here unchanged (the date is in
+[PROVENANCE.md](PROVENANCE.md); AppCore still compiles the same file).
+`Files/SafetyCompatibility.cs` holds what that source still names from AppCore: one size
+constant and two stubs that always refuse. On Linux it opens sources descriptor-relative
 without following links, compares physical identity and link count, stages into an unnamed
 file, flushes it, and publishes with a no-clobber link. [GameWrites](Files/GameWrites.cs)
 builds backups and game-folder writes on the same primitives, with the portable path

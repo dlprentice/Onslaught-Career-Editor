@@ -1,7 +1,7 @@
 # BES save file format
 
 Status: supported retail/Steam specimen contract
-Last updated: 2026-09-28 (options tail +0x2C/+0x40/+0x44 renamed from the byte-matched writer; earlier: the god flags at 0x2496/0x249A, displayable Goodies, the attempts field and the screen-position bytes)
+Last updated: 2026-10-22 (the live codec and its tests are the companion's; earlier: options tail +0x2C/+0x40/+0x44 renamed from the byte-matched writer, the god flags at 0x2496/0x249A, displayable Goodies, the attempts field and the screen-position bytes)
 Summary: supported byte layout and preservation policy; startup/load and tail semantics have scoped independent rechecks, not whole-format acceptance.
 Evidence: MEASURED — the scoped September 19 original-code controls and byte findings linked below; remaining field interpretations retain their older evidence limits.
 Specimen: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -151,8 +151,8 @@ normal menu-load publication chain. The raw loader has no size parameter or
 checksum check; callers admit a requested read length. Product exact-size and
 unknown-byte protections remain stricter requirements.
 
-These semantics are why AppCore treats save and options edits as separate,
-byte-preserving operations.
+These semantics are why the companion treats save and options edits as separate,
+byte-preserving operations (the retired AppCore did the same).
 
 ## Tail snapshot
 
@@ -203,6 +203,10 @@ language and audio calls remain behavioral dependencies, not raw-field copies.
    validation failure.
 6. Do not infer runtime behavior or another build's format from this specimen.
 
-Focused implementation protection lives in AppCore tests using the reviewed
-`tests_shared/fixtures/gold_career_save.bin` fixture. That fixture is the only
+The live codec is the companion's
+[`Careers/CareerSave.cs`](../../companion/OnslaughtToolkit.Godot/Careers/CareerSave.cs) with
+[`Options/OptionsFile.cs`](../../companion/OnslaughtToolkit.Godot/Options/OptionsFile.cs) for the settings block;
+its focused protection is `Tests/CareerSaveTests.cs` and `Tests/OptionsTests.cs` (run by `npm test`) on the reviewed
+`tests_shared/fixtures/gold_career_save.bin` fixture. The retired AppCore's tests cover an older copy of the same
+layout. That fixture is the only
 tracked save-payload exception.

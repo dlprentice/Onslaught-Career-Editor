@@ -341,11 +341,13 @@ def export_platform(engine: Path, project: Path, templates: Path, pins: dict[str
         shutil.copyfile(license_file, package / license_file.name)
     start = f"run {filename}" if platform == "windows" else f"run ./{filename}"
     (package / "README.txt").write_text(
-        f"Onslaught Toolkit, a companion for Battle Engine Aquila ({platform.capitalize()})\n\n"
+        f"Onslaught Companion, for Battle Engine Aquila players ({platform.capitalize()})\n\n"
         f"To start, {start}. Keep the .pck file and the data folder beside it.\n"
-        "It finds the game through Steam; if it does not, choose the game folder on Home.\n\n"
-        "Your careers stay safe. Before the companion changes anything in your game it backs up every career and\n"
-        "your settings, it never writes while the game is running, and Backups can put any earlier version back.\n"
+        "It works with the original game (the install with BEA.exe), which it finds through Steam; if it does not,\n"
+        "choose the game folder on Home. It does not yet read or launch Onslaught CE.\n\n"
+        "Your careers stay safe. Before the companion changes anything in the original game's folder it backs up every\n"
+        "career and the settings file, it writes nothing while the game or Onslaught CE is running (checked before the\n"
+        "backup and again just before the swap), and Backups can put any earlier version back.\n"
         "Backups go to \"Battle Engine Aquila Backups\" in your Documents folder unless you choose another folder.\n\n"
         "About this package\n"
         f"Godot {pins['engineVersion']} runs the companion, a C# application built in code.\n"
@@ -420,7 +422,7 @@ def companion_main(argv: list[str] | None = None) -> int:
                         help="capture on its own hidden output, queued on the Intel iGPU's lock rather than the NVIDIA one")
     args = parser.parse_args(argv)
     if not sys.platform.startswith("linux"):
-        parser.error("this development launcher requires Linux; exported Windows execution requires Windows acceptance")
+        parser.error("this development runner requires Linux; exported Windows execution requires Windows acceptance")
     if args.timeout is not None and (not math.isfinite(args.timeout) or args.timeout <= 0):
         parser.error("--timeout must be finite and positive")
     if args.engine_arg and args.mode != "run":

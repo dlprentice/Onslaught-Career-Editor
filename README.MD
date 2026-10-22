@@ -1,7 +1,7 @@
 # Onslaught Toolkit
 
 Status: active — the project overview
-Last updated: 2026-10-22 (relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0; source-code notes keep the quoted source's GPL)
+Last updated: 2026-10-22 (the companion is Onslaught Companion, original game only for now; AppCore patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
 
 Onslaught Toolkit is a preservation project for *Battle Engine Aquila* (2003, Lost Toys).
@@ -10,8 +10,9 @@ Onslaught Toolkit is a preservation project for *Battle Engine Aquila* (2003, Lo
   reverse-engineering authority. It stays private.
 - **The native source port is the faithful game**, for Windows and Linux. Its source and downloads are published
   separately as **Onslaught CE** (GPL-3.0-only, no game files; link added at release), not from this repository.
-- **The companion is the player toolkit and the future CE launcher** (development paused until new requirements). It
-  is a Godot .NET app: it opens on the player's game and careers, shows progress and Goodies, edits careers and
+- **The companion, Onslaught Companion, is the player app and the future Onslaught CE launcher** (development paused
+  until new requirements). It is a Godot .NET app that today works with the original game's Steam or retail install:
+  it opens on the player's game and careers, shows progress and Goodies, edits careers and
   settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, and plays
   and explains the game's own music, voices and lore.
 - **The Godot rebuild is active as a scoped proof of concept**: startup to exit 1:1 with retail, level 100 playable
@@ -19,8 +20,8 @@ Onslaught Toolkit is a preservation project for *Battle Engine Aquila* (2003, Lo
   records its measured parity.
 
 This repository holds the companion, documentation of the game (formats, behaviours and findings as prose and
-specs), our own tools, the AppCore patching core the companion's future mod manager builds on, and the Godot
-rebuild. It holds no game files, Ghidra database, decompiler output or decomp source.
+specs), our own tools, the retired AppCore patching core (nothing uses it; it goes once its test facts are ported into
+the companion's tests), and the Godot rebuild. It holds no game files, Ghidra database, decompiler output or decomp source.
 
 This is an unofficial community project. It is not affiliated with or endorsed by the game's publishers or rights
 holders. Repository licenses cover their respective project code and documentation; they grant no rights in the
@@ -35,7 +36,7 @@ Its releases are published from its own repository (link added at release).
 
 | Repository | What it holds |
 | --- | --- |
-| This repository | The companion, the AppCore patching core, documentation of the game, lore, our tools, and (until it moves to its own repository after the release) the Godot rebuild |
+| This repository | The companion, the retired AppCore patching core, documentation of the game, lore, our tools, and (until it moves to its own repository after the release) the Godot rebuild |
 | Onslaught CE (link added at release) | The native source port's source and its Windows and Linux downloads; GPL-3.0-only |
 | [`stuart73/Onslaught`](https://github.com/stuart73/Onslaught) | Stuart's partial GPL source release; this repository pins David's fork, [`dlprentice/Onslaught`](https://github.com/dlprentice/Onslaught), as [`references/Onslaught`](references/Onslaught) |
 
@@ -44,14 +45,16 @@ Its releases are published from its own repository (link added at release).
 The companion has no published release yet; build it from source (below). It needs your own installation of the
 game to work on your careers, settings and media. The older Windows-only WinUI toolkit on the
 [Releases](https://github.com/dlprentice/Onslaught-Career-Editor/releases) page (v1.0.11, tag `winui-v1.0.11`) is
-retired and no longer maintained; its source is in the project's private pre-flatten history.
+retired and no longer maintained; its source is in the project's private pre-flatten history. Its executable patching
+and copied-install "safe launch" are not in the current companion and are not coming back: Onslaught CE replaces them,
+and never modifies your install.
 
 ## Where things live
 
 | Path | Owner |
 | --- | --- |
 | [`companion/OnslaughtToolkit.Godot/`](companion/OnslaughtToolkit.Godot/README.md) | The companion (player toolkit, future CE launcher; paused), C# built in code on Godot 4.8 dev6 .NET |
-| `OnslaughtCareerEditor.AppCore/` | The patching core (executable patch plans, guarded installed-game writes, safe copies) the companion's mod manager will build on |
+| `OnslaughtCareerEditor.AppCore/` | The retired patching core of the WinUI app (executable patch plans, guarded installed-game writes, safe copies); the companion does not use it, and it is removed once its test facts are ported |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Documentation of the game: formats, mechanics, saves, assets, function notes and contracts |
 | [`lore/`](lore/_index.md) | The canonical lore and history library, embedded in the companion |
 | [`tools/`](tools/README.md) | Format decoders, asset exporters, capture analysis and the repository's checks |
@@ -95,16 +98,17 @@ for a change and [`CONTRIBUTING.md`](CONTRIBUTING.md) sets contribution boundari
 | Tool checks | Affected cases in `python tools/<name>_tests.py`; all of them with `npm run test:tools` |
 | Rebuild | The Parity suite and Host build with the reference environment in [rebuild/README.md](rebuild/README.md#working-lane); the earlier `npm run check:rebuild` gate covers only the reference projects |
 
-The companion launcher puts scratch, logs and user data under the canonical checkout's `local-data/companion/`,
-including from a Git worktree.
+The companion's development runner (`tools/companion_godot.py`) puts scratch, logs and user data under the canonical
+checkout's `local-data/companion/`, including from a Git worktree.
 
 ## Data and mutation safety
 
 - Never synthesize `.bes` saves from scratch. Start from a real baseline and preserve file length, reserved fields
   and unknown bytes.
 - Every write into the game is a choice the player makes, after a verified backup, never while the game runs. The
-  patching core's `BinaryPatchEngine.AuthorizeInstalledGameWrite` will not grant an installed-game write until a
-  verified original sits beside the target.
+  companion's [`Files/GameWrites.cs`](companion/OnslaughtToolkit.Godot/Files/GameWrites.cs) is the write path that
+  ships: a verified backup set outside the game folder, a running-game check before the backup and again before the
+  swap, an exchange swap that is undone if the displaced file is not the one backed up, and a read-back.
 - Keep game binaries and assets (or converted copies), real saves, Ghidra databases, decompiler output, debugger
   transcripts, private captures, secrets and build output out of Git; `npm run test:safety` enforces the boundary.
 - Online multiplayer is not player-ready.

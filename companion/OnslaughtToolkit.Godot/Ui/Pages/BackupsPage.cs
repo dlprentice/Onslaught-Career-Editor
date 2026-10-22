@@ -23,7 +23,8 @@ internal sealed class BackupsPage : Page
         _app = app;
         (ScrollContainer scroll, VBoxContainer content) = Build.Scroller();
         Root = scroll;
-        content.Add(Build.Text("Every change the companion makes to your game is backed up first. You can put any earlier version back.", "Lead"));
+        content.Add(Build.Text("Every change the companion makes to your original game is backed up first. You can put any earlier version " +
+            "of its careers and settings back.", "Lead"));
 
         (PanelContainer settings, VBoxContainer body) = Build.Card("Your backups", 10);
         Automatic = body.Add(new CheckBox { Text = "Back up automatically when the companion opens and after you play (only when something changed)" });
@@ -105,7 +106,8 @@ internal sealed class BackupsPage : Page
         _pending = (set, file);
         string what = Describe(file.Name);
         Confirm.DialogText = $"Put {what} back as it was {Build.When(set.Created)}?\n\nThe {what} in your game now is backed up first, " +
-            "together with every other career and your settings, so you can undo this too. Nothing is written while the game is running.";
+            "together with every other career and your settings, so you can undo this too. Nothing is written while the game or Onslaught CE " +
+            "is running, and the backup copy must still match the fingerprint recorded when it was made.";
         Confirm.PopupCentered();
     }
 

@@ -1,7 +1,7 @@
 # Companion provenance and license
 
 Status: active independent GPL-3.0-only application boundary
-Last updated: 2026-10-22 (relicensed: the code GPL-3.0-only, the embedded lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (facts read from the developers' source recorded; relicensed: the code GPL-3.0-only, the embedded lore CC BY-SA 4.0)
 Evidence: SOURCE — code-built C# application, project source moved in from the retired AppCore library, and embedded project lore; executed package boundaries are recorded in VALIDATION.md.
 Summary: the companion's C# derives only from the project's own application code and the RE lane's published contracts; it bundles the project's own lore, reads the game's files and manual art from the player's install at run time, and keeps retail data and GPL reconstruction out.
 
@@ -12,7 +12,10 @@ its author). Save layout facts and behavior were ported from the
 earlier GDScript implementation. Options offsets, Goodie colours, rank letters, link
 states and the evidence tier shown for each Goodie rule follow the reverse-engineering
 lane's documents under [`reverse-engineering/`](../../reverse-engineering/RE-INDEX.md),
-which name their specimens. The interface, theme and styles are constructed in code from
+which name their specimens. Some rules are facts read from the developers' released source
+(`references/Onslaught`): the Goodie unlock rules, the gallery's row order and the god-flag
+field's identity. They are checked against retail where the Goodies page says so, and no code
+or comments were copied from that source. The interface, theme and styles are constructed in code from
 Godot's built-in controls and default engine font.
 
 These sources were written for the retired WinUI application's AppCore library and

@@ -18,7 +18,7 @@ import companion_godot as host
 WRAPPER = '[gd_scene format=3]\n\n[ext_resource type="Script" path="res://Ui/CompanionApp.cs" id="1"]\n\n[node name="Companion" type="Control"]\nscript = ExtResource("1")\n'
 
 
-@unittest.skipUnless(sys.platform.startswith("linux"), "Linux development launcher")
+@unittest.skipUnless(sys.platform.startswith("linux"), "Linux development runner")
 class CompanionLauncherTests(unittest.TestCase):
     def setUp(self) -> None:
         owner = host.canonical_root() / "local-data/companion"

@@ -37,7 +37,10 @@ public sealed class OptionsEdit
     public float? MouseSensitivity { get; set; }
     public uint? ScreenShape { get; set; }
 
-    /// <summary>Keyboard keys by (entry id, slot); slot 0 is player one, slot 1 player two.</summary>
+    /// <summary>
+    /// Keyboard keys by (entry id, slot): the row's two binding slots, shown as Slot 1 and Slot 2. Which player
+    /// each slot serves is not established; in the tracked fixture the usual one-player keys (WASD, Space) sit in slot 1.
+    /// </summary>
     public Dictionary<(int EntryId, int Slot), KeyChoice> Keys { get; } = [];
 
     public bool IsEmpty => SoundVolume is null && MusicVolume is null && MouseSensitivity is null && ScreenShape is null &&
@@ -134,12 +137,12 @@ public static class OptionsFile
             if (!SetKey(entryId, slot, action.KeyboardDevice, key)) return Outcome<OptionsPlan>.Refusal($"This file has no row for {action.Name}.");
             if (action.MirrorEntryId is int mirror && !SetKey(mirror, slot, action.MirrorDevice ?? action.KeyboardDevice, key))
                 return Outcome<OptionsPlan>.Refusal($"This file has no second row for {action.Name}.");
-            lines.Add($"Player {slot + 1} {action.Group.ToLowerInvariant()} {action.Name.ToLowerInvariant()} → {key.Name}");
+            lines.Add($"Slot {slot + 1} {action.Group.ToLowerInvariant()} {action.Name.ToLowerInvariant()} → {key.Name}");
         }
         if (edit.Keys.Count > 0 && current.ControlScheme != 0)
         {
             BinaryPrimitives.WriteUInt16LittleEndian(output.AsSpan(TailOffset + 0x08), 0);
-            lines.Add("Control scheme → custom, so the game keeps the chosen keys");
+            lines.Add("Control scheme index set to 0");
         }
         ByteComparison difference = CareerSave.Compare(original, output);
         if (difference.Equal) return Outcome<OptionsPlan>.Refusal("Those settings already have the chosen values.");

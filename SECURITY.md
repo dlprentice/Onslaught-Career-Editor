@@ -1,7 +1,7 @@
 # Security And Private Data Reporting
 
 Status: active disclosure guidance
-Last updated: 2026-10-22 (relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (the installed-game write contract cites the companion's GameWrites; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: how to report a defect that touches saves, local paths or copied
 executables, and the safety contracts a report is judged against.
 
@@ -13,10 +13,14 @@ the defect.
 
 - Save and options edits start from an existing file, preserve unknown bytes,
   stage a sibling output, replace atomically, and verify committed bytes.
-- The pristine measurement specimen is never a write target. AppCore can patch
-  an installed game after its owner explicitly chooses that target and a
-  recovery backup has been verified; otherwise use a verified copy. The guard
-  is `BinaryPatchEngine.AuthorizeInstalledGameWrite`.
+- The pristine measurement specimen is never a write target. The companion
+  writes into an installed game only a career or `defaultoptions.bea` the
+  player chose, after a verified backup set outside the game folder, never
+  while the original game or Onslaught CE runs (checked before the backup and
+  again before the swap), with an exchange swap that is undone if the displaced
+  file is not the backed-up one, and a read-back. The guard is the companion's
+  `Files/GameWrites.cs` (`GameInstaller`). No shipped code patches a game
+  executable.
 - Each writer must enforce its selected target and reject aliases or unsafe
   destinations that escape that contract. A copied-output export must not
   overwrite its input or escape into an installed game tree. Process cleanup

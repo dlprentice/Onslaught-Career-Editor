@@ -137,7 +137,7 @@ public static class GltfExport
 
         JsonObject gltf = new()
         {
-            ["asset"] = new JsonObject { ["version"] = "2.0", ["generator"] = "Onslaught Toolkit companion" },
+            ["asset"] = new JsonObject { ["version"] = "2.0", ["generator"] = "Onslaught Companion" },
             ["scene"] = 0,
             ["scenes"] = new JsonArray(new JsonObject { ["name"] = mesh.Name, ["nodes"] = roots }),
             ["nodes"] = nodes,

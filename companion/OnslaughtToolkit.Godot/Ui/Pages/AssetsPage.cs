@@ -133,9 +133,9 @@ internal sealed class AssetsPage : Page
         // A listing of two folders is quick, so it is read again each time: the install may have changed.
         GameFolder? folder = _services.Game.Folder;
         _library = folder is null ? null : AssetLibrary.Scan(folder.Root);
-        bool any = _library is { } l && l.Models.Count + l.Textures.Count > 0;
-        _empty.Text = folder is null ? "Choose your game folder on Home to see its models and textures."
-            : "No models or textures were found in your game's data/resources folder.";
+        bool any = _library is { } l && l.Models.Count + l.Textures.Count + l.Sounds.Count > 0;
+        _empty.Text = folder is null ? "Choose your game folder on Home to see its models, textures and sound effects."
+            : "No models, textures or sound effects were found in your game's data folder.";
         _empty.Visible = !any;
         Kind.Visible = Search.Visible = List.Visible = any;
         ShowList();

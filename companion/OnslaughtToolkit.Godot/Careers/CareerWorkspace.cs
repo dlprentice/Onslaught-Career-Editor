@@ -3,7 +3,7 @@ using OnslaughtToolkit.Companion.Files;
 
 namespace OnslaughtToolkit.Companion.Careers;
 
-/// <summary>A read-only comparison of the open original with another supported career.</summary>
+/// <summary>A read-only comparison of the open career with another supported career.</summary>
 public sealed record CareerComparison(SaveSession Other, ByteComparison Bytes);
 
 /// <summary>
@@ -24,7 +24,7 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
     /// <summary>Raised on the main thread whenever the session, busy state or verified result changes.</summary>
     public event Action? Changed;
 
-    /// <summary>Raised after a different career becomes the open original.</summary>
+    /// <summary>Raised after a different career becomes the open one.</summary>
     public event Action? SessionOpened;
 
     public async Task<Outcome<SaveSession>> OpenAsync(string path)
@@ -97,7 +97,7 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
 
     public async Task<Outcome<CareerComparison>> CompareAsync(string path)
     {
-        if (Busy || Session is not SaveSession session) return Outcome<CareerComparison>.Refusal("Open an original first.");
+        if (Busy || Session is not SaveSession session) return Outcome<CareerComparison>.Refusal("Open a career first.");
         SetBusy(true);
         try
         {

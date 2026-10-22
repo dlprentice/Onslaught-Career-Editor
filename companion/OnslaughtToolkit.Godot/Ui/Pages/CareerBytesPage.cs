@@ -34,7 +34,7 @@ internal sealed class CareerBytesPage : Page
         column.Add(_comparePanel);
         Values = column.Add(Build.Table("Record", "Stored value", "Reading"));
         Values.SetColumnCustomMinimumWidth(0, 220);
-        Differences = column.Add(Build.Table("Offset", "Region", "Original", "Other"));
+        Differences = column.Add(Build.Table("Offset", "Region", "This career", "Other career"));
         Differences.SetColumnCustomMinimumWidth(0, 110);
         Differences.SetColumnCustomMinimumWidth(1, 220);
 
@@ -116,7 +116,7 @@ internal sealed class CareerBytesPage : Page
     internal async Task<Outcome<CareerComparison>> CompareAsync(string path)
     {
         if (_workspace.Busy || _workspace.Session is not SaveSession original)
-            return Outcome<CareerComparison>.Refusal("Open an original first.");
+            return Outcome<CareerComparison>.Refusal("Open a career first.");
         _status.Show("Opening the comparison career…");
         Outcome<CareerComparison> result = await _workspace.CompareAsync(path);
         if (result.Value is not CareerComparison comparison)
@@ -129,7 +129,7 @@ internal sealed class CareerBytesPage : Page
             : $"[color=#{Palette.Data.ToHtml(false)}]{bytes.ChangedBytes:N0} differing bytes[/color] in " +
               string.Join(", ", bytes.Regions.Select(region => $"{region.Key} ({region.Value})")) + ".";
         Summary.Text = $"[b]{comparison.Other.Path.Replace("[", "[lb]")}[/b]\n{verdict}\n" +
-            $"[code]other    {comparison.Other.Sha256}\noriginal {original.Sha256}[/code]";
+            $"[code]other career {comparison.Other.Sha256}\nthis career  {original.Sha256}[/code]";
         Differences.Clear();
         TreeItem root = Differences.CreateItem();
         foreach (ByteChange change in bytes.Changes)

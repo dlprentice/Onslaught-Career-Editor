@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-10-22 (relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0; machine-specific clones and folders live in an ignored local file)
+Last updated: 2026-10-22 (the game-write rule in its own words, modelled on the companion's GameInstaller; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0; machine-specific clones and folders live in an ignored local file)
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
@@ -16,8 +16,9 @@ A preservation project for *Battle Engine Aquila* (2003). This public repository
   exit, with level 100 playable to completion. `OnslaughtRebuild.Parity` is the simulation owner and
   `OnslaughtRebuild.Host` the presentation owner; the earlier `OnslaughtRebuild.Core`, `Client` and `Godot` projects
   are reference material, not a second production simulation;
-- the **companion** (`companion/`): the Godot .NET toolkit for careers, saves, backups, settings, music and lore,
-  with the AppCore patching core its mod manager will build on;
+- the **companion** (`companion/`), Onslaught Companion: the Godot .NET app for careers, saves, backups, settings,
+  music and lore, today for the original game only and later the Onslaught CE launcher. The AppCore patching core is
+  retired (nothing uses it) and goes once its test facts are ported;
 - documentation of the game (formats, behaviours, contracts) and our own tools.
 
 Elsewhere: the byte-matching decompilation and the native source port are the private `dlprentice/bea-decomp`
@@ -43,9 +44,11 @@ queue, [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) what is demonstrated
 
 ## Ground rules
 
-- Game/save writes require an informed user choice and a verified recovery copy before overwriting original data;
-  `BinaryPatchEngine.AuthorizeInstalledGameWrite` in AppCore is the model. Never manufacture an "original" from an
-  already modified file, and never destroy career data as a side effect.
+- Game/save writes require an informed user choice and a verified recovery copy before overwriting original data, and
+  never happen while the game runs. The companion's `GameInstaller` (`companion/OnslaughtToolkit.Godot/Files/GameWrites.cs`:
+  a verified backup set outside the game folder, a running check before the backup and again before the swap, an
+  exchange swap undone if the displaced file is not the backed-up one, a read-back) is the model. Never manufacture an
+  "original" from an already modified file, and never destroy career data as a side effect.
 - The pristine specimen `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup` (SHA-256 `74154bfa…`) is the
   byte-measurement baseline: read it, never write it. The lab folder's `BEA.exe` (`e1436ef7…`) is patched. Every
   byte or address finding names the specimen it was read from, with its hash; measure the exact selected file
