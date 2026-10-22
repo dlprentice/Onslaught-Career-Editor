@@ -2,9 +2,12 @@
 
 > Analysis of BEA_Widescreen.exe modifications to understand resolution/aspect ratio patching
 > Generated: December 2025
-> Last updated: 2026-10-22 (retail disassembly listing replaced by prose)
 
-Status note: this is historical external widescreen-patch analysis and attribution evidence. It is not the current WinUI/AppCore catalog patch contract, and it does not by itself prove the current `resolution_gate`/`force_windowed` copied-game flow, runtime FOV parity, or no-noticeable-difference rendering.
+Status: historical — external widescreen-patch analysis and attribution evidence
+Last updated: 2026-10-22 (the WinUI/AppCore catalog patch contract named as retired; retail disassembly listing replaced by prose)
+Summary: what `BEA_Widescreen.exe` changes in the Steam `BEA.exe` (191 bytes in 28 regions) and how its code caves work.
+
+Status note: this is historical external widescreen-patch analysis and attribution evidence. It was not the retired WinUI app's AppCore catalog patch contract (removed on 2026-10-22), and it does not by itself prove the current `resolution_gate`/`force_windowed` copied-game flow, runtime FOV parity, or no-noticeable-difference rendering.
 
 ## Summary
 

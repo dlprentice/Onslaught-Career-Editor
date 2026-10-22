@@ -7,7 +7,7 @@ Status: **partially superseded 2026-07-28**, parser scope corrected 2026-09-26 â
 and the hex-edit instruction built on it are **withdrawn as false**. The two-gate
 model, the startup-flow patch guidance, and the wrapper workarounds stand
 unchanged. See "Correction 2026-07-28" immediately below.
-Last updated: 2026-10-22 (companion patching retired: the safe-copy option removed and its mentions put in the past tense; retail disassembly listing replaced by prose; previously 2026-09-26 (initializer and ordered parser route rechecked; display/runtime evidence retains its date))
+Last updated: 2026-10-22 (AppCore patching retired: the WinUI app's safe-copy option removed and its mentions put in the past tense; retail disassembly listing replaced by prose; previously 2026-09-26 (initializer and ordered parser route rechecked; display/runtime evidence retains its date))
 Verdict: `-forcewindowed` is real and reachable, but its parser gate
 `DAT_00662f3e` is **BSS â€” zero at load**; on the inspected startup route,
 the parser sets it for `-testeur` appearing **earlier on the same command line**. So `-forcewindowed` alone

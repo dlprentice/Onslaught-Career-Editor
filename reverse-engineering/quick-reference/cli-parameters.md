@@ -1,5 +1,5 @@
 Status: active quick reference
-Last updated: 2026-09-30 (what every retail option does, read through the byte-matched decompilation)
+Last updated: 2026-10-22 (the retired AppCore and WinUI named in the past tense); previously 2026-09-30 (what every retail option does, read through the byte-matched decompilation)
 Source: pristine retail command-line parser, each option's readers, and the separately dated copied-runtime observations.
 Summary: the Steam launch surface Onslaught Toolkit uses, and what each of the retail parser's 25 options does in the game.
 Evidence: MEASURED — fresh parser/initializer guard instructions and, on 2026-09-30, every retail instruction that reads
@@ -92,8 +92,8 @@ The canonical unpatched Steam executable with SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 does not contain parser literals for `-configuration`, `-norumble`,
 `-nostaticshadows`, `-hidetail`, or `-textureramlimit`. Those names occur in
-Stuart's different in-house PC source and are not accepted by AppCore or shown
-by WinUI.
+Stuart's different in-house PC source and were not accepted by the retired
+AppCore library or shown by the retired WinUI app.
 
 See
 [`CCLIParams__GetParams`](../binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md)

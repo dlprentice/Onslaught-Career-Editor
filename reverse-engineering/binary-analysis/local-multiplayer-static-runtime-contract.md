@@ -1,6 +1,8 @@
 # Local multiplayer evidence boundary
 
-Status: local split-screen path available; online multiplayer unavailable
+Status: historical for the toolkit surface (the WinUI app's split-screen preset was retired with AppCore on 2026-10-22); the retail evidence stands; online multiplayer unavailable
+Last updated: 2026-10-22 (the split-screen preset and readiness checks put in the past tense: they were the retired WinUI app's, through AppCore)
+Summary: what the retail game's local two-player path is shown to do, what the retired WinUI preset offered, and what any online claim would need.
 
 This contract owns the distinction between the retail game's bounded local
 multiplayer path and any future networked companion. It does not add netcode,
@@ -21,17 +23,18 @@ patch networking into the retail executable, or prove online play.
 Stuart's pinned source is a naming and control-flow reference, not proof of the
 Steam binary. The listed retail addresses provide bounded corroboration only.
 
-## Current toolkit behavior
+## Retired toolkit behavior
 
-The Windowed & Mods page can select a local split-screen launch preset for an
-app-owned safe game copy. It uses `-skipfmv -level 850` and the same required
-windowed compatibility base as other safe copies. The installed game and
-original `BEA.exe` remain read-only source material.
+The retired WinUI app's Windowed & Mods page could select a local split-screen
+launch preset for an app-owned safe game copy. It used `-skipfmv -level 850` and
+the same required windowed compatibility base as other safe copies. The installed
+game and original `BEA.exe` stayed read-only source material. The companion has
+no such preset.
 
-The preset does not expose Host, Join, invitation, matchmaking, relay, or
-public-network actions. Product status explicitly says online multiplayer is
-not ready. The AppCore readiness service reports source-level checks only;
-passing those commands is not runtime or network proof.
+The preset did not expose Host, Join, invitation, matchmaking, relay, or
+public-network actions, and the app's product status said online multiplayer was
+not ready. AppCore's readiness service reported source-level checks only;
+passing those commands was not runtime or network proof.
 
 Controlled copied-target observations established bounded launch, exact-process
 ownership, source safety, managed stop, and selected P1/P2 input-to-state/frame
@@ -52,14 +55,14 @@ least:
 - measured gameplay outcomes rather than metadata-only participant slots; and
 - clear failure and recovery behavior in the user-facing app.
 
-None of those requirements is satisfied by the current split-screen preset,
+None of those requirements was satisfied by the retired split-screen preset,
 source inspection, same-host helpers, VM-only metadata, or a rebuild that agrees
 with itself.
 
 ## Claim boundary
 
-This file supports the current local split-screen label and the explicit online
-non-claim. It does not prove native retail netcode, LAN/public matchmaking,
+This file supported the WinUI app's local split-screen label and supports the
+explicit online non-claim. It does not prove native retail netcode, LAN/public matchmaking,
 more than two active retail players, control quality, exact layouts, visual
 parity, or rebuild parity. Current corrected metadata is owned by the
 Ghidra correction authority (private RE archive: `reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md`).

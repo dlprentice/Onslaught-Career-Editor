@@ -1,6 +1,8 @@
 # High-impact call chains
 
 Status: active static summary
+Last updated: 2026-10-22 (the patching rule credited to the companion's protected writes; AppCore, which held it first, is retired)
+Summary: static chains from frontend actions to save and options writes and world loading, with what each means for a tool that edits careers.
 
 These chains explain product-relevant ownership and side effects. They are
 static evidence unless a linked runtime contract says otherwise.
@@ -19,8 +21,9 @@ Primary owners are
 [`CCareer__Save`](functions/Career.cpp/CCareer__Save.md),
 [`CPauseMenu__ResumeGameAndPersistOptions`](functions/PauseMenu.cpp/CPauseMenu__ResumeGameAndPersistOptions.md),
 and the [save/options contract](save-options-static-review-2026-05-26.md).
-These relationships are why AppCore patches real baseline files, preserves
-unknown bytes, and writes separate outputs instead of synthesizing saves.
+These relationships are why the companion (and the retired AppCore library before
+it) edits real baseline files, preserves unknown bytes, and backs up before it writes
+instead of synthesizing saves.
 
 ## World lifecycle
 

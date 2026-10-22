@@ -1,17 +1,21 @@
 # Version Overlay Patch
 
+Status: historical — the patch pair belonged to the retired WinUI app's patch catalog, applied through AppCore; both were removed on 2026-10-22
+Last updated: 2026-10-22 (Scope, Safety Model and Notes put in the past tense: these rows were the WinUI app's, through AppCore)
+Summary: the two byte patches that drew `V1.00 - PATCHED` in the title/menu version overlay, how the WinUI app offered them, and the one copied-game run that showed the marker.
+
 > Patch note for the opt-in `V1.00 - PATCHED` marker bytes
 
 ## Scope
 
-The Binary Patches UI ships one visible stable row that redirects the bottom-left version-format pointer when the user explicitly selects the marker. A hidden cave-string payload row is selected with that visible marker only. A bounded copied-game title/menu runtime smoke has confirmed the visible `V1.00 - PATCHED` marker in one local run; this document does not claim broader overlay, gameplay, or parity behavior.
+The retired WinUI app's Binary Patches page, which applied AppCore's patch catalog, shipped one visible stable row that redirected the bottom-left version-format pointer when the user explicitly selected the marker. A hidden cave-string payload row was selected with that visible marker only. A bounded copied-game title/menu runtime smoke confirmed the visible `V1.00 - PATCHED` marker in one local run; this document does not claim broader overlay, gameplay, or parity behavior.
 
-WinUI Windowed & Mods also exposes Proof quick-pick controls named `Add PATCHED
-marker` and `Clear PATCHED marker`. They only select or clear the existing
-visible `version_overlay_use_patched_format_pointer` row; AppCore/catalog
-dependency handling remains responsible for adding the hidden
-`version_overlay_patched_format_cave_string` payload when a copied profile is
-prepared.
+The WinUI app's Windowed & Mods page also exposed Proof quick-pick controls named
+`Add PATCHED marker` and `Clear PATCHED marker`. They only selected or cleared the
+existing visible `version_overlay_use_patched_format_pointer` row; AppCore's catalog
+dependency handling added the hidden `version_overlay_patched_format_cave_string`
+payload when a copied profile was prepared. The companion never offered or applied
+these patches.
 
 ## Patch Pair
 
@@ -24,13 +28,13 @@ prepared.
 
 - Retail version-format pointer is redirected to a cave string.
 - When the title/menu overlay path was exercised with version `1.00` in one copied-game run, the patched format rendered as `V1.00 - PATCHED` instead of the stock version-only display.
-- These two patch rows are paired, but they are not applied automatically alongside unrelated patch selections.
-- The visible `version_overlay_use_patched_format_pointer` row brings in the hidden `version_overlay_patched_format_cave_string` payload row.
+- These two patch rows were paired, but they were not applied automatically alongside unrelated patch selections.
+- The visible `version_overlay_use_patched_format_pointer` row brought in the hidden `version_overlay_patched_format_cave_string` payload row.
 
 ## Safety Model
 
-- Both patches are byte-verified before write.
-- Both patches are restored through the normal `BEA.exe.original.backup` rollback path.
+- AppCore byte-verified both patches before writing them.
+- AppCore restored both through its normal `BEA.exe.original.backup` rollback path.
 - They do not change gameplay logic; they only affect the version overlay string path when that path is exercised.
 
 ## Evidence
@@ -42,5 +46,5 @@ prepared.
 
 ## Notes
 
-- This is a standalone opt-in visible marker row in the UI.
-- The current visible proof is one copied-game title/menu run only. Other overlay paths, gameplay paths, version-cheat paths, long sessions, rebuild parity, and no-noticeable-difference parity remain separate proof.
+- In the WinUI app this was a standalone opt-in visible marker row.
+- The only visible proof is one copied-game title/menu run. Other overlay paths, gameplay paths, version-cheat paths, long sessions, rebuild parity, and no-noticeable-difference parity remain separate proof.

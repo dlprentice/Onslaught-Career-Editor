@@ -3,7 +3,7 @@
 Status: active canonical synthesis of the pinned Stuart Gillam source corpus and
 its current reverse-engineering/rebuild use; the source files remain the
 line-level primary evidence
-Last updated: 2026-10-22 (relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (save offsets and mutation safety credited to the save format and the companion, AppCore being retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Verdict: **The pinned `references/Onslaught` drop is an exceptionally valuable
 but incomplete architecture corpus: 106 C/C++ files (52 `.cpp`, 54 headers),
 50,266 physical source lines, 1,354,693 source bytes, 254 distinct quoted
@@ -1436,8 +1436,9 @@ save/options data. The measured file is 10,004 bytes:
 
 Retail `CCareer__Load @ 0x00421200` and `CCareer__Save @ 0x00421350`
 therefore have useful source names and broad serializer shape, but the source
-PC branch is not the Steam implementation. AppCore and retail byte evidence own
-actual `.bes` offsets and mutation safety.
+PC branch is not the Steam implementation. Retail byte evidence
+([save-format.md](../save-file/save-format.md)) owns the actual `.bes` offsets, and
+the companion's protected writes own mutation safety (the retired AppCore did before it).
 
 `PCFEPLoadGame.cpp` and `PCFEPSaveGame.cpp` are seven-line implementation
 stubs; their headers declare page shells. The substantial FE save/load
