@@ -1,7 +1,7 @@
 # Retail function and behavior contracts
 
 Status: active — what the contract documents are and how to read their grades
-Last updated: 2026-10-15 (the grading campaign ended; the byte-matching decompilation is the authority; campaign records in the private RE archive)
+Last updated: 2026-10-22 (the decompilation cited as onslaught-decomp; the grading campaign ended; the byte-matching decompilation is the authority; campaign records in the private RE archive)
 Summary: what a retail behaviour contract states, what its recorded grade meant, and where the authority now sits.
 Evidence: SOURCE — the contract documents under `reverse-engineering/contracts/` and the per-function notes under
 `reverse-engineering/binary-analysis/functions/`; grades are those the Ghidra-era campaign recorded.
@@ -12,7 +12,7 @@ The contract documents under [`reverse-engineering/contracts/`](reverse-engineer
 per-function notes under [`reverse-engineering/binary-analysis/functions/`](reverse-engineering/binary-analysis/functions/_index.md)
 describe what individual retail functions do. They were written during the Ghidra-era campaign, which graded every
 function in machine-verified campaign generations. That campaign ended on 2026-10-15: the byte-matching
-decompilation (private `bea-decomp`, 5,482 of 5,482 functions) is now the authority on what a function does, and the
+decompilation ([onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), 5,482 of 5,482 functions) is now the authority on what a function does, and the
 campaign's ledgers, verifiers and `developer_state.json` are in the private `dlprentice/onslaught-re-archive`.
 
 ## What a contract is
@@ -48,7 +48,7 @@ Grades are not percentages, and a name or boundary does not raise a semantic gra
 
 ## Writing or correcting a contract now
 
-- Check the claim against the decompiled function in `bea-decomp` and cite it by name and address; never paste
+- Check the claim against the decompiled function in [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) and cite it by name and address; never paste
   decompiler output into this repository.
 - Keep static structure, measured runtime behaviour, source architecture and open questions visibly separate, and
   state what the document does not prove.

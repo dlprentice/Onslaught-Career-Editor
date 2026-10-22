@@ -1,7 +1,7 @@
 # Onslaught Toolkit
 
 Status: active — the project overview
-Last updated: 2026-10-22 (the related repositories are public and linked; the rebuild moved to onslaught-godot)
+Last updated: 2026-10-22 (reverse-engineering/ marked as moved to onslaught-preservation; the related repositories are public and linked; the rebuild moved to onslaught-godot)
 Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
 
 Onslaught Toolkit is a preservation project for *Battle Engine Aquila* (2003, Lost Toys).
@@ -58,7 +58,7 @@ on the companion's Home page, where each can be saved as a copy elsewhere.
 | Path | Owner |
 | --- | --- |
 | [`companion/OnslaughtToolkit.Godot/`](companion/OnslaughtToolkit.Godot/README.md) | The companion (player toolkit, future CE launcher; paused), C# built in code on Godot 4.8 beta1 .NET and .NET 10 |
-| [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Documentation of the game: formats, mechanics, saves, assets, function notes and contracts |
+| [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Documentation of the game: formats, mechanics, saves, assets, function notes and contracts. Moved: maintained at [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation); this copy is frozen |
 | [`lore/`](lore/_index.md) | The canonical lore and history library, embedded in the companion |
 | [`tools/`](tools/README.md) | Format decoders, asset exporters, capture analysis and the repository's checks |
 | [`rebuild/`](rebuild/README.md) | A frozen copy of the GPL Godot rebuild, now developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot); not built or tested here |

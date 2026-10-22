@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-22 (the related repositories are public and linked; the rebuild's queue moved to onslaught-godot; earlier: the companion moved to Godot 4.8 beta1 and .NET 10, AppCore removed)
+Last updated: 2026-10-22 (the decompilation cited as onslaught-decomp; the related repositories are public and linked; the rebuild's queue moved to onslaught-godot; earlier: the companion moved to Godot 4.8 beta1 and .NET 10, AppCore removed)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
@@ -51,11 +51,10 @@ where needed, a short summary; a fuller prose description is welcome wherever a 
 
 ### Decompilation and native port
 
-The byte-matching decompilation is complete (5,482 of 5,482 functions) in the private `bea-decomp`, which owns its
-plan, score and divergences. Its native source port (Windows and Linux) is developed there and published
-separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce) (GPL-3.0-only source and binaries, no game files); its public decompilation export is
-[onslaught-decomp](https://github.com/dlprentice/onslaught-decomp). Nothing from
-it is copied into this repository.
+The byte-matching decompilation is complete (5,482 of 5,482 functions) and published as
+[onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), whose README holds its score and divergences. Its
+native source port (Windows and Linux) is published as [Onslaught CE](https://github.com/dlprentice/onslaught-ce)
+(GPL-3.0-only source and binaries, no game files). Nothing from either is copied into this repository.
 
 ### Repository
 
@@ -80,7 +79,7 @@ it is copied into this repository.
 | Item | Outcome |
 | --- | --- |
 | Retail RE by Ghidra campaign (generations, contracts, promotion cohorts, record audit) | Superseded by the byte-matching decompilation; records in the private RE archive. |
-| Byte-matching decompilation | Complete (5,482/5,482) in private `bea-decomp`. |
+| Byte-matching decompilation | Complete (5,482/5,482), published as [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp). |
 | WinUI toolkit, its UI tests and CLI (former P11) | Removed 2026-10-15; the companion replaced them. |
 | Campaign bookkeeping relief (former P6) | Retired with the campaign. |
 | Repository preparation (former P12) | The checkout lives on Archive B behind the Projects bind; `local-lab/` and `local-data/` are real ignored children. The 2026-10-15 cleanup moved the Ghidra checkpoint and RE machinery to the private archive and removed the WinUI surfaces. |
