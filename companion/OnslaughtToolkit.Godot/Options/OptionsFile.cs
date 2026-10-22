@@ -82,10 +82,10 @@ public static class OptionsFile
         new("Actions", "Transform", 0x21, 8), new("Actions", "Air brake", 0x15, 9), new("Actions", "Special function", 0x3B, 8),
     ];
 
-    /// <summary>The values the game's own mouse-sensitivity slider stores: 3 to 63 in steps of 3 (retail, static).</summary>
     /// <summary>Why <see cref="Preview"/> refuses an edit whose every choice is what the file already holds.</summary>
     public const string NoChange = "Those settings already have the chosen values.";
 
+    /// <summary>The values the game's own mouse-sensitivity slider stores: 3 to 63 in steps of 3 (retail, static).</summary>
     public static IReadOnlyList<float> SliderSensitivities { get; } = Enumerable.Range(1, 21).Select(step => step * 3f).ToArray();
 
     public static Outcome<OptionsReading> Read(ReadOnlySpan<byte> bytes)
