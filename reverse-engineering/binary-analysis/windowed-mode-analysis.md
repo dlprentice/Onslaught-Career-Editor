@@ -7,7 +7,7 @@ Status: **partially superseded 2026-07-28**, parser scope corrected 2026-09-26 �
 and the hex-edit instruction built on it are **withdrawn as false**. The two-gate
 model, the startup-flow patch guidance, and the wrapper workarounds stand
 unchanged. See "Correction 2026-07-28" immediately below.
-Last updated: 2026-10-22 (retail disassembly listing replaced by prose; previously 2026-09-26 (initializer and ordered parser route rechecked; display/runtime evidence retains its date))
+Last updated: 2026-10-22 (companion patching retired: the safe-copy option removed and its mentions put in the past tense; retail disassembly listing replaced by prose; previously 2026-09-26 (initializer and ordered parser route rechecked; display/runtime evidence retains its date))
 Verdict: `-forcewindowed` is real and reachable, but its parser gate
 `DAT_00662f3e` is **BSS — zero at load**; on the inspected startup route,
 the parser sets it for `-testeur` appearing **earlier on the same command line**. So `-forcewindowed` alone
@@ -115,7 +115,7 @@ operational guidance to use the startup-flow patch at `0x12A644` (with
 | Guard Flag | `DAT_00662f3e` is **BSS — zero at load** in the pristine specimen (`74154bfa…`), and is set to `1` at runtime only by `-testeur` appearing earlier on the command line. *(Corrected 2026-07-28 — see above; previously read "Current canonical Steam hash (`74154bfa...`) has `DAT_00662f3e` = 0x01".)* |
 | Flag Storage | `CLIParams.mForceWindowed` at offset 0x38 |
 | Root Cause | Launch behavior depends on both CLI parse gating and startup fullscreen-flow gates |
-| Practical path | Use the AppCore safe-copy profile with catalog rows at `0x12A644` and `0x12BB97`. **Guard-byte normalization is not an alternative** — the guard has no file byte. *(Corrected 2026-07-28.)* |
+| Practical path | The companion's safe-copy profile once patched catalog rows `0x12A644` and `0x12BB97` on a copied executable; that feature was retired 2026-10-22 (Git keeps it, up to commit `86d1af7`). **Guard-byte normalization is not an alternative** — the guard has no file byte. *(Corrected 2026-07-28.)* |
 
 ## The Mystery
 
@@ -171,15 +171,9 @@ If `mForceWindowed` is not set (or later startup flow forces fullscreen), this p
 
 ### Root Cause
 
-Current evidence supports a two-gate model: parser gate (`DAT_00662f3e`) plus startup fullscreen flow. This explains inconsistent field reports and aligns with the current Binary Patches implementation.
+Current evidence supports a two-gate model: parser gate (`DAT_00662f3e`) plus startup fullscreen flow. This explains inconsistent field reports and aligned with the companion's former Binary Patches rows (retired 2026-10-22; in Git up to commit `86d1af7`).
 
 ## Workarounds
-
-### Option 0: Isolated safe-copy testing
-
-Use the Windowed & Mods custom profile to select the resolution gate and
-windowed-startup rows independently. AppCore verifies the supported specimen
-and mutates only the copied executable.
 
 ### Option 1: DxWnd (Recommended)
 
@@ -211,8 +205,9 @@ The **2026-03 validation note** that stood here — "In current repo binaries, t
 guard is already `0x01`" — was reading that same `.rsrc` byte and is withdrawn.
 
 The half of that note which was correct still holds: primary operational
-guidance is the startup-flow patch set (`0x12A644`, optional `0x12BB97`) exposed
-by Binary Patches.
+guidance is the startup-flow patch set (`0x12A644`, optional `0x12BB97`), which
+the companion's Binary Patches exposed until that feature was retired on
+2026-10-22 (in Git up to commit `86d1af7`).
 
 ### Option 4: `-testeur -forcewindowed` on the command line (no patching)
 
