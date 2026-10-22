@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-only
-using OnslaughtCareerEditor.AppCore;
+using OnslaughtToolkit.Companion.Files;
 
 namespace OnslaughtToolkit.Companion.Tests;
 
 /// <summary>
-/// Linux publication-race and failure cases driven through the linked safety source's
+/// Linux publication-race and failure cases driven through the companion's file-safety source's
 /// internal publication hook. The hook has no production caller, option or environment
 /// route, and this suite is compiled only into development builds.
 /// </summary>

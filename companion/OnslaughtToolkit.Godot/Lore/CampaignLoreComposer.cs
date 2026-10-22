@@ -2,8 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using OnslaughtToolkit.Companion.Game;
 
-namespace OnslaughtCareerEditor.AppCore
+namespace OnslaughtToolkit.Companion.Lore
 {
     /// <summary>
     /// Fills in the campaign list on a lore page from the player's own installed game.

@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace OnslaughtCareerEditor.AppCore
+namespace OnslaughtToolkit.Companion.Game
 {
     /// <summary>One string the game itself would show, and the voice line that goes with it.</summary>
     /// <param name="AudioName">

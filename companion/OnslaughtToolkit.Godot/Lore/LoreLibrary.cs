@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using OnslaughtCareerEditor.AppCore;
+using OnslaughtToolkit.Companion.Game;
 
 namespace OnslaughtToolkit.Companion.Lore;
 

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using Godot;
-using OnslaughtCareerEditor.AppCore;
 using OnslaughtToolkit.Companion.Careers;
 using OnslaughtToolkit.Companion.Files;
 using OnslaughtToolkit.Companion.Game;

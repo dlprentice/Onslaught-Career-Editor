@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace OnslaughtCareerEditor.AppCore
+namespace OnslaughtToolkit.Companion.Careers
 {
     /// <summary>
     /// The result of turning a set of chosen cheats into one save file name.

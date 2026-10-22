@@ -5,7 +5,6 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Win32.SafeHandles;
-using OnslaughtCareerEditor.AppCore;
 using OnslaughtToolkit.Companion.Careers;
 using OnslaughtToolkit.Companion.Game;
 

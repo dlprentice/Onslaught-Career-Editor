@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace OnslaughtCareerEditor.AppCore
+namespace OnslaughtToolkit.Companion.Careers
 {
     /// <summary>
     /// How far the evidence for one cheat actually goes. The page copy is written from this

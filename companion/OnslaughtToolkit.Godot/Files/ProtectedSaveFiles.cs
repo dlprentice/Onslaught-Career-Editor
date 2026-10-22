@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using System.Security.Cryptography;
-using OnslaughtCareerEditor.AppCore;
 using OnslaughtToolkit.Companion.Careers;
 
 namespace OnslaughtToolkit.Companion.Files;

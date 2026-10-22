@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace OnslaughtCareerEditor.AppCore
+namespace OnslaughtToolkit.Companion.Files
 {
     /// <summary>
     /// The companion's file-safety primitives: plain-word refusals for links and Windows path forms, folders locked

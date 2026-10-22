@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using OnslaughtToolkit.Companion.Careers;
 
-namespace OnslaughtCareerEditor.AppCore;
+namespace OnslaughtToolkit.Companion.Files;
 
 internal sealed class SaveLabPublicationException : IOException
 {

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-namespace OnslaughtCareerEditor.AppCore
+namespace OnslaughtToolkit.Companion.Careers
 {
     public sealed record GoodieUnlockRequirement(string Summary, string EvidenceLabel)
     {
