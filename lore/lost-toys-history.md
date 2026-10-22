@@ -8,7 +8,7 @@
   re-verified from this repository. Header block added 2026-07-28; no claim in
   this file was changed, so the date below is still the date of the last content
   change.
-- **Last updated:** 2026-03-12
+- **Last updated:** 2026-10-21 (a named individual's PR e-mail address removed from the contact block)
 - **Summary:** Lost Toys Ltd. from the Bullfrog exodus through its games to its
   closure in 2003.
 
@@ -127,6 +127,5 @@ GU1 3DA
 Tel: +44 (0) 1483 449110
 Fax: +44 (0) 1483 449190
 Email: info@losttoys.com
-PR: alison@lincolnbeasley.co.uk
 Jobs: jobs@losttoys.com
 ```

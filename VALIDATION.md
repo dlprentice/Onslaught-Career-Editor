@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-10-21 (the active rebuild's Parity gate added; the earlier fixed-point rebuild's gates relabelled as reference; each dated section keeps its own date).
+Last updated: 2026-10-21 (a pre-flatten blob link replaced by a plain reference to the archive bundle; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -7170,7 +7170,9 @@ Normal closing while busy is deferred until the transaction returns; shutdown
 joins an outstanding worker. A read-only integration review found no actionable
 ownership, thread-lifetime, uncertainty or unchecked-write issue. The unchanged
 filesystem code's Windows staging-handoff and power-loss limitations remain as
-documented in the [API/safety record](https://github.com/dlprentice/Onslaught-Career-Editor/blob/d5e002d00aa8b7d2fb6d745aa1775285d957f2fd/companion/OnslaughtToolkit.FileBridge/README.md), retired with the prototype on September 25.
+documented in the API/safety record, `companion/OnslaughtToolkit.FileBridge/README.md` at pre-flatten commit
+`d5e002d0` (in the private RE archive's `onslaught-career-editor-full-history-20261015-freeze.bundle`), retired
+with the prototype on September 25.
 
 The actual worktree source built with zero warnings/errors and imported headlessly
 with the .NET editor: `local-data/companion/mono-source-editor-ps1m7phv/`.

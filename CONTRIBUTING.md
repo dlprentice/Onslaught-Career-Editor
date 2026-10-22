@@ -1,13 +1,14 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-10-15 (companion is the active product; decomp private; Godot rebuild parked; WinUI and Ghidra removed)
+Last updated: 2026-10-21 (the rebuild is active and the companion paused; Parity's determinism rule; port issues go to Onslaught CE)
 Summary: what a focused change looks like here, what must never be added to the
 repository, and which checks a change owes.
 
-This public repository holds the Godot toolkit companion (the active product), documentation of
-*Battle Engine Aquila* as prose and specs, our tools, the AppCore patching core and the parked Godot
-rebuild. The byte-matching decompilation and its native port are private. [GOAL.md](GOAL.md) states the
+This public repository holds the Godot toolkit companion (paused until new requirements), documentation of
+*Battle Engine Aquila* as prose and specs, our tools, the AppCore patching core and the active Godot
+rebuild. The byte-matching decompilation is private; its native port is published separately as Onslaught CE
+(link added at release), and port issues belong there. [GOAL.md](GOAL.md) states the
 direction and [PROGRAM.md](PROGRAM.md) the work queue. Keep changes focused and use existing records and
 validation.
 
@@ -45,8 +46,10 @@ its command list in new documents.
 - The AppCore patching core owns executable patch plans, guarded installed-game writes and safe
   copies, as the model for the companion's mod manager; it compiles the companion's file-safety
   source rather than forking it.
-- The parked rebuild's `OnslaughtRebuild.Core` stays deterministic and free of presentation,
-  filesystem, clock, process, network and GPU APIs.
+- The rebuild's simulation, `OnslaughtRebuild.Parity`, is deterministic given its inputs (the tape, the
+  retail data and options files it reads as the game does, and the virtual clock) and has no presentation,
+  process, network or GPU dependency; `OnslaughtRebuild.Host` owns presentation. The earlier
+  `OnslaughtRebuild.Core` is reference material.
 - `lore/` is the canonical public lore/history source.
 - `reverse-engineering/` documents the game with provenance-bounded prose and specs. Static,
   runtime and source-reference claims must remain distinct.
@@ -94,7 +97,7 @@ full three-principle contract is [`AGENTS.md`](AGENTS.md); this is the
 contributor-facing summary, not a second owner.
 Exporters must require explicit local inputs and a separate local output root.
 
-## Game documentation and the parked rebuild
+## Game documentation and the rebuild
 
 Use [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) to find the owning document. New
 findings come from the byte-matching decompilation or controlled observation; write them as prose and specs,
@@ -102,8 +105,9 @@ cite the function or capture, and never paste decompiler output. Contract grades
 [`CONTRACTS.md`](CONTRACTS.md). Retain raw or bulky proof locally; commit only the smallest public-safe evidence
 a document needs, and state what it does not prove.
 
-The rebuild is parked. Before changing `rebuild/`, read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) and
-[`rebuild/README.md`](rebuild/README.md): GPL-compatible source adaptation and locally materialized
+The rebuild is active, with one writer per path; its current lane is in
+[`rebuild/README.md`](rebuild/README.md#working-lane). Before changing `rebuild/`, read
+[`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) and [`rebuild/README.md`](rebuild/README.md): GPL-compatible source adaptation and locally materialized
 user-supplied retail data are permitted; retail executable or decompiler text and separately licensed
 third-party material are not.
 

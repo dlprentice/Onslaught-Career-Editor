@@ -1,13 +1,13 @@
 # Level inventory: the 95 MissionScripts folders
 
 Status: active reference
-Last updated: 2026-09-30
+Last updated: 2026-10-21 (decompilation cited without a link: its repository is private)
 Summary: which of the 95 numbered `data/MissionScripts` folders are playable levels, how the retail game reaches
 each one, and what the 29 folders that cannot load contain.
 Evidence: MEASURED — the pristine specimen's `data/` tree: the folder listing, `data/resources/*_res_PC.aya`,
 `data/WorldHeaders.dat` (all 97 records parsed, 4,783 of 4,783 bytes) and `data/language/english.dat`
 (`tools/language_dat_decode.py` with `text/text.stf`). The code paths cite
-[bea-decomp](https://github.com/dlprentice/bea-decomp) functions that match retail byte for byte, named with their
+the private decompilation's functions that match retail byte for byte, named with their
 addresses; the multiplayer lock test is read from retail's disassembly (0051d28c..0051d2d6) because its function
 does not match yet. RUNTIME — the 2026-08-15 native coverage census
 (`local-lab/native-corpus-coverage-20260815-v1/native-coverage.tsv`) records script natives executed in

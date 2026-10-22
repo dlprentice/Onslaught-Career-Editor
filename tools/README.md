@@ -1,10 +1,10 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-16 (glTF pose check, sound-bank walk, texture census and Goodie walk; Ghidra, campaign and Windows runtime-probe tools moved to the private RE archive; WinUI tools removed)
+Last updated: 2026-10-21 (the rebuild is active, not parked)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
-`tools/` supports the companion, the game documentation and the parked rebuild through guarded extraction,
+`tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
 format inspection, capture analysis and focused checks. The Ghidra scripts, cohort specs, campaign/authority tools
 and the Windows TTD/cdb/PowerShell runtime-probe lab moved on 2026-10-15 to the private repository
 `dlprentice/onslaught-re-archive`; the WinUI packaging tools were removed.

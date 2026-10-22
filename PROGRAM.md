@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-21 (Godot rebuild active with its open queue; companion paused)
+Last updated: 2026-10-21 (the decided repository plan: release, split, bundle, flatten, rename)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
@@ -63,8 +63,8 @@ where needed, a short summary; a fuller prose description is welcome wherever a 
 ### Decompilation and native port — private
 
 The byte-matching decompilation is complete (5,482 of 5,482 functions) in the private `bea-decomp`, which owns its
-plan, score and divergences. Its native source port (Windows and Linux) is in progress there. Publication as
-"Onslaught CE" (GPL-3.0 source and binaries, no game files) follows once the port plays like retail. Nothing from
+plan, score and divergences. Its native source port (Windows and Linux) is developed there and published
+separately as Onslaught CE (GPL-3.0-only source and binaries, no game files; link added at release). Nothing from
 it is copied into this repository.
 
 ### Repository
@@ -72,7 +72,10 @@ it is copied into this repository.
 - The public history was flattened to a single new root (approved by David); the full earlier history is a
   verified bundle and `refs/old/*` in the private RE archive. The third-party fork and GitHub's pull-request refs
   still hold the old history; whether to ask GitHub Support to purge the PR refs is David's decision.
-- A later rename of the repository toward the "Onslaught CE" name is a separate, coordinated task.
+- The decided plan, in order: after the Onslaught CE release, the Godot rebuild (`rebuild/`) moves to its own
+  repository, `onslaught-godot`; this repository's full history is then bundled into the private RE archive and
+  flattened again; and finally this repository is renamed to the companion's name, which David has yet to choose.
+  The companion later becomes the CE launcher. Each step is a separate, coordinated task.
 
 ## Paused
 

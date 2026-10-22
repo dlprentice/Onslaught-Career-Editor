@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-10-21 (Godot rebuild active again as a scoped proof of concept; companion paused)
+Last updated: 2026-10-21 (decompilation done; port preview published separately as Onslaught CE; rebuild PoC in progress; companion paused)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
@@ -11,16 +11,16 @@ archive.
 ## The direction (David, 2026-10-15, with the rebuild reactivated the same day)
 
 - **Reverse engineering is done by decompilation.** The byte-matching decompilation of the retail executable
-  (private `bea-decomp`, 5,482 of 5,482 functions) is the authority on what the game does. It is planned for
-  publication as "Onslaught CE": GPL-3.0 source and binaries, no game files, once its native port plays like retail.
-- **The faithful game is a native source port** of that decompilation, in progress and private, for Windows and
-  Linux. A later remake, if any, forks that port.
+  (private, 5,482 of 5,482 functions) is done and is the authority on what the game does.
+- **The faithful game is a native source port** of that decompilation, for Windows and Linux. Its preview is in
+  progress and is published separately as Onslaught CE: GPL-3.0-only source and binaries, no game files (link added
+  at release). A later remake, if any, forks that port.
 - **The Godot rebuild is active as a scoped proof of concept**: a C# reimplementation on Godot 4.8 dev6 .NET that
   is 1:1 with retail from startup to exit, with level 100 playable to completion (win, loss and retry) and the
   career it writes identical to retail's. `OnslaughtRebuild.Parity` owns the simulation and `OnslaughtRebuild.Host`
   the presentation; parity is measured against retail and native-port recordings Present by Present, as
   [`rebuild/PARITY.md`](rebuild/PARITY.md) records.
-- **The companion is the public product**, currently paused until David sets new requirements. A polished Godot .NET
+- **The companion is the player toolkit and the future CE launcher**, paused until David sets new requirements. A Godot .NET
   toolkit for Linux and Windows, for players: careers, Goodies, settings, backups, music, voices and lore, and later
   a mod manager built on the AppCore patching core, with no known data-loss path.
 - **This repository documents the game in public**: formats, behaviours and findings as prose and specs, with our
@@ -47,6 +47,7 @@ Unknowns are written as open questions with the cheapest falsifier.
 
 ## Where the goal stands
 
-Not met. The decompilation is complete; the native port and the companion's next phase are in progress.
+Not met. The decompilation is done; the native port's preview and the rebuild proof of concept are in progress;
+the companion is paused.
 [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) owns what is demonstrated, [PROGRAM.md](PROGRAM.md) the work
 queue and [VALIDATION.md](VALIDATION.md) the checks.

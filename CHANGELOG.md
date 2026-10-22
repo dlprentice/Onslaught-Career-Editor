@@ -1,45 +1,11 @@
 # Onslaught Toolkit changelog
 
-Status: active — app-release record only
-Last updated: 2026-08-24
+Status: historical — the retired WinUI app's release record; no further entries
+Last updated: 2026-10-21 (marked historical; the unreleased section and the never-published 1.0.12 candidate removed)
 Evidence: MEASURED — published entries name the released ZIP/tag they
-describe. A version cut prepared before publication is labeled as a candidate
-and does not invent a tag or GitHub Release. RE generations are NOT recorded
-here — they live in `developer_state.json` and the campaign ledgers.
-Summary: per-version record of shipped WinUI releases, for downloaders who
-arrive from the Releases page.
-
-## Unreleased
-
-## 1.0.12 — 2026-08-24 (candidate; not a GitHub Release)
-
-Source-tree version cut for the next unsigned portable ZIP. No git tag or
-GitHub Release is authorized by this entry.
-
-- Save Lab now shows what the opened save already has for campaign links,
-  listed Goodies, mission grades, and a focused Goodie, so a write replaces a
-  named mix rather than a blind table.
-- Cheats shows which offered cheats the source save already switches on, and
-  can copy live-trainer readings into the Set and Hold boxes. Life, energy,
-  and shields can be held together. It is still a top-up, not a freeze:
-  walker mode still needs energy held for shields to last, jet mode still
-  zeros shields, and one hit big enough to kill still will.
-- Windowed & Mods names which listed catalog patches a safe copy already has
-  by reading that copy's `BEA.exe`. The installed game is not opened.
-- Settings and Home say whether the chosen `BEA.exe` is the known Steam
-  retail file. A changed file is not called an original; a copy made from it
-  is disclosed as carrying those changes. Auto-detect failure is shown on
-  Settings. Save Lab, Game Options, and Cheats name whether the file sits in
-  the installed game, a playable copy, or a folder the player chose.
-- Player-facing pages name files and folders, not full paths, and no longer
-  dump raw exceptions. Writes into the installed game stay refused except
-  for the existing backup-gated installed-game path.
-- The portable ZIP wraps the payload in one `Onslaught-Toolkit/` folder.
-  Extracted launch, Home, Lore, generated-synthetic Safe Copy, and Media
-  smokes remain the candidate gate. The package is still unsigned and is not
-  an installer, MSIX, or Store build.
-
-Publication (tag, GitHub Release, upload) remains maintainer-owned.
+describe.
+Summary: per-version record of the retired WinUI app's releases, for downloaders
+who arrive from the Releases page. The WinUI app is no longer maintained.
 
 ## 1.0.11 — 2026-08-07
 

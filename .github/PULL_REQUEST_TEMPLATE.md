@@ -6,14 +6,13 @@ What changed, why, and which user or contributor problem it solves.
 
 Areas affected:
 
-- [ ] Godot toolkit companion / retained toolkit source
-- [ ] AppCore / CLI
-- [ ] RE-informed rebuild
-- [ ] Patch / mod safety
-- [ ] Runtime tooling
-- [ ] Docs
-- [ ] RE / Lore docs
-- [ ] Public/release boundary
+- [ ] Companion
+- [ ] AppCore patching core
+- [ ] Rebuild (until it moves to its own repository)
+- [ ] Docs and lore
+- [ ] Tools
+
+Changes to the native port (Onslaught CE) belong in its own repository, not here.
 
 Main paths changed:
 

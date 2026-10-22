@@ -1,9 +1,11 @@
 # Patch Catalog Contract
 
 Status: active normative contract
-Last updated: 2026-07-28
+Last updated: 2026-10-21 (header completed with its Evidence line)
 Summary: what the active executable patch catalog means, and what must be true
 of a row before it may appear in Onslaught Toolkit.
+Evidence: SOURCE — AppCore's apply, verify and restore code and its regression tests, and the two catalogs in
+`patches/catalog/`.
 
 *(Corrected 2026-07-28: this header read "Last reviewed: 2026-07-12" while the
 file had in fact been edited on 2026-07-17 by commit `a777a4ea`, which deleted

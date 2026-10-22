@@ -10,14 +10,13 @@ assignees: ""
 
 Choose one:
 
-- [ ] Godot toolkit companion / retained toolkit source
-- [ ] AppCore / CLI
-- [ ] RE-informed rebuild
-- [ ] Patch / mod safety
-- [ ] Runtime tooling
-- [ ] Docs
-- [ ] RE / Lore docs
-- [ ] Public/release boundary
+- [ ] Companion
+- [ ] AppCore patching core
+- [ ] Rebuild (until it moves to its own repository)
+- [ ] Docs and lore
+- [ ] Tools
+
+Issues with the native port (Onslaught CE) belong in its own repository, not here.
 
 ## Problem
 

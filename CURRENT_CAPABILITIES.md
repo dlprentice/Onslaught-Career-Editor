@@ -1,14 +1,14 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-21 (Godot rebuild active as a scoped proof of concept; companion paused; the earlier fixed-point rebuild's state relabelled as history)
+Last updated: 2026-10-21 (intro: the native port is published separately as Onslaught CE; companion is the future CE launcher)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
 
-The public player product is the Godot companion, whose development is paused until new requirements. The
-byte-matching decompilation (private `bea-decomp`) is complete and is the reverse-engineering authority; its native
-port is in progress and private. The Godot rebuild is active as a scoped proof of concept (level 100, startup to
+The companion is the player toolkit and the future CE launcher; its development is paused until new requirements.
+The byte-matching decompilation (private) is complete and is the reverse-engineering authority; its native port is
+published separately as Onslaught CE (link added at release), and this document does not measure it. The Godot rebuild is active as a scoped proof of concept (level 100, startup to
 exit); its measured parity is in [rebuild/PARITY.md](rebuild/PARITY.md). The AppCore patching core is kept for the
 companion's future mod manager.
 

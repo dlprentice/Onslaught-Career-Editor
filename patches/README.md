@@ -1,13 +1,19 @@
 # BEA.exe patch catalog
 
+Status: active — the catalog's entry point; no user interface for it ships today
+Last updated: 2026-10-21 (header added; AppCore, not the retired WinUI app, owns planning and application)
+Summary: where the executable-patch and safe-copy catalogs are, what their tests prove, how a row's file offset
+maps to a virtual address, and the safety rules for applying a row.
+
 The two JSON catalogs in this directory are the only active executable-patch
 sources:
 
 - [patch rows](catalog/patches.v2.json)
 - [safe-copy profiles](catalog/safe-copy-profiles.v1.json)
 
-WinUI and AppCore own verification, planning, apply, backup, restore, and
-copied-target enforcement. Retired standalone Python patchers are available in
+AppCore owns verification, planning, apply, backup, restore, and
+copied-target enforcement. No user interface for it ships today; the companion's
+future mod manager will build on it. Retired standalone Python patchers are available in
 Git history; keeping a second mutation implementation made the safety contract
 harder to reason about.
 
@@ -82,8 +88,8 @@ Experimental rows stay opt-in and must not be promoted by catalog prose alone.
 
 ## Safety
 
-Prefer an app-owned safe copy: create one through Windowed & Mods, verify the
-selected rows, and use the generated full-file backup for restore. Patching the
+Prefer an app-owned safe copy: AppCore creates one, verifies the selected rows,
+and keeps a full-file backup for restore. Patching the
 installed game is possible and is opt-in - it goes through
 `BinaryPatchEngine.AuthorizeInstalledGameWrite`, which refuses until a verified
 `BEA.exe.original.backup` and its `.sha256` sit beside the target. The pristine

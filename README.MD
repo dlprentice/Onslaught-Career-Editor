@@ -1,18 +1,19 @@
 # Onslaught Toolkit
 
 Status: active — the project overview
-Last updated: 2026-10-21 (Godot rebuild active as a scoped proof of concept; companion paused)
+Last updated: 2026-10-21 (pre-release front page: Onslaught CE published separately, related repositories, companion as future CE launcher)
 Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
 
 Onslaught Toolkit is a preservation project for *Battle Engine Aquila* (2003, Lost Toys).
 
-- **The decompilation is done.** A byte-matching decompilation of the retail executable (private for now) is the
-  project's reverse-engineering authority. It is planned for publication as "Onslaught CE": GPL-3.0 source and
-  binaries, no game files, once its native port plays like retail.
-- **The native source port is in progress** (private, Windows and Linux).
-- **The companion is the public player app** (development paused until new requirements). It is a Godot .NET app: it opens on their game and careers,
-  shows progress and Goodies, edits careers and settings only after a verified backup and a clear choice, keeps
-  automatic backups that can be put back, and plays and explains the game's own music, voices and lore.
+- **The decompilation is done.** A byte-matching decompilation of the retail executable is the project's
+  reverse-engineering authority. It stays private.
+- **The native source port is the faithful game**, for Windows and Linux. Its source and downloads are published
+  separately as **Onslaught CE** (GPL-3.0-only, no game files; link added at release), not from this repository.
+- **The companion is the player toolkit and the future CE launcher** (development paused until new requirements). It
+  is a Godot .NET app: it opens on the player's game and careers, shows progress and Goodies, edits careers and
+  settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, and plays
+  and explains the game's own music, voices and lore.
 - **The Godot rebuild is active as a scoped proof of concept**: startup to exit 1:1 with retail, level 100 playable
   to completion. [`rebuild/README.md`](rebuild/README.md) describes it and [`rebuild/PARITY.md`](rebuild/PARITY.md)
   records its measured parity.
@@ -25,6 +26,19 @@ This is an unofficial community project. It is not affiliated with or endorsed b
 holders. Repository licenses cover their respective project code and documentation; they grant no rights in the
 retail game, its assets, names, or trademarks.
 
+## Play: Onslaught CE
+
+To play the game, use Onslaught CE, the native source port. It needs your own installation of the game for its data.
+Its releases are published from its own repository (link added at release).
+
+## Related repositories
+
+| Repository | What it holds |
+| --- | --- |
+| This repository | The companion, the AppCore patching core, documentation of the game, lore, our tools, and (until it moves to its own repository after the release) the Godot rebuild |
+| Onslaught CE (link added at release) | The native source port's source and its Windows and Linux downloads; GPL-3.0-only |
+| [`stuart73/Onslaught`](https://github.com/stuart73/Onslaught) | Stuart's partial GPL source release, pinned here as [`references/Onslaught`](references/Onslaught) |
+
 ## Using the companion
 
 The companion has no published release yet; build it from source (below). It needs your own installation of the
@@ -36,7 +50,7 @@ retired and no longer maintained; its source is in the project's private pre-fla
 
 | Path | Owner |
 | --- | --- |
-| [`companion/OnslaughtToolkit.Godot/`](companion/OnslaughtToolkit.Godot/README.md) | The MIT companion, C# built in code on Godot 4.8 dev6 .NET |
+| [`companion/OnslaughtToolkit.Godot/`](companion/OnslaughtToolkit.Godot/README.md) | The MIT companion (player toolkit, future CE launcher; paused), C# built in code on Godot 4.8 dev6 .NET |
 | `OnslaughtCareerEditor.AppCore/` | The patching core (executable patch plans, guarded installed-game writes, safe copies) the companion's mod manager will build on |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Documentation of the game: formats, mechanics, saves, assets, function notes and contracts |
 | [`lore/`](lore/_index.md) | The canonical lore and history library, embedded in the companion |

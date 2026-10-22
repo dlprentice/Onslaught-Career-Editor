@@ -1,14 +1,24 @@
 # Onslaught Toolkit companion
 
-Status: C# application built entirely in code on Godot 4.8 dev6 .NET, organised around the player: careers, Goodies, editing, cheats, game settings, backups, music, voices, lore, and the game's models and textures; Linux executed checks, Windows runtime acceptance pending
-Last updated: 2026-10-16 (Goodies show what they hold; Art & sound: glTF, PNG and WAV copies; no replacement without an atomic exchange; failures after a write reported as possible changes; former AppCore sources moved in)
+Status: paused (since 2026-10-16, until new requirements); C# application built entirely in code on Godot 4.8 dev6 .NET, organised around the player: careers, Goodies, editing, cheats, game settings, backups, music, voices, lore, and the game's models and textures; Linux executed checks, Windows runtime acceptance pending
+Last updated: 2026-10-21 (lane marked paused, Working lane section added; the native port, not the rebuild, is the faithful game)
 Summary: the MIT companion for Battle Engine Aquila players: it opens on their game and careers, shows progress and Goodies, changes careers and settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, plays and explains the game's own music, voices and lore, and saves copies of its models (glTF) and textures (PNG).
 
 The companion is for players. It opens on their game and careers, and everything it
-changes in the game is backed up first and can be put back. Retail reverse engineering and
-the faithful GPL game rebuild have separate owners; this project neither launches nor
-depends on that rebuild. Tools for looking at raw bytes are kept, folded away under
-Advanced.
+changes in the game is backed up first and can be put back. Retail reverse engineering, the
+faithful game (the native source port, published separately as Onslaught CE; link added at
+release) and the GPL Godot rebuild have separate owners; this project neither launches nor
+depends on the rebuild. It is planned to become the CE launcher later. Tools for looking at
+raw bytes are kept, folded away under Advanced.
+
+## Working lane
+
+Development is paused (since 2026-10-16) until David sets new requirements; no branch is
+active. The next item, the mod/patch manager on the AppCore patching core, waits until the
+native port has a playable build, and will then target both the port's and retail's
+executables. On resume, start from `main` in a worktree of an internal-disk clone (the
+familiar checkout lives on a USB drive and takes light I/O only) and run this project's
+`npm test`.
 
 ## Layout
 

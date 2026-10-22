@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-10-21 (rebuild active: Parity and Host projects added to the map; companion paused)
+Last updated: 2026-10-21 (port route: Onslaught CE published separately; Onslaught pin named by its constant)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository: the companion, the AppCore patching core, the game documentation, tools and the
 Godot rebuild.
@@ -11,8 +11,9 @@ what is currently proved or working. Use [`CURRENT_CAPABILITIES.md`](CURRENT_CAP
 for demonstrated capability, [`GOAL.md`](GOAL.md) for the direction,
 [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) for the game documentation, and
 [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) for the rebuild's evidence and licence boundary. The
-decompilation and native port live in the private `bea-decomp`; the Ghidra checkpoint and campaign machinery in the
-private `onslaught-re-archive`. Do not embed volatile counts here.
+decompilation lives in a private repository; the native port's source and downloads are published separately as
+Onslaught CE (link added at release), never from this repository. The Ghidra checkpoint and campaign machinery are in
+the private `onslaught-re-archive`. Do not embed volatile counts here.
 
 ## Dependency direction
 
@@ -125,7 +126,7 @@ that used them.
 | [`tests_shared/`](tests_shared/fixtures/README.md) | Narrow reviewed cross-project fixtures; never a dumping ground for retail saves or assets. |
 | `OnslaughtCareerEditor.AppCore.Tests/` | AppCore behavior and safety tests. |
 | [`lore/`](lore/) and `lore-book/` | Canonical public lore/history library and its entry guide. |
-| [`references/`](references/) | David's forks of Stuart Gillam's GPL `Onslaught` source and `AYAResourceExtractor`, pinned at `5352a81` and `53b10b0` by `ONSLAUGHT_PIN` and `EXTRACTOR_PIN` in [`aya_extractor_source_audit.py`](tools/aya_extractor_source_audit.py). Preserve pins, licences and provenance. These are source references, not proof of retail behavior. |
+| [`references/`](references/) | David's forks of Stuart Gillam's GPL `Onslaught` source and `AYAResourceExtractor`, pinned at `c3d8ac4` and `53b10b0` by `ONSLAUGHT_PIN` and `EXTRACTOR_PIN` in [`aya_extractor_source_audit.py`](tools/aya_extractor_source_audit.py). Preserve pins, licences and provenance. These are source references, not proof of retail behavior. |
 | [`roadmap/`](roadmap/original-binary-online-multiplayer-feasibility.md) | Bounded original-binary multiplayer feasibility. [GOAL.md](GOAL.md) owns the outcomes and [PROGRAM.md](PROGRAM.md) owns remaining work. |
 
 ## Documentation truth owners

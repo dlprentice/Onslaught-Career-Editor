@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the front door to the game documentation
-Last updated: 2026-10-15 (decompilation is the authority; Ghidra campaign records and decompiler listings moved to the private RE archive)
+Last updated: 2026-10-21 (Core translation policies attributed to the earlier fixed-point rebuild, not a parked lane)
 Summary: where the documentation of Battle Engine Aquila lives, what each store covers, and the rules a claim about the shipped game has to meet before it is written down.
 
 This tree documents *Battle Engine Aquila* as prose and specs: file formats, save and options layouts, mechanics,
@@ -51,7 +51,7 @@ notes are history.
 | Attribution and known limits | [Project metadata](project-meta/_index.md) |
 
 Further down this page: the patch recipes, the per-subsystem static contracts, the 2026-05-26 review cohort,
-the reference documents, and the retail → Core translation policies the parked rebuild used.
+the reference documents, and the retail → Core translation policies the earlier fixed-point rebuild (Core) used.
 
 ## Patch recipes — analysis documents, not write authorization
 
@@ -202,7 +202,8 @@ asserted here — where that table still names the 05-26 document, so does this 
 
 ## Retail → Core translation policies
 
-These policies belong to the parked Godot rebuild; they stay as a record of how its Core constants were derived.
+These policies belong to the earlier fixed-point rebuild (Core), now reference material; they stay as a record of
+how its Core constants were derived.
 [`game-mechanics/_index.md`](game-mechanics/_index.md) lists the measurements.
 It does not list the **policies** that convert a measured retail quantity into a
 deterministic-Core constant — and those are the documents a Core edit is
