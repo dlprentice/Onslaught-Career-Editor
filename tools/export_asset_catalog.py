@@ -517,11 +517,6 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--language-matrix", type=Path, default=Path(".artifacts/language-export/merged_matrix.json"))
     ap.add_argument("--out-dir", type=Path, default=Path(".artifacts/asset-catalog"))
     ap.add_argument("--self-test", action="store_true", help="Run built-in catalog assembly checks without game assets")
-    ap.add_argument(
-        "--emit-consumer-contract-fixture",
-        type=Path,
-        help=argparse.SUPPRESS,
-    )
     return ap.parse_args()
 
 
@@ -662,56 +657,8 @@ def run_self_test() -> int:
     return 0
 
 
-def emit_consumer_contract_fixture(bundle_root: Path) -> int:
-    """Emit a tiny producer-owned bundle for the AppCore contract regression."""
-
-    bundle_root = bundle_root.resolve()
-    export_path = bundle_root / "exports" / "producer_texture.png"
-    catalog_path = bundle_root / "asset_catalog" / "catalog.json"
-    png = bytes(
-        [
-            137, 80, 78, 71, 13, 10, 26, 10,
-            0, 0, 0, 13, 73, 72, 68, 82,
-            0, 0, 0, 1, 0, 0, 0, 1,
-            8, 6, 0, 0, 0, 31, 21, 196,
-            137, 0, 0, 0, 13, 73, 68, 65,
-            84, 120, 156, 99, 248, 207, 192,
-            240, 31, 0, 5, 0, 1, 255, 137,
-            153, 61, 29, 0, 0, 0, 0, 73,
-            69, 78, 68, 174, 66, 96, 130,
-        ]
-    )
-    catalog = {
-        "schema_version": CATALOG_SCHEMA_VERSION,
-        "path_contract": CATALOG_PATH_CONTRACT,
-        "summary": {
-            "texture_catalog_entries": 1,
-            "total_catalog_entries": 1,
-        },
-        "textures": [
-            {
-                "catalog_id": "texture:producer-contract",
-                "canonical_ref": "textures\\producer_contract.tga",
-                "export_png_paths": ["exports\\producer_texture.png"],
-            }
-        ],
-        "loose_meshes": [],
-        "embedded_meshes": [],
-        "videos": [],
-        "language_rows": [],
-        "goodies": [],
-    }
-    with SecuredOutputRoot(bundle_root) as output:
-        output.atomic_write_bytes(export_path, png)
-        output.atomic_write_json(catalog_path, catalog)
-    print(json.dumps({"catalog": str(catalog_path)}, indent=2))
-    return 0
-
-
 def main() -> int:
     args = parse_args()
-    if args.emit_consumer_contract_fixture is not None:
-        return emit_consumer_contract_fixture(args.emit_consumer_contract_fixture)
     if args.self_test:
         return run_self_test()
 
