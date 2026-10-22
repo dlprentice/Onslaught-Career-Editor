@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-22 (AppCore removed, its test facts now in the companion's tests; companion review fixes: CE running check seen on Linux, backups from another game folder after confirmation; the companion is Onslaught Companion and works with the original game only; AppCore patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (AppCore removed, its test facts now in the companion's tests; careers in old WinUI safe copies listed on Home; companion review fixes: CE running check seen on Linux, backups from another game folder after confirmation; the companion is Onslaught Companion and works with the original game only; AppCore patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -233,7 +233,10 @@ The WinUI app's core library, AppCore (executable patch plans, guarded applicati
 "safe launch" profiles and their save and options services), and the `patches/` catalog it read
 were removed on 2026-10-22; Git keeps them. Executable patching and safe launch are not planned
 for the companion: Onslaught CE replaces them and never modifies the install. AppCore's save-layout
-and file-safety test facts were carried into the companion's own tests first.
+and file-safety test facts were carried into the companion's own tests first. On Windows, Home
+lists any careers left in the old toolkit's safe copies
+(`%APPDATA%\OnslaughtCareerEditor\GameProfiles\*\savegames`) and saves each as a protected copy
+elsewhere; that listing and copy are tested on a scratch folder on Linux and have not run on Windows.
 
 ## Reconstruction
 

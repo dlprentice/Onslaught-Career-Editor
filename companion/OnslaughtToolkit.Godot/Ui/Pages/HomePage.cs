@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using Godot;
+using OnslaughtToolkit.Companion.Careers;
 using OnslaughtToolkit.Companion.Files;
 using OnslaughtToolkit.Companion.Game;
 
@@ -7,7 +8,8 @@ namespace OnslaughtToolkit.Companion.Ui;
 
 /// <summary>
 /// The front page: the game with its own art and a Play button, the player's careers, the safety net
-/// (automatic backups and the promises the companion keeps) and ways into the rest of the app.
+/// (automatic backups and the promises the companion keeps) and ways into the rest of the app. On Windows it also
+/// lists careers left in the retired toolkit's copied installs, so each can be saved as a copy elsewhere.
 /// </summary>
 internal sealed class HomePage : Page
 {
@@ -15,7 +17,11 @@ internal sealed class HomePage : Page
     private readonly TextureRect _art;
     private readonly Emblem _emblem;
     private readonly Label _heroStatus, _folderLine, _backupLine;
-    private readonly PanelContainer _askBackups, _backupsOn;
+    private readonly PanelContainer _askBackups, _backupsOn, _oldCopies;
+    private readonly Label _oldCopiesNote;
+    private readonly VBoxContainer _oldCopyRows;
+    private readonly List<Button> _oldCopyButtons = [];
+    private string _oldCopySource = "";
     private readonly GridContainer _columns;
     private readonly SaveChoice _addChoice;
     private readonly List<Label> _promises = [];
@@ -80,6 +86,12 @@ internal sealed class HomePage : Page
         AddCareer = careerLinks.Add(Build.Button("Add a career file to your game…", "Link",
             "Put a career you have as a file (from a friend, or a backup of your own) into the game's career list."));
         OpenFile = careerLinks.Add(Build.Button("Open a career file…", "Link", "Look at a career file anywhere on your computer, read-only."));
+        (_oldCopies, VBoxContainer old) = Build.Panel("Inset", 8);
+        old.Add(Build.Text("Careers from the old Windows toolkit", "Strong"));
+        _oldCopiesNote = old.Add(Build.Text("", "Muted"));
+        _oldCopyRows = old.Add(Build.Column(6));
+        _oldCopies.Visible = false;
+        careers.Add(_oldCopies);
         _columns.Add(careersCard);
 
         VBoxContainer side = _columns.Add(Build.Column(18));
@@ -148,6 +160,8 @@ internal sealed class HomePage : Page
         FolderDialog = app.Popups.Add(Build.FilePicker("Choose the game folder", FileDialog.FileModeEnum.OpenDir));
         OpenDialog = app.Popups.Add(Build.FilePicker("Open a career file", FileDialog.FileModeEnum.OpenFile, "*.bes ; Career files"));
         AddDialog = app.Popups.Add(Build.FilePicker("Choose a career file to add", FileDialog.FileModeEnum.OpenFile, "*.bes ; Career files"));
+        OldCopyDialog = app.Popups.Add(Build.FilePicker("Save a copy of the career", FileDialog.FileModeEnum.SaveFile, "*.bes ; Career files"));
+        OldCopyDialog.FileSelected += path => _app.Status.Track(SaveOldCopyAsync(_oldCopySource, path));
         _addChoice = new SaveChoice(app);
         _addChoice.Chosen += (_, name) => _app.Status.Track(AddCareerAsync(name));
 
@@ -195,6 +209,12 @@ internal sealed class HomePage : Page
     internal FileDialog FolderDialog { get; }
     internal FileDialog OpenDialog { get; }
     internal FileDialog AddDialog { get; }
+    internal FileDialog OldCopyDialog { get; }
+
+    /// <summary>The careers found in the retired Windows toolkit's copies, as Home lists them.</summary>
+    internal IReadOnlyList<OldCopyCareer> OldCopies { get; private set; } = [];
+    internal IReadOnlyList<Button> OldCopyButtons => _oldCopyButtons;
+    internal bool ShowsOldCopies => _oldCopies.Visible;
     internal SaveChoice AddChoice => _addChoice;
     internal IReadOnlyList<Button> OpenButtons => Careers.OpenButtons;
     internal string HeroStatus => _heroStatus.Text;
@@ -230,6 +250,24 @@ internal sealed class HomePage : Page
         _app.Status.Show(receipt.Ok ? $"{name} is now in your game. Your earlier careers are in the backup." : receipt.Message,
             receipt.Ok ? StatusKind.Success : StatusKind.Failure);
         await _app.Game.RescanAsync();
+        return receipt;
+    }
+
+    /// <summary>
+    /// Saves a career from one of the old toolkit's copies as a new file elsewhere, through the same protected
+    /// route as every copy: the source is read as a verified snapshot, the copy is published without replacing
+    /// anything and read back. The old copy is never changed.
+    /// </summary>
+    internal async Task<PublicationReceipt> SaveOldCopyAsync(string source, string destination)
+    {
+        _app.Status.Show("Saving a checked copy…");
+        Outcome<SaveSession> read = await _app.Workspace.ReadSnapshotAsync(source);
+        PublicationReceipt receipt = read.Value is SaveSession snapshot
+            ? await _app.Workspace.PublishFromAsync(snapshot, destination, snapshot.CopyBytes())
+            : new PublicationReceipt(false, read.Message);
+        _app.Status.Show(receipt.Ok ? $"Saved a checked copy to {receipt.Output}. The old toolkit's copy is unchanged."
+            : receipt.Message + (receipt.MayHaveOutput ? "\nA copy may exist at: " + (receipt.Output ?? destination) : ""),
+            receipt.Ok ? StatusKind.Success : StatusKind.Failure);
         return receipt;
     }
 
@@ -300,7 +338,46 @@ internal sealed class HomePage : Page
             (sets.Count == 0 ? " No backups yet." : $" {Build.Count(sets.Count, "backup")}, the latest {Build.When(sets[0].Created)}.") +
             $"\nFolder: {_app.Backups.Folder}";
         BackUpNow.Disabled = folder is null || _app.Workspace.Busy;
+        ShowOldCopies();
         _folderLine.Text = folder is null ? "" : $"Game folder: {folder.Root}  ({(folder.Source.StartsWith("Found through Steam", StringComparison.Ordinal) ? "found through Steam" : "chosen by you")})";
+    }
+
+    /// <summary>Lists the old toolkit's careers again when they changed; the panel shows only when there are some.</summary>
+    private void ShowOldCopies()
+    {
+        IReadOnlyList<OldCopyCareer> found = OldSafeCopies.Find(_app.OldCopiesFolder);
+        if (found.SequenceEqual(OldCopies)) return;
+        OldCopies = found;
+        foreach (Node child in _oldCopyRows.GetChildren())
+        {
+            _oldCopyRows.RemoveChild(child);
+            child.QueueFree();
+        }
+        _oldCopyButtons.Clear();
+        foreach (OldCopyCareer career in found)
+        {
+            HBoxContainer row = _oldCopyRows.Add(Build.Row(10));
+            Label name = row.Add(Build.Text($"{career.Name}  ·  in the copy \"{career.Copy}\""));
+            name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+            Button save = row.Add(Build.Button("Save a copy somewhere else…", "Link",
+                "Saves a checked copy of this career outside the game. The old copy is left as it is."));
+            save.Pressed += () => ChooseOldCopyDestination(career);
+            _oldCopyButtons.Add(save);
+        }
+        _oldCopiesNote.Text = $"The retired Windows toolkit (v1.0.11) could play a copy of the game kept in {_app.OldCopiesFolder}, " +
+            "and careers played there were saved in that copy, where the game does not look. Save any you want to keep as a " +
+            "copy somewhere else; \"Add a career file to your game…\" can then put it in your game. The companion only reads " +
+            "these copies and never changes or deletes them.";
+        _oldCopies.Visible = found.Count > 0;
+    }
+
+    private void ChooseOldCopyDestination(OldCopyCareer career)
+    {
+        _oldCopySource = career.Path;
+        OldCopyDialog.CurrentDir = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments) is { Length: > 0 } documents
+            ? documents : "";
+        OldCopyDialog.CurrentFile = career.Name + ".bes";
+        OldCopyDialog.PopupCenteredRatio(0.75f);
     }
 
     /// <summary>A left-to-right shade over the banner art so its words stay readable.</summary>

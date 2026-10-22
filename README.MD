@@ -47,7 +47,8 @@ game to work on your careers, settings and media. The older Windows-only WinUI t
 retired and no longer maintained; its source is in the project's private pre-flatten history. Its executable patching
 and copied-install "safe launch" are not in the current companion and are not coming back: Onslaught CE replaces them,
 and never modifies your install. Their last code here (the AppCore library and the `patches/` catalog) was removed on
-2026-10-22; Git keeps it.
+2026-10-22; Git keeps it. A player who used that toolkit's safe launch on Windows finds any careers left in its copies
+on the companion's Home page, where each can be saved as a copy elsewhere.
 
 ## Where things live
 

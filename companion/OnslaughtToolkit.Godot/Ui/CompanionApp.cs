@@ -8,7 +8,7 @@ namespace OnslaughtToolkit.Companion.Ui;
 
 /// <summary>Where the companion looks for Steam, keeps its settings and puts backups; tests and captures supply their own.</summary>
 internal sealed record CompanionEnvironment(IReadOnlyList<string> SteamRoots, string SettingsPath, Func<bool>? GameRunning = null,
-    Action<string>? OpenUrl = null, string? DefaultBackupFolder = null, Action? Quit = null)
+    Action<string>? OpenUrl = null, string? DefaultBackupFolder = null, Action? Quit = null, string? OldCopiesFolder = null)
 {
     internal const string BackupFolderName = "Battle Engine Aquila Backups";
 
@@ -110,6 +110,7 @@ public partial class CompanionApp : Control
             ChooseCareer = ChooseCareerAsync, Popups = popups,
             CatchUp = () => CatchUpAsync(force: true, backUp: false),
             OpenCareerFile = () => Home.OpenDialog.PopupCenteredRatio(0.75f),
+            OldCopiesFolder = environment.OldCopiesFolder ?? OldSafeCopies.DefaultRoot(),
         };
 
         DiscardDialog = this.Add(Build.Confirm("Discard unsaved changes?", "Discard"));

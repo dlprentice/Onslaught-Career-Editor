@@ -31,8 +31,13 @@ internal static class CompanionUiTests
         List<string> openedUrls = [];
         Flag running = new(), quit = new();
         string defaultBackups = Path.Combine(outputDirectory, "ui-backups");
+        // A copies folder shaped like the retired Windows toolkit's, holding one career played in a copy.
+        string oldCopies = Path.Combine(outputDirectory, "ui-old-copies");
+        Directory.CreateDirectory(Path.Combine(oldCopies, "Enhanced Copy", "savegames"));
+        File.WriteAllBytes(Path.Combine(oldCopies, "Enhanced Copy", "savegames", "Old Pilot.bes"), original);
         CompanionEnvironment environment = new([install.SteamRoot], Path.Combine(outputDirectory, "ui-settings", "settings.json"),
-            GameRunning: () => running.On, OpenUrl: openedUrls.Add, DefaultBackupFolder: defaultBackups, Quit: () => quit.On = true);
+            GameRunning: () => running.On, OpenUrl: openedUrls.Add, DefaultBackupFolder: defaultBackups, Quit: () => quit.On = true,
+            OldCopiesFolder: oldCopies);
         CompanionApp app = new(files, managesWindow: false, environment);
         tree.Root.AddChild(app);
         await Frame(tree);
@@ -609,6 +614,19 @@ internal static class CompanionUiTests
             "a real Ogg Vorbis voice line loads and can play (the fake install's half-second tone)");
         check.That(!app.Music.Load(app.Music.Items.First(item => !item.Playable)) && app.Music.Player.Stream is null,
             "a Bink cutscene is listed but not played");
+
+        // A career left in the retired Windows toolkit's copy is listed on Home and saved elsewhere, never into the game.
+        app.Navigate("home");
+        check.That(app.Home.ShowsOldCopies && app.Home.OldCopies.Count == 1 && app.Home.OldCopies[0] is { Name: "Old Pilot", Copy: "Enhanced Copy" } &&
+            app.Home.OldCopyButtons.Count == 1, "Home lists the career left in the old toolkit's copy, with a way to save it");
+        string oldCareer = app.Home.OldCopies[0].Path;
+        string rescued = Path.Combine(outputDirectory, "Old Pilot (rescued).bes");
+        PublicationReceipt rescue = await app.Home.SaveOldCopyAsync(oldCareer, rescued);
+        check.That(rescue.Ok && File.ReadAllBytes(rescued).AsSpan().SequenceEqual(original) && File.ReadAllBytes(oldCareer).AsSpan().SequenceEqual(original),
+            "the old copy's career is saved elsewhere byte for byte, and the old copy is left as it was");
+        string intoGame = Path.Combine(install.Game, "savegames", "Old Pilot.bes");
+        PublicationReceipt refused = await app.Home.SaveOldCopyAsync(oldCareer, intoGame);
+        check.That(!refused.Ok && !File.Exists(intoGame), "saving it elsewhere never puts it straight into the game folder");
         await Frame(tree);
     }
 

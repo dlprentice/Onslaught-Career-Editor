@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: paused (since 2026-10-16, until new requirements); C# application built entirely in code on Godot 4.8 dev6 .NET, organised around the player: careers, Goodies, editing, cheats, game settings, backups, music, voices, lore, and the game's models and textures; Linux executed checks, Windows runtime acceptance pending
-Last updated: 2026-10-22 (AppCore removed: file safety cut down to what the companion calls, its test facts carried over; review fixes: close never abandons a backup started while it asks, settings picker keeps unsaved changes (also when the shown file is picked again or a key edit is refused), CE check seen against a running CE on Linux (output kept), backups from another game folder go back after a confirmation naming both; data-safety fixes: restore checks the manifest hash and game folder, running check also for Onslaught CE and again before the swap, unsaved-changes prompts, right-hand Shift and Control; named Onslaught Companion; works with the original game only; relicensed GPL-3.0-only, lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (AppCore removed: file safety cut down to what the companion calls, its test facts carried over, careers in the old WinUI toolkit's copies listed on Home; review fixes: close never abandons a backup started while it asks, settings picker keeps unsaved changes (also when the shown file is picked again or a key edit is refused), CE check seen against a running CE on Linux (output kept), backups from another game folder go back after a confirmation naming both; data-safety fixes: restore checks the manifest hash and game folder, running check also for Onslaught CE and again before the swap, unsaved-changes prompts, right-hand Shift and Control; named Onslaught Companion; works with the original game only; relicensed GPL-3.0-only, lore CC BY-SA 4.0)
 Summary: Onslaught Companion, the GPL-3.0-only app for Battle Engine Aquila players: today it works with the original game's Steam or retail install; it opens on that game and its careers, shows progress and Goodies, changes careers and settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, plays and explains the game's own music, voices and lore, and saves copies of its models (glTF), textures (PNG) and sound effects (WAV).
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -44,7 +44,7 @@ editor-authored scene, and `npm run build` refuses to stage one.
 | --- | --- |
 | [Careers](Careers/) | The career byte codec (`CareerSave`), immutable open snapshots (`SaveSession`), the open/publish/compare/install workflow (`CareerWorkspace`), each Goodie's rule and evidence (`GoodieFacts`, `GoodieUnlockRequirementService`) and cheat names (`CheatCodeCatalog`, `CheatSaveNameComposer`) |
 | [Files](Files/) | The protected OS file boundary (`ProtectedSaveFiles` on `SaveLabFileTransaction` and `FileMutationSafety`), its worker thread, and game-folder writes in `GameWrites.cs`: the running-game check (`GameProcess`), backup sets (`Backups`) and the verified write on Linux and elsewhere (`GameInstaller`) |
-| [Game](Game/) | Steam library discovery, the game folder and its files, the companion's remembered choices and backup folder (`GameFolder`), and the game's own text read from the install (`GameText`, `GameTextCatalog`) |
+| [Game](Game/) | Steam library discovery, the game folder and its files, careers left in the retired Windows toolkit's copied installs (`OldSafeCopies`), the companion's remembered choices and backup folder (`GameFolder`), and the game's own text read from the install (`GameText`, `GameTextCatalog`) |
 | [Options](Options/) | The settings block's reader and editor (`OptionsFile`), for `defaultoptions.bea` and the copy each career stores, and the physical-key table (`KeyTable`) |
 | [Media](Media/) | The game's music, voice lines and cutscene list (`GameAudio`) |
 | [Assets](Assets/) | The game's models, textures and bank sounds: the `.aya` envelope (`AyaContainer`), the mesh reader (`CmshReader`), DDS decoding (`DdsTexture`), the sound banks (`XapBank`), what each Goodie holds (`GoodieResources`), the install's lists (`AssetLibrary`), glTF export (`GltfExport`) and new-file-only exports (`ExportFiles`) |
@@ -116,7 +116,11 @@ install has it, a Play button for a Steam install (`steam://rungameid/1346400`),
 careers as cards with their progress, adding a career file to the game, the safety net
 (automatic backups, Back up now, and the three promises below), and ways into Goodies,
 Lore, Music & voices and the game's own manual. The career saved most recently opens by
-itself, read-only.
+itself, read-only. On Windows, if the retired WinUI toolkit (v1.0.11) left copied installs
+in `%APPDATA%\OnslaughtCareerEditor\GameProfiles` (its "safe launch"), Home lists the careers
+in each copy's `savegames` folder and saves any of them as a checked copy elsewhere; it never
+changes or deletes those copies. That listing and the copy are tested on a scratch folder on
+Linux; neither has run on Windows, and nobody has looked at the panel on screen.
 
 - **Summary**: the career's path through the campaign as a map, from 1.00 to 8.00: each
   mission's rank, the routes the career took and the routes the game recorded as not taken,

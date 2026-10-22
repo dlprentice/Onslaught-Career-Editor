@@ -39,6 +39,7 @@ public partial class CompanionTestRunner : SceneTree
                 ProtectedFilesTests.Run(original, output, check);
                 TransactionRaceTests.Run(original, output, check);
                 FileSafetyTests.Run(original, output, check);
+                OldSafeCopiesTests.Run(original, output, check);
                 await GameFolderTests.RunAsync(original, output, check);
                 GameTextTests.Run(output, check);
                 InstallTests.Run(original, output, check);
@@ -52,7 +53,7 @@ public partial class CompanionTestRunner : SceneTree
             }
             foreach (string failure in check.Failures) GD.PrintErr("FAIL: " + failure);
             GD.Print($"COMPANION_TESTS: {check.Failures.Count} failures in {check.Count} checks; career codec, game audio, " +
-                "protected files, publication races, file safety, game folder, asset readers and exports, lore, theme contrast and the code-built interface executed.");
+                "protected files, publication races, file safety, old toolkit copies, game folder, asset readers and exports, lore, theme contrast and the code-built interface executed.");
             exitCode = check.Failures.Count == 0 ? 0 : 1;
         }
         catch (Exception error)

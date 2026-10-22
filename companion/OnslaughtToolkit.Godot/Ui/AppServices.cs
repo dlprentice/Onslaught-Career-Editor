@@ -28,6 +28,9 @@ internal sealed class AppServices
     /// <summary>Asks for a career file anywhere on the computer and opens it read-only.</summary>
     internal required Action OpenCareerFile { get; init; }
 
+    /// <summary>Where the retired Windows toolkit kept its copied installs (<see cref="OldSafeCopies"/>), or null.</summary>
+    internal string? OldCopiesFolder { get; init; }
+
     /// <summary>The node dialogs are added to, so they draw above every page.</summary>
     internal required Node Popups { get; init; }
 
