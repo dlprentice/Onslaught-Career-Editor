@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-10-22 (the AppCore gate row removed with AppCore; earlier: a pre-flatten blob link replaced by a plain reference to the archive bundle; each dated section keeps its own date).
+Last updated: 2026-10-22 (the rebuild is gated in onslaught-godot; its rows and npm scripts here removed; the AppCore gate row removed with AppCore; earlier: a pre-flatten blob link replaced by a plain reference to the archive bundle; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -40,13 +40,8 @@ companion's tests); dated entries below that name them are history.
 | A new or edited tracked `.md` header | `npm run test:doc-headers`, which is also inside `test:docs`. The contract is [`DOCUMENTATION.md`](DOCUMENTATION.md); the backlog of pre-standard documents is `tools/doc_header_backlog.txt` and may only shrink |
 | Companion (C# built in code) and its file safety | `npm run test:companion-godot` runs `Tests/CompanionTestRunner.cs` on owned real-save copies: codec contracts, independent byte diffs, protected round trips, changed/conflicting sources and links, publication races and the code-built interface's real controls. `test:companion-tools` checks pins, the code-only policy, staging and exports. |
 | Public payload/provenance boundary | `npm run test:safety` |
-| Rebuild: Parity simulation and Host | With the reference environment from [rebuild/README.md](rebuild/README.md#working-lane): focused `dotnet test rebuild/OnslaughtRebuild.Parity.Tests --filter ...` first, then the whole Parity suite and `dotnet build rebuild/OnslaughtRebuild.Host`. Missing references, empty selections and new skips are not passes. Live Host claims need offscreen captures or traces, not the suite alone. |
-| Earlier fixed-point rebuild (reference): Godot checks | `python rebuild/tools/first_flight.py run --no-build --no-prepare --timeout 600 --engine-arg=--headless --engine-arg=--audio-driver --engine-arg=Dummy --engine-arg=res://Scenes/Pause/Tests/PauseSceneChecks.tscn`, and the same with `res://Scenes/Shared/Tests/AyaTextureChecks.tscn` (add `-- --aya-expect=REPORT` to compare with a prior report). Smoke is the launcher's `smoke` mode with `-- --record-tape=PATH`, then `npm run run:rebuild-headless -- --tape PATH --repeat 2`. Pixel or audio claims need a godot-offscreen Movie Maker capture compared with the dated baseline. |
-| Earlier fixed-point rebuild, its whole lane (from a checkout of its tag) | `npm run check:rebuild` (`rebuild/tools/rebuild_gate.py`): the build, Core, the ferry-landing sweep, Client, the two Godot checks, the headless smoke with its tape and two C# replays of the smoke and won tapes; its summary holds the counts and hashes. `--only STEP,...` runs a subset. |
-| Earlier fixed-point rebuild Core | `npm run test:rebuild-core` excludes only `Level100FerryLandingTests`; `npm run test:rebuild-ferry-sweep` runs that explicit oracle, and `check:rebuild` runs both. |
-| Earlier fixed-point rebuild client/adapters | `npm run test:rebuild-client` |
-| Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` refuses GDScript, saved resources and multi-node scenes, then builds the C# companion; `export:companion-godot` produces normal Godot .NET Linux/Windows exports. `build:rebuild-godot` follows its separate owner. Builds are headless. On an available desktop, `test:rebuild-godot-smoke` is a native synthetic smoke; actual input/audio and the Save Lab UI need a separate live workflow. |
-| Frontend page drawing | `npm run capture:rebuild-godot -- --plan mainmenu` (or `startup`, `gameplay`, `options`) draws through `godot-offscreen`, stamps provenance, checks the shots and scores them with `tools/score_frontend_capture.py` into `capture-status.json` (`PASS`, `FAIL`, `UNSCORED` or `SUSPECT`); capture success alone is not parity. |
+| The Godot rebuild | Developed and gated in its own repository (onslaught-godot) since 2026-10-22. The frozen `rebuild/` copy here is not built or tested and is removed when this repository is split. |
+| Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` refuses GDScript, saved resources and multi-node scenes, then builds the C# companion; `export:companion-godot` produces normal Godot .NET Linux/Windows exports. Builds are headless. |
 | Tools | The affected `tools/<name>_tests.py`; `npm run test:tools` runs every registered suite (`worldheaders_decode --self-test` needs the retail `worldheaders.dat`). |
 | Game documentation claim | Cite the decompiled function, capture, byte comparison or source line; never paste decompiler output (`reverse-engineering/REVIEW-PROTOCOL.md` for optional reviews). |
 

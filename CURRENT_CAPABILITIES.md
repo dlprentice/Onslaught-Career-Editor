@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-22 (the companion moved to Godot 4.8 beta1 and .NET 10.0.13, Windows backups default to an unsynced local folder; AppCore removed, its test facts now in the companion's tests; careers in old WinUI safe copies listed on Home; companion review fixes: CE running check seen on Linux, backups from another game folder after confirmation; the companion is Onslaught Companion and works with the original game only; AppCore patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (rebuild gate wording; the companion moved to Godot 4.8 beta1 and .NET 10.0.13, Windows backups default to an unsynced local folder; AppCore removed, its test facts now in the companion's tests; careers in old WinUI safe copies listed on Home; companion review fixes: CE running check seen on Linux, backups from another game folder after confirmation; the companion is Onslaught Companion and works with the original game only; AppCore patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -272,7 +272,7 @@ three-second pre-run, scripts starting on their INIT_SCRIPT events, waypoint
 walks, the U-17's flight and the planes' move orders and retreat. The cold-start
 route plays Level 100 through the player-input surface and wins it, and its
 recorded tape replays deterministically to the same win
-(`Level100ColdStartTests`; `npm run check:rebuild` replays it twice). World 110
+(`Level100ColdStartTests`; its gate replays it twice). World 110
 is built in Core from retail data through its start state, and a Level 100 win
 carries its surviving base world into World 110's load through the one Won
 career update; the Client session launches World 110 with that carry-over
