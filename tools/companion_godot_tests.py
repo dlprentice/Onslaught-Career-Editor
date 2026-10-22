@@ -135,7 +135,6 @@ class CompanionLauncherTests(unittest.TestCase):
         staged=Path(restore["args"][1]).parent
         for name in ("Main.tscn","Ui/CompanionApp.cs","Files/ProtectedSaveFiles.cs","Tests/CompanionTestRunner.cs"):self.assertTrue((staged/name).is_file())
         self.assertFalse((staged/"Ui/CompanionApp.cs.uid").exists())
-        self.assertFalse((staged.parents[1]/"OnslaughtCareerEditor.AppCore").exists())
         self.assertFalse((self.project/".godot").exists())
         self.assertTrue(all(call["old_bridge"] is None for call in calls))
         self.assertFalse(any("FileBridge.csproj" in str(call) for call in calls))

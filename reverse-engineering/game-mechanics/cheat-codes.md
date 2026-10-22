@@ -121,7 +121,8 @@ Index 4 (`Aurore`) currently has a single known check inside `CGame::ReceiveButt
 > - Windows zero-initializes BSS when loading the executable
 > - **Only the CODE patch at `0x004654a0` actually works** (but only enables TURKEY effect)
 >
-> See `patches/README.md` for full technical proof (PE section analysis).
+> For this image every section maps a file offset to a virtual address as `VA = file_offset + 0x400000`
+> (the retired patch catalog's README recorded the relation; Git keeps it, last at commit `86d1af7`).
 
 **DISCOVERED Dec 2025**: Setting the `g_bAllCheatsEnabled` data flag would enable ALL cheats - but this flag is in BSS and cannot be file-patched.
 
@@ -290,15 +291,16 @@ From `Controller.cpp` analysis:
 - [x] Test the PC cheat codes (MALLOY, TURKEY, Maladim) in game - **DONE**: MALLOY=goodies (works), TURKEY=levels (works), Maladim=god toggle works in mission pause flow
 - [x] Verify Maladim shows god mode toggle in pause menu during mission - **DONE**: visible under `Controller Options` as `God OFF` / `God ON`
 - [ ] Test binary patch on actual BEA.exe
-- [x] Calculate exact file offset for binary patch byte (see [`../../patches/README.md`](../../patches/README.md), which carries the PE-section proof this line needs)
+- [x] Calculate exact file offset for binary patch byte (`file_offset = VA - 0x400000` for this image; the retired
+  `patches/README.md`, in Git up to commit `86d1af7`, carried the PE-section derivation)
 
   **CITATION REPAIRED 2026-07-28.** This line previously read
   "(see `patches/README.md` and `binary-patching/SKILL.md`)". `patches/README.md`
-  resolves; **`binary-patching/SKILL.md` does not exist anywhere in this
+  resolved then; **`binary-patching/SKILL.md` does not exist anywhere in this
   repository** — there is no `binary-patching/` directory, and
   `find . -name 'SKILL.md'` outside `.git` returns nothing. The dead half is
-  dropped rather than repointed: `patches/README.md` already owns the
-  offset-and-section derivation. Whether a `binary-patching` skill was
+  dropped rather than repointed: `patches/README.md` owned the
+  offset-and-section derivation until it was retired on 2026-10-22. Whether a `binary-patching` skill was
   intentionally removed or never tracked is **UNKNOWN**; what would settle it is
   a `git log --diff-filter=D -- '*SKILL.md'`, which returns nothing, meaning the
   file was never in this repository's history at all.

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-10-21 (a pre-flatten blob link replaced by a plain reference to the archive bundle; each dated section keeps its own date).
+Last updated: 2026-10-22 (the AppCore gate row removed with AppCore; earlier: a pre-flatten blob link replaced by a plain reference to the archive bundle; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -30,15 +30,14 @@ removed on 2026-10-15; dated entries below that name them are history. The unuse
 evaluation VM was retired; no Windows host is provisioned here. The rebuild's Windows PowerShell launchers were retired on
 2026-09-26; its only launcher is the Linux one. Archive/manifest
 verification on Linux does not establish Windows runtime behavior.
-No Linux result is Windows runtime acceptance. The dated August 30 full AppCore
-run was **1,575 passed / 26 failed / 1,601 total**; its Windows-dependent failures
-are not replaced by the focused portable results below.
+No Linux result is Windows runtime acceptance. The AppCore patching core and its
+tests were removed on 2026-10-22 (their save-layout and file-safety facts now sit in the
+companion's tests); dated entries below that name them are history.
 
 | Change | Focused evidence |
 | --- | --- |
 | Documentation or deletion only | `git diff --check`, `npm run test:docs` (link check with its self-test, then headers), and the affected generator/reference check |
 | A new or edited tracked `.md` header | `npm run test:doc-headers`, which is also inside `test:docs`. The contract is [`DOCUMENTATION.md`](DOCUMENTATION.md); the backlog of pre-standard documents is `tools/doc_header_backlog.txt` and may only shrink |
-| AppCore patching core | `npm run test:appcore` runs the whole AppCore test project on .NET 8 and 10; eight Windows-path or retail-file cases fail on Linux, so compare against that set. |
 | Companion (C# built in code) and its file safety | `npm run test:companion-godot` runs `Tests/CompanionTestRunner.cs` on owned real-save copies: codec contracts, independent byte diffs, protected round trips, changed/conflicting sources and links, publication races and the code-built interface's real controls. `test:companion-tools` checks pins, the code-only policy, staging and exports. |
 | Public payload/provenance boundary | `npm run test:safety` |
 | Rebuild: Parity simulation and Host | With the reference environment from [rebuild/README.md](rebuild/README.md#working-lane): focused `dotnet test rebuild/OnslaughtRebuild.Parity.Tests --filter ...` first, then the whole Parity suite and `dotnet build rebuild/OnslaughtRebuild.Host`. Missing references, empty selections and new skips are not passes. Live Host claims need offscreen captures or traces, not the suite alone. |

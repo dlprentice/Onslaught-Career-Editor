@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: paused (since 2026-10-16, until new requirements); C# application built entirely in code on Godot 4.8 dev6 .NET, organised around the player: careers, Goodies, editing, cheats, game settings, backups, music, voices, lore, and the game's models and textures; Linux executed checks, Windows runtime acceptance pending
-Last updated: 2026-10-22 (review fixes: close never abandons a backup started while it asks, settings picker keeps unsaved changes (also when the shown file is picked again or a key edit is refused), CE check seen against a running CE on Linux (output kept), backups from another game folder go back after a confirmation naming both; data-safety fixes: restore checks the manifest hash and game folder, running check also for Onslaught CE and again before the swap, unsaved-changes prompts, right-hand Shift and Control; named Onslaught Companion; works with the original game only; relicensed GPL-3.0-only, lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (AppCore removed: file safety cut down to what the companion calls, its test facts carried over; review fixes: close never abandons a backup started while it asks, settings picker keeps unsaved changes (also when the shown file is picked again or a key edit is refused), CE check seen against a running CE on Linux (output kept), backups from another game folder go back after a confirmation naming both; data-safety fixes: restore checks the manifest hash and game folder, running check also for Onslaught CE and again before the swap, unsaved-changes prompts, right-hand Shift and Control; named Onslaught Companion; works with the original game only; relicensed GPL-3.0-only, lore CC BY-SA 4.0)
 Summary: Onslaught Companion, the GPL-3.0-only app for Battle Engine Aquila players: today it works with the original game's Steam or retail install; it opens on that game and its careers, shows progress and Goodies, changes careers and settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, plays and explains the game's own music, voices and lore, and saves copies of its models (glTF), textures (PNG) and sound effects (WAV).
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -293,10 +293,10 @@ does with the file. These checks do not prove behavior after power loss.
 [ProtectedSaveFiles](Files/ProtectedSaveFiles.cs) is built on
 [`SaveLabFileTransaction.cs`](Files/SaveLabFileTransaction.cs) and
 [`FileMutationSafety.cs`](Files/FileMutationSafety.cs), the file-safety source the
-retired WinUI application's AppCore library used, moved here unchanged (the date is in
-[PROVENANCE.md](PROVENANCE.md); AppCore still compiles the same file).
-`Files/SafetyCompatibility.cs` holds what that source still names from AppCore: one size
-constant and two stubs that always refuse. On Linux it opens sources descriptor-relative
+retired WinUI application's AppCore library used, moved here (see [PROVENANCE.md](PROVENANCE.md))
+and cut down on 2026-10-22, when AppCore was removed, to what the companion calls: link and
+Windows path-form refusals, ancestor-locked folders, no-follow opens, the game-folder output
+refusal and the new-file-only guarded publication. On Linux it opens sources descriptor-relative
 without following links, compares physical identity and link count, stages into an unnamed
 file, flushes it, and publishes with a no-clobber link. [GameWrites](Files/GameWrites.cs)
 builds backups and game-folder writes on the same primitives, with the portable path

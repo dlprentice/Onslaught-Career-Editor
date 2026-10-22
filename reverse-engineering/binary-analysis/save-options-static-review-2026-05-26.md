@@ -1,7 +1,7 @@
 # Save, options and startup compatibility contract
 
 Status: active bounded contract; comprehensive compatibility recheck in progress
-Last updated: 2026-10-01
+Last updated: 2026-10-22 (the retired AppCore source link repointed)
 Summary: independently rechecked startup/serialization behavior and explicit remaining save/settings compatibility boundaries.
 Evidence: MEASURED — selected pristine instructions and the isolated execution below; inherited subsystem summaries remain subject to recheck.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -994,7 +994,7 @@ newly verified merely because they remain documented here.
 - [Control bindings](functions/Controller.cpp/ControlBindings.md)
 - [`CFEPOptions__WriteDefaultOptionsFile`](functions/FEPOptions.cpp/CFEPOptions__WriteDefaultOptionsFile.md)
 - [`CPauseMenu__ResumeGameAndPersistOptions`](functions/PauseMenu.cpp/CPauseMenu__ResumeGameAndPersistOptions.md)
-- [`BesFilePatcher.cs`](../../OnslaughtCareerEditor.AppCore/BesFilePatcher.cs)
+- AppCore's `BesFilePatcher.cs` (removed 2026-10-22; Git keeps it, last at commit `86d1af7`); the live codec is the companion's [`CareerSave.cs`](../../companion/OnslaughtToolkit.Godot/Careers/CareerSave.cs)
 
 ## Open boundaries
 

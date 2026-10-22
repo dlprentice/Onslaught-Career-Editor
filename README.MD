@@ -1,7 +1,7 @@
 # Onslaught Toolkit
 
 Status: active — the project overview
-Last updated: 2026-10-22 (the companion is Onslaught Companion, original game only for now; AppCore patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (AppCore and the executable-patch catalog removed; the companion is Onslaught Companion, original game only for now; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
 
 Onslaught Toolkit is a preservation project for *Battle Engine Aquila* (2003, Lost Toys).
@@ -20,8 +20,7 @@ Onslaught Toolkit is a preservation project for *Battle Engine Aquila* (2003, Lo
   records its measured parity.
 
 This repository holds the companion, documentation of the game (formats, behaviours and findings as prose and
-specs), our own tools, the retired AppCore patching core (nothing uses it; it goes once its test facts are ported into
-the companion's tests), and the Godot rebuild. It holds no game files, Ghidra database, decompiler output or decomp source.
+specs), our own tools and the Godot rebuild. It holds no game files, Ghidra database, decompiler output or decomp source.
 
 This is an unofficial community project. It is not affiliated with or endorsed by the game's publishers or rights
 holders. Repository licenses cover their respective project code and documentation; they grant no rights in the
@@ -36,7 +35,7 @@ Its releases are published from its own repository (link added at release).
 
 | Repository | What it holds |
 | --- | --- |
-| This repository | The companion, the retired AppCore patching core, documentation of the game, lore, our tools, and (until it moves to its own repository after the release) the Godot rebuild |
+| This repository | The companion, documentation of the game, lore, our tools, and (until it moves to its own repository after the release) the Godot rebuild |
 | Onslaught CE (link added at release) | The native source port's source and its Windows and Linux downloads; GPL-3.0-only |
 | [`stuart73/Onslaught`](https://github.com/stuart73/Onslaught) | Stuart's partial GPL source release; this repository pins David's fork, [`dlprentice/Onslaught`](https://github.com/dlprentice/Onslaught), as [`references/Onslaught`](references/Onslaught) |
 
@@ -47,18 +46,17 @@ game to work on your careers, settings and media. The older Windows-only WinUI t
 [Releases](https://github.com/dlprentice/Onslaught-Career-Editor/releases) page (v1.0.11, tag `winui-v1.0.11`) is
 retired and no longer maintained; its source is in the project's private pre-flatten history. Its executable patching
 and copied-install "safe launch" are not in the current companion and are not coming back: Onslaught CE replaces them,
-and never modifies your install.
+and never modifies your install. Their last code here (the AppCore library and the `patches/` catalog) was removed on
+2026-10-22; Git keeps it.
 
 ## Where things live
 
 | Path | Owner |
 | --- | --- |
 | [`companion/OnslaughtToolkit.Godot/`](companion/OnslaughtToolkit.Godot/README.md) | The companion (player toolkit, future CE launcher; paused), C# built in code on Godot 4.8 dev6 .NET |
-| `OnslaughtCareerEditor.AppCore/` | The retired patching core of the WinUI app (executable patch plans, guarded installed-game writes, safe copies); the companion does not use it, and it is removed once its test facts are ported |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Documentation of the game: formats, mechanics, saves, assets, function notes and contracts |
 | [`lore/`](lore/_index.md) | The canonical lore and history library, embedded in the companion |
 | [`tools/`](tools/README.md) | Format decoders, asset exporters, capture analysis and the repository's checks |
-| [`patches/`](patches/README.md) | The executable-patch and safe-copy profile catalogs |
 | [`rebuild/`](rebuild/README.md) | The GPL Godot rebuild: `OnslaughtRebuild.Parity` (simulation) and `OnslaughtRebuild.Host` (presentation); the earlier Core/Client/Godot projects are reference |
 
 [`PROJECT-INDEX.md`](PROJECT-INDEX.md) maps source ownership and dependencies;
@@ -94,7 +92,6 @@ for a change and [`CONTRIBUTING.md`](CONTRIBUTING.md) sets contribution boundari
 | Task | Command |
 | --- | --- |
 | Companion build, run, test, capture, export | `npm run build:companion-godot`; `npm run run:companion-godot`; `npm run test:companion-godot`; `npm run capture:companion-godot`; `npm run export:companion-godot -- --platform both` |
-| AppCore patching core | `npm run test:appcore` |
 | Tool checks | Affected cases in `python tools/<name>_tests.py`; all of them with `npm run test:tools` |
 | Rebuild | The Parity suite and Host build with the reference environment in [rebuild/README.md](rebuild/README.md#working-lane); the earlier `npm run check:rebuild` gate covers only the reference projects |
 
@@ -131,7 +128,7 @@ reading guide.
 
 | Path | Licence |
 | --- | --- |
-| Code: `companion/`, `OnslaughtCareerEditor.AppCore*/`, `tools/`, `patches/` and `tests_shared/` scripts, build files | GPL-3.0-only ([`LICENSE`](LICENSE)) |
+| Code: `companion/`, `tools/` and `tests_shared/` scripts, build files | GPL-3.0-only ([`LICENSE`](LICENSE)) |
 | `rebuild/` | GPL-3.0-only ([`rebuild/LICENSE`](rebuild/LICENSE), [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md)) |
 | Documentation (`*.md`, `reverse-engineering/`, `roadmap/`, data tables) and `lore/`, `lore-book/` | CC BY-SA 4.0 ([`LICENSES/CC-BY-SA-4.0.txt`](LICENSES/CC-BY-SA-4.0.txt)) |
 | `reverse-engineering/source-code/`: notes quoting Stuart Gillam's published source | CC BY-SA 4.0 and GPL-3.0-only (the quoted source keeps its licence and credit) |

@@ -1,12 +1,12 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-10-22 (contributions: inbound = outbound licensing)
+Last updated: 2026-10-22 (the retired AppCore patching core removed; contributions: inbound = outbound licensing)
 Summary: what a focused change looks like here, what must never be added to the
 repository, and which checks a change owes.
 
 This public repository holds the Godot toolkit companion (paused until new requirements), documentation of
-*Battle Engine Aquila* as prose and specs, our tools, the AppCore patching core and the active Godot
+*Battle Engine Aquila* as prose and specs, our tools and the active Godot
 rebuild. The byte-matching decompilation is private; its native port is published separately as Onslaught CE
 (link added at release), and port issues belong there. [GOAL.md](GOAL.md) states the
 direction and [PROGRAM.md](PROGRAM.md) the work queue. Keep changes focused and use existing records and
@@ -52,9 +52,6 @@ New code files start with an `SPDX-License-Identifier: GPL-3.0-only` comment.
 ## Ownership
 
 - The companion owns its career codec, file safety, game text, lore and every screen.
-- The AppCore patching core owns executable patch plans, guarded installed-game writes and safe
-  copies, as the model for the companion's mod manager; it compiles the companion's file-safety
-  source rather than forking it.
 - The rebuild's simulation, `OnslaughtRebuild.Parity`, is deterministic given its inputs (the tape, the
   retail data and options files it reads as the game does, and the virtual clock) and has no presentation,
   process, network or GPU dependency; `OnslaughtRebuild.Host` owns presentation. The earlier
@@ -131,5 +128,4 @@ npm run test:safety
 npm test
 ```
 
-Run `npm run test:appcore` when the AppCore patching core changes. Do not run a root aggregate merely
-for ceremony.
+Do not run a root aggregate merely for ceremony.

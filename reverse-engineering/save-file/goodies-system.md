@@ -1,7 +1,7 @@
 # Goodies save and unlock contract
 
 Status: active save contract
-Last updated: 2026-09-26 (RE audit: the wall never shows 71-73)
+Last updated: 2026-10-22 (the implementation authority is the companion's codec; AppCore removed; earlier: RE audit: the wall never shows 71-73)
 Summary: the 300 Goodie states in the career block, which indices the wall shows, and how unlocks are decided.
 Evidence: MEASURED — pristine instructions and the tracked gold save; SOURCE — `Career.cpp`, `FEPGoodies.cpp`.
 Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -35,7 +35,7 @@ renders blue. Stuart's `FEPGoodies.cpp` has the same state switch. Horizontal
 wall panning changes projected screen position, not the cursor coordinate used
 by `get_goodie_number`.
 
-AppCore accepts only a real `10004`-byte, version-`0x4BD1` baseline, refuses in-place Goodie patching, limits writes to displayable indices, and preserves unselected and reserved bytes. [`BesFilePatcher.cs`](../../OnslaughtCareerEditor.AppCore/BesFilePatcher.cs) and its focused tests are the implementation authority for this contract.
+The companion accepts only a real `10004`-byte, version-`0x4BD1` baseline, never edits a career in place, limits Goodie edits to the slots the gallery shows, and preserves unselected and reserved bytes. Its codec [`CareerSave.cs`](../../companion/OnslaughtToolkit.Godot/Careers/CareerSave.cs), with [`Tests/CareerSaveTests.cs`](../../companion/OnslaughtToolkit.Godot/Tests/CareerSaveTests.cs), is the implementation authority for this contract (the retired AppCore `BesFilePatcher` held it until 2026-10-22).
 
 MissionScript handlers use one-based indices:
 

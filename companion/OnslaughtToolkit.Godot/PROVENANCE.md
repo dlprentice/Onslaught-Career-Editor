@@ -1,7 +1,7 @@
 # Companion provenance and license
 
 Status: active independent GPL-3.0-only application boundary
-Last updated: 2026-10-22 (facts read from the developers' source recorded; relicensed: the code GPL-3.0-only, the embedded lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (AppCore removed: the moved file-safety source cut down, its test facts carried over; facts read from the developers' source recorded; relicensed: the code GPL-3.0-only, the embedded lore CC BY-SA 4.0)
 Evidence: SOURCE — code-built C# application, project source moved in from the retired AppCore library, and embedded project lore; executed package boundaries are recorded in VALIDATION.md.
 Summary: the companion's C# derives only from the project's own application code and the RE lane's published contracts; it bundles the project's own lore, reads the game's files and manual art from the player's install at run time, and keeps retail data and GPL reconstruction out.
 
@@ -19,13 +19,15 @@ or comments were copied from that source. The interface, theme and styles are co
 Godot's built-in controls and default engine font.
 
 These sources were written for the retired WinUI application's AppCore library and
-moved into the companion unchanged (Git history follows them) on 2026-10-16, when the
-companion became their only user: `Files/SaveLabFileTransaction.cs` and
+moved into the companion (Git history follows them) on 2026-10-16, when the
+companion became their only user; when AppCore itself was removed on 2026-10-22,
+`FileMutationSafety.cs` was cut down to the members the companion calls: `Files/SaveLabFileTransaction.cs` and
 `Files/FileMutationSafety.cs` (the OS file boundary), `Game/GameTextCatalog.cs` (the game's
 language-table reader), `Careers/GoodieUnlockRequirementService.cs` (each Goodie's unlock
 rule), `Careers/CheatCodeCatalog.cs` and `Careers/CheatSaveNameComposer.cs` (cheat names),
 and `Lore/CampaignLoreComposer.cs` (the lore's mission list). They keep their original
-namespace. The companion uses no other AppCore code or third-party AppCore media library. Godot .NET SDK `4.8.0-dev.6` and the
+namespace. The companion uses no other AppCore code or third-party AppCore media library;
+AppCore's save-layout and file-safety test facts were carried into the companion's own tests. Godot .NET SDK `4.8.0-dev.6` and the
 self-contained .NET runtime are disclosed production dependencies with their MIT and
 third-party notices, which every export carries. Godot retains its own MIT and third-party
 licenses.

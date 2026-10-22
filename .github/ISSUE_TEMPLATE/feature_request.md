@@ -11,7 +11,6 @@ assignees: ""
 Choose one:
 
 - [ ] Companion
-- [ ] AppCore patching core
 - [ ] Rebuild (until it moves to its own repository)
 - [ ] Docs and lore
 - [ ] Tools
@@ -28,9 +27,9 @@ Describe the smallest useful version.
 
 ## Safety Boundary
 
-Preserve pristine inputs and unknown save bytes. Any installed-game patching
-workflow must require an informed choice and a verified recovery backup before
-writing. Describe the selected target and how a failed write remains recoverable.
+Preserve pristine inputs and unknown save bytes. Any write into an installed game
+must require an informed choice and a verified recovery backup first, and no game
+executable is modified. Describe the selected target and how a failed write remains recoverable.
 
 Confirm whether this request needs any of the following:
 

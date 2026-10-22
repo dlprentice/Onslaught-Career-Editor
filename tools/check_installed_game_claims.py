@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """Fail if anything still promises the installed game is never changed.
 
-The app can patch an installed game after an explicit choice and a verified
-backup. Scan active product claims for contradictory blanket prohibitions.
+The companion writes careers and settings into an installed game after an explicit
+choice and a verified backup. Scan active product claims for contradictory blanket
+prohibitions.
 
 What is banned is the ABSOLUTE form - a standing promise about the app or the installed
-game. Describing what a particular flow does is fine and mostly still true: creating a
-safe copy really does change nothing outside the copy, and the live trainer really does
-never open an installed game. The difference is whether the sentence is about an action
-or about the world.
+game. Describing what a particular flow does is fine and mostly still true: opening a
+career really does only read it, and saving a copy elsewhere really does change nothing
+in the game. The difference is whether the sentence is about an action or about the world.
 
 Run:  python ./tools/check_installed_game_claims.py            list every hit
       python ./tools/check_installed_game_claims.py --check    non-zero if any is unexplained
@@ -58,8 +58,6 @@ BANNED = [
 
 # Where the banned text is legitimate, and why. A file is only exempt for the reason given.
 ALLOWED = {
-    "OnslaughtCareerEditor.AppCore.Tests/GameProfilePreflightServiceTests.cs":
-        "superseded note quotes the receipt limit it replaced",
     "tools/check_installed_game_claims.py": "this file lists the banned phrases",
 }
 
@@ -156,8 +154,8 @@ def main() -> int:
                 print(f"  {name}:{number}  ({why})")
                 print(f"      {line}")
             print()
-            print("The app patches an installed game on request. A sentence that promises")
-            print("otherwise is now false. Describe what a flow does, or add the file to")
+            print("The companion writes into an installed game on request. A sentence that")
+            print("promises otherwise is false. Describe what a flow does, or add the file to")
             print("ALLOWED with the reason the wording is legitimate there.")
             return 1
 

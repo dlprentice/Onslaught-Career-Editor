@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-22 (the companion's next step is the CE launcher and manager; exe patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (AppCore removed; the companion's next step is the CE launcher and manager; exe patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
@@ -52,7 +52,8 @@ Open when it resumes:
 - The Onslaught CE launcher and manager: find, launch and update Onslaught CE; show and edit CE's careers and
   settings in CE's own folder, with the same protected writes and per-game backups; say which game is running. The
   original game's save and settings editing stays, with protected writes. Executable patching and the WinUI app's
-  copied-install safe launch are retired; AppCore goes once its test facts are ported into the companion's tests.
+  copied-install safe launch are retired; their code (AppCore and `patches/`) was removed on 2026-10-22, its test facts
+  kept in the companion's tests.
   Any media replacement would be a CE option (for example a CE user-data override folder), not a file swap in an
   install. Then, at David's direction, a public release.
 

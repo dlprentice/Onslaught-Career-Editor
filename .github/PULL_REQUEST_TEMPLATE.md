@@ -7,7 +7,6 @@ What changed, why, and which user or contributor problem it solves.
 Areas affected:
 
 - [ ] Companion
-- [ ] AppCore patching core
 - [ ] Rebuild (until it moves to its own repository)
 - [ ] Docs and lore
 - [ ] Tools
@@ -34,8 +33,9 @@ Validation intentionally skipped (relevant commands and reason):
       generated proof payloads, unredacted private paths, or machine identifiers
       were added to the branch or pasted into this PR. Compact non-secret
       summaries and screenshots registered under the attribution policy remain allowed.
-- [ ] Writes preserve unknown save bytes and enforce the selected target. Installed-game
-      patching requires an informed choice and a verified recovery backup before writing.
+- [ ] Writes preserve unknown save bytes and enforce the selected target. A write into an
+      installed game requires an informed choice and a verified recovery backup first, and no
+      game executable is modified.
 - [ ] Runtime, online, gameplay, visual, RE-semantic, and rebuild claims do not
       exceed the evidence in this PR.
 - [ ] No hosted CI/release automation or public release action was added.

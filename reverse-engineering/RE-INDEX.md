@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the front door to the game documentation
-Last updated: 2026-10-22 (removed the tracked retail string table row)
+Last updated: 2026-10-22 (patch recipes: the executable-patch catalog and its contract were retired; removed the tracked retail string table row)
 Summary: where the documentation of Battle Engine Aquila lives, what each store covers, and the rules a claim about the shipped game has to meet before it is written down.
 
 This tree documents *Battle Engine Aquila* as prose and specs: file formats, save and options layouts, mechanics,
@@ -63,11 +63,14 @@ user choice behind the owning verified-backup precondition; the original
 write authorization, and hiding these notes would not make a game safer—only the
 evidence harder to find.
 
-The normative authority for the byte definitions and for the copied-target
-boundary is the [patch catalog contract](../patches/CATALOG_CONTRACT.md), with
-[`patches/README.md`](../patches/README.md). The notes below explain why the
-rows exist and what was actually observed; where a note and the catalog
-disagree, the catalog wins.
+The executable-patch catalog these notes were written against (`patches/`, with
+its contract) was retired on 2026-10-22 together with the patching code: the
+companion never modifies a game executable, and enhancements belong in Onslaught
+CE as opt-in options. Git keeps the catalog (commit `86d1af7` is the last that
+has it). The notes below record where each byte lives and what was observed; for
+this image a file offset maps to a virtual address as `VA = file_offset +
+0x400000` in every section, measured on the pristine specimen (SHA-256
+`74154bfa…`).
 
 **Two documents in this family carry a withdrawn claim.** The 2026-07-28
 guard-byte correction struck a hex-edit recipe out of both

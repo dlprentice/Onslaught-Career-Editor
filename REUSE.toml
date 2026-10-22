@@ -16,10 +16,7 @@ version = 1
 [[annotations]]
 path = [
     "companion/**",
-    "OnslaughtCareerEditor.AppCore/**",
-    "OnslaughtCareerEditor.AppCore.Tests/**",
     "tools/**",
-    "patches/**",
     "tests_shared/*.py",
     ".editorconfig",
     ".gitattributes",
@@ -49,10 +46,7 @@ path = [
     "lore-book/**",
     "roadmap/**",
     "companion/**/*.md",
-    "OnslaughtCareerEditor.AppCore*/**/*.md",
     "tools/**/*.md",
-    "patches/**/*.md",
-    "patches/*.tsv",
     "tests_shared/fixtures/README.md",
 ]
 SPDX-FileCopyrightText = "David Prentice and Onslaught Toolkit contributors"

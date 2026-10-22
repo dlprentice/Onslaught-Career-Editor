@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-22 (companion review fixes: CE running check seen on Linux, backups from another game folder after confirmation; the companion is Onslaught Companion and works with the original game only; AppCore patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (AppCore removed, its test facts now in the companion's tests; companion review fixes: CE running check seen on Linux, backups from another game folder after confirmation; the companion is Onslaught Companion and works with the original game only; AppCore patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -10,8 +10,9 @@ The companion, Onslaught Companion, is the player app for the original game and 
 development is paused until new requirements.
 The byte-matching decompilation (private) is complete and is the reverse-engineering authority; its native port is
 published separately as Onslaught CE (link added at release), and this document does not measure it. The Godot rebuild is active as a scoped proof of concept (level 100, startup to
-exit); its measured parity is in [rebuild/PARITY.md](rebuild/PARITY.md). The AppCore patching core is retired:
-executable patching and copied-install safe launch are not planned, and nothing uses AppCore.
+exit); its measured parity is in [rebuild/PARITY.md](rebuild/PARITY.md). Executable patching and copied-install
+safe launch are retired and not planned; their code (the AppCore library and the `patches/` catalog) was removed on
+2026-10-22, and Git keeps it.
 
 ## Retail behaviour findings — save, settings and startup
 
@@ -194,8 +195,9 @@ unsaved changes; while changes are unsaved, a bar under the page keeps Save in r
 surfaces it sits on.
 
 The in-process [ProtectedSaveFiles](companion/OnslaughtToolkit.Godot/Files/ProtectedSaveFiles.cs)
-adapter uses the companion's own `SaveLabFileTransaction` and `FileMutationSafety` (moved byte for byte from
-AppCore; the date is in the companion's [PROVENANCE](companion/OnslaughtToolkit.Godot/PROVENANCE.md)). Linux publication retains
+adapter uses the companion's own `SaveLabFileTransaction` and `FileMutationSafety` (moved from the retired
+AppCore library and since cut down to what the companion uses; see the companion's
+[PROVENANCE](companion/OnslaughtToolkit.Godot/PROVENANCE.md)). Linux publication retains
 no-follow handles, physical identities, unnamed staging and no-clobber linking.
 Malformed or changed inputs and conflicting outputs are refused; uncertain publication
 never becomes a success receipt or an automatic deletion. There is no helper process or
@@ -227,18 +229,11 @@ The Windows-only WinUI 3 shell, its UI tests, the maintainer CLI and the portabl
 packaging were removed on 2026-10-15; the Godot companion replaced them. Their source,
 demonstrated features and receipts remain in Git history.
 
-## AppCore patching core (retired)
-
-`OnslaughtCareerEditor.AppCore` is the retired WinUI app's core: executable patch plans,
-guarded application, the installed-game write authorization, copied-install "safe launch"
-profiles, and the save/options services they use. Executable patching and safe launch are
-not planned for the companion (Onslaught CE replaces them and never modifies the install);
-AppCore stays in the tree only until its save-layout test facts are ported into the
-companion's tests. It targets .NET 8 and 10 and compiles the companion's
-`FileMutationSafety.cs`. On Linux on 2026-10-15
-`npm run test:appcore` ran 1,229 tests per framework: 1,221 passed and 8 failed, all
-eight Windows-path or retail-file cases that already failed before the reduction. The
-companion does not use AppCore. The CLI was removed with the WinUI shell.
+The WinUI app's core library, AppCore (executable patch plans, guarded application, copied-install
+"safe launch" profiles and their save and options services), and the `patches/` catalog it read
+were removed on 2026-10-22; Git keeps them. Executable patching and safe launch are not planned
+for the companion: Onslaught CE replaces them and never modifies the install. AppCore's save-layout
+and file-safety test facts were carried into the companion's own tests first.
 
 ## Reconstruction
 
@@ -838,5 +833,4 @@ executable patching and safe launch are not in the current companion and are rep
 executable, the original assets, saves, a Ghidra database or the rebuild client. Repository licenses do not cover
 retail game data; future releases keep that user-supplied boundary.
 
-Use `npm run` for the current command surface: `npm test` checks the companion; `npm run test:appcore` the retired AppCore
-patching core.
+Use `npm run` for the current command surface: `npm test` checks the companion.

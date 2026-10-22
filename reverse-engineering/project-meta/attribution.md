@@ -1,7 +1,7 @@
 # Attribution & Preservation Contributors
 
 Status: active — attribution, preservation credits and the screenshot register
-Last updated: 2026-10-22 (source-code notes keep the quoted source's GPL; save fixture licence note; earlier: licence summary, ExuberantParrot credits)
+Last updated: 2026-10-22 (licence list drops the retired AppCore and patch catalog; source-code notes keep the quoted source's GPL; save fixture licence note; earlier: licence summary, ExuberantParrot credits)
 Summary: who contributed what, the licence boundaries of reference material, and the tracked-screenshot register.
 Evidence: SOURCE — contributors' public credits and published repositories; the register is checked against `git ls-files` by `tools/check_registered_screenshots.py`
 
@@ -78,8 +78,8 @@ Evidence: SOURCE — contributors' public credits and published repositories; th
 
 ## Licences
 
-- Project code (the companion, AppCore, `tools/`, `patches/` and `tests_shared/`
-  scripts, and `rebuild/`) is GPL-3.0-only: the root [`LICENSE`](../../LICENSE),
+- Project code (the companion, `tools/` and `tests_shared/` scripts, and
+  `rebuild/`) is GPL-3.0-only: the root [`LICENSE`](../../LICENSE),
   also at [`LICENSES/GPL-3.0-only.txt`](../../LICENSES/GPL-3.0-only.txt). The
   companion and tools were MIT until 2026-10-22, when their author relicensed them.
 - Documentation and lore are CC BY-SA 4.0

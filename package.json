@@ -25,7 +25,6 @@
     "run:rebuild-headless": "npm run prepare:rebuild-assets && dotnet run --project ./rebuild/OnslaughtRebuild.Headless/OnslaughtRebuild.Headless.csproj --",
     "run:rebuild-godot": "python ./rebuild/tools/first_flight.py run",
     "test:rebuild-godot-smoke": "python ./rebuild/tools/first_flight.py smoke",
-    "test:appcore": "dotnet test ./OnslaughtCareerEditor.AppCore.Tests/OnslaughtCareerEditor.AppCore.Tests.csproj --nologo",
     "test:godot-host": "python ./tools/godot_host_tests.py && python ./rebuild/tools/first_flight_tests.py",
     "build:companion-godot": "python ./tools/companion_godot.py build",
     "run:companion-godot": "python ./tools/companion_godot.py run",

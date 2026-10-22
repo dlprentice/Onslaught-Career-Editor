@@ -1,9 +1,9 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-10-22 (relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (the AppCore patching core, its tests and the `patches/` catalog removed; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: stable ownership, dependency direction, and code-entry routing for the
-Onslaught Toolkit repository: the companion, the AppCore patching core, the game documentation, tools and the
+Onslaught Toolkit repository: the companion, the game documentation, tools and the
 Godot rebuild.
 
 This index answers **where code and responsibility live**. It does not restate
@@ -22,8 +22,6 @@ flowchart LR
     T["C# companion"] --> D["Companion career codec"]
     T --> B["In-process C# file adapter and file safety"]
     T --> L["Companion readers: game text, Goodie rules, cheat names, lore mission list"]
-    A["AppCore patching core"] --> B
-    AT["AppCore tests"] --> A
     HO["Rebuild Host (Godot)"] --> P["Rebuild Parity simulation"]
     PT["Parity tests"] --> P
     G["Earlier Godot renderer/input"] --> RC["Rebuild Client"]
@@ -36,14 +34,12 @@ flowchart LR
 The arrows are source dependencies, not priority. The rebuild is the active lane: `OnslaughtRebuild.Parity` owns the
 simulation and `OnslaughtRebuild.Host` the presentation; the earlier Core, Client, Headless and Godot projects are
 reference material. The companion is the public player product, paused until new requirements. The companion is a C# application built in code and owns its file-safety
-source; the AppCore patching core compiles that same file.
+source.
 The companion (GPL-3.0-only) has no dependency on the rebuild or private retail assets.
 
 | Project | Declared role and dependencies |
 | --- | --- |
-| [`OnslaughtToolkit.Godot`](companion/OnslaughtToolkit.Godot/README.md) | Godot .NET C# application built in code: interface, theme, career codec, the game's music and voices, model and texture readers with glTF and PNG export, file safety and its in-process adapter, with its contract tests. No GDScript, editor-authored scene or AppCore assembly. |
-| [`OnslaughtCareerEditor.AppCore`](OnslaughtCareerEditor.AppCore/OnslaughtCareerEditor.AppCore.csproj) | .NET 8/10 patching core kept as the model for the companion's future mod manager: executable patch plans and guarded application, the installed-game write authorization, safe copies and the save/options services they need. No project reference or package; it compiles the companion's `FileMutationSafety.cs`. Not built into the companion. |
-| [`OnslaughtCareerEditor.AppCore.Tests`](OnslaughtCareerEditor.AppCore.Tests/OnslaughtCareerEditor.AppCore.Tests.csproj) | AppCore behavior and safety tests, run whole by `npm run test:appcore`; eight Windows-path or retail-file cases fail on Linux. |
+| [`OnslaughtToolkit.Godot`](companion/OnslaughtToolkit.Godot/README.md) | Godot .NET C# application built in code: interface, theme, career codec, the game's music and voices, model and texture readers with glTF and PNG export, file safety and its in-process adapter, with its contract tests. No GDScript or editor-authored scene. |
 | [`OnslaughtRebuild.Parity`](rebuild/OnslaughtRebuild.Parity/OnslaughtRebuild.Parity.csproj) | The rebuild's simulation owner: a float-exact C# port of the decompilation's simulation, deterministic, with no presentation, filesystem, clock, process, network, or GPU dependency. No project references. |
 | [`OnslaughtRebuild.Parity.Tests`](rebuild/OnslaughtRebuild.Parity.Tests/OnslaughtRebuild.Parity.Tests.csproj) | Parity tests against recorded retail and native-port references ([rebuild/README.md](rebuild/README.md#working-lane)); references Parity. |
 | [`OnslaughtRebuild.Host`](rebuild/OnslaughtRebuild.Host/OnslaughtRebuild.Host.csproj) | The rebuild's presentation owner: a Godot .NET project built in code that draws the parity core and supplies input; references Parity. |
@@ -51,9 +47,9 @@ The companion (GPL-3.0-only) has no dependency on the rebuild or private retail 
 | [`OnslaughtRebuild.Client`](rebuild/OnslaughtRebuild.Client/OnslaughtRebuild.Client.csproj) | Input-to-fixed-step and presentation-lifecycle adapter; references Core. |
 | [`OnslaughtRebuild.Godot`](rebuild/OnslaughtRebuild.Godot/OnslaughtRebuild.Godot.csproj) | Rendering, audio, native integration, and player input; references Client and Core. |
 
-Host boundary: Linux owns native Godot, Core/Client/headless execution and the
-AppCore tests. Some AppCore services keep Windows path/process behavior. The WinUI shell, its UI tests and the CLI were removed
-on 2026-10-15. The never-built Windows VM was retired;
+Host boundary: Linux owns native Godot and Core/Client/headless execution. The WinUI shell, its UI tests and the CLI
+were removed on 2026-10-15, and the patching core it left behind (AppCore, with its tests and the `patches/` catalog)
+on 2026-10-22; Git keeps them. The never-built Windows VM was retired;
 no Windows validation host is currently provisioned here.
 [`VALIDATION.md`](VALIDATION.md) distinguishes focused service tests, native
 runtime checks and unfinished acceptance.
@@ -94,23 +90,6 @@ the manual's images from the install. Pages live in
 [`Ui/Pages/`](companion/OnslaughtToolkit.Godot/Ui/Pages/). Contract tests live in
 [`Tests/`](companion/OnslaughtToolkit.Godot/Tests/) and never enter a release export.
 
-## AppCore domain map
-
-AppCore is intentionally organized by small owners rather than framework
-layers. Use these domains to find the first file, then follow call sites and
-tests rather than assuming the representative list is exhaustive.
-
-| Domain | Representative owners |
-| --- | --- |
-| Patches and installed-game writes | `BinaryPatchEngine` (including `AuthorizeInstalledGameWrite`), `BinaryPatchPlanBuilder`, `InstalledGameDirectory`, `PatchSurfaceInspector`, `PatchSurfaceCensusReader`, `PatchCensusStagingService`, `RetailExecutableIdentity` |
-| Safe copies and profiles | `SafeCopyCatalog`, `SafeCopySaveRescue`, `GameProfilePreflightService`, `GameProfileRuntimeService`, `GameProfileManagedProcessRegistry`, `GameProfileControlOptionsService`, `GameProfileMusicReplacementService` |
-| Saves and configuration | `BesFilePatcher`, `SaveAnalyzerService`, `SaveEditorService`, `SaveEditorAdvancedService`, `SavePatchIntentContract`, `MissionScript*SaveCodec`, `ConfigurationEditorService`, `AppConfig`, `CareerSaveLocation` |
-
-The companion owns its C# career codec, file safety, game text, Goodie rules, cheat names and
-the lore mission list; it imports no AppCore assembly. AppCore's lore, media, asset-catalog,
-modding-manifest and live-trainer services were removed on 2026-10-15 with the WinUI shell
-that used them.
-
 ## Repository owners
 
 | Path | Authority |
@@ -122,9 +101,7 @@ that used them.
 | `.artifacts/` | Ignored legacy validation, screenshot and publish output. It may contain unique evidence; preserve coupled tool paths, put new general-purpose output in `local-data/`, and use the migration deletion queue for authorized retirement. |
 | [`rebuild/`](rebuild/README.md) | The GPL-licensed Godot rebuild (Parity simulation, Host presentation) and the earlier fixed-point projects kept as reference; provenance, determinism, and parity contracts are subtree-owned. |
 | [`tools/`](tools/README.md) | Format decoders, asset export, capture analysis, the companion and Godot launchers, and the documentation and safety gates. Root [`package.json`](package.json) owns commands. |
-| [`patches/`](patches/README.md) | The only active executable-patch and safe-copy profile catalogs. AppCore owns planning and guarded application. |
 | [`tests_shared/`](tests_shared/fixtures/README.md) | Narrow reviewed cross-project fixtures; never a dumping ground for retail saves or assets. |
-| `OnslaughtCareerEditor.AppCore.Tests/` | AppCore behavior and safety tests. |
 | [`lore/`](lore/) and `lore-book/` | Canonical public lore/history library and its entry guide. |
 | [`references/`](references/) | David's forks of Stuart Gillam's GPL `Onslaught` source and `AYAResourceExtractor`, pinned at `c3d8ac4` and `53b10b0` by `ONSLAUGHT_PIN` and `EXTRACTOR_PIN` in [`aya_extractor_source_audit.py`](tools/aya_extractor_source_audit.py). Preserve pins, licences and provenance. These are source references, not proof of retail behavior. |
 | [`roadmap/`](roadmap/original-binary-online-multiplayer-feasibility.md) | Bounded original-binary multiplayer feasibility. [GOAL.md](GOAL.md) owns the outcomes and [PROGRAM.md](PROGRAM.md) owns remaining work. |
@@ -166,7 +143,7 @@ Update this index when one of these stable source contracts changes:
 
 - a companion sidebar page is added, removed, or remapped;
 - a project reference or assembly responsibility changes;
-- reusable behavior moves between the companion, AppCore, or a rebuild assembly;
+- reusable behavior moves between the companion and a rebuild assembly;
 - a root source/evidence owner is added, removed, or superseded.
 
 Do not add volatile file counts, campaign counts, coverage percentages, current

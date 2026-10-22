@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using System.Security.Cryptography;
 using OnslaughtCareerEditor.AppCore;
+using OnslaughtToolkit.Companion.Careers;
 
 namespace OnslaughtToolkit.Companion.Files;
 
@@ -28,8 +29,8 @@ public interface IProtectedSaveFiles
 }
 
 /// <summary>
-/// The companion's narrow OS file-safety boundary, on the companion's own SaveLabFileTransaction and
-/// FileMutationSafety source (AppCore compiles the same FileMutationSafety file): no-follow opens, physical
+/// The companion's narrow OS file-safety boundary, on its own SaveLabFileTransaction and
+/// FileMutationSafety: no-follow opens, physical
 /// identity checks, unnamed staging, no-clobber publication and verified reopen. Each call owns
 /// and releases its handles before returning. A running transaction must not be abandoned or
 /// reported as failed merely because a caller stopped waiting.
@@ -37,7 +38,7 @@ public interface IProtectedSaveFiles
 public sealed class ProtectedSaveFiles : IProtectedSaveFiles
 {
     private const int MaximumPathCharacters = 4096;
-    private const int SaveLength = BesFilePatcher.EXPECTED_FILE_SIZE;
+    private const int SaveLength = CareerSave.Size;
 
     public ProtectedRead OpenCareer(string input)
     {

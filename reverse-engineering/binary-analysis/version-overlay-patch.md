@@ -35,9 +35,8 @@ prepared.
 
 ## Evidence
 
-- `patches/catalog/patches.v2.json`
-- `BinaryPatchEngine.cs`
-- `patches/README.md`
+- The retired patch catalog (`patches/catalog/patches.v2.json` and `patches/README.md`) and the apply engine that
+  used it, both removed on 2026-10-22; Git keeps them (commit `86d1af7` is the last that has them).
 - Copied-game runtime smoke artifact: retained in ignored local evidence storage.
 - First captured title/menu frame: retained in ignored local evidence storage; public summary is only that the frame showed `V1.00 - PATCHED` in one local run.
 

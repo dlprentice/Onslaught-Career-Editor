@@ -11,7 +11,6 @@ assignees: ""
 Choose one:
 
 - [ ] Companion
-- [ ] AppCore patching core
 - [ ] Rebuild (until it moves to its own repository)
 - [ ] Docs and lore
 - [ ] Tools

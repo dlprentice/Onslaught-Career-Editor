@@ -2,6 +2,7 @@
 using Microsoft.Win32.SafeHandles;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using OnslaughtToolkit.Companion.Careers;
 
 namespace OnslaughtCareerEditor.AppCore;
 
@@ -68,9 +69,9 @@ internal sealed class SaveLabSource : IDisposable
 
     internal static byte[] ReadSaveBytes(FileStream stream)
     {
-        if (stream.Length != BesFilePatcher.EXPECTED_FILE_SIZE)
-            throw new IOException($"A supported career save must contain exactly {BesFilePatcher.EXPECTED_FILE_SIZE:N0} bytes.");
-        byte[] bytes = new byte[BesFilePatcher.EXPECTED_FILE_SIZE];
+        if (stream.Length != CareerSave.Size)
+            throw new IOException($"A supported career save must contain exactly {CareerSave.Size:N0} bytes.");
+        byte[] bytes = new byte[CareerSave.Size];
         stream.Position = 0;
         stream.ReadExactly(bytes);
         if (stream.ReadByte() != -1)
