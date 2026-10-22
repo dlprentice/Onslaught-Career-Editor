@@ -182,10 +182,10 @@ internal static class Build
         return dialog;
     }
 
-    /// <summary>A filesystem dialog that cannot delete, create folders or offer to overwrite.</summary>
+    /// <summary>A filesystem dialog that cannot delete, create folders or offer to overwrite; a set title is kept.</summary>
     internal static FileDialog FilePicker(string title, FileDialog.FileModeEnum mode, params string[] filters) => new()
     {
-        Title = title, ModeOverridesTitle = false, FileMode = mode, Access = Godot.FileDialog.AccessEnum.Filesystem, Filters = filters,
+        Title = title, FileMode = mode, Access = Godot.FileDialog.AccessEnum.Filesystem, Filters = filters,
         Size = new Vector2I(860, 580), DeletingEnabled = false, FolderCreationEnabled = false,
         OverwriteWarningEnabled = false, RecentListEnabled = false, FavoritesEnabled = false,
     };

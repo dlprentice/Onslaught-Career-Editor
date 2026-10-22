@@ -3,7 +3,9 @@
 """Focused fake-tool checks for the code-built C# companion routes and export boundaries."""
 from __future__ import annotations
 
+import base64
 import contextlib
+import hashlib
 import io
 import json
 import os
@@ -33,7 +35,7 @@ class CompanionLauncherTests(unittest.TestCase):
         self.project.mkdir(parents=True)
         for name, data in {
             "project.godot": 'config_version=5\n\n[application]\nconfig/name="Onslaught Toolkit"\n', "Main.tscn": WRAPPER,
-            "OnslaughtToolkit.Godot.csproj": "integrated project", "global.json": '{"sdk":{"version":"8.0.424"}}',
+            "OnslaughtToolkit.Godot.csproj": "integrated project", "global.json": '{"sdk":{"version":"10.0.402"}}',
             "OnslaughtToolkit.Godot.sln": "single-project Godot solution", "packages.lock.json": "{}",
             "Ui/CompanionApp.cs": "code-built application root", "Files/ProtectedSaveFiles.cs": "integrated safety adapter",
             "Tests/CompanionTestRunner.cs": "C# contract runner", "Development/LicenseMetadata.cs": "C# notice entry", "Development/ScreenCapture.cs": "C# capture entry",
@@ -54,13 +56,15 @@ class CompanionLauncherTests(unittest.TestCase):
         self.dotnet = self.root / "bin/dotnet"
         self.dotnet.parent.mkdir()
         self.calls = self.root / "calls.jsonl"
+        sdk_version, runtime = self.pins["dotnet"]["sdkVersion"], self.pins["dotnet"]["runtimeVersion"]
         fake = (
             f"#!{sys.executable}\n"
             "import json, os, pathlib, sys\n"
             "tool=pathlib.Path(sys.argv[0]).name\n"
             "if '--version' in sys.argv:\n"
-            " print('8.0.424' if tool=='dotnet' else os.environ.get('FAKE_VERSION','4.8.dev6.mono.official.8898c2b3d')); raise SystemExit(0)\n"
+            f" print({sdk_version!r} if tool=='dotnet' else os.environ.get('FAKE_VERSION',{self.pins['engineVersion']!r})); raise SystemExit(0)\n"
             "with open(os.environ['FAKE_CALLS'],'a') as f: f.write(json.dumps({'tool':tool,'args':sys.argv[1:],'cwd':os.getcwd(),'tmp':os.environ['TMPDIR'],'data':os.environ['XDG_DATA_HOME'],'cache':os.environ['XDG_CACHE_HOME'],'config':os.environ['XDG_CONFIG_HOME'],'old_bridge':os.environ.get('ONSLAUGHT_FILE_BRIDGE')})+'\\n')\n"
+            "if tool=='dotnet' and sys.argv[1]=='restore' and os.environ.get('FAKE_ADVISORY'): print('warning NU1903: Package X 1.0.0 has a known high severity vulnerability')\n"
             "if tool=='dotnet' and sys.argv[1] in ('restore','build'):\n"
             " project=pathlib.Path(sys.argv[2]).parent\n"
             " assets=project/'.godot/mono/temp/obj'; assets.mkdir(parents=True,exist_ok=True)\n"
@@ -75,8 +79,8 @@ class CompanionLauncherTests(unittest.TestCase):
             " data=target.parent/'data_OnslaughtToolkit.Godot'; data.mkdir()\n"
             " for name in ['OnslaughtToolkit.Godot.dll','GodotSharp.dll','libcoreclr.so']: (data/name).write_text('integrated runtime')\n"
             " if os.environ.get('FAKE_TEST_LEAK'): (data/'OnslaughtToolkit.Godot.dll').write_text('OnslaughtToolkit.Companion.Tests')\n"
-            " config={'includedFrameworks':[{'name':'Microsoft.NETCore.App','version':'8.0.30'}]}\n"
-            " if os.environ.get('FAKE_FRAMEWORK_DEPENDENT'): config={'framework':{'name':'Microsoft.NETCore.App','version':'8.0.30'}}\n"
+            f" config={{'includedFrameworks':[{{'name':'Microsoft.NETCore.App','version':{runtime!r}}}]}}\n"
+            f" if os.environ.get('FAKE_FRAMEWORK_DEPENDENT'): config={{'framework':{{'name':'Microsoft.NETCore.App','version':{runtime!r}}}}}\n"
             " (data/'OnslaughtToolkit.Godot.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':config}))\n"
             " if os.environ.get('FAKE_HELPER_LEAK'): (target.parent/'file-bridge').mkdir()\n"
             "if any(arg.startswith('--fixture=') for arg in sys.argv): raise SystemExit(int(os.environ.get('FAKE_NATIVE_EXIT','0')))\n"
@@ -106,13 +110,19 @@ class CompanionLauncherTests(unittest.TestCase):
             entry = {"id":pin["archiveId"],"version":pin["version"],"file":pin["file"],"installDirectory":pin["installDirectory"],"digests":{"sha256":pin["archiveSha256"]}}
             archives.append(entry)
             (install / ".game-pipeline-source.json").write_text(json.dumps({"archiveId":entry["id"],"archiveVersion":entry["version"],"archiveFile":entry["file"],"archiveDigests":entry["digests"],"payloadSha256":pin.get("payloadSha256")}),encoding="utf-8")
-        self.lock.write_text(json.dumps({"paths":{"dataRoot":str(self.root/"installed")},"archives":archives,"managedTools":[{"id":"dotnetSdk8","exactVersion":"8.0.424"}]}),encoding="utf-8")
-        (self.project / "toolchain.json").write_text(json.dumps(self.pins),encoding="utf-8")
+        self.lock.write_text(json.dumps({"paths":{"dataRoot":str(self.root/"installed")},"archives":archives,"managedTools":[{"id":"dotnetSdk8","exactVersion":"8.0.424"},{"id":self.pins["dotnet"]["sdkTool"],"exactVersion":sdk_version}]}),encoding="utf-8")
         packages = self.root / "packages"
         for rid in ("linux-x64","win-x64"):
-            package=packages/f"microsoft.netcore.app.runtime.{rid}/8.0.30"
+            package=packages/f"microsoft.netcore.app.runtime.{rid}/{runtime}"
             package.mkdir(parents=True)
             for name in ("LICENSE.TXT","THIRD-PARTY-NOTICES.TXT"):(package/name).write_text(name,encoding="utf-8")
+            pin=self.pins["dotnet"]["runtimePacks"][rid]
+            nupkg=package/pin["package"];nupkg.write_bytes(f"runtime pack {rid}".encode())
+            pin["sha512"]=base64.b64encode(hashlib.sha512(nupkg.read_bytes()).digest()).decode()
+            pin["sha256"]=host.sha256(nupkg)
+            (package/(pin["package"]+".sha512")).write_text(pin["sha512"],encoding="ascii")
+        self.packages = packages
+        (self.project / "toolchain.json").write_text(json.dumps(self.pins),encoding="utf-8")
         for patch in (mock.patch.object(host,"ROOT",self.source),mock.patch.object(host,"COMPANION",self.project),
                       mock.patch.object(host,"FIXTURE",self.fixture),
                       mock.patch.object(host,"canonical_root",return_value=self.canonical),
@@ -155,7 +165,7 @@ class CompanionLauncherTests(unittest.TestCase):
         self.assertEqual(2,self.invoke("build"));self.assertEqual([],self.calls_read())
 
     def test_standard_engine_version_is_refused(self)->None:
-        with mock.patch.dict(os.environ,{"FAKE_VERSION":"4.8.dev6.official.8898c2b3d"}):self.assertEqual(2,self.invoke("build"))
+        with mock.patch.dict(os.environ,{"FAKE_VERSION":self.pins["engineVersion"].replace(".mono","")}):self.assertEqual(2,self.invoke("build"))
         self.assertEqual([],self.calls_read())
 
     def test_template_bytes_pin_refuses_export_before_build(self)->None:
@@ -209,6 +219,53 @@ class CompanionLauncherTests(unittest.TestCase):
         staged=Path(icon[0]["cwd"])
         self.assertIn('config/icon="res://icon.png"',(staged/"project.godot").read_text())
         self.assertTrue((staged/"icon.png").read_bytes().startswith(host.PNG_SIGNATURE))
+
+    def test_the_pins_name_the_net10_runtime_that_sdk_10_0_402_ships(self)->None:
+        pins=host.read_json(Path(host.__file__).resolve().parents[1]/"companion/OnslaughtToolkit.Godot/toolchain.json")
+        self.assertEqual(("10.0.402","10.0.13","net10.0","dotnetSdk10"),
+                         (pins["dotnet"]["sdkVersion"],pins["dotnet"]["runtimeVersion"],pins["dotnet"]["targetFramework"],pins["dotnet"]["sdkTool"]))
+        for rid in ("linux-x64","win-x64"):
+            pack=pins["dotnet"]["runtimePacks"][rid]
+            self.assertEqual(f"microsoft.netcore.app.runtime.{rid}.10.0.13.nupkg",pack["package"])
+            self.assertEqual(64,len(base64.b64decode(pack["sha512"])));self.assertRegex(pack["sha256"],r"^[0-9a-f]{64}$")
+
+    def test_a_runtime_pack_that_differs_from_its_official_hash_is_refused(self)->None:
+        for change in ("bytes","record"):
+            with self.subTest(change=change):
+                pin=self.pins["dotnet"]["runtimePacks"]["linux-x64"]
+                folder=self.packages/f"microsoft.netcore.app.runtime.linux-x64/{self.pins['dotnet']['runtimeVersion']}"
+                target=folder/(pin["package"] if change=="bytes" else pin["package"]+".sha512")
+                original=target.read_bytes();target.write_bytes(original+b"x")
+                try:self.assertEqual(2,self.invoke("export","--platform","linux"))
+                finally:target.write_bytes(original)
+        (self.packages/f"microsoft.netcore.app.runtime.win-x64/{self.pins['dotnet']['runtimeVersion']}"/self.pins["dotnet"]["runtimePacks"]["win-x64"]["package"]).unlink()
+        self.assertEqual(2,self.invoke("export","--platform","windows"))
+        self.assertEqual(0,self.invoke("export","--platform","linux"))
+
+    def test_audit_restores_outside_locked_mode_and_fails_on_an_advisory(self)->None:
+        self.assertEqual(0,self.invoke("audit"))
+        restore=[call for call in self.calls_read() if call["tool"]=="dotnet"]
+        self.assertEqual(["restore"],[call["args"][0] for call in restore])
+        self.assertNotIn("--locked-mode",restore[0]["args"]);self.assertIn("-p:NuGetAudit=true",restore[0]["args"])
+        self.assertIn("-p:NuGetAuditMode=all",restore[0]["args"])
+        self.assertFalse(any("--import" in call["args"] for call in self.calls_read()))
+        with mock.patch.dict(os.environ,{"FAKE_ADVISORY":"1"}):self.assertEqual(2,self.invoke("audit"))
+
+    def test_the_engine_defaults_to_the_pinned_install(self)->None:
+        with contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(0,host.companion_main(["check","--shared-lock",str(self.lock)]))
+        self.assertTrue(any(call["tool"]==self.engine.name and "--import" in call["args"] for call in self.calls_read()))
+
+    def test_old_outputs_are_pruned_to_the_newest_few_of_each_mode(self)->None:
+        owner=self.canonical/"local-data/companion";owner.mkdir(parents=True)
+        for index in range(8):
+            for mode in ("test","export"):
+                folder=owner/f"godot-dotnet-{mode}-old{index}";folder.mkdir();os.utime(folder,(1000+index,1000+index))
+        self.assertEqual(0,self.invoke("test"))
+        tests=sorted(path.name for path in owner.glob("godot-dotnet-test-*"))
+        self.assertEqual(host.KEEP_OUTPUTS,len(tests))
+        self.assertEqual([f"godot-dotnet-test-old{index}" for index in range(4,8)],[name for name in tests if "old" in name])
+        self.assertEqual(8,len(list(owner.glob("godot-dotnet-export-*"))))
 
     def test_framework_dependent_export_is_refused(self)->None:
         with mock.patch.dict(os.environ,{"FAKE_FRAMEWORK_DEPENDENT":"1"}):self.assertEqual(2,self.invoke("export","--platform","linux"))

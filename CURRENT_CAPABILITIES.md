@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-22 (AppCore removed, its test facts now in the companion's tests; careers in old WinUI safe copies listed on Home; companion review fixes: CE running check seen on Linux, backups from another game folder after confirmation; the companion is Onslaught Companion and works with the original game only; AppCore patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (the companion moved to Godot 4.8 beta1 and .NET 10.0.13, Windows backups default to an unsynced local folder; AppCore removed, its test facts now in the companion's tests; careers in old WinUI safe copies listed on Home; companion review fixes: CE running check seen on Linux, backups from another game folder after confirmation; the companion is Onslaught Companion and works with the original game only; AppCore patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -141,7 +141,8 @@ a single executed failed-Load-to-bank chain. See the
 ## Godot companion — careers, settings, backups, music and lore
 
 The GPL-3.0-only [companion](companion/OnslaughtToolkit.Godot/README.md) is a C# application
-built entirely in code on **Godot 4.8.dev6.mono.official.8898c2b3d**. Its one scene only
+built entirely in code on **Godot 4.8.beta1.mono.official.4d10419ca** and .NET 10 (`net10.0`,
+runtime 10.0.13, SDK 10.0.402). Its one scene only
 attaches the root script; the build refuses GDScript, saved resources and multi-node
 scenes. David approved its feature set and Flight-deck look on 2026-09-25; on 2026-09-26
 he asked for it to be built around players: easy to find your way, easy on the eyes, and

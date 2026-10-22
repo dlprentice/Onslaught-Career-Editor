@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import math
@@ -36,8 +37,8 @@ IGPU_LOCK = "/var/tmp/godot-igpu.lock"
 # The eight bytes every PNG file starts with, written as numbers: this tool checks an icon, it embeds no image.
 PNG_SIGNATURE = bytes((137, 80, 78, 71, 13, 10, 26, 10))
 PLATFORMS = {
-    "linux": ("linux-x64", "Linux", "OnslaughtToolkit.x86_64"),
-    "windows": ("win-x64", "Windows", "OnslaughtToolkit.exe"),
+    "linux": ("linux-x64", "Linux", "OnslaughtCompanion.x86_64"),
+    "windows": ("win-x64", "Windows", "OnslaughtCompanion.exe"),
 }
 
 
@@ -62,8 +63,27 @@ def canonical_root() -> Path:
     return common.parent.resolve(strict=True)
 
 
+# Each check, build, test and audit run leaves its own output folder (about 43 MB for a test run); only the newest
+# few of each are kept. Export and capture folders hold packages and screens, so they are never pruned.
+PRUNED_MODES = ("check", "build", "test", "run", "audit")
+KEEP_OUTPUTS = 5
+
+
+def prune_outputs(owner: Path, mode: str, keep: int = KEEP_OUTPUTS) -> list[Path]:
+    """Removes all but the newest ``keep`` earlier output folders of this mode; returns what it removed."""
+    if mode not in PRUNED_MODES or not owner.is_dir():
+        return []
+    earlier = [path for path in owner.glob(f"godot-dotnet-{mode}-*") if path.is_dir() and not path.is_symlink()]
+    earlier.sort(key=lambda path: path.stat().st_mtime, reverse=True)
+    removed = earlier[keep:]
+    for path in removed:
+        shutil.rmtree(path)
+    return removed
+
+
 def allocate_output(owner: Path, mode: str) -> tuple[Path, dict[str, str]]:
     owner.mkdir(parents=True, exist_ok=True)
+    prune_outputs(owner, mode, KEEP_OUTPUTS - 1)
     output = Path(tempfile.mkdtemp(prefix=f"godot-dotnet-{mode}-", dir=owner))
     directories = {
         "TMPDIR": "scratch", "XDG_DATA_HOME": "profile/data", "XDG_CONFIG_HOME": "profile/config",
@@ -101,7 +121,7 @@ def run_logged(command: list[str], *, cwd: Path, env: dict[str, str], timeout: f
     return result
 
 
-def verify_toolchain(pins: dict[str, Any], shared_lock: Path, requested_engine: str,
+def verify_toolchain(pins: dict[str, Any], shared_lock: Path, requested_engine: str | None,
                      env: dict[str, str], output: Path, platforms: list[str]) -> tuple[Path, Path]:
     if pins.get("schemaVersion") != 1:
         raise ValueError("Unsupported companion toolchain pin schema")
@@ -125,7 +145,7 @@ def verify_toolchain(pins: dict[str, Any], shared_lock: Path, requested_engine: 
             raise RuntimeError(f"Shared toolchain {name} installation provenance differs from its lock")
         installs[name] = install.resolve(strict=True)
     expected_engine = installs["engine"] / pins["engine"]["executable"]
-    located = shutil.which(os.path.expanduser(requested_engine))
+    located = shutil.which(os.path.expanduser(requested_engine or str(expected_engine)))
     if located is None:
         raise RuntimeError(f"Pinned Godot .NET executable not found: {requested_engine}")
     engine = Path(located).resolve(strict=True)
@@ -154,7 +174,7 @@ def verify_toolchain(pins: dict[str, Any], shared_lock: Path, requested_engine: 
             raise RuntimeError(f"Installed export template differs from companion SHA-256 pin: {filename}")
     if (templates / "version.txt").read_text(encoding="utf-8").strip() != pins["templateVersion"]:
         raise RuntimeError("Installed export template version differs from companion pin")
-    sdk = next((entry for entry in shared["managedTools"] if entry["id"] == "dotnetSdk8"), {})
+    sdk = next((entry for entry in shared["managedTools"] if entry["id"] == pins["dotnet"]["sdkTool"]), {})
     if sdk.get("exactVersion") != pins["dotnet"]["sdkVersion"]:
         raise RuntimeError("Shared companion build SDK differs from companion pin")
     return engine, templates
@@ -216,8 +236,7 @@ def dotnet_sdk(pins: dict[str, Any], project: Path, env: dict[str, str], output:
     return dotnet
 
 
-def build_project(engine: Path, project: Path, pins: dict[str, Any], env: dict[str, str], output: Path) -> None:
-    dotnet = dotnet_sdk(pins, project, env, output)
+def write_feeds(engine: Path, project: Path) -> None:
     # A generated local feed route keeps host paths out of the tracked project. The official
     # Microsoft feed supplies only pinned framework/runtime packs for normal Godot exports.
     from xml.sax.saxutils import escape
@@ -227,6 +246,27 @@ def build_project(engine: Path, project: Path, pins: dict[str, Any], env: dict[s
         + escape(str(feed), {'"': '&quot;'})
         + '"/><add key="nuget.org" value="https://api.nuget.org/v3/index.json"/></packageSources></configuration>\n',
         encoding="utf-8")
+
+
+def audit_project(engine: Path, project: Path, pins: dict[str, Any], env: dict[str, str], output: Path) -> None:
+    """A restore outside locked mode with NuGet's vulnerability audit on, over direct and transitive packages.
+
+    The build's own restore stays locked and offline from the audit (``NuGetAudit=false``) so a new advisory never
+    changes what a build produces; this run is where advisories are read. It needs nuget.org."""
+    dotnet = dotnet_sdk(pins, project, env, output)
+    write_feeds(engine, project)
+    result = run_logged([dotnet, "restore", str(project / "OnslaughtToolkit.Godot.csproj"), "--nologo", "--force-evaluate",
+                         "-p:NuGetAudit=true", "-p:NuGetAuditMode=all", "-p:NuGetAuditLevel=low"],
+                        cwd=project, env=env, timeout=180, log=output / "logs/dotnet-audit.log")
+    advisories = sorted(set(re.findall(r"\b(?:warning|error) (NU190[1-5])\b[^\n]*", (result.stdout or "") + (result.stderr or ""))))
+    if advisories:
+        raise RuntimeError(f"NuGet audit reported {', '.join(advisories)}; see {output / 'logs/dotnet-audit.log'}")
+    print("Companion NuGet audit: no advisories for direct or transitive packages", flush=True)
+
+
+def build_project(engine: Path, project: Path, pins: dict[str, Any], env: dict[str, str], output: Path) -> None:
+    dotnet = dotnet_sdk(pins, project, env, output)
+    write_feeds(engine, project)
     csproj = project / "OnslaughtToolkit.Godot.csproj"
     run_logged([dotnet, "restore", str(csproj), "--locked-mode", "--nologo", "-p:NuGetAudit=false"],
                cwd=project, env=env, timeout=180, log=output / "logs/dotnet-restore.log")
@@ -242,8 +282,28 @@ def check_project(engine: Path, project: Path, env: dict[str, str], output: Path
                cwd=project, env=env, timeout=180, log=output / "logs/import.log", godot=True)
 
 
+def verify_runtime_pack(pins: dict[str, Any], platform: str, folders: list[str]) -> Path:
+    """The restored .NET runtime pack the export bundles, checked against its official SHA-512 and its SHA-256 pin."""
+    rid = PLATFORMS[platform][0]
+    version = pins["dotnet"]["runtimeVersion"]
+    pin = pins["dotnet"]["runtimePacks"][rid]
+    for folder in folders:
+        pack = Path(folder) / f"microsoft.netcore.app.runtime.{rid}" / version
+        nupkg = pack / pin["package"]
+        if not nupkg.is_file():
+            continue
+        recorded = (pack / (pin["package"] + ".sha512")).read_text(encoding="ascii").strip()
+        with nupkg.open("rb") as stream:
+            actual = base64.b64encode(hashlib.file_digest(stream, "sha512").digest()).decode("ascii")
+        if recorded != pin["sha512"] or actual != pin["sha512"] or sha256(nupkg) != pin["sha256"]:
+            raise RuntimeError(f"Restored .NET runtime pack differs from its official SHA-512 pin: {nupkg}")
+        return pack
+    raise RuntimeError(f"Pinned .NET runtime pack was not restored: {pin['package']}")
+
+
 def copy_dotnet_notices(pins: dict[str, Any], platform: str, project: Path, package: Path) -> None:
     assets = read_json(project / ".godot/mono/temp/obj/project.assets.json")
+    verify_runtime_pack(pins, platform, assets["packageFolders"])
     runtime_package = f"microsoft.netcore.app.runtime.{PLATFORMS[platform][0]}/{pins['dotnet']['runtimeVersion']}"
     for source_name, target_name in (("LICENSE.TXT", "DOTNET-LICENSE.txt"),
                                      ("THIRD-PARTY-NOTICES.TXT", "DOTNET-THIRD-PARTY-NOTICES.txt")):
@@ -350,7 +410,11 @@ def export_platform(engine: Path, project: Path, templates: Path, pins: dict[str
         "backup and again just before the swap), and Backups can put any earlier version back.\n" +
         ("Spotting a running Onslaught CE has not been tested on Windows yet; close CE yourself before saving into the game.\n"
          if platform == "windows" else "") +
-        "Backups go to \"Battle Engine Aquila Backups\" in your Documents folder unless you choose another folder.\n\n"
+        ("Backups go to \"Battle Engine Aquila Backups\" in %LOCALAPPDATA%\\Onslaught Companion (a folder Windows does not sync)\n"
+         "unless you choose another folder. A game in Program Files may have careers Windows kept in VirtualStore;\n"
+         "Home names them, but the companion does not read or back them up yet.\n\n"
+         if platform == "windows" else
+         "Backups go to \"Battle Engine Aquila Backups\" in your Documents folder unless you choose another folder.\n\n") +
         "About this package\n"
         f"Godot {pins['engineVersion']} runs the companion, a C# application built in code.\n"
         "Its file-safety boundary runs inside the same process; no helper process is used.\n"
@@ -408,8 +472,8 @@ def capture_screens(project: Path, fixture: Path, offscreen_tool: str, sizes: st
 
 def companion_main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("check", "build", "test", "run", "export", "capture"))
-    parser.add_argument("--engine", default="~/.local/bin/godot48-mono")
+    parser.add_argument("mode", choices=("check", "build", "test", "run", "export", "capture", "audit"))
+    parser.add_argument("--engine", help="Godot .NET executable; defaults to the pinned install the shared lock names")
     parser.add_argument("--shared-lock", type=Path, help="existing game_pipeline_shared/toolchain.linux.lock.json")
     parser.add_argument("--platform", choices=("linux", "windows", "both"), default="both", help="export target")
     parser.add_argument("--fixture", type=Path, default=FIXTURE, help="read-only input copied into this test invocation")
@@ -446,6 +510,9 @@ def companion_main(argv: list[str] | None = None) -> int:
         shared_lock = args.shared_lock or Path.home() / "Projects/game-dev/game_pipeline_shared/toolchain.linux.lock.json"
         engine, templates = verify_toolchain(pins, shared_lock, args.engine, env, output, platforms)
         project = stage_project(output)
+        if args.mode == "audit":
+            audit_project(engine, project, pins, env, output)
+            return 0
         build_project(engine, project, pins, env, output)
         check_project(engine, project, env, output)
         if args.mode in ("check", "build"):

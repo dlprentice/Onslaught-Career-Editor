@@ -1,42 +1,59 @@
 {
   "schemaVersion": 1,
-  "engineVersion": "4.8.dev6.mono.official.8898c2b3d",
-  "templateVersion": "4.8.dev6.mono",
+  "engineVersion": "4.8.beta1.mono.official.4d10419ca",
+  "templateVersion": "4.8.beta1.mono",
   "source": "game_pipeline_shared/toolchain.linux.lock.json",
-  "sourceRevision": "fd65688d8690754f7cbeefe3072bc99f19edff39",
+  "sourceRevision": "80e547e",
   "engine": {
     "archiveId": "godotDev48Mono",
-    "version": "4.8-dev6",
-    "file": "Godot_v4.8-dev6_mono_linux_x86_64.zip",
-    "archiveSha256": "1658eeb19c04b76c723def84ded44c28f80985f40bebcc36994a1b8b1bde9799",
-    "installDirectory": "toolchain/godot-4.8-dev6-mono",
-    "executable": "Godot_v4.8-dev6_mono_linux.x86_64",
-    "executableSha256": "2708751461f8ac0c0de8e3a0939509673ca4bd048a11445d6839a3d242797db3",
-    "payloadSha256": "4430538f6d06c80c907aa5615905788553bae450faec4e9f6d99c6275e66aa05",
-    "sdkPackage": "GodotSharp/Tools/nupkgs/Godot.NET.Sdk.4.8.0-dev.6.nupkg",
-    "sdkPackageSha256": "88d8e2392dfbf203a2a3ab1fc6175585538653da3dac88e724260c4cea325538"
+    "version": "4.8-beta1",
+    "file": "Godot_v4.8-beta1_mono_linux_x86_64.zip",
+    "archiveSha256": "5a9e2ab063a3954698d2d35a7cbe74836ab6f5a47512ba63ca9b2f53febc6902",
+    "installDirectory": "toolchain/godot-4.8-beta1-mono",
+    "executable": "Godot_v4.8-beta1_mono_linux.x86_64",
+    "executableSha256": "ef5a84f1d74f169e2615fbcba6152baa850c3a8bee66acc8d9fab6652d2fbf50",
+    "payloadSha256": "cef5b103e2098f6a3fe8b774377a86003e75cf06f99984737903f219cb3f3f1d",
+    "sdkPackage": "GodotSharp/Tools/nupkgs/Godot.NET.Sdk.4.8.0-beta.1.nupkg",
+    "sdkPackageSha256": "6a51ab7b03c70feb9e7cdc446a179e280f3293e531ece95097946b490c41b1c7"
   },
   "templates": {
     "archiveId": "godotDev48MonoExportTemplates",
-    "version": "4.8-dev6",
-    "file": "Godot_v4.8-dev6_mono_export_templates.tpz",
-    "archiveSha256": "6dcb6d1d54680e9c4f601fa45e66a083a79c16335c730fe5432d35ff2824d9e2",
-    "installDirectory": "toolchain/godot-export-templates-4.8-dev6-mono",
+    "version": "4.8-beta1",
+    "file": "Godot_v4.8-beta1_mono_export_templates.tpz",
+    "archiveSha256": "328cdba3375c3bcf732e9c895f235fb3cbb9d0f7c28563903ed5b99edc233eb6",
+    "installDirectory": "toolchain/godot-export-templates-4.8-beta1-mono",
     "releaseFiles": {
       "linux": "linux_release.x86_64",
       "windows": "windows_release_x86_64.exe"
     },
     "fileSha256": {
-      "version.txt": "3e507bd2c511dfd2ba2c066e3f27dffcbdd08ceaeb5af4aba6492666b7697d16",
-      "linux_release.x86_64": "b25bfadeb7739942cf59428aadead8d5884c421b5572d83d49f0b5637692559f",
-      "windows_release_x86_64.exe": "ac5a24d508a42a32636045ea2f0413c3ee68bc0e8f8b35f8e9d0007be4a66028"
+      "version.txt": "0cff1689c4e26f92c095e0bd7184dc59faec0e16a16e7c488ed9941bd731de92",
+      "linux_release.x86_64": "8a55346ff9468a09809814e49f7bdf297b4df5504466e0ea6a94593f8bb8d074",
+      "windows_release_x86_64.exe": "6dc1e26b056004b67c9f200df97bc535082e62884965b5656e7ae75f802b0ea4"
     }
   },
   "dotnet": {
-    "sdkVersion": "8.0.424",
-    "runtimeVersion": "8.0.30",
-    "targetFramework": "net8.0",
+    "sdkTool": "dotnetSdk10",
+    "sdkVersion": "10.0.402",
+    "runtimeVersion": "10.0.13",
+    "targetFramework": "net10.0",
     "selfContained": true,
+    "runtimeSource": "https://builds.dotnet.microsoft.com/dotnet/release-metadata/10.0/releases.json (10.0.13, released 2026-10-13 with SDK 10.0.402)",
+    "runtimePacks": {
+      "linux-x64": {
+        "package": "microsoft.netcore.app.runtime.linux-x64.10.0.13.nupkg",
+        "sizeBytes": 40101183,
+        "sha512": "/REkglvNhkHTaYq+6/YVY2rjleCzgNhgJ2/7bEvpy+38SyktZh19QmNm0261frVAGv2OWM5CtxO9rK1R6JYx8g==",
+        "sha256": "28c62a37549d17009f457ac53cd4acdd60f1598ba3f00e22587bbac318c679c6"
+      },
+      "win-x64": {
+        "package": "microsoft.netcore.app.runtime.win-x64.10.0.13.nupkg",
+        "sizeBytes": 39979592,
+        "sha512": "55suoRAIf6dVjOdPhHxIElDa2GBoqVZI70bG4zq+f2pHQbGV6yDvztsXdit4pxc3Ea79X0Kfo78Kncjt9NauIQ==",
+        "sha256": "c66885d464697be75676b4d1fbca38b8806f3af01d65d27205b3f06add094444"
+      }
+    },
+    "runtimePackHashSource": "sha512 is nuget.org's catalog packageHash (base64); sha256 was computed from that verified download",
     "purpose": "The companion is a C# application built in code, including its file-identity and verified publication boundary."
   }
 }

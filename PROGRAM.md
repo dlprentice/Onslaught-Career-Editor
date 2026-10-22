@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-22 (AppCore removed; the companion's next step is the CE launcher and manager; exe patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (the companion moved to Godot 4.8 beta1 and .NET 10; AppCore removed; the companion's next step is the CE launcher and manager; exe patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
@@ -37,7 +37,7 @@ Open, in priority order:
 
 ### Companion — paused
 
-The companion is a C# application built in code on Godot 4.8 dev6 .NET and organised around players: careers
+The companion is a C# application built in code on Godot 4.8 beta1 .NET and .NET 10, and organised around players: careers
 with a campaign map, Goodies, career editing, cheats, game settings, automatic backups that can be put back, music
 and voices, and lore (see its [README](companion/OnslaughtToolkit.Godot/README.md)). Every write into the game is a
 choice made after a verified backup, never while the game runs.

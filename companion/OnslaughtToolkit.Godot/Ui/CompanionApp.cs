@@ -15,12 +15,15 @@ internal sealed record CompanionEnvironment(IReadOnlyList<string> SteamRoots, st
     internal static CompanionEnvironment Default() =>
         new(SteamLibraries.DefaultRoots(), ProjectSettings.GlobalizePath("user://settings.json"), GameProcess.IsRunning);
 
-    /// <summary>The player's Documents folder (or the app's own data folder) plus a clearly named backups folder.</summary>
+    /// <summary>
+    /// A clearly named backups folder in the player's Documents folder, or on Windows in the unsynced local application
+    /// data folder (<see cref="WindowsFolders.DefaultBackupRoot"/>), or else in the app's own data folder.
+    /// </summary>
     internal string BackupFolder()
     {
         if (DefaultBackupFolder is string chosen) return chosen;
-        string documents = OS.GetSystemDir(OS.SystemDir.Documents);
-        string root = !string.IsNullOrWhiteSpace(documents) && Directory.Exists(documents) ? documents : OS.GetUserDataDir();
+        string root = WindowsFolders.DefaultBackupRoot(OperatingSystem.IsWindows(), OS.GetSystemDir(OS.SystemDir.Documents),
+            System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), OS.GetUserDataDir());
         return System.IO.Path.Combine(root, BackupFolderName);
     }
 }

@@ -1,7 +1,7 @@
 # Onslaught Toolkit
 
 Status: active — the project overview
-Last updated: 2026-10-22 (AppCore and the executable-patch catalog removed; the companion is Onslaught Companion, original game only for now; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (the companion moved to Godot 4.8 beta1 and .NET 10; AppCore and the executable-patch catalog removed; the companion is Onslaught Companion, original game only for now; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
 
 Onslaught Toolkit is a preservation project for *Battle Engine Aquila* (2003, Lost Toys).
@@ -54,7 +54,7 @@ on the companion's Home page, where each can be saved as a copy elsewhere.
 
 | Path | Owner |
 | --- | --- |
-| [`companion/OnslaughtToolkit.Godot/`](companion/OnslaughtToolkit.Godot/README.md) | The companion (player toolkit, future CE launcher; paused), C# built in code on Godot 4.8 dev6 .NET |
+| [`companion/OnslaughtToolkit.Godot/`](companion/OnslaughtToolkit.Godot/README.md) | The companion (player toolkit, future CE launcher; paused), C# built in code on Godot 4.8 beta1 .NET and .NET 10 |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Documentation of the game: formats, mechanics, saves, assets, function notes and contracts |
 | [`lore/`](lore/_index.md) | The canonical lore and history library, embedded in the companion |
 | [`tools/`](tools/README.md) | Format decoders, asset exporters, capture analysis and the repository's checks |
@@ -69,7 +69,8 @@ Retired surfaces (WinUI, the CLI, Electron, the Python GUI, WPF) remain in Git h
 The engineering host is Omarchy Linux. Requirements:
 
 - The .NET 10 SDK named in `global.json`, and the pinned toolchain from `~/.local/opt/game-pipeline`
-  (Godot 4.8 dev6 .NET with matching templates; .NET SDK 8.0.424 for the companion)
+  (Godot 4.8 dev6 .NET with matching templates for the rebuild; Godot 4.8 beta1 .NET with matching templates
+  and .NET SDK 10.0.402 for the companion)
 - Node.js 26.7 and npm 11.19 from mise
 - Python 3.14 available as `python`; root commands use forward-slash paths
 - A lawfully obtained Battle Engine Aquila installation for anything that reads the game

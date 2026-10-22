@@ -1,7 +1,7 @@
 # Onslaught Companion
 
-Status: paused (since 2026-10-16, until new requirements); C# application built entirely in code on Godot 4.8 dev6 .NET, organised around the player: careers, Goodies, editing, cheats, game settings, backups, music, voices, lore, and the game's models and textures; Linux executed checks, Windows runtime acceptance pending
-Last updated: 2026-10-22 (AppCore removed: file safety cut down to what the companion calls, its test facts carried over, careers in the old WinUI toolkit's copies listed on Home; review fixes: close never abandons a backup started while it asks, settings picker keeps unsaved changes (also when the shown file is picked again or a key edit is refused), CE check seen against a running CE on Linux (output kept), backups from another game folder go back after a confirmation naming both; data-safety fixes: restore checks the manifest hash and game folder, running check also for Onslaught CE and again before the swap, unsaved-changes prompts, right-hand Shift and Control; named Onslaught Companion; works with the original game only; relicensed GPL-3.0-only, lore CC BY-SA 4.0)
+Status: paused (since 2026-10-16, until new requirements); C# application built entirely in code on Godot 4.8 beta1 .NET and .NET 10, organised around the player: careers, Goodies, editing, cheats, game settings, backups, music, voices, lore, and the game's models and textures; Linux executed checks, Windows runtime acceptance pending
+Last updated: 2026-10-22 (moved to Godot 4.8 beta1 and .NET 10.0.13 with SDK 10.0.402, runtime packs pinned by hash, a NuGet audit route and pruned run folders; packages named OnslaughtCompanion; Windows backups default to the unsynced local app data folder and Home names careers Windows kept in VirtualStore; AppCore removed: file safety cut down to what the companion calls, its test facts carried over, careers in the old WinUI toolkit's copies listed on Home; review fixes: close never abandons a backup started while it asks, settings picker keeps unsaved changes (also when the shown file is picked again or a key edit is refused), CE check seen against a running CE on Linux (output kept), backups from another game folder go back after a confirmation naming both; data-safety fixes: restore checks the manifest hash and game folder, running check also for Onslaught CE and again before the swap, unsaved-changes prompts, right-hand Shift and Control; named Onslaught Companion; works with the original game only; relicensed GPL-3.0-only, lore CC BY-SA 4.0)
 Summary: Onslaught Companion, the GPL-3.0-only app for Battle Engine Aquila players: today it works with the original game's Steam or retail install; it opens on that game and its careers, shows progress and Goodies, changes careers and settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, plays and explains the game's own music, voices and lore, and saves copies of its models (glTF), textures (PNG) and sound effects (WAV).
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -35,7 +35,7 @@ and takes light I/O only) and run this project's `npm test`.
 
 ## Layout
 
-Everything is C# on Godot 4.8 dev6 .NET. [Main.tscn](Main.tscn) is a one-node wrapper
+Everything is C# on Godot 4.8 beta1 .NET, targeting .NET 10 (`net10.0`). [Main.tscn](Main.tscn) is a one-node wrapper
 that attaches [CompanionApp](Ui/CompanionApp.cs); every control, container, dialog
 and style below it is constructed in code. There is no GDScript, saved resource or
 editor-authored scene, and `npm run build` refuses to stage one.
@@ -66,7 +66,22 @@ npm test
 npm run capture:companion-godot
 npm run run:companion-godot
 npm run export:companion-godot -- --platform both
+python tools/companion_godot.py audit
 ```
+
+These need the pinned shared toolchain on Linux: the Godot .NET build and export templates
+that [toolchain.json](toolchain.json) names, installed by
+the shared game toolchain (`game_pipeline_shared`) under
+`~/.local/opt/game-pipeline`, its lock at `~/Projects/game-dev/game_pipeline_shared/toolchain.linux.lock.json`
+(or `--shared-lock FILE`), and .NET SDK 10.0.402. The engine defaults to the pinned install;
+`--engine PATH` names another copy of the same build. A contributor without that toolchain can
+install the same Godot 4.8 beta1 .NET editor, templates and SDK from their official downloads,
+check them against the hashes in `toolchain.json`, and point `--shared-lock` at a lock file of
+the same shape; the runner refuses any other build. `audit` restores outside locked mode with
+NuGet's vulnerability audit over direct and transitive packages (it needs nuget.org); the
+build's own restore stays locked and does not audit, so a new advisory never changes a build.
+Each check, build, test, run and audit leaves an output folder; the runner keeps the newest five
+of each and removes older ones. Export and capture folders are never removed.
 
 Build, test, capture and export never open a window on the desktop. **Run opens a
 window**; use it when the desktop is available. Each command stages the project and the lore into a unique canonical `local-data/companion/`
@@ -159,7 +174,8 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   Controller and mouse bindings are kept unless replaced; language and display mode are kept.
 - **Backups** (of the original game's careers and settings): automatic backups (when the
   companion opens and after the game closes while it is open, only when something changed), the folder (`Battle Engine Aquila Backups` in
-  Documents unless you choose another), Back up now, and every backup set, newest first,
+  Documents unless you choose another; on Windows in `%LOCALAPPDATA%\Onslaught Companion`, which
+  Windows does not sync, because Documents is often a OneDrive folder), Back up now, and every backup set, newest first,
   with why it was made and **Put back** for each file.
 - **Music & voices** plays the soundtrack and voice lines from your install, grouped by
   mission with the game's own transcripts. Only files with an Ogg Vorbis header reach the
@@ -212,6 +228,12 @@ are never thrown away for this; the companion says so instead.
   key classes no game-written row confirms (for example top-row digits, punctuation and the
   right-hand Shift and Control) are stored by the same convention but marked as not yet seen.
 - A career or copy chosen through a symbolic link in its path is refused rather than resolved.
+- Two Windows folder rules are untested on Windows. Backups default to
+  `%LOCALAPPDATA%\Onslaught Companion\Battle Engine Aquila Backups` because a OneDrive Documents
+  folder can hold online-only placeholders, which are reparse points the backup refuses (and with it
+  every write); a backup folder chosen inside OneDrive would still be refused. For a game in a Program
+  Files folder, Windows may keep what the game saves in `%LOCALAPPDATA%\VirtualStore\...\savegames`;
+  Home names careers found there, but the companion does not read, back up or write them.
 
 ## How files stay safe
 
@@ -315,8 +337,11 @@ a Windows cross-export is not acceptance.
 
 [toolchain.json](toolchain.json) records the measured engine, SDK and template hashes and
 the shared lock revision; `tools/companion_godot.py` verifies the installation and refuses
-mismatches. `global.json` pins .NET SDK 8.0.424; the Godot SDK is `4.8.0-dev.6` and the
-runtime `8.0.30`. Export presets target Linux x86_64 and Windows x86_64, and Godot's normal
+mismatches. `global.json` pins .NET SDK 10.0.402 (latest patch of that band; the runner accepts only
+10.0.402); the Godot SDK is `4.8.0-beta.1`, the target `net10.0` and the runtime 10.0.13, the
+one that SDK ships. The runtime packs Godot's export bundles
+(`microsoft.netcore.app.runtime.linux-x64` and `win-x64` 10.0.13) are pinned by nuget.org's
+SHA-512 and their SHA-256, and an export whose restored pack differs is refused. Export presets target Linux x86_64 and Windows x86_64, and Godot's normal
 .NET export bundles the runtime, so packages need no installed .NET. The Windows package
 carries the companion's name and its emblem as the program icon, drawn by
 [Emblem](Ui/Emblem.cs) at export time; the project itself stores no icon file. Adopt a later engine

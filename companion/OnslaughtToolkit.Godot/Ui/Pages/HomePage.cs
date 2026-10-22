@@ -18,7 +18,8 @@ internal sealed class HomePage : Page
     private readonly Emblem _emblem;
     private readonly Label _heroStatus, _folderLine, _backupLine;
     private readonly PanelContainer _askBackups, _backupsOn, _oldCopies;
-    private readonly Label _oldCopiesNote;
+    private readonly Label _oldCopiesNote, _virtualStoreNote;
+    private readonly PanelContainer _virtualStore;
     private readonly VBoxContainer _oldCopyRows;
     private readonly List<Button> _oldCopyButtons = [];
     private string _oldCopySource = "";
@@ -92,6 +93,11 @@ internal sealed class HomePage : Page
         _oldCopyRows = old.Add(Build.Column(6));
         _oldCopies.Visible = false;
         careers.Add(_oldCopies);
+        (_virtualStore, VBoxContainer store) = Build.Panel("CautionNotice", 8);
+        store.Add(Build.Text("Careers Windows kept elsewhere", "Strong"));
+        _virtualStoreNote = store.Add(Build.Text("", "Muted"));
+        _virtualStore.Visible = false;
+        careers.Add(_virtualStore);
         _columns.Add(careersCard);
 
         VBoxContainer side = _columns.Add(Build.Column(18));
@@ -339,6 +345,7 @@ internal sealed class HomePage : Page
             $"\nFolder: {_app.Backups.Folder}";
         BackUpNow.Disabled = folder is null || _app.Workspace.Busy;
         ShowOldCopies();
+        ShowVirtualStore(folder?.Root);
         _folderLine.Text = folder is null ? "" : $"Game folder: {folder.Root}  ({(folder.Source.StartsWith("Found through Steam", StringComparison.Ordinal) ? "found through Steam" : "chosen by you")})";
     }
 
@@ -372,6 +379,22 @@ internal sealed class HomePage : Page
             "copy somewhere else; \"Add a career file to your game…\" can then put it in your game. The companion only reads " +
             "these copies and never changes or deletes them.";
         _oldCopies.Visible = found.Count > 0;
+    }
+
+    /// <summary>
+    /// Says when Windows kept careers for a game in Program Files in its VirtualStore folder, which the companion does
+    /// not read, back up or write; the panel shows only when that folder holds some.
+    /// </summary>
+    private void ShowVirtualStore(string? root)
+    {
+        string? saves = root is null ? null : WindowsFolders.VirtualStoreSavesHere(root);
+        IReadOnlyList<string> found = WindowsFolders.Careers(saves);
+        _virtualStore.Visible = found.Count > 0;
+        if (found.Count == 0) return;
+        _virtualStoreNote.Text = $"Your game is in a Program Files folder, and Windows kept {Build.Count(found.Count, "career")} " +
+            $"it saved in {saves} instead of in the game folder ({string.Join(", ", found.Select(System.IO.Path.GetFileNameWithoutExtension))}). " +
+            "The game may be playing those copies. The companion does not read, back up or change that folder yet; this has not " +
+            "been tried on Windows.";
     }
 
     private void ChooseOldCopyDestination(OldCopyCareer career)
