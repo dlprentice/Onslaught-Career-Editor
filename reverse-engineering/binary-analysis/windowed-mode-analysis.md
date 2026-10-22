@@ -115,7 +115,7 @@ operational guidance to use the startup-flow patch at `0x12A644` (with
 | Guard Flag | `DAT_00662f3e` is **BSS — zero at load** in the pristine specimen (`74154bfa…`), and is set to `1` at runtime only by `-testeur` appearing earlier on the command line. *(Corrected 2026-07-28 — see above; previously read "Current canonical Steam hash (`74154bfa...`) has `DAT_00662f3e` = 0x01".)* |
 | Flag Storage | `CLIParams.mForceWindowed` at offset 0x38 |
 | Root Cause | Launch behavior depends on both CLI parse gating and startup fullscreen-flow gates |
-| Practical path | The companion's safe-copy profile once patched catalog rows `0x12A644` and `0x12BB97` on a copied executable; that feature was retired 2026-10-22 (Git keeps it, up to commit `86d1af7`). **Guard-byte normalization is not an alternative** — the guard has no file byte. *(Corrected 2026-07-28.)* |
+| Practical path | The retired WinUI app's Windowed & Mods page applied catalog rows `0x12A644` and `0x12BB97` to a copied executable, through AppCore's safe-copy profiles (the app was retired 2026-10-15; AppCore and its patch catalog were removed 2026-10-22 and are in Git up to commit `86d1af7`). **Guard-byte normalization is not an alternative** — the guard has no file byte. *(Corrected 2026-07-28.)* |
 
 ## The Mystery
 
@@ -171,7 +171,7 @@ If `mForceWindowed` is not set (or later startup flow forces fullscreen), this p
 
 ### Root Cause
 
-Current evidence supports a two-gate model: parser gate (`DAT_00662f3e`) plus startup fullscreen flow. This explains inconsistent field reports and aligned with the companion's former Binary Patches rows (retired 2026-10-22; in Git up to commit `86d1af7`).
+Current evidence supports a two-gate model: parser gate (`DAT_00662f3e`) plus startup fullscreen flow. This explains inconsistent field reports and aligned with the retired WinUI app's Binary Patches rows (AppCore's patch catalog, in Git up to commit `86d1af7`).
 
 ## Workarounds
 
@@ -206,8 +206,8 @@ guard is already `0x01`" — was reading that same `.rsrc` byte and is withdrawn
 
 The half of that note which was correct still holds: primary operational
 guidance is the startup-flow patch set (`0x12A644`, optional `0x12BB97`), which
-the companion's Binary Patches exposed until that feature was retired on
-2026-10-22 (in Git up to commit `86d1af7`).
+the retired WinUI app's Binary Patches page exposed through AppCore's patch
+catalog (in Git up to commit `86d1af7`).
 
 ### Option 4: `-testeur -forcewindowed` on the command line (no patching)
 
