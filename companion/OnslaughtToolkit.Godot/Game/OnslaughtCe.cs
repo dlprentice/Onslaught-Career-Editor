@@ -6,7 +6,9 @@ namespace OnslaughtToolkit.Companion.Game;
 /// source (bea-decomp <c>port/platform/linux/paths.cpp</c>, <c>port/platform/windows/files.cpp</c> and
 /// <c>port/tools/package.py</c>): where CE keeps its own careers and settings, and which programs a CE package holds.
 /// The process rule was seen finding a running Onslaught CE 0.1 on Linux on 2026-10-22 (its <c>bea</c> started from the
-/// package folder, before and after its file was replaced while it ran); it has not been tried on Windows. The companion does not read or write CE's folder yet; it only refuses to
+/// package folder, before and after its file was replaced while it ran; the check's output is kept in the ignored
+/// <c>local-data/companion/evidence/ce-running-check-2026-10-22.log</c>); it has not been tried on Windows. The
+/// companion does not read or write CE's folder yet; it only refuses to
 /// save copies there and counts CE as the game while it runs, because CE reads the original install's careers too.
 /// </summary>
 public static class OnslaughtCe

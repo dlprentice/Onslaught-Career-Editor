@@ -5,6 +5,7 @@ using OnslaughtToolkit.Companion.Careers;
 using OnslaughtToolkit.Companion.Files;
 using OnslaughtToolkit.Companion.Game;
 using OnslaughtToolkit.Companion.Lore;
+using OnslaughtToolkit.Companion.Options;
 using OnslaughtToolkit.Companion.Ui;
 
 using OnslaughtToolkit.Companion.Assets;
@@ -403,6 +404,10 @@ internal static class CompanionUiTests
         for (int frame = 0; frame < 30; frame++) await Frame(tree);
         check.That(settings.Opened?.Path == install.Options && settings.HasChanges && app.Status.Label.Text.Contains("Save or undo"),
             "opening a settings file from the picker while changes are unsaved keeps them and says so");
+        settings.OpenDialog.EmitSignal(FileDialog.SignalName.FileSelected, install.Options);
+        for (int frame = 0; frame < 30; frame++) await Frame(tree);
+        check.That(settings.Opened?.Path == install.Options && settings.HasChanges && settings.PreviewText.Contains("Music volume") &&
+            app.Status.Label.Text.Contains("already open"), "picking the file already shown while changes are unsaved keeps them and says so");
         check.That(!app.RequestClose() && app.DiscardDialog.Visible && app.DiscardDialog.DialogText.Contains("2 changes on Game settings"),
             "closing with unsaved settings asks first");
         app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
@@ -445,10 +450,35 @@ internal static class CompanionUiTests
             "a Right Shift press is captured as Right Shift, with a note that the game has not been seen writing it");
         settings.UndoAll.EmitSignal(BaseButton.SignalName.Pressed);
         for (int frame = 0; frame < 600 && (app.Workspace.Busy || settings.HasChanges); frame++) await Frame(tree);
+        // A key edit on a file whose control-scheme index is unknown is refused, yet the music change beside it is unsaved work.
+        byte[] unknownScheme = File.ReadAllBytes(install.Options);
+        BinaryPrimitives.WriteUInt16LittleEndian(unknownScheme.AsSpan(OptionsFile.TailOffset + 0x08), 7);
+        string unknownPath = Path.Combine(outputDirectory, "unknown-scheme.bea");
+        File.WriteAllBytes(unknownPath, unknownScheme);
+        settings.OpenDialog.EmitSignal(FileDialog.SignalName.FileSelected, unknownPath);
+        for (int frame = 0; frame < 600 && (app.Workspace.Busy || settings.Opened?.Path != unknownPath); frame++) await Frame(tree);
+        settings.Music.Value = settings.Music.Value > 50 ? 20 : 80;
+        settings.StartCapture(0x21, 1);
+        settings.Capture(Key.Y);
+        check.That(settings.Opened?.Path == unknownPath && settings.PreviewText.Contains("control scheme index is 7") && settings.HasChanges &&
+            settings.ChangeCount == 2, "a refused key edit beside a music change still counts as two unsaved changes");
+        check.That(!app.RequestClose() && app.DiscardDialog.Visible && app.DiscardDialog.DialogText.Contains("2 changes on Game settings") && !quit.On,
+            "closing with a refused key edit and a music change asks first");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+        settings.OpenDialog.EmitSignal(FileDialog.SignalName.FileSelected, install.Options);
+        for (int frame = 0; frame < 30; frame++) await Frame(tree);
+        check.That(settings.Opened?.Path == unknownPath && settings.HasChanges, "the picker keeps a refused edit's other changes too");
+        settings.UndoKeys.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(settings.HasChanges && settings.ChangeCount == 1 && settings.PreviewText.Contains("Music volume"),
+            "undoing the refused key leaves the music change ready to save");
+        settings.UndoAll.EmitSignal(BaseButton.SignalName.Pressed);
+        for (int frame = 0; frame < 600 && (app.Workspace.Busy || settings.HasChanges); frame++) await Frame(tree);
+        check.That(!settings.HasChanges, "undo clears the settings changes");
         int careerSource = 1;
         settings.Source.Select(careerSource);
         settings.Source.EmitSignal(OptionButton.SignalName.ItemSelected, careerSource);
-        for (int frame = 0; frame < 600 && (app.Workspace.Busy || settings.Opened?.Path == install.Options); frame++) await Frame(tree);
+        for (int frame = 0; frame < 600 && (app.Workspace.Busy || settings.Opened?.Path.EndsWith(".bes", StringComparison.Ordinal) != true); frame++) await Frame(tree);
         check.That(settings.Opened?.Path.EndsWith(".bes", StringComparison.Ordinal) == true, "a career's own settings can be chosen and opened");
     }
 

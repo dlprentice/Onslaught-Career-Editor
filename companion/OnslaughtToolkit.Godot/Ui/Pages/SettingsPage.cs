@@ -174,13 +174,15 @@ internal sealed class SettingsPage : Page
     internal OptionButton Shape => _shape;
 
     /// <summary>
-    /// Whether the player has changed anything here that saving would write. A choice equal to what the file already
-    /// holds (a slider moved and moved back, the screen shape it already has) changes nothing, so nothing is lost.
+    /// Whether the player has chosen anything here that is not saved. Only choices that all equal what the file already
+    /// holds (a slider moved and moved back, the screen shape it already has) count as no change. An edit the plan
+    /// refuses for another reason (a key on a file whose control-scheme index is unknown) still counts, because its
+    /// other choices could be saved once the refused one is undone.
     /// </summary>
-    internal bool HasChanges => _plan.Value is OptionsPlan;
+    internal bool HasChanges => !_edit.IsEmpty && (_plan.Value is OptionsPlan || _plan.Message != OptionsFile.NoChange);
 
     /// <summary>How many settings are changed and not saved yet.</summary>
-    internal int ChangeCount => _plan.Value is OptionsPlan plan ? plan.Lines.Count : 0;
+    internal int ChangeCount => _plan.Value is OptionsPlan plan ? plan.Lines.Count : HasChanges ? _edit.Count : 0;
 
     internal override void Refresh()
     {
@@ -354,9 +356,11 @@ internal sealed class SettingsPage : Page
     /// <summary>Opens a settings file picked with "Open a settings file…", unless unsaved changes would be dropped.</summary>
     internal void OpenPicked(string path)
     {
-        if (HasChanges && _file is SaveSession shown && path != shown.Path)
+        if (HasChanges && _file is SaveSession shown)
         {
-            _app.Status.Show("Save or undo your settings changes before opening another settings file.", StatusKind.Failure);
+            // Opening the file already shown would start it again and drop the changes too.
+            _app.Status.Show(path == shown.Path ? "That settings file is already open; your unsaved changes are kept."
+                : "Save or undo your settings changes before opening another settings file.", StatusKind.Failure);
             return;
         }
         _app.Status.Track(OpenAsync(path));

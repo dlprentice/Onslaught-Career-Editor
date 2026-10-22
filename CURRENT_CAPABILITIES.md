@@ -182,7 +182,8 @@ and the settings file are copied to a verified backup set; nothing is written wh
 `BEA.exe` or Onslaught CE running, checked before the backup and again just before the swap (on
 Linux, the `BEA.exe` rule was seen on 2026-09-26 to find the Steam game's own process under
 Proton and nothing else; the CE rule was seen on 2026-10-22 to find a running Onslaught CE 0.1
-on Linux, and is untested on Windows); a
+on Linux, recorded in the ignored `local-data/companion/evidence/ce-running-check-2026-10-22.log`,
+and is untested on Windows); a
 file the game saved since it was opened is not replaced; the new file is swapped in (on Linux
 an atomic exchange that swaps back if the displaced file is not the one backed up; elsewhere
 `File.Replace` with the same comparison) and verified. A file is put back from Backups only if it

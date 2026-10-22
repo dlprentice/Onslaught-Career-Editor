@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: paused (since 2026-10-16, until new requirements); C# application built entirely in code on Godot 4.8 dev6 .NET, organised around the player: careers, Goodies, editing, cheats, game settings, backups, music, voices, lore, and the game's models and textures; Linux executed checks, Windows runtime acceptance pending
-Last updated: 2026-10-22 (review fixes: close never abandons a backup started while it asks, settings picker keeps unsaved changes, CE check seen against a running CE on Linux, backups from another game folder go back after a confirmation naming both; data-safety fixes: restore checks the manifest hash and game folder, running check also for Onslaught CE and again before the swap, unsaved-changes prompts, right-hand Shift and Control; named Onslaught Companion; works with the original game only; relicensed GPL-3.0-only, lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (review fixes: close never abandons a backup started while it asks, settings picker keeps unsaved changes (also when the shown file is picked again or a key edit is refused), CE check seen against a running CE on Linux (output kept), backups from another game folder go back after a confirmation naming both; data-safety fixes: restore checks the manifest hash and game folder, running check also for Onslaught CE and again before the swap, unsaved-changes prompts, right-hand Shift and Control; named Onslaught Companion; works with the original game only; relicensed GPL-3.0-only, lore CC BY-SA 4.0)
 Summary: Onslaught Companion, the GPL-3.0-only app for Battle Engine Aquila players: today it works with the original game's Steam or retail install; it opens on that game and its careers, shows progress and Goodies, changes careers and settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, plays and explains the game's own music, voices and lore, and saves copies of its models (glTF), textures (PNG) and sound effects (WAV).
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -240,7 +240,9 @@ code keeps them:
   CE program replaced while it runs (`/proc/PID/exe` ending in ` (deleted)`) still counts. On
   2026-10-22 the check found a running Onslaught CE 0.1 on Linux (comm `bea`, its program in the
   extracted package beside `onslaught-ce-launch`), before and after its `bea` file was replaced,
-  and stopped finding it once CE exited; it has not been tried on Windows. On
+  and stopped finding it once CE exited (`Development/RunningCheck.cs` output saved in the ignored
+  `local-data/companion/evidence/ce-running-check-2026-10-22.log` beside the harness that ran it);
+  it has not been tried on Windows. On
   2026-09-26, with the Steam game running under Proton, the check found exactly the game's own process (`BEA.exe`, argv[0] `S:\steamapps\common\Battle Engine
   Aquila\BEA.exe`) and not Steam's launcher shim, the Proton script or the runtime wrapper;
   `python tools/companion_godot.py test --script Development/RunningCheck.cs` prints what it sees.

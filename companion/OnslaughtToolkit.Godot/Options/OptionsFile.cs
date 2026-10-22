@@ -49,6 +49,11 @@ public sealed class OptionsEdit
     public bool IsEmpty => SoundVolume is null && MusicVolume is null && MouseSensitivity is null && ScreenShape is null &&
         Keys.Count == 0 && InvertFlight.All(value => value is null) && InvertWalker.All(value => value is null) &&
         Vibration.All(value => value is null) && ControllerPreset.All(value => value is null);
+
+    /// <summary>How many settings this edit chooses, counting each key on its own.</summary>
+    public int Count => new object?[] { SoundVolume, MusicVolume, MouseSensitivity, ScreenShape }.Count(value => value is not null) +
+        Keys.Count + InvertFlight.Count(value => value is not null) + InvertWalker.Count(value => value is not null) +
+        Vibration.Count(value => value is not null) + ControllerPreset.Count(value => value is not null);
 }
 
 public sealed record OptionsPlan(byte[] Bytes, IReadOnlyList<ByteChange> Changes, IReadOnlyList<string> Lines);
@@ -78,6 +83,9 @@ public static class OptionsFile
     ];
 
     /// <summary>The values the game's own mouse-sensitivity slider stores: 3 to 63 in steps of 3 (retail, static).</summary>
+    /// <summary>Why <see cref="Preview"/> refuses an edit whose every choice is what the file already holds.</summary>
+    public const string NoChange = "Those settings already have the chosen values.";
+
     public static IReadOnlyList<float> SliderSensitivities { get; } = Enumerable.Range(1, 21).Select(step => step * 3f).ToArray();
 
     public static Outcome<OptionsReading> Read(ReadOnlySpan<byte> bytes)
@@ -169,7 +177,7 @@ public static class OptionsFile
             lines.Add("Control scheme index set to 0");
         }
         ByteComparison difference = CareerSave.Compare(original, output);
-        if (difference.Equal) return Outcome<OptionsPlan>.Refusal("Those settings already have the chosen values.");
+        if (difference.Equal) return Outcome<OptionsPlan>.Refusal(NoChange);
         return Outcome<OptionsPlan>.Success(new OptionsPlan(output, difference.Changes, lines), "Preview only. No file has been written.");
 
         bool Volume(float? value, int offset, string name, float before)
