@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-10-21 (port route: Onslaught CE published separately; Onslaught pin named by its constant)
+Last updated: 2026-10-21 (port route: Onslaught CE published separately; Onslaught pin named by its constant; the parity core's determinism contract)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository: the companion, the AppCore patching core, the game documentation, tools and the
 Godot rebuild.
@@ -144,7 +144,7 @@ wrong — fix the rows, not the document.
 | What is known about the retail game? | [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) and its routed documents; the private decompilation is the authority behind them |
 | How are retail function/behavior contracts graded and located? | [`CONTRACTS.md`](CONTRACTS.md) |
 | What evidence may enter the rebuild? | [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) |
-| What makes the rebuild deterministic, and what is its measured parity? | [`rebuild/DETERMINISM.md`](rebuild/DETERMINISM.md), [`rebuild/PARITY.md`](rebuild/PARITY.md) |
+| What makes the rebuild deterministic, and what is its measured parity? | [the parity core's contract](rebuild/DETERMINISM.md#the-parity-core-onslaughtrebuildparity) (the rest of that page is the earlier Core's), [`rebuild/PARITY.md`](rebuild/PARITY.md) |
 | Where does ignored machine-local evidence live? | [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md); on this host the canonical checkout's real `local-lab/` directory |
 | Which validation command applies? | [`VALIDATION.md`](VALIDATION.md) and [`package.json`](package.json) |
 | What shipped, per release? | [`CHANGELOG.md`](CHANGELOG.md) (the retired WinUI app's releases) |

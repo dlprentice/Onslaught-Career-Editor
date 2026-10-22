@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-21 (the decided repository plan: release, split, bundle, flatten, rename)
+Last updated: 2026-10-21 (the decided repository plan: release, split, bundle, flatten, rename; the rebuild's open items after M7 slice 4)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
@@ -25,12 +25,15 @@ Open, in priority order:
 - The tutorial win: a level 100 route driven by ordinary player inputs through every target group, zone and the
   genuine win, then end-level data, the save and the debrief, compared across retail, the native port and the
   rebuild.
-- The trainer route's first LIFE divergence from the native port at P16206: find the first differing collision input
-  or writeback and fix that operation.
+- The level-start pan camera: the parity core rounds its orientation's angles as the earlier port did, where retail
+  keeps them unrounded through its inline block (port patch 0036). Port retail's block with its oracle cases, then
+  re-compare the trainer (to P17300) and c17 (to P22150) routes, which match the native port at every Present today.
 - The controls and display Apply paths (display reset, joystick, the remaining options) that still stop a run.
 - The remaining motion controllers and the incomplete BattleEngine coverage.
-- The Host's front end, debrief and retry flow, actual audio output, display reset and live input, with moving-footage
-  review.
+- The Host's remaining drawing and output: the HUD's text (weapon name, warnings, objective panel), the lock-on pieces
+  and warning-receiver threats (not ported), the front end's particles and battle-engine model, P2800's dome, then
+  actual audio output, display reset and live input, with moving-footage review. The front end, the level's 2D and the
+  HUD's target passes are drawn and compared with the port ([PARITY.md](rebuild/PARITY.md), M7 slices 1 to 4).
 
 ### Companion — paused
 
