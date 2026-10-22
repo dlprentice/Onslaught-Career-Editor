@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-10-22 (relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0; machine-specific clones and folders live in an ignored local file)
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
@@ -37,8 +37,9 @@ queue, [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) what is demonstrated
   (`/srv/archive-b/Onslaught-Career-Editor`, a USB drive, bind-mounted). It holds the canonical `local-lab/`.
   Give it light I/O only: do builds, test runs, captures and worktrees in a clone on the internal disk and point it at
   the canonical lab ([LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md)). Worktrees never receive a copied corpus.
-- Which branch and clone each lane uses right now is recorded in `rebuild/README.md` (rebuild) and the companion's
-  own [README](companion/OnslaughtToolkit.Godot/README.md), not here.
+- Which branch each lane uses right now is recorded in `rebuild/README.md` (rebuild) and the companion's own
+  [README](companion/OnslaughtToolkit.Godot/README.md), not here; which clone and reference folders this machine uses is
+  in the ignored `local-data/rebuild-env.sh` and the private notes, never in a tracked file.
 
 ## Ground rules
 
