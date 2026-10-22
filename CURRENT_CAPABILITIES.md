@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-22 (the companion is Onslaught Companion and works with the original game only; AppCore patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (companion review fixes: CE running check seen on Linux, backups from another game folder after confirmation; the companion is Onslaught Companion and works with the original game only; AppCore patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -181,13 +181,13 @@ one that was opened, or a copy elsewhere. Before anything in the game changes, e
 and the settings file are copied to a verified backup set; nothing is written while it finds
 `BEA.exe` or Onslaught CE running, checked before the backup and again just before the swap (on
 Linux, the `BEA.exe` rule was seen on 2026-09-26 to find the Steam game's own process under
-Proton and nothing else; the CE rule follows the port's packaging and has not been seen
-against a running CE); a
+Proton and nothing else; the CE rule was seen on 2026-10-22 to find a running Onslaught CE 0.1
+on Linux, and is untested on Windows); a
 file the game saved since it was opened is not replaced; the new file is swapped in (on Linux
 an atomic exchange that swaps back if the displaced file is not the one backed up; elsewhere
 `File.Replace` with the same comparison) and verified. A file is put back from Backups only if it
-still matches the SHA-256 its backup recorded and only into the game folder that backup came
-from. Switching careers or closing with unsaved changes asks first. When the game closes, or the player
+still matches the SHA-256 its backup recorded; a backup from another game folder goes back only
+after a confirmation naming both folders. Switching careers or closing with unsaved changes asks first. When the game closes, or the player
 comes back to the companion, it reads what the game saved and shows the latest, keeping any
 unsaved changes; while changes are unsaved, a bar under the page keeps Save in reach. Every label style outside the banner measures at least 4.5:1 against the
 surfaces it sits on.

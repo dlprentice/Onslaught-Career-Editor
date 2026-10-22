@@ -8,8 +8,8 @@ namespace OnslaughtToolkit.Companion.Ui;
 /// <summary>
 /// The safety net: where backups go, automatic backups, and every backup set with a way to put any file
 /// back. Putting a file back is itself a write into the game, so it backs up the current files first. A file is put
-/// back only if it still matches the hash its backup recorded, and only into the game folder the backup came from;
-/// sets from another game folder are listed but cannot be put back here.
+/// back only if it still matches the hash its backup recorded. A set made from another game folder (an install that
+/// moved, or another copy of the game) is put back here only after a confirmation that names both folders.
 /// </summary>
 internal sealed class BackupsPage : Page
 {
@@ -18,7 +18,7 @@ internal sealed class BackupsPage : Page
     private readonly AppServices _app;
     private readonly VBoxContainer _sets;
     private readonly Label _folder, _empty;
-    private (BackupSet Set, BackupFile File)? _pending;
+    private (BackupSet Set, BackupFile File, string? OtherFolderConfirmedFor)? _pending;
 
     internal BackupsPage(AppServices app) : base("backups", "Backups", "backups")
     {
@@ -105,26 +105,25 @@ internal sealed class BackupsPage : Page
     internal void AskToRestore(BackupSet set, BackupFile file)
     {
         if (_app.Game.Folder is not GameFolder game) return;
-        if (!Backups.SameGame(set, game))
-        {
-            _app.Status.Show(OtherGameMessage(set), StatusKind.Failure);
-            return;
-        }
-        _pending = (set, file);
+        bool here = Backups.SameGame(set, game);
+        _pending = (set, file, here ? null : game.Root);
         string what = Describe(file.Name);
-        Confirm.DialogText = $"Put {what} back as it was {Build.When(set.Created)}?\n\nThe {what} in your game now is backed up first, " +
+        Confirm.DialogText = $"Put {what} back as it was {Build.When(set.Created)}?\n\n" + (here ? "" :
+            $"This backup was made from another game folder:\n{set.Game}\nIt will be put into the game folder you use now:\n{game.Root}\n\n") +
+            $"The {what} in your game now is backed up first, " +
             "together with every other career and your settings, so you can undo this too. Nothing is written while the game or Onslaught CE " +
-            "is running, and the backup copy must still match the fingerprint recorded when it was made.";
+            "is running, and the backup copy must still match the fingerprint recorded when it was made." + OnslaughtCe.UntestedCheckNote;
         Confirm.PopupCentered();
     }
 
     internal async Task<InstallReceipt> ConfirmAsync()
     {
         Confirm.Hide();
-        if (_pending is not (BackupSet set, BackupFile file) || _app.Game.Folder is not GameFolder game)
+        if (_pending is not (BackupSet set, BackupFile file, var confirmedFor) || _app.Game.Folder is not GameFolder game)
             return new InstallReceipt(false, "Nothing was chosen to put back.", "");
         _pending = null;
-        if (!Backups.SameGame(set, game))
+        // A set from another game folder goes in only when the confirmation named this very game folder.
+        if (!Backups.SameGame(set, game) && (confirmedFor is null || !Backups.SameRoot(confirmedFor, game.Root)))
         {
             InstallReceipt refused = new(false, OtherGameMessage(set), file.Name);
             _app.Status.Show(refused.Message, StatusKind.Failure);
@@ -140,6 +139,10 @@ internal sealed class BackupsPage : Page
         Refresh();
         return receipt;
     }
+
+    /// <summary>Test hook: a pending choice as if confirmed for <paramref name="otherFolderConfirmedFor"/> (null: never confirmed).</summary>
+    internal void HoldPendingForTest(BackupSet set, BackupFile file, string? otherFolderConfirmedFor) =>
+        _pending = (set, file, otherFolderConfirmedFor);
 
     private void ShowSets()
     {
@@ -159,15 +162,15 @@ internal sealed class BackupsPage : Page
             reason.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
             head.Add(Build.Text(Build.Count(set.Files.Count, "file"), "Faint", wrap: false));
             if (game is not null && !here)
-                body.Add(Build.Text($"From another game folder: {set.Game}. It can only be put back there.", "Faint", wrap: false, clip: true));
+                body.Add(Build.Text($"From another game folder: {set.Game}. Putting a file back here asks first.", "Faint", wrap: false, clip: true));
             foreach (BackupFile file in set.Files)
             {
                 HBoxContainer row = body.Add(Build.Row(12));
                 Label name = row.Add(Build.Text(Capitalised(Describe(file.Name)), "", wrap: false, clip: true));
                 name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
                 name.TooltipText = System.IO.Path.Combine(set.Folder, file.Name);
-                Button restore = row.Add(Build.Button("Put back", "Caution", here ? "" : OtherGameMessage(set),
-                    disabled: !here || _app.Workspace.Busy));
+                Button restore = row.Add(Build.Button("Put back", "Caution", here ? "" : $"Made from another game folder ({set.Game}); asks first.",
+                    disabled: _app.Workspace.Busy));
                 restore.Icon = Icons.Get("restore");
                 restore.Pressed += () => AskToRestore(set, file);
             }
@@ -179,7 +182,7 @@ internal sealed class BackupsPage : Page
     }
 
     private static string OtherGameMessage(BackupSet set) =>
-        $"That backup was made from another game folder ({set.Game}), so it is not put back into this one. Nothing was written.";
+        $"That backup was made from another game folder ({set.Game}) and putting it into this one was not confirmed. Nothing was written.";
 
     private static string Describe(string file) =>
         string.Equals(file, GameInstaller.OptionsName, StringComparison.OrdinalIgnoreCase) ? "the game's default settings"

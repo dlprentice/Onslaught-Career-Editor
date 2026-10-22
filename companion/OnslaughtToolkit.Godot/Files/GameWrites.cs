@@ -87,12 +87,17 @@ public static class GameProcess
     /// Whether a Linux process is Onslaught CE: its launcher, or its game program <c>bea</c> started from a CE package
     /// folder (<see cref="OnslaughtCe.IsCeProgram"/>). The program is read from <c>/proc/PID/exe</c>; when that cannot be
     /// read, argv[0] counts only if it is a full path, so a relative <c>./bea</c> is never resolved against the
-    /// companion's own folder.
+    /// companion's own folder. A program replaced or deleted while it runs (a CE update) reads as
+    /// <c>/…/bea (deleted)</c>: the suffix is dropped, and a full-path argv[0] is tried as well, so a running CE whose
+    /// files changed under it still counts.
     /// </summary>
     public static bool IsOnslaughtCe(string comm, IReadOnlyList<string> argv, string? program, Func<string, bool> fileExists)
     {
+        const string deleted = " (deleted)";
+        if (program is not null && program.EndsWith(deleted, StringComparison.Ordinal)) program = program[..^deleted.Length];
         string? first = argv.Count > 0 && Path.IsPathFullyQualified(argv[0]) ? argv[0] : null;
-        return OnslaughtCe.IsCeProgram(comm, program ?? first, fileExists);
+        return OnslaughtCe.IsCeProgram(comm, program ?? first, fileExists) ||
+            (program is not null && first is not null && first != program && OnslaughtCe.IsCeProgram(comm, first, fileExists));
     }
 
     private static string? Program(string procFolder)
@@ -203,7 +208,8 @@ public static class Backups
 
     /// <summary>
     /// Whether a backup set was made from this game folder: its manifest's game root names the same folder. A set
-    /// from another install must not be put back into this one, nor stand in for this one's latest backup.
+    /// from another install never stands in for this one's latest backup, and is put back into this one only after the
+    /// player confirms a prompt naming both folders.
     /// </summary>
     public static bool SameGame(BackupSet set, GameFolder game) => SameRoot(set.Game, game.Root);
 

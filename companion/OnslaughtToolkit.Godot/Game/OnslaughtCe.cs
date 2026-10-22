@@ -4,8 +4,9 @@ namespace OnslaughtToolkit.Companion.Game;
 /// <summary>
 /// What the companion knows about Onslaught CE, the native port, read as a documented contract from the port's own
 /// source (bea-decomp <c>port/platform/linux/paths.cpp</c>, <c>port/platform/windows/files.cpp</c> and
-/// <c>port/tools/package.py</c>), not yet checked against a running CE: where CE keeps its own careers and settings,
-/// and which programs a CE package holds. The companion does not read or write CE's folder yet; it only refuses to
+/// <c>port/tools/package.py</c>): where CE keeps its own careers and settings, and which programs a CE package holds.
+/// The process rule was seen finding a running Onslaught CE 0.1 on Linux on 2026-10-22 (its <c>bea</c> started from the
+/// package folder, before and after its file was replaced while it ran); it has not been tried on Windows. The companion does not read or write CE's folder yet; it only refuses to
 /// save copies there and counts CE as the game while it runs, because CE reads the original install's careers too.
 /// </summary>
 public static class OnslaughtCe
@@ -18,6 +19,13 @@ public static class OnslaughtCe
 
     /// <summary>The game program beside the launcher: <c>bea</c> on Linux, <c>bea.exe</c> on Windows.</summary>
     public const string LinuxGame = "bea", WindowsGame = "bea.exe";
+
+    /// <summary>
+    /// Said beside the promise not to write while CE runs, where that check has not been tried against a running CE
+    /// (Windows); empty on Linux, where it has.
+    /// </summary>
+    public static string UntestedCheckNote => OperatingSystem.IsWindows()
+        ? " Spotting Onslaught CE has not been tested on Windows yet, so close CE yourself before saving into the game." : "";
 
     /// <summary>The CE user folders for this process's environment.</summary>
     public static IReadOnlyList<string> UserFolders() =>

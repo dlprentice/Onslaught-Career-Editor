@@ -131,6 +131,10 @@ internal static class InstallTests
         {
             ("onslaught-ce-la", [launcher], launcher, true, "CE's launcher"),
             ("bea", ["./bea"], game, true, "CE's bea in its package folder"),
+            ("bea", ["./bea"], game + " (deleted)", true, "CE's bea replaced by an update while it runs (/proc/PID/exe ends in (deleted))"),
+            ("bea", [game], Path.Combine(root, "gone", "bea") + " (deleted)", true,
+                "CE's bea whose old file is gone, placed by its full-path argv[0]"),
+            ("bea", ["./bea"], Path.Combine(elsewhere, "bea") + " (deleted)", false, "a deleted program called bea outside a CE package"),
             ("bea", [game, "--windowed"], null, true, "CE's bea named by its full path when /proc/PID/exe cannot be read"),
             ("onslaught-ce", ["bash", Path.Combine(package, "onslaught-ce")], "/usr/bin/bash", true, "CE's start script"),
             ("bea", ["./bea"], Path.Combine(elsewhere, "bea"), false, "a program called bea outside a CE package"),
@@ -163,12 +167,15 @@ internal static class InstallTests
         File.WriteAllBytes(source, original);
         ProtectedRead read = files.OpenCareer(source);
         string custom = Path.Combine(root, "ce-user-dir");
-        string xdgCe = Path.Combine(Environment.GetEnvironmentVariable("XDG_DATA_HOME") ?? Path.Combine(root, "no-xdg"), "onslaught-ce");
+        string xdg = Path.Combine(root, "ce-xdg-data");
+        string xdgCe = Path.Combine(xdg, "onslaught-ce");
         string allowed = Path.Combine(root, "ce-neighbour");
         foreach (string folder in new[] { Path.Combine(custom, "savegames"), Path.Combine(xdgCe, "savegames"), allowed })
             Directory.CreateDirectory(folder);
-        string? before = Environment.GetEnvironmentVariable("BEA_USER_DIR");
+        // The test sets both variables itself, so it never depends on (or writes into) the runner's real data folder.
+        string? before = Environment.GetEnvironmentVariable("BEA_USER_DIR"), xdgBefore = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
         Environment.SetEnvironmentVariable("BEA_USER_DIR", custom);
+        Environment.SetEnvironmentVariable("XDG_DATA_HOME", xdg);
         try
         {
             foreach (string output in new[] { Path.Combine(custom, "savegames", "Copy.bes"), Path.Combine(custom, "Copy.bes"),
@@ -185,6 +192,7 @@ internal static class InstallTests
         finally
         {
             Environment.SetEnvironmentVariable("BEA_USER_DIR", before);
+            Environment.SetEnvironmentVariable("XDG_DATA_HOME", xdgBefore);
         }
     }
 

@@ -145,7 +145,7 @@ internal sealed class SettingsPage : Page
             else _app.Status.Track(SaveIntoGameAsync());
         };
         OpenOther.Pressed += () => OpenDialog.PopupCenteredRatio(0.75f);
-        OpenDialog.FileSelected += path => _app.Status.Track(OpenAsync(path));
+        OpenDialog.FileSelected += OpenPicked;
         SaveDialog.FileSelected += path => _app.Status.Track(SaveElsewhereAsync(path));
         Bar.Save.Pressed += AskToSave;
         Bar.Undo.Pressed += UndoChanges;
@@ -171,11 +171,16 @@ internal sealed class SettingsPage : Page
     internal string PreviewText => string.Join("\n", _changes.GetChildren().OfType<Label>().Select(label => label.Text));
     internal string ResultText => _resultText.Text;
 
-    /// <summary>Whether the player has changed anything here that is not saved yet.</summary>
-    internal bool HasChanges => !_edit.IsEmpty;
+    internal OptionButton Shape => _shape;
+
+    /// <summary>
+    /// Whether the player has changed anything here that saving would write. A choice equal to what the file already
+    /// holds (a slider moved and moved back, the screen shape it already has) changes nothing, so nothing is lost.
+    /// </summary>
+    internal bool HasChanges => _plan.Value is OptionsPlan;
 
     /// <summary>How many settings are changed and not saved yet.</summary>
-    internal int ChangeCount => _plan.Value is OptionsPlan plan ? plan.Lines.Count : HasChanges ? 1 : 0;
+    internal int ChangeCount => _plan.Value is OptionsPlan plan ? plan.Lines.Count : 0;
 
     internal override void Refresh()
     {
@@ -346,6 +351,17 @@ internal sealed class SettingsPage : Page
         if (index >= 0) Source.Selected = index;
     }
 
+    /// <summary>Opens a settings file picked with "Open a settings file…", unless unsaved changes would be dropped.</summary>
+    internal void OpenPicked(string path)
+    {
+        if (HasChanges && _file is SaveSession shown && path != shown.Path)
+        {
+            _app.Status.Show("Save or undo your settings changes before opening another settings file.", StatusKind.Failure);
+            return;
+        }
+        _app.Status.Track(OpenAsync(path));
+    }
+
     private void OpenSelected(int index)
     {
         // Opening other settings starts this page again from them; unsaved changes are never dropped that way.
@@ -388,7 +404,7 @@ internal sealed class SettingsPage : Page
             _details.Show(null);
         }
         bool ready = !_app.Workspace.Busy;
-        Bar.Show(_plan.Value is OptionsPlan changed ? changed.Lines.Count : 0, ready && _plan.Ok, ready && HasChanges);
+        Bar.Show(_plan.Value is OptionsPlan changed ? changed.Lines.Count : 0, ready && _plan.Ok, ready && !_edit.IsEmpty);
     }
 
     private void UndoChanges()

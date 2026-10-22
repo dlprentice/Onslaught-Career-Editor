@@ -104,7 +104,7 @@ internal sealed class HomePage : Page
         foreach (string promise in new[]
         {
             "Nothing in your original game changes without a backup first.",
-            "Nothing is written into it while it or Onslaught CE is running.",
+            "Nothing is written into it while it or Onslaught CE is running." + OnslaughtCe.UntestedCheckNote,
             "Any earlier version of its careers and settings can be put back from Backups.",
         })
         {

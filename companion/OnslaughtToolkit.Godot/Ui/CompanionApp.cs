@@ -164,7 +164,8 @@ public partial class CompanionApp : Control
         PageTitle = titles.Add(Build.Heading("", "Title"));
         PageSubtitle = titles.Add(Build.Text("", "Muted", wrap: false, clip: true));
         RunningBadge = header.Add(Build.Text("Game running", "Warn", wrap: false));
-        RunningBadge.TooltipText = "The original game or Onslaught CE is running. The companion won't write into the game folder until it closes.";
+        RunningBadge.TooltipText = "The original game or Onslaught CE is running. The companion won't write into the game folder until it closes." +
+            OnslaughtCe.UntestedCheckNote;
         RunningBadge.SizeFlagsVertical = SizeFlags.ShrinkCenter;
         RunningBadge.Visible = false;
         VBoxContainer career = header.Add(Build.Column(2));
@@ -301,11 +302,7 @@ public partial class CompanionApp : Control
     /// </summary>
     internal bool RequestClose()
     {
-        if (Workspace.Busy)
-        {
-            Status.Show("A file operation is still finishing. Wait for its result before closing.");
-            return false;
-        }
+        if (CloseWouldAbandonWrite()) return false;
         List<string> unsaved = [];
         if (EditCareer.HasChanges) unsaved.Add($"{Build.Count(EditCareer.ChangeCount, "change")} on Edit career");
         if (Settings.HasChanges) unsaved.Add($"{Build.Count(Settings.ChangeCount, "change")} on Game settings");
@@ -314,8 +311,19 @@ public partial class CompanionApp : Control
             _quit();
             return true;
         }
-        AskToDiscard($"Not saved yet: {string.Join(" and ", unsaved)}. Close the companion and discard them?", "Discard and close", _quit);
+        AskToDiscard($"Not saved yet: {string.Join(" and ", unsaved)}. Close the companion and discard them?", "Discard and close", () =>
+        {
+            // The dialog stays open across frames, and an automatic backup can start meanwhile (the game closed).
+            if (!CloseWouldAbandonWrite()) _quit();
+        });
         return false;
+    }
+
+    private bool CloseWouldAbandonWrite()
+    {
+        if (!Workspace.Busy) return false;
+        Status.Show("A file operation is still finishing. Wait for its result before closing.");
+        return true;
     }
 
     private void AskToDiscard(string text, string action, Action then)

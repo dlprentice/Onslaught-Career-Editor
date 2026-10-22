@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: paused (since 2026-10-16, until new requirements); C# application built entirely in code on Godot 4.8 dev6 .NET, organised around the player: careers, Goodies, editing, cheats, game settings, backups, music, voices, lore, and the game's models and textures; Linux executed checks, Windows runtime acceptance pending
-Last updated: 2026-10-22 (data-safety fixes: restore checks the manifest hash and game folder, running check also for Onslaught CE and again before the swap, unsaved-changes prompts, right-hand Shift and Control; named Onslaught Companion; works with the original game only; relicensed GPL-3.0-only, lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (review fixes: close never abandons a backup started while it asks, settings picker keeps unsaved changes, CE check seen against a running CE on Linux, backups from another game folder go back after a confirmation naming both; data-safety fixes: restore checks the manifest hash and game folder, running check also for Onslaught CE and again before the swap, unsaved-changes prompts, right-hand Shift and Control; named Onslaught Companion; works with the original game only; relicensed GPL-3.0-only, lore CC BY-SA 4.0)
 Summary: Onslaught Companion, the GPL-3.0-only app for Battle Engine Aquila players: today it works with the original game's Steam or retail install; it opens on that game and its careers, shows progress and Goodies, changes careers and settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, plays and explains the game's own music, voices and lore, and saves copies of its models (glTF), textures (PNG) and sound effects (WAV).
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -198,8 +198,10 @@ are never thrown away for this; the companion says so instead.
 - The handedness conversion follows the game's culling convention; no mirrored text on a model
   has been checked against it.
 - Behavior after a power loss during a write is not proven (see below).
-- The Onslaught CE running-check rule and CE's folder locations come from the port's source and
-  packaging; neither has been checked against a running CE.
+- The Onslaught CE running check has been seen against a running CE only on Linux (Onslaught
+  CE 0.1, its `bea` started from the package folder); spotting CE on Windows is untested, and
+  there the companion says so beside its promise. CE's folder locations come from the port's
+  source and packaging; only `BEA_USER_DIR` has been seen in use.
 - Which player each binding slot serves (Slot 1 or Slot 2) has not been checked in the game, and
   key classes no game-written row confirms (for example top-row digits, punctuation and the
   right-hand Shift and Control) are stored by the same convention but marked as not yet seen.
@@ -234,16 +236,20 @@ code keeps them:
   it runs is CE's launcher (`onslaught-ce-launch`, or `onslaught-ce.exe` on Windows), or is
   named `bea` (`bea.exe`) and sits in a folder that also holds that launcher, as an Onslaught
   CE package lays it out; a program called `bea` anywhere else does not count. On Windows the
-  check looks for processes named `BEA` (which includes CE's `bea.exe`) or `onslaught-ce`. The
-  CE rule follows the port's packaging and has not yet been seen against a running CE. On
+  check looks for processes named `BEA` (which includes CE's `bea.exe`) or `onslaught-ce`. A
+  CE program replaced while it runs (`/proc/PID/exe` ending in ` (deleted)`) still counts. On
+  2026-10-22 the check found a running Onslaught CE 0.1 on Linux (comm `bea`, its program in the
+  extracted package beside `onslaught-ce-launch`), before and after its `bea` file was replaced,
+  and stopped finding it once CE exited; it has not been tried on Windows. On
   2026-09-26, with the Steam game running under Proton, the check found exactly the game's own process (`BEA.exe`, argv[0] `S:\steamapps\common\Battle Engine
   Aquila\BEA.exe`) and not Steam's launcher shim, the Proton script or the runtime wrapper;
   `python tools/companion_godot.py test --script Development/RunningCheck.cs` prints what it sees.
 - **Any earlier version can be put back from Backups.** Putting a file back is itself a
   write into the game, so it backs up the current files first. The file is put back only if
-  its bytes still match the SHA-256 the backup's manifest recorded, and only into the game
-  folder the backup was made from; a backup from another game folder is listed but cannot be
-  put back. Automatic backups compare against the newest backup of the same game folder.
+  its bytes still match the SHA-256 the backup's manifest recorded. A backup made from another
+  game folder (an install that moved, or another copy of the game) is put back only after a
+  confirmation that names both folders. Automatic backups compare against the newest backup of
+  the same game folder.
 
 Everything else only reads. Careers and settings open read-only as verified snapshots. A
 copy saved elsewhere is always a **new** file: publication re-checks the source's identity

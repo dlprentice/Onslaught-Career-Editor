@@ -209,6 +209,9 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
     /// <summary>Blocks until a running transaction finishes; used only while the application closes.</summary>
     public void WaitForCompletion() => worker.WaitForCompletion();
 
+    /// <summary>Test hook: marks a file operation as running (or finished) without starting one.</summary>
+    internal void HoldBusyForTest(bool busy) => SetBusy(busy);
+
     private void SetBusy(bool busy)
     {
         Busy = busy;

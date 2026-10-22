@@ -42,7 +42,7 @@ internal static class CompanionUiTests
             await Start(app, tree, install, check);
             await Edit(app, files, tree, install, fixture, outputDirectory, original, running, check);
             await UnsavedChanges(app, tree, install, quit, check);
-            await CheatsAndSettings(app, tree, install, outputDirectory, check);
+            await CheatsAndSettings(app, tree, install, outputDirectory, quit, check);
             await BackupsAndHome(app, tree, install, outputDirectory, original, defaultBackups, openedUrls, running, check);
             await DriveLore(app, tree, openedUrls, check);
             await ModelsAndTextures(app, tree, install, outputDirectory, check);
@@ -338,13 +338,20 @@ internal static class CompanionUiTests
         check.That(quit.On, "agreeing to discard closes the companion");
         quit.On = false;
         app.DiscardDialog.Hide();
+        check.That(!app.RequestClose() && app.DiscardDialog.Visible && !quit.On, "closing asks again while the change is unsaved");
+        app.Workspace.HoldBusyForTest(true);
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
+        app.Workspace.HoldBusyForTest(false);
+        check.That(!quit.On && app.Status.Label.Text.Contains("still finishing"),
+            "a file operation that starts while the close dialog is open keeps the companion open when the player confirms");
+        app.DiscardDialog.Hide();
         edit.UndoAll.EmitSignal(BaseButton.SignalName.Pressed);
         check.That(app.RequestClose() && quit.On && !app.DiscardDialog.Visible, "with nothing unsaved, closing does not ask");
         quit.On = false;
         await app.OpenCareerAsync(install.Career);
     }
 
-    private static async Task CheatsAndSettings(CompanionApp app, SceneTree tree, FakeInstall install, string outputDirectory, Checks check)
+    private static async Task CheatsAndSettings(CompanionApp app, SceneTree tree, FakeInstall install, string outputDirectory, Flag quit, Checks check)
     {
         check.Suite("cheats and settings");
         app.Navigate("cheats");
@@ -392,6 +399,10 @@ internal static class CompanionUiTests
         settings.Source.EmitSignal(OptionButton.SignalName.ItemSelected, 1);
         check.That(settings.Opened?.Path == install.Options && settings.HasChanges && settings.Source.Selected == 0 &&
             app.Status.Label.Text.Contains("Save or undo"), "choosing other settings while changes are unsaved keeps them and says so");
+        settings.OpenDialog.EmitSignal(FileDialog.SignalName.FileSelected, install.Career);
+        for (int frame = 0; frame < 30; frame++) await Frame(tree);
+        check.That(settings.Opened?.Path == install.Options && settings.HasChanges && app.Status.Label.Text.Contains("Save or undo"),
+            "opening a settings file from the picker while changes are unsaved keeps them and says so");
         check.That(!app.RequestClose() && app.DiscardDialog.Visible && app.DiscardDialog.DialogText.Contains("2 changes on Game settings"),
             "closing with unsaved settings asks first");
         app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
@@ -410,6 +421,14 @@ internal static class CompanionUiTests
             (float)(newMusic / 100)) < 1e-6, "a settings copy changes only the music float and the chosen key's two dwords");
         check.That(!settings.HasChanges && settings.ResultText.StartsWith("Saved a copy", StringComparison.Ordinal),
             "after a settings copy is saved the page starts again from the file, the result still shown");
+        int sameShape = (int)settings.Reading!.ScreenShape + 1;
+        settings.Shape.Select(sameShape);
+        settings.Shape.EmitSignal(OptionButton.SignalName.ItemSelected, sameShape);
+        check.That(!settings.HasChanges && settings.ChangeCount == 0 && app.RequestClose() && quit.On && !app.DiscardDialog.Visible,
+            "choosing the screen shape the file already has changes nothing, so closing does not ask");
+        quit.On = false;
+        settings.Shape.Select(0);
+        settings.Shape.EmitSignal(OptionButton.SignalName.ItemSelected, 0);
         settings.Music.Value = newMusic;
         settings.StartCapture(0x21, 1);
         settings.Capture(Key.T);
@@ -504,17 +523,29 @@ internal static class CompanionUiTests
             File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(inGame) && Backups.List(defaultBackups).Count == setsBefore,
             "a backup copy that no longer matches its recorded fingerprint is not put back, and nothing is written");
 
-        // A backup made from another game folder is listed but never put back into this one.
+        // A backup made from another game folder (an install that moved) goes back only after a prompt naming both folders.
         FakeInstall elsewhere = FakeInstall.Create(Path.Combine(outputDirectory, "ui-other-install"), original);
         BackupReceipt foreign = Backups.Create(new ProtectedSaveFiles(), GameFolder.Inspect(elsewhere.Game, "test"), defaultBackups,
             DateTime.Now.AddMinutes(5), "Backed up by you");
         backups.Refresh();
         BackupSet otherGame = Backups.List(defaultBackups).Single(set => set.Folder == foreign.Set?.Folder);
-        backups.AskToRestore(otherGame, otherGame.Files[0]);
-        check.That(foreign.Ok && !backups.Confirm.Visible && app.Status.Label.Text.Contains("another game folder") &&
-            File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(inGame), "a backup from another game folder is not put back into this one");
-        check.That(backups.RestoreButtons.Count(button => button.Disabled) == otherGame.Files.Count,
-            "only that backup's Put back buttons are disabled");
+        BackupFile otherCareer = otherGame.Files.Single(file => file.Name == "Career One.bes");
+        check.That(foreign.Ok && backups.RestoreButtons.All(button => !button.Disabled),
+            "a backup from another game folder can be chosen to put back too");
+        backups.HoldPendingForTest(otherGame, otherCareer, null);
+        InstallReceipt unconfirmed = await backups.ConfirmAsync();
+        check.That(!unconfirmed.Ok && unconfirmed.Message.Contains("another game folder") && File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(inGame),
+            "a backup from another game folder is never put back without the confirmation that names both folders");
+        backups.HoldPendingForTest(otherGame, otherCareer, elsewhere.Game);
+        InstallReceipt wrongFolder = await backups.ConfirmAsync();
+        check.That(!wrongFolder.Ok && File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(inGame),
+            "a confirmation that named a different game folder does not count");
+        backups.AskToRestore(otherGame, otherCareer);
+        check.That(backups.Confirm.Visible && backups.Confirm.DialogText.Contains(otherGame.Game) && backups.Confirm.DialogText.Contains(app.Game.Folder!.Root),
+            "putting back a backup from another game folder asks first, naming both folders");
+        InstallReceipt moved = await backups.ConfirmAsync();
+        check.That(moved.Ok && File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(File.ReadAllBytes(Path.Combine(otherGame.Folder, otherCareer.Name))),
+            "after the player confirms, the file from the other game folder's backup is put back here");
         app.Navigate("home");
         HomePage home = app.Home;
         check.That(!home.AskingAboutBackups && home.HeroStatus.Contains("last backed up"), "Home shows the safety net once it is set up");

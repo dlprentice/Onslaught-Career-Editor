@@ -347,7 +347,9 @@ def export_platform(engine: Path, project: Path, templates: Path, pins: dict[str
         "choose the game folder on Home. It does not yet read or launch Onslaught CE.\n\n"
         "Your careers stay safe. Before the companion changes anything in the original game's folder it backs up every\n"
         "career and the settings file, it writes nothing while the game or Onslaught CE is running (checked before the\n"
-        "backup and again just before the swap), and Backups can put any earlier version back.\n"
+        "backup and again just before the swap), and Backups can put any earlier version back.\n" +
+        ("Spotting a running Onslaught CE has not been tested on Windows yet; close CE yourself before saving into the game.\n"
+         if platform == "windows" else "") +
         "Backups go to \"Battle Engine Aquila Backups\" in your Documents folder unless you choose another folder.\n\n"
         "About this package\n"
         f"Godot {pins['engineVersion']} runs the companion, a C# application built in code.\n"
