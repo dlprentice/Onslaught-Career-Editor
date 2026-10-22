@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-10-22 (the AppCore patching core, its tests and the `patches/` catalog removed; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (the related repositories are linked; `rebuild/` is a frozen copy; earlier: AppCore and the `patches/` catalog removed)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository: the companion, the game documentation, tools and the
 Godot rebuild.
@@ -11,8 +11,8 @@ what is currently proved or working. Use [`CURRENT_CAPABILITIES.md`](CURRENT_CAP
 for demonstrated capability, [`GOAL.md`](GOAL.md) for the direction,
 [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) for the game documentation, and
 [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) for the rebuild's evidence and licence boundary. The
-decompilation lives in a private repository; the native port's source and downloads are published separately as
-Onslaught CE (link added at release), never from this repository. The Ghidra checkpoint and campaign machinery are in
+decompilation's public export is [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp); the native port's source and downloads are
+published separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce), never from this repository. The Ghidra checkpoint and campaign machinery are in
 the private `onslaught-re-archive`. Do not embed volatile counts here.
 
 ## Dependency direction
@@ -31,8 +31,8 @@ flowchart LR
     RC --> RCore
 ```
 
-The arrows are source dependencies, not priority. The rebuild is the active lane: `OnslaughtRebuild.Parity` owns the
-simulation and `OnslaughtRebuild.Host` the presentation; the earlier Core, Client, Headless and Godot projects are
+The arrows are source dependencies, not priority. `rebuild/` is a frozen copy; the rebuild is developed in
+[onslaught-godot](https://github.com/dlprentice/onslaught-godot). In it, `OnslaughtRebuild.Parity` owns the simulation and `OnslaughtRebuild.Host` the presentation; the earlier Core, Client, Headless and Godot projects are
 reference material. The companion is the public player product, paused until new requirements. The companion is a C# application built in code and owns its file-safety
 source.
 The companion (GPL-3.0-only) has no dependency on the rebuild or private retail assets.

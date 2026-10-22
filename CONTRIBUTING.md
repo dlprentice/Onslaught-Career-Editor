@@ -1,14 +1,15 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-10-22 (the retired AppCore patching core removed; contributions: inbound = outbound licensing)
+Last updated: 2026-10-22 (Onslaught CE and onslaught-godot linked; earlier: the retired AppCore patching core removed, inbound = outbound licensing)
 Summary: what a focused change looks like here, what must never be added to the
 repository, and which checks a change owes.
 
 This public repository holds the Godot toolkit companion (paused until new requirements), documentation of
-*Battle Engine Aquila* as prose and specs, our tools and the active Godot
-rebuild. The byte-matching decompilation is private; its native port is published separately as Onslaught CE
-(link added at release), and port issues belong there. [GOAL.md](GOAL.md) states the
+*Battle Engine Aquila* as prose and specs, our tools and a frozen copy of the Godot
+rebuild, which is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot). The byte-matching decompilation's public export is
+[onslaught-decomp](https://github.com/dlprentice/onslaught-decomp); its native port is published separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce);
+report port problems in [its issues](https://github.com/dlprentice/onslaught-ce/issues). [GOAL.md](GOAL.md) states the
 direction and [PROGRAM.md](PROGRAM.md) the work queue. Keep changes focused and use existing records and
 validation.
 
@@ -111,8 +112,7 @@ cite the function or capture, and never paste decompiler output. Contract grades
 [`CONTRACTS.md`](CONTRACTS.md). Retain raw or bulky proof locally; commit only the smallest public-safe evidence
 a document needs, and state what it does not prove.
 
-The rebuild is active, with one writer per path; its current lane is in
-[`rebuild/README.md`](rebuild/README.md#working-lane). Before changing `rebuild/`, read
+`rebuild/` is a frozen copy: rebuild changes belong in [onslaught-godot](https://github.com/dlprentice/onslaught-godot). For the record, read
 [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) and [`rebuild/README.md`](rebuild/README.md): GPL-compatible source adaptation and locally materialized
 user-supplied retail data are permitted; retail executable or decompiler text and separately licensed
 third-party material are not.

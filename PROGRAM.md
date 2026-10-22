@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-22 (the companion moved to Godot 4.8 beta1 and .NET 10; AppCore removed; the companion's next step is the CE launcher and manager; exe patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (the related repositories are public and linked; the rebuild's queue moved to onslaught-godot; earlier: the companion moved to Godot 4.8 beta1 and .NET 10, AppCore removed)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
@@ -11,29 +11,11 @@ the campaign's records are in the private `dlprentice/onslaught-re-archive`.
 
 ## Open work
 
-### Godot rebuild — active (scoped proof of concept)
+### Godot rebuild
 
-David reactivated the rebuild on 2026-10-15: startup to exit 1:1 with retail, with level 100 playable to completion
-(win, loss and retry) and the career written after a win identical to retail's. `OnslaughtRebuild.Parity` owns the
-simulation and `OnslaughtRebuild.Host` the presentation (experimental live mode `HOST_LIVE=1`); the earlier
-Core/Client/Godot projects are reference material. Parity is measured Present by Present against retail and
-native-port recordings; [rebuild/PARITY.md](rebuild/PARITY.md) records the milestones and what is measured, and
-[rebuild/README.md](rebuild/README.md#working-lane) the working branch, clone and reference environment.
-
-Open, in priority order:
-
-- The tutorial win: a level 100 route driven by ordinary player inputs through every target group, zone and the
-  genuine win, then end-level data, the save and the debrief, compared across retail, the native port and the
-  rebuild.
-- The level-start pan camera: the parity core rounds its orientation's angles as the earlier port did, where retail
-  keeps them unrounded through its inline block (port patch 0036). Port retail's block with its oracle cases, then
-  re-compare the trainer (to P17300) and c17 (to P22150) routes, which match the native port at every Present today.
-- The controls and display Apply paths (display reset, joystick, the remaining options) that still stop a run.
-- The remaining motion controllers and the incomplete BattleEngine coverage.
-- The Host's remaining drawing and output: the HUD's text (weapon name, warnings, objective panel), the lock-on pieces
-  and warning-receiver threats (not ported), the front end's particles and battle-engine model, P2800's dome, then
-  actual audio output, display reset and live input, with moving-footage review. The front end, the level's 2D and the
-  HUD's target passes are drawn and compared with the port ([PARITY.md](rebuild/PARITY.md), M7 slices 1 to 4).
+The rebuild's work queue, milestones and measured parity are kept in
+[onslaught-godot](https://github.com/dlprentice/onslaught-godot), where it is developed; `rebuild/` here is a frozen
+copy.
 
 ### Companion — paused
 
@@ -67,11 +49,12 @@ citing functions rather than quoting code. The companion's CE work (careers, set
 consumer. Sections whose decompiler listings moved to the private archive on 2026-10-15 keep a pointer and,
 where needed, a short summary; a fuller prose description is welcome wherever a reader needs one.
 
-### Decompilation and native port — private
+### Decompilation and native port
 
 The byte-matching decompilation is complete (5,482 of 5,482 functions) in the private `bea-decomp`, which owns its
 plan, score and divergences. Its native source port (Windows and Linux) is developed there and published
-separately as Onslaught CE (GPL-3.0-only source and binaries, no game files; link added at release). Nothing from
+separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce) (GPL-3.0-only source and binaries, no game files); its public decompilation export is
+[onslaught-decomp](https://github.com/dlprentice/onslaught-decomp). Nothing from
 it is copied into this repository.
 
 ### Repository
@@ -79,16 +62,16 @@ it is copied into this repository.
 - The public history was flattened to a single new root (approved by David); the full earlier history is a
   verified bundle and `refs/old/*` in the private RE archive. The third-party fork and GitHub's pull-request refs
   still hold the old history; whether to ask GitHub Support to purge the PR refs is David's decision.
-- The decided plan, in order: after the Onslaught CE release, the Godot rebuild (`rebuild/`) moves to its own
-  repository, `onslaught-godot`; this repository's full history is then bundled into the private RE archive and
-  flattened again; and finally this repository is renamed to the companion's name, which David has yet to choose.
-  The companion later becomes the CE launcher. Each step is a separate, coordinated task.
+- The split: the Godot rebuild is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot) (the `rebuild/` copy here is frozen), and
+  the game documentation is published as [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation). Still to come: this repository's
+  full history is bundled into the private RE archive and flattened again, and the repository is renamed
+  onslaught-companion. The companion later becomes the CE launcher. Each step is a separate, coordinated task.
 
 ## Paused
 
 - **The earlier fixed-point rebuild's queue** (Core/Client/Godot, paused 2026-10-15 when the rebuild restarted around
   the parity core): World 110 generalization (former P7) and player-input replay tapes (former P8). Its final state is
-  described in [rebuild/README.md](rebuild/README.md#the-earlier-rebuild-history). The active rebuild's scope is level
+  described in [rebuild/README.md](rebuild/README.md#the-earlier-rebuild-history). The rebuild's scope is level
   100 only.
 - **The companion** (above), until David sets new requirements.
 

@@ -1,26 +1,26 @@
 # Onslaught Toolkit
 
 Status: active — the project overview
-Last updated: 2026-10-22 (the companion moved to Godot 4.8 beta1 and .NET 10; AppCore and the executable-patch catalog removed; the companion is Onslaught Companion, original game only for now; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (the related repositories are public and linked; the rebuild moved to onslaught-godot)
 Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
 
 Onslaught Toolkit is a preservation project for *Battle Engine Aquila* (2003, Lost Toys).
 
 - **The decompilation is done.** A byte-matching decompilation of the retail executable is the project's
-  reverse-engineering authority. It stays private.
+  reverse-engineering authority. Its public export is [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp).
 - **The native source port is the faithful game**, for Windows and Linux. Its source and downloads are published
-  separately as **Onslaught CE** (GPL-3.0-only, no game files; link added at release), not from this repository.
+  separately as **[Onslaught CE](https://github.com/dlprentice/onslaught-ce)** (GPL-3.0-only, no game files), not from this repository.
 - **The companion, Onslaught Companion, is the player app and the future Onslaught CE launcher** (development paused
   until new requirements). It is a Godot .NET app that today works with the original game's Steam or retail install:
   it opens on the player's game and careers, shows progress and Goodies, edits careers and
   settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, and plays
   and explains the game's own music, voices and lore.
-- **The Godot rebuild is active as a scoped proof of concept**: startup to exit 1:1 with retail, level 100 playable
-  to completion. [`rebuild/README.md`](rebuild/README.md) describes it and [`rebuild/PARITY.md`](rebuild/PARITY.md)
-  records its measured parity.
+- **The Godot rebuild** aims to be 1:1 with retail from startup to exit, with level 100 playable to completion. It
+  is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot), which keeps its measured parity; `rebuild/` here is a frozen copy,
+  not built or tested, and is removed when this repository is split.
 
 This repository holds the companion, documentation of the game (formats, behaviours and findings as prose and
-specs), our own tools and the Godot rebuild. It holds no game files, Ghidra database, decompiler output or decomp source.
+specs), our own tools and a frozen copy of the Godot rebuild. It holds no game files, Ghidra database, decompiler output or decomp source.
 
 This is an unofficial community project. It is not affiliated with or endorsed by the game's publishers or rights
 holders. Repository licenses cover their respective project code and documentation; they grant no rights in the
@@ -29,14 +29,17 @@ retail game, its assets, names, or trademarks.
 ## Play: Onslaught CE
 
 To play the game, use Onslaught CE, the native source port. It needs your own installation of the game for its data.
-Its releases are published from its own repository (link added at release).
+Its source and downloads are at [Onslaught CE](https://github.com/dlprentice/onslaught-ce).
 
 ## Related repositories
 
 | Repository | What it holds |
 | --- | --- |
-| This repository | The companion, documentation of the game, lore, our tools, and (until it moves to its own repository after the release) the Godot rebuild |
-| Onslaught CE (link added at release) | The native source port's source and its Windows and Linux downloads; GPL-3.0-only |
+| This repository | The companion, documentation of the game, lore, our tools, and a frozen copy of the Godot rebuild |
+| [Onslaught CE](https://github.com/dlprentice/onslaught-ce) | The native source port's source and its Windows and Linux downloads; GPL-3.0-only |
+| [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) | The byte-matching decompilation of the retail executable, for MSVC 6; bring your own game and compiler; GPL-3.0-only |
+| [onslaught-godot](https://github.com/dlprentice/onslaught-godot) | The Godot 4 C# rebuild, checked against the original game Present by Present; GPL-3.0-only |
+| [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation) | Documentation of the game: file formats, saves, mechanics, levels and engine; CC BY-SA 4.0 |
 | [`stuart73/Onslaught`](https://github.com/stuart73/Onslaught) | Stuart's partial GPL source release; this repository pins David's fork, [`dlprentice/Onslaught`](https://github.com/dlprentice/Onslaught), as [`references/Onslaught`](references/Onslaught) |
 
 ## Using the companion
@@ -58,7 +61,7 @@ on the companion's Home page, where each can be saved as a copy elsewhere.
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Documentation of the game: formats, mechanics, saves, assets, function notes and contracts |
 | [`lore/`](lore/_index.md) | The canonical lore and history library, embedded in the companion |
 | [`tools/`](tools/README.md) | Format decoders, asset exporters, capture analysis and the repository's checks |
-| [`rebuild/`](rebuild/README.md) | The GPL Godot rebuild: `OnslaughtRebuild.Parity` (simulation) and `OnslaughtRebuild.Host` (presentation); the earlier Core/Client/Godot projects are reference |
+| [`rebuild/`](rebuild/README.md) | A frozen copy of the GPL Godot rebuild, now developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot); not built or tested here |
 
 [`PROJECT-INDEX.md`](PROJECT-INDEX.md) maps source ownership and dependencies;
 [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) says what is demonstrated today and what is not.
@@ -69,8 +72,7 @@ Retired surfaces (WinUI, the CLI, Electron, the Python GUI, WPF) remain in Git h
 The engineering host is Omarchy Linux. Requirements:
 
 - The .NET 10 SDK named in `global.json`, and the pinned toolchain from `~/.local/opt/game-pipeline`
-  (Godot 4.8 dev6 .NET with matching templates for the rebuild; Godot 4.8 beta1 .NET with matching templates
-  and .NET SDK 10.0.402 for the companion)
+  (Godot 4.8 beta1 .NET with matching templates and .NET SDK 10.0.402)
 - Node.js 26.7 and npm 11.19 from mise
 - Python 3.14 available as `python`; root commands use forward-slash paths
 - A lawfully obtained Battle Engine Aquila installation for anything that reads the game
@@ -95,7 +97,6 @@ for a change and [`CONTRIBUTING.md`](CONTRIBUTING.md) sets contribution boundari
 | --- | --- |
 | Companion build, run, test, capture, export | `npm run build:companion-godot`; `npm run run:companion-godot`; `npm run test:companion-godot`; `npm run capture:companion-godot`; `npm run export:companion-godot -- --platform both` |
 | Tool checks | Affected cases in `python tools/<name>_tests.py`; all of them with `npm run test:tools` |
-| Rebuild | The Parity suite and Host build with the reference environment in [rebuild/README.md](rebuild/README.md#working-lane); the earlier `npm run check:rebuild` gate covers only the reference projects |
 
 The companion's development runner (`tools/companion_godot.py`) puts scratch, logs and user data under the canonical
 checkout's `local-data/companion/`, including from a Git worktree.

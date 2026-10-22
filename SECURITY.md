@@ -1,7 +1,7 @@
 # Security And Private Data Reporting
 
 Status: active disclosure guidance
-Last updated: 2026-10-22 (the installed-game write contract cites the companion's GameWrites; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (private reports go through GitHub's private vulnerability reporting; the installed-game write contract cites the companion's GameWrites; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: how to report a defect that touches saves, local paths or copied
 executables, and the safety contracts a report is judged against.
 
@@ -39,7 +39,8 @@ format completeness, patch gameplay effects, asset fidelity, or rebuild parity.
 
 ## Report privately
 
-Use the maintainer channel provided with your collaboration invitation for:
+Use GitHub's private vulnerability reporting (the repository's Security tab, "Report a
+vulnerability": https://github.com/dlprentice/Onslaught-Career-Editor/security/advisories/new) for:
 
 - leaked secrets, credentials, private paths, or machine identifiers;
 - unsafe mutation of an installed game, original executable, save, or options
@@ -52,10 +53,6 @@ Use the maintainer channel provided with your collaboration invitation for:
 In the first report, include the affected path and commit, the command or user
 action, high-level reproduction steps, and the smallest redacted evidence. Do
 not paste secrets, executable/save bytes, machine-local paths, or raw captures.
-
-If no private channel has been arranged, open a public issue titled `Private
-report needed` with a one-sentence category such as `possible unsafe patch
-path`. Wait for a private route before adding sensitive detail.
 
 ## Public reports
 

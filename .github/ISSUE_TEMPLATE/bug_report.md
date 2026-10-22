@@ -11,11 +11,10 @@ assignees: ""
 Choose one:
 
 - [ ] Companion
-- [ ] Rebuild (until it moves to its own repository)
 - [ ] Docs and lore
 - [ ] Tools
 
-Issues with the native port (Onslaught CE) belong in its own repository, not here.
+Issues with the native port belong in [Onslaught CE's issues](https://github.com/dlprentice/onslaught-ce/issues), not here; rebuild issues belong in [onslaught-godot](https://github.com/dlprentice/onslaught-godot).
 
 ## Expected Behavior
 

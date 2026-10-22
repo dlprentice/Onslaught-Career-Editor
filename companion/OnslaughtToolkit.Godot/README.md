@@ -6,8 +6,8 @@ Summary: Onslaught Companion, the GPL-3.0-only app for Battle Engine Aquila play
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
 changes in the game is backed up first and can be put back. Retail reverse engineering, the
-faithful game (the native source port, published separately as Onslaught CE; link added at
-release) and the GPL Godot rebuild have separate owners; this project neither launches nor
+faithful game (the native source port, published separately as
+[Onslaught CE](https://github.com/dlprentice/onslaught-ce)) and the GPL Godot rebuild ([onslaught-godot](https://github.com/dlprentice/onslaught-godot)) have separate owners; this project neither launches nor
 depends on the rebuild. Tools for looking at raw bytes are kept, folded away under Advanced.
 
 ## Which game it works with

@@ -7,11 +7,10 @@ What changed, why, and which user or contributor problem it solves.
 Areas affected:
 
 - [ ] Companion
-- [ ] Rebuild (until it moves to its own repository)
 - [ ] Docs and lore
 - [ ] Tools
 
-Changes to the native port (Onslaught CE) belong in its own repository, not here.
+Changes to the native port belong in [Onslaught CE](https://github.com/dlprentice/onslaught-ce), not here; rebuild changes belong in [onslaught-godot](https://github.com/dlprentice/onslaught-godot).
 
 Main paths changed:
 

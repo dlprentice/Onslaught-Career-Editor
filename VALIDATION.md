@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-10-22 (the rebuild is gated in onslaught-godot; its rows and npm scripts here removed; the AppCore gate row removed with AppCore; earlier: a pre-flatten blob link replaced by a plain reference to the archive bundle; each dated section keeps its own date).
+Last updated: 2026-10-22 (the rebuild is gated in onslaught-godot, and the leftover rebuild gate text removed; its rows and npm scripts here removed; the AppCore gate row removed with AppCore; earlier: a pre-flatten blob link replaced by a plain reference to the archive bundle; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -13,10 +13,8 @@ Linux is the active development and native Godot host. `npm test` runs the compa
 C# contract suite (career codec, media inventory, protected adapter, publication races
 and the code-built interface) and its launcher tests without opening a window. `npm run build` and
 `npm run dev` build/run the Godot .NET companion. The latter opens a window.
-The active rebuild is gated by its Parity suite and Host build ([rebuild/README.md](rebuild/README.md#working-lane)).
-The earlier fixed-point rebuild keeps its native Linux build/run/smoke/capture commands as reference (last run at the
-old tag `archive/godot-rebuild-20260926`); live input checks need an available desktop. Source and headless tests alone do
-not establish native input, audio, focus or full tutorial behavior.
+The rebuild is gated in [onslaught-godot](https://github.com/dlprentice/onslaught-godot). Source and headless tests
+alone do not establish native input, audio, focus or full tutorial behavior.
 
 Dated entries below are history. Those that name the Ghidra campaign, `developer_state.json` or tools now in the
 private RE archive (`dlprentice/onslaught-re-archive`) describe checks that no longer run here. Paths beginning
@@ -44,13 +42,6 @@ companion's tests); dated entries below that name them are history.
 | Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` refuses GDScript, saved resources and multi-node scenes, then builds the C# companion; `export:companion-godot` produces normal Godot .NET Linux/Windows exports. Builds are headless. |
 | Tools | The affected `tools/<name>_tests.py`; `npm run test:tools` runs every registered suite (`worldheaders_decode --self-test` needs the retail `worldheaders.dat`). |
 | Game documentation claim | Cite the decompiled function, capture, byte comparison or source line; never paste decompiler output (`reverse-engineering/REVIEW-PROTOCOL.md` for optional reviews). |
-
-Rebuild commands materialize their exact retail inputs to ignored paths. Linux
-selects canonical `local-lab/rebuild-godot` and discovers Steam library roots;
-`-- --game-root "/absolute/game/root"` overrides discovery. A fresh checkout needs
-its private canonical lab owner; worktrees verify and link its current materialized
-files read-only, with imports and new output owned by the worktree. `prepare:rebuild-assets`
-is sufficient when only that boundary changed.
 
 September 19 engine migration: both installed 4.8 dev6 editions and matching
 template payloads passed the shared toolchain's pinned hash verification. The

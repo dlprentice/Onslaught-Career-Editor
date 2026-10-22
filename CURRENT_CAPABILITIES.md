@@ -1,16 +1,17 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-22 (rebuild gate wording; the companion moved to Godot 4.8 beta1 and .NET 10.0.13, Windows backups default to an unsynced local folder; AppCore removed, its test facts now in the companion's tests; careers in old WinUI safe copies listed on Home; companion review fixes: CE running check seen on Linux, backups from another game folder after confirmation; the companion is Onslaught Companion and works with the original game only; AppCore patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (the related repositories are linked; rebuild gate wording; the companion moved to Godot 4.8 beta1 and .NET 10.0.13, Windows backups default to an unsynced local folder; AppCore removed, its test facts now in the companion's tests; careers in old WinUI safe copies listed on Home; companion review fixes: CE running check seen on Linux, backups from another game folder after confirmation; the companion is Onslaught Companion and works with the original game only; AppCore patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
 
 The companion, Onslaught Companion, is the player app for the original game and the future Onslaught CE launcher; its
 development is paused until new requirements.
-The byte-matching decompilation (private) is complete and is the reverse-engineering authority; its native port is
-published separately as Onslaught CE (link added at release), and this document does not measure it. The Godot rebuild is active as a scoped proof of concept (level 100, startup to
-exit); its measured parity is in [rebuild/PARITY.md](rebuild/PARITY.md). Executable patching and copied-install
+The byte-matching decompilation is complete and is the reverse-engineering authority (public export:
+[onslaught-decomp](https://github.com/dlprentice/onslaught-decomp)); its native port is published separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce), and this
+document does not measure it. The Godot rebuild, a scoped proof of concept (level 100, startup to exit), is developed
+in [onslaught-godot](https://github.com/dlprentice/onslaught-godot), which records its measured parity; `rebuild/` here is a frozen copy. Executable patching and copied-install
 safe launch are retired and not planned; their code (the AppCore library and the `patches/` catalog) was removed on
 2026-10-22, and Git keeps it.
 
