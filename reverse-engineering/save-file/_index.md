@@ -1,7 +1,7 @@
 # Retail save format
 
 This directory documents the observed fixed 10,004-byte (`0x2714`) `.bes`
-career format used by the supported retail/Steam specimen. AppCore starts from
+career format used by the supported retail/Steam specimen. The companion starts from
 a real baseline, preserves unknown bytes and file size, and writes only fields
 selected by the user.
 

@@ -1,7 +1,7 @@
 # Goodies save and unlock contract
 
 Status: active save contract
-Last updated: 2026-10-22 (the implementation authority is the companion's codec; AppCore removed; earlier: RE audit: the wall never shows 71-73)
+Last updated: 2026-10-22 (the implementation authority is the companion's codec, also for the save view; AppCore removed; earlier: RE audit: the wall never shows 71-73)
 Summary: the 300 Goodie states in the career block, which indices the wall shows, and how unlocks are decided.
 Evidence: MEASURED — pristine instructions and the tracked gold save; SOURCE — `Career.cpp`, `FEPGoodies.cpp`.
 Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -10,7 +10,7 @@ This document owns the public format boundary and the evidence needed to interpr
 
 ## Save layout
 
-`CCareer` stores 300 four-byte Goodie states. The retail save view used by AppCore is:
+`CCareer` stores 300 four-byte Goodie states. The retail save view used by the companion's codec is:
 
 ```text
 offset(index) = 0x1F46 + index * 4
@@ -101,7 +101,7 @@ Goodie 228 = 0x1F46 + 228 * 4 = 0x22D6
 mCareerInProgress = file offset 0x248A
 ```
 
-Writing a progress flag at `0x22D4` corrupts the neighboring Goodie dword. AppCore uses the true view and must preserve this correction.
+Writing a progress flag at `0x22D4` corrupts the neighboring Goodie dword. The companion's codec uses the true view and must preserve this correction.
 
 ## Claim boundary
 

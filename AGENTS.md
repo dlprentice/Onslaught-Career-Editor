@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-10-22 (the game-write rule in its own words, modelled on the companion's GameInstaller; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0; machine-specific clones and folders live in an ignored local file)
+Last updated: 2026-10-22 (AppCore retired; the game-write rule in its own words, modelled on the companion's GameInstaller; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0; machine-specific clones and folders live in an ignored local file)
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
@@ -17,8 +17,8 @@ A preservation project for *Battle Engine Aquila* (2003). This public repository
   `OnslaughtRebuild.Host` the presentation owner; the earlier `OnslaughtRebuild.Core`, `Client` and `Godot` projects
   are reference material, not a second production simulation;
 - the **companion** (`companion/`), Onslaught Companion: the Godot .NET app for careers, saves, backups, settings,
-  music and lore, today for the original game only and later the Onslaught CE launcher. The AppCore patching core is
-  retired (nothing uses it) and goes once its test facts are ported;
+  music and lore, today for the original game only and later the Onslaught CE launcher. The old AppCore patching
+  core is gone; the file-safety and save-layout code the companion uses lives in the companion, and Git keeps the rest;
 - documentation of the game (formats, behaviours, contracts) and our own tools.
 
 Elsewhere: the byte-matching decompilation and the native source port are the private `dlprentice/bea-decomp`
@@ -72,7 +72,7 @@ queue, [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) what is demonstrated
   tooling. Retention belongs to `local-lab/INDEX.md` and the machine's deletion queue.
 - Licensing: the rebuild is GPL and may adapt the pinned GPL source in `references/Onslaught` and the decompilation's
   simulation (recorded per unit in `rebuild/PROVENANCE.md`); it consumes locally materialized retail data but never
-  contains retail executables, decompiler output or separately licensed material. All project code (companion, AppCore,
+  contains retail executables, decompiler output or separately licensed material. All project code (companion, rebuild,
   tools) is GPL-3.0-only and documentation and lore are CC BY-SA 4.0, as `REUSE.toml` maps them; ExuberantParrot's PR #1
   passages also keep their MIT notice. Contributions come in under the same terms (`CONTRIBUTING.md`). None of it
   merges with private retail material into one licensing boundary.

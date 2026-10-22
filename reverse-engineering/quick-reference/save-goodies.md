@@ -29,4 +29,4 @@ MissionScript Goodie indices are one-based: `script index = save index + 1`. Scr
 - Goodie `232` maps to cutscene `33` and lacks a matching `goodie_232_res_PC.aya` in the checked PC archive set.
 - Goodie `228` is at `0x22D6`. The old `0x22D4` aligned-view value is not `mCareerInProgress`; that flag is at file offset `0x248A`.
 
-Use the AppCore patcher and its focused tests for byte-preservation behavior.
+Byte-preservation behaviour is owned by the companion's career codec ([`CareerSave.cs`](../../companion/OnslaughtToolkit.Godot/Careers/CareerSave.cs)) and its focused tests.

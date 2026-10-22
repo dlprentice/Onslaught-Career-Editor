@@ -42,7 +42,7 @@ hypotheses but are not retail Steam proof. Controlled runtime observations must
 use a verified copied target and record specimen identity; proprietary payloads
 and bulky captures remain outside Git.
 
-When a finding changes product behavior, update the owning AppCore/CLI/rebuild
+When a finding changes product behavior, update the owning companion, tool or rebuild
 code and its consequential focused test. Do not create a new progress ledger,
 wave mirror, generated inventory, or readiness report merely to restate these
 owners.

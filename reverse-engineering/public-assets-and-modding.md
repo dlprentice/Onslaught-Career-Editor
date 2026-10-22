@@ -20,19 +20,19 @@ rebuild read a user's lawfully obtained installation as local input.
 
 ## Proven Copied-Content Slice
 
-The safe-copy product can replace one fixed-size English localization entry:
+The retired WinUI safe-copy product (removed 2026-10-22; Git keeps it) could replace one fixed-size English localization entry:
 Level 100 `TUTORIAL_01`, text ID `4422830`, in
-`data/language/english.dat`. AppCore verifies the supported Steam table hash
-and original UTF-16 bytes, keeps the table and file length unchanged, writes a
-backup, and records before/after hashes in the copied-profile manifest. A
+`data/language/english.dat`. AppCore verified the supported Steam table hash
+and original UTF-16 bytes, kept the table and file length unchanged, wrote a
+backup, and recorded before/after hashes in the copied-profile manifest. A
 controlled copied-game run rendered the unique replacement in Level 100.
 
-The safe-copy product can also rebuild the supported
+It could also rebuild the supported
 `data/resources/100_res_PC.aya` with one exact compiled mission-command change:
 Level 100's initial `DisableFlightMode` call becomes `EnableFlightMode`.
-AppCore verifies the original archive and decompressed payload hashes, changes
-one byte in the `LevelScript` instruction stream, writes an original backup,
-round-trips the four size-prefixed zlib members, and validates the exact
+AppCore verified the original archive and decompressed payload hashes, changed
+one byte in the `LevelScript` instruction stream, wrote an original backup,
+round-tripped the four size-prefixed zlib members, and validated the exact
 original/modified payload pair before launch. In controlled retail runs, the
 same transform input reached the original rejection return with the clean
 archive and the walker-to-jet state write with the changed archive. A
