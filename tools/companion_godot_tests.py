@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: GPL-3.0-only
 """Focused fake-tool checks for the code-built C# companion routes and export boundaries."""
 from __future__ import annotations
 
@@ -200,8 +200,10 @@ class CompanionLauncherTests(unittest.TestCase):
             package=Path(call["args"][call["args"].index("--export-release")+2]).parent
             self.assertFalse((package/"file-bridge").exists());self.assertFalse(list(package.rglob("*TransactionTests*")))
             self.assertTrue(list(package.rglob("OnslaughtToolkit.Godot.dll")))
-            for name in ("LICENSE.txt","GODOT-LICENSE.txt","GODOT-THIRD-PARTY-NOTICES.json","DOTNET-LICENSE.txt","DOTNET-THIRD-PARTY-NOTICES.txt"):self.assertTrue((package/name).is_file())
+            for name in ("LICENSE.txt","LORE-LICENSE.txt","GODOT-LICENSE.txt","GODOT-THIRD-PARTY-NOTICES.json","DOTNET-LICENSE.txt","DOTNET-THIRD-PARTY-NOTICES.txt"):self.assertTrue((package/name).is_file())
             readme=(package/"README.txt").read_text();self.assertIn("no helper process",readme);self.assertIn("C# application built in code",readme)
+            self.assertEqual(host.APP_LICENSE.read_bytes(),(package/"LICENSE.txt").read_bytes());self.assertIn("GNU GENERAL PUBLIC LICENSE",(package/"LICENSE.txt").read_text())
+            self.assertIn("Attribution-ShareAlike 4.0 International",(package/"LORE-LICENSE.txt").read_text());self.assertIn("GPL-3.0-only",readme);self.assertIn("CC BY-SA 4.0",readme)
         self.assertFalse(any(call["args"][0]=="publish" for call in self.calls_read()))
         icon=[call for call in self.calls_read() if "res://Development/IconWriter.cs" in call["args"]]
         self.assertEqual(1,len(icon))

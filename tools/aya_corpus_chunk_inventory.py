@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-only
 """Corpus-wide AYA chunk inventory.
 
 Read-only. Walks every ``.aya`` under a retail ``data/resources`` tree, inflates

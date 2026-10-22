@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-only
 namespace OnslaughtCareerEditor.AppCore;
 
 // Compile-time adapters for the two linked safety files, not another save codec.

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 using Microsoft.Win32.SafeHandles;
 using System.ComponentModel;
 using System.Runtime.InteropServices;

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-only
 """Manage Battle Engine Aquila cardid.txt tweak presets with backup/restore safety."""
 
 from __future__ import annotations

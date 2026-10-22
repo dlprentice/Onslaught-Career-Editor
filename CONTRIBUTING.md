@@ -1,7 +1,7 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-10-21 (the rebuild is active and the companion paused; Parity's determinism rule; port issues go to Onslaught CE)
+Last updated: 2026-10-22 (contributions: inbound = outbound licensing)
 Summary: what a focused change looks like here, what must never be added to the
 repository, and which checks a change owes.
 
@@ -39,6 +39,15 @@ evidence.
 
 Root [`package.json`](package.json) is the command authority. Do not duplicate
 its command list in new documents.
+
+## Licensing of contributions
+
+Inbound = outbound: by opening a pull request you agree that your contribution is
+licensed under the same terms as the paths it changes, as [`REUSE.toml`](REUSE.toml) and any
+per-file SPDX line state them: code GPL-3.0-only ([`LICENSE`](LICENSE)), documentation and lore
+CC BY-SA 4.0 ([`LICENSES/CC-BY-SA-4.0.txt`](LICENSES/CC-BY-SA-4.0.txt)). Contribute only work you
+have the right to license this way; credit quoted or third-party material and keep its notice.
+New code files start with an `SPDX-License-Identifier: GPL-3.0-only` comment.
 
 ## Ownership
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-only
 namespace OnslaughtToolkit.Companion.Careers;
 
 public enum MissionProgress { Complete, Open, NotYetOpen }

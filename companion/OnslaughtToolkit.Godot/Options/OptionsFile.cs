@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-only
 using System.Buffers.Binary;
 using OnslaughtToolkit.Companion.Careers;
 
@@ -60,7 +60,7 @@ public static class OptionsFile
     public const int VibrationOffset = 0x24AE, PresetOffset = 0x24B6, RowsOffset = 0x24BE, RowSize = 0x20, RowCount = 16;
     public const int TailOffset = 0x26BE;
 
-    /// <summary>The fifteen bindable actions and their keyboard device codes (MIT ConfigurationEditorService).</summary>
+    /// <summary>The fifteen bindable actions and their keyboard device codes (ConfigurationEditorService).</summary>
     public static IReadOnlyList<BindingAction> Actions { get; } =
     [
         new("Movement", "Forward", 0x1F, 9), new("Movement", "Backward", 0x20, 9),

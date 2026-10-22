@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-only
 """
 Batch export Battle Engine Aquila LANGUAGE/*.DAT into TSV/JSON plus a merged matrix.
 

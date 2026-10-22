@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-only
 """
 Decode the 0x20-byte "options entries" block inside BEA .bes saves and defaultoptions.bea.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: GPL-3.0-only
 """Read-only CMSH/LVLR/WRES/physics instance and MSL-use census.
 
 The report contains names, counts, hashes, and relative source coordinates; it

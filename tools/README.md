@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-21 (the rebuild is active, not parked)
+Last updated: 2026-10-22 (relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -30,7 +30,7 @@ needs a Windows host would be reported as skipped on Linux, never as a pass; non
 
 - `godot_host.py` supplies pinned installed-engine discovery, locked bundled-SDK
   restore/build and owned-process cleanup for both Godot lanes; `companion_godot.py`
-  builds and runs the MIT companion, and `rebuild/tools/first_flight.py` adds retail
+  builds and runs the companion, and `rebuild/tools/first_flight.py` adds retail
   preparation and rebuild runtime modes. The shared helper imports no GPL or retail code.
 Use [`VALIDATION.md`](../VALIDATION.md) to select checks. These tools do not
 publish, sign, or install anything by themselves.

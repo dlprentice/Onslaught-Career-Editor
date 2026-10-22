@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: GPL-3.0-only
 """Checks the CMSH grammar walker on small synthetic streams (no game bytes)."""
 import collections
 import struct

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: GPL-3.0-only
 """Check the companion's glTF exports pose by pose against the game's own key composition.
 
 For every model whose export has animations, each animation is evaluated by the glTF rules (node local = T·R·S,

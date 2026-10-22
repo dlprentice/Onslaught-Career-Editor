@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-only
 using System.Buffers.Binary;
 
 namespace OnslaughtToolkit.Companion.Careers;
@@ -12,7 +12,7 @@ public readonly record struct Outcome<T>(bool Ok, string Message, T? Value) wher
 
 /// <summary>
 /// The companion's career byte codec. It performs no filesystem operations. Layout facts come
-/// from the MIT AppCore BesFilePatcher and its tests, not the GPL rebuild. Recognizing the
+/// from the AppCore BesFilePatcher and its tests, not the GPL rebuild. Recognizing the
 /// container proves neither that the game generated the bytes nor that it will accept them.
 /// </summary>
 public static class CareerSave

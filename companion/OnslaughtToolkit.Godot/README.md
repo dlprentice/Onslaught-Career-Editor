@@ -1,8 +1,8 @@
 # Onslaught Toolkit companion
 
 Status: paused (since 2026-10-16, until new requirements); C# application built entirely in code on Godot 4.8 dev6 .NET, organised around the player: careers, Goodies, editing, cheats, game settings, backups, music, voices, lore, and the game's models and textures; Linux executed checks, Windows runtime acceptance pending
-Last updated: 2026-10-21 (lane marked paused, Working lane section added; the native port, not the rebuild, is the faithful game)
-Summary: the MIT companion for Battle Engine Aquila players: it opens on their game and careers, shows progress and Goodies, changes careers and settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, plays and explains the game's own music, voices and lore, and saves copies of its models (glTF) and textures (PNG).
+Last updated: 2026-10-22 (relicensed GPL-3.0-only; lore CC BY-SA 4.0)
+Summary: the GPL-3.0-only companion for Battle Engine Aquila players: it opens on their game and careers, shows progress and Goodies, changes careers and settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, plays and explains the game's own music, voices and lore, and saves copies of its models (glTF) and textures (PNG).
 
 The companion is for players. It opens on their game and careers, and everything it
 changes in the game is backed up first and can be put back. Retail reverse engineering, the
@@ -233,7 +233,7 @@ does with the file. These checks do not prove behavior after power loss.
 
 [ProtectedSaveFiles](Files/ProtectedSaveFiles.cs) is built on
 [`SaveLabFileTransaction.cs`](Files/SaveLabFileTransaction.cs) and
-[`FileMutationSafety.cs`](Files/FileMutationSafety.cs), the MIT file-safety source the
+[`FileMutationSafety.cs`](Files/FileMutationSafety.cs), the file-safety source the
 retired WinUI application's AppCore library used, moved here unchanged on 2026-10-16
 (`Files/SafetyCompatibility.cs` supplies the two constants they still name). On Linux it opens sources descriptor-relative
 without following links, compares physical identity and link count, stages into an unnamed

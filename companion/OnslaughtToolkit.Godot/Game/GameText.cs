@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-only
 using System.Text.RegularExpressions;
 using OnslaughtCareerEditor.AppCore;
 
@@ -6,7 +6,7 @@ namespace OnslaughtToolkit.Companion.Game;
 
 /// <summary>
 /// The game's own words, read at run time from the player's install and never bundled: mission names
-/// and voice-line transcripts from <c>data/language/&lt;language&gt;.dat</c> (decoded by the linked MIT
+/// and voice-line transcripts from <c>data/language/&lt;language&gt;.dat</c> (decoded by the linked
 /// GameTextCatalog, whose loader order comes from the game's CText__Init), and Goodie titles through
 /// the name-to-id map in <c>data/MissionScripts/text/text.stf</c>.
 /// </summary>

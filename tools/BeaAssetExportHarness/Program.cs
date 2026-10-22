@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 using System.Buffers.Binary;
 using System.Drawing;
 using System.IO.Compression;

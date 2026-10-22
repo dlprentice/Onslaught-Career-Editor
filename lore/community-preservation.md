@@ -4,7 +4,7 @@
   published, and the project's rights boundary. Two corrections landed
   2026-07-28 and are marked at the lines they affect; the modding-surface
   section had asserted the opposite of what this repository measures.
-- **Last updated:** 2026-07-28
+- **Last updated:** 2026-10-22 (relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 - **Summary:** community contributors and resources, the mods and tools that
   exist for this title, what the retail modding surface actually is, and the
   rights boundary this project operates under.
@@ -58,7 +58,7 @@ cheat-string table, which is not a config file —
 
 Onslaught Toolkit is an unofficial community project and is not affiliated with
 or endorsed by the game's publishers or rights holders. Users supply their own
-retail game data. The MIT toolkit and GPL rebuild/reference licenses do not
+retail game data. The toolkit's GPL-3.0 code, CC BY-SA 4.0 documentation and the reference licenses do not
 grant rights in the game executable, assets, names, trademarks, or third-party
 components. Original credits and notices remain part of preservation rather
 than cleanup material.

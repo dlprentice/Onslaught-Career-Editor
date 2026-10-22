@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-only
 using System.Buffers.Binary;
 using System.IO.Compression;
 using Vector3 = System.Numerics.Vector3;

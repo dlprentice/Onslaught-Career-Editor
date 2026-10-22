@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: GPL-3.0-only
 """Walk PC CMSH mesh streams with the loader grammar in
 reverse-engineering/asset-formats/cmsh-fields.md and prove it accounts for every byte.
 

@@ -1,4 +1,4 @@
-; MIT companion application. No retail assets or GPL rebuild dependencies.
+; GPL-3.0-only companion application. No retail assets or rebuild dependencies.
 config_version=5
 
 [application]

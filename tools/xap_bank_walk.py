@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: GPL-3.0-only
 """Walk the PC sample banks (data/sounds/sounds_<language>_pc.xap) with the layout in
 reverse-engineering/asset-formats/xap-sample-bank.md, decode every sample, and prove the layout accounts for every byte.
 

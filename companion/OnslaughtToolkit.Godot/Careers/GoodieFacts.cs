@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-only
 using OnslaughtCareerEditor.AppCore;
 
 namespace OnslaughtToolkit.Companion.Careers;
@@ -6,7 +6,7 @@ namespace OnslaughtToolkit.Companion.Careers;
 public enum GoodieEvidence { SeenInGame, GameCodeChecked, DeveloperSource, NeverShown, Reserved }
 
 /// <summary>
-/// What is known about one Goodie: its unlock rule (the linked MIT GoodieUnlockRequirementService,
+/// What is known about one Goodie: its unlock rule (the linked GoodieUnlockRequirementService,
 /// written from the developers' Career.cpp) and how far the evidence goes, per the RE lane's
 /// 2026-09-25 review: only Goodie 2's load, gold display and new-to-viewed change were seen in the
 /// Steam game; the rules for Goodies 0, 8, 74–78, 121 and 164 match the retail code; the rest,

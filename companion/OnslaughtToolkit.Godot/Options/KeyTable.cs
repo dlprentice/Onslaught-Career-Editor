@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-only
 using Godot;
 
 namespace OnslaughtToolkit.Companion.Options;
@@ -7,7 +7,7 @@ namespace OnslaughtToolkit.Companion.Options;
 /// Keyboard keys as the game stores them in binding rows: <c>(character &lt;&lt; 16) | scan</c>, where
 /// the character is what the key types (0 for keys that type nothing) and the scan code is set 1, with
 /// 0x80 added for extended keys. The convention is taken from rows the game itself wrote in the tracked
-/// fixture (W, A, S, D, Space, Tab, numpad 1, arrows, left Shift) and the retained MIT key table; keys
+/// fixture (W, A, S, D, Space, Tab, numpad 1, arrows, left Shift) and the retained key table; keys
 /// outside this table cannot be bound here.
 /// </summary>
 public static class KeyTable

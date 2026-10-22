@@ -26,6 +26,8 @@ Validation intentionally skipped (relevant commands and reason):
 
 ## Safety And Claims
 
+- [ ] I license this contribution under the same terms as the paths it changes
+      (inbound = outbound, `CONTRIBUTING.md`): code GPL-3.0-only, docs and lore CC BY-SA 4.0.
 - [ ] Validation used disposable copies and preserved pristine inputs.
 - [ ] No proprietary game assets, copied executables, arbitrary saves/options,
       bulk frame captures, raw debugger logs, secrets, or raw/bulky

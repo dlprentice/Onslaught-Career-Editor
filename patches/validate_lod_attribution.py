@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-only
 """Compare two proxy-v2 captures at one transform-pinned LOD checkpoint.
 
 The comparator deliberately ignores process-local matrix ids, COM pointers,

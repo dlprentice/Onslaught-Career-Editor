@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: GPL-3.0-only
 """Settle CPOS/CORI semantics from the bytes.
 
 Hypothesis under test: for each part, CPOS/CORI are indexed by *virtual* frame

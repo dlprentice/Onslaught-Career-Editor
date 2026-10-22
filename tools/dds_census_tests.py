@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: GPL-3.0-only
 """Checks the texture census on synthetic DDS files in an AYA envelope (no game bytes)."""
 import struct
 import tempfile

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-only
 """Build a fail-closed PC/USA-Xbox AYA texture-fidelity census.
 
 The existing cross-platform comparator owns top-level resource pairing.  This

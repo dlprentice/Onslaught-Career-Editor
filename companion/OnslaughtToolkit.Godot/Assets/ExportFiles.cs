@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-only
 namespace OnslaughtToolkit.Companion.Assets;
 
 /// <summary>The outcome of writing one exported file.</summary>

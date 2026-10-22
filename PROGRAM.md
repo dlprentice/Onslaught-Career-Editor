@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-21 (the decided repository plan: release, split, bundle, flatten, rename; the rebuild's open items after M7 slice 4)
+Last updated: 2026-10-22 (relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
@@ -53,7 +53,7 @@ Open when it resumes:
   backup and restore, through `BinaryPatchEngine.AuthorizeInstalledGameWrite`. Then, at David's direction, showing
   the Goodies' own contents, media replacement and a public release.
 
-Keep MIT application code, the GPL rebuild and private retail data separate. No unrelated launcher, store or
+Keep the companion's application code, the rebuild and private retail data separate. No unrelated launcher, store or
 community features are planned.
 
 ### Game documentation — ongoing

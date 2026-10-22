@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-21 (intro: the native port is published separately as Onslaught CE; companion is the future CE launcher)
+Last updated: 2026-10-22 (relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -138,7 +138,7 @@ a single executed failed-Load-to-bank chain. See the
 
 ## Godot companion — careers, settings, backups, music and lore
 
-The MIT [companion](companion/OnslaughtToolkit.Godot/README.md) is a C# application
+The GPL-3.0-only [companion](companion/OnslaughtToolkit.Godot/README.md) is a C# application
 built entirely in code on **Godot 4.8.dev6.mono.official.8898c2b3d**. Its one scene only
 attaches the root script; the build refuses GDScript, saved resources and multi-node
 scenes. David approved its feature set and Flight-deck look on 2026-09-25; on 2026-09-26

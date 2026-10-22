@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: GPL-3.0-only
 """Checks the Goodie resource walker on synthetic archives (no game bytes)."""
 import struct
 import unittest

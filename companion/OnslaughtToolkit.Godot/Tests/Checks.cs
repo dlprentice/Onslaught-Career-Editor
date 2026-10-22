@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-only
 namespace OnslaughtToolkit.Companion.Tests;
 
 /// <summary>Collects failed expectations so one run reports every broken contract.</summary>

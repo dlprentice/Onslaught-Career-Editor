@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: GPL-3.0-only
 """Pinned Godot .NET companion routes: a C# application built in code, including its file-safety boundary."""
 from __future__ import annotations
 
@@ -22,7 +22,8 @@ from godot_host import print_process_output, run_process
 
 ROOT = Path(__file__).resolve().parents[1]
 COMPANION = ROOT / "companion/OnslaughtToolkit.Godot"
-MIT_LICENSE = ROOT / "LICENSE"
+APP_LICENSE = ROOT / "LICENSE"  # GPL-3.0-only, the application
+LORE_LICENSE = ROOT / "LICENSES/CC-BY-SA-4.0.txt"  # the embedded lore and lore book
 FIXTURE = ROOT / "tests_shared/fixtures/gold_career_save.bin"
 NATIVE_EXTENSIONS = {".godot", ".tscn", ".cfg", ".cs", ".csproj", ".sln"}
 EXCLUDED_DIRECTORIES = {".godot", "bin", "obj", "local-data"}
@@ -194,7 +195,7 @@ def stage_project(output: Path) -> Path:
     for name in ("project.godot", "Main.tscn", "OnslaughtToolkit.Godot.csproj", "OnslaughtToolkit.Godot.sln", "global.json", "packages.lock.json"):
         if not (project / name).is_file():
             raise RuntimeError(f"Companion project file is missing: {name}")
-    # The project's own lore (MIT, project-written) is embedded in the assembly as text.
+    # The project's own lore (CC BY-SA 4.0, project-written) is embedded in the assembly as text.
     for folder, pattern in (("lore", "*.md"), ("lore-book", "BOOK.md")):
         (output / folder).mkdir()
         for article in sorted((ROOT / folder).glob(pattern)):
@@ -264,7 +265,8 @@ def prepare_package_licenses(engine: Path, project: Path, env: dict[str, str], o
         raise RuntimeError("Pinned Godot did not supply its redistribution license metadata")
     licenses = output / "package-licenses"
     licenses.mkdir()
-    shutil.copyfile(MIT_LICENSE, licenses / "LICENSE.txt")
+    shutil.copyfile(APP_LICENSE, licenses / "LICENSE.txt")
+    shutil.copyfile(LORE_LICENSE, licenses / "LORE-LICENSE.txt")
     (licenses / "GODOT-LICENSE.txt").write_text(notices.pop("license") + "\n", encoding="utf-8")
     (licenses / "GODOT-THIRD-PARTY-NOTICES.json").write_text(
         json.dumps(notices, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -349,7 +351,9 @@ def export_platform(engine: Path, project: Path, templates: Path, pins: dict[str
         f"Godot {pins['engineVersion']} runs the companion, a C# application built in code.\n"
         "Its file-safety boundary runs inside the same process; no helper process is used.\n"
         f"It bundles Microsoft.NETCore.App {pins['dotnet']['runtimeVersion']}; no installed .NET runtime is needed.\n"
-        "The application MIT license, Godot notices and .NET notices are included here.\n"
+        "The application is GPL-3.0-only (LICENSE.txt) and its lore is CC BY-SA 4.0 (LORE-LICENSE.txt);\n"
+        "Godot notices and .NET notices are included here.\n"
+        "Source code: https://github.com/dlprentice/Onslaught-Career-Editor\n"
         "This package contains no retail assets or saves; it reads your own copy of the game.\n" +
         ("This Windows build is not code-signed, so Windows SmartScreen may call it an unrecognised app.\n"
          "It was made on Linux and has not yet been run on Windows. Cross-export is not Windows\n"

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-only
 """Synthetic tests for the nested AYA texture-fidelity census."""
 
 from __future__ import annotations

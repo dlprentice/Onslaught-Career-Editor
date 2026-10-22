@@ -6,7 +6,7 @@
   [`lore/`](../lore/_index.md) with no tracked mirror. The link list below is
   also the reading order: the builder derives each document's position from it,
   so moving a line here moves the document in the reader.
-- **Last updated:** 2026-08-22
+- **Last updated:** 2026-10-22 (licence note: CC BY-SA 4.0, quotations stay with their authors)
 - **Summary:** the front door — what this is, the shelves, and where to start.
 
 In 2003 a studio in Guildford shipped a game about a walking machine that could
@@ -71,3 +71,7 @@ Static notes and source references do not override observed retail behavior.
 Onslaught Toolkit is an unofficial community project, not affiliated with or
 endorsed by the game's publishers or rights holders. Users supply their own
 retail game data; project licenses do not grant rights in the game or its assets.
+
+The project's own writing here is CC BY-SA 4.0. The quotations from the developers,
+the post-mortem, interviews and community members remain theirs, quoted for
+commentary and preservation.

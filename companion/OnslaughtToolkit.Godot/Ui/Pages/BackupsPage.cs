@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-only
 using Godot;
 using OnslaughtToolkit.Companion.Files;
 using OnslaughtToolkit.Companion.Game;

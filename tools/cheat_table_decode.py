@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-only
 """Decode BEA.exe cheat table (XOR with key "HELP ME!!").
 
 Usage:

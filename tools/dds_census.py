@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: GPL-3.0-only
 """Census of the installed textures (data/resources/dxtntextures and data/resources/textures): every DDS header, mip
 chain and pixel format, checked against the stored bytes.
 

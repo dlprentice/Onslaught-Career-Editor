@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-only
 using System.Security.Cryptography;
 using OnslaughtCareerEditor.AppCore;
 
@@ -28,7 +28,7 @@ public interface IProtectedSaveFiles
 }
 
 /// <summary>
-/// The companion's narrow OS file-safety boundary. It links the existing MIT
+/// The companion's narrow OS file-safety boundary. It links the existing
 /// SaveLabFileTransaction and FileMutationSafety source unchanged: no-follow opens, physical
 /// identity checks, unnamed staging, no-clobber publication and verified reopen. Each call owns
 /// and releases its handles before returning. A running transaction must not be abandoned or

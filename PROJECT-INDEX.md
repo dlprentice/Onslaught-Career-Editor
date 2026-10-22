@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-10-21 (port route: Onslaught CE published separately; Onslaught pin named by its constant; the parity core's determinism contract)
+Last updated: 2026-10-22 (relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository: the companion, the AppCore patching core, the game documentation, tools and the
 Godot rebuild.
@@ -37,7 +37,7 @@ The arrows are source dependencies, not priority. The rebuild is the active lane
 simulation and `OnslaughtRebuild.Host` the presentation; the earlier Core, Client, Headless and Godot projects are
 reference material. The companion is the public player product, paused until new requirements. The companion is a C# application built in code and owns its file-safety
 source; the AppCore patching core compiles that same file.
-The MIT companion has no dependency on the GPL rebuild or private retail assets.
+The companion (GPL-3.0-only) has no dependency on the rebuild or private retail assets.
 
 | Project | Declared role and dependencies |
 | --- | --- |
@@ -115,7 +115,7 @@ that used them.
 
 | Path | Authority |
 | --- | --- |
-| [`companion/`](companion/OnslaughtToolkit.Godot/README.md) | MIT Godot .NET toolkit, a C# application built in code with its in-process file adapter. `tools/companion_godot.py` owns pinned .NET-engine routes (build, test, capture, run, export); `tools/godot_host.py` supplies shared engine discovery and process support. |
+| [`companion/`](companion/OnslaughtToolkit.Godot/README.md) | GPL-3.0-only Godot .NET toolkit, a C# application built in code with its in-process file adapter. `tools/companion_godot.py` owns pinned .NET-engine routes (build, test, capture, run, export); `tools/godot_host.py` supplies shared engine discovery and process support. |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Documentation of the game as prose and specs: formats, mechanics, saves, assets, source notes, function notes and contracts, each bound to its specimen or source. No Ghidra database or decompiler output. |
 | `local-lab/` | Ignored machine-local evidence: retail safe copies, historical campaign generations, captures, reviewer reports, frozen proof graphs, the retired working Ghidra project and `rebuild-godot/` staging. It is a real directory inside the Archive B checkout; fresh clones and child worktrees lack it. [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) owns canonical absolute-path / `BEA_LOCAL_LAB` routing; consult relevant `local-lab/INDEX.md` sections for the retained corpus. |
 | `local-data/` | The real ignored repository child for `host-attestations/`, current retail/media inputs, operational outputs and grouped `recovered/` packages; its `AGENTS.md` owns the internal map. Unused `windows-vm/` and `vm-media/` staging was retired. `_recovered-worktrees/` and `windows-profile-2026-08-28/` retain protected historical Ghidra material in place. `local-proofs/` remains a reserved ignored/publication-denied name, not a current data owner. |

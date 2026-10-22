@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 using System.Buffers.Binary;
 using System.Runtime.InteropServices;
 using OnslaughtCareerEditor.AppCore;

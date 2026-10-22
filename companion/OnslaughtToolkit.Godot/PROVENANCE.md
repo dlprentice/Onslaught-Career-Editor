@@ -1,12 +1,13 @@
 # Companion provenance and license
 
-Status: active independent MIT application boundary
-Last updated: 2026-10-16 (the former AppCore sources moved into the companion; model and texture readers)
-Evidence: SOURCE — code-built C# application, MIT source moved in from the retired AppCore library, and embedded project lore; executed package boundaries are recorded in VALIDATION.md.
-Summary: the companion's C# derives only from MIT application references and the RE lane's published contracts; it bundles the project's own lore, reads the game's files and manual art from the player's install at run time, and keeps retail data and GPL reconstruction out.
+Status: active independent GPL-3.0-only application boundary
+Last updated: 2026-10-22 (relicensed: the code GPL-3.0-only, the embedded lore CC BY-SA 4.0)
+Evidence: SOURCE — code-built C# application, project source moved in from the retired AppCore library, and embedded project lore; executed package boundaries are recorded in VALIDATION.md.
+Summary: the companion's C# derives only from the project's own application code and the RE lane's published contracts; it bundles the project's own lore, reads the game's files and manual art from the player's install at run time, and keeps retail data and GPL reconstruction out.
 
-All C# in this project is original MIT application code under the repository
-[LICENSE](../../LICENSE). Save layout facts and behavior were ported from the MIT
+All C# in this project is original application code, GPL-3.0-only under the repository
+[LICENSE](../../LICENSE) (it was MIT until 2026-10-22; the project's own code was relicensed by
+its author). Save layout facts and behavior were ported from the
 `BesFilePatcher`, `SaveLabService` and their focused tests, through the companion's
 earlier GDScript implementation. Options offsets, Goodie colours, rank letters, link
 states and the evidence tier shown for each Goodie rule follow the reverse-engineering
@@ -14,7 +15,7 @@ lane's documents under [`reverse-engineering/`](../../reverse-engineering/RE-IND
 which name their specimens. The interface, theme and styles are constructed in code from
 Godot's built-in controls and default engine font.
 
-These MIT sources were written for the retired WinUI application's AppCore library and
+These sources were written for the retired WinUI application's AppCore library and
 moved into the companion unchanged (Git history follows them) on 2026-10-16, when the
 companion became their only user: `Files/SaveLabFileTransaction.cs` and
 `Files/FileMutationSafety.cs` (the OS file boundary), `Game/GameTextCatalog.cs` (the game's
@@ -29,13 +30,15 @@ licenses.
 The repository's public lore library — [`lore/`](../../lore/_index.md) and
 [`lore-book/BOOK.md`](../../lore-book/BOOK.md), which the retired WinUI app also shipped
 as its offline reader — is embedded in the application as text when it is built.
-Its own articles name their sources.
+The lore is CC BY-SA 4.0 ([`LICENSES/CC-BY-SA-4.0.txt`](../../LICENSES/CC-BY-SA-4.0.txt)), and every
+export carries that text as `LORE-LICENSE.txt`; quotations in it stay with their authors. Its own
+articles name their sources.
 
 The model and texture readers under [`Assets/`](Assets/) are written from the public format
 documents in [`reverse-engineering/asset-formats/`](../../reverse-engineering/asset-formats/_index.md)
 (the AYA envelope, the CMSH grammar and record layouts, key evaluation, and the DDS
 header). Those documents describe the private byte-matching decompilation's loaders in
-prose; no decompiled or GPL code is copied into the companion, and only numbers (counts and
+prose; no decompiled or reconstructed code is copied into the companion, and only numbers (counts and
 composed transforms) are compared between the two. The DXT block decoding is the standard
 public algorithm.
 

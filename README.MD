@@ -1,7 +1,7 @@
 # Onslaught Toolkit
 
 Status: active — the project overview
-Last updated: 2026-10-21 (pre-release front page: Onslaught CE published separately, related repositories, companion as future CE launcher)
+Last updated: 2026-10-22 (relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
 
 Onslaught Toolkit is a preservation project for *Battle Engine Aquila* (2003, Lost Toys).
@@ -50,7 +50,7 @@ retired and no longer maintained; its source is in the project's private pre-fla
 
 | Path | Owner |
 | --- | --- |
-| [`companion/OnslaughtToolkit.Godot/`](companion/OnslaughtToolkit.Godot/README.md) | The MIT companion (player toolkit, future CE launcher; paused), C# built in code on Godot 4.8 dev6 .NET |
+| [`companion/OnslaughtToolkit.Godot/`](companion/OnslaughtToolkit.Godot/README.md) | The companion (player toolkit, future CE launcher; paused), C# built in code on Godot 4.8 dev6 .NET |
 | `OnslaughtCareerEditor.AppCore/` | The patching core (executable patch plans, guarded installed-game writes, safe copies) the companion's mod manager will build on |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Documentation of the game: formats, mechanics, saves, assets, function notes and contracts |
 | [`lore/`](lore/_index.md) | The canonical lore and history library, embedded in the companion |
@@ -125,6 +125,15 @@ reading guide.
 
 ## Licenses
 
+| Path | Licence |
+| --- | --- |
+| Code: `companion/`, `OnslaughtCareerEditor.AppCore*/`, `tools/`, `patches/` and `tests_shared/` scripts, build files | GPL-3.0-only ([`LICENSE`](LICENSE)) |
+| `rebuild/` | GPL-3.0-only ([`rebuild/LICENSE`](rebuild/LICENSE), [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md)) |
+| Documentation (`*.md`, `reverse-engineering/`, `roadmap/`, data tables) and `lore/`, `lore-book/` | CC BY-SA 4.0 ([`LICENSES/CC-BY-SA-4.0.txt`](LICENSES/CC-BY-SA-4.0.txt)) |
+| ExuberantParrot's PR #1 passages in two function notes | CC BY-SA 4.0 and MIT ([`LICENSES/MIT.txt`](LICENSES/MIT.txt)) |
+| `references/` submodules | their own licences |
+
+[`REUSE.toml`](REUSE.toml) maps every path to its licence; quotations in the lore stay with their authors.
 Repository licensing, source attribution and the rebuild's GPL boundary are in [`LICENSE`](LICENSE),
 [`rebuild/LICENSE`](rebuild/LICENSE), [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md),
 [`companion/OnslaughtToolkit.Godot/PROVENANCE.md`](companion/OnslaughtToolkit.Godot/PROVENANCE.md) and

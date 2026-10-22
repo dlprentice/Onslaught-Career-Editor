@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: GPL-3.0-only
 """Walk every Goodie resource (data/resources/goodie_N_res_PC.aya) with the layout in
 reverse-engineering/asset-formats/goodie-resources.md and resolve what each Goodie shows.
 

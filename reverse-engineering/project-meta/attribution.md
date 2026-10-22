@@ -1,7 +1,7 @@
 # Attribution & Preservation Contributors
 
 Status: active — attribution, preservation credits and the screenshot register
-Last updated: 2026-10-15 (WinUI screenshots left with the WinUI shell; register empty)
+Last updated: 2026-10-22 (licence summary; ExuberantParrot credited for PR #1 and PR #2)
 Summary: who contributed what, the licence boundaries of reference material, and the tracked-screenshot register.
 Evidence: SOURCE — contributors' public credits and published repositories; the register is checked against `git ls-files` by `tools/check_registered_screenshots.py`
 
@@ -54,12 +54,43 @@ Evidence: SOURCE — contributors' public credits and published repositories; th
 ### BermudaMaster
 - Speedrun/community research that helped validate mission behavior, rating expectations, and gameplay edge cases.
 
+### ExuberantParrot
+- [PR #1](https://github.com/dlprentice/Onslaught-Career-Editor/pull/1) (merged 2026-07-21):
+  corrected the script-VM field labels in
+  [`ScriptObjectCode.cpp.md`](../binary-analysis/functions/ScriptObjectCode.cpp.md)
+  (`+0x5C` event gate, `+0x64` instruction-count copy) and the `CSymtab` container
+  layout in [`Symtab.cpp.md`](../binary-analysis/functions/Symtab.cpp.md). Its text
+  is still present and was contributed under the repository's MIT licence of the
+  time; it stays under that notice ([`LICENSES/MIT.txt`](../../LICENSES/MIT.txt))
+  alongside CC BY-SA 4.0, and `REUSE.toml` marks the two files
+  `CC-BY-SA-4.0 AND MIT`.
+- [PR #2](https://github.com/dlprentice/Onslaught-Career-Editor/pull/2) (closed
+  2026-07-22): diagnosed the white wash over impact and explosion sprites in the
+  first-flight view. The fix was written independently on `main` from that
+  diagnosis, so no PR #2 text is carried; the diagnosis is credited here.
+
 ### Early Discord/community researchers
 - Community members including Jeppi, Baworo, Antares, NDjeneralBN, min473, and others contributed archival finds, research leads, modding discussion, or preservation interest.
 - Their contributions are reflected across lore, roadmap, and archival notes where still useful.
 
 ### Project lead / current repo maintenance
 - David (`dlprentice`) maintains the current editor/tooling effort, retail-static RE corpus, and release preparation work.
+
+## Licences
+
+- Project code (the companion, AppCore, `tools/`, `patches/` and `tests_shared/`
+  scripts, and `rebuild/`) is GPL-3.0-only: the root [`LICENSE`](../../LICENSE),
+  also at [`LICENSES/GPL-3.0-only.txt`](../../LICENSES/GPL-3.0-only.txt). The
+  companion and tools were MIT until 2026-10-22, when their author relicensed them.
+- Documentation and lore are CC BY-SA 4.0
+  ([`LICENSES/CC-BY-SA-4.0.txt`](../../LICENSES/CC-BY-SA-4.0.txt)). Quotations
+  in the lore stay with their authors, quoted for commentary and preservation.
+- ExuberantParrot's PR #1 passages keep their MIT notice
+  ([`LICENSES/MIT.txt`](../../LICENSES/MIT.txt)) as well.
+- [`REUSE.toml`](../../REUSE.toml) maps paths to these licences; per-file SPDX lines
+  take precedence where present. Contributions come in under the same terms
+  ([`CONTRIBUTING.md`](../../CONTRIBUTING.md)).
+- `references/` submodules, Godot and the .NET runtime keep their own licences.
 
 ## Publisher / Rights Context
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-only
 """Fail if a tracked picture of the game is not registered, or if there are too many.
 
 On 2026-08-01 the project relaxed a rule. It used to say plainly "do not track retail

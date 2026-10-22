@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-only
 """Corpus probe: is the CHeightField per-node array (field +0x20) populated in
 any shipped heightfield header?
 

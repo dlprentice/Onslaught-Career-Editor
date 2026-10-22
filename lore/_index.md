@@ -5,7 +5,7 @@
   measured RE evidence. Where an article disagrees with a measurement under
   [`reverse-engineering/`](../reverse-engineering/RE-INDEX.md), **the
   measurement wins** and the article is the side that gets corrected.
-- **Last updated:** 2026-08-22
+- **Last updated:** 2026-10-22 (licence note: CC BY-SA 4.0, quotations stay with their authors)
 - **Summary:** navigation to the 16 lore articles in this directory, plus
   pointers to the RE and roadmap indexes.
 
@@ -82,3 +82,8 @@ A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the p
 ---
 
 *This index provides navigation to the lore articles collected in this directory.*
+
+The project's own writing in these articles is CC BY-SA 4.0
+([`LICENSES/CC-BY-SA-4.0.txt`](../LICENSES/CC-BY-SA-4.0.txt)). Quotations from the
+developers, the post-mortem, interviews and community members remain with their
+authors, quoted for commentary and preservation.

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: GPL-3.0-only
 """Raw CMSH per-part track probe.
 
 Decodes MESP part records from a retail `.msh.aya` without the static-preview

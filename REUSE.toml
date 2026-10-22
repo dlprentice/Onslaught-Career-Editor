@@ -1,0 +1,65 @@
+# Licence map for this repository (REUSE specification 3.3).
+# Per-file SPDX lines take precedence where a file has one; the last matching
+# annotation below wins for files without one.
+# Not covered here: rebuild/ (GPL-3.0-only, its own LICENSE, SPDX lines and
+# PROVENANCE.md), references/ submodules (their own licences), and
+# tests_shared/fixtures/gold_career_save.bin (a real save contributed by
+# vandal_117 as a test baseline; see reverse-engineering/project-meta/attribution.md).
+version = 1
+
+# Project code and build files.
+[[annotations]]
+path = [
+    "companion/**",
+    "OnslaughtCareerEditor.AppCore/**",
+    "OnslaughtCareerEditor.AppCore.Tests/**",
+    "tools/**",
+    "patches/**",
+    "tests_shared/*.py",
+    ".editorconfig",
+    ".gitattributes",
+    ".gitignore",
+    ".gitmodules",
+    ".node-version",
+    ".nvmrc",
+    "global.json",
+    "package.json",
+    "package-lock.json",
+    "REUSE.toml",
+]
+SPDX-FileCopyrightText = "David Prentice and Onslaught Toolkit contributors"
+SPDX-License-Identifier = "GPL-3.0-only"
+
+# Documentation, lore and documentation data tables.
+[[annotations]]
+path = [
+    "*.md",
+    "*.MD",
+    ".github/**",
+    "reverse-engineering/**",
+    "lore/**",
+    "lore-book/**",
+    "roadmap/**",
+    "companion/**/*.md",
+    "OnslaughtCareerEditor.AppCore*/**/*.md",
+    "tools/**/*.md",
+    "patches/**/*.md",
+    "patches/*.tsv",
+    "tests_shared/fixtures/README.md",
+]
+SPDX-FileCopyrightText = "David Prentice and Onslaught Toolkit contributors"
+SPDX-License-Identifier = "CC-BY-SA-4.0"
+
+# ExuberantParrot's PR #1 (2026-07-21), contributed under the repository's MIT
+# licence of the time: its passages keep that notice (LICENSES/MIT.txt).
+[[annotations]]
+path = [
+    "reverse-engineering/binary-analysis/functions/ScriptObjectCode.cpp.md",
+    "reverse-engineering/binary-analysis/functions/Symtab.cpp.md",
+]
+precedence = "override"
+SPDX-FileCopyrightText = [
+    "David Prentice and Onslaught Toolkit contributors",
+    "ExuberantParrot (PR #1)",
+]
+SPDX-License-Identifier = "CC-BY-SA-4.0 AND MIT"

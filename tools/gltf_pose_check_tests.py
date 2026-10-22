@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: GPL-3.0-only
 """Checks the glTF pose checker on synthetic parts and a hand-written glTF animation (no game bytes)."""
 import unittest
 

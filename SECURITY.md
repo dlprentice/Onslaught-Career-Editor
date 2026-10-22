@@ -1,7 +1,7 @@
 # Security And Private Data Reporting
 
 Status: active disclosure guidance
-Last updated: 2026-09-06
+Last updated: 2026-10-22 (relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: how to report a defect that touches saves, local paths or copied
 executables, and the safety contracts a report is judged against.
 
@@ -61,8 +61,9 @@ publicly. Do not attach full local retail payloads.
 
 ## License and asset boundary
 
-The root MIT license covers the toolkit code and documentation. `rebuild/` and
-`references/Onslaught` are separately GPL-licensed; file-level and third-party
+Project code, including `rebuild/`, is GPL-3.0-only under the root `LICENSE`;
+documentation and lore are CC BY-SA 4.0, as `REUSE.toml` maps them.
+`references/Onslaught` keeps its own GPL licence; file-level and third-party
 notices remain applicable.
 
 Retail game files and converted copies remain user-supplied local inputs and

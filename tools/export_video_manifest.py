@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-only
 """
 Build a read-only manifest for the loose .vid/Bink corpus.
 

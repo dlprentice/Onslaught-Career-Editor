@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-only
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -446,7 +446,7 @@ internal static class PortableInstall
 
 /// <summary>
 /// The Linux side of a game-folder write, on descriptor-relative, link-refusing handles reused from the
-/// linked MIT safety source (LinuxSaveNative). New files are published with a no-clobber link; replaced
+/// linked safety source (LinuxSaveNative). New files are published with a no-clobber link; replaced
 /// files are swapped with renameat2(RENAME_EXCHANGE) so the displaced file can be identified and the
 /// swap undone if it was not the backed-up original. Where the filesystem has no exchange, a replacement is
 /// refused before anything changes; new files are still published.

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-only
 namespace OnslaughtToolkit.Companion.Tests;
 
 /// <summary>The game's own music, voice lines and cutscene list, found in a game-shaped folder of tiny original bytes.</summary>

@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-10-21 (Onslaught CE route, no-telemetry rule, companion README link)
+Last updated: 2026-10-22 (relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
@@ -68,7 +68,9 @@ queue, [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) what is demonstrated
   tooling. Retention belongs to `local-lab/INDEX.md` and the machine's deletion queue.
 - Licensing: the rebuild is GPL and may adapt the pinned GPL source in `references/Onslaught` and the decompilation's
   simulation (recorded per unit in `rebuild/PROVENANCE.md`); it consumes locally materialized retail data but never
-  contains retail executables, decompiler output or separately licensed material. The companion is MIT. Neither
+  contains retail executables, decompiler output or separately licensed material. All project code (companion, AppCore,
+  tools) is GPL-3.0-only and documentation and lore are CC BY-SA 4.0, as `REUSE.toml` maps them; ExuberantParrot's PR #1
+  passages also keep their MIT notice. Contributions come in under the same terms (`CONTRIBUTING.md`). None of it
   merges with private retail material into one licensing boundary.
 - The rebuild's simulation (`OnslaughtRebuild.Parity`) is deterministic given its inputs: the tape, the retail data
   and options files it reads as the game does, and the virtual clock. It never reads wall time, locale, environment or
