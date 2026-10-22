@@ -3,7 +3,7 @@
 - **Status:** live preservation record. Class names, behaviour-type ids, and
   data-record names below are measured evidence — read from RTTI type
   descriptors in the pristine `BEA.exe`
-  (from a string inventory generated locally from your own copy of `BEA.exe` (not tracked; retail text is never committed)),
+  (from a string inventory generated locally from your own copy of `BEA.exe`; retail text is never committed),
   the resolved PhysicsScript value-id tables
   ([physics-round-value-ids-2026-07-25.md](../reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md),
   raw table `local-lab/physics-value-ids-2026-07-25/all_ids.tsv`), the exact

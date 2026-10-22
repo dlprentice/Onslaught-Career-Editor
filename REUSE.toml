@@ -84,3 +84,16 @@ SPDX-FileCopyrightText = [
     "Stuart Gillam (Onslaught source release, github.com/stuart73/Onslaught)",
 ]
 SPDX-License-Identifier = "CC-BY-SA-4.0 AND GPL-3.0-only"
+
+# The AYAResourceExtractor notes in the same folder document Stuart's separate
+# resource extractor (github.com/stuart73/AYAResourceExtractor, pinned in
+# references/AYAResourceExtractor), whose root licence is MIT; they quote it, not
+# the GPL game source. This later annotation takes precedence for those files.
+[[annotations]]
+path = "reverse-engineering/source-code/aya-*"
+precedence = "override"
+SPDX-FileCopyrightText = [
+    "David Prentice and Onslaught Toolkit contributors",
+    "Stuart Gillam (AYAResourceExtractor, github.com/stuart73/AYAResourceExtractor)",
+]
+SPDX-License-Identifier = "CC-BY-SA-4.0 AND MIT"

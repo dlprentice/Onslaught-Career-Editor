@@ -6,7 +6,7 @@
   ([physics-round-value-ids-2026-07-25.md](../reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md),
   raw `local-lab/physics-value-ids-2026-07-25/all_ids.tsv`), the pristine-exe
   string table
-  (a string inventory generated locally from your own copy of `BEA.exe` (not tracked; retail text is never committed)),
+  (a string inventory generated locally from your own copy of `BEA.exe`; retail text is never committed),
   and the pinned source corpus. Faction flavor is carried from
   [world-lore.md](world-lore.md) and marked as fiction. Where this page and a
   measurement disagree, the measurement wins.

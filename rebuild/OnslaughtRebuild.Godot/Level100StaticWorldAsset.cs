@@ -193,14 +193,11 @@ internal sealed partial class Level100StaticWorldAsset
             // authored position into `this+0x1c..+0x28` (Z-down at `+0x24`),
             // then runs two clamps and nothing else:
             //
-            //   0x004F34F6  b9 c8 ad 6f 00  MOV ECX, 0x006FADC8   height field
-            //   0x004F34FB  e8 80 b6 f8 ff  CALL 0x0047EB80       bilinear sample
-            //   0x004F3500  d8 56 24        FCOM  [ESI + 0x24]    sample vs authored
-            //   0x004F3529  d9 5c 24 14     FSTP  [ESP + 0x14]    sample becomes Z
-            //   0x004F3534  ff 50 50        CALL  [EAX + 0x50]    SetPosition
-            //   0x004F3549  d9 05 fc bd 6f 00 FLD [0x006FBDFC]    water level
-            //   0x004F354F  d8 56 24        FCOM  [ESI + 0x24]
-            //   0x004F3559  d9 5e 24        FSTP  [ESI + 0x24]    water becomes Z
+            //   it samples the height field (0x006FADC8) bilinearly through 0x0047EB80 at
+            //   0x004F34FB, compares the sample with the authored height at [ESI+0x24], stores the
+            //   sample as Z (0x004F3529) and calls SetPosition (vtable +0x50, 0x004F3534); then it
+            //   loads the water level from 0x006FBDFC (0x004F3549), compares it the same way and
+            //   stores it as Z at [ESI+0x24] (0x004F3559).
             //
             // Both `FSTP`s write the support height straight into the pivot.
             // Z is down-positive, so the pair is `min(authored, support)` there

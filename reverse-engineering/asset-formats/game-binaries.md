@@ -127,8 +127,8 @@ whole-install hash pass or new archive unpacking was performed.
 
 [`binary-analysis/functions/import-thunks.md`](../binary-analysis/functions/import-thunks.md)
 pins the zlib/Ogg/Vorbis IAT thunks in the pristine image. The Bink import-name
-cluster is in the executable's string table, which is
-a string inventory generated locally from your own copy of `BEA.exe` (not tracked; retail text is never committed).
+cluster is in the executable's string table. Read it with a string inventory
+generated locally from your own copy of `BEA.exe`; retail text is never committed.
 Together with the DLL export tables, these establish that the required external
 names are present. This pass did not perform a loader-time bind trace, call every
 export, or claim ABI compatibility beyond the measured symbols.

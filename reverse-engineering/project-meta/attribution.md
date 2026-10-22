@@ -89,6 +89,8 @@ Evidence: SOURCE — contributors' public credits and published repositories; th
   published Onslaught source (GPL version 3 only): those notes are
   CC BY-SA 4.0 and GPL-3.0-only, crediting Stuart alongside the project, and the
   quoted source keeps its own licence.
+- The `aya-*` notes in that folder quote Stuart's separate AYAResourceExtractor
+  instead, whose root licence is MIT: those notes are CC BY-SA 4.0 and MIT.
 - The gold career save fixture (`tests_shared/fixtures/gold_career_save.bin`,
   vandal_117's real save) is game data contributed as a test baseline; no
   project licence is claimed for it.
