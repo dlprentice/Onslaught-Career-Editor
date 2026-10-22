@@ -174,9 +174,11 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
     /// <summary>
     /// Writes a verified career or options file into the game folder after a verified backup. The
     /// source is read through the protected route and must be a supported career of the same kind.
+    /// <paramref name="expectedSourceSha256"/> is the hash a backup manifest recorded for the source (a file being put
+    /// back): if the bytes read now differ, the backup copy changed after it was made and nothing is written.
     /// </summary>
     public async Task<InstallReceipt> InstallAsync(Game.GameFolder game, string sourcePath, string targetName, string backupRoot,
-        Func<bool> gameRunning, string reason = "Before a change to your game")
+        Func<bool> gameRunning, string reason = "Before a change to your game", string? expectedSourceSha256 = null)
     {
         if (Busy) return new InstallReceipt(false, "A file operation is already running.", targetName);
         bool options = string.Equals(targetName, GameInstaller.OptionsName, StringComparison.OrdinalIgnoreCase);
@@ -191,6 +193,10 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
                 ProtectedRead read = files.OpenCareer(sourcePath);
                 if (!read.Ok || read.Bytes is not byte[] bytes)
                     return new InstallReceipt(false, "The file to install could not be read: " + read.Message, targetName);
+                if (expectedSourceSha256 is not null && !string.Equals(read.Sha256, expectedSourceSha256, StringComparison.OrdinalIgnoreCase))
+                    return new InstallReceipt(false, $"This backup copy of {System.IO.Path.GetFileName(sourcePath)} has changed since it was " +
+                        "made (it no longer matches the fingerprint its backup recorded), so it was not put back. Nothing was written.",
+                        targetName);
                 return GameInstaller.Install(files, game, targetName, bytes, backupRoot, gameRunning, DateTime.Now, reason: reason);
             }, message => new InstallReceipt(false, message, targetName));
         }

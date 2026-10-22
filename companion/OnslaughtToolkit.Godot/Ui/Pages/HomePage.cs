@@ -159,7 +159,7 @@ internal sealed class HomePage : Page
         ChooseFolder.Pressed += () => FolderDialog.PopupCenteredRatio(0.75f);
         FolderDialog.DirSelected += path => _app.Status.Track(ChooseAsync(path));
         OpenFile.Pressed += () => OpenDialog.PopupCenteredRatio(0.75f);
-        OpenDialog.FileSelected += path => _app.Status.Track(_app.OpenCareer(path));
+        OpenDialog.FileSelected += path => _app.Status.Track(_app.ChooseCareer(path));
         AddCareer.Pressed += () => AddDialog.PopupCenteredRatio(0.75f);
         AddDialog.FileSelected += AskToAdd;
         Manual.Pressed += () =>
@@ -268,7 +268,8 @@ internal sealed class HomePage : Page
         AddCareer.Disabled = folder is null;
         Careers.Show();
 
-        IReadOnlyList<BackupSet> sets = Backups.List(_app.Backups.Folder);
+        // Only this game folder's backups count as its backups.
+        IReadOnlyList<BackupSet> sets = folder is null ? [] : Backups.List(_app.Backups.Folder, folder);
         if (_app.Game.Busy && folder is null)
         {
             _heroStatus.Text = "Looking for your game…";

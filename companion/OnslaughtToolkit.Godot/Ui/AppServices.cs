@@ -19,7 +19,11 @@ internal sealed class AppServices
 
     internal required Action<string> OpenUrl { get; init; }
     internal required Action<string> Navigate { get; init; }
+    /// <summary>Opens a career read-only as the open one, without asking; for the companion's own reopen after a save.</summary>
     internal required Func<string, Task<Outcome<SaveSession>>> OpenCareer { get; init; }
+
+    /// <summary>Opens a career the player chose, asking first if Edit career holds unsaved changes.</summary>
+    internal required Func<string, Task<Outcome<SaveSession>>> ChooseCareer { get; init; }
 
     /// <summary>Asks for a career file anywhere on the computer and opens it read-only.</summary>
     internal required Action OpenCareerFile { get; init; }

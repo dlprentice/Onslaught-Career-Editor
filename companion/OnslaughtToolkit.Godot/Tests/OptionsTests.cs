@@ -61,8 +61,14 @@ internal static class OptionsTests
         BinaryPrimitives.WriteUInt16LittleEndian(preset.AsSpan(0x26BE + 8), 1);
         check.That(OptionsFile.Preview(preset, keyEdit).Value is OptionsPlan custom && BinaryPrimitives.ReadUInt16LittleEndian(custom.Bytes.AsSpan(0x26BE + 8)) == 0,
             "Changing a key sets the control scheme index to 0.");
-        check.That(KeyTable.For(Key.W)?.Packed == U(original, read.Bindings.Single(row => row.EntryId == 0x1F).Offset + 0x1C) ||
-            read.Bindings.Single(row => row.EntryId == 0x1F).Slot1Device != 9, "The key table packs W the way the game wrote it.");
+        GameWrittenKeys(original, read, check);
+        RightHandModifiers(original, read, keyEdit, check);
+        NoOpFields(original, read, check);
+        byte[] unknownScheme = original.ToArray();
+        BinaryPrimitives.WriteUInt16LittleEndian(unknownScheme.AsSpan(0x26BE + 8), 7);
+        check.That(OptionsFile.Preview(unknownScheme, keyEdit) is { Ok: false } refusedScheme && refusedScheme.Message.Contains("control scheme index is 7") &&
+            OptionsFile.Preview(unknownScheme, Edit(edit => edit.MusicVolume = read.MusicVolume > 0.5f ? 0.25f : 0.75f)).Ok,
+            "A key edit is refused for a control-scheme index the companion does not know; other settings still change.");
 
         foreach ((string name, OptionsEdit edit) in new[]
         {
@@ -76,6 +82,80 @@ internal static class OptionsTests
         }
         check.That(OptionsFile.Describe(9, KeyTable.For(Key.W)!.Packed) == "W" && OptionsFile.Describe(17, 0) == "Left mouse button" &&
             OptionsFile.Describe(5, 0xFFFF).StartsWith("Controller"), "Stored bindings have readable names.");
+    }
+
+    /// <summary>
+    /// Every keyboard binding the game itself wrote in the fixture (keyboard devices 8 to 10, a nonzero key) decodes to a
+    /// key-table name, and that entry packs to exactly the stored dword and is marked as game-written.
+    /// </summary>
+    private static void GameWrittenKeys(byte[] original, OptionsReading read, Checks check)
+    {
+        int keyboard = 0;
+        foreach (BindingRow row in read.Bindings)
+        {
+            for (int slot = 0; slot < 2; slot++)
+            {
+                (uint device, uint key) = row.Slot(slot);
+                if (device is not (8 or 9 or 10) || key == 0) continue;
+                keyboard++;
+                KeyChoice? entry = KeyTable.Keys.FirstOrDefault(choice => choice.Packed == key);
+                check.That(entry is { GameWritten: true } && entry.Name == KeyTable.Name(key) &&
+                    U(original, row.Offset + (slot == 0 ? 0x10 : 0x1C)) == entry.Packed,
+                    $"The game-written key 0x{key:X8} (entry 0x{row.EntryId:X2}, slot {slot + 1}) is in the key table exactly as stored.");
+            }
+        }
+        check.That(keyboard == 16, $"The fixture holds the sixteen game-written keyboard bindings the key table was checked against (found {keyboard}).");
+        check.That(KeyTable.For(Key.W)?.Packed == 0x00570011 && KeyTable.For(Key.Kp1)?.Packed == 0x0031004F && KeyTable.For(Key.Up)?.Packed == 0xC8,
+            "W, numpad 1 and the up arrow pack as the game wrote them.");
+        check.That(KeyTable.For(Key.Key1) is { GameWritten: false } && KeyTable.For(Key.Kp2) is { GameWritten: false } &&
+            KeyTable.For(Key.Comma) is { GameWritten: false } && KeyTable.For(Key.Ctrl) is { GameWritten: false },
+            "Key classes no game-written row confirms are marked as not yet seen.");
+    }
+
+    /// <summary>Right Shift and Right Control are their own keys to the game, never stored as the left-hand ones.</summary>
+    private static void RightHandModifiers(byte[] original, OptionsReading read, OptionsEdit keyEdit, Checks check)
+    {
+        KeyChoice? rightShift = KeyTable.For(Key.Shift, KeyLocation.Right), leftShift = KeyTable.For(Key.Shift, KeyLocation.Left);
+        KeyChoice? rightControl = KeyTable.For(Key.Ctrl, KeyLocation.Right), leftControl = KeyTable.For(Key.Ctrl, KeyLocation.Left);
+        check.That(rightShift is { Packed: 0x36, Name: "Right Shift", GameWritten: false } && leftShift?.Packed == 0x2A &&
+            rightShift.Packed != leftShift.Packed, "Right Shift is stored as scan 0x36, not as Left Shift (0x2A).");
+        check.That(rightControl is { Packed: 0x9D, Name: "Right Control", GameWritten: false } && leftControl?.Packed == 0x1D,
+            "Right Control is stored as extended scan 0x9D, not as Left Control (0x1D).");
+        check.That(KeyTable.Name(0x36) == "Right Shift" && KeyTable.Name(0x9D) == "Right Control", "Stored right-hand keys read back by name.");
+        int transform = read.Bindings.Single(row => row.EntryId == 0x21).Offset;
+        if (OptionsFile.Preview(original, Edit(edit => edit.Keys[(0x21, 1)] = rightShift!)).Value is OptionsPlan plan)
+            check.That(U(plan.Bytes, transform + 0x1C) == 0x36 && plan.Lines.Single().EndsWith("→ Right Shift", StringComparison.Ordinal),
+                "A Right Shift edit writes 0x36 into the slot.");
+        else
+            check.Fail("A Right Shift edit must plan.");
+    }
+
+    /// <summary>A field set to the value it already holds is not listed as a change, and changes no byte.</summary>
+    private static void NoOpFields(byte[] original, OptionsReading read, Checks check)
+    {
+        float music = read.MusicVolume > 0.5f ? 0.25f : 0.75f;
+        KeyChoice space = KeyTable.For(Key.Space)!;
+        OptionsEdit mixed = Edit(edit =>
+        {
+            edit.MusicVolume = music;
+            edit.SoundVolume = read.SoundVolume;
+            edit.InvertFlight[0] = read.InvertFlight[0];
+            edit.ControllerPreset[1] = read.ControllerPreset[1];
+            edit.ScreenShape = read.ScreenShape;
+            edit.Keys[(0x21, 1)] = space; // the fixture's own Transform key
+        });
+        if (OptionsFile.Preview(original, mixed).Value is OptionsPlan plan)
+        {
+            check.That(plan.Lines.Count == 1 && plan.Lines[0].StartsWith("Music volume", StringComparison.Ordinal) &&
+                plan.Changes.All(change => change.Offset is >= 0x2492 and < 0x2496),
+                "A mixed edit lists only the field that changes; the fields set to their current values change no byte and get no line.");
+        }
+        else
+        {
+            check.Fail("A mixed edit with one real change must plan.");
+        }
+        check.That(!OptionsFile.Preview(original, Edit(edit => edit.Keys[(0x21, 1)] = space)).Ok,
+            "Setting a key to the key it already has is no change, and is refused as one.");
     }
 
     private static OptionsEdit Edit(Action<OptionsEdit> change)

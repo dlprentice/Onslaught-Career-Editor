@@ -8,7 +8,7 @@ namespace OnslaughtToolkit.Companion.Ui;
 
 /// <summary>Where the companion looks for Steam, keeps its settings and puts backups; tests and captures supply their own.</summary>
 internal sealed record CompanionEnvironment(IReadOnlyList<string> SteamRoots, string SettingsPath, Func<bool>? GameRunning = null,
-    Action<string>? OpenUrl = null, string? DefaultBackupFolder = null)
+    Action<string>? OpenUrl = null, string? DefaultBackupFolder = null, Action? Quit = null)
 {
     internal const string BackupFolderName = "Battle Engine Aquila Backups";
 
@@ -42,6 +42,8 @@ public partial class CompanionApp : Control
     private readonly Dictionary<string, Page> _pages = [];
     private readonly List<string> _careerMenuPaths = [];
     private Func<bool> _gameRunning = () => false;
+    private Action _quit = () => { };
+    private Action? _onDiscard;
     private bool _running, _openedFirstCareer, _autoBackupDone, _quietOpen;
     private double _sinceRunningCheck;
     private Task _catchUp = Task.CompletedTask;
@@ -77,6 +79,9 @@ public partial class CompanionApp : Control
     internal CareerBytesPage Bytes { get; private set; } = null!;
     internal AssetsPage Assets { get; private set; } = null!;
 
+    /// <summary>Asks before unsaved changes on Edit career or Game settings would be lost (switching careers, closing).</summary>
+    internal ConfirmationDialog DiscardDialog { get; private set; } = null!;
+
     /// <summary>Whether the game was running at the last check; the header says so while it is.</summary>
     internal bool GameIsRunning => _running;
 
@@ -93,6 +98,7 @@ public partial class CompanionApp : Control
         Game = new GameLibrary(environment.SteamRoots, settings);
         Status = new StatusLine();
         _gameRunning = environment.GameRunning ?? GameProcess.IsRunning;
+        _quit = environment.Quit ?? (() => GetTree().Quit());
         Action<string> openUrl = environment.OpenUrl ?? (url => OS.ShellOpen(url));
         this.Add(new ColorRect { Color = Palette.Background, MouseFilter = MouseFilterEnum.Ignore })
             .SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
@@ -100,10 +106,20 @@ public partial class CompanionApp : Control
         Services = new AppServices
         {
             Workspace = Workspace, Game = Game, Status = Status, Backups = new BackupLocation(settings, environment.BackupFolder()),
-            GameRunning = () => _gameRunning(), OpenUrl = openUrl, Navigate = Navigate, OpenCareer = OpenCareerAsync, Popups = popups,
+            GameRunning = () => _gameRunning(), OpenUrl = openUrl, Navigate = Navigate, OpenCareer = OpenCareerAsync,
+            ChooseCareer = ChooseCareerAsync, Popups = popups,
             CatchUp = () => CatchUpAsync(force: true, backUp: false),
             OpenCareerFile = () => Home.OpenDialog.PopupCenteredRatio(0.75f),
         };
+
+        DiscardDialog = this.Add(Build.Confirm("Discard unsaved changes?", "Discard"));
+        DiscardDialog.Confirmed += () =>
+        {
+            Action? then = _onDiscard;
+            _onDiscard = null;
+            then?.Invoke();
+        };
+        DiscardDialog.Canceled += () => _onDiscard = null;
 
         Home = new HomePage(Services);
         Summary = new SummaryPage(Services);
@@ -266,6 +282,51 @@ public partial class CompanionApp : Control
     }
 
     /// <summary>
+    /// Opens a career the player chose (the Career menu, Home, or a file picked with Ctrl+O). Opening another career
+    /// starts Edit career again from it, so unsaved changes there are only dropped after the player says so; until then
+    /// the open career stays and this returns a refusal.
+    /// </summary>
+    internal Task<Outcome<SaveSession>> ChooseCareerAsync(string path)
+    {
+        if (!EditCareer.HasChanges) return OpenCareerAsync(path);
+        AskToDiscard($"{Build.Count(EditCareer.ChangeCount, "change")} on Edit career {(EditCareer.ChangeCount == 1 ? "is" : "are")} " +
+            $"not saved. Open {System.IO.Path.GetFileNameWithoutExtension(path)} and discard {(EditCareer.ChangeCount == 1 ? "it" : "them")}?",
+            "Discard and open", () => Status.Track(OpenCareerAsync(path)));
+        return Task.FromResult(Outcome<SaveSession>.Refusal("Your unsaved changes are kept until you choose."));
+    }
+
+    /// <summary>
+    /// Closes the companion, unless a file operation is still running (a close never abandons a write) or Edit career
+    /// or Game settings holds unsaved changes, which are only dropped after the player says so. Returns whether it quit.
+    /// </summary>
+    internal bool RequestClose()
+    {
+        if (Workspace.Busy)
+        {
+            Status.Show("A file operation is still finishing. Wait for its result before closing.");
+            return false;
+        }
+        List<string> unsaved = [];
+        if (EditCareer.HasChanges) unsaved.Add($"{Build.Count(EditCareer.ChangeCount, "change")} on Edit career");
+        if (Settings.HasChanges) unsaved.Add($"{Build.Count(Settings.ChangeCount, "change")} on Game settings");
+        if (unsaved.Count == 0)
+        {
+            _quit();
+            return true;
+        }
+        AskToDiscard($"Not saved yet: {string.Join(" and ", unsaved)}. Close the companion and discard them?", "Discard and close", _quit);
+        return false;
+    }
+
+    private void AskToDiscard(string text, string action, Action then)
+    {
+        _onDiscard = then;
+        DiscardDialog.DialogText = text;
+        DiscardDialog.OkButtonText = action;
+        DiscardDialog.PopupCentered();
+    }
+
+    /// <summary>
     /// Checks whether the game is running and updates what depends on it. When the game has just closed,
     /// the companion catches up with what it saved and, if automatic backups are on, backs that up.
     /// </summary>
@@ -418,7 +479,7 @@ public partial class CompanionApp : Control
         if (id == 1000)
             Home.OpenDialog.PopupCenteredRatio(0.75f);
         else if (id >= 0 && id < _careerMenuPaths.Count)
-            Status.Track(OpenCareerAsync(_careerMenuPaths[(int)id]));
+            Status.Track(ChooseCareerAsync(_careerMenuPaths[(int)id]));
     }
 
     private void RefreshHeader()
@@ -454,11 +515,5 @@ public partial class CompanionApp : Control
         window.MoveToCenter();
     }
 
-    private void OnCloseRequested()
-    {
-        if (Workspace.Busy)
-            Status.Show("A file operation is still finishing. Wait for its result before closing.");
-        else
-            GetTree().Quit();
-    }
+    private void OnCloseRequested() => RequestClose();
 }

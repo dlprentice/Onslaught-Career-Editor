@@ -101,12 +101,48 @@ internal sealed class SaveLabSource : IDisposable
     }
 }
 
+/// <summary>
+/// Where a copy saved elsewhere may not go: inside a game folder (one holding <c>BEA.exe</c> and <c>data/</c>, as
+/// FileMutationSafety checks) or inside Onslaught CE's own careers-and-settings folder, which CE reads as its careers
+/// (<see cref="OnslaughtToolkit.Companion.Game.OnslaughtCe.UserFolders()"/>). Both the path as given and its folder with
+/// links resolved are compared, so a link cannot lead there.
+/// </summary>
+internal static class OutputGuard
+{
+    internal const string OutputInsideCeFolder =
+        "Copies never go into Onslaught CE's own folder, where CE keeps its careers and settings. Choose another folder.";
+
+    internal static void Reject(string output)
+    {
+        FileMutationSafety.RejectOutputInGameTree(output);
+        string full = System.IO.Path.GetFullPath(output);
+        string? parent = System.IO.Path.GetDirectoryName(full);
+        string? realParent = parent is null ? null : OnslaughtToolkit.Companion.Game.SteamLibraries.Canonical(parent);
+        foreach (string folder in OnslaughtToolkit.Companion.Game.OnslaughtCe.UserFolders())
+        {
+            string lexical = System.IO.Path.GetFullPath(folder);
+            string? real = OnslaughtToolkit.Companion.Game.SteamLibraries.Canonical(folder);
+            if (Inside(full, lexical) || (parent is not null && Inside(parent, lexical)) ||
+                (realParent is not null && (Inside(realParent, lexical) || (real is not null && Inside(realParent, real)))))
+                throw new InvalidOperationException(OutputInsideCeFolder);
+        }
+    }
+
+    private static bool Inside(string path, string folder)
+    {
+        StringComparison comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        string trimmed = System.IO.Path.TrimEndingDirectorySeparator(folder);
+        return string.Equals(System.IO.Path.TrimEndingDirectorySeparator(path), trimmed, comparison) ||
+            path.StartsWith(trimmed + System.IO.Path.DirectorySeparatorChar, comparison);
+    }
+}
+
 internal static class SaveLabFileTransaction
 {
     internal static byte[] PublishNew(string output, SaveLabSource source, byte[] bytes,
         ReadOnlySpan<byte> baseline, string sourceIdentity, Action? beforePublish)
     {
-        FileMutationSafety.RejectOutputInGameTree(output);
+        OutputGuard.Reject(output);
         if (OperatingSystem.IsLinux())
             return PublishLinux(output, source, bytes, baseline, sourceIdentity, beforePublish);
         if (!OperatingSystem.IsWindows())
@@ -153,7 +189,7 @@ internal static class SaveLabFileTransaction
         VerifyCopy(staged, bytes);
         beforePublish?.Invoke();
         directory.Verify();
-        FileMutationSafety.RejectOutputInGameTree(output);
+        OutputGuard.Reject(output);
         source.Verify(baseline, sourceIdentity);
         directory.RequireVacant(name);
         LinuxSaveNative.Stat sealedIdentity = LinuxSaveNative.Inspect(staged.SafeFileHandle);
@@ -168,7 +204,7 @@ internal static class SaveLabFileTransaction
         {
             directory.Flush();
             directory.Verify();
-            FileMutationSafety.RejectOutputInGameTree(output);
+            OutputGuard.Reject(output);
             using FileStream reopened = directory.OpenRead(name);
             LinuxSaveNative.Stat committed = LinuxSaveNative.Inspect(reopened.SafeFileHandle);
             LinuxSaveNative.RequireRegular(committed, links: 1);
@@ -313,6 +349,10 @@ internal static class LinuxSaveNative
 
     internal static SafeFileHandle OpenAt(int directory, string name, int flags, uint mode)
     {
+        // The flag values above are x86-64's; on other architectures O_DIRECTORY and O_NOFOLLOW differ, so every
+        // caller (save copies and game-folder writes alike) is refused here rather than opening with the wrong flags.
+        if (!OperatingSystem.IsLinux() || RuntimeInformation.ProcessArchitecture is not Architecture.X64)
+            throw new PlatformNotSupportedException("Protected file access requires a supported Linux x64 file system.");
         int fd = OpenAtNative(directory, name, flags, mode);
         if (fd < 0)
         {

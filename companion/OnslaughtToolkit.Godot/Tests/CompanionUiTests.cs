@@ -28,10 +28,10 @@ internal static class CompanionUiTests
         SwitchableSaveFiles files = new(new ProtectedSaveFiles());
         FakeInstall install = FakeInstall.Create(Path.Combine(outputDirectory, "ui-install"), original);
         List<string> openedUrls = [];
-        Flag running = new();
+        Flag running = new(), quit = new();
         string defaultBackups = Path.Combine(outputDirectory, "ui-backups");
         CompanionEnvironment environment = new([install.SteamRoot], Path.Combine(outputDirectory, "ui-settings", "settings.json"),
-            GameRunning: () => running.On, OpenUrl: openedUrls.Add, DefaultBackupFolder: defaultBackups);
+            GameRunning: () => running.On, OpenUrl: openedUrls.Add, DefaultBackupFolder: defaultBackups, Quit: () => quit.On = true);
         CompanionApp app = new(files, managesWindow: false, environment);
         tree.Root.AddChild(app);
         await Frame(tree);
@@ -41,6 +41,7 @@ internal static class CompanionUiTests
         {
             await Start(app, tree, install, check);
             await Edit(app, files, tree, install, fixture, outputDirectory, original, running, check);
+            await UnsavedChanges(app, tree, install, quit, check);
             await CheatsAndSettings(app, tree, install, outputDirectory, check);
             await BackupsAndHome(app, tree, install, outputDirectory, original, defaultBackups, openedUrls, running, check);
             await DriveLore(app, tree, openedUrls, check);
@@ -307,6 +308,42 @@ internal static class CompanionUiTests
         await Frame(tree);
     }
 
+    /// <summary>Switching careers or closing with unsaved edits asks first; nothing is dropped until the player says so.</summary>
+    private static async Task UnsavedChanges(CompanionApp app, SceneTree tree, FakeInstall install, Flag quit, Checks check)
+    {
+        check.Suite("unsaved changes");
+        await app.OpenCareerAsync(install.Career);
+        EditCareerPage edit = app.EditCareer;
+        string other = Path.Combine(install.Game, "savegames", "Career One (edited).bes");
+        edit.Rows[0].Target.Value = edit.Rows[0].Target.Value + 1;
+        Outcome<SaveSession> asked = await app.Services.ChooseCareer(other);
+        check.That(!asked.Ok && app.DiscardDialog.Visible && app.DiscardDialog.DialogText.StartsWith("1 change on Edit career is not saved", StringComparison.Ordinal) &&
+            app.Workspace.Session?.Path == install.Career && edit.HasChanges, "choosing another career with an unsaved change asks first and keeps it");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+        PopupMenu menu = app.CareerMenu.GetPopup();
+        int item = Enumerable.Range(0, menu.ItemCount).First(index => menu.GetItemText(index) == "Career One (edited)");
+        menu.EmitSignal(PopupMenu.SignalName.IdPressed, (long)menu.GetItemId(item));
+        check.That(app.DiscardDialog.Visible && app.Workspace.Session?.Path == install.Career && edit.HasChanges,
+            "the header's Career menu asks too, and a cancelled choice keeps the change");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
+        for (int frame = 0; frame < 600 && (app.Workspace.Busy || app.Workspace.Session?.Path != other); frame++) await Frame(tree);
+        check.That(app.Workspace.Session?.Path == other && !edit.HasChanges, "after the player agrees, the other career opens and the change is dropped");
+        app.DiscardDialog.Hide();
+
+        edit.Rows[1].Target.Value = edit.Rows[1].Target.Value + 1;
+        check.That(!app.RequestClose() && app.DiscardDialog.Visible && app.DiscardDialog.DialogText.Contains("1 change on Edit career") && !quit.On,
+            "closing with an unsaved change asks first and does not close");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
+        check.That(quit.On, "agreeing to discard closes the companion");
+        quit.On = false;
+        app.DiscardDialog.Hide();
+        edit.UndoAll.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(app.RequestClose() && quit.On && !app.DiscardDialog.Visible, "with nothing unsaved, closing does not ask");
+        quit.On = false;
+        await app.OpenCareerAsync(install.Career);
+    }
+
     private static async Task CheatsAndSettings(CompanionApp app, SceneTree tree, FakeInstall install, string outputDirectory, Checks check)
     {
         check.Suite("cheats and settings");
@@ -351,6 +388,14 @@ internal static class CompanionUiTests
             "the changes name the music volume and the new key");
         check.That(settings.Bar.Root.Visible && settings.Bar.Summary.Text.StartsWith("2 changes", StringComparison.Ordinal),
             "the settings page's bar counts its unsaved changes");
+        settings.Source.Select(1);
+        settings.Source.EmitSignal(OptionButton.SignalName.ItemSelected, 1);
+        check.That(settings.Opened?.Path == install.Options && settings.HasChanges && settings.Source.Selected == 0 &&
+            app.Status.Label.Text.Contains("Save or undo"), "choosing other settings while changes are unsaved keeps them and says so");
+        check.That(!app.RequestClose() && app.DiscardDialog.Visible && app.DiscardDialog.DialogText.Contains("2 changes on Game settings"),
+            "closing with unsaved settings asks first");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
         string optionsCopy = Path.Combine(outputDirectory, "options-copy.bea");
         PublicationReceipt optionsWritten = await settings.SaveElsewhereAsync(optionsCopy);
         byte[] optionsBytes = File.Exists(optionsCopy) ? File.ReadAllBytes(optionsCopy) : [];
@@ -375,6 +420,12 @@ internal static class CompanionUiTests
         InstallReceipt optionsInstalled = await settings.SaveIntoGameAsync();
         check.That(optionsInstalled is { Ok: true, Replaced: true } && File.ReadAllBytes(install.Options).AsSpan().SequenceEqual(optionsBytes) &&
             settings.Opened?.Matches(optionsBytes) == true, "the game's default settings are replaced after a backup and reopened");
+        settings.StartCapture(0x15, 1);
+        check.That(settings.Capture(Key.Shift, KeyLocation.Right) && settings.PreviewText.Contains("air brake → Right Shift") &&
+            app.Status.Label.Text.Contains("not been seen writing it"),
+            "a Right Shift press is captured as Right Shift, with a note that the game has not been seen writing it");
+        settings.UndoAll.EmitSignal(BaseButton.SignalName.Pressed);
+        for (int frame = 0; frame < 600 && (app.Workspace.Busy || settings.HasChanges); frame++) await Frame(tree);
         int careerSource = 1;
         settings.Source.Select(careerSource);
         settings.Source.EmitSignal(OptionButton.SignalName.ItemSelected, careerSource);
@@ -435,6 +486,35 @@ internal static class CompanionUiTests
             "unsaved changes are never thrown away to show what the game saved; the player is told instead");
         app.EditCareer.UndoAll.EmitSignal(BaseButton.SignalName.Pressed);
         await app.OpenCareerAsync(install.Career);
+
+        // A backup copy that changed after it was made is not put back.
+        app.Navigate("backups");
+        BackupSet tampered = Backups.List(defaultBackups, app.Game.Folder!)[0];
+        BackupFile tamperedFile = tampered.Files.Single(file => file.Name == "Career One.bes");
+        string tamperedCopy = Path.Combine(tampered.Folder, tamperedFile.Name);
+        byte[] altered = File.ReadAllBytes(tamperedCopy);
+        altered[0x23F6] ^= 0x02;
+        File.Delete(tamperedCopy);
+        File.WriteAllBytes(tamperedCopy, altered);
+        byte[] inGame = File.ReadAllBytes(install.Career);
+        int setsBefore = Backups.List(defaultBackups).Count;
+        backups.AskToRestore(tampered, tamperedFile);
+        InstallReceipt tamperedRestore = await backups.ConfirmAsync();
+        check.That(!tamperedRestore.Ok && tamperedRestore.Message.Contains("has changed since it was made") &&
+            File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(inGame) && Backups.List(defaultBackups).Count == setsBefore,
+            "a backup copy that no longer matches its recorded fingerprint is not put back, and nothing is written");
+
+        // A backup made from another game folder is listed but never put back into this one.
+        FakeInstall elsewhere = FakeInstall.Create(Path.Combine(outputDirectory, "ui-other-install"), original);
+        BackupReceipt foreign = Backups.Create(new ProtectedSaveFiles(), GameFolder.Inspect(elsewhere.Game, "test"), defaultBackups,
+            DateTime.Now.AddMinutes(5), "Backed up by you");
+        backups.Refresh();
+        BackupSet otherGame = Backups.List(defaultBackups).Single(set => set.Folder == foreign.Set?.Folder);
+        backups.AskToRestore(otherGame, otherGame.Files[0]);
+        check.That(foreign.Ok && !backups.Confirm.Visible && app.Status.Label.Text.Contains("another game folder") &&
+            File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(inGame), "a backup from another game folder is not put back into this one");
+        check.That(backups.RestoreButtons.Count(button => button.Disabled) == otherGame.Files.Count,
+            "only that backup's Put back buttons are disabled");
         app.Navigate("home");
         HomePage home = app.Home;
         check.That(!home.AskingAboutBackups && home.HeroStatus.Contains("last backed up"), "Home shows the safety net once it is set up");

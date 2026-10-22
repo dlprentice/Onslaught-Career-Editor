@@ -25,19 +25,25 @@ public sealed record BackupReceipt(bool Ok, string Message, BackupSet? Set = nul
 public sealed record InstallReceipt(bool Ok, string Message, string Target, string? BackupFolder = null,
     bool Replaced = false, bool MayHaveChanged = false, string? Sha256 = null, bool Exchanged = false);
 
-/// <summary>Whether the game is running; the companion never writes into its folder while it is.</summary>
+/// <summary>
+/// Whether the game is running: the original game, or Onslaught CE, which reads the same install's careers. The
+/// companion never writes into the game folder while either runs.
+/// </summary>
 public static class GameProcess
 {
     public static bool IsRunning() => Running().Count > 0;
 
-    /// <summary>The processes the check counts as the game, as "pid: name (first argument)"; read-only.</summary>
+    /// <summary>The processes the check counts as the game, as "pid: name (first argument) game"; read-only.</summary>
     public static IReadOnlyList<string> Running()
     {
         List<string> found = [];
         try
         {
+            // Windows names a process after its program: BEA covers the original game and CE's bea.exe alike.
             if (OperatingSystem.IsWindows())
-                return System.Diagnostics.Process.GetProcessesByName("BEA").Select(process => $"{process.Id}: {process.ProcessName}").ToArray();
+                return System.Diagnostics.Process.GetProcessesByName("BEA").Select(process => $"{process.Id}: {process.ProcessName} (the game)")
+                    .Concat(System.Diagnostics.Process.GetProcessesByName("onslaught-ce")
+                        .Select(process => $"{process.Id}: {process.ProcessName} (Onslaught CE)")).ToArray();
             foreach (string folder in Directory.EnumerateDirectories("/proc"))
             {
                 if (!int.TryParse(Path.GetFileName(folder), out int pid)) continue;
@@ -45,7 +51,9 @@ public static class GameProcess
                 {
                     string comm = File.ReadAllText(Path.Combine(folder, "comm"));
                     string[] argv = File.ReadAllText(Path.Combine(folder, "cmdline")).Split('\0', StringSplitOptions.RemoveEmptyEntries);
-                    if (IsGame(comm, argv)) found.Add($"{pid}: {comm.Trim()} ({(argv.Length > 0 ? argv[0] : "")})");
+                    string first = argv.Length > 0 ? argv[0] : "";
+                    if (IsGame(comm, argv)) found.Add($"{pid}: {comm.Trim()} ({first}) original game");
+                    else if (IsOnslaughtCe(comm, argv, Program(folder), File.Exists)) found.Add($"{pid}: {comm.Trim()} ({first}) Onslaught CE");
                 }
                 catch (Exception error) when (error is IOException or UnauthorizedAccessException)
                 {
@@ -73,6 +81,30 @@ public static class GameProcess
         if (argv.Count == 0) return false;
         if (IsExecutable(argv[0])) return true;
         return FileName(argv[0]).StartsWith("wine", StringComparison.OrdinalIgnoreCase) && argv.Skip(1).Any(IsExecutable);
+    }
+
+    /// <summary>
+    /// Whether a Linux process is Onslaught CE: its launcher, or its game program <c>bea</c> started from a CE package
+    /// folder (<see cref="OnslaughtCe.IsCeProgram"/>). The program is read from <c>/proc/PID/exe</c>; when that cannot be
+    /// read, argv[0] counts only if it is a full path, so a relative <c>./bea</c> is never resolved against the
+    /// companion's own folder.
+    /// </summary>
+    public static bool IsOnslaughtCe(string comm, IReadOnlyList<string> argv, string? program, Func<string, bool> fileExists)
+    {
+        string? first = argv.Count > 0 && Path.IsPathFullyQualified(argv[0]) ? argv[0] : null;
+        return OnslaughtCe.IsCeProgram(comm, program ?? first, fileExists);
+    }
+
+    private static string? Program(string procFolder)
+    {
+        try
+        {
+            return new FileInfo(Path.Combine(procFolder, "exe")).LinkTarget;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
     }
 
     private static bool IsExecutable(string argument) => FileName(argument).Equals("BEA.exe", StringComparison.OrdinalIgnoreCase);
@@ -139,13 +171,13 @@ public static class Backups
     }
 
     /// <summary>
-    /// Whether any career or the options file differs from the newest backup set in the folder (a file
-    /// added, removed or changed), so an automatic backup is only made when there is something new.
-    /// Reads only.
+    /// Whether any career or the options file differs from the newest backup set made from this game folder (a
+    /// file added, removed or changed), so an automatic backup is only made when there is something new. Sets
+    /// made from another game folder in the same backup folder are not compared. Reads only.
     /// </summary>
     public static bool ChangedSinceLatest(GameFolder game, string root)
     {
-        if (List(root).FirstOrDefault() is not BackupSet latest) return true;
+        if (List(root, game).FirstOrDefault() is not BackupSet latest) return true;
         Dictionary<string, string> backed = latest.Files.ToDictionary(file => file.Name, file => file.Sha256, StringComparer.Ordinal);
         List<GameFile> current = [.. game.Careers.Where(file => file.Supported)];
         if (game.Options is { Supported: true } options) current.Add(options);
@@ -164,6 +196,25 @@ public static class Backups
             }
         }
         return false;
+    }
+
+    /// <summary>Backup sets in a folder that were made from this game folder, newest first.</summary>
+    public static IReadOnlyList<BackupSet> List(string root, GameFolder game) => List(root).Where(set => SameGame(set, game)).ToArray();
+
+    /// <summary>
+    /// Whether a backup set was made from this game folder: its manifest's game root names the same folder. A set
+    /// from another install must not be put back into this one, nor stand in for this one's latest backup.
+    /// </summary>
+    public static bool SameGame(BackupSet set, GameFolder game) => SameRoot(set.Game, game.Root);
+
+    internal static bool SameRoot(string? recorded, string root)
+    {
+        if (string.IsNullOrWhiteSpace(recorded) || !Path.IsPathFullyQualified(recorded)) return false;
+        StringComparison comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        static string Normal(string path) => Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
+        return string.Equals(Normal(recorded), Normal(root), comparison) ||
+            SteamLibraries.Canonical(recorded) is string real && SteamLibraries.Canonical(root) is string current &&
+            string.Equals(Normal(real), Normal(current), comparison);
     }
 
     /// <summary>Backup sets found in a folder, newest first. Folders without a readable manifest are ignored.</summary>
@@ -203,8 +254,9 @@ public static class Backups
 
 /// <summary>
 /// Writes into the game folder, the one place the companion changes the player's install. Only a
-/// career in <c>savegames/</c> or <c>defaultoptions.bea</c> can be written, never while the game runs,
-/// and only after a verified backup of every career and the options file. Replacing a file checks it
+/// career in <c>savegames/</c> or <c>defaultoptions.bea</c> can be written, never while the game runs
+/// (checked before the backup and again just before the swap), and only after a verified backup of every
+/// career and the options file. Replacing a file checks it
 /// still matches its backup, then swaps atomically and verifies both sides of the swap.
 /// </summary>
 public static partial class GameInstaller
@@ -233,7 +285,7 @@ public static partial class GameInstaller
         if (target.Length == 0)
             return new InstallReceipt(false, "Only a .bes career in the game's savegames folder, or defaultoptions.bea, can be written.", targetName);
         if (gameRunning())
-            return new InstallReceipt(false, "Battle Engine Aquila is running. Close the game first; it writes these files itself.", target);
+            return new InstallReceipt(false, RunningMessage, target);
         if (!CareerSave.Inspect(prepared).Ok)
             return new InstallReceipt(false, "That file is not a supported 10,004-byte career; nothing was written.", target);
         if (!Directory.Exists(Path.GetDirectoryName(target)))
@@ -263,9 +315,21 @@ public static partial class GameInstaller
         {
             // Each writer handles every failure after its file is in place itself (AfterPublication), so an
             // exception reaching this catch happened before anything in the game folder was published.
+            // The backup takes a while; the game may have started meanwhile, so each writer checks again just before
+            // its swap or link, after its last change check, and refuses with nothing written.
+            Action beforeSwapChecked = () =>
+            {
+                beforeSwap?.Invoke();
+                if (gameRunning()) throw new GameStartedException();
+            };
             return OperatingSystem.IsLinux() && !UsePortableInstall
-                ? LinuxInstall.Write(target, prepared, saved?.Sha256, set.Folder, beforeCheck, beforeSwap, afterPublish)
-                : PortableInstall.Write(target, prepared, saved?.Sha256, set.Folder, beforeCheck, beforeSwap, afterPublish);
+                ? LinuxInstall.Write(target, prepared, saved?.Sha256, set.Folder, beforeCheck, beforeSwapChecked, afterPublish)
+                : PortableInstall.Write(target, prepared, saved?.Sha256, set.Folder, beforeCheck, beforeSwapChecked, afterPublish);
+        }
+        catch (GameStartedException)
+        {
+            return new InstallReceipt(false, "The game started while the backup was being made, so nothing was written. " + RunningMessage,
+                target, set.Folder);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or Win32Exception or InvalidOperationException)
         {
@@ -291,6 +355,11 @@ public static partial class GameInstaller
                 "earlier files.", target, backupFolder, replaced, MayHaveChanged: true);
         }
     }
+
+    internal const string RunningMessage = "Battle Engine Aquila or Onslaught CE is running. Close the game first; it writes these files itself.";
+
+    /// <summary>Raised by the check just before the swap; nothing in the game folder has changed when it is.</summary>
+    private sealed class GameStartedException() : IOException("The game started during the write.");
 
     /// <summary>The full target path for an allowed name, or null.</summary>
     public static string? Target(GameFolder game, string name)

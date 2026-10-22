@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: paused (since 2026-10-16, until new requirements); C# application built entirely in code on Godot 4.8 dev6 .NET, organised around the player: careers, Goodies, editing, cheats, game settings, backups, music, voices, lore, and the game's models and textures; Linux executed checks, Windows runtime acceptance pending
-Last updated: 2026-10-22 (named Onslaught Companion; works with the original game only, safety promises scoped to it; relicensed GPL-3.0-only, lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (data-safety fixes: restore checks the manifest hash and game folder, running check also for Onslaught CE and again before the swap, unsaved-changes prompts, right-hand Shift and Control; named Onslaught Companion; works with the original game only; relicensed GPL-3.0-only, lore CC BY-SA 4.0)
 Summary: Onslaught Companion, the GPL-3.0-only app for Battle Engine Aquila players: today it works with the original game's Steam or retail install; it opens on that game and its careers, shows progress and Goodies, changes careers and settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, plays and explains the game's own music, voices and lore, and saves copies of its models (glTF), textures (PNG) and sound effects (WAV).
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -81,10 +81,13 @@ which builds, tests, captures, runs and exports the companion). It covers the co
 bytes, Goodie edits, settings edits and the key table, the protected adapter and six Linux
 publication races, Steam discovery, the game's text on a synthetic language table,
 backups, automatic backups and writes into the game on both the Linux and the portable
-(Windows) path, including a file that takes the name just before the swap and a career the
-game saved after it was opened, music and voice grouping, every lore article and link, and
-the interface driving its real controls: saving into the game, putting files back, and
-catching up after the game closes.
+(Windows) path, including a file that takes the name just before the swap, a career the
+game saved after it was opened and a game that starts while the backup is made, the
+Onslaught CE process and folder rules, backups kept apart per game folder, a backup copy
+changed after it was made, the game-written keys and the right-hand Shift and Control,
+music and voice grouping, every lore article and link, and
+the interface driving its real controls: saving into the game, putting files back,
+catching up after the game closes, and asking before unsaved changes are dropped.
 
 `npm run capture:companion-godot` renders every page and state at 1280×800 and
 1920×1080 through `godot-offscreen`: first a machine without the game, then a fake install
@@ -195,6 +198,12 @@ are never thrown away for this; the companion says so instead.
 - The handedness conversion follows the game's culling convention; no mirrored text on a model
   has been checked against it.
 - Behavior after a power loss during a write is not proven (see below).
+- The Onslaught CE running-check rule and CE's folder locations come from the port's source and
+  packaging; neither has been checked against a running CE.
+- Which player each binding slot serves (Slot 1 or Slot 2) has not been checked in the game, and
+  key classes no game-written row confirms (for example top-row digits, punctuation and the
+  right-hand Shift and Control) are stored by the same convention but marked as not yet seen.
+- A career or copy chosen through a symbolic link in its path is refused rather than resolved.
 
 ## How files stay safe
 

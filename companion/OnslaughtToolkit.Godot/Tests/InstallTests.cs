@@ -42,6 +42,8 @@ internal static class InstallTests
         {
             check.That(GameProcess.IsGame(comm, argv) == isGame, $"The running-game check {(isGame ? "finds" : "ignores")} {argv[0]}.");
         }
+        OnslaughtCeProcesses(root, check);
+        OnslaughtCeFolders(original, root, files, check);
         foreach (string name in new[] { "../escape.bes", "sub/dir.bes", "career.txt", "BEA.exe", ".hidden.bes", " padded.bes", "x.bes " })
             check.That(!GameInstaller.Install(files, game, name, edited, backups, () => false, now).Ok, $"The target name '{name}' is refused.");
         check.That(!GameInstaller.Install(files, game, "New.bes", edited, backups, () => true, now).Ok, "Nothing is written while the game runs.");
@@ -106,8 +108,145 @@ internal static class InstallTests
             "Ordinary names that only start like a device name are allowed.");
 
         ChangeGuards(original, root, now, files, check);
+        GameStartsDuringWrite(original, root, now, files, check);
+        BackupsPerGameFolder(original, root, now, files, check);
         PublicationBoundary(original, root, now, files, check);
         PortableWrites(original, root, now, files, check);
+    }
+
+    /// <summary>
+    /// Onslaught CE counts as the game while it runs: its launcher, or its game program <c>bea</c> in a folder that
+    /// also holds the launcher, as a CE package lays them out. A program called <c>bea</c> anywhere else does not.
+    /// </summary>
+    private static void OnslaughtCeProcesses(string root, Checks check)
+    {
+        string package = Path.Combine(root, "onslaught-ce-1.0-linux-i686");
+        string elsewhere = Path.Combine(root, "unrelated-tools");
+        Directory.CreateDirectory(package);
+        Directory.CreateDirectory(elsewhere);
+        foreach (string name in new[] { "bea", "onslaught-ce-launch", "onslaught-ce" }) File.WriteAllText(Path.Combine(package, name), "marker");
+        File.WriteAllText(Path.Combine(elsewhere, "bea"), "marker");
+        string game = Path.Combine(package, "bea"), launcher = Path.Combine(package, "onslaught-ce-launch");
+        foreach ((string comm, string[] argv, string? program, bool isCe, string what) in new (string, string[], string?, bool, string)[]
+        {
+            ("onslaught-ce-la", [launcher], launcher, true, "CE's launcher"),
+            ("bea", ["./bea"], game, true, "CE's bea in its package folder"),
+            ("bea", [game, "--windowed"], null, true, "CE's bea named by its full path when /proc/PID/exe cannot be read"),
+            ("onslaught-ce", ["bash", Path.Combine(package, "onslaught-ce")], "/usr/bin/bash", true, "CE's start script"),
+            ("bea", ["./bea"], Path.Combine(elsewhere, "bea"), false, "a program called bea outside a CE package"),
+            ("bea", ["bea"], null, false, "a relative bea that cannot be placed"),
+            ("python3", ["python3", game], "/usr/bin/python3", false, "a tool that only names CE's bea"),
+            ("beam.smp", ["/usr/lib/erlang/erts/bin/beam.smp"], "/usr/lib/erlang/erts/bin/beam.smp", false, "a program whose name starts like bea"),
+        })
+        {
+            check.That(GameProcess.IsOnslaughtCe(comm, argv, program, File.Exists) == isCe,
+                $"The running-game check {(isCe ? "finds" : "ignores")} {what}.");
+        }
+        check.That(!GameProcess.IsGame("bea", [game]) && GameProcess.IsGame("bea.exe", ["Z:\\games\\onslaught-ce\\bea.exe"]),
+            "The BEA.exe rule does not take CE's Linux bea for the original game, and CE's Windows bea.exe under Wine counts as the game.");
+    }
+
+    /// <summary>CE's own careers folder is never a place for a copy saved elsewhere, wherever CE's environment puts it.</summary>
+    private static void OnslaughtCeFolders(byte[] original, string root, ProtectedSaveFiles files, Checks check)
+    {
+        Dictionary<string, string?> linux = new() { ["XDG_DATA_HOME"] = "/data/xdg", ["BEA_USER_DIR"] = "/srv/ce-user" };
+        IReadOnlyList<string> folders = OnslaughtCe.UserFolders(name => linux.GetValueOrDefault(name), windows: false, "/home/player");
+        check.That(folders.SequenceEqual(["/srv/ce-user", "/data/xdg/onslaught-ce", "/home/player/.local/share/onslaught-ce"]),
+            "CE's folders on Linux: BEA_USER_DIR, $XDG_DATA_HOME/onslaught-ce and ~/.local/share/onslaught-ce.");
+        foreach (string broad in new[] { "/", "/home/player", "/home", "relative/ce" })
+            check.That(!OnslaughtCe.UserFolders(name => name == "BEA_USER_DIR" ? broad : null, windows: false, "/home/player").Contains(broad),
+                $"A BEA_USER_DIR of '{broad}' is not taken as CE's folder, so it cannot refuse everything under it.");
+        check.That(OnslaughtCe.UserFolders(name => name == "APPDATA" ? "/appdata" : null, windows: true, "/home/player")
+            .SequenceEqual([Path.Combine("/appdata", "Onslaught CE")]), "CE's folder on Windows is %APPDATA%\\Onslaught CE.");
+
+        string source = Path.Combine(root, "ce-copy-source.bes");
+        File.WriteAllBytes(source, original);
+        ProtectedRead read = files.OpenCareer(source);
+        string custom = Path.Combine(root, "ce-user-dir");
+        string xdgCe = Path.Combine(Environment.GetEnvironmentVariable("XDG_DATA_HOME") ?? Path.Combine(root, "no-xdg"), "onslaught-ce");
+        string allowed = Path.Combine(root, "ce-neighbour");
+        foreach (string folder in new[] { Path.Combine(custom, "savegames"), Path.Combine(xdgCe, "savegames"), allowed })
+            Directory.CreateDirectory(folder);
+        string? before = Environment.GetEnvironmentVariable("BEA_USER_DIR");
+        Environment.SetEnvironmentVariable("BEA_USER_DIR", custom);
+        try
+        {
+            foreach (string output in new[] { Path.Combine(custom, "savegames", "Copy.bes"), Path.Combine(custom, "Copy.bes"),
+                Path.Combine(xdgCe, "savegames", "Copy.bes") })
+            {
+                PublicationReceipt refused = files.PublishCopy(source, read.Identity, read.Sha256, output, original);
+                check.That(!refused.Ok && !refused.MayHaveOutput && refused.Message.Contains("Onslaught CE") && !File.Exists(output),
+                    $"A copy is refused inside Onslaught CE's folder ({Path.GetRelativePath(root, output)}), and nothing is written.");
+            }
+            string fine = Path.Combine(allowed, "Copy.bes");
+            check.That(files.PublishCopy(source, read.Identity, read.Sha256, fine, original).Ok && File.Exists(fine),
+                "A copy beside CE's folder, not inside it, is still saved.");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("BEA_USER_DIR", before);
+        }
+    }
+
+    /// <summary>
+    /// The game starting while the backup is made: the second running check, just before the swap or link, refuses the
+    /// write and nothing changes, on the Linux and the portable path, for a new career and a replacement.
+    /// </summary>
+    private static void GameStartsDuringWrite(byte[] original, string root, DateTime now, ProtectedSaveFiles files, Checks check)
+    {
+        byte[] edited = original.ToArray();
+        edited[0x2406] ^= 0x5A;
+        int second = 0;
+        foreach (bool portable in new[] { false, true })
+        {
+            GameInstaller.UsePortableInstall = portable;
+            try
+            {
+                string path = portable ? "Portable path" : "Linux path";
+                FakeInstall install = FakeInstall.Create(Path.Combine(root, portable ? "starts-portable" : "starts-linux"), original);
+                string backups = Path.Combine(root, portable ? "starts-portable-backups" : "starts-linux-backups");
+                Directory.CreateDirectory(backups);
+                foreach (string target in new[] { "Started.bes", "Career One.bes" })
+                {
+                    int checks = 0;
+                    bool StartsAfterFirstCheck() => ++checks > 1;
+                    InstallReceipt refused = GameInstaller.Install(files, GameFolder.Inspect(install.Game, "test"), target, edited, backups,
+                        StartsAfterFirstCheck, now.AddSeconds(second++), beforeSwap: () => { });
+                    check.That(refused is { Ok: false, MayHaveChanged: false, BackupFolder: not null } && checks == 2 &&
+                        refused.Message.Contains("started while the backup was being made") &&
+                        !File.Exists(Path.Combine(install.Game, "savegames", "Started.bes")) && Unchanged(install, original) &&
+                        Leftovers(install).Length == 0,
+                        $"{path}: a game that starts during the backup stops the write of {target} just before the swap; nothing is written.");
+                }
+            }
+            finally
+            {
+                GameInstaller.UsePortableInstall = false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Two game folders sharing one backup folder: each one's automatic backup compares only with its own latest set, and
+    /// a set is matched to the game folder it was made from.
+    /// </summary>
+    private static void BackupsPerGameFolder(byte[] original, string root, DateTime now, ProtectedSaveFiles files, Checks check)
+    {
+        FakeInstall first = FakeInstall.Create(Path.Combine(root, "two-games-first"), original);
+        FakeInstall second = FakeInstall.Create(Path.Combine(root, "two-games-second"), original);
+        string backups = Path.Combine(root, "two-games-backups");
+        Directory.CreateDirectory(backups);
+        GameFolder one = GameFolder.Inspect(first.Game, "test"), two = GameFolder.Inspect(second.Game, "test");
+        BackupReceipt made = Backups.Create(files, one, backups, now, "Automatic backup");
+        check.That(made.Ok && !Backups.ChangedSinceLatest(one, backups) && Backups.ChangedSinceLatest(two, backups),
+            "A backup of one game folder does not count as the latest backup of another holding the same files.");
+        Backups.Create(files, two, backups, now.AddSeconds(1), "Automatic backup");
+        IReadOnlyList<BackupSet> ones = Backups.List(backups, one), twos = Backups.List(backups, two);
+        check.That(ones.Count == 1 && twos.Count == 1 && Backups.SameGame(ones[0], one) && !Backups.SameGame(ones[0], two) &&
+            !Backups.SameGame(twos[0], one) && Backups.List(backups).Count == 2, "Each backup set is matched to the game folder it came from.");
+        check.That(!Backups.SameGame(ones[0] with { Game = "" }, one) && !Backups.SameGame(ones[0] with { Game = "relative/game" }, one) &&
+            Backups.SameGame(ones[0] with { Game = first.Game + Path.DirectorySeparatorChar }, one),
+            "A set without a full game folder path matches no game; a trailing separator does not matter.");
     }
 
     /// <summary>

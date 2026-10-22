@@ -93,7 +93,7 @@ internal sealed class EditCareerPage : Page
         };
         Bar.Save.Pressed += AskToSave;
         Bar.Undo.Pressed += UndoChanges;
-        OpenResult.Pressed += () => _app.Status.Track(_app.OpenCareer(_app.Workspace.LastVerifiedOutput.Length > 0
+        OpenResult.Pressed += () => _app.Status.Track(_app.ChooseCareer(_app.Workspace.LastVerifiedOutput.Length > 0
             ? _app.Workspace.LastVerifiedOutput : _lastInstalled));
         ShowEmpty();
     }
@@ -124,6 +124,9 @@ internal sealed class EditCareerPage : Page
 
     /// <summary>Whether the player has changed anything here that is not saved yet.</summary>
     internal bool HasChanges => Rows.Any(row => row.IsChanged) || _goodieTargets.Count > 0;
+
+    /// <summary>How many changes are not saved yet, as the bar under the page counts them.</summary>
+    internal int ChangeCount => Rows.Count(row => row.IsChanged) + _goodieTargets.Count;
 
     /// <summary>The changes in the player's words, one per line.</summary>
     internal string ChangesText => string.Join("\n", _changes.GetChildren().OfType<Label>().Select(label => label.Text));

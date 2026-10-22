@@ -69,7 +69,7 @@ internal sealed class CareerCards
             action.Pressed += () =>
             {
                 if (isOpen) _app.Navigate("summary");
-                else _app.Status.Track(_app.OpenCareer(path));
+                else _app.Status.Track(_app.ChooseCareer(path));
             };
             _open.Add(action);
             Root.Add(card);

@@ -8,8 +8,11 @@ namespace OnslaughtToolkit.Companion.Options;
 /// <param name="MirrorEntryId">An entry the game keeps equal to this one (Fire weapon's second row).</param>
 public sealed record BindingAction(string Group, string Name, int EntryId, uint KeyboardDevice, int? MirrorEntryId = null, uint? MirrorDevice = null);
 
-/// <summary>A keyboard key as the game stores it: the character it types (0 for none) and its set-1 scan code.</summary>
-public sealed record KeyChoice(string Name, uint Character, uint Scan)
+/// <summary>
+/// A keyboard key as the game stores it: the character it types (0 for none) and its set-1 scan code.
+/// <paramref name="GameWritten"/> says a row the game itself wrote confirms this key's class.
+/// </summary>
+public sealed record KeyChoice(string Name, uint Character, uint Scan, bool GameWritten = false)
 {
     public uint Packed => (Character << 16) | Scan;
 }
@@ -98,6 +101,14 @@ public static class OptionsFile
             "Options read.");
     }
 
+    /// <summary>
+    /// Plans an edit. A field set to the value it already holds changes no byte and gets no line, so the lines name
+    /// only real changes; an edit that changes nothing is refused. Volumes are the slider's whole percent as a float
+    /// from 0 to 1: the startup load copies the stored float without validation (the original-code controls cited
+    /// above), so such a value is read as written; whether the game's own menu would land on the same step is not
+    /// established. A key edit needs a known control-scheme index (0 or 1, as AppCore required), and sets it to 0;
+    /// what the game does with either value has not been checked, so the line only says what is stored.
+    /// </summary>
     public static Outcome<OptionsPlan> Preview(ReadOnlySpan<byte> original, OptionsEdit edit)
     {
         if (Read(original).Value is not OptionsReading current) return Outcome<OptionsPlan>.Refusal(Read(original).Message);
@@ -122,24 +133,37 @@ public static class OptionsFile
         {
             if (!SliderSensitivities.Contains(sensitivity))
                 return Outcome<OptionsPlan>.Refusal("Mouse sensitivity uses the game's own slider values, 3 to 63 in steps of 3.");
-            BinaryPrimitives.WriteSingleLittleEndian(output.AsSpan(TailOffset + 0x04), sensitivity);
-            lines.Add($"Mouse sensitivity {current.MouseSensitivity:0.###} → {sensitivity:0}");
+            if (BitConverter.SingleToUInt32Bits(current.MouseSensitivity) != BitConverter.SingleToUInt32Bits(sensitivity))
+            {
+                BinaryPrimitives.WriteSingleLittleEndian(output.AsSpan(TailOffset + 0x04), sensitivity);
+                lines.Add($"Mouse sensitivity {current.MouseSensitivity:0.###} → {sensitivity:0}");
+            }
         }
         if (edit.ScreenShape is uint shape)
         {
             if (shape > 1) return Outcome<OptionsPlan>.Refusal("Screen shape can be 4:3 or 16:9.");
             Word(TailOffset + 0x20, shape, $"Screen shape {ShapeName(current.ScreenShape)} → {ShapeName(shape)}");
         }
+        bool keysChanged = false;
         foreach (((int entryId, int slot), KeyChoice key) in edit.Keys)
         {
             if (slot is < 0 or > 1 || Actions.FirstOrDefault(action => action.EntryId == entryId) is not BindingAction action)
                 return Outcome<OptionsPlan>.Refusal("That binding is not one the game offers.");
-            if (!SetKey(entryId, slot, action.KeyboardDevice, key)) return Outcome<OptionsPlan>.Refusal($"This file has no row for {action.Name}.");
-            if (action.MirrorEntryId is int mirror && !SetKey(mirror, slot, action.MirrorDevice ?? action.KeyboardDevice, key))
-                return Outcome<OptionsPlan>.Refusal($"This file has no second row for {action.Name}.");
+            if (SetKey(entryId, slot, action.KeyboardDevice, key) is not bool changed) return Outcome<OptionsPlan>.Refusal($"This file has no row for {action.Name}.");
+            if (action.MirrorEntryId is int mirror)
+            {
+                if (SetKey(mirror, slot, action.MirrorDevice ?? action.KeyboardDevice, key) is not bool mirrored)
+                    return Outcome<OptionsPlan>.Refusal($"This file has no second row for {action.Name}.");
+                changed |= mirrored;
+            }
+            if (!changed) continue;
+            keysChanged = true;
             lines.Add($"Slot {slot + 1} {action.Group.ToLowerInvariant()} {action.Name.ToLowerInvariant()} → {key.Name}");
         }
-        if (edit.Keys.Count > 0 && current.ControlScheme != 0)
+        if (edit.Keys.Count > 0 && current.ControlScheme is not (0 or 1))
+            return Outcome<OptionsPlan>.Refusal($"This file's control scheme index is {current.ControlScheme}, a value the companion does not know, " +
+                "so its keys are not changed.");
+        if (keysChanged && current.ControlScheme != 0)
         {
             BinaryPrimitives.WriteUInt16LittleEndian(output.AsSpan(TailOffset + 0x08), 0);
             lines.Add("Control scheme index set to 0");
@@ -152,6 +176,7 @@ public static class OptionsFile
         {
             if (value is not float volume) return true;
             if (!float.IsFinite(volume) || volume is < 0 or > 1) return false;
+            if (BitConverter.SingleToUInt32Bits(before) == BitConverter.SingleToUInt32Bits(volume)) return true;
             BinaryPrimitives.WriteSingleLittleEndian(output.AsSpan(offset), volume);
             lines.Add($"{name} {before * 100:0}% → {volume * 100:0}%");
             return true;
@@ -164,13 +189,16 @@ public static class OptionsFile
 
         void Word(int offset, uint value, string line)
         {
+            if (BinaryPrimitives.ReadUInt32LittleEndian(output.AsSpan(offset)) == value) return;
             BinaryPrimitives.WriteUInt32LittleEndian(output.AsSpan(offset), value);
             lines.Add(line);
         }
 
-        bool SetKey(int entryId, int slot, uint device, KeyChoice key)
+        // Null when the file has no such row; otherwise whether the slot's bytes changed.
+        bool? SetKey(int entryId, int slot, uint device, KeyChoice key)
         {
-            if (current.Bindings.FirstOrDefault(row => row.EntryId == entryId) is not BindingRow row) return false;
+            if (current.Bindings.FirstOrDefault(row => row.EntryId == entryId) is not BindingRow row) return null;
+            if (row.Slot(slot) == (device, key.Packed)) return false;
             int at = row.Offset + (slot == 0 ? 0x0C : 0x18);
             BinaryPrimitives.WriteUInt32LittleEndian(output.AsSpan(at), device);
             BinaryPrimitives.WriteUInt32LittleEndian(output.AsSpan(at + 4), key.Packed);

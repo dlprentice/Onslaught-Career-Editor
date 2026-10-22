@@ -7,7 +7,9 @@ namespace OnslaughtToolkit.Companion.Ui;
 
 /// <summary>
 /// The safety net: where backups go, automatic backups, and every backup set with a way to put any file
-/// back. Putting a file back is itself a write into the game, so it backs up the current files first.
+/// back. Putting a file back is itself a write into the game, so it backs up the current files first. A file is put
+/// back only if it still matches the hash its backup recorded, and only into the game folder the backup came from;
+/// sets from another game folder are listed but cannot be put back here.
 /// </summary>
 internal sealed class BackupsPage : Page
 {
@@ -102,7 +104,12 @@ internal sealed class BackupsPage : Page
     /// <summary>Asks before putting a backed-up file back into the game.</summary>
     internal void AskToRestore(BackupSet set, BackupFile file)
     {
-        if (_app.Game.Folder is null) return;
+        if (_app.Game.Folder is not GameFolder game) return;
+        if (!Backups.SameGame(set, game))
+        {
+            _app.Status.Show(OtherGameMessage(set), StatusKind.Failure);
+            return;
+        }
         _pending = (set, file);
         string what = Describe(file.Name);
         Confirm.DialogText = $"Put {what} back as it was {Build.When(set.Created)}?\n\nThe {what} in your game now is backed up first, " +
@@ -117,10 +124,16 @@ internal sealed class BackupsPage : Page
         if (_pending is not (BackupSet set, BackupFile file) || _app.Game.Folder is not GameFolder game)
             return new InstallReceipt(false, "Nothing was chosen to put back.", "");
         _pending = null;
+        if (!Backups.SameGame(set, game))
+        {
+            InstallReceipt refused = new(false, OtherGameMessage(set), file.Name);
+            _app.Status.Show(refused.Message, StatusKind.Failure);
+            return refused;
+        }
         if (_app.BackupFolderOrReport() is not string folder) return new InstallReceipt(false, "No backup folder.", file.Name);
         _app.Status.Show("Backing up, then putting the file back…");
         InstallReceipt receipt = await _app.Workspace.InstallAsync(game, System.IO.Path.Combine(set.Folder, file.Name), file.Name, folder,
-            _app.GameRunning, $"Before putting back {Describe(file.Name)} from {set.Created:d MMM HH:mm}");
+            _app.GameRunning, $"Before putting back {Describe(file.Name)} from {set.Created:d MMM HH:mm}", expectedSourceSha256: file.Sha256);
         await _app.CatchUp();
         _app.Status.Show(receipt.Ok ? $"{Capitalised(Describe(file.Name))} is back as it was {Build.When(set.Created)}." : receipt.Message,
             receipt.Ok ? StatusKind.Success : StatusKind.Failure);
@@ -135,21 +148,26 @@ internal sealed class BackupsPage : Page
         _empty.Text = sets.Count == 0 ? "No backups yet. Back up now, or turn on automatic backups; every change you save into your " +
             "game also backs up first." : "";
         _empty.Visible = sets.Count == 0;
+        GameFolder? game = _app.Game.Folder;
         foreach (BackupSet set in sets.Take(SetsShown))
         {
+            bool here = game is not null && Backups.SameGame(set, game);
             (PanelContainer panel, VBoxContainer body) = Build.Panel("Inset", 6);
             HBoxContainer head = body.Add(Build.Row(12));
             head.Add(Build.Text(Capitalised(Build.When(set.Created)), "Strong", wrap: false));
             Label reason = head.Add(Build.Text(set.Reason ?? "Backup", "Muted", wrap: false, clip: true));
             reason.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
             head.Add(Build.Text(Build.Count(set.Files.Count, "file"), "Faint", wrap: false));
+            if (game is not null && !here)
+                body.Add(Build.Text($"From another game folder: {set.Game}. It can only be put back there.", "Faint", wrap: false, clip: true));
             foreach (BackupFile file in set.Files)
             {
                 HBoxContainer row = body.Add(Build.Row(12));
                 Label name = row.Add(Build.Text(Capitalised(Describe(file.Name)), "", wrap: false, clip: true));
                 name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
                 name.TooltipText = System.IO.Path.Combine(set.Folder, file.Name);
-                Button restore = row.Add(Build.Button("Put back", "Caution", disabled: _app.Game.Folder is null || _app.Workspace.Busy));
+                Button restore = row.Add(Build.Button("Put back", "Caution", here ? "" : OtherGameMessage(set),
+                    disabled: !here || _app.Workspace.Busy));
                 restore.Icon = Icons.Get("restore");
                 restore.Pressed += () => AskToRestore(set, file);
             }
@@ -159,6 +177,9 @@ internal sealed class BackupsPage : Page
         if (sets.Count > SetsShown)
             _sets.Add(Build.Text($"{sets.Count - SetsShown} older backups are in the folder too.", "Faint"));
     }
+
+    private static string OtherGameMessage(BackupSet set) =>
+        $"That backup was made from another game folder ({set.Game}), so it is not put back into this one. Nothing was written.";
 
     private static string Describe(string file) =>
         string.Equals(file, GameInstaller.OptionsName, StringComparison.OrdinalIgnoreCase) ? "the game's default settings"

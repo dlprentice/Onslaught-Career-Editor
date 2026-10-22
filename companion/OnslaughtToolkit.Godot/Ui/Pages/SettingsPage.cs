@@ -174,6 +174,9 @@ internal sealed class SettingsPage : Page
     /// <summary>Whether the player has changed anything here that is not saved yet.</summary>
     internal bool HasChanges => !_edit.IsEmpty;
 
+    /// <summary>How many settings are changed and not saved yet.</summary>
+    internal int ChangeCount => _plan.Value is OptionsPlan plan ? plan.Lines.Count : HasChanges ? 1 : 0;
+
     internal override void Refresh()
     {
         if (_file is null && _app.Game.Folder is not null && !_app.Workspace.Busy && Source.ItemCount > 0 && Source.Selected >= 0)
@@ -241,16 +244,24 @@ internal sealed class SettingsPage : Page
         _keyButtons[(entryId, slot)].GrabFocus();
     }
 
-    /// <summary>Applies a captured physical key; Escape cancels. Returns whether the key was usable.</summary>
-    internal bool Capture(Key physical)
+    /// <summary>
+    /// Applies a captured physical key at its location (left or right Shift and Control are different keys to the
+    /// game); Escape cancels. Returns whether the key was usable. A key whose class no game-written row confirms yet
+    /// is accepted with a note saying so.
+    /// </summary>
+    internal bool Capture(Key physical, KeyLocation location = KeyLocation.Unspecified)
     {
         if (_capturing is not (int EntryId, int Slot) target) return false;
         _capturing = null;
-        if (physical != Godot.Key.Escape && KeyTable.For(physical) is KeyChoice choice) _edit.Keys[target] = choice;
+        KeyChoice? choice = physical == Godot.Key.Escape ? null : KeyTable.For(physical, location);
+        if (choice is not null) _edit.Keys[target] = choice;
         else if (physical != Godot.Key.Escape) _app.Status.Show("That key can't be stored by the game, so it cannot be used here.", StatusKind.Failure);
         ShowKeys();
         Preview();
-        return physical != Godot.Key.Escape && KeyTable.For(physical) is not null;
+        if (choice is { GameWritten: false })
+            _app.Status.Show($"{choice.Name} is stored the way the game numbers that key, but the game has not been seen writing it yet; " +
+                "check it in the game.");
+        return choice is not null;
     }
 
     internal void AskToSave()
@@ -337,6 +348,13 @@ internal sealed class SettingsPage : Page
 
     private void OpenSelected(int index)
     {
+        // Opening other settings starts this page again from them; unsaved changes are never dropped that way.
+        if (HasChanges && _file is SaveSession shown && index >= 0 && index < _sourcePaths.Count && _sourcePaths[index] != shown.Path)
+        {
+            SelectSource(shown.Path);
+            _app.Status.Show("Save or undo your settings changes before choosing other settings.", StatusKind.Failure);
+            return;
+        }
         if (index >= 0 && index < _sourcePaths.Count && _sourcePaths[index] != _file?.Path) _app.Status.Track(OpenAsync(_sourcePaths[index]));
     }
 
@@ -431,7 +449,7 @@ internal sealed class SettingsPage : Page
     private void OnKeyInput(InputEvent input, Button button)
     {
         if (_capturing is null || input is not InputEventKey { Pressed: true, Echo: false } key) return;
-        Capture(key.PhysicalKeycode);
+        Capture(key.PhysicalKeycode, key.Location);
         button.AcceptEvent();
     }
 

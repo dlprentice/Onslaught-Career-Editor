@@ -1,7 +1,7 @@
 # BES save file format
 
 Status: supported retail/Steam specimen contract
-Last updated: 2026-10-22 (the live codec and its tests are the companion's; earlier: options tail +0x2C/+0x40/+0x44 renamed from the byte-matched writer, the god flags at 0x2496/0x249A, displayable Goodies, the attempts field and the screen-position bytes)
+Last updated: 2026-10-22 (the packed-key form corrected from the fixture's game-written rows; the live codec and its tests are the companion's; earlier: options tail +0x2C/+0x40/+0x44 renamed from the byte-matched writer, the god flags at 0x2496/0x249A, displayable Goodies, the attempts field and the screen-position bytes)
 Summary: supported byte layout and preservation policy; startup/load and tail semantics have scoped independent rechecks, not whole-format acceptance.
 Evidence: MEASURED — the scoped September 19 original-code controls and byte findings linked below; remaining field interpretations retain their older evidence limits.
 Specimen: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -130,8 +130,18 @@ misaligned view inside this bitset, not a god-mode field.
 ## Options entries
 
 The supported specimen has 16 entries of `0x20` bytes. Each contains an active
-flag, entry id, and two binding triples. Packed keys use
-`(virtual_key << 16) | scan_code`. The options block is part of both `.bes` and
+flag, entry id, and two binding triples. A keyboard binding packs its key as
+`(character << 16) | scan`: the character the key types (0 for a key that types
+nothing) and its set-1 scan code with `0x80` added for extended keys
+(DirectInput's key numbers). The game-written rows in the tracked fixture show
+it: W is `0x00570011`, Space `0x00200039`, Tab `0x0009000F`, numpad 1
+`0x0031004F` (the character `1`, not a virtual-key code), the up arrow
+`0x000000C8` (`0x48 + 0x80`) and left Shift `0x0000002A`. Other key classes
+(top-row digits, punctuation, Control, the right-hand Shift `0x36` and Control
+`0x9D`) follow the same convention, but no game-written row confirms them yet.
+Which of an entry's two binding slots serves which player has not been checked
+in the game; in the fixture the usual one-player keys (WASD, Space, Tab) are in
+the second slot. The options block is part of both `.bes` and
 `defaultoptions.bea`, but retail load behavior differs:
 
 - `CCareer__Load(flag=1)` loads a career while preserving current sound/music
