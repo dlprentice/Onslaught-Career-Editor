@@ -7,7 +7,7 @@ namespace OnslaughtToolkit.Companion.Tests;
 
 /// <summary>
 /// The game-text layer on a synthetic language table built in the documented v3 layout from
-/// original strings (never retail text), decoded through the linked AppCore reader.
+/// original strings (never retail text), decoded through the companion's GameTextCatalog reader.
 /// </summary>
 internal static class GameTextTests
 {
