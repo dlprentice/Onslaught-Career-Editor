@@ -234,9 +234,12 @@ The WinUI app's core library, AppCore (executable patch plans, guarded applicati
 were removed on 2026-10-22; Git keeps them. Executable patching and safe launch are not planned
 for the companion: Onslaught CE replaces them and never modifies the install. AppCore's save-layout
 and file-safety test facts were carried into the companion's own tests first. On Windows, Home
-lists any careers left in the old toolkit's safe copies
-(`%APPDATA%\OnslaughtCareerEditor\GameProfiles\*\savegames`) and saves each as a protected copy
-elsewhere; that listing and copy are tested on a scratch folder on Linux and have not run on Windows.
+lists every `.bes` left in the old toolkit's safe copies
+(`%APPDATA%\OnslaughtCareerEditor\GameProfiles\*`, in each copy's `savegames`, `saves` and `Save`
+folders and its top folder, as AppCore's rescue searched) and saves each career-sized one as a
+protected copy elsewhere; a file of another size is listed as one that cannot be copied. That listing
+and copy are tested on a scratch folder on Linux (the button and save picker driven by the interface
+test) and have not run on Windows; nobody has looked at the panel on screen.
 
 ## Reconstruction
 

@@ -35,6 +35,7 @@ internal static class CompanionUiTests
         string oldCopies = Path.Combine(outputDirectory, "ui-old-copies");
         Directory.CreateDirectory(Path.Combine(oldCopies, "Enhanced Copy", "savegames"));
         File.WriteAllBytes(Path.Combine(oldCopies, "Enhanced Copy", "savegames", "Old Pilot.bes"), original);
+        File.WriteAllBytes(Path.Combine(oldCopies, "Enhanced Copy", "Cut Short.bes"), original[..64]);
         CompanionEnvironment environment = new([install.SteamRoot], Path.Combine(outputDirectory, "ui-settings", "settings.json"),
             GameRunning: () => running.On, OpenUrl: openedUrls.Add, DefaultBackupFolder: defaultBackups, Quit: () => quit.On = true,
             OldCopiesFolder: oldCopies);
@@ -617,13 +618,27 @@ internal static class CompanionUiTests
 
         // A career left in the retired Windows toolkit's copy is listed on Home and saved elsewhere, never into the game.
         app.Navigate("home");
-        check.That(app.Home.ShowsOldCopies && app.Home.OldCopies.Count == 1 && app.Home.OldCopies[0] is { Name: "Old Pilot", Copy: "Enhanced Copy" } &&
-            app.Home.OldCopyButtons.Count == 1, "Home lists the career left in the old toolkit's copy, with a way to save it");
+        check.That(app.Home.ShowsOldCopies && app.Home.OldCopies.Count == 2 && app.Home.OldCopies[0] is { Name: "Old Pilot", Copy: "Enhanced Copy", CanCopy: true } &&
+            app.Home.OldCopyButtons.Count == 2 && !app.Home.OldCopyButtons[0].Disabled, "Home lists the career left in the old toolkit's copy, with a way to save it");
+        check.That(app.Home.OldCopies[1] is { Name: "Cut Short", Folder: "", CanCopy: false } && app.Home.OldCopyButtons[1].Disabled,
+            "a .bes at the copy's root that is not career-sized is listed too, and cannot be copied");
         string oldCareer = app.Home.OldCopies[0].Path;
         string rescued = Path.Combine(outputDirectory, "Old Pilot (rescued).bes");
-        PublicationReceipt rescue = await app.Home.SaveOldCopyAsync(oldCareer, rescued);
-        check.That(rescue.Ok && File.ReadAllBytes(rescued).AsSpan().SequenceEqual(original) && File.ReadAllBytes(oldCareer).AsSpan().SequenceEqual(original),
-            "the old copy's career is saved elsewhere byte for byte, and the old copy is left as it was");
+        // The button opens the save picker named after the career; choosing a file there saves the checked copy.
+        app.Home.OldCopyButtons[0].EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(app.Home.OldCopyDialog.Visible && app.Home.OldCopyDialog.CurrentFile == "Old Pilot.bes",
+            "saving an old copy's career opens a save picker named after it");
+        app.Home.OldCopyDialog.EmitSignal(FileDialog.SignalName.FileSelected, rescued);
+        app.Home.OldCopyDialog.Hide();
+        await Frame(tree);
+        for (int frame = 0; frame < 600 && app.Workspace.Busy; frame++) await Frame(tree);
+        check.That(File.Exists(rescued) && File.ReadAllBytes(rescued).AsSpan().SequenceEqual(original) && File.ReadAllBytes(oldCareer).AsSpan().SequenceEqual(original) &&
+            app.Status.Label.Text.Contains("old toolkit's copy is unchanged"),
+            "the old copy's career is saved elsewhere byte for byte through the picker, and the old copy is left as it was: " +
+            $"exists {File.Exists(rescued)}, status \"{app.Status.Label.Text}\"");
+        string secondCopy = Path.Combine(outputDirectory, "Old Pilot (second copy).bes");
+        PublicationReceipt rescue = await app.Home.SaveOldCopyAsync(oldCareer, secondCopy);
+        check.That(rescue.Ok && File.ReadAllBytes(secondCopy).AsSpan().SequenceEqual(original), "saving it again to another file also works: " + rescue.Message);
         string intoGame = Path.Combine(install.Game, "savegames", "Old Pilot.bes");
         PublicationReceipt refused = await app.Home.SaveOldCopyAsync(oldCareer, intoGame);
         check.That(!refused.Ok && !File.Exists(intoGame), "saving it elsewhere never puts it straight into the game folder");

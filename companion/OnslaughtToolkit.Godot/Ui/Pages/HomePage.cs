@@ -357,10 +357,13 @@ internal sealed class HomePage : Page
         foreach (OldCopyCareer career in found)
         {
             HBoxContainer row = _oldCopyRows.Add(Build.Row(10));
-            Label name = row.Add(Build.Text($"{career.Name}  ·  in the copy \"{career.Copy}\""));
+            Label name = row.Add(Build.Text($"{career.Name}  ·  in the copy \"{career.Where}\"" +
+                (career.CanCopy ? "" : $"\nNot career-sized ({career.Length:N0} bytes; a career is {CareerSave.Size:N0}), so it cannot be copied. It is left where it is: {career.Path}")));
             name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
-            Button save = row.Add(Build.Button("Save a copy somewhere else…", "Link",
-                "Saves a checked copy of this career outside the game. The old copy is left as it is."));
+            Button save = row.Add(Build.Button("Save a copy somewhere else…", "Link", career.CanCopy
+                ? "Saves a checked copy of this career outside the game. The old copy is left as it is."
+                : "This file is not the size of a career, so the companion cannot check it or copy it."));
+            save.Disabled = !career.CanCopy;
             save.Pressed += () => ChooseOldCopyDestination(career);
             _oldCopyButtons.Add(save);
         }

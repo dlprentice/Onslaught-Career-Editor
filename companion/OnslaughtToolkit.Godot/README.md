@@ -117,9 +117,11 @@ careers as cards with their progress, adding a career file to the game, the safe
 (automatic backups, Back up now, and the three promises below), and ways into Goodies,
 Lore, Music & voices and the game's own manual. The career saved most recently opens by
 itself, read-only. On Windows, if the retired WinUI toolkit (v1.0.11) left copied installs
-in `%APPDATA%\OnslaughtCareerEditor\GameProfiles` (its "safe launch"), Home lists the careers
-in each copy's `savegames` folder and saves any of them as a checked copy elsewhere; it never
-changes or deletes those copies. That listing and the copy are tested on a scratch folder on
+in `%APPDATA%\OnslaughtCareerEditor\GameProfiles` (its "safe launch"), Home lists every `.bes`
+in each copy's `savegames`, `saves` and `Save` folders and its top folder (the folders the old
+toolkit's own rescue searched) and saves any career-sized one as a checked copy elsewhere; a file
+of another size is listed as one that cannot be copied, so no career disappears without a word. It
+never changes or deletes those copies. That listing and the copy are tested on a scratch folder on
 Linux; neither has run on Windows, and nobody has looked at the panel on screen.
 
 - **Summary**: the career's path through the campaign as a map, from 1.00 to 8.00: each
