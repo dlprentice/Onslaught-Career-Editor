@@ -253,6 +253,15 @@ code keeps them:
   confirmation that names both folders. Automatic backups compare against the newest backup of
   the same game folder.
 
+Two rules sit under all three. A backup is only ever the file as it was found, copied, read
+back and hashed: the companion never makes an "original" from a file that may already have
+been changed, never edits or replaces a backup, and never deletes one. And it never writes
+`BEA.exe`. It reads it only to say which game it is: an install counts as the unmodified Steam
+release only when its `BEA.exe` is exactly 2,506,752 bytes with SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+(`ExecutableIdentity.RetailSha256` in [GameFolder](Game/GameFolder.cs)), the pristine retail
+specimen's identity.
+
 Everything else only reads. Careers and settings open read-only as verified snapshots. A
 copy saved elsewhere is always a **new** file: publication re-checks the source's identity
 and content, stages and verifies every byte, publishes without replacing any existing file,

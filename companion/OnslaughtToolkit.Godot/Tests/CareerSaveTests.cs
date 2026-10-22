@@ -183,6 +183,7 @@ internal static class CareerSaveTests
         check.That(CareerSave.RegionOf(0x0002) == "Pending extra Goodies" && CareerSave.RegionOf(0x0006) == "Mission records",
             "Byte regions name the pending Goodies dword.");
         GoodieEdits(original, info, check);
+        LayoutFacts(original, check);
         check.That(original.AsSpan().SequenceEqual(untouched),
             "Inspection, previews and malformed-input checks never mutate the baseline.");
     }
@@ -234,6 +235,73 @@ internal static class CareerSaveTests
         check.That(combined.Value is { Selected.Count: 1, Goodies.Count: 1 } && CareerSave.Inspect(combined.Value.CopyBytes()).Value is
             CareerInspection after && after.Kills[0] == newAircraft && after.Goodies[7].State == flipped,
             "A kill count and a Goodie state compose in one copy.");
+    }
+
+    /// <summary>
+    /// Layout facts carried over from the retired AppCore save-codec tests (its Goodie-state, slot-bitset and
+    /// link-census cases) that the checks above did not already pin. Offsets stay literals.
+    /// </summary>
+    private static void LayoutFacts(byte[] original, Checks check)
+    {
+        Dictionary<int, int> noKills = [];
+        // Every slot the gallery shows can be edited, and the edit touches only that slot's dword at 0x1F46 + 4 * index.
+        List<int> strayGoodies = [];
+        for (int index = 0; index < 233; index++)
+        {
+            if (!CareerSave.IsShown(index)) continue;
+            int offset = 0x1F46 + index * 4;
+            GoodieState target = BinaryPrimitives.ReadUInt32LittleEndian(original.AsSpan(offset)) == 3 ? GoodieState.Locked : GoodieState.Old;
+            Outcome<EditPlan> plan = CareerSave.Preview(original, new EditRequest(noKills, new Dictionary<int, GoodieState> { [index] = target }));
+            if (plan.Value is not EditPlan edit || edit.Changes.Any(change => change.Offset < offset || change.Offset >= offset + 4))
+                strayGoodies.Add(index);
+        }
+        check.That(strayGoodies.Count == 0, "Each of the 230 shown Goodie slots edits only its own dword" +
+            (strayGoodies.Count > 0 ? ": not " + string.Join(", ", strayGoodies) : "."));
+        int[] reservedEditable = Enumerable.Range(233, 67).Where(index =>
+            CareerSave.Preview(original, new EditRequest(noKills, new Dictionary<int, GoodieState> { [index] = GoodieState.Old })).Ok).ToArray();
+        check.That(reservedEditable.Length == 0, "No reserved Goodie slot (233–299) can be edited.");
+        check.That(!CareerSave.Preview(original, new EditRequest(noKills,
+            new Dictionary<int, GoodieState> { [1] = GoodieState.Old, [234] = GoodieState.New })).Ok,
+            "A request mixing a shown slot with a reserved one is refused as a whole, so nothing is planned.");
+
+        // The census counts each stored state of the shown slots; a reserved slot set to "new" is not counted as shown.
+        byte[] mixed = original.ToArray();
+        for (int index = 0; index < 233; index++) BinaryPrimitives.WriteUInt32LittleEndian(mixed.AsSpan(0x1F46 + index * 4), 0);
+        BinaryPrimitives.WriteUInt32LittleEndian(mixed.AsSpan(0x1F46 + 1 * 4), 1);
+        BinaryPrimitives.WriteUInt32LittleEndian(mixed.AsSpan(0x1F46 + 2 * 4), 2);
+        BinaryPrimitives.WriteUInt32LittleEndian(mixed.AsSpan(0x1F46 + 3 * 4), 3);
+        BinaryPrimitives.WriteUInt32LittleEndian(mixed.AsSpan(0x1F46 + 4 * 4), 99);
+        BinaryPrimitives.WriteUInt32LittleEndian(mixed.AsSpan(0x1F46 + 233 * 4), 2);
+        check.That(CareerSave.Inspect(mixed).Value?.GoodieCensus is { Shown: 230, Locked: 226, Hint: 1, New: 1, Old: 1, Unknown: 1 },
+            "The Goodie census counts locked, hint, new, viewed and unrecognized shown slots, and ignores reserved ones.");
+
+        // Tech slots are 32 little-endian dwords from 0x240A: slot n is bit n % 32 of dword n / 32.
+        byte[] tech = original.ToArray();
+        for (int index = 0; index < 128; index++) tech[0x240A + index] = 0;
+        tech[0x240A] = 0x01;          // slot 0
+        tech[0x240D] = 0x80;          // slot 31
+        tech[0x240E] = 0x01;          // slot 32
+        tech[0x2411] = 0x60;          // slots 61 and 62
+        tech[0x2489] = 0x80;          // the last stored bit
+        IReadOnlyList<uint>? slots = CareerSave.Inspect(tech).Value?.TechSlots;
+        check.That(slots is not null && slots[0] == 0x80000001u && slots[1] == 0x60000001u && slots[31] == 0x80000000u &&
+            slots.Skip(2).Take(29).All(word => word == 0),
+            "Tech slot words read little-endian from 0x240A: slots 0, 31, 32, 61 and 62 land on their own bits.");
+        check.That(CareerSave.RegionOf(0x2409) == "Packed kill bytes" && CareerSave.RegionOf(0x240A) == "Raw tech slots" &&
+            CareerSave.RegionOf(0x2489) == "Raw tech slots" && CareerSave.RegionOf(0x248A) == "Career settings",
+            "The tech slots occupy exactly 0x240A–0x2489.");
+
+        // A link with a state but no destination is unused; destination zero is a real link.
+        byte[] links = original.ToArray();
+        for (int index = 0; index < 200; index++)
+        {
+            BinaryPrimitives.WriteUInt32LittleEndian(links.AsSpan(0x1906 + index * 8), 0);
+            BinaryPrimitives.WriteUInt32LittleEndian(links.AsSpan(0x1906 + index * 8 + 4), 0xFFFFFFFF);
+        }
+        BinaryPrimitives.WriteUInt32LittleEndian(links.AsSpan(0x1906 + 4), 0);
+        BinaryPrimitives.WriteUInt32LittleEndian(links.AsSpan(0x1906 + 8), 1);
+        check.That(CareerSave.Inspect(links).Value?.LinkCensus is { Used: 1, Locked: 1, Complete: 0 },
+            "A link with a state but an unused destination is not counted, and destination zero is.");
     }
 
     private static Dictionary<int, int> One() => new() { [0] = 1 };
