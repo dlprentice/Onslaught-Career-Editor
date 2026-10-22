@@ -52,27 +52,15 @@ Eleven `E8`, zero `E9`. One inbound `E8`: `0x004910d6` inside
 `CHeightField__DeserializeMapAndInitResources`. First gates for that
 caller are
 [`CHeightField__DeserializeMapAndInitResources.md`](CHeightField__DeserializeMapAndInitResources.md).
-That body's sole inbound is `CEngine__Deserialize` `0x0044a72f`:
-
-```
-push ebx
-mov  ecx, 0x006fadc8
-call 0x00491060
-```
+That body's sole inbound is `CEngine__Deserialize` `0x0044a72f`, which passes the shared BSS instance `0x006fadc8` in `ECX` (with one stack
+argument) and calls `0x00491060`.
 
 So Load's `this` is the shared BSS instance.
 
 `CChunkReader__Read` (`0x00423960`) is `thiscall` `ret 0xc`:
 `dest, nbytes, count`; copies `nbytes*count` from `[reader+4]` via
-`CDXMemBuffer__Read` `0x00548570` and advances `[reader+8]`. Overlay:
-
-```
-push 1
-push 0x13dc
-push edi          ; dest = this
-mov  ecx, ebp
-call 0x00423960   ; 0x0047f7dc
-```
+`CDXMemBuffer__Read` `0x00548570` and advances `[reader+8]`. Overlay: the chunk-reader call at `0x0047f7dc` reads one record of `0x13dc` bytes with
+`this` as the destination and the reader (`EBP`) as `this` for the read.
 
 That is the only image `0x13dc`-byte copy onto an object. It writes
 `[this+0x102c]` (scale). Image-wide, every instruction-aligned
@@ -95,66 +83,24 @@ store to `[reg+0x102c]`.
 
 | Address | Name | Byte evidence | Contract (confidence) |
 | --- | --- | --- | --- |
-| `0x0047f750` | `CHeightField__Load` | `81ec14010000 53 55 56 57 8bf9 … 6a01 68dc130000 57 … c20400` | thiscall; ret 4; 0x13dc overlay onto `this=0x006fadc8`; that write is the `+0x102c` scale. HIGH on ABI, inbound, overlay, image-wide load-only `+0x102c`. **Not** on the authored float or color/sample loops. |
+| `0x0047f750` | `CHeightField__Load` | entry `81 ec 14 01 00 00`; overlay push `6a 01 68 dc 13 00 00 57`; `ret 4` `c2 04 00` | thiscall; ret 4; 0x13dc overlay onto `this=0x006fadc8`; that write is the `+0x102c` scale. HIGH on ABI, inbound, overlay, image-wide load-only `+0x102c`. **Not** on the authored float or color/sample loops. |
 
 ## Wave396 Read-Back
 
 Wave396 corrected the undefined saved signature to a thiscall shape with one chunk-reader stack argument. Post-apply read-back validates the expected `0x13dc` structure size, calls `CHeightField__InitColorGradient`, allocates the `0xa2000`-byte height buffer, and reads repeated `9x9` tile blocks. This is saved static Ghidra metadata/read-back evidence only; it does not prove runtime terrain behavior or complete concrete field typing.
 
-## Decompiled Analysis
+## Behaviour summary
 
-### Memory Allocation
-```c
-// Frees existing buffers
-if (this->pUnknown1 != NULL) {
-    CMemoryManager::Free(this->pUnknown1);
-    this->pUnknown1 = NULL;
-}
-if (this->pHeightData != NULL) {
-    CMemoryManager::Free(this->pHeightData);
-    this->pHeightData = NULL;
-}
-
-// Allocate new height buffer
-// 0xa2000 = 663,552 bytes = 331,776 height samples (16-bit)
-this->pHeightData = CMemoryManager::Alloc(0xa2000, 0x22,
-    "[maintainer-local-source-export-root]\\HeightField.cpp", 0x880);
-```
-
-### Size Validation
-```c
-if (*pSizePtr != 0x13dc) {
-    sprintf(buffer, "Got size %d, expected %d", *pSizePtr, 0x13dc);
-    DebugPrint(buffer);
-}
-```
-
-### Color Processing
-The function processes ARGB color values at offsets 0x107c and 0x108c, extracting RGB channels and normalizing them to prevent overflow past 0xFF.
-
-### Height Data Reading
-Height data is read in nested loops:
-- Outer: until 0xa2000 bytes read
-- 64 iterations (0x40)
-- 9x9 = 81 height values per tile
-- Each value is 2 bytes (16-bit short)
-
-```c
-do {
-    for (i = 0x40; i != 0; i--) {
-        for (j = 9; j != 0; j--) {
-            for (k = 9; k != 0; k--) {
-                ReadStream(&heightValue, 2, 1);
-                *(short*)(offset + this->pHeightData) = heightValue;
-                offset += 2;
-            }
-        }
-    }
-} while (offset < 0xa2000);
-```
-
-### Color Gradient Post-Processing
-After loading, the function doubles color values in the gradient table and clamps to maximum values (RGB565-like encoding).
+The function releases any existing auxiliary and height buffers through the
+engine allocator, then allocates a new `0xa2000`-byte height buffer (331,776
+16-bit samples; allocator debug line `0x880`). When the record size read from
+the stream is not `0x13dc` it formats and traces a size-mismatch message. It
+normalises the ARGB colours at record offsets `0x107c` and `0x108c` so no
+channel overflows `0xFF`, then fills the height buffer from the stream in
+blocks of 64 tiles of 9x9 two-byte samples until `0xa2000` bytes have been
+read. Afterwards it doubles the colour values in the gradient table and clamps
+them to their channel maxima (an RGB565-like encoding). Behaviour for the body
+at `0x0047f750` as recorded from the Wave396 read-back; not re-measured.
 
 ## Cross-References
 

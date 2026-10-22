@@ -34,9 +34,9 @@ The inputs were read-only:
 
 - all six pristine PC retail `data/language/*.dat` files;
 - the six corresponding members inside each Xbox Europe, Korea, and USA
-  extracted-game ZIP under `G:\BEA ROMS`;
+  extracted-game ZIP under `<maintainer archive>`;
 - the already-anchored PS2 Europe and USA retail ISO members under
-  `G:\BEA ROMS`, streamed from ZIP without mounting or executing them;
+  `<maintainer archive>`, streamed from ZIP without mounting or executing them;
 - the installed PC English manual HTML; and
 - the PS2 USA manual's 2,412,322-byte text PDF in the read-only archive.
 

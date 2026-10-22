@@ -3,7 +3,7 @@
 > Address: `0x00538300`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-10-22 (retail disassembly listing removed; behaviour kept in prose)
 Source File: none — `SetWindVector` and the `atm_windvector` console variable are absent from `references/Onslaught/` (checked 2026-08-22) | | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -61,36 +61,11 @@ dispatch is a computed virtual `call [reg+0x34]`. Incoming `ecx` is
 unused. One stack argument: the vm/args object at `[esp+4]`, whose
 `[+0]`,`[+4]`,`[+8]` are three script-expression elements.
 
-```
-00538300  83 ec 14           sub esp, 0x14
-00538303  56                 push esi
-00538304  8b 74 24 1c        mov esi, [esp+0x1c]        ; args object
-00538308  8b 4e 08           mov ecx, [esi+8]           ; element 3
-0053830b  8b 01              mov eax, [ecx]
-0053830d  ff 50 34           call [eax+0x34]            ; float eval
-00538310  8b 4e 04           mov ecx, [esi+4]           ; element 2
-00538313  d9 5c 24 04        fstp [esp+4]
-00538317  8b 11              mov edx, [ecx]
-00538319  ff 52 34           call [edx+0x34]            ; float eval
-0053831c  8b 0e              mov ecx, [esi]             ; element 1
-0053831e  d9 5c 24 1c        fstp [esp+0x1c]
-00538322  8b 01              mov eax, [ecx]
-00538324  ff 50 34           call [eax+0x34]            ; float eval
-00538327  8b 4c 24 1c        mov ecx, [esp+0x1c]        ; e1 value
-0053832b  8b 54 24 04        mov edx, [esp+4]           ; e2 value
-0053832f  d9 5c 24 08        fstp [esp+8]               ; e3 value
-00538333  8b 44 24 08        mov eax, [esp+8]
-00538337  89 4c 24 0c        mov [esp+0xc], ecx
-0053833b  a3 98 01 66 00     mov [0x660198], eax        ; cell1 = e3
-00538340  8b 44 24 14        mov eax, [esp+0x14]
-00538344  89 54 24 10        mov [esp+0x10], edx
-00538348  89 0d 9c 01 66 00  mov [0x66019c], ecx        ; cell2 = e1
-0053834e  89 15 a0 01 66 00  mov [0x6601a0], edx        ; cell3 = e2
-00538354  a3 a4 01 66 00     mov [0x6601a4], eax        ; cell4 = stale slot!
-00538359  5e                 pop esi
-0053835a  83 c4 14           add esp, 0x14
-0053835d  c2 0c 00           ret 0xc
-```
+The body reserves a 0x14-byte local frame and saves `esi` (`0x00538303`),
+evaluates the three elements through `vtable[+0x34]` (calls at `0x0053830d`,
+`0x00538319`, `0x00538324`), and ends with four absolute stores to the wind
+cells (`0x0053833b`, `0x00538348`, `0x0053834e`, `0x00538354`) before
+restoring the frame and returning with `ret 0xc` at `0x0053835d`.
 
 Store mapping (traced slot by slot): evaluation runs in **reverse**
 order (elements 3, 2, 1), staged through `[esp+4]`, then the arg slot

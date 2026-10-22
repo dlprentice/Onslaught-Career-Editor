@@ -1,11 +1,11 @@
 # Development source index
 
 Status: active, prioritized source/provenance index
-Last updated: 2026-08-22
+Last updated: 2026-10-22 (machine-local paths removed)
 Summary: first-party and technical-development evidence for Battle Engine
 Aquila, separated from later reporting, inferred binary behavior, and fictional
 in-universe lore. Original archive material remains read-only under
-`G:\BEA ROMS`; only bounded findings and hashes are promoted here.
+`<maintainer archive>`; only bounded findings and hashes are promoted here.
 
 ## Evidence classes
 
@@ -24,7 +24,7 @@ in-universe lore. Original archive material remains read-only under
 ### Lost Toys GDC deck
 
 Path:
-`G:\BEA ROMS\Lore\09_Wayback_Websites\full_domains\losttoys.com\GDC\20030412092159_GDC_GDCE02_20-_20Cross_20Platform_20Console_20Development.ppt`
+`<maintainer archive>\Lore\09_Wayback_Websites\full_domains\losttoys.com\GDC\20030412092159_GDC_GDCE02_20-_20Cross_20Platform_20Console_20Development.ppt`
 
 | Property | Value |
 | --- | --- |
@@ -62,7 +62,7 @@ still carry provenance, but the three disc payloads are not separate builds.
 ### PC demo
 
 Path:
-`G:\BEA ROMS\Manually Downloaded\battleengine - 2003 PC DEMO.zip`
+`<maintainer archive>\battleengine - 2003 PC DEMO.zip`
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
@@ -97,7 +97,7 @@ known regional AYA byte differences.
 ### Official Lost Toys / BEA website archive
 
 Root:
-`G:\BEA ROMS\Lore\09_Wayback_Websites\full_domains\losttoys.com\battleengine`
+`<maintainer archive>\Lore\09_Wayback_Websites\full_domains\losttoys.com\battleengine`
 
 Expected value: original screenshots/thumbnails, SWF material, PC support
 files, public mission/character/vehicle terminology, and contemporary public
@@ -110,7 +110,7 @@ remain open. Do not restart the converged Wayback harvest without a new seed.
 ### E3 2002 press kit
 
 Root:
-`G:\BEA ROMS\Lore\05_Press_Kits_and_Media\gamenatione32002`
+`<maintainer archive>\Lore\05_Press_Kits_and_Media\gamenatione32002`
 
 Priority inputs: `NEW.ISO` and `NEW Disc2.iso`. Expected value: earlier or
 higher-quality screenshots/renders, logos, fact sheets, press copy, video,
@@ -119,7 +119,7 @@ and BEA-specific comparisons are the next bounded step.
 
 ### Manuals and credits
 
-Root: `G:\BEA ROMS\Lore\04_Manuals_and_Docs`
+Root: `<maintainer archive>\Lore\04_Manuals_and_Docs`
 
 Use for credits/roles, release/legal data, controls, mission/vehicle/weapon and
 character terminology, and regional feature differences. Manual prose proves
@@ -146,7 +146,7 @@ an additional refuter for virtual functions.
 
 ## Transformation and publication boundary
 
-- Original archive files remain unchanged under `G:\BEA ROMS`.
+- Original archive files remain unchanged under `<maintainer archive>`.
 - Extractions, normalized comparisons, transcripts, and raw manifests stay in
   ignored analysis workspaces unless their size/licensing permits a bounded
   derived fact to be promoted.

@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the front door to the game documentation
-Last updated: 2026-10-21 (Core translation policies attributed to the earlier fixed-point rebuild, not a parked lane)
+Last updated: 2026-10-22 (removed the tracked retail string table row)
 Summary: where the documentation of Battle Engine Aquila lives, what each store covers, and the rules a claim about the shipped game has to meet before it is written down.
 
 This tree documents *Battle Engine Aquila* as prose and specs: file formats, save and options layouts, mechanics,
@@ -40,7 +40,6 @@ notes are history.
 | Cross-platform engine architecture | [GDC deck / binary synthesis](ENGINE_ARCHITECTURE.md) |
 | PC demo versus retail | [Build and virtual-target comparison](DEMO_VS_RETAIL.md) |
 | Function and behavior contract system | [Contract front door](../CONTRACTS.md) |
-| Complete executable string inventory | [Binary strings](binary-analysis/binary-strings.md) |
 | Pinned-source narrative | [Stuart source synthesis](source-code/stuart-source-synthesis.md) |
 | Save and options formats | [Save-file index](save-file/_index.md) |
 | Retail binary analysis | [Binary-analysis index](binary-analysis/_index.md) |

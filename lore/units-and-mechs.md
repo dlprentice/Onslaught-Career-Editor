@@ -3,7 +3,7 @@
 - **Status:** live preservation record. Class names, behaviour-type ids, and
   data-record names below are measured evidence — read from RTTI type
   descriptors in the pristine `BEA.exe`
-  ([binary-strings.md](../reverse-engineering/binary-analysis/binary-strings.md)),
+  (from a string inventory generated locally from your own copy of `BEA.exe` (not tracked; retail text is never committed)),
   the resolved PhysicsScript value-id tables
   ([physics-round-value-ids-2026-07-25.md](../reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md),
   raw table `local-lab/physics-value-ids-2026-07-25/all_ids.tsv`), the exact
@@ -13,7 +13,7 @@
   is carried from [world-lore.md](world-lore.md) and [characters.md](characters.md)
   and is marked as fiction. Where this page and a measurement disagree, the
   measurement wins.
-- **Last updated:** 2026-08-22
+- **Last updated:** 2026-10-22 (string-table link replaced: the table is generated locally, not tracked)
 - **Summary:** all 160 literal top-level unit-record names, all 25 resolved
   behaviour-type ids, and the major runtime class families that turn those
   records into the player's machine, armies, bosses, and infrastructure.
@@ -287,7 +287,7 @@ puts all of them on the unit-statement surface. It does not silently narrow
 
 ## Sources
 
-- RTTI class inventory: `reverse-engineering/binary-analysis/binary-strings.md`
+- RTTI class inventory: a string inventory generated locally from your own copy of `BEA.exe` (not tracked; retail text is never committed)
   (658 unique `C*` type descriptors, pristine specimen).
 - Behaviour-type/unit/component value tables (static, byte-read):
   `local-lab/physics-value-ids-2026-07-25/all_ids.tsv` +

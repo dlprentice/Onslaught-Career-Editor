@@ -3,9 +3,9 @@
 > Address: `0x005351D0`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-10-22 (machine-local paths removed)
 Source File: none — absent from `references/Onslaught/`; the wait/VM mechanics this native shares are pinned map-level in [`../IScript.cpp.md`](../IScript.cpp.md) ("Wait helpers") | Binary: BEA.exe pristine specimen
-`C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Summary: Mission-native 54, registered as `PlayAnimationWait`: three

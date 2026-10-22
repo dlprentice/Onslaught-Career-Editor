@@ -1,7 +1,7 @@
 # The terrain material record and the `LANDSCAPE_LIGHTING` gate — both loose ends are live
 
 Status: active static contract
-Last updated: 2026-09-26 (RE audit: stage-0 ALPHAOP is DISABLE; the shipped per-GPU tweak file overrides the defaults; the reference count)
+Last updated: 2026-10-22 (retail disassembly listings replaced by prose and tables; earlier: 2026-09-26 RE audit of ALPHAOP, cardid.txt overrides and the reference count)
 Summary: the terrain draw's material record, the LANDSCAPE_LIGHTING and landscape_method defaults, and the resulting lighting factor; the per-GPU tweak file can override both defaults.
 Evidence: MEASURED — pristine instructions and the shipped `cardid.txt`; the runtime shadow read is cited in section 5.
 Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`; `cardid.txt` SHA-256 prefix `9855bf65364050d1`.
@@ -98,10 +98,8 @@ neither of which uses `ECX` as a write base into the block (`0x004eba30`
 ignores `ECX` entirely; `0x004eb1e0`'s `MOV ESI, ECX` is consumed once, at
 `0x004eb568`, as a `this` for a further call). The eleventh is a thunk:
 
-```
-004eb1d0  b9 48 d2 83 00     MOV  ECX, 0x83d248
-004eb1d5  e9 c6 07 00 00     JMP  0x4eb9a0
-```
+`0x004eb1d0` loads `ECX = 0x0083d248` (signature `b9 48 d2 83 00`) and jumps
+to `0x004eb9a0`.
 
 `0x004eb9a0` has exactly **one** reference in the image — that `JMP`
 (`call_xref_scan.py`: 0 `CALL`, 1 `JMP`; `operand_scan.py`: 0 data pointers).
@@ -110,34 +108,11 @@ dispatch-table slot at `0x00622708`. So `0x004eb9a0` is the **sole writer of the
 block, always with `this = 0x0083d248`**, and it writes exactly `0x88` bytes =
 two `D3DMATERIAL9`:
 
-```
-004eb9a0  8b c1              MOV  EAX, ECX                 ; EAX = 0x0083d248
-004eb9a2  ba 00 00 80 3f     MOV  EDX, 0x3f800000          ; 1.0f
-004eb9a7  33 c9              XOR  ECX, ECX                 ; 0.0f
-004eb9a9  89 10              MOV  [EAX+0x00], EDX          ;  material[0].Diffuse.r
-004eb9ab  89 50 04           MOV  [EAX+0x04], EDX          ;  .g
-004eb9ae  89 50 08           MOV  [EAX+0x08], EDX          ;  .b
-004eb9b1  89 50 0c           MOV  [EAX+0x0c], EDX          ;  .a
-004eb9b4  89 48 10           MOV  [EAX+0x10], ECX          ;  .Ambient.r
-004eb9b7  89 48 14           MOV  [EAX+0x14], ECX          ;  .g
-004eb9ba  89 48 18           MOV  [EAX+0x18], ECX          ;  .b
-004eb9bd  89 50 1c           MOV  [EAX+0x1c], EDX          ;  .a
-004eb9c0..004eb9cf            MOV  [EAX+0x20..0x2c], ECX   ;  .Specular  = 0
-004eb9cc..004eb9d5            MOV  [EAX+0x30..0x3c], ECX   ;  .Emissive  = 0
-004eb9d8  c7 40 40 cd cc cc 3d  MOV [EAX+0x40], 0x3dcccccd ;  .Power = 0.1
-                                                           ; -- 0x44 boundary --
-004eb9df  89 48 44           MOV  [EAX+0x44], ECX          ;  material[1].Diffuse.r
-004eb9e2  89 48 48           MOV  [EAX+0x48], ECX          ;  .g
-004eb9e5  89 48 4c           MOV  [EAX+0x4c], ECX          ;  .b
-004eb9e8  89 50 50           MOV  [EAX+0x50], EDX          ;  .a = 1.0
-004eb9eb  c7 40 54 cd cc 4c 3f  MOV [EAX+0x54], 0x3f4ccccd ;  .Ambient.r = 0.8
-004eb9f2  c7 40 58 cd cc 4c 3f  MOV [EAX+0x58], 0x3f4ccccd ;  .g        = 0.8
-004eb9f9  c7 40 5c cd cc 4c 3f  MOV [EAX+0x5c], 0x3f4ccccd ;  .b        = 0.8
-004eba00  89 50 60           MOV  [EAX+0x60], EDX          ;  .a        = 1.0
-004eba03..004eba0f            MOV  [EAX+0x64..0x70], ECX   ;  .Specular = 0
-004eba12..004eba1e            MOV  [EAX+0x74..0x84], ECX   ;  .Emissive = 0, .Power = 0
-004eba24  c3                 RET
-```
+It stores, at `this = 0x0083d248`, the field values tabulated below: `1.0f`
+(`0x3f800000`) and `0.0f` from two registers into the colour channels, `0.1f`
+(`0x3dcccccd`) into `material[0].Power` at `+0x40`, and `0.8f` (`0x3f4ccccd`)
+into `material[1].Ambient.rgb` at `+0x54`/`+0x58`/`+0x5c`, then returns at
+`0x004eba24`.
 
 | record | Diffuse | Ambient | Specular | Emissive | Power |
 | --- | --- | --- | --- | --- | ---: |
@@ -172,18 +147,10 @@ CRT static-initialiser stubs at `0x00544590`–`0x005445ff`, `0x00544600`–
 `0x008aa940 + 0xc` = **`0x008aa94c`**. The constructor `0x00528aa0` writes the
 default straight into `[this+0xc]`:
 
-```
-00528aa0  8b c1              MOV  EAX, ECX
-00528aa2  8b 4c 24 04        MOV  ECX, [ESP+0x4]      ; name
-00528aa6  c7 00 94 4a 5e 00  MOV  [EAX], 0x5e4a94     ; vtable
-00528aac  89 48 08           MOV  [EAX+0x8], ECX
-00528aaf  8b 15 18 c0 89 00  MOV  EDX, [0x0089c018]   ; registry head
-00528ab5  8b 4c 24 08        MOV  ECX, [ESP+0x8]      ; default value
-00528ab9  89 50 04           MOV  [EAX+0x4], EDX
-00528abc  a3 18 c0 89 00     MOV  [0x0089c018], EAX
-00528ac1  c7 00 9c 4a 5e 00  MOV  [EAX], 0x5e4a9c
-00528ac7  89 48 0c           MOV  [EAX+0xc], ECX      ; value := default
-```
+It stores the class vtable into `[this]`, the name argument into `[this+8]`,
+links the object at the head of the registry `[0x0089c018]` through
+`[this+4]`, replaces the vtable with `0x005e4a9c`, and writes the default-value
+argument into `[this+0xc]` (`0x00528ac7`).
 
 and `0x00544690` passes `PUSH 0x1`. So the earlier conclusion inverts on this
 byte: `RenderTerrain`'s lighting-disable at `0x005455a2` is gated on
@@ -200,41 +167,26 @@ parses `%s %f`, and walks the CVar registry `[0x0089c018]` with `_stricmp`
 The same value chooses the stage op at `0x00545675`. Taking the second gate
 site in full:
 
-```
-0054564e  39 2d fc 54 85 00  CMP  [0x008554fc], EBP        ; USE_MODULATE_2X
-00545654  75 0b              JNZ  0x00545661
-00545656  55                 PUSH EBP                      ; if unsupported,
-00545657  b9 20 a9 8a 00     MOV  ECX, 0x008aa920          ;   landscape_method := 0
-0054565c  e8 ef 34 fe ff     CALL 0x00528b50
-00545661  6a 02              PUSH 0x2
-00545663  b9 20 a9 8a 00     MOV  ECX, 0x008aa920
-00545668  e8 53 26 fe ff     CALL 0x00527cc0               ; landscape_method == 2 ?
-0054566d  84 c0              TEST AL, AL
-0054566f  0f 84 7d 04 00 00  JZ   0x00545af2               ; other landscape method
-00545675  39 2d 4c a9 8a 00  CMP  [0x008aa94c], EBP        ; LANDSCAPE_LIGHTING
-0054567b  74 0d              JZ   0x0054568a
-0054567d  55                 PUSH EBP                      ; lighting ON  ->
-0054567e  b9 b0 5b 85 00     MOV  ECX, 0x00855bb0          ;   COLOROP := MODULATE2X
-00545683  e8 68 e4 fc ff     CALL 0x00513af0               ;   (or MODULATE if uncapable)
-00545688  eb 0f              JMP  0x00545699
-0054568a  6a 04              PUSH 0x4                      ; lighting OFF ->
-0054568c  6a 01              PUSH 0x1                      ;   COLOROP := MODULATE
-0054568e  55                 PUSH EBP
-0054568f  b9 b0 5b 85 00     MOV  ECX, 0x00855bb0
-00545694  e8 d7 e1 fc ff     CALL 0x00513870
-```
+- `0x0054564e`: if `USE_MODULATE_2X` (`[0x008554fc]`) is zero,
+  `landscape_method` (`0x008aa920`) is set to 0 through `0x00528b50`.
+- `0x00545661`–`0x0054566f`: unless `landscape_method == 2` (tested through
+  `0x00527cc0`), it branches to the other landscape method at `0x00545af2`.
+- `0x00545675`: if `LANDSCAPE_LIGHTING` (`[0x008aa94c]`) is non-zero, stage 0
+  `COLOROP` becomes `MODULATE2X` (or `MODULATE` where unsupported) through
+  `0x00513af0`; otherwise (`0x0054568a`) stage 0 `COLOROP` is set to
+  `MODULATE` (4) through `0x00513870`.
 
 The two branches are a coherent pair: *lighting off* means plain
 `D3DTOP_MODULATE` against the implicit white vertex colour; *lighting on* means
 `D3DTOP_MODULATE2X` against a lit vertex colour that is expected to sit near
 0.5. The remaining stage setup is unconditional and decides the operands:
 
-```
-00545699  SetTextureStageState(0, D3DTSS_COLORARG1 = 2, D3DTA_TEXTURE = 2)
-005456a8  SetTextureStageState(0, D3DTSS_COLORARG2 = 3, D3DTA_DIFFUSE = 0)
-005456b6  SetTextureStageState(0, D3DTSS_ALPHAOP   = 4, D3DTOP_DISABLE    = 1)
-005456c5  SetTextureStageState(0, D3DTSS_ALPHAARG1 = 5, D3DTA_TEXTURE = 2)
-```
+| Site | Stage 0 state | Value |
+| --- | --- | --- |
+| `0x00545699` | `D3DTSS_COLORARG1` (2) | `D3DTA_TEXTURE` (2) |
+| `0x005456a8` | `D3DTSS_COLORARG2` (3) | `D3DTA_DIFFUSE` (0) |
+| `0x005456b6` | `D3DTSS_ALPHAOP` (4) | `D3DTOP_DISABLE` (1) |
+| `0x005456c5` | `D3DTSS_ALPHAARG1` (5) | `D3DTA_TEXTURE` (2) |
 
 (`0x00513870` reads `Stage = [ESP+0x4]`, `Type = [ESP+0x8]`, `Value = [ESP+0xc]`,
 shadows into `[0x008557f0 + (Type + Stage*30)*4]`, then calls device `+0x10c`.)
@@ -270,17 +222,9 @@ onto `D3DLIGHT9` (record base = `ESP+0x8`):
 | `+0x54` | `Range` | `src[+0x30]` |
 | `+0x64` | `Attenuation2` | `1 / (Range^2 * DAT_005d8578)` |
 
-```
-005512ac  8b 54 24 78        MOV  EDX, [ESP+0x78]        ; arg2 ("enabled")
-005512b0  3b d6              CMP  EDX, ESI               ; ESI = 1
-005512bc  75 15              JNZ  0x005512d3              ; != 1 -> leave Ambient zero
-005512be  8b 50 24           MOV  EDX, [EAX+0x24]
-005512c1  89 54 24 2c        MOV  [ESP+0x2c], EDX        ; Ambient.r
-005512c5  8b 50 28           MOV  EDX, [EAX+0x28]
-005512c8  8b 40 2c           MOV  EAX, [EAX+0x2c]
-005512cb  89 54 24 30        MOV  [ESP+0x30], EDX        ; Ambient.g
-005512cf  89 44 24 34        MOV  [ESP+0x34], EAX        ; Ambient.b
-```
+At `0x005512ac`–`0x005512bc` it compares the flag argument with 1 and, only when
+equal, copies the cached colour triple `src[+0x24/+0x28/+0x2c]` into the
+record's `Ambient.rgb` at `[ESP+0x2c/0x30/0x34]` (`0x005512be`–`0x005512cf`).
 
 The `0x5c`-byte cached record's colour triple lives at `+0x24`, and the flag
 argument decides **only** whether that triple is also promoted into the light's
@@ -288,33 +232,17 @@ argument decides **only** whether that triple is also promoted into the light's
 
 ## 4. `CDXLandscape::Render`'s prologue, read as one statement
 
-```
-005454ae  PUSH 0; ECX=0x00855bb0; CALL 0x00513af0   ; stage 0 COLOROP := MODULATE2X
-005454ba  PUSH 1; ECX=0x00855bb0; CALL 0x00513af0   ; stage 1 COLOROP := MODULATE2X
-005454c6  PUSH 1; PUSH 4; PUSH 0; CALL 0x00513820   ; stage 0 ALPHAOP := DISABLE (1)
-005454d6  MOV  EAX, [0x00888a50]
-005454db  MOV  dword [0x009c68a8], 0x0              ; D3DRS_AMBIENT := 0
-005454e5  MOV  byte  [0x009c690c], 0x1
-005454ec  PUSH 0x0083d28c                           ; terrain material[1]
-005454f1  MOV  EDX, [EAX]
-005454f3  PUSH EAX
-005454f4  CALL dword [EDX+0xc4]                     ; SetMaterial
-005454fa  XOR  ESI, ESI
-005454fc  MOV  AL, [ESI + 0x009c68a0]               ; light-enable array
-00545502  TEST AL, AL
-00545504  JZ   0x00545513
-00545506  PUSH 0x1                                  ; <-- promote colour to Ambient
-00545508  PUSH ESI
-00545509  MOV  ECX, 0x009c65c0
-0054550e  CALL 0x00551200                           ; ApplyCachedLight(i, 1)
-00545513  INC  ESI ; CMP ESI, 8 ; JL 0x005454fc
-00545520  CALL 0x00545590                           ; RenderTerrain
-00545525  MOV  ECX, [0x006fbe54] ...                ; D3DRS_AMBIENT := HFLD ambient
-00545538  XOR  ESI, ESI                             ; and re-upload every light
-00545544  PUSH 0x0                                  ;   with Ambient := 0
-00545547  MOV  ECX, 0x009c65c0
-0054554c  CALL 0x00551200                           ; ApplyCachedLight(i, 0)
-```
+| Site | Effect |
+| --- | --- |
+| `0x005454ae` | stage 0 `COLOROP` := `MODULATE2X` (`0x00513af0`) |
+| `0x005454ba` | stage 1 `COLOROP` := `MODULATE2X` |
+| `0x005454c6` | stage 0 `ALPHAOP` := `DISABLE` (1) through `0x00513820` |
+| `0x005454db` | `D3DRS_AMBIENT` shadow `0x009c68a8` := 0 (and byte `0x009c690c` := 1) |
+| `0x005454ec`–`0x005454f4` | `SetMaterial` (vtable `+0xc4`) with terrain material `[1]` `0x0083d28c` |
+| `0x005454fc`–`0x00545513` | for each of the 8 lights enabled in `0x009c68a0[]`, `ApplyCachedLight(i, 1)` (`0x00551200`, call at `0x0054550e`): colour promoted to Ambient |
+| `0x00545520` | `RenderTerrain` (`0x00545590`) |
+| `0x00545525` | `D3DRS_AMBIENT` := HFLD ambient `[0x006fbe54]` |
+| `0x00545538`–`0x0054554c` | every light re-uploaded with `ApplyCachedLight(i, 0)`: Ambient := 0 |
 
 The bracketing is symmetric and exists for no other draw in the image: **for
 the terrain, and only for the terrain, the ambient register is zeroed, the
@@ -398,12 +326,9 @@ shape of the measured fact.
 `CEngine::SetupLights` @ `0x0044a2d0` enables exactly two lights and disables
 the rest:
 
-```
-0044a52a  MOV  byte [0x009c68a0], BL   ; BL = 1  light 0 enabled
-0044a584  MOV  byte [0x009c68a1], BL   ;         light 1 enabled
-0044a590  MOV  byte [0x009c68a2], 0x0
-0044a5be..0044a5dc  MOV byte [0x009c68a3..a7], 0x0
-```
+it sets the enable bytes `0x009c68a0` (`0x0044a52a`) and `0x009c68a1`
+(`0x0044a584`) to 1, and `0x009c68a2` (`0x0044a590`) and `0x009c68a3`..`a7`
+(`0x0044a5be`–`0x0044a5dc`) to 0.
 
 Light 0 is filled from `0x006fbe44` (HFLD `CHFD+0x107C`) and light 1 from
 `0x006fbe48` (`CHFD+0x1080`), each byte scaled by `_DAT_005db060` =

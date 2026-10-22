@@ -1,7 +1,7 @@
 # PC demo versus PC retail
 
 Status: active, measured cross-build evidence over the dated 2026-08-12 census
-Last updated: 2026-08-27
+Last updated: 2026-10-22 (machine-local paths removed)
 Evidence: MEASURED — exact executable/archive hashes, independently recounted
 MSVC RTTI/vtables, a 2,127-target virtual census, a conservative 8,086-row
 cross-build function-address map, and exact multi-range, opcode-factory, and
@@ -40,7 +40,7 @@ PC demo `BEA.exe`, SHA-256
 | Demo `All.gip` | 75,388,730 | `90b16dc8df5669bb1ed2dbd09b450c30864047c9a536ecc31bfc6aa55cb66975` |
 
 The demo executable came from the read-only archive
-`G:\BEA ROMS\Manually Downloaded\battleengine - 2003 PC DEMO.zip`. The retail
+`<maintainer archive>\battleengine - 2003 PC DEMO.zip`. The retail
 executable is the pristine project baseline and is also reproduced exactly by
 the canonical PC disc image. The different executable and data-package hashes
 prove that this is not merely the retail build repackaged with fewer files.

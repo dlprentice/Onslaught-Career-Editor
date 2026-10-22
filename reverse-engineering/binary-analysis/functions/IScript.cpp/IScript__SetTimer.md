@@ -3,7 +3,7 @@
 > Address: `0x005358e0`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-10-22 (retail disassembly listing removed; behaviour kept in prose)
 Source File: `references/Onslaught/eventmanager.cpp:143-146` owns the callee
 (`CEventManager::AddEvent` time-from-now overload); the wrapper itself is
 absent from the pinned source | Binary: BEA.exe pristine specimen
@@ -56,27 +56,9 @@ inclusive through the complete `ret 0xc`, **49 bytes**, SHA-256
 `5262e1f5a2ae51e2a1da0a01aea4866302d9a16b675fd8228a664002cb8b7b9b`.
 Exactly one direct `E8`.
 
-```
-005358e0  8b 44 24 04        mov eax, [esp+4]           ; IScript* vm
-005358e4  56                 push esi
-005358e5  8b f1              mov esi, ecx               ; SAVE incoming dispatcher context
-005358e7  8b 08              mov ecx, [eax]             ; element object 1
-005358e9  8b 11              mov edx, [ecx]
-005358eb  ff 52 34           call dword ptr [edx+0x34]  ; FLOAT evaluation
-005358ee  d9 5c 24 08        fstp dword ptr [esp+8]     ; store into the dead vm-arg slot
-005358f2  6a 00              push 0                     ; re_use_event = 0
-005358f4  6a 00              push 0                     ; data = 0
-005358f6  6a 00              push 0                     ; start_or_end = 0 (START_OF_FRAME)
-005358f8  56                 push esi                   ; to_call = dispatcher context
-005358f9  8d 44 24 18        lea eax, [esp+0x18]        ; &time_from_now (the reused slot)
-005358fd  68 d2 07 00 00     push 0x7d2                 ; event_num = 2002
-00535902  50                 push eax
-00535903  b9 c8 2f 67 00     mov ecx, 0x672fc8          ; global CEventManager
-00535908  e8 c3 59 f1 ff     call 0x44b2d0              ; AddEvent_TimeFromNow
-0053590d  5e                 pop esi
-0053590e  c2 0c 00           ret 0xc
-00535911  90 x?              nop pad to 0x00535920 (native 18 GetHealth)
-```
+The `E8` to `0x0044b2d0` is at `0x00535908`; `ret 0xc` at `0x0053590e`,
+followed by `nop` padding up to native 18 `GetHealth` at `0x00535920`. In
+prose:
 
 1. `eax = [esp+4]` (vm); `esi = ecx` — the incoming dispatcher-context
    object is saved; it becomes the event's callback receiver.

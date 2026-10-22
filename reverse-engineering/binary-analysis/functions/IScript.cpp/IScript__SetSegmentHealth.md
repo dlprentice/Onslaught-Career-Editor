@@ -3,9 +3,9 @@
 > Address: `0x00535480`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-10-22 (retail disassembly listings replaced by prose)
 Source File: none — `SetSegmentHealth`, the segments controller behind `[thing+0x178]`, and the `DestructableSegmentsController.cpp` debug-path string (`.rdata 0x006287c6`) have no source body in `references/Onslaught/` (checked 2026-08-22) | Binary: BEA.exe pristine specimen
-`C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Summary: Mission-native 51, registered as `SetSegmentHealth`: the
@@ -54,32 +54,14 @@ Body `0x00535480`–`0x005354ba` inclusive through the complete
 `2957c3e9133eeb1603c646b9483866f2d20b77a4f6aa1f2a56a21b1c34dba707`.
 One `E8`, zero decoded `E9`.
 
-```
-00535480  8b 41 10           mov eax, [ecx+0x10]        ; attached thing
-00535483  57                 push edi
-00535484  f6 40 34 10        test byte [eax+0x34], 0x10 ; UNIT class bit
-00535488  74 2d              je 0x5354b7                ; -> bare return
-0053548a  8b b8 78 01 00 00  mov edi, [eax+0x178]       ; segments controller
-00535490  85 ff              test edi, edi
-00535492  74 23              je 0x5354b7
-00535494  8b 44 24 08        mov eax, [esp+8]           ; args object
-00535498  56                 push esi
-00535499  8b 48 04           mov ecx, [eax+4]           ; element 2 (health)
-0053549c  8b 30              mov esi, [eax]             ; element 1 (name)
-0053549e  8b 01              mov eax, [ecx]
-005354a0  ff 50 34           call [eax+0x34]            ; float eval -> st0
-005354a3  8b 16              mov edx, [esi]
-005354a5  51                 push ecx                   ; value slot
-005354a6  8b ce              mov ecx, esi
-005354a8  d9 1c 24           fstp dword ptr [esp]       ; store the float
-005354ab  ff 52 38           call [edx+0x38]            ; char* name -> eax
-005354ae  50                 push eax                   ; arg: name
-005354af  8b cf              mov ecx, edi               ; this = controller
-005354b1  e8 9a ef f0 ff     call 0x00444450            ; (name, value)
-005354b6  5e                 pop esi
-005354b7  5f                 pop edi
-005354b8  c2 0c 00           ret 0xc
-```
+In prose: the attached thing is read from `[this+0x10]`; the native returns
+without effect unless the thing's class byte `[thing+0x34]` carries the UNIT bit
+`0x10` and its segments controller `[thing+0x178]` is non-null. It then takes
+the second argument element and evaluates it as a float through
+`vtable[+0x34]` (call at `0x005354a0`), takes the first element and fetches it
+as a `char*` name through `vtable[+0x38]` (call at `0x005354ab`), and calls
+`0x00444450(name, value)` with the controller as `this` (`E8` at
+`0x005354b1`); `ret 0xc` at `0x005354b8`.
 
 Boundary: five `nop` then native 134 `ResetSegmentHealth` at
 `0x005354c0` (same prologue); the pair shares the descriptor block with
@@ -119,19 +101,11 @@ spelling correction below). Gates `[this+0x10]` (an owner link inside
 the controller) → `[[that]+0x30]` → its `vtable[+0x24]()` must return
 nonzero — the name-list carrier. Then:
 
-```
-00444467  mov edi, [esp+0xc]      ; arg1 = char* name
-0044446b  mov ecx, eax            ; carrier
-0044446d  push edi
-0044446e  call 0x004aa8a0         ; lookup-by-name -> entry or 0
-00444473  test eax, eax; je ret
-00444477  mov eax, [eax+0x88]     ; entry -> segment INDEX
-0044447d  mov ecx, [esi+4]        ; controller segment-pointer array
-00444480  mov eax, [ecx+eax*4]    ; segment object
-00444483  test eax, eax; je ret
-00444487  mov edx, [esp+0x10]     ; arg2 = float value
-0044448c  mov [eax+0xc], edx      ; SEGMENT HEALTH CELL
-```
+From `0x00444467` it passes the name argument to the carrier's
+lookup-by-name `0x004aa8a0`; on a hit it reads the entry's segment index
+`[entry+0x88]`, indexes the controller's segment-pointer array `[ctrl+4]`, and,
+if that segment is non-null, stores the float argument into the segment's
+health cell `[seg+0xc]` (store at `0x0044448c`).
 
 - `0x004AA8A0` (`ret 4`, arg `char*`): walks `[carrier+0x15c]` entries
   at `[carrier+0x160]`, `stricmp` (`0x00568390`) of `entry+0xdc` vs the

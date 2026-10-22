@@ -3,9 +3,9 @@
 > Address: `0x00535ED0`
 
 Status: active static function note
-Last updated: 2026-09-27 (GenericSPtrSet callee identity refreshed; caller behavior not newly certified)
+Last updated: 2026-10-22 (retail disassembly listing replaced by prose; previously 2026-09-27 (GenericSPtrSet callee identity refreshed; caller behavior not newly certified))
 Source File: none — absent from `references/Onslaught/` (checked 2026-08-22) | Binary: BEA.exe pristine specimen
-`C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Summary: Mission-native 23, registered as `SetObjective`: a 12-byte
@@ -43,12 +43,9 @@ Body `0x00535ed0`–`0x00535edc` inclusive through the complete
 `ret 0xc`, **13 bytes**, SHA-256
 `e1e368b83a8c664935143709b40f4ad2bf7c6217003492b5d64c2562a48f666b`.
 
-```
-00535ed0  8b 49 10           mov ecx, [ecx+0x10]        ; attached thing
-00535ed3  6a 01              push 1                     ; set
-00535ed5  e8 96 da fb ff     call 0x004f3970            ; objective flag
-00535eda  c2 0c 00           ret 0xc
-```
+In prose: it takes the attached thing from `[this+0x10]` and calls the thing's
+objective-flag setter `0x004f3970` with the argument 1 (call at `0x00535ed5`);
+`ret 0xc` at `0x00535eda`.
 
 Zero args consumed from the script stack; no class gate. The script's
 "objective marker" is purely thing-state + global-set membership.

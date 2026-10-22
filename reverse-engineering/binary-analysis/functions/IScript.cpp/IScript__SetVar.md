@@ -3,7 +3,7 @@
 > Address: `0x005348f0`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-10-22 (retail disassembly listing replaced by prose)
 Source File: `references/Onslaught/thing.h:294` / `thing.cpp:827-829` (the
 callee's virtual; the wrapper itself is absent from the pinned source) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -64,20 +64,9 @@ wrapper alone **uses the incoming `ecx`** (the Mission dispatcher's
 instructions ending at `0x0053490a`, body hash `34fbc2c1…17c12`; both
 windows end on the same `ret 0xc`). No direct `E8` inside the wrapper.
 
-```
-005348f0  8b 44 24 04        mov eax, [esp+4]           ; IScript* vm
-005348f4  8b 49 10           mov ecx, [ecx+0x10]        ; receiver from INCOMING ecx
-005348f7  56                 push esi
-005348f8  8b 70 04           mov esi, [eax+4]           ; element object 2
-005348fb  8b 00              mov eax, [eax]             ; element object 1
-005348fd  8b 11              mov edx, [ecx]             ; receiver vtable
-005348ff  56                 push esi                   ; arg2 = element object 2, UNEVALUATED
-00534900  50                 push eax                   ; arg1 = element object 1, UNEVALUATED
-00534901  ff 92 f8 00 00 00  call dword ptr [edx+0xf8]  ; receiver->SetVar(elem1, elem2)
-00534907  5e                 pop esi
-00534908  c2 0c 00           ret 0xc                    ; dispatcher's 3-dword frame
-0053490b  90 x5              nop pad to 0x00534910 (native 66 CreatePosition)
-```
+The virtual call to the receiver's `[+0xf8]` slot is at `0x00534901`; `ret 0xc`
+at `0x00534908`, then `nop` padding to native 66 `CreatePosition` at
+`0x00534910`. In prose:
 
 1. `eax = [esp+4]` (vm); `ecx = [ecx+0x10]` — receiver taken from the
    incoming dispatcher context, not loaded from an immediate global.

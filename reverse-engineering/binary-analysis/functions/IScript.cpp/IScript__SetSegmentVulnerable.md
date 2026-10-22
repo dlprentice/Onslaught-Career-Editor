@@ -3,9 +3,9 @@
 > Address: `0x00534300`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-10-22 (retail disassembly listings replaced by prose)
 Source File: none — see [`IScript__SetSegmentHealth.md`](IScript__SetSegmentHealth.md) for the pinned-source absence behind this whole family | Binary: BEA.exe pristine specimen
-`C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Summary: Mission-native 109, registered as `SetSegmentVulnerable`: the
@@ -47,32 +47,12 @@ Body `0x00534300`–`0x0053433c` inclusive through the complete
 `822c04d3deb5d77da96b356f4f76a23c2332ac4cd0eb51ca0c8ab601e61c4556`.
 One `E8`, zero decoded `E9`.
 
-```
-00534300  8b 41 10           mov eax, [ecx+0x10]        ; attached thing
-00534303  57                 push edi
-00534304  f6 40 34 10        test byte [eax+0x34], 0x10 ; UNIT class bit
-00534308  74 2f              je 0x534339                ; -> bare return
-0053430a  8b b8 78 01 00 00  mov edi, [eax+0x178]       ; segments ctrl
-00534310  85 ff              test edi, edi
-00534312  74 25              je 0x534339
-00534314  8b 44 24 08        mov eax, [esp+8]           ; args object
-00534318  56                 push esi
-00534319  8b 48 04           mov ecx, [eax+4]           ; element 2 (flag)
-0053431c  8b 30              mov esi, [eax]             ; element 1 (name)
-0053431e  8b 01              mov eax, [ecx]
-00534320  ff 50 3c           call [eax+0x3c]            ; INT eval -> eax
-00534323  8b 16              mov edx, [esi]
-00534325  25 ff 00 00 00     and eax, 0xff              ; byte mask
-0053432a  50                 push eax                   ; value slot
-0053432b  8b ce              mov ecx, esi
-0053432d  ff 52 38           call [edx+0x38]            ; char* name -> eax
-00534330  50                 push eax
-00534331  8b cf              mov ecx, edi
-00534333  e8 78 02 f1 ff     call 0x004445b0            ; (name, flag)
-00534338  5e                 pop esi
-00534339  5f                 pop edi
-0053433a  c2 0c 00           ret 0xc
-```
+In prose: the same UNIT/controller gate as native 51. The second argument
+element is evaluated as an integer through `vtable[+0x3c]` (call at
+`0x00534320`) and masked to a byte (`0x00534325`); the first element is fetched
+as a `char*` name through `vtable[+0x38]` (call at `0x0053432d`); then
+`0x004445b0(name, flag)` is called with the controller as `this` (`E8` at
+`0x00534333`); `ret 0xc` at `0x0053433a`.
 
 The value element uses `vtable[+0x3c]` (integer), **not** the
 `vtable[+0x34]` float slot the health natives use — the byte encodings
@@ -95,15 +75,10 @@ Boundary: three `nop` then `SetVelocity` (native 129) at `0x00534340`.
 `thiscall`, `ret 8`. Same carrier gate, `0x004AA8A0` lookup, and
 `[entry+0x88]` index path as `0x00444450`. Then:
 
-```
-004445e7  mov edx, [esp+0x10]      ; arg2 = flag
-004445eb  mov [eax+0x1c], edx      ; VULNERABILITY CELL (+0x1c)
-004445ee  mov ecx, [esi+0xc]       ; root segment
-004445f1  test ecx, ecx; je ret 8
-004445f5  call 0x00442890          ; recompute
-004445fa  fstp [esi+0x18]          ; cached total refresh
-004445ff  ret 8
-```
+After the lookup it stores the flag into the segment's vulnerability cell
+`[seg+0x1c]` (store at `0x004445eb`); when the root segment `[ctrl+0xc]` is
+non-null it calls the recompute `0x00442890` (at `0x004445f5`) and stores the
+float result into the cached total `[ctrl+0x18]`; `ret 8`.
 
 Cell `+0x1c` cross-anchors this wake:
 

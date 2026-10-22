@@ -23,7 +23,7 @@ Found **4 cross-references** to the Bomber.cpp debug path string:
 **Type:** Exception unwinding function
 **Reference:** 0x005d1402 (offset +0x2)
 
-**Decompiled Code:**
+**Listing:**
 *Decompiler listing removed from the public tree (private RE archive: `scrubbed-passages/reverse-engineering/binary-analysis/functions/Bomber.cpp.md`, block 1).*
 
 **Analysis:**
@@ -41,7 +41,7 @@ Found **4 cross-references** to the Bomber.cpp debug path string:
 **Type:** Exception unwinding function
 **Reference:** 0x005d1418 (offset +0x2)
 
-**Decompiled Code:**
+**Listing:**
 *Decompiler listing removed from the public tree (private RE archive: `scrubbed-passages/reverse-engineering/binary-analysis/functions/Bomber.cpp.md`, block 2).*
 
 **Analysis:**
@@ -59,15 +59,9 @@ Found **4 cross-references** to the Bomber.cpp debug path string:
 **Type:** C++ constructor inline code
 **Context:** Between FUN_00415d70 (ends 0x00415d86) and FUN_004161a0
 
-**Disassembly Context:**
-```asm
-004160e0: FE FF          ???
-004160e2: 6A 11          PUSH 0x11        ; Line 17 decimal
-004160e4: 68 78 3A 62 00 PUSH 0x623a78    ; "[maintainer-local-source-export-root]\Bomber.cpp"
-004160e9: 6A 17          PUSH 0x17        ; Unknown parameter
-004160eb: 6A 30          PUSH 0x30        ; Unknown parameter
-004160ed: B9 F0 3D 9C 00 MOV ECX, 0x9c3df0 ; Object pointer?
-```
+**Context in prose:** from `0x004160e2` it pushes the line number 17
+(`0x11`), the debug path string `0x00623a78`, then `0x17` and `0x30`, and loads
+`ECX = 0x009c3df0` (`0x004160ed`), the setup for an allocator call.
 
 **Analysis:**
 - This is NOT a standalone function - Ghidra failed to identify the function boundary
@@ -86,16 +80,9 @@ Found **4 cross-references** to the Bomber.cpp debug path string:
 **Type:** C++ constructor inline code
 **Context:** Same region as reference #3
 
-**Disassembly Context:**
-```asm
-00416117: EB 02          JMP ...
-00416119: 33 FF          XOR EDI,EDI
-0041611b: 6A 12          PUSH 0x12        ; Line 18 decimal
-0041611d: 68 78 3A 62 00 PUSH 0x623a78    ; "[maintainer-local-source-export-root]\Bomber.cpp"
-00416122: 6A 16          PUSH 0x16        ; Unknown parameter
-00416124: 6A 64          PUSH 0x64        ; Unknown parameter (100 decimal)
-00416126: B9 F0 3D 9C 00 MOV ECX, 0x9c3df0 ; Same object pointer
-```
+**Context in prose:** after clearing `EDI` (`0x00416119`) it pushes the line
+number 18 (`0x12`, `0x0041611b`), the debug path string `0x00623a78`, then `0x16`
+and `0x64` (100), and loads the same `ECX = 0x009c3df0` (`0x00416126`).
 
 **Analysis:**
 - Second constructor or initialization path for same CBomber object

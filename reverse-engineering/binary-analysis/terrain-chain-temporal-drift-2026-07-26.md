@@ -1,7 +1,7 @@
 # The reconstruction's terrain drift is the cloud-shadow scroll, and the origin of that scroll is wrong
 
 Status: partially superseded (read the box below); the scroll's code facts stand
-Last updated: 2026-09-26 (RE audit: one advance per view-0 RenderTerrain call, the breakpoint location, the rebuild's frame delta)
+Last updated: 2026-10-22 (retail disassembly listings replaced by prose; earlier: 2026-09-26 RE audit of the advance count, breakpoint location and frame delta)
 Summary: the terrain's cloud-shadow scroll accumulators, where they advance, and how the reconstruction's origin differs; the per-second rate is measured, not derived.
 Evidence: MEASURED — pristine instructions and a runtime accumulator read; the 20x factor's cause is an inference.
 Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -130,20 +130,13 @@ carries a clock.
 only when its view-index argument is 0 (split-screen views 1 and up do not
 advance them):
 
-```
-005455d2  d9 05 20 9e 8a 00   FLD   dword [0x008a9e20]     ; frame delta
-005455d8  d8 0d 80 85 5d 00   FMUL  dword [0x005d8580]     ; 0x3a83126f = 0.001
-005455de  d8 05 94 02 8c 00   FADD  dword [0x008c0294]     ; u accumulator
-005455e4  d9 15 94 02 8c 00   FST   dword [0x008c0294]
-005455ea  d8 1d 68 85 5d 00   FCOMP dword [0x005d8568]     ; 0x3f800000 = 1.0
-005455f5  75 12               JNE   0x00545609
-005455f7  d9 05 94 02 8c 00   FLD   dword [0x008c0294]
-005455fd  d8 25 68 85 5d 00   FSUB  dword [0x005d8568]
-00545603  d9 1d 94 02 8c 00   FSTP  dword [0x008c0294]
-00545609  ...                 ; the same nine instructions for v, with
-0054560f  d8 0d e4 50 5e 00   FMUL  dword [0x005e50e4]     ; 0x3a03126f = 0.0005
-                              ; into 0x008c0298
-```
+From `0x005455d2` it multiplies the frame delta `[0x008a9e20]` by the constant
+at `0x005d8580` (`0x3a83126f` = 0.001), adds it into the u accumulator
+`0x008c0294`, and, when the stored sum reaches 1.0 (`0x005d8568`,
+`0x3f800000`; compare at `0x005455ea`), subtracts 1.0 from it
+(`0x005455f7`–`0x00545603`). From `0x00545609` the same sequence advances the v
+accumulator `0x008c0298` with the constant at `0x005e50e4` (`0x3a03126f` =
+0.0005).
 
 `pe_read_va.py` reads `0x005d8580` as `6f 12 83 3a`, `0x005e50e4` as
 `6f 12 03 3a` and `0x005d8568` as `00 00 80 3f` — `0.001`, `0.0005`, `1.0`. A
@@ -154,20 +147,12 @@ The matrix buffer at `0x00628258` is then zeroed whole
 (`0x00545640: MOV ECX,0x10; XOR EAX,EAX; MOV EDI,0x628258; REP STOSD`) and
 refilled per stage. For stage 2 (`D3DTS_TEXTURE2` = `0x12`):
 
-```
-0054591a  a1 94 02 8c 00      MOV  EAX, [0x008c0294]
-0054591f  8b 0d 98 02 8c 00   MOV  ECX, [0x008c0298]
-00545925  a3 78 82 62 00      MOV  [0x00628278], EAX        ; _31 = u
-0054592f  c7 05 68 82 62 00 0 MOV  [0x00628268], 0          ; _21 = 0
-00545939  c7 05 5c 82 62 00 0 MOV  [0x0062825c], 0          ; _12 = 0
-00545943  c7 05 58 82 62 00 . MOV  [0x00628258], 0x3b800000 ; _11 = 1/256
-0054594d  c7 05 6c 82 62 00 . MOV  [0x0062826c], 0x3b800000 ; _22 = 1/256
-00545957  89 0d 7c 82 62 00   MOV  [0x0062827c], ECX        ; _32 = v
-00545964  6a 12               PUSH 0x12
-00545967  ff 92 b0 00 00 00   CALL dword [EDX+0xb0]         ; SetTransform
-```
+From `0x0054591a` it stores the u and v accumulators into `_31`
+(`0x00628278`) and `_32` (`0x0062827c`), zeroes `_21` and `_12`, sets `_11`
+and `_22` to `0x3b800000` (1/256), and at `0x00545967` passes the buffer with
+state `0x12` to `IDirect3DDevice9::SetTransform` (vtable `+0xb0`).
 
-and `0x005458f6` sets `TEXCOORDINDEX` for stage 2 to `0`, the same landscape
+`0x005458f6` also sets `TEXCOORDINDEX` for stage 2 to `0`, the same landscape
 X/Y pair stage 0 uses. So retail's stage-2 coordinate is exactly
 
 ```

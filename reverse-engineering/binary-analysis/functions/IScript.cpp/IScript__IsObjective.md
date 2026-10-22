@@ -3,9 +3,9 @@
 > Address: `0x00535EF0`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-10-22 (retail disassembly listing replaced by prose)
 Source File: none — absent from `references/Onslaught/` (checked 2026-08-22) | Binary: BEA.exe pristine specimen
-`C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Summary: Mission-native 31, registered as `IsObjective`: the query twin
@@ -44,26 +44,13 @@ Body `0x00535ef0`–`0x00535f6f` inclusive through the complete final
 Two internal `E8`, both to the shared allocator helper `0x005490e0`
 (one per return path), zero decoded `E9`.
 
-```
-00535ef0  8b 49 10           mov ecx, [ecx+0x10]        ; attached thing
-00535ef3  8b 01              mov eax, [ecx]
-00535ef5  ff 50 68           call [eax+0x68]            ; slot 13 predicate
-00535ef8  85 c0              test eax, eax
-00535efa  je 0x535f36                                   ; false path
-true path @0x00535efc:
-          push 0x565; push 0x64fa40 (__FILE__); push 0x18; push 8
-          mov ecx, 0x9c3df0; call 0x5490e0            ; CDXMemoryManager alloc
-          test eax,eax; je null-out
-          mov ecx, [esp+0xc]
-          mov dword ptr [eax], 0x005e4d50             ; CBool vptr
-          mov byte  ptr [eax+4], 1                    ; payload TRUE
-          mov dword ptr [ecx], eax                    ; out = object
-          ret 0xc
-false path @0x00535f36:
-          identical alloc with line token 0x569;
-          mov dword ptr [eax], 0x005e4d50
-          mov byte  ptr [eax+4], 0                    ; payload FALSE
-```
+In prose: it calls the attached thing's (`[this+0x10]`) vtable slot 13
+(`[+0x68]`, call at `0x00535ef5`) as a predicate. On either outcome it allocates
+a 0x18-byte object through `CDXMemoryManager` (`0x005490e0`, `this` =
+`0x009c3df0`, debug path `0x0064fa40`, line token `0x565` on the true path at
+`0x00535efc` and `0x569` on the false path at `0x00535f36`), installs the `CBool`
+vptr `0x005e4d50`, sets the payload byte `[obj+4]` to 1 or 0, and writes the
+object to the caller's out slot before `ret 0xc`.
 
 Both paths are the same boxed-return shape as native 18 GetHealth's
 `CFloat` boxing (`IScript.cpp.md` Functions table), with a `CBool`

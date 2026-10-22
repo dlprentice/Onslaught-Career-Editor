@@ -3,9 +3,9 @@
 > Address: `0x00535E80`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-10-22 (retail disassembly listing replaced by prose)
 Source File: none — absent from `references/Onslaught/`; script-side constants in the shipped `data/MissionScripts/onsldef.msl` | Binary: BEA.exe pristine specimen
-`C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Summary: Mission-native 35, registered as `UnHighlightHudPart`: the
@@ -43,15 +43,10 @@ Body `0x00535e80`–`0x00535e98` inclusive through the complete
 `d273f5d1af93a54b9f7a9b3bbd2a56c0e9f84696f85048e2b3757e69eb9e9bd3`.
 Zero `E8`, zero decoded `E9`.
 
-```
-00535e80  8b 44 24 04        mov eax, [esp+4]           ; args object
-00535e84  8b 08              mov ecx, [eax]             ; element 1
-00535e86  8b 11              mov edx, [ecx]
-00535e88  ff 52 30           call [edx+0x30]            ; INT eval -> eax
-00535e8b  c7 04 85 1c a5 8a 00
-          01 00 00 00        mov dword [eax*4 + 0x8aa51c], 1   ; NORMAL
-00535e96  c2 0c 00           ret 0xc
-```
+In prose: it evaluates the first argument element as an integer through its
+`vtable[+0x30]` (call at `0x00535e88`) and stores the dword 1 (normal) into the
+HUD-part state array at `0x008aa51c + 4*index` (store at `0x00535e8b`);
+`ret 0xc` at `0x00535e96`.
 
 Identical to native 34 except the stored dword. The array's consumer
 and semantics notes are owned by

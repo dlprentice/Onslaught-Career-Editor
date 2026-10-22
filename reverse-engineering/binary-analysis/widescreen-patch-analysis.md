@@ -2,7 +2,7 @@
 
 > Analysis of BEA_Widescreen.exe modifications to understand resolution/aspect ratio patching
 > Generated: December 2025
-> Last updated: 2026-03-01
+> Last updated: 2026-10-22 (retail disassembly listing replaced by prose)
 
 Status note: this is historical external widescreen-patch analysis and attribution evidence. It is not the current WinUI/AppCore catalog patch contract, and it does not by itself prove the current `resolution_gate`/`force_windowed` copied-game flow, runtime FOV parity, or no-noticeable-difference rendering.
 
@@ -110,19 +110,12 @@ The widescreen patch uses a classic **code cave** technique:
 
 ## Code Cave Disassembly (Partial)
 
-```asm
-; At 0x005D7F32 (target of hook at 0x4506CE)
-005D7F32: FF35 F04F9D00    PUSH dword ptr [0x9D4FF0]  ; Push calculated aspect
-005D7F38: E9 9687E7FF      JMP 0x004506D3             ; Return to original code
-
-; At 0x005D7F9D (aspect ratio calculation)
-005D7F9D: DB85 5C2E0300    FILD dword ptr [EBP+0x32E5C]  ; Load screen width
-005D7FA3: DA B5 582E0300   FIDIV dword ptr [EBP+0x32E58] ; Divide by height
-005D7FA9: D915 F04F9D00    FST dword ptr [0x9D4FF0]      ; Store aspect ratio
-005D7FAF: D83D C48B5D00    FDIVR dword ptr [0x5D8BC4]    ; Divide by reference
-005D7FB5: D915 F44F9D00    FST dword ptr [0x9D4FF4]      ; Store adjusted
-; ... more FPU operations for FOV correction
-```
+The hook at `0x004506CE` jumps to a cave at `0x005D7F32` that pushes the
+calculated aspect stored at `0x009D4FF0` and jumps back to `0x004506D3`. A second
+cave at `0x005D7F9D` computes the aspect ratio: it divides the screen width
+(`[EBP+0x32E5C]`) by the height (`[EBP+0x32E58]`), stores the result at
+`0x009D4FF0`, divides the reference constant at `0x005D8BC4` by it and stores
+that at `0x009D4FF4`, followed by further FPU work for the FOV correction.
 
 ## Windowed Mode Analysis
 
@@ -163,11 +156,9 @@ The widescreen patch uses a classic **code cave** technique:
 *Decompiler listing removed from the public tree (private RE archive: `scrubbed-passages/reverse-engineering/binary-analysis/widescreen-patch-analysis.md`, block 1).*
 
 The check at file offset 0x24150:
-```asm
-00424150: A0 3E2F6600      MOV AL, byte ptr [0x662F3E]  ; Load guard flag
-00424155: 84 C0            TEST AL, AL                   ; Check if non-zero
-00424157: 74 15            JZ +0x15                      ; Skip if zero (taken only when DAT_00662f3e == 0x00)
-```
+It loads the guard byte `[0x662F3E]` into `AL`, tests it, and skips the
+`-forcewindowed` handling when it is zero (signature `A0 3E 2F 66 00 84 C0 74 15`
+at `0x00424150`).
 
 When the flag is `0x00`, the JZ (jump if zero) is taken and `-forcewindowed` is not processed. *(Corrected 2026-07-28. The sentence that followed here previously read: "In current repo binaries (`0x01`), that guard no longer blocks CLI parsing." That is false — the guard is zero at load in **every** build, so it blocks CLI parsing on every stock command line until `-testeur` opens it.)*
 

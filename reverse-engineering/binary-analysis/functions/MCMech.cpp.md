@@ -2,7 +2,7 @@
 
 Summary: current deleting-entry identities; earlier behavior claims retain their stated limits.
 Status: active bounded static identity reference
-Last updated: 2026-09-27 (event-listener identities; earlier behavior limits retained)
+Last updated: 2026-10-22 (decompiler wording removed; previously 2026-09-27 (event-listener identities; earlier behavior limits retained))
 <!-- ghidra-full-reaudit-20260713:start -->
 > **2026-07-13 live correction closeout:** `0x00499bc0` comment correction. Current live Ghidra reflects confirmed rows only; older conflicting text below is superseded only where confirmed. Use the closeout (private RE archive: `reverse-engineering/binary-analysis/ghidra-full-reaudit-closeout-2026-07-13.md`); final per-address decisions and exact before/after metadata are in `reverse-engineering/binary-analysis/ghidra-reviewed-correction-plan-2026-07-13.json`.
 <!-- ghidra-full-reaudit-20260713:end -->
@@ -63,7 +63,7 @@ Wave755 static read-back (`unwind-continuation-wave755`, `wave755-readback-verif
 
 ## Class Structure (CMCMech)
 
-Based on decompiled code analysis:
+From static analysis of the binary:
 
 | Offset | Type | Name | Purpose |
 |--------|------|------|---------|

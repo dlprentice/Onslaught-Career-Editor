@@ -7,7 +7,7 @@ Status: **partially superseded 2026-07-28**, parser scope corrected 2026-09-26 �
 and the hex-edit instruction built on it are **withdrawn as false**. The two-gate
 model, the startup-flow patch guidance, and the wrapper workarounds stand
 unchanged. See "Correction 2026-07-28" immediately below.
-Last updated: 2026-09-26 (initializer and ordered parser route rechecked; display/runtime evidence retains its date)
+Last updated: 2026-10-22 (retail disassembly listing replaced by prose; previously 2026-09-26 (initializer and ordered parser route rechecked; display/runtime evidence retains its date))
 Verdict: `-forcewindowed` is real and reachable, but its parser gate
 `DAT_00662f3e` is **BSS — zero at load**; on the inspected startup route,
 the parser sets it for `-testeur` appearing **earlier on the same command line**. So `-forcewindowed` alone
@@ -67,14 +67,9 @@ not opened or mutated.
    **both are reads** — `0x00424150` and `0x004714f0`, each `mov al, byte ptr
    [0x662f3e]`. That scan found no absolute write. The setting writer is object-relative:
 
-   ```
-   00423c6b  68 18 46 62 00             push      0x624618            ; "-testeur"
-   00423c70  55                         push      ebp                 ; current token
-   00423c71  e8 1a 47 14 00             call      0x568390            ; stricmp
-   00423c79  85 c0                      test      eax, eax
-   00423c7b  75 07                      jne       0x423c84
-   00423c7d  c6 83 86 01 00 00 01       mov       byte ptr [ebx + 0x186], 1
-   ```
+   From `0x00423c6b` it compares the current command-line token with the string
+   `"-testeur"` at `0x00624618` through `stricmp` (`0x00568390`) and, on a
+   match, stores 1 into `byte ptr [ebx+0x186]` (`0x00423c7d`).
 
    `ebx` is the `CCLIParams` `this` pointer (`mov ebx, ecx` at `0x00423bd4`;
    `mov ecx, 0x662db8` at `0x004239c0`), and `0x00662DB8 + 0x186 = 0x00662F3E`

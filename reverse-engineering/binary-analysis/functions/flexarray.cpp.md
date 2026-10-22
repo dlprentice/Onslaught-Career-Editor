@@ -16,15 +16,14 @@ CFlexArray is a dynamic array template class used throughout the Battle Engine A
 
 ## Class Structure
 
-```cpp
-struct CFlexArray {
-    void*  mData;       // +0x00: Pointer to element array
-    int    mCapacity;   // +0x04: Current allocated capacity
-    int    mCount;      // +0x08: Number of elements in use
-    int    mGrowth;     // +0x0C: Growth factor (positive = additive, negative = multiplicative)
-};
-// Total size: 16 bytes (0x10)
-```
+| Offset | Field | Meaning |
+| --- | --- | --- |
+| `+0x00` | `mData` | pointer to the element array |
+| `+0x04` | `mCapacity` | allocated capacity |
+| `+0x08` | `mCount` | elements in use |
+| `+0x0C` | `mGrowth` | growth factor (positive additive, negative multiplicative) |
+
+Total size 16 bytes (`0x10`).
 
 ### Growth Strategy
 
@@ -51,16 +50,9 @@ The `mGrowth` field controls how the array grows when capacity is exceeded:
 
 ### CFlexArray__Init (0x00465530)
 
-```cpp
-CFlexArray* CFlexArray::Init(int initialCapacity) {
-    if (initialCapacity == 0) {
-        initialCapacity = 16;  // Default capacity
-    }
-    this->mCapacity = initialCapacity;
-    this->mData = MemAlloc(initialCapacity * 4, 0x12, "flexarray.cpp", 0x22);
-    return this;
-}
-```
+Behaviour: a requested capacity of zero becomes 16; the capacity is stored and
+an array of that many 4-byte slots is taken from the engine allocator (debug
+line `0x22`), and `this` is returned.
 
 **Notes:**
 - Default capacity is 16 elements if 0 is passed
@@ -69,11 +61,8 @@ CFlexArray* CFlexArray::Init(int initialCapacity) {
 
 ### CFlexArray__Free (0x00465570)
 
-```cpp
-void CFlexArray::Free() {
-    MemFree(this->mData);
-}
-```
+Behaviour: releases the element array through the engine allocator and nothing
+else.
 
 **Notes:**
 - Simple memory deallocation
@@ -81,21 +70,8 @@ void CFlexArray::Free() {
 
 ### CFlexArray__Resize (0x00465580)
 
-```cpp
-void CFlexArray::Resize(uint newCapacity) {
-    uint oldCapacity = this->mCapacity;
-    this->mData = MemRealloc(this->mData, newCapacity * 4);
-
-    // Zero-initialize new elements
-    if (oldCapacity < newCapacity) {
-        void** ptr = (void**)this->mData + oldCapacity;
-        for (int i = newCapacity - oldCapacity; i > 0; i--) {
-            *ptr++ = NULL;
-        }
-    }
-    this->mCapacity = newCapacity;
-}
-```
+Behaviour: reallocates the array to the new capacity, clears any slots beyond
+the old capacity to null, and records the new capacity.
 
 **Notes:**
 - Reallocates memory to new size
@@ -104,19 +80,9 @@ void CFlexArray::Resize(uint newCapacity) {
 
 ### CFlexArray__InitWithGrowth (0x004241a0)
 
-```cpp
-CFlexArray* CFlexArray::InitWithGrowth(int capacity, int growth) {
-    Init(capacity);
-    this->mCount = 0;
-
-    if (growth > 0) {
-        this->mGrowth = growth * 16;  // Scaled additive growth
-    } else if (growth < 0) {
-        this->mGrowth = growth - 1;   // Multiplicative growth factor
-    }
-    return this;
-}
-```
+Behaviour: initialises through `CFlexArray__Init`, sets the count to zero and
+derives `mGrowth` from the argument (positive values scaled by 16, negative
+values lowered by one), then returns `this`.
 
 **Notes:**
 - Wrapper around Init that also sets growth strategy
@@ -125,11 +91,7 @@ CFlexArray* CFlexArray::InitWithGrowth(int capacity, int growth) {
 
 ### CFlexArray__Clear (0x004241e0)
 
-```cpp
-void CFlexArray::Clear() {
-    this->mCount = 0;
-}
-```
+Behaviour: sets the count to zero.
 
 **Notes:**
 - Simply resets element count
@@ -138,30 +100,10 @@ void CFlexArray::Clear() {
 
 ### CFlexArray__Add (0x004241f0)
 
-```cpp
-CFlexArray* CFlexArray::Add(void* element) {
-    if (this->mCapacity <= this->mCount) {
-        // Need to grow
-        if (this->mGrowth == 0) return this;  // Cannot grow
-
-        while (this->mCapacity < this->mCount + 1 && this->mData != NULL) {
-            int newSize;
-            if (this->mGrowth < 1) {
-                newSize = -(this->mGrowth * this->mCapacity);  // Multiplicative
-            } else {
-                newSize = this->mGrowth + this->mCapacity;     // Additive
-            }
-            Resize(newSize);
-        }
-    }
-
-    if (this->mData == NULL) return this;
-
-    ((void**)this->mData)[this->mCount] = element;
-    this->mCount++;
-    return this;
-}
-```
+Behaviour: when the array is full it grows (unless `mGrowth` is zero, in which
+case the add is dropped) by repeated `CFlexArray__Resize` calls using the
+additive or multiplicative rule, then stores the element at the end and bumps
+the count; it returns `this`.
 
 **Notes:**
 - Auto-grows array when at capacity
@@ -170,29 +112,9 @@ CFlexArray* CFlexArray::Add(void* element) {
 
 ### CFlexArray__InsertAt (0x00424260)
 
-```cpp
-CFlexArray* CFlexArray::InsertAt(int index, void* element) {
-    if (index == this->mCount) {
-        // Insert at end - same as Add
-        Add(element);
-        return this;
-    }
-
-    // Ensure capacity (same growth logic as Add)
-    // ... growth code ...
-
-    // Shift elements right
-    void** ptr = (void**)this->mData + this->mCount;
-    while (ptr > (void**)this->mData + index) {
-        *ptr = *(ptr - 1);
-        ptr--;
-    }
-
-    ((void**)this->mData)[index] = element;
-    this->mCount++;
-    return this;
-}
-```
+Behaviour: inserting at the current count is delegated to `CFlexArray__Add`;
+otherwise it grows as `Add` does, moves the tail one slot right, writes the
+element at the index and bumps the count; it returns `this`.
 
 **Notes:**
 - Optimized case for append (delegates to Add)
@@ -201,28 +123,10 @@ CFlexArray* CFlexArray::InsertAt(int index, void* element) {
 
 ### CFlexArray__RemoveRange (0x00424360)
 
-```cpp
-void CFlexArray::RemoveRange(int start, int end) {
-    if (start < 0 || start > end || end >= this->mCount) {
-        return;  // Invalid range
-    }
-
-    if (end == this->mCount - 1) {
-        // Removing from end - just truncate
-        this->mCount = start;
-        return;
-    }
-
-    // Shift elements left
-    void** dst = (void**)this->mData + start;
-    void** src = (void**)this->mData + end + 1;
-    while (src < (void**)this->mData + this->mCount) {
-        *dst++ = *src++;
-    }
-
-    this->mCount += (start - end) - 1;  // Reduce count
-}
-```
+Behaviour: an invalid range (negative start, start past end, or end past the
+last element) is ignored; a range ending at the last element just truncates the
+count to the start; otherwise the elements after the range are moved down to
+the start and the count drops by the range length.
 
 **Notes:**
 - Inclusive range [start, end]

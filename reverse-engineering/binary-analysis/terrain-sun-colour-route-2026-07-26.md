@@ -77,15 +77,13 @@ The shipped Level 100 values are sun `0x00BDB179` = (189, 177, 121) and ambient
 This was the one reference the stage census never explained. The bytes settle it
 by address order alone:
 
-```
-005454db   C7 05 A8 68 9C 00 00 00 00 00   MOV  dword ptr [0x009c68a8], 0x0   ; ambient := 0
-005454e5   C6 05 0C 69 9C 00 01            MOV  byte  ptr [0x009c690c], 0x1   ; mark dirty
-...
-00545520   E8 6B 00 00 00                  CALL 0x00545590                    ; RenderTerrain
-00545525   8B 0D 54 BE 6F 00               MOV  ECX, dword ptr [0x006fbe54]   ; HFLD ambient
-0054552b   C6 05 0C 69 9C 00 01            MOV  byte  ptr [0x009c690c], 0x1
-00545532   89 0D A8 68 9C 00               MOV  dword ptr [0x009c68a8], ECX   ; ambient := HFLD
-```
+- `0x005454db`: stores 0 into the ambient register `0x009c68a8`;
+- `0x005454e5`: sets its dirty byte `0x009c690c` to 1;
+- `0x00545520`: calls `RenderTerrain` (`0x00545590`);
+- `0x00545525`: loads the HFLD ambient `[0x006fbe54]` (signature
+  `8b 0d 54 be 6f 00`);
+- `0x0054552b` / `0x00545532`: sets the dirty byte again and stores that
+  ambient back into `0x009c68a8`.
 
 `0x009c68a8` is the engine's ambient-colour register (`0x009c690c` is its dirty
 flag). The write at `0x005454db` is unconditional straight-line code in the
@@ -118,16 +116,9 @@ Three independent facts close this route for terrain:
   `0x0044a39e`; `CDXLandscape__RenderTerrain` sets it to **0** at its own entry
   and back to 1 at exit:
 
-  ```
-  00545590   A1 4C A9 8A 00        MOV  EAX, [0x008aa94c]
-  0054559e   3B C5                 CMP  EAX, EBP           ; EBP = 0
-  005455a0   75 0E                 JNZ  0x005455b0
-  005455a2   C6 05 AD 68 9C 00 00  MOV  byte ptr [0x009c68ad], 0x0
-  ...
-  005461fa   A1 4C A9 8A 00        MOV  EAX, [0x008aa94c]
-  00546203   75 0E                 JNZ  0x00546213
-  00546205   C6 05 AD 68 9C 00 01  MOV  byte ptr [0x009c68ad], 0x1
-  ```
+  At entry it loads `[0x008aa94c]` (`0x00545590`) and, when it is zero, clears
+  `0x009c68ad` (`0x005455a2`); at exit it repeats the test (`0x005461fa`) and,
+  again only when it is zero, sets `0x009c68ad` back to 1 (`0x00546205`).
 
   Both writes are gated on `DAT_008aa94c == 0`. `0x008aa94c` is
   `0x008aa920 + 0x2c` — a member of the landscape/water object whose base
@@ -169,7 +160,7 @@ It is nevertheless unreachable:
 - `DXPalletizer__Palletize` has **exactly one xref in the image**:
   `CDXEngine__BuildLandscapeTextureCache` @ `0x00547860`, call at `0x005479a6`.
 - That call passes `expand_half_palette = 0`. The twelve pushes at
-  `0x0054797a`–`0x0054799e` decompile to
+  `0x0054797a`–`0x0054799e` read as
   `Palletize(src, w, h, 0x100, &indices, &palette, 0, 1, 1, 0, 0, 0)`; the
   eleventh argument is the flag, and the three literal `PUSH 0x0` at
   `0x0054797a`/`0x0054797c` cover it.
@@ -206,10 +197,8 @@ can reach, for the reasons in §3.
 One call in that prologue remains unidentified and is recorded rather than
 claimed:
 
-```
-005454ec   68 8C D2 83 00        PUSH 0x83d28c
-005454f4   FF 92 C4 00 00 00     CALL dword ptr [EDX + 0xc4]      ; EDX = *DAT_00888a50
-```
+At `0x005454ec` it pushes `0x0083d28c` and at `0x005454f4` calls the device
+(`EDX` = `*DAT_00888a50`) through vtable slot `+0xc4`.
 
 Device vtable `+0xc4` takes one pointer. Its six other call sites
 (`CDXEngine__Render` ×2, `CDXFrontEnd__SetupRenderMatricesAndProjection`,

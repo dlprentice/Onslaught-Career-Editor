@@ -3,7 +3,7 @@
 > Address: `0x004e6660`
 
 Status: active static function note
-Last updated: 2026-09-08
+Last updated: 2026-10-22 (retail disassembly listing replaced by prose)
 Source File: none — `Unit.cpp` has no source body in `references/Onslaught/`
 (checked 2026-08-22) | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
@@ -27,12 +27,9 @@ Body `0x004e6660`–`0x004e6674` inclusive through the complete
 `2f0568d877c62bd654adaef35fe8954ca23f24f286642dcf56aa6492c1c79b8`.
 Zero `E8`, zero `E9`.
 
-```
-004e6660  d9 05 d0 2f 67 00   fld dword ptr [0x672fd0]   ; global time snapshot
-004e6666  d8 05 d8 85 5d 00   fadd dword ptr [0x5d85d8]  ; + 5.0f
-004e666c  d9 99 88 00 00 00   fstp dword ptr [ecx+0x88]  ; unit cooldown cell
-004e6672  c2 04 00            ret 4
-```
+In prose: it loads the global time snapshot `[0x00672fd0]`, adds the constant
+at `0x005d85d8` (5.0f), stores the sum into the unit's cooldown cell
+`[this+0x88]` (`0x004e666c`), and returns with `ret 4` at `0x004e6672`.
 
 `thiscall`; one stack arg (unused by the body — the caller pushes the
 source pointer but this callee never reads it). `[0x005d85d8]` is

@@ -41,35 +41,27 @@ scans through `tools/operand_scan.py` and direct `rel32` scans through
 The gameplay frame function ends at `0x0053ecb4` (`RET 4`). Its terminal
 sequence is the cockpit:
 
-```
-0053eb7a  MOV  EAX, [0x0089d670]                  ; 4-dword translation
-0053eb84  SUB  ESP,0x10; ECX=0xc; ESI=0x0089d640  ; 12-dword 3x4 rotation
-0053eb93  REP MOVSD
-0053ebb1  MOV  ECX, 0x009c65c0
-0053ebb6  CALL 0x00550ca0                         ; CDXEngine::SetWorldMatrix
-0053ebbb  MOV  EAX, [0x00888a50]
-0053ebc0  PUSH 0x0083d248                         ; material[0]
-0053ebc6  MOV  EDX, [EAX]
-0053ebc8  CALL dword [EDX+0xc4]                   ; IDirect3DDevice9::SetMaterial
-...
-0053ec4c  MOV  ECX, 0x0089c9a0
-0053ec51  CALL 0x0044a650                         ; blend/z-write setup, below
-0053ec64  MOV  ECX, [ESI+0x528]
-0053ec6a  CALL 0x0053bb50                         ; the cockpit draw wrapper
-```
+- `0x0053eb7a`–`0x0053eb93`: copies a 4-dword translation from `0x0089d670` and
+  a 12-dword 3x4 rotation from `0x0089d640` onto the stack;
+- `0x0053ebb6`: calls `CDXEngine::SetWorldMatrix` (`0x00550ca0`, `this` =
+  `0x009c65c0`) with it;
+- `0x0053ebc8`: calls `IDirect3DDevice9::SetMaterial` (vtable `+0xc4`) on the
+  device held at `0x00888a50` with material `[0]` at `0x0083d248`;
+- `0x0053ec51`: calls the blend/z-write setup `0x0044a650` (`this` =
+  `0x0089c9a0`), below;
+- `0x0053ec6a`: calls the cockpit draw wrapper `0x0053bb50` on `[ESI+0x528]`.
 
 `0x0053bb50` has exactly **one** caller in the image (`call_xref_scan.py`:
 `CALL at 0x0053ec6a`, total 1). It is the wrapper the task named
 `CCockpit::Render`; its body is:
 
-```
-0053bb7c  PUSH 1; PUSH 0x8f; ECX=0x00855bb0; CALL 0x00513bc0  ; NORMALIZENORMALS := 1
-0053bb97  ECX=[this+0x110]; CALL [vt+0x16c]                   ; a float
-0053bbc3  ... 0x0063012c := 0x5d8c70 - f*0x5d8c74             ; global vertex-alpha scale
-0053bbe1  ECX=[this+0x8c]; PUSH edi; CALL [vt+0x8]            ; the mesh render
-0053bbed  0x0063012c := 0xff
-0053bbf8  PUSH 0; PUSH 0x8f; CALL 0x00513bc0                  ; NORMALIZENORMALS := 0
-```
+it sets `D3DRS_NORMALIZENORMALS` (`0x8f`) to 1 through the render-state cache
+`0x00513bc0` (`this` = `0x00855bb0`) at `0x0053bb7c`; reads a float from
+`[this+0x110]` through its vtable slot `+0x16c` (`0x0053bb97`); sets the global
+vertex-alpha scale `0x0063012c` from the constants at `0x005d8c70`/`0x005d8c74`
+and that float (`0x0053bbc3`); renders the mesh at `[this+0x8c]` through its
+vtable slot `+0x8` (`0x0053bbe1`); restores `0x0063012c` to `0xff`
+(`0x0053bbed`); and sets `NORMALIZENORMALS` back to 0 (`0x0053bbf8`).
 
 `0x0063012c` is the same global `CMeshRenderer::RenderMeshCore` reads at
 `0x005497fc` to scale the per-vertex alpha, which independently ties this
@@ -78,12 +70,12 @@ wrapper to the stride-36 mesh path.
 `0x0044a650`, called at `0x0053ec51` immediately before the draw, is four
 cached render-state writes:
 
-```
-0044a650  PUSH 1; PUSH 0x1b   ; D3DRS_ALPHABLENDENABLE := 1
-0044a65e  PUSH 5; PUSH 0x13   ; D3DRS_SRCBLEND  := D3DBLEND_SRCALPHA
-0044a66c  PUSH 6; PUSH 0x14   ; D3DRS_DESTBLEND := D3DBLEND_INVSRCALPHA
-0044a67a  PUSH 0; PUSH 0x0e   ; D3DRS_ZWRITEENABLE := 0
-```
+| Site | Render state | Value |
+| --- | --- | --- |
+| `0x0044a650` | `D3DRS_ALPHABLENDENABLE` (`0x1b`) | 1 |
+| `0x0044a65e` | `D3DRS_SRCBLEND` (`0x13`) | 5 = `D3DBLEND_SRCALPHA` |
+| `0x0044a66c` | `D3DRS_DESTBLEND` (`0x14`) | 6 = `D3DBLEND_INVSRCALPHA` |
+| `0x0044a67a` | `D3DRS_ZWRITEENABLE` (`0x0e`) | 0 |
 
 (`0x00513bc0` takes `(state, value)` — first push is the value; the
 `D3DRS_FOGCOLOR` write at `0x0053e5d2` with state `0x22` = 34 fixes the
@@ -101,19 +93,19 @@ The inference that this makes the cockpit's **ambient response zero** does not
 follow, because the material is not the ambient source. The engine's
 render-state default block at `0x004eb2da`–`0x004eb398` sets:
 
-```
-004eb2da  PUSH 1; PUSH 0x1c   ; FOGENABLE              := 1
-004eb2e8  PUSH 0; PUSH 0x1d   ; SPECULARENABLE         := 0
-004eb302  PUSH 1; PUSH 0x89   ; LIGHTING               := 1
-004eb313  PUSH 1; PUSH 0x1a   ; DITHERENABLE           := 1
-004eb321  PUSH 2; PUSH 0x09   ; SHADEMODE              := GOURAUD
-004eb32f  PUSH 1; PUSH 0x91   ; DIFFUSEMATERIALSOURCE  := D3DMCS_COLOR1
-004eb340  PUSH 0; PUSH 0x92   ; SPECULARMATERIALSOURCE := D3DMCS_MATERIAL
-004eb351  PUSH 1; PUSH 0x93   ; AMBIENTMATERIALSOURCE  := D3DMCS_COLOR1
-004eb362  PUSH 0; PUSH 0x94   ; EMISSIVEMATERIALSOURCE := D3DMCS_MATERIAL
-004eb373  PUSH 0; PUSH 0x8f   ; NORMALIZENORMALS       := 0
-004eb384  PUSH 0xf0ccface; PUSH 0x8b ; AMBIENT := sentinel (forces a first write)
-```
+| Site | Render state | Value |
+| --- | --- | --- |
+| `0x004eb2da` | `FOGENABLE` (`0x1c`) | 1 |
+| `0x004eb2e8` | `SPECULARENABLE` (`0x1d`) | 0 |
+| `0x004eb302` | `LIGHTING` (`0x89`) | 1 |
+| `0x004eb313` | `DITHERENABLE` (`0x1a`) | 1 |
+| `0x004eb321` | `SHADEMODE` (`0x09`) | 2 = GOURAUD |
+| `0x004eb32f` | `DIFFUSEMATERIALSOURCE` (`0x91`) | 1 = `D3DMCS_COLOR1` |
+| `0x004eb340` | `SPECULARMATERIALSOURCE` (`0x92`) | 0 = `D3DMCS_MATERIAL` |
+| `0x004eb351` | `AMBIENTMATERIALSOURCE` (`0x93`) | 1 = `D3DMCS_COLOR1` |
+| `0x004eb362` | `EMISSIVEMATERIALSOURCE` (`0x94`) | 0 = `D3DMCS_MATERIAL` |
+| `0x004eb373` | `NORMALIZENORMALS` (`0x8f`) | 0 |
+| `0x004eb384` | `AMBIENT` (`0x8b`) | sentinel `0xf0ccface` (forces a first write) |
 
 A whole-image scan for the five-byte `PUSH imm32` encodings of these states
 finds no other `mov ecx, 0x00855bb0` writer of `0x93` (`AMBIENTMATERIALSOURCE`),
@@ -149,11 +141,9 @@ render-target helpers at `0x0054dc91`/`0x0054de98`, and the state-flush tail at
 `0x0053e5b8`, inside the same gameplay frame function — it runs once per frame.
 It reads the HFLD sun position as three floats:
 
-```
-0044a2d6  FLD dword [0x006fbe6c] / [0x006fbe70] / [0x006fbe74]
-0044a2f2  FCHS  (x3)                       ; negate
-0044a326  FSQRT ... 0044a339 FDIVR         ; normalize
-```
+it loads the three floats at `0x006fbe6c`/`0x006fbe70`/`0x006fbe74`
+(`0x0044a2d6`), negates each, and normalises the vector (square root and divide
+at `0x0044a326`–`0x0044a339`),
 
 so `light0.Direction = -normalize(sunPosition)` and, by the second negation at
 `0x0044a4a1`–`0x0044a4d0`, `light1.Direction = +normalize(sunPosition)`. Light
@@ -245,12 +235,9 @@ Immediately before the draw, `0x0053ebb6` uploads a world matrix.
 `0x00550ca0` writes its 16 dwords to `[this+0x354]` = `0x009c6914`, and
 `0x00551034` proves that slot is the **world** transform:
 
-```
-00551034  LEA  EDX, [EBP+0x354]
-0055103a  PUSH EDX
-0055103b  PUSH 0x100                  ; D3DTS_WORLDMATRIX(0)
-00551043  CALL dword [ECX+0xb0]       ; IDirect3DDevice9::SetTransform
-```
+it passes the address of `[EBP+0x354]` as the matrix and `0x100`
+(`D3DTS_WORLDMATRIX(0)`) as the transform state to
+`IDirect3DDevice9::SetTransform` (vtable `+0xb0`) at `0x00551043`
 
 (the same function sets `[EBP+0x394]` with state `2` = `D3DTS_VIEW` at
 `0x00551068` and `[EBP+0x3d4]` with state `3` = `D3DTS_PROJECTION` at

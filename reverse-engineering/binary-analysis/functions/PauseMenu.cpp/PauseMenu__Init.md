@@ -28,14 +28,9 @@ void __thiscall PauseMenu__Init(void * this);
 
 At this address, the code uses `g_bGodModeEnabled` to display the current god-mode toggle state **once the cheat-gated controller-options item is visible**:
 
-```c
-// Pseudocode from Ghidra
-if (IsCheatActive(3)) {  // 3 = "Maladim" cheat
-    // Add a controller-options toggle item
-    bool godModeEnabled = g_bGodModeEnabled;
-    AddToggleOption("God OFF" / "God ON", godModeEnabled);
-}
-```
+When cheat 3 (`Maladim`) is active, the constructor adds a controller-options
+toggle item whose label reads `God OFF` or `God ON` according to the current
+value of `g_bGodModeEnabled`; without the cheat the item is not added.
 
 ### Memory Layout
 

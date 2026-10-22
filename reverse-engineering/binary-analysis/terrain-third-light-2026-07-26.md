@@ -66,27 +66,16 @@ re-derived here.
 `.data`, so neither is dispatched virtually. Both call sites are inside the same
 function, `0x0053e2e0`:
 
-```
-0053e5b6  8b cd              MOV  ECX, EBP
-0053e5b8  e8 13 bd f0 ff     CALL 0x0044a2d0        ; CEngine::SetupLights
-0053e5bd  8b 4d 18           MOV  ECX, [EBP+0x18]
-0053e5c0  e8 2b 20 f5 ff     CALL 0x004905f0        ; dynamic timed lights (slots 2..7)
-...
-0053e675  38 9d a8 04 00 00  CMP  byte [EBP+0x4a8], BL
-0053e67b  74 2d              JE   0x0053e6aa        ; no landscape -> skip
-0053e67d  8b 95 70 04 00 00  MOV  EDX, [EBP+0x470]
-0053e683  8b 4d 10           MOV  ECX, [EBP+0x10]
-0053e686  57                 PUSH EDI
-0053e687  52                 PUSH EDX
-0053e688  e8 83 6d 00 00     CALL 0x00545410        ; CDXLandscape::Render
-0053e68d  b9 50 75 9c 00     MOV  ECX, 0x009c7550
-0053e692  e8 c9 52 01 00     CALL 0x00553960
-0053e697  a1 50 8a 88 00     MOV  EAX, [0x00888a50]
-0053e69c  68 48 d2 83 00     PUSH 0x0083d248        ; restore material[0]
-0053e6a1  50                 PUSH EAX
-0053e6a2  8b 08              MOV  ECX, [EAX]
-0053e6a4  ff 91 c4 00 00 00  CALL dword [ECX+0xc4]  ; SetMaterial
-```
+- `0x0053e5b8`: calls `CEngine::SetupLights` (`0x0044a2d0`, `this` = `EBP`);
+- `0x0053e5c0`: calls the dynamic timed-light manager `0x004905f0` (slots 2..7)
+  on `[EBP+0x18]`;
+- `0x0053e675`–`0x0053e67b`: when the has-landscape byte `[EBP+0x4a8]` is clear,
+  jumps past the terrain to `0x0053e6aa`;
+- `0x0053e688`: calls `CDXLandscape::Render` (`0x00545410`) with two arguments
+  (`[EBP+0x470]` and `EDI`) on `[EBP+0x10]`;
+- `0x0053e692`: calls `0x00553960` on `0x009c7550`;
+- `0x0053e69c`–`0x0053e6a4`: restores material `[0]` (`0x0083d248`) through the
+  device's `SetMaterial` (vtable `+0xc4`).
 
 The `SetMaterial(0x0083d248)` immediately after the call confirms `0x00545410`
 is the terrain draw whose prologue swaps in `0x0083d28c`.
@@ -103,14 +92,9 @@ instructions from `0x0044a2d0` contain no `RET` before `0x0044a5e8` and no
 conditional jump that can skip it — and it writes the enable array
 unconditionally:
 
-```
-0044a52a  88 1d a0 68 9c 00  MOV byte [0x009c68a0], BL   ; BL = 1
-0044a584  88 1d a1 68 9c 00  MOV byte [0x009c68a1], BL
-0044a590  c6 05 a2 68 9c 00 00  MOV byte [0x009c68a2], 0
-0044a5be  c6 05 a3 68 9c 00 00  MOV byte [0x009c68a3], 0
-0044a5c5  ... a4 ... 0        0044a5cc  ... a5 ... 0
-0044a5d3  ... a6 ... 0        0044a5da  ... a7 ... 0
-```
+it sets `0x009c68a0` (`0x0044a52a`) and `0x009c68a1` (`0x0044a584`) to 1 and
+`0x009c68a2` (`0x0044a590`) through `0x009c68a7` (`0x0044a5be`–`0x0044a5da`)
+to 0.
 
 So at entry to `CDXLandscape::Render` the enable array is
 **`[1, 1, 0, 0, 0, 0, 0, 0]`**, whatever any earlier code left behind.
@@ -142,14 +126,10 @@ exactly **two** are enable-array writers: `0x004905f0` and its helper
 `[record+8]`, and for each slot **disables it first and re-enables it only if
 the countdown survives**:
 
-```
-0049064f  c6 82 a0 68 9c 00 00  MOV byte [EDX+0x009c68a0], 0
-0049065d  f3 a5                 REP MOVSD               ; record -> 0x009c6678 + n*0x5c
-0049066a  c6 82 a0 68 9c 00 01  MOV byte [EDX+0x009c68a0], 1
-...
-0049067a  c7 00 00 00 00 00     MOV dword [EAX], 0      ; countdown expired
-00490680  c6 82 a0 68 9c 00 00  MOV byte [EDX+0x009c68a0], 0
-```
+For each slot it clears the enable byte (`0x0049064f`), copies the record into
+`0x009c6678 + n*0x5c` (`0x0049065d`) and sets the enable byte again
+(`0x0049066a`); when the countdown has expired it zeroes it (`0x0049067a`) and
+leaves the slot disabled (`0x00490680`).
 
 So the light state at the terrain draw is *exactly* `sun + anti-sun`, plus any
 transient effect light currently alive. Its colours come from live game state,
@@ -202,22 +182,11 @@ triple that
 [`ApplyCachedLight` promotes into `D3DLIGHT9.Ambient`](terrain-ambient-light-material-2026-07-26.md#3-applycachedlights-third-argument-is-d3dlight9ambient).
 The colour arguments are **immediates in `.text`**:
 
-```
-; light 0 -> 0x009c65c0, enabled at 0x00450a1b
-00450986  68 90 c2 f5 3d     PUSH 0x3df5c290   ; 0.12  (b)
-0045098b  68 90 c2 75 3e     PUSH 0x3e75c290   ; 0.24  (g)
-00450990  68 90 c2 f5 3e     PUSH 0x3ef5c290   ; 0.48  (r)
-
-; light 1 -> 0x009c661c, enabled at 0x00450a89
-004509d4  68 90 c2 f5 3e     PUSH 0x3ef5c290   ; 0.48  (b)
-004509d9  68 90 c2 75 3e     PUSH 0x3e75c290   ; 0.24  (g)
-004509de  68 90 c2 f5 3d     PUSH 0x3df5c290   ; 0.12  (r)
-
-; light 2 -> 0x009c6678, enabled at 0x00450b28
-00450ad0  68 90 c2 75 3e     PUSH 0x3e75c290   ; 0.24  (b)
-00450ad5  68 90 c2 75 3e     PUSH 0x3e75c290   ; 0.24  (g)
-00450ada  68 90 c2 75 3e     PUSH 0x3e75c290   ; 0.24  (r)
-```
+| Light | Record | Enabled at | Push sites (b, g, r) | Colour (r, g, b) |
+| --- | --- | --- | --- | --- |
+| 0 | `0x009c65c0` | `0x00450a1b` | `0x00450986`, `0x0045098b`, `0x00450990` | (0.48, 0.24, 0.12) |
+| 1 | `0x009c661c` | `0x00450a89` | `0x004509d4`, `0x004509d9`, `0x004509de` | (0.12, 0.24, 0.48) |
+| 2 | `0x009c6678` | `0x00450b28` | `0x00450ad0`, `0x00450ad5`, `0x00450ada` | (0.24, 0.24, 0.24) |
 
 `0x3df5c290 = 0.12`, `0x3e75c290 = 0.24`, `0x3ef5c290 = 0.48` exactly. That is a
 warm key `(0.48, 0.24, 0.12)`, a cool fill `(0.12, 0.24, 0.48)` and a neutral

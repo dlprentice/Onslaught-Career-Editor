@@ -3,7 +3,7 @@
 > Address: `0x00538360`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-10-22 (retail disassembly listing replaced by prose)
 Source File: none — `SetRainDensity` and the `atm_raindensity` console variable are absent from `references/Onslaught/` (checked 2026-08-22) | | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -48,14 +48,10 @@ Body `0x00538360`–`0x00538371` inclusive through the complete
 `06d4436759f4daab19a1572e47c504fd452f62086973e8c286a3b277ac3e915e`.
 Zero `E8`, zero decoded `E9`. Incoming `ecx` unused.
 
-```
-00538360  8b 44 24 04        mov eax, [esp+4]           ; args object
-00538364  8b 08              mov ecx, [eax]             ; element 1
-00538366  8b 11              mov edx, [ecx]
-00538368  ff 52 34           call [edx+0x34]            ; float eval
-0053836b  d9 1d 90 01 66 00  fstp [0x660190]            ; rain density cell
-00538371  c2 0c 00           ret 0xc
-```
+In prose: it evaluates the first argument element as a float through its
+`vtable[+0x34]` (call at `0x00538368`), stores the result straight into the global
+rain density cell `0x660190` (store at `0x0053836b`), and returns with `ret 0xc` at
+`0x00538371`.
 
 Boundary: thirteen `nop` (`0x00538372`–`0x00538380`) then native 44
 `SetSnowDensity` — the widest inter-native pad in the corpus run,

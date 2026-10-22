@@ -3,9 +3,9 @@
 > Address: `0x00535500`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-10-22 (retail disassembly listings replaced by prose)
 Source File: none — see [`IScript__SetSegmentHealth.md`](IScript__SetSegmentHealth.md) for the pinned-source absence behind this whole family | Binary: BEA.exe pristine specimen
-`C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Summary: Mission-native 52, registered as `SetAllSegmentsHealth`: the
@@ -49,25 +49,12 @@ Body `0x00535500`–`0x0053552d` inclusive through the complete
 `5674d8cdf6a9629523c5867184b36e5aef137e90b4eb6d3c71eebc03a5db3b5c`.
 One `E8`, zero decoded `E9`.
 
-```
-00535500  8b 41 10           mov eax, [ecx+0x10]        ; attached thing
-00535503  56                 push esi
-00535504  f6 40 34 10        test byte [eax+0x34], 0x10 ; UNIT class bit
-00535508  74 20              je 0x53552a                ; -> bare return
-0053550a  8b b0 78 01 00 00  mov esi, [eax+0x178]       ; segments ctrl
-00535510  85 f6              test esi, esi
-00535512  74 16              je 0x53552a
-00535514  8b 44 24 08        mov eax, [esp+8]           ; args object
-00535518  8b 08              mov ecx, [eax]             ; element 1
-0053551a  8b 11              mov edx, [ecx]
-0053551c  ff 52 34           call [edx+0x34]            ; float eval -> st0
-0053551f  51                 push ecx                   ; value slot
-00535520  8b ce              mov ecx, esi               ; this = controller
-00535522  d9 1c 24           fstp dword ptr [esp]       ; store the float
-00535525  e8 56 f0 f0 ff     call 0x00444580            ; (value)
-0053552a  5e                 pop esi
-0053552b  c2 0c 00           ret 0xc
-```
+In prose: the body reads the attached thing from `[this+0x10]` and returns
+at once unless its class byte `[thing+0x34]` has the UNIT bit `0x10` and its
+segments controller `[thing+0x178]` is non-null. It then evaluates the first
+argument element through its `vtable[+0x34]` float evaluator, passes the result
+as the single stack argument with the controller as `this` to `0x00444580`, and
+returns with `ret 0xc`. The dispatch `E8` is at `0x00535525`.
 
 Boundary: one `nop` then `SetStealth` (native 138) at `0x00535530`.
 
@@ -84,20 +71,9 @@ Boundary: one `nop` then `SetStealth` (native 138) at `0x00535530`.
 `thiscall`, `ret 4`. No gates of its own; the caller's gate is the only
 one:
 
-```
-00444580  mov edx, [ecx+8]         ; segment count
-00444583  xor eax, eax             ; i = 0
-00444585  test edx, edx; jle done
-00444589  push esi
-0044458a  mov edx, [ecx+4]         ; segment array
-0044458d  mov edx, [edx+eax*4]     ; segments[i]
-00444590  test edx, edx; je skip
-00444594  mov esi, [esp+8]         ; arg = float value
-00444598  mov [edx+0xc], esi       ; SEGMENT HEALTH CELL
-0044459b  mov edx, [ecx+8]; inc eax; cmp eax, edx; jl 0x0044458a
-004445a3  pop esi
-004445a4  ret 4
-```
+It walks the segment array `[ctrl+4]` for `[ctrl+8]` entries and, for each
+non-null segment pointer, copies the float argument into the segment's health
+cell `[seg+0xc]`; then `ret 4` at `0x004445a4`.
 
 Writes `[seg+0xc]` for every non-null slot in `[ctrl+4][0..[ctrl+8])`.
 **No `[seg+0x10]` write and no recompute call** — the only member of

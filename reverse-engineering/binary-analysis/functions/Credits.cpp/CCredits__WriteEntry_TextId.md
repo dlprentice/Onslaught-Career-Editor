@@ -11,7 +11,7 @@ Small credits-table row writer used by `CCredits__BuildDefaultEntries`. It store
 
 ## Behavioral Notes
 
-- Decompiled body writes:
+- The body writes:
   - `[this + 0x00] = section`
   - `[this + 0x04] = text_id`
   - `[this + 0x08] = 0`

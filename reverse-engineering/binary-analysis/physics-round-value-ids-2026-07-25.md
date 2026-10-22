@@ -1,7 +1,7 @@
 # PhysicsScript round and weapon-mode value ids — resolved
 
 Status: active static contract
-Last updated: 2026-09-26 (RE audit: the Mech Bullet explosion never collides; name flags +0x9c/+0xa0; the spawn range check; unit offsets for ids 1, 2, 5, 6 and 23)
+Last updated: 2026-10-22 (machine-local path removed; earlier: 2026-09-26 RE audit: the Mech Bullet explosion never collides; name flags +0x9c/+0xa0; the spawn range check; unit offsets for ids 1, 2, 5, 6 and 23)
 Summary: which record offset each round, weapon-mode, explosion and weapon value id writes, the damage chain for the tutorial rounds, and what stays open.
 Evidence: MEASURED — RTTI descriptors, vtable slots and apply bodies read from the pristine specimen, and the value ids present in the shipped `default physics.dat`; runtime sections cite their own captures; INFERRED where marked.
 Specimen: pristine `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`; `data/default physics.dat` SHA-256 `e1fb3dedbeb29b4b4151da2c8cbbdc940b716b1a2321e1d6a9ba1542c74ada14`.
@@ -578,7 +578,7 @@ future measurement must go through `Pulse Cannon Pod`.
 Read-only, from this repository, with the maintainer Ghidra project closed:
 
 ```
-analyzeHeadless.bat C:\Users\david\Ghidra\Projects BEA -process BEA.exe \
+analyzeHeadless.bat <maintainer Ghidra project directory> BEA -process BEA.exe \
   -noanalysis -readOnly -scriptPath tools \
   -postScript ExportFunctionsByAddressDecompile.java <addrs> <outdir> 120
 analyzeHeadless.bat ... -postScript ResolveVtableTypeNames.java <vtables> <out.tsv>

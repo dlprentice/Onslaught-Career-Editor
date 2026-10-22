@@ -3,7 +3,7 @@
 > Address: `0x00538380`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-10-22 (retail disassembly listing replaced by prose)
 Source File: none — `SetSnowDensity` and the `atm_snowdensity` console variable are absent from `references/Onslaught/` (checked 2026-08-22) | | Binary: BEA.exe pristine specimen
 `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
@@ -50,14 +50,10 @@ Body `0x00538380`–`0x00538391` inclusive through the complete
 `d264ac612ef05855bd1ad422109d5c2446588591b7d9e30a2207872fae09cdef`.
 Zero `E8`, zero decoded `E9`. Incoming `ecx` unused.
 
-```
-00538380  8b 44 24 04        mov eax, [esp+4]           ; args object
-00538384  8b 08              mov ecx, [eax]             ; element 1
-00538386  8b 11              mov edx, [ecx]
-00538388  ff 52 34           call [edx+0x34]            ; float eval
-0053838b  d9 1d 8c 01 66 00  fstp [0x66018c]            ; snow density cell
-00538391  c2 0c 00           ret 0xc
-```
+In prose: it evaluates the first argument element as a float through its
+`vtable[+0x34]` (call at `0x00538388`), stores the result straight into the global
+snow density cell `0x66018c` (store at `0x0053838b`), and returns with `ret 0xc` at
+`0x00538391`.
 
 Boundary: thirteen `nop` (`0x00538392`–`0x005383a0`) then native 45
 `SetLightningDensity`.

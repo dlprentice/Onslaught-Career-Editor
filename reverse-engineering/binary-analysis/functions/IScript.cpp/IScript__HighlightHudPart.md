@@ -3,9 +3,9 @@
 > Address: `0x00535E60`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-10-22 (retail disassembly listing replaced by prose)
 Source File: none — `HighlightHudPart` is absent from `references/Onslaught/`; the script-side constants live in the shipped `data/MissionScripts/onsldef.msl` (checked 2026-08-22) | Binary: BEA.exe pristine specimen
-`C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Summary: Mission-native 34, registered as `HighlightHudPart`: a 25-byte
@@ -44,15 +44,10 @@ Body `0x00535e60`–`0x00535e78` inclusive through the complete
 `d2a93e3bebd2d503307b5f1e3433926730059a7c413993ea8efbbdc0e479fc39`.
 Zero `E8`, zero decoded `E9`.
 
-```
-00535e60  8b 44 24 04        mov eax, [esp+4]           ; args object
-00535e64  8b 08              mov ecx, [eax]             ; element 1
-00535e66  8b 11              mov edx, [ecx]
-00535e68  ff 52 30           call [edx+0x30]            ; INT eval -> eax
-00535e6b  c7 04 85 1c a5 8a 00
-          02 00 00 00        mov dword [eax*4 + 0x8aa51c], 2   ; HIGHLIGHT
-00535e76  c2 0c 00           ret 0xc
-```
+In prose: it evaluates the first argument element as an integer through its
+`vtable[+0x30]` (call at `0x00535e68`) and stores the dword 2 (highlight) into
+the HUD-part state array at `0x008aa51c + 4*index` (store at `0x00535e6b`);
+`ret 0xc` at `0x00535e76`.
 
 The evaluator here is `vtable[+0x30]` — the integer-return slot shared
 with AddScore's arg handling ([`IScript.cpp.md`](../IScript.cpp.md)

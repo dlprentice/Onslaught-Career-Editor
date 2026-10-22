@@ -3,9 +3,9 @@
 > Address: `0x00535EE0`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-10-22 (retail disassembly listing replaced by prose)
 Source File: none — absent from `references/Onslaught/` (checked 2026-08-22) | Binary: BEA.exe pristine specimen
-`C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Summary: Mission-native 30, registered as `UnsetObjective`: the exact
@@ -41,12 +41,9 @@ Body `0x00535ee0`–`0x00535eec` inclusive through the complete
 `ret 0xc`, **13 bytes**, SHA-256
 `0ec7dfff6ad0dba017b45b0a9840f6b587b899e88aaedb29d1d0eabfb842b35f`.
 
-```
-00535ee0  8b 49 10           mov ecx, [ecx+0x10]        ; attached thing
-00535ee3  6a 00              push 0                     ; clear
-00535ee5  e8 86 da fb ff     call 0x004f3970            ; objective flag
-00535eea  c2 0c 00           ret 0xc
-```
+In prose: it takes the attached thing from `[this+0x10]` and calls the thing's
+objective-flag setter `0x004f3970` with the argument 0 (call at `0x00535ee5`);
+`ret 0xc` at `0x00535eea`.
 
 The setter's full contract (bit law, set membership, cross-anchors) is
 owned by [`IScript__SetObjective.md`](IScript__SetObjective.md) and not

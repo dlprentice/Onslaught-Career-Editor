@@ -3,7 +3,7 @@
 > Address: `0x005383a0`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-10-22 (retail disassembly listing replaced by prose)
 Source File: none — `SetLightningDensity` and the `atm_lightningdensity`
 console variable are absent from `references/Onslaught/` (checked
 2026-08-22) | Binary: BEA.exe pristine specimen
@@ -49,14 +49,10 @@ Body `0x005383a0`–`0x005383b1` inclusive through the complete
 `d96c561015d344bc59677521a4234ed44340ba544d00307e945ddd05cc999806`.
 Zero `E8`, zero decoded `E9`. Incoming `ecx` unused.
 
-```
-005383a0  8b 44 24 04        mov eax, [esp+4]           ; args object
-005383a4  8b 08              mov ecx, [eax]             ; element 1
-005383a6  8b 11              mov edx, [ecx]
-005383a8  ff 52 34           call [edx+0x34]            ; float eval
-005383ab  d9 1d 88 01 66 00  fstp [0x660188]            ; lightning density cell
-005383b1  c2 0c 00           ret 0xc
-```
+In prose: it evaluates the first argument element as a float through its
+`vtable[+0x34]` (call at `0x005383a8`), stores the result straight into the global
+lightning density cell `0x660188` (store at `0x005383ab`), and returns with `ret 0xc` at
+`0x005383b1`.
 
 Tail context: `ret 0xc` at `0x005383b1` is immediately followed by
 native 5 (`PostEvent`) territory at `0x005383c0` — no pad bytes; the

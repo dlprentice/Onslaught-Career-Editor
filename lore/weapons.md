@@ -6,11 +6,11 @@
   ([physics-round-value-ids-2026-07-25.md](../reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md),
   raw `local-lab/physics-value-ids-2026-07-25/all_ids.tsv`), the pristine-exe
   string table
-  ([binary-strings.md](../reverse-engineering/binary-analysis/binary-strings.md)),
+  (a string inventory generated locally from your own copy of `BEA.exe` (not tracked; retail text is never committed)),
   and the pinned source corpus. Faction flavor is carried from
   [world-lore.md](world-lore.md) and marked as fiction. Where this page and a
   measurement disagree, the measurement wins.
-- **Last updated:** 2026-08-22
+- **Last updated:** 2026-10-22 (string-table link replaced: the table is generated locally, not tracked)
 - **Summary:** all 139 literal weapon-record names, the
   weapon → weapon-mode → round → explosion data model that drives them, and
   what the numbers actually say for the two tutorial weapons measured end to
@@ -256,7 +256,7 @@ pipeline heals (noted in the round-ids document).
   [physics-script-static-contract.md](../reverse-engineering/binary-analysis/physics-script-static-contract.md).
 - Damage pipeline (round + explosion composition, radial falloff):
   `cround-hit-damage-path-2026-08-10.md` (cited in the round-ids document §6.2).
-- String table: `reverse-engineering/binary-analysis/binary-strings.md`
+- String table: a string inventory generated locally from your own copy of `BEA.exe` (not tracked; retail text is never committed)
   (pristine specimen; addresses retained per string).
 - HUD plumbing: `references/Onslaught/BattleEngineJetPart.cpp:903`
   (`GetLanguageName` → `TEXT_DB.GetString`).

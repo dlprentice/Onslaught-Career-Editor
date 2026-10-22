@@ -37,19 +37,10 @@ Nothing was written to any installed game directory.
 
 ## 1. `CMeshPart__RenderAnimatedRecursive` @ `0x004b5ad0` — frame and convention
 
-Prologue bytes (`--bytes` output, verbatim):
-
-```
-004b5ad0  81 ec 98 00 00 00     sub  esp, 0x98
-004b5ad6  8b 84 24 ec 00 00 00  mov  eax, [esp + 0xec]
-004b5add  53                    push ebx
-004b5ade  55                    push ebp
-004b5adf  8b 9c 24 e8 00 00 00  mov  ebx, [esp + 0xe8]
-004b5ae6  56                    push esi
-004b5ae7  8b b4 24 e8 00 00 00  mov  esi, [esp + 0xe8]
-004b5aee  89 44 24 1c           mov  [esp + 0x1c], eax
-004b5af2  57                    push edi
-```
+The prologue (entry signature `81 ec 98 00 00 00`) reserves a 0x98-byte frame,
+loads three stack arguments (into `eax` at `0x004b5ad6`, `ebx` at `0x004b5adf`,
+`esi` at `0x004b5ae7`) interleaved with pushes of `ebx`, `ebp`, `esi` and `edi`,
+and saves the `eax` argument at `[esp+0x1c]` (`0x004b5aee`).
 
 Let `E` = value of `esp` at entry (`[E]` = return address, arguments at `E+4`…).
 
@@ -84,16 +75,9 @@ Argument map (derived below from the caller's push sequence):
 
 ### What the function does with `EBX`
 
-```
-004b5b09  8b 13        mov  edx, [ebx]          ; vptr
-004b5b0b  8d 44 24 48  lea  eax, [esp + 0x48]   ; out buffer
-004b5b0f  50           push eax
-004b5b10  8b cb        mov  ecx, ebx
-004b5b12  ff 52 04     call [edx + 4]           ; -> eax = 3x4 matrix
-...
-004b5b88  50           push eax                 ; second out buffer [esp+0x38]
-004b5b8f  ff 12        call [edx]               ; -> eax = 3-float position
-```
+At `0x004b5b12` it calls `EBX`'s vtable slot `+4` (`EBX` as `this`) with a
+local out-buffer at `[esp+0x48]`, and at `0x004b5b8f` its slot `+0` with a
+second out-buffer at `[esp+0x38]`:
 
 * **vtable slot `+4`** — `Matrix3x4* f(Matrix3x4* out)`, `__thiscall`. Its result
   is consumed as three rows at `+0x00`, `+0x10`, `+0x20` (stride `0x10`), i.e. a
@@ -138,17 +122,12 @@ mov ebx,[esp+0x24]`. With `C` = entry `esp`: `ebp = [C+0xc]` = **arg 2**,
 
 That branch's push sequence (`esp = C-0x10` on entry to it):
 
-```
-004b62e8  push edx   ; edx = [esp+0x30] = C+0x20 = arg 7      -> C-0x14
-004b62f3  push eax   ; eax = [esp+0x28] = C+0x18 = arg 5      -> C-0x18
-004b62f4  push ebx   ;                              arg 4      -> C-0x1c
-004b62f7  push ecx   ; ecx = [esp+0x20] = C+0x10 = arg 3      -> C-0x20
-004b62f8  push eax   ; eax = *[ebp+0x160]  (the mesh part)     -> C-0x24
-004b62fe  sub  esp,0x30 ; rep movsd 12 dwords from arg 1 (matrix)
-004b6303  sub  esp,0x10 ; 4 dwords copied from *arg 0 (position)
-004b6324  call 0x4b5ad0
-004b6329  add  esp,0x54
-```
+It pushes, in order, arg 7 (`0x004b62e8`), arg 5 (`0x004b62f3`), arg 4
+(`0x004b62f4`), arg 3 (`0x004b62f7`) and the mesh part `*[ebp+0x160]`
+(`0x004b62f8`); then reserves 0x30 bytes and copies the 12-dword matrix from
+arg 1 (`0x004b62fe`) and 0x10 bytes holding the 4-dword position from `*arg 0`
+(`0x004b6303`); calls `0x004b5ad0` at `0x004b6324` and removes 0x54 bytes of
+arguments at `0x004b6329`.
 
 `esp` at the `call` is `C-0x64`, so the callee's `E = C-0x68` and
 `E+0x48 = C-0x20`.
@@ -173,23 +152,19 @@ sites pass null, which is exactly why `0x004b5b01` guards it.
 
 ## 3. The cockpit path, established end to end
 
-```
-0053ec6a  call 0x0053bb50                  ; CCockpit::Render (sole caller)
-0053bbe1  mov  ecx, [esi + 0x8c]           ; the renderable
-0053bbe7  push edi                         ; 0 or 0x40
-0053bbea  call [edx + 8]                   ; vtable slot +8
-```
+`0x0053ec6a` calls `CCockpit::Render` (`0x0053bb50`, its sole caller), which at
+`0x0053bbe1` loads the renderable from `[esi+0x8c]` and at `0x0053bbea` calls its
+vtable slot `+8` with a single flag argument (`0` or `0x40`).
 
 The class whose vtable slot `+8` is a `ret 4` render entry calling `0x004b6260`
 is the one with **vptr `0x005dea38`**:
 
-```
-0x005dea38: +0x00 0x004dbc30  (scalar deleting dtor)
-            +0x04 0x004dbd80  (load / build mesh table)
-            +0x08 0x004dbec0  <- Render, ret 4
-            ...
-            +0x24 0x004dbf80  (GetCurrentMesh: [this+0x14][ [this+0x24] ])
-```
+| vtable `0x005dea38` slot | Target | Role |
+| --- | --- | --- |
+| `+0x00` | `0x004dbc30` | scalar deleting dtor |
+| `+0x04` | `0x004dbd80` | load / build mesh table |
+| `+0x08` | `0x004dbec0` | Render, `ret 4` |
+| `+0x24` | `0x004dbf80` | GetCurrentMesh: `[this+0x14][ [this+0x24] ]` |
 
 `operand_scan` for `0x005dea38` returns exactly two writers, both `mov [reg],
 0x5dea38` at `0x004dbb67` (constructor) and `0x004dbc6e` (destructor). The
@@ -198,10 +173,8 @@ at `0x005166a0` dispatched by `0x005165a3 jmp [eax*4 + 0x5166a0]` inside
 `CreateRenderable @ 0x00516580`. `CreateRenderable` has 17 callers; exactly one
 stores the result to `+0x8c`:
 
-```
-0042459b  call 0x516580
-004245a5  mov  [ebp + 0x8c], eax
-```
+the call at `0x0042459b` followed by the store to `[ebp+0x8c]` at
+`0x004245a5`,
 
 and the same function also initialises `[ebp+0x110]` (`0x00424677`) and
 `[ebp+0x12c]` (`0x004245c0`) — the two other fields `CCockpit::Render` reads at
@@ -214,21 +187,17 @@ configuration could instantiate a sibling class.
 
 `0x004dbec0` builds `0x004b6260`'s arg 0 and arg 1 from two globals:
 
-```
-004dbef4  mov ecx,[0x0083cd08] ; ...0x0083cd0c, 0x0083cd10, 0x0083cd14  -> 4-dword position
-004dbf13  mov esi, 0x0083ccd8  ; rep movsd 12 dwords                    -> 3x4 rotation
-```
+the 4-dword position from `0x0083cd08`..`0x0083cd14` (`0x004dbef4`) and the
+12-dword 3x4 rotation copied from `0x0083ccd8` (`0x004dbf13`).
 
 Both are `.bss`. `operand_scan` over all 2,506,752 bytes returns, for
 `0x0083ccd8`, three hits: two are the *reads* above (`mov esi, 0x83ccd8`), and one
 is the sole writer at `0x004dc1e7`; for `0x0083cd08`, two hits: the read at
 `0x004dbef4` and the sole writer at `0x004dc190`. Those writers are:
 
-```
-004dc190  mov [0x83cd08], 0 ; mov [0x83cd0c], 0 ; mov [0x83cd10], 0      -> zero
-004dc1b0  builds 1.0/0/0 , 0/1.0/0 , 0/0/1.0 on the stack and stores to
-          0x83ccd8 .. 0x83cd04                                          -> identity
-```
+`0x004dc190` stores zero into `0x0083cd08`, `0x0083cd0c` and `0x0083cd10`;
+`0x004dc1b0` builds the rows (1,0,0), (0,1,0), (0,0,1) and stores them to
+`0x0083ccd8`..`0x0083cd04`, an identity rotation.
 
 **So the transform handed into the recursive walker for the cockpit is the
 identity rotation and the zero position.** Everything the cockpit's placement can
@@ -245,16 +214,10 @@ The same pattern exists per class: `0x004db960`'s class uses `0x0083cc98` /
 (the composed position) and argument 1 = `&E+0x14` (the composed 3x4). Inside
 `0x004b6350`:
 
-```
-004b6946  mov  esi, [esp+0x88]        ; arg 1 = the 3x4 rotation
-004b694d  sub  esp, 0x30
-004b6957  rep movsd (12 dwords)       ; push the matrix by value
-004b6959  sub  esp, 0x10
-004b695c  mov  ecx, ebx               ; ebx = [esp+0x84] = arg 0 = position
-004b6960..004b6973  copy 4 dwords     ; push the position by value
-004b6976  mov  ecx, 0x009c65c0        ; CDXEngine
-004b697b  call 0x00550ca0             ; CDXEngine::SetWorldMatrix
-```
+it takes arg 1 (the 3x4 rotation, `0x004b6946`) and copies its 12 dwords onto
+the stack by value (`0x004b6957`), copies the 4-dword position from arg 0 by
+value (`0x004b6960`–`0x004b6973`), and calls `CDXEngine::SetWorldMatrix`
+(`0x00550ca0`, `this` = `0x009c65c0`) at `0x004b697b`.
 
 `0x00550ca0` is `__thiscall`, `ret 0x40` (16 dwords of by-value arguments,
 `A0..A15` at `[esp+0x44]`…`[esp+0x80]`). It assembles a D3D row-major 4x4 at
@@ -274,12 +237,9 @@ row 3. `A3`, `A7`, `A11`, `A15` are discarded.
 
 `[engine+0x354]` is the world slot, proven by the flush at:
 
-```
-00551034  lea  edx, [ebp + 0x354]
-0055103a  push edx
-0055103b  push 0x100                  ; D3DTS_WORLDMATRIX(0)
-00551043  call [ecx + 0xb0]           ; IDirect3DDevice9::SetTransform
-```
+`0x00551034`–`0x00551043`, which passes `&[ebp+0x354]` with transform state
+`0x100` (`D3DTS_WORLDMATRIX(0)`) to `IDirect3DDevice9::SetTransform` (vtable
+`+0xb0`)
 
 (the same function uploads `[ebp+0x394]` with state `2` = `D3DTS_VIEW` at
 `0x00551068` and `[ebp+0x3d4]` with state `3` at `0x005110bd`).

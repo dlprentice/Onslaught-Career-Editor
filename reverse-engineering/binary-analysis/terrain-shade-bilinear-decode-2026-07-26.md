@@ -1,7 +1,7 @@
 # Terrain shade interpolation — the exact 8.8 fixed-point stepping, decoded from bytes
 
 Status: active static contract
-Last updated: 2026-09-26 (RE audit: the loop labels, the destination argument and the edge distance)
+Last updated: 2026-10-22 (retail disassembly listings replaced by prose and tables; earlier: 2026-09-26 RE audit of loop labels, destination argument and edge distance)
 Summary: the landscape blit's bilinear shade stepping in 8.8 fixed point, which the reconstruction implements exactly.
 Evidence: MEASURED — capture-target instructions (identical to the pristine specimen here) and the materialized shade plane.
 
@@ -40,33 +40,34 @@ tenth stack argument Ghidra does not render, leaving the loop bounds
 unresolved. The call site settles it. `CLandscapeTexture__UpdateTile`
 @ `0x0048ea80`, first blit call:
 
-```
-0048eb28   6a 08                push 8              ; arg10  [esp+0x28]
-0048eb2a   6a 08                push 8              ; arg9   [esp+0x24]
-0048eb2c   6a 00                push 0              ; arg8   [esp+0x20]
-0048eb36   6a 00                push 0              ; arg7   [esp+0x1c]
-0048eb38   6a 05                push 5              ; arg6   [esp+0x18]
-0048eb3a   57                   push edi            ; arg5  tile_flags = tile_coord & 0xffff
-0048eb3d   50                   push eax            ; arg4  dst_stride = pitch/2
-0048eb42   50                   push eax            ; arg3  dst_bits (the locked surface, LockRect at 0x0048eb14)
-0048eb57   51                   push ecx            ; arg2  tile_ctx
-0048eb58   52                   push edx            ; arg1  lod_shift = [this+0x34]
-0048eb59   b9 c8 ad 6f 00       mov ecx, 0x6fadc8   ; this  = the global height field
-0048eb5e   e8 8d 04 ff ff       call 0x47eff0
-```
+| Push site | Argument | Value |
+| --- | --- | --- |
+| `0x0048eb28` | arg10 | 8 |
+| `0x0048eb2a` | arg9 | 8 |
+| `0x0048eb2c` | arg8 | 0 |
+| `0x0048eb36` | arg7 | 0 |
+| `0x0048eb38` | arg6 | 5 |
+| `0x0048eb3a` | arg5 | `tile_flags` = `tile_coord & 0xffff` |
+| `0x0048eb3d` | arg4 | `dst_stride` = pitch/2 |
+| `0x0048eb42` | arg3 | `dst_bits` (the locked surface; `LockRect` at `0x0048eb14`) |
+| `0x0048eb57` | arg2 | `tile_ctx` |
+| `0x0048eb58` | arg1 | `lod_shift` = `[this+0x34]` |
+
+`this` is the global height field `0x006fadc8`; the call to `0x0047eff0` is at
+`0x0048eb5e`.
 
 So the trailing arguments are **`5, 0, 0, 8, 8`**, not `5, 0, 0, 8`. The
 prologue is `sub esp,0x80` plus four pushes, so argument *n* lives at
 `[esp + 0x90 + 4n]`. Reading the body against that mapping:
 
-| use | instruction | argument | value |
+| use | site | argument | value |
 | --- | --- | --- | --- |
-| `1 << lod_shift` | `0047f016  d3 e5  shl ebp, cl` (`cl` from `[esp+0x8c]` pre-push) | arg1 | object mip |
-| tile flag tests | `0047f034  8b 8c 24 a4 00 00 00` → `test cl,1` | arg5 | `tile_coord & 0xffff` |
-| outer loop over rows, start | `0047f070  8b b4 24 b0 00 00 00` | arg8 | 0 |
-| outer loop over rows, end | `0047f139  8b 84 24 b8 00 00 00` … `0047f142  jge` | arg10 | 8 |
-| inner loop over columns, start | `0047f183  8b 84 24 ac 00 00 00` | arg7 | 0 |
-| inner loop over columns, end | `0047f19a  8b 8c 24 b4 00 00 00`; `0047f6c1-0047f6d4  inc / cmp / jl` | arg9 | 8 |
+| `1 << lod_shift` | `0x0047f016` (`shl` by the arg1 count) | arg1 | object mip |
+| tile flag tests | `0x0047f034` load, then a bit-0 test | arg5 | `tile_coord & 0xffff` |
+| outer loop over rows, start | `0x0047f070` | arg8 | 0 |
+| outer loop over rows, end | `0x0047f139` … `0x0047f142` | arg10 | 8 |
+| inner loop over columns, start | `0x0047f183` | arg7 | 0 |
+| inner loop over columns, end | `0x0047f19a`; `0x0047f6c1`–`0x0047f6d4` | arg9 | 8 |
 
 Argument 3 is the destination: the blit builds its 16-bit output pointer from it
 (`0047f092-0047f09f`) and stores through that pointer (`mov [edi-2],dx`, `0047f5b6`).
@@ -79,44 +80,26 @@ therefore runs 8 × 8 **units** per tile, and each unit expands to
 buffer branch is `0x400 / 2 = 0x200` = 512 texels, i.e. 64 tiles × 8 units ×
 1 texel, which fixes **`lod_shift = 0` for the 512×512 root map**.
 
-## 2. The interpolation, instruction by instruction
+## 2. The interpolation
 
 `0x0047f463`–`0x0047f4d6`, with `ebx` = the plane row base
 (`((tile_flags>>6)*8 + i)*0x200 + [0x0089bd84] + (tile_flags&0x3f)*8`) and
 `edi`/`eax` = the inner unit index `j`:
 
-```
-0047f471  8a 34 03              mov dh, [ebx + eax]           ; edx = s00 << 8
-0047f476  8a 4c 3b 01           mov cl, [ebx + edi + 1]       ; ecx = s01
-0047f47a  8a a4 3b 00 02 00 00  mov ah, [ebx + edi + 0x200]   ; eax = s10 << 8
-0047f485  8a 8c 3b 01 02 00 00  mov cl, [ebx + edi + 0x201]   ; ecx = s11
-0047f492  8b 8c 24 94 00 00 00  mov ecx, [esp + 0x94]         ; ecx = lod_shift  (arg1)
-0047f499  c1 e6 08              shl esi, 8                    ; s01 << 8
-0047f49c  c1 e3 08              shl ebx, 8                    ; s11 << 8
-0047f49f  2b f2                 sub esi, edx                  ; dX  = (s01-s00)<<8
-0047f4a1  2b d8                 sub ebx, eax                  ;       (s11-s10)<<8
-0047f4a3  2b c2                 sub eax, edx                  ; dY  = (s10-s00)<<8
-0047f4a5  2b de                 sub ebx, esi                  ; dXY = ((s11-s10)-(s01-s00))<<8
-0047f4a7  d3 fe                 sar esi, cl                   ; stepX  = dX  >> L
-0047f4a9  d3 f8                 sar eax, cl                   ; stepY  = dY  >> L
-0047f4ab  03 c9                 add ecx, ecx                  ; cl = 2L
-0047f4b1  d3 fb                 sar ebx, cl                   ; stepXY = dXY >> 2L
-```
+It loads the four corner shades `s00`, `s01`, `s10`, `s11` from the plane
+(`0x0047f471`–`0x0047f485`; the `+1`, `+0x200` and `+0x201` neighbours of the
+unit), forms the 8.8 differences along X, along Y and across the diagonal, and
+shifts them arithmetically right by `lod_shift` (X and Y) and by twice
+`lod_shift` (the cross term), `0x0047f492`–`0x0047f4b1`.
 
 The two loops, row at `0x0047f506` and column at `0x0047f530`, both **advance
 before they sample**:
 
-```
-0047f506  8b 4c 24 18  mov ecx,[esp+0x18]   ; stepY
-0047f50a  03 d1        add edx, ecx         ; acc   += stepY      (row)
-0047f510  03 f3        add esi, ebx         ; stepX += stepXY     (row)
-...
-0047f530  03 d6        add edx, esi         ; val   += stepX      (column)
-0047f54a  c1 fa 08     sar edx, 8           ; lighting index = val >> 8
-0047f570  d3 fa        sar edx, cl          ; shadow rule: >> 1 where the tile bit is set
-0047f576  8d 14 52     lea edx,[edx + edx*2]
-0047f579  0f af 9c 91 d8 10 00 00  imul ebx, [ecx + edx*4 + 0x10d8]   ; gradient[idx], stride 0xc
-```
+The row step (`0x0047f506`) adds the Y step to the row accumulator and the
+cross term to the X step; the column step (`0x0047f530`) adds the X step to the
+value. The lighting index is the value shifted right by 8 (`0x0047f54a`),
+halved where the tile's shadow bit is set (`0x0047f570`), and then selects a
+12-byte gradient entry (multiply at `0x0047f579`, displacement `0x10d8`).
 
 In closed form, for destination sub-texel `(r, c)` of a unit, `0 ≤ r,c < N`:
 

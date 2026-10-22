@@ -24,12 +24,9 @@ Patched site (`BEA_Widescreen.exe`):
 
 Cave payload (`.rdata` raw-disassembled):
 
-```asm
-005D7FD1: 8B11               mov edx,[ecx]
-005D7FD3: FF5210             call [edx+0x10]
-005D7FD6: D80DF44F9D00       fmul dword [0x009D4FF4]
-005D7FDC: E95363F6FF         jmp 0x0053E334
-```
+The cave at `0x005D7FD1` makes the original virtual call through `[edx+0x10]`
+(`0x005D7FD3`), multiplies its float result by the widescreen term at
+`0x009D4FF4` (`0x005D7FD6`), and jumps back to `0x0053E334`.
 
 Conclusion: region 8 is a functional render-path hook that preserves the original virtual call and scales its float result by the widescreen ratio term.
 
@@ -44,11 +41,8 @@ Patched site (`BEA_Widescreen.exe`):
 
 Cave payload:
 
-```asm
-005A3955: D90598B35D00       fld dword [0x005DB398]
-005A395B: D835F84F9D00       fdiv dword [0x009D4FF8]
-005A3961: E957BAF9FF         jmp 0x0053F3BD
-```
+The cave at `0x005A3955` loads the constant at `0x005DB398`, divides it by the
+widescreen global at `0x009D4FF8`, and jumps back to `0x0053F3BD`.
 
 Conclusion: region 9 replaces a static FOV constant load with a runtime-adjusted value derived from widescreen globals.
 
@@ -63,23 +57,15 @@ Patched site (`BEA_Widescreen.exe`):
 
 Cave payload (`.rdata` raw-disassembled):
 
-```asm
-005D7FE1: D944E410           fld dword [esp+0x10]
-005D7FE5: D9C0               fld st0
-005D7FE7: D835F44F9D00       fdiv dword [0x009D4FF4]
-005D7FED: D954E410           fst dword [esp+0x10]
-005D7FF1: DEE9               fsubp st1
-005D7FF3: D80DEC855D00       fmul dword [0x005D85EC]
-005D7FF9: E9B7FDFFFF         jmp 0x005D7DB5
-```
+The cave at `0x005D7FE1` loads the stack float `[esp+0x10]`, divides a copy by
+the widescreen term at `0x009D4FF4` and writes it back to `[esp+0x10]`, subtracts
+the two, scales the difference by the constant at `0x005D85EC`, and jumps to
+`0x005D7DB5`.
 
 Follow-on trampoline in `.text`:
 
-```asm
-005D7DB5: D884E4C4000000     fadd dword [esp+0xC4]
-005D7DBC: EB28               jmp 0x005D7DE6
-005D7DE6: E9759DF6FF         jmp 0x00541B60
-```
+At `0x005D7DB5` it adds `[esp+0xC4]` and leaves through two jumps
+(`0x005D7DBC`, `0x005D7DE6`) back to `0x00541B60`.
 
 Conclusion: region 10 is functional (FPU transform path rewrite), and region 11 is supportive padding for the 5-byte jump replacement.
 

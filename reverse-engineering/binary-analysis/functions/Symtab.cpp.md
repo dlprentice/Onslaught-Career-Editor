@@ -64,55 +64,10 @@ The symbol table (CSymtab) stores variable names and their data types for the mi
 5. Checks for duplicate names before adding (strcmp loop)
 6. Adds entry to new symbol table via `CFlexArray__Add`
 
-**Decompiled (cleaned):**
-```cpp
-CSymtab* CSymtab::Clone(CSymtab* source) {
-    CSymtab* newSymtab = OID__AllocObject(0x14, 0x18, "Symtab.cpp", 180);
-    if (newSymtab) {
-        CFlexArray__InitWithGrowth(newSymtab, 16, 1);
-        newSymtab->totalCount = 0;              // +0x10
-    }
-
-    int numEntries = source->arrayCount;        // +0x08 (CFlexArray count)
-    for (int i = 0; i < numEntries; i++) {
-        CSymtabEntry* srcEntry = source->entries[i];
-
-        // Clone data type if present
-        CDataType* clonedType = nullptr;
-        if (srcEntry->dataType) {
-            clonedType = srcEntry->dataType->Clone();  // vtable+0x48
-        }
-
-        // Create new entry
-        CSymtabEntry* newEntry = OID__AllocObject(0x18, 0x18, "Symtab.cpp", 45);
-        if (newEntry) {
-            newEntry->name.InitFromString(srcEntry->GetName());  // vtable+0x38
-            newEntry->index = srcEntry->index;
-            newEntry->dataType = clonedType;
-            newEntry->refCount = 0;
-            newEntry->flags = 0;
-        }
-
-        // Check for duplicates by name
-        const char* newName = newEntry->GetName();
-        bool found = false;
-        for (int j = 0; j < newSymtab->totalCount; j++) {   // +0x10 scan bound
-            if (strcmp(newSymtab->entries[j]->GetName(), newName) == 0) {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) {
-            newEntry->refCount = newSymtab->totalCount;  // entry +0x10 receives the table position
-            CFlexArray__Add(newSymtab, newEntry);        // advances arrayCount (+0x08)
-            newSymtab->totalCount++;                     // +0x10
-        }
-    }
-
-    return newSymtab;
-}
-```
+The new table's total count `+0x10` starts at zero, each accepted entry's
+`+0x10` receives the table position it was added at, and the total count is
+incremented after each add; a cloned entry whose name already exists in the
+new table is not added.
 
 ---
 
@@ -139,38 +94,9 @@ CSymtab* CSymtab::Clone(CSymtab* source) {
 4. Adds entry to symbol table via `CFlexArray__Add`
 5. Reads total count into this+0x10
 
-**Decompiled (cleaned):**
-```cpp
-void CSymtab::ReadFromBuffer(DXMemBuffer* buffer) {
-    CFlexArray__InitWithGrowth(this, 16, 1);
-
-    int entryCount;
-    buffer->ReadBytes(&entryCount, 4);
-
-    for (int i = 0; i < entryCount; i++) {
-        CSymtabEntry* entry = OID__AllocObject(0x18, 0x18, "Symtab.cpp", 289);
-        if (entry) {
-            entry->name.ReadFromBuffer(buffer);
-
-            int typeId;
-            buffer->ReadBytes(&typeId, 4);
-            if (typeId == 0) {
-                entry->dataType = nullptr;
-            } else {
-                entry->dataType = CDataType::CreateFromType(typeId, buffer);
-            }
-
-            buffer->ReadBytes(&entry->index, 4);      // offset 0x0C
-            buffer->ReadBytes(&entry->refCount, 4);   // offset 0x10
-            buffer->ReadBytes(&entry->flags, 4);      // offset 0x14
-        }
-
-        CFlexArray__Add(this, entry);         // advances arrayCount (+0x08)
-    }
-
-    buffer->ReadBytes(&this->totalCount, 4);  // offset 0x10
-}
-```
+Entry fields are read in the order name, type id, index (`+0x0C`), refCount
+(`+0x10`) and flags (`+0x14`); a zero type id leaves the entry without a data
+type.
 
 ---
 
@@ -178,31 +104,26 @@ void CSymtab::ReadFromBuffer(DXMemBuffer* buffer) {
 
 ### CSymtab (0x14 bytes / 20 bytes)
 
-```cpp
-class CSymtab {
-    /* 0x00 */ CSymtabEntry** entries;  // CFlexArray mData - element array
-    /* 0x04 */ int capacity;            // CFlexArray mCapacity
-    /* 0x08 */ int arrayCount;          // CFlexArray mCount - live element count
-    /* 0x0C */ int growth;              // CFlexArray mGrowth - growth factor
-    /* 0x10 */ int totalCount;          // Total symbol count (serialized tail; the `count`/`totalCount` field in the pseudocode above)
-};
-```
+| Offset | Field | Meaning |
+| --- | --- | --- |
+| `0x00` | entries | CFlexArray `mData`, element array |
+| `0x04` | capacity | CFlexArray `mCapacity` |
+| `0x08` | arrayCount | CFlexArray `mCount`, live element count |
+| `0x0C` | growth | CFlexArray `mGrowth`, growth factor |
+| `0x10` | totalCount | total symbol count (the serialized tail) |
 
 CSymtab is a CFlexArray (`mData@+0x00, mCapacity@+0x04, mCount@+0x08, mGrowth@+0x0C` - see `flexarray.cpp.md`) extended by the total-count field at `+0x10`: both functions above pass `this` directly to `CFlexArray__InitWithGrowth` (0x004241a0), which writes the array header at `+0x00`, and `ReadFromBuffer` reads the serialized total into `this+0x10`. Only `CSymtabEntry` carries a vtable (it is a CStringDataType-based object).
 
 ### CSymtabEntry (0x18 bytes / 24 bytes)
 
-```cpp
-class CSymtabEntry {
-    /* 0x00 */ void** vtable;           // Virtual function table (CStringDataType)
-    /* 0x04 */ char* name;              // Symbol name string
-    /* 0x08 */ CDataType* dataType;     // Associated data type
-    /* 0x0C */ int index;               // Symbol index in table
-    /* 0x10 */ int refCount;            // Reference count
-    /* 0x14 */ byte flags;              // Symbol flags
-    /* 0x15 */ byte padding[3];         // Alignment padding
-};
-```
+| Offset | Field | Meaning |
+| --- | --- | --- |
+| `0x00` | vtable | virtual function table (CStringDataType) |
+| `0x04` | name | symbol name string |
+| `0x08` | dataType | associated `CDataType` |
+| `0x0C` | index | symbol index in table |
+| `0x10` | refCount | reference count (table position on clone) |
+| `0x14` | flags | symbol flags (byte), then 3 bytes of padding |
 
 ---
 
@@ -277,5 +198,5 @@ These are compiler-generated cleanup handlers for RAII/exception safety.
 
 ---
 
-*Last updated: 2026-07-21*
+*Last updated: 2026-10-22 (decompiler-derived bodies and pseudo-C layouts replaced by prose and tables)*
 *Static binary analysis using Ghidra-derived evidence*

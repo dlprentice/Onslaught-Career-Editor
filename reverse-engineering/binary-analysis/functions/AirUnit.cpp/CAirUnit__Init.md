@@ -1,7 +1,7 @@
 # CAirUnit__Init
 
 Status: active static contract; dated export receipts retained below
-Last updated: 2026-09-08
+Last updated: 2026-10-22 (decompiler pseudocode replaced by a prose summary)
 Source File: none — `AirUnit.cpp` is absent from the pinned source drop | Binary: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Summary: air-unit initialization, including the full living-aircraft Euler rate and the separate dying-state reduction.
 
@@ -91,31 +91,13 @@ Read-back verified in `scratch/program_2026-03-01/phase5_signature_readback/inde
 - **Exception safe** - Unwind handlers for both effect loops
 - **~600 bytes** - Moderately sized function
 
-## Decompiled Pseudocode
+## Behaviour summary
 
-```c
-void CAirUnit::Init(void * init) {
-    // Call base class constructor
-    CUnit__Init(init);
-
-    // Initialize air unit-specific properties from config
-    void* config = this->config_3bc;
-
-    // First loop: Create Trail effects (line 42)
-    for each trail_effect in config->trails {
-        void* effect = MemAlloc(size, type, "AirUnit.cpp", 42);
-        ParticleEffectLink__PushGlobalList(effect);      // Register effect-owner link globally
-        CSPtrSet__AddToTail(effect); // Register effect (set pointer is in ECX)
-    }
-
-    // Second loop: Create Engine effects (line 54)
-    for each engine_effect in config->engines {
-        void* effect = MemAlloc(size, type, "AirUnit.cpp", 54);
-        ParticleEffectLink__PushGlobalList(effect);      // Register effect-owner link globally
-        CSPtrSet__AddToHead(effect);      // Final setup
-    }
-}
-```
+After the base `CUnit__Init`, `CAirUnit__Init` (`0x00402ad0`) walks the two effect lists in the
+configuration at `this+0x3bc`: for each trail entry and then each engine entry it allocates an effect
+(allocator debug lines 42 and 54 of `AirUnit.cpp`), pushes its owner link onto the global list with
+`ParticleEffectLink__PushGlobalList`, and inserts it into the unit's effect set (tail for trails, head for
+engines).
 
 ## Notes
 

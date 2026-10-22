@@ -3,9 +3,9 @@
 > Address: `0x00535EA0`
 
 Status: active static function note
-Last updated: 2026-08-22
+Last updated: 2026-10-22 (retail disassembly listing replaced by prose)
 Source File: none — `SetVisible` is absent from `references/Onslaught/` (checked 2026-08-22) | Binary: BEA.exe pristine specimen
-`C:/Users/david/source/Onslaught-Career-Editor/local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
 SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 Summary: Mission-native 22, registered as `SetVisible`: one integer
@@ -45,23 +45,13 @@ Body `0x00535ea0`–`0x00535ec0` inclusive through the complete
 `96bcba04c009158a0dbfd3370f18b4803849464a78635aacc862593fac01acee`.
 Zero `E8`, zero decoded `E9`.
 
-```
-00535ea0  8b 44 24 04        mov eax, [esp+4]           ; args object
-00535ea4  56                 push esi
-00535ea5  8b f1              mov esi, ecx
-00535ea7  8b 08              mov ecx, [eax]             ; element 1
-00535ea9  8b 11              mov edx, [ecx]
-00535eab  ff 52 3c           call [edx+0x3c]            ; INT eval -> al
-00535eae  8b 4e 10           mov ecx, [esi+0x10]        ; attached thing
-00535eb1  3c 01              cmp al, 1
-00535eb3  75 0c              jne 0x535ec1               ; not 1 -> nothing
-00535eb5  8b 01              mov eax, [ecx]
-00535eb7  ff 90 80 00 00 00  call [eax+0x80]            ; thing slot 32
-00535ebd  5e                 pop esi
-00535ebe  c2 0c 00           ret 0xc
-```
+In prose: the first argument element is evaluated as an integer through
+`vtable[+0x3c]` (call at `0x00535eab`); the attached thing is read from
+`[this+0x10]` (`0x00535eae`); if the low byte of the result is exactly 1 the
+thing's vtable slot 32 (`[+0x80]`) is called with no arguments (call at
+`0x00535eb7`), otherwise nothing happens; `ret 0xc`.
 
-The comparison is `al` only (`cmp al,1`) — consistent with the
+The comparison uses only the low byte of the result, consistent with the
 `vtable[+0x3c]` integer evaluators returning their value in `eax` and
 the boolean convention this family uses.
 

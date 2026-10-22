@@ -52,35 +52,18 @@ These codes are in Stuart's source but **NOT in the Steam/PC executable**:
 
 ## Implementation Details (Core Mechanism Confirmed - Dec 2025)
 
-Key parts of the implementation are confirmed via retail BEA.exe decompilation (XOR decode + substring match). Treat the C-like snippets below as a *summary* of decompiler output, not verbatim source.
+Key parts of the implementation are confirmed from the retail BEA.exe (XOR decode + substring match). The behaviour is described in prose below; no decompiler output is reproduced.
 
 ### IsCheatActive Function (0x00465490)
 
 The cheat checking function uses **XOR encryption** with key "HELP ME!!" stored at `0x00629a64`:
 
-```c
-// Pseudocode-style summary based on Ghidra decompilation
-bool IsCheatActive(int cheatIndex) {
-    // Early exit: dev mode or all-cheats flag bypasses checks
-    if (g_bDevModeEnabled != 0 || g_bAllCheatsEnabled != 0) {
-        return true;  // ALL cheats active!
-    }
-
-// XOR decrypt the cheat code (loop runs keyLen times)
-char decrypted[256];
-char* key = "HELP ME!!";
-char* encrypted = &cheat_data[cheatIndex * 0x100];  // 0x00629464
-
-int keyLen = strlen(key);  // "HELP ME!!" = 9 bytes
-for (int i = 0; i < keyLen; i++) {
-    decrypted[i] = encrypted[i] ^ key[i];
-}
-
-// Check if decrypted code is in career name
-char* careerName = GetCareerName();
-return strstr(careerName, decrypted) != NULL;
-}
-```
+Behaviour of `IsCheatActive` (`0x00465490`): if either the developer-mode flag
+or the all-cheats flag is set, every cheat counts as active. Otherwise it takes
+the cheat's 0x100-byte slot in the encrypted table at `0x00629464` (slot =
+index x 0x100), XORs as many bytes as the key is long (9 for `"HELP ME!!"`)
+against the key to recover the code, and reports the cheat active when that
+code occurs anywhere in the current career (save) name.
 
 ### XOR Encryption Details
 

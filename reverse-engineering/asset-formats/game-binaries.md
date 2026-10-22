@@ -1,7 +1,7 @@
 # Game binaries contract — DLLs and helper executable
 
 Status: active static identity/ABI census
-Last updated: 2026-09-07
+Last updated: 2026-10-22 (string-table link replaced: the table is generated locally, not tracked)
 Verdict: all five non-main PE files have exact identities, version/import/export
 censuses, and bounded evidence-based roles; invocation/load-time behavior stays
 open.
@@ -127,8 +127,8 @@ whole-install hash pass or new archive unpacking was performed.
 
 [`binary-analysis/functions/import-thunks.md`](../binary-analysis/functions/import-thunks.md)
 pins the zlib/Ogg/Vorbis IAT thunks in the pristine image. The Bink import-name
-cluster is in
-[`binary-analysis/binary-strings.md`](../binary-analysis/binary-strings.md).
+cluster is in the executable's string table, which is
+a string inventory generated locally from your own copy of `BEA.exe` (not tracked; retail text is never committed).
 Together with the DLL export tables, these establish that the required external
 names are present. This pass did not perform a loader-time bind trace, call every
 export, or claim ABI compatibility beyond the measured symbols.

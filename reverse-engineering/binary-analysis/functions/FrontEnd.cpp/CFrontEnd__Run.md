@@ -51,7 +51,7 @@ The loop runs until `mState` leaves `-2`. Each pass calls `CFrontEnd__Process`, 
 
 ## State Machine
 
-The frontend uses `mState` (at offset 0xbe14 from this+4, so 0x2f85*4 in the decompiled code) to control flow:
+The frontend uses `mState` (at offset 0xbe14 from this+4, i.e. dword index 0x2f85) to control flow:
 
 | State | Meaning | Behavior |
 |-------|---------|----------|
