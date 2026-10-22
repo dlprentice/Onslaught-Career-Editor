@@ -1,7 +1,7 @@
 # Attribution & Preservation Contributors
 
 Status: active — attribution, preservation credits and the screenshot register
-Last updated: 2026-10-22 (licence summary; ExuberantParrot credited for PR #1 and PR #2)
+Last updated: 2026-10-22 (source-code notes keep the quoted source's GPL; save fixture licence note; earlier: licence summary, ExuberantParrot credits)
 Summary: who contributed what, the licence boundaries of reference material, and the tracked-screenshot register.
 Evidence: SOURCE — contributors' public credits and published repositories; the register is checked against `git ls-files` by `tools/check_registered_screenshots.py`
 
@@ -85,6 +85,13 @@ Evidence: SOURCE — contributors' public credits and published repositories; th
 - Documentation and lore are CC BY-SA 4.0
   ([`LICENSES/CC-BY-SA-4.0.txt`](../../LICENSES/CC-BY-SA-4.0.txt)). Quotations
   in the lore stay with their authors, quoted for commentary and preservation.
+- `reverse-engineering/source-code/` quotes and documents Stuart Gillam's
+  published Onslaught source (GPL version 3 only): those notes are
+  CC BY-SA 4.0 and GPL-3.0-only, crediting Stuart alongside the project, and the
+  quoted source keeps its own licence.
+- The gold career save fixture (`tests_shared/fixtures/gold_career_save.bin`,
+  vandal_117's real save) is game data contributed as a test baseline; no
+  project licence is claimed for it.
 - ExuberantParrot's PR #1 passages keep their MIT notice
   ([`LICENSES/MIT.txt`](../../LICENSES/MIT.txt)) as well.
 - [`REUSE.toml`](../../REUSE.toml) maps paths to these licences; per-file SPDX lines

@@ -2,9 +2,14 @@
 # Per-file SPDX lines take precedence where a file has one; the last matching
 # annotation below wins for files without one.
 # Not covered here: rebuild/ (GPL-3.0-only, its own LICENSE, SPDX lines and
-# PROVENANCE.md), references/ submodules (their own licences), and
-# tests_shared/fixtures/gold_career_save.bin (a real save contributed by
-# vandal_117 as a test baseline; see reverse-engineering/project-meta/attribution.md).
+# PROVENANCE.md) and references/ submodules (their own licences).
+#
+# tests_shared/fixtures/gold_career_save.bin is deliberately unannotated: it is a
+# real career save written by the retail game and contributed by vandal_117 as
+# the one tracked test baseline (reverse-engineering/project-meta/attribution.md;
+# tests_shared/fixtures/README.md). It is game-format data, not project work, and
+# no licence was granted with it, so the project's licences are not claimed for
+# it and `reuse lint` reports it as unlicensed.
 version = 1
 
 # Project code and build files.
@@ -30,7 +35,10 @@ path = [
 SPDX-FileCopyrightText = "David Prentice and Onslaught Toolkit contributors"
 SPDX-License-Identifier = "GPL-3.0-only"
 
-# Documentation, lore and documentation data tables.
+# Documentation, lore and documentation data tables. lore/** and lore-book/**
+# quote developers, interviews and articles; those quotations stay with their
+# authors (the quotation note under "Licences" in
+# reverse-engineering/project-meta/attribution.md and README.MD's licence table).
 [[annotations]]
 path = [
     "*.md",
@@ -63,3 +71,16 @@ SPDX-FileCopyrightText = [
     "ExuberantParrot (PR #1)",
 ]
 SPDX-License-Identifier = "CC-BY-SA-4.0 AND MIT"
+
+# reverse-engineering/source-code/ quotes and documents Stuart Gillam's published
+# Onslaught source (github.com/stuart73/Onslaught, pinned in references/Onslaught,
+# GPL version 3 only): the quoted source stays under its GPL-3.0-only licence and
+# credit, alongside CC BY-SA 4.0 for this project's text.
+[[annotations]]
+path = "reverse-engineering/source-code/**"
+precedence = "override"
+SPDX-FileCopyrightText = [
+    "David Prentice and Onslaught Toolkit contributors",
+    "Stuart Gillam (Onslaught source release, github.com/stuart73/Onslaught)",
+]
+SPDX-License-Identifier = "CC-BY-SA-4.0 AND GPL-3.0-only"
