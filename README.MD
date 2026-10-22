@@ -37,7 +37,7 @@ Its releases are published from its own repository (link added at release).
 | --- | --- |
 | This repository | The companion, the AppCore patching core, documentation of the game, lore, our tools, and (until it moves to its own repository after the release) the Godot rebuild |
 | Onslaught CE (link added at release) | The native source port's source and its Windows and Linux downloads; GPL-3.0-only |
-| [`stuart73/Onslaught`](https://github.com/stuart73/Onslaught) | Stuart's partial GPL source release, pinned here as [`references/Onslaught`](references/Onslaught) |
+| [`stuart73/Onslaught`](https://github.com/stuart73/Onslaught) | Stuart's partial GPL source release; this repository pins David's fork, [`dlprentice/Onslaught`](https://github.com/dlprentice/Onslaught), as [`references/Onslaught`](references/Onslaught) |
 
 ## Using the companion
 
