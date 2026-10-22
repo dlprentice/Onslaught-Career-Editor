@@ -1,7 +1,7 @@
 # Companion provenance and license
 
 Status: active independent GPL-3.0-only application boundary
-Last updated: 2026-10-22 (AppCore removed: the moved sources take the companion's namespaces, the file-safety source cut down, its test facts carried over; facts read from the developers' source recorded; relicensed: the code GPL-3.0-only, the embedded lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (AppCore removed: the moved sources take the companion's namespaces, the file-safety source cut down, its test facts carried over; facts read from the developers' source recorded; relicensed: the code GPL-3.0-only, the embedded lore CC BY-SA 4.0; Phase E: Godot .NET SDK 4.8.0-beta.1 and the bundled .NET 10.0.13 runtime)
 Evidence: SOURCE — code-built C# application, project source moved in from the retired AppCore library, and embedded project lore; executed package boundaries are recorded in VALIDATION.md.
 Summary: the companion's C# derives only from the project's own application code and the RE lane's published contracts; it bundles the project's own lore, reads the game's files and manual art from the player's install at run time, and keeps retail data and GPL reconstruction out.
 
@@ -28,8 +28,8 @@ rule), `Careers/CheatCodeCatalog.cs` and `Careers/CheatSaveNameComposer.cs` (che
 and `Lore/CampaignLoreComposer.cs` (the lore's mission list). On 2026-10-22 they left the
 retired library's namespace for the companion's own (`OnslaughtToolkit.Companion.Files`,
 `.Game`, `.Careers` and `.Lore`, by folder). The companion uses no other AppCore code or third-party AppCore media library;
-AppCore's save-layout and file-safety test facts were carried into the companion's own tests. Godot .NET SDK `4.8.0-dev.6` and the
-self-contained .NET runtime are disclosed production dependencies with their MIT and
+AppCore's save-layout and file-safety test facts were carried into the companion's own tests. Godot .NET SDK `4.8.0-beta.1` and the
+self-contained .NET runtime `Microsoft.NETCore.App` 10.0.13 (the `linux-x64` and `win-x64` runtime packs) are disclosed production dependencies with their MIT and
 third-party notices, which every export carries. Godot retains its own MIT and third-party
 licenses.
 

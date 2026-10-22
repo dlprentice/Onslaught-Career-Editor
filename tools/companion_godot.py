@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import fcntl
 import hashlib
 import json
 import math
@@ -67,15 +68,41 @@ def canonical_root() -> Path:
 # few of each are kept. Export and capture folders hold packages and screens, so they are never pruned.
 PRUNED_MODES = ("check", "build", "test", "run", "audit")
 KEEP_OUTPUTS = 5
+# Every worktree of a clone shares the canonical output owner, so a run holds an exclusive lock on this file in
+# its own folder for as long as it lives (a `run` window keeps its profile there); pruning skips a held folder.
+IN_USE_LOCK = ".in-use.lock"
+_held_locks: list[int] = []
+
+
+def hold_output(output: Path) -> None:
+    """Locks ``output`` against pruning until this process exits; the descriptor is not inherited by children."""
+    descriptor = os.open(output / IN_USE_LOCK, os.O_RDWR | os.O_CREAT | os.O_CLOEXEC, 0o600)
+    fcntl.flock(descriptor, fcntl.LOCK_EX)
+    _held_locks.append(descriptor)
+
+
+def output_in_use(path: Path) -> bool:
+    marker = path / IN_USE_LOCK
+    if not marker.is_file() or marker.is_symlink():
+        return False
+    descriptor = os.open(marker, os.O_RDONLY | os.O_CLOEXEC)
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        return True
+    finally:
+        os.close(descriptor)
+    return False
 
 
 def prune_outputs(owner: Path, mode: str, keep: int = KEEP_OUTPUTS) -> list[Path]:
-    """Removes all but the newest ``keep`` earlier output folders of this mode; returns what it removed."""
+    """Removes all but the newest ``keep`` earlier output folders of this mode, never one a live run holds;
+    returns what it removed."""
     if mode not in PRUNED_MODES or not owner.is_dir():
         return []
     earlier = [path for path in owner.glob(f"godot-dotnet-{mode}-*") if path.is_dir() and not path.is_symlink()]
     earlier.sort(key=lambda path: path.stat().st_mtime, reverse=True)
-    removed = earlier[keep:]
+    removed = [path for path in earlier[keep:] if not output_in_use(path)]
     for path in removed:
         shutil.rmtree(path)
     return removed
@@ -85,6 +112,7 @@ def allocate_output(owner: Path, mode: str) -> tuple[Path, dict[str, str]]:
     owner.mkdir(parents=True, exist_ok=True)
     prune_outputs(owner, mode, KEEP_OUTPUTS - 1)
     output = Path(tempfile.mkdtemp(prefix=f"godot-dotnet-{mode}-", dir=owner))
+    hold_output(output)
     directories = {
         "TMPDIR": "scratch", "XDG_DATA_HOME": "profile/data", "XDG_CONFIG_HOME": "profile/config",
         "XDG_CACHE_HOME": "profile/cache", "DOTNET_CLI_HOME": "profile/dotnet",
@@ -147,7 +175,7 @@ def verify_toolchain(pins: dict[str, Any], shared_lock: Path, requested_engine: 
     expected_engine = installs["engine"] / pins["engine"]["executable"]
     located = shutil.which(os.path.expanduser(requested_engine or str(expected_engine)))
     if located is None:
-        raise RuntimeError(f"Pinned Godot .NET executable not found: {requested_engine}")
+        raise RuntimeError(f"Pinned Godot .NET executable not found: {requested_engine or expected_engine}")
     engine = Path(located).resolve(strict=True)
     if engine != expected_engine:
         raise RuntimeError(f"Expected shared Godot .NET at {expected_engine}; found {engine}")

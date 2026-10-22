@@ -267,6 +267,28 @@ class CompanionLauncherTests(unittest.TestCase):
         self.assertEqual([f"godot-dotnet-test-old{index}" for index in range(4,8)],[name for name in tests if "old" in name])
         self.assertEqual(8,len(list(owner.glob("godot-dotnet-export-*"))))
 
+    def test_a_folder_a_live_run_holds_is_never_pruned(self)->None:
+        owner=self.canonical/"local-data/companion";owner.mkdir(parents=True)
+        for index in range(8):
+            folder=owner/f"godot-dotnet-run-old{index}";folder.mkdir();os.utime(folder,(1000+index,1000+index))
+        held=owner/"godot-dotnet-run-old0"
+        descriptor=os.open(held/host.IN_USE_LOCK,os.O_RDWR|os.O_CREAT,0o600);self.addCleanup(os.close,descriptor)
+        host.fcntl.flock(descriptor,host.fcntl.LOCK_EX)
+        os.utime(held,(1000,1000))
+        removed=host.prune_outputs(owner,"run",4)
+        self.assertTrue(held.is_dir());self.assertNotIn(held,removed)
+        self.assertEqual(sorted(f"godot-dotnet-run-old{index}" for index in range(1,4)),sorted(path.name for path in removed))
+        output,_=host.allocate_output(owner,"run")
+        self.assertTrue(host.output_in_use(output))
+
+    def test_a_missing_pinned_engine_names_the_expected_path(self)->None:
+        self.engine.unlink()
+        stderr=io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(stderr):
+            self.assertNotEqual(0,host.companion_main(["check","--shared-lock",str(self.lock)]))
+        self.assertIn(f"not found: {self.engine}",stderr.getvalue())
+        self.assertNotIn("not found: None",stderr.getvalue())
+
     def test_framework_dependent_export_is_refused(self)->None:
         with mock.patch.dict(os.environ,{"FAKE_FRAMEWORK_DEPENDENT":"1"}):self.assertEqual(2,self.invoke("export","--platform","linux"))
 
