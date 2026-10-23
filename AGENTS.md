@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-10-22 (the public onslaught-decomp and Onslaught CE named in place of the private repository; Onslaught CE, onslaught-decomp and onslaught-godot are public; `rebuild/` is a frozen copy; earlier: AppCore retired, relicensing)
+Last updated: 2026-10-23 (companion scope includes original-game and Onslaught CE support; earlier: public exports, rebuild split, AppCore retirement and relicensing)
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
@@ -18,7 +18,7 @@ A preservation project for *Battle Engine Aquila* (2003). This public repository
   `OnslaughtRebuild.Host` the presentation owner; the earlier `OnslaughtRebuild.Core`, `Client` and `Godot` projects
   are reference material, not a second production simulation;
 - the **companion** (`companion/`), Onslaught Companion: the Godot .NET app for careers, saves, backups, settings,
-  music and lore, today for the original game only and later the Onslaught CE launcher. The old AppCore patching
+  music and lore for the original game and Onslaught CE, including CE launcher settings and signed update information. The old AppCore patching
   core is gone; the file-safety and save-layout code the companion uses lives in the companion, and Git keeps the rest;
 - documentation of the game (formats, behaviours, contracts) and our own tools.
 

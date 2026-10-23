@@ -215,13 +215,14 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
     }
 
     public async Task<InstallReceipt> SaveCeSettingsAsync(Options.CeSettings settings, bool updateCheck, bool recordSessions,
-        string backupRoot, Func<bool> gameRunning)
+        string backupRoot, Func<bool> gameRunning, string? packageRoot = null, string? originalRoot = null)
     {
         if (Busy) return new InstallReceipt(false, "A file operation is already running.", settings.Path);
         SetBusy(true);
         try
         {
-            return await worker.RunExclusiveAsync(_ => settings.Save(updateCheck, recordSessions, backupRoot, gameRunning, DateTime.Now),
+            return await worker.RunExclusiveAsync(_ => settings.Save(updateCheck, recordSessions, backupRoot, gameRunning, DateTime.Now,
+                    packageRoot: packageRoot, originalRoot: originalRoot),
                 message => new InstallReceipt(false, message, settings.Path));
         }
         finally { SetBusy(false); }

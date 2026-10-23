@@ -35,7 +35,8 @@ public partial class CeCapture : SceneTree
                     GuiEmbedSubwindows = true };
                 Root.AddChild(viewport);
                 CompanionApp app = new(new ProtectedSaveFiles(), false, new CompanionEnvironment([install.SteamRoot], settings.FilePath,
-                    GameRunning: () => false, OpenUrl: _ => { }, DefaultBackupFolder: Path.Combine(work, "backups"), CeUserFolder: user));
+                    GameRunning: () => false, OpenUrl: _ => { }, DefaultBackupFolder: Path.Combine(work, "backups"), CeUserFolder: user,
+                    CeInstallSupported: GameFolder.LooksLikeGame));
                 viewport.AddChild(app);
                 await Frame();
                 await Frame();
@@ -50,11 +51,22 @@ public partial class CeCapture : SceneTree
                 app.Navigate("home");
                 if (Arg("--live-feed") == "1") await app.Home.CePanel.CheckUpdatesAsync();
                 await Shot("ce-home");
+                ((ScrollContainer)app.Home.Root).ScrollVertical = 540;
+                await Shot("ce-original-careers");
+                ((ScrollContainer)app.Home.Root).ScrollVertical = 0;
                 app.Navigate("summary"); await Shot("ce-career");
                 app.Navigate("settings"); await app.Settings.CePanel.LoadAsync(); await Shot("ce-settings");
                 app.Settings.CePanel.RecordSessions.ButtonPressed = true;
                 app.Settings.CePanel.AskToSave(); await Shot("ce-settings-confirm");
                 app.Settings.CePanel.Confirm.Hide();
+                string backups = Path.Combine(work, "backups");
+                Directory.CreateDirectory(backups);
+                BackupSet originalBackup = Backups.Create(new ProtectedSaveFiles(), app.Game.Original!, backups,
+                    DateTime.Now).Set ?? throw new IOException("Fixture backup failed");
+                app.Navigate("backups");
+                app.Backups.AskToRestore(originalBackup, originalBackup.Files.First(file => file.Name.EndsWith(".bes")));
+                await Shot("ce-backup-confirm");
+                app.Backups.Confirm.Hide();
                 viewport.QueueFree(); await Frame();
             }
             GD.Print("CAPTURES_DONE CE isolated screens");

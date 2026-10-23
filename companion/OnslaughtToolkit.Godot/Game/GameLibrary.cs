@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using OnslaughtToolkit.Companion.Careers;
+using OnslaughtToolkit.Companion.Options;
 
 namespace OnslaughtToolkit.Companion.Game;
 
@@ -7,11 +8,14 @@ namespace OnslaughtToolkit.Companion.Game;
 /// Owns which game folder the companion uses: the folder the player chose, or the one Steam's own
 /// records name. Detection and inspection run off the interface thread and only read.
 /// </summary>
-public sealed class GameLibrary(IReadOnlyList<string> steamRoots, SettingsStore settings, string? ceUserFolder = null, Func<string, string?>? ceEnvironment = null)
+public sealed class GameLibrary(IReadOnlyList<string> steamRoots, SettingsStore settings, string? ceUserFolder = null,
+    Func<string, string?>? ceEnvironment = null, Func<string, bool>? ceInstallSupported = null)
 {
     public GameFolder? Folder { get; private set; }
     public GameFolder? Original { get; private set; }
     public CeInstallation? Ce { get; private set; }
+    public string? CePackageRoot { get; private set; }
+    public string? CeOriginalRoot { get; private set; }
     public CeVersion? CeVersion { get; private set; }
     public string CeVersionMessage { get; private set; } = "Choose a CE launcher to read its version.";
 
@@ -24,10 +28,12 @@ public sealed class GameLibrary(IReadOnlyList<string> steamRoots, SettingsStore 
         try
         {
             Ce = ce;
+            CePackageRoot = ce.Folder;
             CompanionSettings saved = Settings.Load();
             saved.CeLauncher = ce.LauncherPath;
             bool remembered = Settings.Save(saved);
             await ReadCeVersionAsync();
+            SelectFolder();
             return Outcome<CeInstallation>.Success(ce, remembered ? "CE launcher selected." : "CE launcher selected, but could not be remembered.");
         }
         finally { SetBusy(false); }
@@ -58,9 +64,29 @@ public sealed class GameLibrary(IReadOnlyList<string> steamRoots, SettingsStore 
 
     private void SelectFolder()
     {
+        CeOriginalRoot = Target == GameTarget.OnslaughtCe && CeUserFolder.Length > 0 ? CeOriginalFolder() : null;
+        if (Target == GameTarget.OnslaughtCe && CeUserFolder.Length > 0)
+        {
+            try
+            {
+                CeInstallation.RejectFolderInAnyPackage(CeUserFolder, "CE's user folder");
+                CeGameData.RejectWriteFolder(CeUserFolder, CeOriginalRoot, "CE's user folder");
+                if (CePackageRoot is not null) CeInstallation.RejectFolderInPackage(CeUserFolder, CePackageRoot, "CE's user folder");
+            }
+            catch (IOException error) { Folder = null; CeVersionMessage = error.Message; return; }
+        }
         Folder = Target == GameTarget.OnslaughtCe && CeUserFolder.Length > 0
-            ? GameFolder.InspectCe(CeUserFolder, Original?.Root) : Original;
+            ? GameFolder.InspectCe(CeUserFolder, Original?.Root, CeOriginalRoot, CePackageRoot) : Original;
         if (Target == GameTarget.OnslaughtCe && CeUserFolder.Length == 0) Folder = null;
+    }
+
+    private string CeOriginalFolder()
+    {
+        // Launcher find_game: valid BEA_GAME_DIR, then ce.ini gamedir, then discovery.
+        string? env = (ceEnvironment ?? Environment.GetEnvironmentVariable)("BEA_GAME_DIR");
+        string? ini = CeSettings.Read(CeUserFolder).Value?.GameDirectory;
+        return CeGameData.Resolve(ceEnvironment is null ? SteamLibraries.DefaultRoots(ceOnly: true) : steamRoots,
+            env, ini, ceInstallSupported) ?? "";
     }
 
     /// <summary>The game's own words from the folder's language file, when it can be read.</summary>
@@ -90,7 +116,10 @@ public sealed class GameLibrary(IReadOnlyList<string> steamRoots, SettingsStore 
                 return (null, null);
             });
             if (CeUserFolder.Length > 0)
+            {
+                CePackageRoot = CeInstallation.FindPackageFolder(Settings.Load().CeLauncher, ceEnvironment, home: ceEnvironment is null ? null : "");
                 Ce = CeInstallation.Find(Settings.Load().CeLauncher, CeUserFolder, ceEnvironment, home: ceEnvironment is null ? null : "");
+            }
             if (Target == GameTarget.OnslaughtCe) await ReadCeVersionAsync();
             SelectFolder();
             return Folder;
@@ -134,7 +163,7 @@ public sealed class GameLibrary(IReadOnlyList<string> steamRoots, SettingsStore 
         try
         {
             if (Target == GameTarget.OnslaughtCe)
-                Folder = await Task.Run(() => GameFolder.InspectCe(CeUserFolder, Original?.Root));
+                SelectFolder();
             else
             {
                 (Original, Text) = await Task.Run(() => GameFolder.LooksLikeGame(current.Root) ? Read(current.Root, current.Source) : (null, null));
@@ -158,7 +187,14 @@ public sealed class GameLibrary(IReadOnlyList<string> steamRoots, SettingsStore 
         try
         {
             HashSet<(string, long, DateTime)> now = [];
-            if (Directory.Exists(folder.SavegamesPath))
+            if (folder.Target == GameTarget.OnslaughtCe)
+            {
+                HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase);
+                foreach (string root in new[] { folder.Root, CeOriginalFolder() }.Where(root => root.Length > 0))
+                    foreach (FileInfo file in GameFolder.CeCareerFiles(root))
+                        if (seen.Add(file.Name)) now.Add((file.FullName, file.Length, file.LastWriteTime));
+            }
+            else if (Directory.Exists(folder.SavegamesPath))
             {
                 foreach (FileInfo file in new DirectoryInfo(folder.SavegamesPath).EnumerateFiles("*.bes"))
                     now.Add((file.FullName, file.Length, file.LastWriteTime));

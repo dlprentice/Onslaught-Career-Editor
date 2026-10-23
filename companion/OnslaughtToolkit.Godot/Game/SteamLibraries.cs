@@ -18,11 +18,16 @@ public static partial class SteamLibraries
     public const string DefaultInstallFolder = "Battle Engine Aquila";
 
     /// <summary>Where Steam keeps its root on this machine: native, Flatpak and Snap on Linux; the registry on Windows.</summary>
-    public static IReadOnlyList<string> DefaultRoots()
+    public static IReadOnlyList<string> DefaultRoots(bool ceOnly = false)
     {
         List<string> roots = [];
         if (OperatingSystem.IsWindows())
         {
+            if (ceOnly)
+            {
+                string? ce = WindowsRegistry(@"HKEY_CURRENT_USER\Software\Valve\Steam", "SteamPath");
+                return string.IsNullOrWhiteSpace(ce) ? [] : [ce.Replace('/', '\\')];
+            }
             foreach (string? path in new[]
             {
                 WindowsRegistry(@"HKEY_CURRENT_USER\Software\Valve\Steam", "SteamPath"),
@@ -41,7 +46,7 @@ public static partial class SteamLibraries
             roots.Add(Path.Combine(home, ".steam", "steam"));
             roots.Add(Path.Combine(home, ".steam", "root"));
             roots.Add(Path.Combine(home, ".var", "app", "com.valvesoftware.Steam", ".local", "share", "Steam"));
-            roots.Add(Path.Combine(home, "snap", "steam", "common", ".local", "share", "Steam"));
+            if (!ceOnly) roots.Add(Path.Combine(home, "snap", "steam", "common", ".local", "share", "Steam"));
         }
         return roots;
     }

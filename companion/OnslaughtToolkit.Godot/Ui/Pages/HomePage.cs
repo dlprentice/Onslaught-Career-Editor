@@ -336,8 +336,8 @@ internal sealed class HomePage : Page
         _emblem.Visible = art is null;
         ChooseFolder.Disabled = _app.Game.Busy || _app.Workspace.Busy;
         ChooseFolder.ThemeTypeVariation = folder is null && !_app.Game.Busy ? "Primary" : "";
-        ChooseFolder.Text = ce ? "Choose media folder…" : folder is null ? "Choose game folder…" : "Change folder…";
-        ChooseFolder.TooltipText = ce ? "Original installation used for the companion's media. CE chooses its own data when it starts."
+        ChooseFolder.Text = ce ? "Choose original game folder…" : folder is null ? "Choose game folder…" : "Change folder…";
+        ChooseFolder.TooltipText = ce ? "Choose the original game's pictures and music. Original careers come from the data folder recorded or discovered by CE."
             : "The folder that contains BEA.exe and the data folder.";
         Play.Visible = ce ? _app.Game.Ce is not null : folder is not null && folder.Root.Replace('\\', '/').Contains("/steamapps/", StringComparison.OrdinalIgnoreCase);
         Play.Disabled = _app.Game.Busy || _app.Workspace.Busy || _app.GameRunning();

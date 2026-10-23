@@ -50,6 +50,7 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
         if (string.Equals(full, Path.TrimEndingDirectorySeparator(drive ?? ""), StringComparison.OrdinalIgnoreCase) ||
             !string.IsNullOrEmpty(home) && IsInside(home, full))
             return Outcome<string>.Refusal("CE's user folder must not be the home folder, its parent or a drive root.");
+        RejectFolderInAnyPackage(full, "CE's user folder");
         return Outcome<string>.Success(full, "CE user folder found.");
     }
 
@@ -58,17 +59,12 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
     {
         try
         {
-            bool onWindows = windows ?? OperatingSystem.IsWindows();
-            string expected = onWindows ? OnslaughtCe.WindowsLauncher : "onslaught-ce";
-            string full = Path.GetFullPath(Directory.Exists(path) ? Path.Combine(path, expected) : path);
-            FileInfo file = new(full);
-            if (file.LinkTarget is not null) full = file.ResolveLinkTarget(returnFinalTarget: true)?.FullName ?? full;
-            StringComparison comparison = onWindows ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-            if (!Path.GetFileName(full).Equals(expected, comparison) || !File.Exists(full) ||
-                !onWindows && !File.Exists(Path.Combine(Path.GetDirectoryName(full)!, OnslaughtCe.LinuxLauncher)))
-                return Outcome<CeInstallation>.Refusal($"Choose the CE package's {expected} launcher, not the bea game program.");
+            Outcome<string> launcher = InspectLauncher(path, windows);
+            if (launcher.Value is not string full) return Outcome<CeInstallation>.Refusal(launcher.Message);
             if (!Path.IsPathFullyQualified(userFolder))
                 return Outcome<CeInstallation>.Refusal("CE's user folder must be an absolute path.");
+            RejectFolderInAnyPackage(userFolder, "CE's user folder");
+            RejectFolderInPackage(userFolder, Path.GetDirectoryName(full)!, "CE's user folder");
             return Outcome<CeInstallation>.Success(new CeInstallation(full, Path.GetFullPath(userFolder)), "CE launcher found.");
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
@@ -77,8 +73,99 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
         }
     }
 
+    /// <summary>Retains the package identity even when its configured user folder is unsafe.</summary>
+    public static Outcome<string> InspectPackageFolder(string path, bool? windows = null)
+    {
+        Outcome<string> launcher = InspectLauncher(path, windows);
+        return launcher.Value is string full ? Outcome<string>.Success(Path.GetDirectoryName(full)!, "CE package found.") : launcher;
+    }
+
+    private static Outcome<string> InspectLauncher(string path, bool? windows)
+    {
+        try
+        {
+            bool onWindows = windows ?? OperatingSystem.IsWindows();
+            string expected = onWindows ? OnslaughtCe.WindowsLauncher : "onslaught-ce";
+            string full = Path.GetFullPath(Directory.Exists(path) ? Path.Combine(path, expected) : path);
+            full = SteamLibraries.Canonical(full) ?? throw new IOException("The CE launcher path could not be resolved.");
+            StringComparison comparison = onWindows ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+            if (!Path.GetFileName(full).Equals(expected, comparison) || !File.Exists(full) ||
+                !onWindows && !File.Exists(Path.Combine(Path.GetDirectoryName(full)!, OnslaughtCe.LinuxLauncher)))
+                return Outcome<string>.Refusal($"Choose the CE package's {expected} launcher, not the bea game program.");
+            return Outcome<string>.Success(full, "CE launcher found.");
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            return Outcome<string>.Refusal("The CE launcher could not be inspected: " + error.Message);
+        }
+    }
+
+    /// <summary>
+    /// Writable user data and backups must survive replacement of the selected launcher package. Check both the
+    /// named paths and every resolved ancestor, including when the writable folder does not exist yet. Call again
+    /// before writes: a successful discovery is not a lasting guarantee about a directory or its links.
+    /// </summary>
+    public static void RejectFolderInPackage(string folder, string packageRoot, string label)
+        => RejectFolderInTree(folder, packageRoot, label,
+            " must be outside the CE package folder, which launcher updates replace.");
+
+    internal static void RejectFolderInTree(string folder, string packageRoot, string label, string reason)
+    {
+        if (!Path.IsPathFullyQualified(folder) || !Path.IsPathFullyQualified(packageRoot))
+            throw new IOException("The CE package and " + label + " must use absolute paths.");
+        string full = Path.TrimEndingDirectorySeparator(Path.GetFullPath(folder));
+        string package = Path.GetFullPath(packageRoot);
+        string resolvedPackage = SteamLibraries.Canonical(package) ?? throw new IOException("The CE package folder could not be resolved safely.");
+        foreach (string current in AncestorChain(full))
+        {
+            string resolved = SteamLibraries.Canonical(current) ?? throw new IOException(label + " could not be resolved safely.");
+            // An alias can enter the package and then follow another link back out. That route still depends on
+            // package contents surviving an update, even when the final directory is physically outside it.
+            if (IsInside(current, package) || IsInside(current, resolvedPackage) || IsInside(resolved, resolvedPackage))
+                throw new IOException(label + reason);
+        }
+    }
+
+    /// <summary>
+    /// Protects writable folders even before a launcher is selected. Package markers in either platform's layout
+    /// are sufficient; discovery does not execute a launcher or search beyond the supplied folder's ancestors.
+    /// </summary>
+    public static void RejectFolderInAnyPackage(string folder, string label)
+    {
+        if (!Path.IsPathFullyQualified(folder)) throw new IOException(label + " must use an absolute path.");
+        HashSet<string> inspected = new(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+        foreach (string current in AncestorChain(Path.GetFullPath(folder)))
+        {
+            Check(current);
+            string resolved = SteamLibraries.Canonical(current) ?? throw new IOException(label + " could not be resolved safely.");
+            foreach (string ancestor in AncestorChain(resolved)) Check(ancestor);
+        }
+
+        void Check(string candidate)
+        {
+            if (!inspected.Add(candidate)) return;
+            if (File.Exists(Path.Combine(candidate, OnslaughtCe.WindowsLauncher)) ||
+                File.Exists(Path.Combine(candidate, "onslaught-ce")) && File.Exists(Path.Combine(candidate, OnslaughtCe.LinuxLauncher)))
+                throw new IOException(label + " must be outside the CE package folder, which launcher updates replace.");
+        }
+    }
+
+    private static IEnumerable<string> AncestorChain(string path)
+    {
+        for (string? current = Path.TrimEndingDirectorySeparator(path); current is not null; current = Path.GetDirectoryName(current))
+            yield return current;
+    }
+
     /// <summary>Remembered choice first, then PATH and the usual per-user bin folder; no recursive disk search.</summary>
     public static CeInstallation? Find(string? remembered, string userFolder, Func<string, string?>? environment = null,
+        bool? windows = null, string? home = null)
+    {
+        string? package = FindPackageFolder(remembered, environment, windows, home);
+        return package is null ? null : Inspect(package, userFolder, windows).Value;
+    }
+
+    /// <summary>Finds the selected package independently of whether its configured user folder can be used safely.</summary>
+    public static string? FindPackageFolder(string? remembered, Func<string, string?>? environment = null,
         bool? windows = null, string? home = null)
     {
         environment ??= Environment.GetEnvironmentVariable;
@@ -91,7 +178,7 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
         home ??= Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         if (!onWindows && !string.IsNullOrEmpty(home)) paths.Add(Path.Combine(home, ".local", "bin", expected));
         foreach (string path in paths.Distinct(onWindows ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal))
-            if (Inspect(path, userFolder, onWindows).Value is CeInstallation installation) return installation;
+            if (InspectPackageFolder(path, onWindows).Value is string package) return package;
         return null;
     }
 
@@ -107,10 +194,11 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
 
     public Outcome<string> Launch(Func<ProcessStartInfo, bool>? start = null)
     {
-        if (!Inspect(LauncherPath, UserFolder).Ok) return Outcome<string>.Refusal("The selected CE launcher is no longer available.");
+        Outcome<CeInstallation> inspected = Inspect(LauncherPath, UserFolder);
+        if (inspected.Value is not CeInstallation current) return Outcome<string>.Refusal(inspected.Message);
         try
         {
-            bool launched = start is not null ? start(StartInfo(versionOnly: false)) : StartLauncher(StartInfo(versionOnly: false));
+            bool launched = start is not null ? start(current.StartInfo(versionOnly: false)) : StartLauncher(current.StartInfo(versionOnly: false));
             return launched ? Outcome<string>.Success(LauncherPath, "Started the Onslaught CE launcher. It checks and applies updates itself.") :
                 Outcome<string>.Refusal("The CE launcher could not be started.");
         }
@@ -123,11 +211,12 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
     public async Task<Outcome<CeVersion>> ReadVersionAsync(CancellationToken cancellationToken = default,
         Func<ProcessStartInfo, CancellationToken, Task<string>>? read = null)
     {
-        if (!Inspect(LauncherPath, UserFolder).Ok) return Outcome<CeVersion>.Refusal("The selected CE launcher is no longer available.");
+        Outcome<CeInstallation> inspected = Inspect(LauncherPath, UserFolder);
+        if (inspected.Value is not CeInstallation current) return Outcome<CeVersion>.Refusal(inspected.Message);
         try
         {
-            string output = await (read is null ? RunVersionAsync(StartInfo(versionOnly: true), cancellationToken) :
-                read(StartInfo(versionOnly: true), cancellationToken));
+            string output = await (read is null ? RunVersionAsync(current.StartInfo(versionOnly: true), cancellationToken) :
+                read(current.StartInfo(versionOnly: true), cancellationToken));
             return ParseVersion(output);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or Win32Exception or InvalidOperationException or OperationCanceledException)
@@ -196,8 +285,10 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
     private static bool IsInside(string path, string folder)
     {
         string full = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
+        folder = Path.TrimEndingDirectorySeparator(Path.GetFullPath(folder));
         StringComparison comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        return full.Equals(folder, comparison) || full.StartsWith(folder + Path.DirectorySeparatorChar, comparison);
+        return full.Equals(folder, comparison) || full.StartsWith(Path.EndsInDirectorySeparator(folder) ? folder :
+            folder + Path.DirectorySeparatorChar, comparison);
     }
 }
 

@@ -46,6 +46,7 @@ public partial class CompanionTestRunner : SceneTree
                 InstallTests.Run(original, output, check);
                 CeAtomicWriteTests.Run(original, output, check);
                 await CeSettingsTests.RunAsync(output, check);
+                CeGameDataTests.Run(output, check);
                 await CeUpdateFeedTests.RunAsync(check);
                 AssetTests.Run(output, check);
                 OptionsTests.Run(original, check);
@@ -54,6 +55,7 @@ public partial class CompanionTestRunner : SceneTree
                 ThemeTests.Run(check);
                 await CompanionUiTests.RunAsync(this, fixture, output, original, check);
                 await CeTargetTests.RunAsync(this, original, output, check);
+                await CeOverlayTests.RunAsync(this, original, output, check);
                 await CePanelTests.RunAsync(this, original, output, check);
                 check.That(File.ReadAllBytes(fixture).AsSpan().SequenceEqual(original), "the owned fixture copy is restored");
             }

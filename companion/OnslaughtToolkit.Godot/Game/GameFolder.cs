@@ -51,6 +51,7 @@ public sealed record GameFile(string Path, string Name, long Size, DateTime Modi
     string? Sha256 = null)
 {
     public bool Supported => Problem is null;
+    public bool FromOriginalInstall { get; init; }
 
     /// <summary>The career's name as the game shows it: the file name without .bes.</summary>
     public string DisplayName => System.IO.Path.GetFileNameWithoutExtension(Name);
@@ -61,27 +62,51 @@ public sealed record GameFolder(string Root, string Source, ExecutableIdentity E
     GameFile? Options, IReadOnlyList<string> Languages, int MusicTracks, int VoiceLines, int Cutscenes)
 {
     public GameTarget Target { get; init; }
-    /// <summary>The original installation supplies media; Root always owns the selected target's saves.</summary>
+    /// <summary>The original installation supplies media; Root is the selected game's write destination.</summary>
     public string AssetRoot { get; init; } = Root;
+    public string? CeOriginalRoot { get; init; }
+    public string? CePackageRoot { get; init; }
     public string DisplayName => Target == GameTarget.OnslaughtCe ? "Onslaught CE" : "Original game";
     public bool IsAvailable => Target == GameTarget.OnslaughtCe ? Directory.Exists(Root) : LooksLikeGame(Root);
-    public GameFolder Refresh() => Target == GameTarget.OnslaughtCe ? InspectCe(Root, AssetRoot) : Inspect(Root, Source);
+    public GameFolder Refresh() => Target == GameTarget.OnslaughtCe ? InspectCe(Root, AssetRoot, CeOriginalRoot, CePackageRoot) : Inspect(Root, Source);
 
-    public static GameFolder InspectCe(string userFolder, string? assetRoot = null)
+    public static GameFolder InspectCe(string userFolder, string? assetRoot = null, string? originalRoot = null, string? packageRoot = null)
     {
         string root = Path.GetFullPath(userFolder);
         List<GameFile> careers = [];
-        string saves = Path.Combine(root, "savegames");
-        if (Directory.Exists(saves))
-            foreach (FileInfo file in new DirectoryInfo(saves).EnumerateFiles("*.bes").OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase))
-                careers.Add(Describe(file));
+        string? source = originalRoot ?? assetRoot;
+        HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase);
+        // Show original-folder careers for preservation, writable names first, ignoring case.
+        // CE's Windows search merges; the pinned Linux search omits originals once user/savegames exists.
+        // These source-labelled entries stay read-only here and participate in companion backups.
+        foreach (FileInfo file in CeCareerFiles(root))
+            if (seen.Add(file.Name)) careers.Add(Describe(file));
+        if (!string.IsNullOrWhiteSpace(source) && Directory.Exists(source))
+            foreach (FileInfo file in CeCareerFiles(source!))
+                if (seen.Add(file.Name)) careers.Add(Describe(file) with { FromOriginalInstall = true });
         GameFolder? assets = LooksLikeGame(assetRoot) ? Inspect(assetRoot!, "Original game data") : null;
         return new GameFolder(root, "CE user folder", new(ExecutableState.Missing), careers, null,
             assets?.Languages ?? [], assets?.MusicTracks ?? 0, assets?.VoiceLines ?? 0, assets?.Cutscenes ?? 0)
-            { Target = GameTarget.OnslaughtCe, AssetRoot = assets?.Root ?? root };
+            { Target = GameTarget.OnslaughtCe, AssetRoot = assets?.Root ?? root,
+                CeOriginalRoot = !string.IsNullOrWhiteSpace(source) && Directory.Exists(source) ? source : "", CePackageRoot = packageRoot };
     }
 
-    public string SavegamesPath => System.IO.Path.Combine(Root, "savegames");
+    internal static string CeSavegamesPath(string root)
+    {
+        string exact = Path.Combine(root, "savegames");
+        if (Directory.Exists(exact) || !Directory.Exists(root)) return exact;
+        return Directory.EnumerateDirectories(root).FirstOrDefault(path =>
+            Path.GetFileName(path).Equals("savegames", StringComparison.OrdinalIgnoreCase)) ?? exact;
+    }
+
+    internal static IEnumerable<FileInfo> CeCareerFiles(string root)
+    {
+        string saves = CeSavegamesPath(root);
+        return Directory.Exists(saves) ? new DirectoryInfo(saves).EnumerateFiles().Where(file =>
+            file.Extension.Equals(".bes", StringComparison.OrdinalIgnoreCase)) : [];
+    }
+
+    public string SavegamesPath => Target == GameTarget.OnslaughtCe ? CeSavegamesPath(Root) : System.IO.Path.Combine(Root, "savegames");
     public string OptionsPath => System.IO.Path.Combine(Root, "defaultoptions.bea");
 
     /// <summary>A full install has the executable and its data folder, the shape the game itself needs.</summary>
@@ -187,10 +212,13 @@ public sealed class BackupLocation(SettingsStore settings, string defaultFolder)
     public bool IsDefault => settings.Load().BackupFolder is null;
 
     /// <summary>The folder, created if needed, or null when it cannot be created.</summary>
-    public string? Ensure()
+    public string? Ensure(string? cePackageRoot = null, string? ceOriginalRoot = null)
     {
         try
         {
+            CeInstallation.RejectFolderInAnyPackage(Folder, "The backup folder");
+            CeGameData.RejectWriteFolder(Folder, ceOriginalRoot, "The backup folder");
+            if (cePackageRoot is not null) CeInstallation.RejectFolderInPackage(Folder, cePackageRoot, "The backup folder");
             Files.OutputGuard.Reject(Path.Combine(Folder, ".backup-location-check.bes"));
             Directory.CreateDirectory(Folder);
             return Folder;

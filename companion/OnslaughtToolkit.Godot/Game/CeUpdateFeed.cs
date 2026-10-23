@@ -76,7 +76,7 @@ public static class CeUpdateFeed
         {
             using JsonDocument document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 4 });
             JsonElement root = document.RootElement;
-            if (!ExactFields(root, ["name", "version", "linux-i686", "windows-i686"]) ||
+            if (!RequiredFields(root, ["name", "version", "linux-i686", "windows-i686"], allowAdditional: true) ||
                 Text(root, "name") != "Onslaught CE" || Text(root, "version") is not string version ||
                 !TryVersion(version, out _) || !Package(root.GetProperty("linux-i686")) || !Package(root.GetProperty("windows-i686")))
                 return Failure("The signed release information has a format this companion does not support. CE has not been changed.");
@@ -151,19 +151,20 @@ public static class CeUpdateFeed
         return true;
     }
 
-    private static bool ExactFields(JsonElement value, string[] wanted)
+    private static bool RequiredFields(JsonElement value, string[] wanted, bool allowAdditional = false)
     {
         if (value.ValueKind != JsonValueKind.Object) return false;
         HashSet<string> seen = new(StringComparer.Ordinal);
         foreach (JsonProperty field in value.EnumerateObject())
-            if (!wanted.Contains(field.Name, StringComparer.Ordinal) || !seen.Add(field.Name)) return false;
-        return seen.Count == wanted.Length;
+            if (!seen.Add(field.Name)) return false;
+        // Signed top-level additions are optional, but cannot replace required fields or repeat any name.
+        return wanted.All(seen.Contains) && (allowAdditional || seen.Count == wanted.Length);
     }
 
     private static string? Text(JsonElement value, string key) =>
         value.TryGetProperty(key, out JsonElement field) && field.ValueKind == JsonValueKind.String ? field.GetString() : null;
 
-    private static bool Package(JsonElement value) => ExactFields(value, ["url", "sha256"]) &&
+    private static bool Package(JsonElement value) => RequiredFields(value, ["url", "sha256"]) &&
         Text(value, "url") is string url && url.StartsWith(PackagePrefix, StringComparison.Ordinal) &&
         Uri.TryCreate(url, UriKind.Absolute, out Uri? parsed) && AllowedRequest(parsed) &&
         parsed.AbsolutePath.StartsWith(ReleasePath + "download/", StringComparison.Ordinal) && parsed.Query.Length == 0 &&

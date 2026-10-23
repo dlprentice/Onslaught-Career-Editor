@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-23 (companion CE phase D)
+Last updated: 2026-10-23 (CE validation and release work stated without branch or phase status)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
@@ -24,17 +24,22 @@ with a campaign map, Goodies, career editing, cheats, game settings, automatic b
 and voices, and lore (see its [README](companion/OnslaughtToolkit.Godot/README.md)). Every write into the game is a
 choice made after a verified backup, never while the game runs.
 [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore) records
-what is proven. David resumed companion development for phase D: CE as a separate target alongside the original game.
+what is proven. Players can choose the original game or CE, manage careers and backups, and use CE's two supported
+launcher settings and signed public update information. The CE launcher installs updates.
 
 Remaining acceptance and release work:
 
-- A human click-through, listening to the music and voices, and running the Windows package. The portable write
-  path has run only on Linux; Windows cross-export and package checks do not establish Windows execution.
-- Phase D adds CE discovery, launcher-only start, signed public update status, CE careers and the two documented
-  launcher switches. The launcher retains update installation. See the companion README for the pinned contract,
-  backup scope and Windows limitations. Branch `codex/companion-ce-20261023` awaits the lead's review and merge.
-  Any media replacement would be a CE option (for example a CE user-data override folder), not a file swap in an
-  install. Then, at David's direction, a public release.
+- Start a real CE launcher from the companion and read its installed version. These paths have fixture tests,
+  but neither has been exercised with a real CE launcher. Check an edited career in CE itself; the file tests do
+  not establish acceptance by the running game.
+- Run the Windows package, including process detection, reading the launcher's version and protected file writes.
+  The portable write path has run only on Linux; Windows cross-export and package checks do not establish Windows
+  execution. The companion README describes the possible Windows console-output issue.
+- A human click-through and listening to the music and voices. See the companion README for the pinned source
+  contract, backup scope and other limits. Public release remains at David's direction.
+
+Any future media replacement would be a CE option (for example a CE user-data override folder), not a file swap
+in an install.
 
 Keep the companion's application code, the rebuild and private retail data separate. Beyond launching and managing
 Onslaught CE, no store, account or community features are planned.
@@ -61,7 +66,7 @@ native source port (Windows and Linux) is published as [Onslaught CE](https://gi
 - The split: the Godot rebuild is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot) (the `rebuild/` copy here is frozen), and
   the game documentation is published as [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation). Still to come: this repository's
   full history is bundled into the private RE archive and flattened again, and the repository is renamed
-  onslaught-companion. The companion CE integration is a separate feature branch for lead review. Each step is a separate, coordinated task.
+  onslaught-companion. Each step is a separate, coordinated task.
 
 ## Paused
 
@@ -69,7 +74,6 @@ native source port (Windows and Linux) is published as [Onslaught CE](https://gi
   the parity core): World 110 generalization (former P7) and player-input replay tapes (former P8). Its final state is
   described in [rebuild/README.md](rebuild/README.md#the-earlier-rebuild-history). The rebuild's scope is level
   100 only.
-- **The companion** (above), until David sets new requirements.
 
 ## Closed
 

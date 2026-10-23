@@ -50,6 +50,8 @@ internal sealed class CareerCards
             Label name = words.Add(Build.Text(career.DisplayName, "CardTitle", wrap: false, clip: true));
             name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
             name.TooltipText = career.Path;
+            if (career.FromOriginalInstall)
+                words.Add(Build.Text("Original-game file — read-only. Save changes as a new CE career.", "Faint"));
             if (career.Summary is CareerSummary summary)
             {
                 words.Add(Build.Text($"{summary.MissionsDone} of {summary.MissionsUsed} missions  ·  " +

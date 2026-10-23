@@ -13,7 +13,12 @@ namespace OnslaughtToolkit.Companion.Files;
 public sealed record BackupFile(string Name, string Original, long Size, string Sha256);
 
 /// <summary>A verified backup set. <see cref="Reason"/> says why it was made, in the player's words.</summary>
-public sealed record BackupSet(string Folder, DateTime Created, string Game, IReadOnlyList<BackupFile> Files, string? Reason = null);
+public sealed record BackupSet(string Folder, DateTime Created, string Game, IReadOnlyList<BackupFile> Files, string? Reason = null,
+    GameTarget? Target = null)
+{
+    public string GameName => Target switch { GameTarget.Original => "Original Battle Engine Aquila",
+        GameTarget.OnslaughtCe => "Onslaught CE", _ => "Game not recorded (older backup)" };
+}
 
 public sealed record BackupReceipt(bool Ok, string Message, BackupSet? Set = null, string? PartialFolder = null);
 
@@ -127,6 +132,23 @@ public static class Backups
 
     public static BackupReceipt Create(IProtectedSaveFiles files, GameFolder game, string root, DateTime now, string reason = "Backup")
     {
+        try
+        {
+            CeInstallation.RejectFolderInAnyPackage(root, "The backup folder");
+            CeGameData.RejectWriteFolder(root, game.CeOriginalRoot, "The backup folder");
+            CeGameData.RejectWriteFolder(game.Root, game.CeOriginalRoot, "CE's user folder");
+            if (game.Target == GameTarget.OnslaughtCe) CeInstallation.RejectFolderInAnyPackage(game.Root, "CE's user folder");
+        }
+        catch (IOException error) { return new BackupReceipt(false, error.Message); }
+        if (game.CePackageRoot is string package)
+        {
+            try
+            {
+                CeInstallation.RejectFolderInPackage(game.Root, package, "CE's user folder");
+                CeInstallation.RejectFolderInPackage(root, package, "The backup folder");
+            }
+            catch (IOException error) { return new BackupReceipt(false, error.Message); }
+        }
         if (!Path.IsPathFullyQualified(root) || !Directory.Exists(root))
             return new BackupReceipt(false, "Choose an existing backup folder.");
         if (SteamLibraries.Canonical(root) is not string realRoot || (IsInside(realRoot, game.Root) || IsInside(realRoot, game.AssetRoot)))
@@ -157,7 +179,7 @@ public static class Backups
                     PartialFolder: folder);
             saved.Add(new BackupFile(file.Name, file.Path, bytes.Length, copy.Sha256.ToLowerInvariant()));
         }
-        BackupSet set = new(folder, now, game.Root, saved, reason);
+        BackupSet set = new(folder, now, game.Root, saved, reason, game.Target);
         try
         {
             using FileStream manifest = new(Path.Combine(folder, ManifestName), FileMode.CreateNew, FileAccess.Write);
@@ -210,7 +232,8 @@ public static class Backups
     /// from another install never stands in for this one's latest backup, and is put back into this one only after the
     /// player confirms a prompt naming both folders.
     /// </summary>
-    public static bool SameGame(BackupSet set, GameFolder game) => SameRoot(set.Game, game.Root);
+    public static bool SameGame(BackupSet set, GameFolder game) =>
+        (set.Target is null || set.Target == game.Target) && SameRoot(set.Game, game.Root);
 
     internal static bool SameRoot(string? recorded, string root)
     {
@@ -291,7 +314,19 @@ public static partial class GameInstaller
             return new InstallReceipt(false, "Only a .bes career in the game's savegames folder, or defaultoptions.bea, can be written.", targetName);
         if (game.Target == GameTarget.OnslaughtCe)
         {
-            try { FileMutationSafety.RejectOutputInGameTree(target); }
+            try
+            {
+                FileMutationSafety.RejectOutputInGameTree(target);
+                CeGameData.RejectWriteFolder(game.Root, game.CeOriginalRoot, "CE's user folder");
+                CeGameData.RejectWriteFolder(backupRoot, game.CeOriginalRoot, "The backup folder");
+                CeInstallation.RejectFolderInAnyPackage(game.Root, "CE's user folder");
+                CeInstallation.RejectFolderInAnyPackage(backupRoot, "The backup folder");
+                if (game.CePackageRoot is string package)
+                {
+                    CeInstallation.RejectFolderInPackage(game.Root, package, "CE's user folder");
+                    CeInstallation.RejectFolderInPackage(backupRoot, package, "The backup folder");
+                }
+            }
             catch (Exception error) when (error is IOException or InvalidOperationException or UnauthorizedAccessException)
             { return new InstallReceipt(false, error.Message, target); }
         }
@@ -316,7 +351,10 @@ public static partial class GameInstaller
         if (backup.Set is not BackupSet set)
             return new InstallReceipt(false, "No verified backup could be made, so nothing was written. " + backup.Message, target,
                 backup.PartialFolder);
-        BackupFile? saved = set.Files.FirstOrDefault(file => file.Name == Path.GetFileName(target));
+        // A merged CE backup may contain this name from the original installation, while the
+        // CE write destination is still vacant. Only an actual destination backup licenses replacement.
+        BackupFile? saved = set.Files.FirstOrDefault(file => string.Equals(file.Original, target,
+            OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal));
         if (existing.Exists && saved is null)
             return new InstallReceipt(false, "The backup does not contain the file being replaced, so nothing was written.", target, set.Folder);
         if (expectedSha256 is not null && !string.Equals(saved?.Sha256, expectedSha256, StringComparison.OrdinalIgnoreCase))
@@ -332,6 +370,15 @@ public static partial class GameInstaller
             {
                 beforeSwap?.Invoke();
                 if (gameRunning()) throw new GameStartedException();
+                CeGameData.RejectWriteFolder(game.Root, game.CeOriginalRoot, "CE's user folder");
+                CeGameData.RejectWriteFolder(backupRoot, game.CeOriginalRoot, "The backup folder");
+                CeInstallation.RejectFolderInAnyPackage(backupRoot, "The backup folder");
+                if (game.Target == GameTarget.OnslaughtCe) CeInstallation.RejectFolderInAnyPackage(game.Root, "CE's user folder");
+                if (game.CePackageRoot is string package)
+                {
+                    CeInstallation.RejectFolderInPackage(game.Root, package, "CE's user folder");
+                    CeInstallation.RejectFolderInPackage(backupRoot, package, "The backup folder");
+                }
             };
             return OperatingSystem.IsLinux() && !UsePortableInstall
                 ? LinuxInstall.Write(target, prepared, saved?.Sha256, set.Folder, beforeCheck, beforeSwapChecked, afterPublish)
@@ -380,6 +427,8 @@ public static partial class GameInstaller
         if (name.Length is < 5 or > 128 || !name.EndsWith(".bes", StringComparison.OrdinalIgnoreCase) ||
             PortableNameProblem(name[..^4]) is not null)
             return null;
+        if (game.Target == GameTarget.OnslaughtCe && game.Careers.FirstOrDefault(file => !file.FromOriginalInstall &&
+            file.Name.Equals(name, StringComparison.OrdinalIgnoreCase)) is GameFile existing) return existing.Path;
         return Path.Combine(game.SavegamesPath, name);
     }
 

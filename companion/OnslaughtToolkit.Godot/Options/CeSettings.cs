@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.Win32.SafeHandles;
 using OnslaughtToolkit.Companion.Careers;
 using OnslaughtToolkit.Companion.Files;
+using OnslaughtToolkit.Companion.Game;
 
 namespace OnslaughtToolkit.Companion.Options;
 
@@ -105,13 +106,24 @@ public sealed class CeSettings
     /// is refused or rolled back by that publisher. A first file gets an explicit absence receipt, not a fake original.
     /// </summary>
     public InstallReceipt Save(bool updateCheck, bool recordSessions, string backupRoot, Func<bool> gameRunning, DateTime now,
-        Action? beforeCheck = null, Action? beforeSwap = null)
+        Action? beforeCheck = null, Action? beforeSwap = null, string? packageRoot = null, string? originalRoot = null)
     {
         string? backupFolder = null;
         try
         {
             if (gameRunning()) return Refuse(GameInstaller.RunningMessage);
             string userFolder = System.IO.Path.GetDirectoryName(Path)!;
+            void CheckPackageFolders()
+            {
+                CeGameData.RejectWriteFolder(userFolder, originalRoot, "CE's user folder");
+                CeGameData.RejectWriteFolder(backupRoot, originalRoot, "The backup folder");
+                CeInstallation.RejectFolderInAnyPackage(userFolder, "CE's user folder");
+                CeInstallation.RejectFolderInAnyPackage(backupRoot, "The backup folder");
+                if (packageRoot is null) return;
+                CeInstallation.RejectFolderInPackage(userFolder, packageRoot, "CE's user folder");
+                CeInstallation.RejectFolderInPackage(backupRoot, packageRoot, "The backup folder");
+            }
+            CheckPackageFolders();
             if (!Directory.Exists(userFolder)) return Refuse("Start CE once so it can create its user folder, then try again.");
             FileMutationSafety.RejectExistingReparseAncestors(Path, "CE user folder");
             FileMutationSafety.RejectOutputInGameTree(Path);
@@ -138,6 +150,7 @@ public sealed class CeSettings
             Action beforeSwapChecked = () =>
             {
                 beforeSwap?.Invoke();
+                CheckPackageFolders();
                 if (gameRunning()) throw new IOException(GameInstaller.RunningMessage);
             };
             InstallReceipt result = Write(Path, bytes, Exists ? Sha256 : null, backupFolder, beforeCheck, beforeSwapChecked);

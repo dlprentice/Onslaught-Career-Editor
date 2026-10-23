@@ -1,13 +1,14 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-23 (companion CE integration)
+Last updated: 2026-10-23 (CE save sources clarified; fixture evidence separated from real-launch and Windows validation gaps)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
 
-The companion, Onslaught Companion, now has original-game and Onslaught CE targets. Phase D adds CE launcher
-discovery, protected CE careers, two launcher settings and signed update status; updates remain the launcher's job.
+The companion, Onslaught Companion, lets players choose the original game or Onslaught CE. It supports finding
+CE's launcher, protected career writes, two launcher settings and signed update information; the CE launcher
+installs updates.
 See its [README](companion/OnslaughtToolkit.Godot/README.md) for the contract and platform limits.
 The byte-matching decompilation is complete and is the reverse-engineering authority (public export:
 [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp)); its native port is published separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce), and this
@@ -150,14 +151,36 @@ scenes. David approved its feature set and Flight-deck look on 2026-09-25; on 20
 he asked for it to be built around players: easy to find your way, easy on the eyes, and
 safe for their game and saves.
 
-**Which game it works with:** Home selects the original game or Onslaught CE. Original careers and
-`defaultoptions.bea` stay associated with their install; CE careers belong to its separate user folder. The same
-protected career transactions apply to either target. CE starts through its selected launcher, can display a
-signature-verified public release version, and edits only the launcher's `update_check` and `record_sessions`
-switches. Original data is read separately for media. CE settings backups are separate verified files; the career
-Backups page does not restore `ce.ini`. Its sidebar:
+**Which game it works with:** Home selects the original game or Onslaught CE. The original game uses its
+installation's careers and `defaultoptions.bea`. With CE selected, the companion lists its user-folder careers
+and original-install files for browsing and backups, preferring the user file for a duplicate name regardless of case.
+Original-install careers are labeled read-only; edits can become a new named
+CE copy, and CE writes go to its user folder. The companion offers Play through the selected CE launcher, displays
+a signature-verified public release version, and edits only the launcher's `update_check` and `record_sessions`
+switches. Original data also supplies music, voices and art. CE settings backups are separate verified files; the career Backups page does
+not restore `ce.ini`.
+These extra original-file entries do not assert CE's Load menu contains them. The pinned Windows source merges
+both lists; the pinned Linux directory lookup omits original entries once user `savegames` exists despite its
+merge comment. This is a static finding, not a runtime result here; see the linked source in the companion README.
+CE's original data folder is admitted by its two data-file hashes, using its environment/configuration/Steam
+search order; the companion's separate pictures-and-music choice does not override that.
 
-- **Home** finds the game through Steam (native, Flatpak or Snap on Linux; the registry
+**CE evidence and gaps:** [CE career tests](companion/OnslaughtToolkit.Godot/Tests/CeTargetTests.cs) and
+[original-career browsing tests](companion/OnslaughtToolkit.Godot/Tests/CeOverlayTests.cs) use owned copies
+of the tracked real-save fixture in isolated folders. [Launcher and settings tests](companion/OnslaughtToolkit.Godot/Tests/CeSettingsTests.cs)
+check the launch request and capture a tiny fixture script's version reply; the companion has not started a real CE
+launcher or read its version, and an edited career has not been checked in a running CE game.
+[Data-folder tests](companion/OnslaughtToolkit.Godot/Tests/CeGameDataTests.cs) exercise the two-file validation and
+folder selection using owned tiny inputs; these are not a game-content or launch acceptance test.
+[Update tests](companion/OnslaughtToolkit.Godot/Tests/CeUpdateFeedTests.cs) check signature verification and refused
+responses. Windows process detection, version-output capture and protected file writes have not run on Windows;
+the portable write logic is exercised on Linux. A Windows launcher started from a console may send its version to
+that console instead of the companion, which would display it as unreadable; see the
+[companion README](companion/OnslaughtToolkit.Godot/README.md#which-game-it-works-with).
+
+Its sidebar:
+
+- **Home**, with the original game selected, finds the game through Steam (native, Flatpak or Snap on Linux; the registry
   on Windows) or a chosen folder, checks `BEA.exe` against the Steam release by SHA-256,
   shows the banner art from the player's own manual, offers Play through Steam, lists the
   careers with their progress and opens the most recent one read-only.
@@ -168,12 +191,12 @@ Backups page does not restore `ce.ini`. Its sidebar:
   rules and how each rule is known (071–073 are stored but never shown); Edit career for
   kill counts and Goodies; Cheats for a byte-identical copy named to switch on the three
   cheats seen working in the Steam game.
-- **Your game**: Game settings (the defaults the game reads at start, or the copy each career
+- **Your game**: for the original game, Game settings edits the defaults read at start, or the copy each career
   stores, which the game does not apply when that career loads: sound, invert, vibration,
   controller layout, mouse sensitivity, screen shape and keys captured from a key press, in
-  the two binding slots each action has)
-  and Backups (automatic backups when the companion opens and after the game closes, only
-  when something changed; Back up now; every set, with Put back for each file).
+  the two binding slots each action has. CE offers its two launcher settings described above.
+  Backups offers automatic backups when the companion opens and after the game closes, only
+  when something changed; Back up now; and every set, with Put back for each file.
 - **Extras**: Music & voices plays the soundtrack and voice lines from the install with
   the game's transcripts (Bink cutscenes are listed only); Lore reads the repository's lore
   offline with search, the map of Allium from the player's manual and the manual itself;
@@ -182,9 +205,10 @@ Backups page does not restore `ce.ini`. Its sidebar:
 - **Advanced**, folded away: Career bytes (the open career's stored values, or the bytes that
   differ from another career).
 
-A change reaches the game only through one dialog that offers a new career, replacing the
-one that was opened, or a copy elsewhere. Before anything in the game changes, every career
-and the settings file are copied to a verified backup set; nothing is written while it finds
+A career change reaches the game through a dialog that offers a new career, replacement where allowed,
+or a copy elsewhere. Before a career write, the readable careers for the selected game are copied to a
+verified backup set, along with `defaultoptions.bea` for the original game. CE settings use their separate
+verified backups described above. Nothing is written while it finds
 `BEA.exe` or Onslaught CE running, checked before the backup and again just before the swap (on
 Linux, the `BEA.exe` rule was seen on 2026-09-26 to find the Steam game's own process under
 Proton and nothing else; the CE rule was seen on 2026-10-22 to find a running Onslaught CE 0.1
@@ -194,8 +218,9 @@ file the game saved since it was opened is not replaced; the new file is swapped
 an atomic exchange that swaps back if the displaced file is not the one backed up; elsewhere
 `File.Replace` with the same comparison) and verified. A file is put back from Backups only if it
 still matches the SHA-256 its backup recorded; a backup from another game folder goes back only
-after a confirmation naming both folders. Switching careers or closing with unsaved changes asks first. When the game closes, or the player
-comes back to the companion, it reads what the game saved and shows the latest, keeping any
+after a confirmation naming both games and folders; new manifests record the game, and older manifests that lack
+that information are identified as unknown. Switching careers or closing with unsaved changes asks first. When the
+game closes, or the player comes back to the companion, it reads what the game saved and shows the latest, keeping any
 unsaved changes; while changes are unsaved, a bar under the page keeps Save in reach. Every label style outside the banner measures at least 4.5:1 against the
 surfaces it sits on.
 

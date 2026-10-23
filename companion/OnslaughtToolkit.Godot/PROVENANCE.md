@@ -1,7 +1,7 @@
 # Companion provenance and license
 
 Status: active independent GPL-3.0-only application boundary
-Last updated: 2026-10-22 (AppCore removed: the moved sources take the companion's namespaces, the file-safety source cut down, its test facts carried over; facts read from the developers' source recorded; relicensed: the code GPL-3.0-only, the embedded lore CC BY-SA 4.0; Phase E: Godot .NET SDK 4.8.0-beta.1 and the bundled .NET 10.0.13 runtime)
+Last updated: 2026-10-23 (BouncyCastle.Cryptography 2.7.0 disclosed for signed CE update verification, with its pin and export notice)
 Evidence: SOURCE — code-built C# application, project source moved in from the retired AppCore library, and embedded project lore; executed package boundaries are recorded in VALIDATION.md.
 Summary: the companion's C# derives only from the project's own application code and the RE lane's published contracts; it bundles the project's own lore, reads the game's files and manual art from the player's install at run time, and keeps retail data and GPL reconstruction out.
 
@@ -32,6 +32,14 @@ AppCore's save-layout and file-safety test facts were carried into the companion
 self-contained .NET runtime `Microsoft.NETCore.App` 10.0.13 (the `linux-x64` and `win-x64` runtime packs) are disclosed production dependencies with their MIT and
 third-party notices, which every export carries. Godot retains its own MIT and third-party
 licenses.
+
+`BouncyCastle.Cryptography` 2.7.0, copyright The Legion of the Bouncy Castle Inc., is a production dependency
+under the MIT licence. It verifies the CE update feed's Ed25519 signature before the companion reads the feed.
+The exact version is declared in [OnslaughtToolkit.Godot.csproj](OnslaughtToolkit.Godot.csproj) and its package hash
+is pinned by `contentHash` in [packages.lock.json](packages.lock.json). The build runner restores with
+`--locked-mode`; every export copies the package's `LICENSE.md` as `BOUNCYCASTLE-LICENSE.txt`
+([tools/companion_godot.py](../../tools/companion_godot.py)). The package is restored from NuGet, not vendored in
+this repository, so it needs no vendored-source entry in `REUSE.toml`.
 
 The repository's public lore library — [`lore/`](../../lore/_index.md) and
 [`lore-book/BOOK.md`](../../lore-book/BOOK.md), which the retired WinUI app also shipped

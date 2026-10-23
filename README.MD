@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-10-23 (the game documentation named as moved to onslaught-preservation; where to report problems; earlier: titled Onslaught Companion; Onslaught CE's install behaviour described; reverse-engineering/ marked as moved to onslaught-preservation; the related repositories are public and linked; the rebuild moved to onslaught-godot)
+Last updated: 2026-10-23 (original-game and CE support described in player terms; companion ownership and validation limits clarified)
 Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
 
 Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
@@ -11,11 +11,12 @@ repository holds it and the project's overview.
   reverse-engineering authority. Its public export is [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp).
 - **The native source port is the faithful game**, for Windows and Linux. Its source and downloads are published
   separately as **[Onslaught CE](https://github.com/dlprentice/onslaught-ce)** (GPL-3.0-only, no game files), not from this repository.
-- **The companion, Onslaught Companion, manages the original game and Onslaught CE.** It is a Godot .NET app with
-  separate save targets, CE launcher settings and signed public update checks:
-  it opens on the player's game and careers, shows progress and Goodies, edits careers and
-  settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, and plays
-  and explains the game's own music, voices and lore.
+- **The companion, Onslaught Companion, manages careers for the original game and Onslaught CE.** It is a Godot
+  .NET app that shows progress and Goodies, edits careers and settings after a verified backup and a clear choice,
+  and keeps automatic backups that can be put back. It offers CE launch, two CE launcher settings and a check of
+  the signed public update information. It also plays and explains the game's own music, voices and lore.
+  The [companion's limits](companion/OnslaughtToolkit.Godot/README.md#known-limits) distinguish tested file operations
+  from game launch and Windows behavior that still need to be tried.
 - **The Godot rebuild** aims to be 1:1 with retail from startup to exit, with level 100 playable to completion. It
   is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot), which keeps its measured parity; `rebuild/` here is a frozen copy,
   not built or tested, and is removed when this repository is split.
@@ -64,7 +65,7 @@ on the companion's Home page, where each can be saved as a copy elsewhere.
 
 | Path | Owner |
 | --- | --- |
-| [`companion/OnslaughtToolkit.Godot/`](companion/OnslaughtToolkit.Godot/README.md) | The companion (player toolkit, future CE launcher; paused), C# built in code on Godot 4.8 beta1 .NET and .NET 10 |
+| [`companion/OnslaughtToolkit.Godot/`](companion/OnslaughtToolkit.Godot/README.md) | The companion for original-game and CE careers, settings and launch, C# built in code on Godot 4.8 beta1 .NET and .NET 10 |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Documentation of the game: formats, mechanics, saves, assets, function notes and contracts. Moved: maintained at [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation); this copy is frozen |
 | [`lore/`](lore/_index.md) | The canonical lore and history library, embedded in the companion |
 | [`tools/`](tools/README.md) | Format decoders, asset exporters, capture analysis and the repository's checks |
@@ -115,7 +116,7 @@ checkout's `local-data/companion/`, including from a Git worktree.
 - Every write into the game is a choice the player makes, after a verified backup, never while the game runs. The
   companion's [`Files/GameWrites.cs`](companion/OnslaughtToolkit.Godot/Files/GameWrites.cs) is the write path that
   ships: a verified backup set outside the game folder, a running-game check before the backup and again before the
-  swap, an exchange swap that is undone if the displaced file is not the one backed up, and a read-back.
+  swap, an exchange swap that is undone if the displaced file is not the one backed up, and verification of the saved file.
 - Keep game binaries and assets (or converted copies), real saves, Ghidra databases, decompiler output, debugger
   transcripts, private captures, secrets and build output out of Git; `npm run test:safety` enforces the boundary.
 - Online multiplayer is not player-ready.

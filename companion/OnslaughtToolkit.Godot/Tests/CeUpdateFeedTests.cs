@@ -60,6 +60,33 @@ internal static class CeUpdateFeedTests
             "The detached hex signature accepts no newline, LF and CRLF.");
 
         string good = Feed();
+        string extended = good.Insert(1, "\"future\":true,\"release-notes\":\"Optional release details\"," +
+            "\"linux-arm64\":{\"artifact\":\"future-package\",\"features\":[\"example\"]},");
+        byte[] extendedData = Encoding.UTF8.GetBytes(extended);
+        check.That(CeUpdateFeed.Validate(extendedData, Sign(extendedData), TestKey, "0.1.1") is
+            { Verified: true, LatestVersion: "0.1.2", Availability: CeUpdateAvailability.Newer },
+            "Authenticated optional top-level fields, including a future platform, preserve the known release result.");
+        check.That(CeUpdateFeed.Validate(extendedData, signature, TestKey, "0.1.1") is { Verified: false, LatestVersion: null },
+            "Optional fields are accepted only when the signature authenticates their exact bytes.");
+        check.That(CeUpdateFeed.Validate("{"u8.ToArray(), signature, TestKey, "0.1.1").Message.Contains("signature", StringComparison.Ordinal),
+            "Unauthenticated malformed JSON fails signature verification before parsing.");
+        foreach (string required in new[] { "name", "version", "linux-i686", "windows-i686" })
+        {
+            byte[] missing = Encoding.UTF8.GetBytes(extended.Replace($"\"{required}\":", $"\"future-{required}\":", StringComparison.Ordinal));
+            check.That(CeUpdateFeed.Validate(missing, Sign(missing), TestKey, "0.1.1") is { Verified: false, LatestVersion: null },
+                $"Optional signed fields cannot replace the required {required} field.");
+        }
+        foreach (string duplicate in new[]
+        {
+            good.Insert(1, "\"future\":true,\"future\":false,"),
+            good.Insert(1, "\"future\":true,\"fut\\u0075re\":false,"),
+            extended.Replace("\"version\":", "\"version\":\"9.0\",\"version\":", StringComparison.Ordinal),
+        })
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(duplicate);
+            check.That(CeUpdateFeed.Validate(bytes, Sign(bytes), TestKey, "0.1.1") is { Verified: false, LatestVersion: null },
+                "Signed duplicate required or optional top-level names are rejected, including escaped spellings.");
+        }
         foreach (string malformed in new[]
         {
             good.Replace("\"version\":\"0.1.2\"", "\"version\":\"0.1.2\",\"version\":\"9.0\"", StringComparison.Ordinal),
@@ -73,7 +100,11 @@ internal static class CeUpdateFeedTests
             good.Replace("releases/download/v0.1.2", "releases/download/../../elsewhere", StringComparison.Ordinal),
             good.Replace(new string('a', 64), new string('g', 64), StringComparison.Ordinal),
             good.Replace("\"windows-i686\"", "\"unexpected-platform\"", StringComparison.Ordinal),
-            good.Replace("\"windows-i686\":", "\"future\":true,\"windows-i686\":", StringComparison.Ordinal),
+            good.Replace("\"sha256\":", "\"future\":true,\"sha256\":", StringComparison.Ordinal),
+            extended.Replace("\"name\":\"Onslaught CE\"", "\"name\":\"Other\"", StringComparison.Ordinal),
+            extended.Replace("\"version\":\"0.1.2\"", "\"version\":12", StringComparison.Ordinal),
+            extended.Replace("https://github.com/dlprentice/onslaught-ce/releases/download/", "https://example.com/", StringComparison.Ordinal),
+            extended.Replace(new string('a', 64), new string('g', 64), StringComparison.Ordinal),
             "[]", "null", "{", good + "{}",
         })
         {

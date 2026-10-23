@@ -125,7 +125,7 @@ internal sealed class CeSettingsPanel
         try
         {
             result = await _app.Workspace.SaveCeSettingsAsync(snapshot, UpdateCheck.ButtonPressed, RecordSessions.ButtonPressed,
-                backup, _app.GameRunning);
+                backup, _app.GameRunning, _app.Game.CePackageRoot, _app.Game.CeOriginalRoot);
         }
         finally
         {

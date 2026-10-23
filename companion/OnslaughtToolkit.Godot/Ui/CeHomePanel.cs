@@ -51,7 +51,7 @@ internal sealed class CeHomePanel
         Root.Visible = _app.Game.Target == GameTarget.OnslaughtCe;
         _version.Text = _app.Game.CeVersionMessage;
         _launcher.Text = _app.Game.Ce is CeInstallation ce ? "Launcher: " + ce.LauncherPath :
-            "CE was not found on PATH. Choose its launcher wherever you extracted the package.";
+            "CE was not found automatically. Choose its launcher wherever you extracted the package.";
         _userFolder.Text = "Saves and settings: " + (_app.Game.CeUserFolder.Length > 0 ? _app.Game.CeUserFolder : "No valid CE user folder");
         ChooseLauncher.Disabled = _app.Game.Busy || _app.Workspace.Busy;
         CheckUpdates.Disabled = _checking || _app.Game.Busy;
