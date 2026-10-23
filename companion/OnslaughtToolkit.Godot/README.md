@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-23 (CE save sources, launcher evidence and Windows limits clarified; branch status removed)
+Last updated: 2026-10-23 (CE sources and runtime limits clarified; signed feed extensions and version-label comparison documented)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it offers CE launch and reads signed public update information.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -55,6 +55,11 @@ pinned Ed25519 key before displaying a version. It downloads no package and inst
 the CE launcher owns updates. No saves, paths or installed version are sent. This check is
 user-initiated, not background telemetry. The verifier uses the pinned MIT-licensed
 BouncyCastle.Cryptography package; its notice is included in exports.
+Optional fields in the signed feed and its platform entries are accepted. Signed version labels
+such as `0.2.0-rc1` can be displayed, but differing labels with prerelease or build suffixes are
+not ordered; the companion reports that comparison is unavailable. Identical labels compare
+equal, and ordinary dotted numeric releases compare numerically. The CE launcher decides which
+updates to offer.
 
 The source contract was inspected at
 [CE commit 72a44140](https://github.com/dlprentice/onslaught-ce/tree/72a44140c6db3e093cc07b1bed40a0584fdfecd2):

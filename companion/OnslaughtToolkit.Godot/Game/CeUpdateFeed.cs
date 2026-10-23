@@ -76,9 +76,9 @@ public static class CeUpdateFeed
         {
             using JsonDocument document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 4 });
             JsonElement root = document.RootElement;
-            if (!RequiredFields(root, ["name", "version", "linux-i686", "windows-i686"], allowAdditional: true) ||
+            if (!RequiredFields(root, ["name", "version", "linux-i686", "windows-i686"]) ||
                 Text(root, "name") != "Onslaught CE" || Text(root, "version") is not string version ||
-                !TryVersion(version, out _) || !Package(root.GetProperty("linux-i686")) || !Package(root.GetProperty("windows-i686")))
+                !ValidVersionLabel(version) || !Package(root.GetProperty("linux-i686")) || !Package(root.GetProperty("windows-i686")))
                 return Failure("The signed release information has a format this companion does not support. CE has not been changed.");
 
             CeUpdateAvailability availability = Compare(version, installedVersion);
@@ -151,14 +151,14 @@ public static class CeUpdateFeed
         return true;
     }
 
-    private static bool RequiredFields(JsonElement value, string[] wanted, bool allowAdditional = false)
+    private static bool RequiredFields(JsonElement value, string[] wanted)
     {
         if (value.ValueKind != JsonValueKind.Object) return false;
         HashSet<string> seen = new(StringComparer.Ordinal);
         foreach (JsonProperty field in value.EnumerateObject())
             if (!seen.Add(field.Name)) return false;
-        // Signed top-level additions are optional, but cannot replace required fields or repeat any name.
-        return wanted.All(seen.Contains) && (allowAdditional || seen.Count == wanted.Length);
+        // Signed additions are optional, but cannot replace required fields or repeat any name.
+        return wanted.All(seen.Contains);
     }
 
     private static string? Text(JsonElement value, string key) =>
@@ -183,8 +183,20 @@ public static class CeUpdateFeed
         return true;
     }
 
+    private static bool ValidVersionLabel(string version)
+    {
+        if (version.Length is 0 or > 63) return false;
+        int suffix = version.IndexOfAny(['-', '+']);
+        if (suffix < 0) return TryVersion(version, out _);
+        return suffix > 0 && suffix < version.Length - 1 && TryVersion(version[..suffix], out _) &&
+            char.IsAsciiLetterOrDigit(version[suffix + 1]) &&
+            version[(suffix + 1)..].All(character => char.IsAsciiLetterOrDigit(character) || character is '.' or '-' or '+');
+    }
+
     private static CeUpdateAvailability Compare(string latest, string? installed)
     {
+        if (string.Equals(latest, installed, StringComparison.Ordinal)) return CeUpdateAvailability.Current;
+        // CE's version_cmp is numeric, not a prerelease-ordering contract. Different suffix labels remain incomparable.
         if (!TryVersion(latest, out int[] a) || !TryVersion(installed, out int[] b)) return CeUpdateAvailability.Unknown;
         for (int i = 0; i < Math.Max(a.Length, b.Length); i++)
         {

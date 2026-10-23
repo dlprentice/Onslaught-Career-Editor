@@ -136,7 +136,7 @@ internal sealed class HomePage : Page
         foreach (string promise in new[]
         {
             "Career changes are backed up before they replace a file.",
-            "Nothing is written into it while it or Onslaught CE is running." + OnslaughtCe.UntestedCheckNote,
+            "Nothing is written to game files while Battle Engine Aquila or Onslaught CE is running." + OnslaughtCe.UntestedCheckNote,
             "Verified career backups can be put back from Backups.",
         })
         {
@@ -380,7 +380,8 @@ internal sealed class HomePage : Page
         BackUpNow.Disabled = folder is null || _app.Workspace.Busy;
         ShowOldCopies();
         ShowVirtualStore(ce ? null : folder?.Root);
-        _folderLine.Text = folder is null ? "" : $"{(ce ? "CE user folder" : "Game folder")}: {folder.Root}  ({(folder.Source.StartsWith("Found through Steam", StringComparison.Ordinal) ? "found through Steam" : "chosen by you")})";
+        _folderLine.Text = folder is null ? "" : ce ? $"CE user folder: {folder.Root}" :
+            $"Game folder: {folder.Root}  ({(folder.Source.StartsWith("Found through Steam", StringComparison.Ordinal) ? "found through Steam" : "chosen by you")})";
     }
 
     /// <summary>Lists the old toolkit's careers again when they changed; the panel shows only when there are some.</summary>
