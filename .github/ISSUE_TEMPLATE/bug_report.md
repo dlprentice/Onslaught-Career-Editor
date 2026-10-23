@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Report a problem with the companion app, its tools or its documentation
+about: Report a problem with the companion app, its tools or this repository's documentation (game documentation: onslaught-preservation)
 title: "[Bug] "
 labels: bug
 assignees: ""
@@ -26,8 +26,8 @@ What happened instead?
 
 ## Reproduction
 
-List payload/secret-safe steps and commands. Redact local user paths, machine
-identifiers, and any proprietary payload details.
+List the steps and commands that show the problem. Remove your local user paths
+and machine names, and anything copied from the game's own files.
 
 If available, include the exact local validation command and its result.
 

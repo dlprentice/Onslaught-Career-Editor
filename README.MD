@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-10-23 (where to report problems; earlier: titled Onslaught Companion; Onslaught CE's install behaviour described; reverse-engineering/ marked as moved to onslaught-preservation; the related repositories are public and linked; the rebuild moved to onslaught-godot)
+Last updated: 2026-10-23 (the game documentation named as moved to onslaught-preservation; where to report problems; earlier: titled Onslaught Companion; Onslaught CE's install behaviour described; reverse-engineering/ marked as moved to onslaught-preservation; the related repositories are public and linked; the rebuild moved to onslaught-godot)
 Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
 
 Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
@@ -126,7 +126,8 @@ the reviewed exception to the no-save rule. See [`SECURITY.md`](SECURITY.md) and
 
 ## Evidence and provenance
 
-[`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) is the front door to the game documentation.
+The game documentation moved to [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation), where it is
+maintained; [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) here is a frozen copy.
 Findings name the specimen, capture, test or source line they rest on. Stuart's source release (GitHub `stuart73/Onslaught`) in the
 pinned [`references/Onslaught`](references/Onslaught) submodule is a source reference, not proof of retail behaviour.
 Earlier Ghidra-era records, the tracked Ghidra checkpoint and the campaign machinery are kept privately.

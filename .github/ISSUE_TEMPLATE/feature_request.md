@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest a payload/secret-safe product, tooling, or documentation improvement
+about: Suggest an improvement to the companion app, its tools or this repository's documentation
 title: "[Feature] "
 labels: enhancement
 assignees: ""
