@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Report a payload/secret-safe source, tooling, or app issue
+about: Report a problem with the companion app, its tools or its documentation
 title: "[Bug] "
 labels: bug
 assignees: ""
