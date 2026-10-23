@@ -1,8 +1,9 @@
 # Licence map for this repository (REUSE specification 3.3).
 # Per-file SPDX lines take precedence where a file has one; the last matching
 # annotation below wins for files without one.
-# Not covered here: rebuild/ (GPL-3.0-only, its own LICENSE, SPDX lines and
-# PROVENANCE.md) and references/ submodules (their own licences).
+# rebuild/ is GPL-3.0-only throughout (its own LICENSE and PROVENANCE.md); its
+# per-file SPDX lines take precedence and the annotation below covers the rest.
+# Not covered here: references/ submodules (their own licences).
 #
 # tests_shared/fixtures/gold_career_save.bin is deliberately unannotated: it is a
 # real career save written by the retail game and contributed by vandal_117 as
@@ -29,6 +30,13 @@ path = [
     "package-lock.json",
     "REUSE.toml",
 ]
+SPDX-FileCopyrightText = "David Prentice and Onslaught Toolkit contributors"
+SPDX-License-Identifier = "GPL-3.0-only"
+
+# The frozen rebuild copy: code, docs, data and project files, all GPL-3.0-only.
+# Files adapting Stuart Gillam's release also credit him (rebuild/PROVENANCE.md).
+[[annotations]]
+path = "rebuild/**"
 SPDX-FileCopyrightText = "David Prentice and Onslaught Toolkit contributors"
 SPDX-License-Identifier = "GPL-3.0-only"
 

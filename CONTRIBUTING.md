@@ -1,7 +1,7 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-10-22 (Onslaught CE and onslaught-godot linked; earlier: the retired AppCore patching core removed, inbound = outbound licensing)
+Last updated: 2026-10-22 (SPDX prose excluded from REUSE parsing; Onslaught CE and onslaught-godot linked; earlier: the retired AppCore patching core removed, inbound = outbound licensing)
 Summary: what a focused change looks like here, what must never be added to the
 repository, and which checks a change owes.
 
@@ -48,7 +48,9 @@ licensed under the same terms as the paths it changes, as [`REUSE.toml`](REUSE.t
 per-file SPDX line state them: code GPL-3.0-only ([`LICENSE`](LICENSE)), documentation and lore
 CC BY-SA 4.0 ([`LICENSES/CC-BY-SA-4.0.txt`](LICENSES/CC-BY-SA-4.0.txt)). Contribute only work you
 have the right to license this way; credit quoted or third-party material and keep its notice.
+<!-- REUSE-IgnoreStart -->
 New code files start with an `SPDX-License-Identifier: GPL-3.0-only` comment.
+<!-- REUSE-IgnoreEnd -->
 
 ## Ownership
 
