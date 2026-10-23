@@ -129,7 +129,7 @@ public static class Backups
     {
         if (!Path.IsPathFullyQualified(root) || !Directory.Exists(root))
             return new BackupReceipt(false, "Choose an existing backup folder.");
-        if (SteamLibraries.Canonical(root) is not string realRoot || IsInside(realRoot, game.Root))
+        if (SteamLibraries.Canonical(root) is not string realRoot || (IsInside(realRoot, game.Root) || IsInside(realRoot, game.AssetRoot)))
             return new BackupReceipt(false, "Choose a backup folder outside the game folder.");
         string folder = Path.Combine(realRoot, $"onslaught-backup-{now:yyyyMMdd-HHmmss}");
         for (int suffix = 2; Path.Exists(folder); suffix++)
@@ -283,12 +283,18 @@ public static partial class GameInstaller
         string? expectedSha256 = null, string reason = "Before a change to your game", Action? afterPublish = null)
     {
         // The page's list may be stale; every decision below uses a fresh read of the folder.
-        if (!GameFolder.LooksLikeGame(game.Root))
+        if (!game.IsAvailable)
             return new InstallReceipt(false, "The game folder is no longer there.", targetName);
-        game = GameFolder.Inspect(game.Root, game.Source);
+        game = game.Refresh();
         string target = Target(game, targetName) ?? "";
         if (target.Length == 0)
             return new InstallReceipt(false, "Only a .bes career in the game's savegames folder, or defaultoptions.bea, can be written.", targetName);
+        if (game.Target == GameTarget.OnslaughtCe)
+        {
+            try { FileMutationSafety.RejectOutputInGameTree(target); }
+            catch (Exception error) when (error is IOException or InvalidOperationException or UnauthorizedAccessException)
+            { return new InstallReceipt(false, error.Message, target); }
+        }
         if (gameRunning())
             return new InstallReceipt(false, RunningMessage, target);
         if (!CareerSave.Inspect(prepared).Ok)
@@ -369,7 +375,8 @@ public static partial class GameInstaller
     /// <summary>The full target path for an allowed name, or null.</summary>
     public static string? Target(GameFolder game, string name)
     {
-        if (string.Equals(name, OptionsName, StringComparison.OrdinalIgnoreCase)) return game.OptionsPath;
+        if (string.Equals(name, OptionsName, StringComparison.OrdinalIgnoreCase))
+            return game.Target == GameTarget.Original ? game.OptionsPath : null;
         if (name.Length is < 5 or > 128 || !name.EndsWith(".bes", StringComparison.OrdinalIgnoreCase) ||
             PortableNameProblem(name[..^4]) is not null)
             return null;
@@ -407,27 +414,29 @@ public static partial class GameInstaller
 /// </summary>
 internal static class PortableInstall
 {
+    /// <summary>
+    /// Publishes bytes already admitted by the caller. The default reader requires a complete career;
+    /// settings callers supply their own bounded reader, used for every comparison and the final read-back.
+    /// The caller supplies the verified backup hash and checks the running game in <paramref name="beforeSwap"/>.
+    /// </summary>
     internal static InstallReceipt Write(string target, byte[] prepared, string? backedUpSha256, string backupFolder,
-        Action? beforeCheck, Action? beforeSwap, Action? afterPublish)
+        Action? beforeCheck, Action? beforeSwap, Action? afterPublish, Func<FileStream, byte[]>? readBytes = null)
     {
+        readBytes ??= SaveLabSource.ReadSaveBytes;
         using FileMutationSafety.DirectoryLockSet locks = FileMutationSafety.LockDirectoryTree(Path.GetDirectoryName(target)!, "Game folder");
         string folder = locks.PhysicalPath;
         string name = Path.GetFileName(target);
         string destination = Path.Combine(folder, name);
         string staged = Path.Combine(folder, $".onslaught-install-{Guid.NewGuid():N}.tmp");
-        using (FileStream stream = new(staged, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.WriteThrough))
-        {
-            stream.Write(prepared);
-            stream.Flush(flushToDisk: true);
-            if (!SaveLabSource.ReadSaveBytes(stream).AsSpan().SequenceEqual(prepared))
-            {
-                stream.Dispose();
-                File.Delete(staged);
-                throw new IOException("The staged copy did not match the prepared bytes.");
-            }
-        }
         try
         {
+            using (FileStream stream = new(staged, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.WriteThrough))
+            {
+                stream.Write(prepared);
+                stream.Flush(flushToDisk: true);
+                if (!readBytes(stream).AsSpan().SequenceEqual(prepared))
+                    throw new IOException("The staged copy did not match the prepared bytes.");
+            }
             beforeCheck?.Invoke();
             if (backedUpSha256 is null)
             {
@@ -438,12 +447,12 @@ internal static class PortableInstall
                 return GameInstaller.AfterPublication(target, backupFolder, replaced: false, () =>
                 {
                     afterPublish?.Invoke();
-                    return Verified(destination, name, prepared, target, backupFolder, replaced: false);
+                    return Verified(destination, name, prepared, target, backupFolder, replaced: false, readBytes);
                 });
             }
 
             FileMutationSafety.RejectReparsePoint(destination, "Game file");
-            if (!string.Equals(Hash(ReadCareer(destination)), backedUpSha256, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(Hash(ReadFile(destination, readBytes)), backedUpSha256, StringComparison.OrdinalIgnoreCase))
                 throw new IOException($"{name} changed after it was backed up. Back up again before writing.");
             beforeSwap?.Invoke();
             string displaced = Path.Combine(folder, $".onslaught-displaced-{Guid.NewGuid():N}.tmp");
@@ -454,16 +463,19 @@ internal static class PortableInstall
             catch (Exception error) when (error is IOException or UnauthorizedAccessException)
             {
                 // A failed swap usually changes nothing; if the original is no longer in place, say so.
-                if (string.Equals(TryHash(destination), backedUpSha256, StringComparison.OrdinalIgnoreCase)) throw;
+                if (string.Equals(TryHash(destination, readBytes), backedUpSha256, StringComparison.OrdinalIgnoreCase)) throw;
                 return new InstallReceipt(false, $"{name} could not be swapped cleanly ({error.Message}). Check the game folder; the " +
                     "backup holds the earlier files.", target, backupFolder, MayHaveChanged: true);
             }
             return GameInstaller.AfterPublication(target, backupFolder, replaced: true, () =>
             {
                 afterPublish?.Invoke();
-                if (!string.Equals(TryHash(displaced), backedUpSha256, StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(TryHash(displaced, readBytes), backedUpSha256, StringComparison.OrdinalIgnoreCase))
                 {
                     // Another program wrote the file between the check and the swap: put its file back and withdraw ours.
+                    // If it has also changed our published file, preserve both files for inspection instead of overwriting it.
+                    if (!string.Equals(TryHash(destination, readBytes), Hash(prepared), StringComparison.OrdinalIgnoreCase))
+                        throw new IOException("The published file changed before rollback; the displaced file was kept at " + displaced);
                     string withdrawn = Path.Combine(folder, $".onslaught-withdrawn-{Guid.NewGuid():N}.tmp");
                     File.Replace(displaced, destination, withdrawn, ignoreMetadataErrors: true);
                     File.Delete(withdrawn);
@@ -471,7 +483,7 @@ internal static class PortableInstall
                         "unchanged and nothing was installed.", target, backupFolder, MayHaveChanged: true);
                 }
                 File.Delete(displaced);
-                return Verified(destination, name, prepared, target, backupFolder, replaced: true);
+                return Verified(destination, name, prepared, target, backupFolder, replaced: true, readBytes);
             });
         }
         finally
@@ -481,9 +493,10 @@ internal static class PortableInstall
         }
     }
 
-    private static InstallReceipt Verified(string destination, string name, byte[] prepared, string target, string backupFolder, bool replaced)
+    private static InstallReceipt Verified(string destination, string name, byte[] prepared, string target, string backupFolder, bool replaced,
+        Func<FileStream, byte[]> readBytes)
     {
-        byte[] bytes = ReadCareer(destination);
+        byte[] bytes = ReadFile(destination, readBytes);
         if (!bytes.AsSpan().SequenceEqual(prepared))
             return new InstallReceipt(false, "The write finished but the file in the game folder did not verify. Inspect it; the backup " +
                 "holds the earlier bytes.", target, backupFolder, replaced, MayHaveChanged: true);
@@ -497,17 +510,30 @@ internal static class PortableInstall
             throw new IOException($"{name} already exists; nothing was replaced.");
     }
 
-    private static byte[] ReadCareer(string path)
+    private static byte[] ReadFile(string path, Func<FileStream, byte[]> readBytes)
     {
-        using FileStream stream = new(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-        return SaveLabSource.ReadSaveBytes(stream);
+        if (OperatingSystem.IsLinux())
+        {
+            using LinuxSaveDirectory directory = LinuxSaveDirectory.Open(Path.GetDirectoryName(path)!);
+            using FileStream stream = directory.OpenRead(Path.GetFileName(path));
+            LinuxSaveNative.RequireRegular(LinuxSaveNative.Inspect(stream.SafeFileHandle), links: 1);
+            byte[] bytes = readBytes(stream);
+            directory.Verify();
+            return bytes;
+        }
+        using SafeFileHandle handle = FileMutationSafety.OpenNoFollowReadHandle(path, "Game file");
+        WindowsFileIdentity identity = FileMutationSafety.GetWindowsIdentity(handle, "Game file");
+        if (identity.IsReparsePoint || identity.NumberOfLinks != 1)
+            throw new IOException("The game file must be a regular file without links.");
+        using FileStream source = new(handle, FileAccess.Read);
+        return readBytes(source);
     }
 
-    private static string? TryHash(string path)
+    private static string? TryHash(string path, Func<FileStream, byte[]> readBytes)
     {
         try
         {
-            return File.Exists(path) ? Hash(ReadCareer(path)) : null;
+            return File.Exists(path) ? Hash(ReadFile(path, readBytes)) : null;
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {
@@ -530,16 +556,18 @@ internal static class LinuxInstall
     private const uint RenameExchange = 2;
     private const int NotSupported = 22, NoSystemCall = 38, NotDirectoryTypeSupported = 95;
 
+    /// <summary>Same contract as <see cref="PortableInstall.Write"/>, using descriptor-relative Linux publication.</summary>
     internal static InstallReceipt Write(string target, byte[] prepared, string? backedUpSha256, string backupFolder,
-        Action? beforeCheck, Action? beforeSwap, Action? afterPublish)
+        Action? beforeCheck, Action? beforeSwap, Action? afterPublish, Func<FileStream, byte[]>? readBytes = null)
     {
+        readBytes ??= SaveLabSource.ReadSaveBytes;
         string name = Path.GetFileName(target);
         using Folder folder = Folder.Open(Path.GetDirectoryName(target)!);
         using FileStream staged = folder.CreateUnnamed();
         staged.Write(prepared);
         staged.Flush(flushToDisk: true);
         LinuxSaveNative.Stat stagedStat = LinuxSaveNative.Inspect(staged.SafeFileHandle);
-        if (!SaveLabSource.ReadSaveBytes(staged).AsSpan().SequenceEqual(prepared))
+        if (!readBytes(staged).AsSpan().SequenceEqual(prepared))
             throw new IOException("The staged copy did not match the prepared bytes.");
         beforeCheck?.Invoke();
 
@@ -552,11 +580,11 @@ internal static class LinuxInstall
             return GameInstaller.AfterPublication(target, backupFolder, replaced: false, () =>
             {
                 afterPublish?.Invoke();
-                return Verified(folder, target, name, prepared, stagedStat, backupFolder, replaced: false, exchanged: false);
+                return Verified(folder, target, name, prepared, stagedStat, backupFolder, replaced: false, exchanged: false, readBytes);
             });
         }
 
-        (LinuxSaveNative.Stat original, byte[] originalBytes) = folder.ReadCareer(name);
+        (LinuxSaveNative.Stat original, byte[] originalBytes) = folder.ReadFile(name, readBytes);
         if (!string.Equals(Hash(originalBytes), backedUpSha256, StringComparison.OrdinalIgnoreCase))
             throw new IOException($"{name} changed after it was backed up. Back up again before writing.");
         string temporary = $".onslaught-install-{Guid.NewGuid():N}.tmp";
@@ -565,7 +593,7 @@ internal static class LinuxInstall
         bool exchanged;
         try
         {
-            (LinuxSaveNative.Stat again, byte[] againBytes) = folder.ReadCareer(name);
+            (LinuxSaveNative.Stat again, byte[] againBytes) = folder.ReadFile(name, readBytes);
             if (again.Identity != original.Identity || !againBytes.AsSpan().SequenceEqual(originalBytes))
                 throw new IOException($"{name} changed after it was backed up. Back up again before writing.");
             beforeSwap?.Invoke();
@@ -591,24 +619,29 @@ internal static class LinuxInstall
         {
             afterPublish?.Invoke();
             LinuxSaveNative.Stat displaced = folder.Inspect(temporary);
-            if (displaced.Identity != original.Identity)
+            if (displaced.Identity != original.Identity || !folder.Matches(temporary, originalBytes, readBytes))
             {
-                // Another file took the name between the check and the swap: put it back and withdraw ours.
-                folder.TryExchange(temporary, name);
+                // Both replacement and an in-place write to the same inode must be restored. Identity alone
+                // does not show that the bytes displaced by our swap are the bytes in the verified backup.
+                if (folder.Inspect(name).Identity != stagedStat.Identity || !folder.Matches(name, prepared, readBytes))
+                    throw new IOException("The published file changed before rollback; the displaced file was kept at " + temporary);
+                if (!folder.TryExchange(temporary, name))
+                    throw new IOException("The rollback exchange was unavailable; the displaced file was kept at " + temporary);
                 folder.RemoveOwn(temporary, stagedStat);
+                folder.Flush();
                 return new InstallReceipt(false, $"{name} was replaced by another program during the write. It was put back " +
                     "unchanged and nothing was installed.", target, backupFolder, MayHaveChanged: true);
             }
             folder.RemoveOwn(temporary, original);
-            return Verified(folder, target, name, prepared, stagedStat, backupFolder, replaced: true, exchanged: true);
+            return Verified(folder, target, name, prepared, stagedStat, backupFolder, replaced: true, exchanged: true, readBytes);
         });
     }
 
     private static InstallReceipt Verified(Folder folder, string target, string name, byte[] prepared, LinuxSaveNative.Stat staged,
-        string backupFolder, bool replaced, bool exchanged)
+        string backupFolder, bool replaced, bool exchanged, Func<FileStream, byte[]> readBytes)
     {
         folder.Flush();
-        (LinuxSaveNative.Stat written, byte[] bytes) = folder.ReadCareer(name);
+        (LinuxSaveNative.Stat written, byte[] bytes) = folder.ReadFile(name, readBytes);
         if (written.Identity != staged.Identity || !bytes.AsSpan().SequenceEqual(prepared))
             return new InstallReceipt(false, "The write finished but the file in the game folder did not verify. Inspect it; the backup " +
                 "holds the earlier bytes.", target, backupFolder, replaced, MayHaveChanged: true);
@@ -650,14 +683,27 @@ internal static class LinuxInstall
             }
         }
 
-        internal (LinuxSaveNative.Stat Stat, byte[] Bytes) ReadCareer(string name)
+        internal (LinuxSaveNative.Stat Stat, byte[] Bytes) ReadFile(string name, Func<FileStream, byte[]> readBytes)
         {
             VerifyFolder();
             SafeFileHandle handle = LinuxSaveNative.OpenAt(Descriptor, name, LinuxSaveNative.ReadFile, 0);
             using FileStream stream = new(handle, FileAccess.Read);
             LinuxSaveNative.Stat stat = LinuxSaveNative.Inspect(handle);
             LinuxSaveNative.RequireRegular(stat, links: 1);
-            return (stat, SaveLabSource.ReadSaveBytes(stream));
+            return (stat, readBytes(stream));
+        }
+
+        internal bool Matches(string name, byte[] expected, Func<FileStream, byte[]> readBytes)
+        {
+            try
+            {
+                return ReadFile(name, readBytes).Bytes.AsSpan().SequenceEqual(expected);
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            {
+                // A changed length or unreadable displaced file is not a verified match; keep it intact.
+                return false;
+            }
         }
 
         internal LinuxSaveNative.Stat Inspect(string name)

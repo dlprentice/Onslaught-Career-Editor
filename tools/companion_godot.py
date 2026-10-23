@@ -124,12 +124,28 @@ def allocate_output(owner: Path, mode: str) -> tuple[Path, dict[str, str]]:
         env[key] = str(path)
     env.update(TMP=env["TMPDIR"], TEMP=env["TMPDIR"], DOTNET_CLI_TELEMETRY_OPTOUT="1",
                DOTNET_NOLOGO="1", DOTNET_SKIP_FIRST_TIME_EXPERIENCE="1")
+    if mode in ("test", "capture"):
+        # Tests and captures must not discover real CE profiles through HOME or inherited overrides.
+        home = output / "profile/home"
+        home.mkdir(parents=True, exist_ok=True)
+        env["HOME"] = str(home)
+        env["NUGET_PACKAGES"] = os.environ.get("NUGET_PACKAGES", str(Path.home() / ".nuget/packages"))
+        for key in ("BEA_USER_DIR", "BEA_GAME_DIR", "BEA_UPDATE_FEED"):
+            env.pop(key, None)
     (output / "logs").mkdir()
     return output, env
 
 
 def run_logged(command: list[str], *, cwd: Path, env: dict[str, str], timeout: float | None,
                log: Path, godot: bool = False, echo: bool = True) -> subprocess.CompletedProcess[str]:
+    if godot and "--headless" in command and env.get("ONSLAUGHT_GODOT_HEADLESS"):
+        # The machine wrapper supplies isolated XDG directories and no desktop surface.
+        path_index = command.index("--path")
+        project_path = command[path_index + 1]
+        arguments = [arg for index, arg in enumerate(command[1:], 1)
+                     if index not in (path_index, path_index + 1) and arg != "--headless"]
+        env = dict(env, GODOT=command[0])
+        command = [env["ONSLAUGHT_GODOT_HEADLESS"], "--path", project_path, *arguments]
     try:
         result = run_process(command, cwd=cwd, env=env, timeout=timeout, capture=True)
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
@@ -358,6 +374,14 @@ def prepare_package_licenses(engine: Path, project: Path, env: dict[str, str], o
     (licenses / "GODOT-LICENSE.txt").write_text(notices.pop("license") + "\n", encoding="utf-8")
     (licenses / "GODOT-THIRD-PARTY-NOTICES.json").write_text(
         json.dumps(notices, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    lock = read_json(project / "packages.lock.json")
+    crypto = lock["dependencies"]["net10.0"].get("BouncyCastle.Cryptography")
+    if crypto:
+        cache = Path(env.get("NUGET_PACKAGES", str(Path.home() / ".nuget/packages")))
+        license_path = cache / "bouncycastle.cryptography" / crypto["resolved"] / "LICENSE.md"
+        if not license_path.is_file():
+            raise RuntimeError("The pinned BouncyCastle package license is missing")
+        shutil.copyfile(license_path, licenses / "BOUNCYCASTLE-LICENSE.txt")
     return licenses
 
 

@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-22 (the decompilation cited as onslaught-decomp; the related repositories are public and linked; the rebuild's queue moved to onslaught-godot; earlier: the companion moved to Godot 4.8 beta1 and .NET 10, AppCore removed)
+Last updated: 2026-10-23 (companion CE phase D)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
@@ -17,25 +17,22 @@ The rebuild's work queue, milestones and measured parity are kept in
 [onslaught-godot](https://github.com/dlprentice/onslaught-godot), where it is developed; `rebuild/` here is a frozen
 copy.
 
-### Companion — paused
+### Companion — CE integration
 
 The companion is a C# application built in code on Godot 4.8 beta1 .NET and .NET 10, and organised around players: careers
 with a campaign map, Goodies, career editing, cheats, game settings, automatic backups that can be put back, music
 and voices, and lore (see its [README](companion/OnslaughtToolkit.Godot/README.md)). Every write into the game is a
 choice made after a verified backup, never while the game runs.
 [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore) records
-what is proven. Development paused after the Goodies and mip work (branch `claude/companion-20261015`); it resumes
-when David sets new requirements.
+what is proven. David resumed companion development for phase D: CE as a separate target alongside the original game.
 
-Open when it resumes:
+Remaining acceptance and release work:
 
 - A human click-through, listening to the music and voices, and running the Windows package. The portable write
   path has run only on Linux; Windows cross-export and package checks do not establish Windows execution.
-- The Onslaught CE launcher and manager: find, launch and update Onslaught CE; show and edit CE's careers and
-  settings in CE's own folder, with the same protected writes and per-game backups; say which game is running. The
-  original game's save and settings editing stays, with protected writes. Executable patching and the WinUI app's
-  copied-install safe launch are retired; their code (AppCore and `patches/`) was removed on 2026-10-22, its test facts
-  kept in the companion's tests.
+- Phase D adds CE discovery, launcher-only start, signed public update status, CE careers and the two documented
+  launcher switches. The launcher retains update installation. See the companion README for the pinned contract,
+  backup scope and Windows limitations. Branch `codex/companion-ce-20261023` awaits the lead's review and merge.
   Any media replacement would be a CE option (for example a CE user-data override folder), not a file swap in an
   install. Then, at David's direction, a public release.
 
@@ -64,7 +61,7 @@ native source port (Windows and Linux) is published as [Onslaught CE](https://gi
 - The split: the Godot rebuild is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot) (the `rebuild/` copy here is frozen), and
   the game documentation is published as [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation). Still to come: this repository's
   full history is bundled into the private RE archive and flattened again, and the repository is renamed
-  onslaught-companion. The companion later becomes the CE launcher. Each step is a separate, coordinated task.
+  onslaught-companion. The companion CE integration is a separate feature branch for lead review. Each step is a separate, coordinated task.
 
 ## Paused
 

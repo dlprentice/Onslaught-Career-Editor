@@ -36,7 +36,7 @@ class CompanionLauncherTests(unittest.TestCase):
         for name, data in {
             "project.godot": 'config_version=5\n\n[application]\nconfig/name="Onslaught Toolkit"\n', "Main.tscn": WRAPPER,
             "OnslaughtToolkit.Godot.csproj": "integrated project", "global.json": '{"sdk":{"version":"10.0.402"}}',
-            "OnslaughtToolkit.Godot.sln": "single-project Godot solution", "packages.lock.json": "{}",
+            "OnslaughtToolkit.Godot.sln": "single-project Godot solution", "packages.lock.json": '{"dependencies":{"net10.0":{"BouncyCastle.Cryptography":{"resolved":"2.7.0"}}}}',
             "Ui/CompanionApp.cs": "code-built application root", "Files/ProtectedSaveFiles.cs": "integrated safety adapter",
             "Tests/CompanionTestRunner.cs": "C# contract runner", "Development/LicenseMetadata.cs": "C# notice entry", "Development/ScreenCapture.cs": "C# capture entry",
             "Development/IconWriter.cs": "C# icon entry",
@@ -63,7 +63,7 @@ class CompanionLauncherTests(unittest.TestCase):
             "tool=pathlib.Path(sys.argv[0]).name\n"
             "if '--version' in sys.argv:\n"
             f" print({sdk_version!r} if tool=='dotnet' else os.environ.get('FAKE_VERSION',{self.pins['engineVersion']!r})); raise SystemExit(0)\n"
-            "with open(os.environ['FAKE_CALLS'],'a') as f: f.write(json.dumps({'tool':tool,'args':sys.argv[1:],'cwd':os.getcwd(),'tmp':os.environ['TMPDIR'],'data':os.environ['XDG_DATA_HOME'],'cache':os.environ['XDG_CACHE_HOME'],'config':os.environ['XDG_CONFIG_HOME'],'old_bridge':os.environ.get('ONSLAUGHT_FILE_BRIDGE')})+'\\n')\n"
+            "with open(os.environ['FAKE_CALLS'],'a') as f: f.write(json.dumps({'tool':tool,'args':sys.argv[1:],'cwd':os.getcwd(),'tmp':os.environ['TMPDIR'],'data':os.environ['XDG_DATA_HOME'],'cache':os.environ['XDG_CACHE_HOME'],'config':os.environ['XDG_CONFIG_HOME'],'home':os.environ['HOME'],'ce_user':os.environ.get('BEA_USER_DIR'),'old_bridge':os.environ.get('ONSLAUGHT_FILE_BRIDGE')})+'\\n')\n"
             "if tool=='dotnet' and sys.argv[1]=='restore' and os.environ.get('FAKE_ADVISORY'): print('warning NU1903: Package X 1.0.0 has a known high severity vulnerability')\n"
             "if tool=='dotnet' and sys.argv[1] in ('restore','build'):\n"
             " project=pathlib.Path(sys.argv[2]).parent\n"
@@ -121,12 +121,15 @@ class CompanionLauncherTests(unittest.TestCase):
             pin["sha512"]=base64.b64encode(hashlib.sha512(nupkg.read_bytes()).digest()).decode()
             pin["sha256"]=host.sha256(nupkg)
             (package/(pin["package"]+".sha512")).write_text(pin["sha512"],encoding="ascii")
+        crypto = packages / "bouncycastle.cryptography/2.7.0"
+        crypto.mkdir(parents=True)
+        (crypto / "LICENSE.md").write_text("MIT license fixture", encoding="utf-8")
         self.packages = packages
         (self.project / "toolchain.json").write_text(json.dumps(self.pins),encoding="utf-8")
         for patch in (mock.patch.object(host,"ROOT",self.source),mock.patch.object(host,"COMPANION",self.project),
                       mock.patch.object(host,"FIXTURE",self.fixture),
                       mock.patch.object(host,"canonical_root",return_value=self.canonical),
-                      mock.patch.dict(os.environ,{"FAKE_CALLS":str(self.calls),"FAKE_NUGET":str(packages),"ONSLAUGHT_FILE_BRIDGE":"must-not-be-used","PATH":str(self.dotnet.parent)+os.pathsep+os.environ["PATH"]})):
+                      mock.patch.dict(os.environ,{"FAKE_CALLS":str(self.calls),"FAKE_NUGET":str(packages),"NUGET_PACKAGES":str(packages),"ONSLAUGHT_GODOT_HEADLESS":"","ONSLAUGHT_FILE_BRIDGE":"must-not-be-used","PATH":str(self.dotnet.parent)+os.pathsep+os.environ["PATH"]})):
             patch.start();self.addCleanup(patch.stop)
 
     def invoke(self,*arguments:str)->int:
@@ -135,6 +138,17 @@ class CompanionLauncherTests(unittest.TestCase):
 
     def calls_read(self)->list[dict]:
         return [json.loads(line) for line in self.calls.read_text().splitlines()] if self.calls.exists() else []
+
+    def test_optional_headless_wrapper_preserves_owned_profiles(self)->None:
+        wrapper = self.root / "godot-headless"
+        wrapper.write_text('#!/bin/sh\nexec "$GODOT" --headless "$@"\n', encoding="utf-8")
+        wrapper.chmod(0o755)
+        with mock.patch.dict(os.environ, {"ONSLAUGHT_GODOT_HEADLESS":str(wrapper), "BEA_USER_DIR":"/must-not-read-real-ce"}):
+            self.assertEqual(0, self.invoke("test"))
+        native = next(call for call in self.calls_read() if any(arg.startswith("--fixture=") for arg in call["args"]))
+        self.assertIn("--headless", native["args"])
+        self.assertTrue(Path(native["home"]).is_relative_to(self.canonical))
+        self.assertIsNone(native["ce_user"])
 
     def test_build_uses_integrated_project_and_exact_safety_snapshots(self)->None:
         self.assertEqual(0,self.invoke("build"))
@@ -209,7 +223,7 @@ class CompanionLauncherTests(unittest.TestCase):
             package=Path(call["args"][call["args"].index("--export-release")+2]).parent
             self.assertFalse((package/"file-bridge").exists());self.assertFalse(list(package.rglob("*TransactionTests*")))
             self.assertTrue(list(package.rglob("OnslaughtToolkit.Godot.dll")))
-            for name in ("LICENSE.txt","LORE-LICENSE.txt","GODOT-LICENSE.txt","GODOT-THIRD-PARTY-NOTICES.json","DOTNET-LICENSE.txt","DOTNET-THIRD-PARTY-NOTICES.txt"):self.assertTrue((package/name).is_file())
+            for name in ("LICENSE.txt","LORE-LICENSE.txt","GODOT-LICENSE.txt","GODOT-THIRD-PARTY-NOTICES.json","DOTNET-LICENSE.txt","DOTNET-THIRD-PARTY-NOTICES.txt","BOUNCYCASTLE-LICENSE.txt"):self.assertTrue((package/name).is_file())
             readme=(package/"README.txt").read_text();self.assertIn("no helper process",readme);self.assertIn("C# application built in code",readme)
             self.assertEqual(host.APP_LICENSE.read_bytes(),(package/"LICENSE.txt").read_bytes());self.assertIn("GNU GENERAL PUBLIC LICENSE",(package/"LICENSE.txt").read_text())
             self.assertIn("Attribution-ShareAlike 4.0 International",(package/"LORE-LICENSE.txt").read_text());self.assertIn("GPL-3.0-only",readme);self.assertIn("CC BY-SA 4.0",readme)

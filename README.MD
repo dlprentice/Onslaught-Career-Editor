@@ -11,8 +11,8 @@ repository holds it and the project's overview.
   reverse-engineering authority. Its public export is [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp).
 - **The native source port is the faithful game**, for Windows and Linux. Its source and downloads are published
   separately as **[Onslaught CE](https://github.com/dlprentice/onslaught-ce)** (GPL-3.0-only, no game files), not from this repository.
-- **The companion, Onslaught Companion, is the player app and the future Onslaught CE launcher** (development paused
-  until new requirements). It is a Godot .NET app that today works with the original game's Steam or retail install:
+- **The companion, Onslaught Companion, manages the original game and Onslaught CE.** It is a Godot .NET app with
+  separate save targets, CE launcher settings and signed public update checks:
   it opens on the player's game and careers, shows progress and Goodies, edits careers and
   settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, and plays
   and explains the game's own music, voices and lore.

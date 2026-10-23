@@ -1,13 +1,14 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-22 (Onslaught CE's install behaviour described; the decompilation cited as onslaught-decomp; the related repositories are linked; rebuild gate wording; the companion moved to Godot 4.8 beta1 and .NET 10.0.13, Windows backups default to an unsynced local folder; AppCore removed, its test facts now in the companion's tests; careers in old WinUI safe copies listed on Home; companion review fixes: CE running check seen on Linux, backups from another game folder after confirmation; the companion is Onslaught Companion and works with the original game only; AppCore patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-23 (companion CE integration)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
 
-The companion, Onslaught Companion, is the player app for the original game and the future Onslaught CE launcher; its
-development is paused until new requirements.
+The companion, Onslaught Companion, now has original-game and Onslaught CE targets. Phase D adds CE launcher
+discovery, protected CE careers, two launcher settings and signed update status; updates remain the launcher's job.
+See its [README](companion/OnslaughtToolkit.Godot/README.md) for the contract and platform limits.
 The byte-matching decompilation is complete and is the reverse-engineering authority (public export:
 [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp)); its native port is published separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce), and this
 document does not measure it. The Godot rebuild, a scoped proof of concept (level 100, startup to exit), is developed
@@ -149,10 +150,12 @@ scenes. David approved its feature set and Flight-deck look on 2026-09-25; on 20
 he asked for it to be built around players: easy to find your way, easy on the eyes, and
 safe for their game and saves.
 
-**Which game it works with:** today only the original game, the Steam or retail install that holds `BEA.exe`. It reads
-and writes that install's `savegames/*.bes` and `defaultoptions.bea`, and Play starts it through Steam. It does not read
-Onslaught CE's own career folder or launch CE, and its backups cover only the original game; it does refuse to write
-into the game folder while CE runs and to save a copy into CE's folder. Its sidebar:
+**Which game it works with:** Home selects the original game or Onslaught CE. Original careers and
+`defaultoptions.bea` stay associated with their install; CE careers belong to its separate user folder. The same
+protected career transactions apply to either target. CE starts through its selected launcher, can display a
+signature-verified public release version, and edits only the launcher's `update_check` and `record_sessions`
+switches. Original data is read separately for media. CE settings backups are separate verified files; the career
+Backups page does not restore `ce.ini`. Its sidebar:
 
 - **Home** finds the game through Steam (native, Flatpak or Snap on Linux; the registry
   on Windows) or a chosen folder, checks `BEA.exe` against the Steam release by SHA-256,

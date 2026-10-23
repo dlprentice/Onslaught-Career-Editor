@@ -5,6 +5,8 @@ using OnslaughtToolkit.Companion.Careers;
 
 namespace OnslaughtToolkit.Companion.Game;
 
+public enum GameTarget { Original, OnslaughtCe }
+
 public enum ExecutableState { Retail, Different, Missing, Unreadable }
 
 /// <summary>
@@ -58,6 +60,27 @@ public sealed record GameFile(string Path, string Name, long Size, DateTime Modi
 public sealed record GameFolder(string Root, string Source, ExecutableIdentity Executable, IReadOnlyList<GameFile> Careers,
     GameFile? Options, IReadOnlyList<string> Languages, int MusicTracks, int VoiceLines, int Cutscenes)
 {
+    public GameTarget Target { get; init; }
+    /// <summary>The original installation supplies media; Root always owns the selected target's saves.</summary>
+    public string AssetRoot { get; init; } = Root;
+    public string DisplayName => Target == GameTarget.OnslaughtCe ? "Onslaught CE" : "Original game";
+    public bool IsAvailable => Target == GameTarget.OnslaughtCe ? Directory.Exists(Root) : LooksLikeGame(Root);
+    public GameFolder Refresh() => Target == GameTarget.OnslaughtCe ? InspectCe(Root, AssetRoot) : Inspect(Root, Source);
+
+    public static GameFolder InspectCe(string userFolder, string? assetRoot = null)
+    {
+        string root = Path.GetFullPath(userFolder);
+        List<GameFile> careers = [];
+        string saves = Path.Combine(root, "savegames");
+        if (Directory.Exists(saves))
+            foreach (FileInfo file in new DirectoryInfo(saves).EnumerateFiles("*.bes").OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase))
+                careers.Add(Describe(file));
+        GameFolder? assets = LooksLikeGame(assetRoot) ? Inspect(assetRoot!, "Original game data") : null;
+        return new GameFolder(root, "CE user folder", new(ExecutableState.Missing), careers, null,
+            assets?.Languages ?? [], assets?.MusicTracks ?? 0, assets?.VoiceLines ?? 0, assets?.Cutscenes ?? 0)
+            { Target = GameTarget.OnslaughtCe, AssetRoot = assets?.Root ?? root };
+    }
+
     public string SavegamesPath => System.IO.Path.Combine(Root, "savegames");
     public string OptionsPath => System.IO.Path.Combine(Root, "defaultoptions.bea");
 
@@ -143,6 +166,8 @@ public sealed record GameFolder(string Root, string Source, ExecutableIdentity E
 public sealed class CompanionSettings
 {
     public string? GameFolder { get; set; }
+    public GameTarget Target { get; set; }
+    public string? CeLauncher { get; set; }
 
     /// <summary>Where backups go; null means the default folder.</summary>
     public string? BackupFolder { get; set; }
@@ -166,10 +191,11 @@ public sealed class BackupLocation(SettingsStore settings, string defaultFolder)
     {
         try
         {
+            Files.OutputGuard.Reject(Path.Combine(Folder, ".backup-location-check.bes"));
             Directory.CreateDirectory(Folder);
             return Folder;
         }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or InvalidOperationException)
         {
             return null;
         }

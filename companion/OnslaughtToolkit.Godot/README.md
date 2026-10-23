@@ -1,8 +1,8 @@
 # Onslaught Companion
 
-Status: paused (since 2026-10-16, until new requirements); C# application built entirely in code on Godot 4.8 beta1 .NET and .NET 10, organised around the player: careers, Goodies, editing, cheats, game settings, backups, music, voices, lore, and the game's models and textures; Linux executed checks, Windows runtime acceptance pending
-Last updated: 2026-10-22 (moved to Godot 4.8 beta1 and .NET 10.0.13 with SDK 10.0.402, runtime packs pinned by hash, a NuGet audit route and pruned run folders; packages named OnslaughtCompanion; Windows backups default to the unsynced local app data folder and Home names careers Windows kept in VirtualStore; AppCore removed: file safety cut down to what the companion calls, its test facts carried over, careers in the old WinUI toolkit's copies listed on Home; review fixes: close never abandons a backup started while it asks, settings picker keeps unsaved changes (also when the shown file is picked again or a key edit is refused), CE check seen against a running CE on Linux (output kept), backups from another game folder go back after a confirmation naming both; data-safety fixes: restore checks the manifest hash and game folder, running check also for Onslaught CE and again before the swap, unsaved-changes prompts, right-hand Shift and Control; named Onslaught Companion; works with the original game only; relicensed GPL-3.0-only, lore CC BY-SA 4.0)
-Summary: Onslaught Companion, the GPL-3.0-only app for Battle Engine Aquila players: today it works with the original game's Steam or retail install; it opens on that game and its careers, shows progress and Goodies, changes careers and settings only after a verified backup and a clear choice, keeps automatic backups that can be put back, plays and explains the game's own music, voices and lore, and saves copies of its models (glTF), textures (PNG) and sound effects (WAV).
+Status: active — phase D CE integration
+Last updated: 2026-10-23
+Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it launches CE and reads its signed public update information.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
 changes in the game is backed up first and can be put back. Retail reverse engineering, the
@@ -12,26 +12,45 @@ depends on the rebuild. Tools for looking at raw bytes are kept, folded away und
 
 ## Which game it works with
 
-Today the companion works with **the original game only**: the Steam or retail install that
-holds `BEA.exe`. It reads and writes that install's `savegames/*.bes` careers and its
-`defaultoptions.bea`, and its Play button asks Steam to start the original game. It does not
-yet read Onslaught CE's own career folder (`~/.local/share/onslaught-ce`, or
-`%APPDATA%\Onslaught CE` on Windows), cannot launch Onslaught CE, and backs up only the
-original game's careers and settings. It does know when Onslaught CE is running and then
-writes nothing into the game folder, because CE reads the same install, and it refuses to save
-a copy into CE's folder. Making it the Onslaught CE launcher and manager is the next step
-(see below).
+Choose **Original Battle Engine Aquila** or **Onslaught CE** on Home. The original target uses
+its installation's careers and `defaultoptions.bea`; its Play button starts Steam. CE uses its
+separate user folder and starts only `onslaught-ce` (Linux) or `onslaught-ce.exe` (Windows).
+Portable CE packages can live anywhere: the companion checks PATH and a remembered launcher,
+and offers a file picker. Its `--version` reply is displayed without starting the game.
+
+CE user-folder precedence matches the launcher: `BEA_USER_DIR`, then Linux
+`$XDG_DATA_HOME/onslaught-ce` or `~/.local/share/onslaught-ce`; Windows uses
+`%APPDATA%\Onslaught CE`. Relative, drive-root and home-root overrides are refused. The launcher
+creates its user folder; the companion does not invent an installation. Original game data is
+read separately for media and never becomes the destination of a CE career write.
+
+CE careers use the existing `.bes` codec and protected backup/write/reopen path. Running-game,
+stale-file, link and changed-target checks remain mandatory. CE settings edits are limited to
+`update_check` and `record_sessions` in `ce.ini`. Unknown lines stay intact; invalid encoding is
+refused. Saving makes a verified external settings copy, stages the whole new file beside the
+original and swaps it atomically with readback. These settings backups are named
+`onslaught-ce-settings-*` and are kept separately from the career backup sets; automatic backups
+and the Backups page manage careers, not these settings copies.
+
+**Check public updates** contacts only the public GitHub release feed and its detached signature
+(and GitHub's HTTPS asset redirects). The companion authenticates the exact bytes with CE's
+pinned Ed25519 key before displaying a version. It downloads no package and installs no update;
+the CE launcher owns updates. No saves, paths or installed version are sent. This check is
+user-initiated, not background telemetry. The verifier uses the pinned MIT-licensed
+BouncyCastle.Cryptography package; its notice is included in exports.
+
+The launcher contract was inspected at
+[CE commit 72a44140](https://github.com/dlprentice/onslaught-ce/tree/72a44140c6db3e093cc07b1bed40a0584fdfecd2):
+`port/updater/ce_launch.c`, `port/updater/ce_report.h`, `port/tools/package.py` and
+`port/tools/sign_release.py`. Windows process detection, console version capture and publication
+still need Windows runtime validation. Linux tests do not establish those Windows behaviors.
 
 ## Working lane
 
-Development is paused (since 2026-10-16) until David sets new requirements; no branch is
-active. The next item is making the companion the Onslaught CE launcher and manager: find,
-launch and update CE, and show and edit its careers and settings in CE's own folder.
-Original-game career and settings editing stays, with the same protected writes. Executable
-patching and the copied-profile "safe launch" of the retired WinUI app are retired, not
-planned; enhancements to the game belong in Onslaught CE as opt-in options. On resume, start
-from `main` in a worktree of an internal-disk clone (the familiar checkout lives on a USB drive
-and takes light I/O only) and run this project's `npm test`.
+Phase D runs on `codex/companion-ce-20261023` for lead review. It changes only the companion;
+CE releases, port and parity remain with their owners. No main merge or release is part of this
+phase. Build and test in an internal-disk clone, using `npm test`; the archive checkout receives
+only light I/O. Test and capture profiles use private HOME/XDG directories and owned fixture copies.
 
 ## Layout
 
@@ -88,6 +107,9 @@ window**; use it when the desktop is available. Each command stages the project 
 directory with isolated imports, profiles, scratch and logs, and prints that directory.
 Worktrees use the [canonical lab rules](../../LOCAL_LAB_OVERLAY.md); no research corpus
 is copied.
+
+On machines with the shared wrapper, `ONSLAUGHT_GODOT_HEADLESS=godot-headless npm test` routes engine checks
+through it. Tests and captures use a private HOME and clear inherited CE user-folder overrides.
 
 `npm test` runs `Tests/CompanionTestRunner.cs` against an owned copy of the one tracked
 [real-save fixture](../../tests_shared/fixtures/README.md) and a game-shaped folder built
@@ -274,7 +296,7 @@ code keeps them:
   2026-09-26, with the Steam game running under Proton, the check found exactly the game's own process (`BEA.exe`, argv[0] `S:\steamapps\common\Battle Engine
   Aquila\BEA.exe`) and not Steam's launcher shim, the Proton script or the runtime wrapper;
   `python tools/companion_godot.py test --script Development/RunningCheck.cs` prints what it sees.
-- **Any earlier version can be put back from Backups.** Putting a file back is itself a
+- **Career backup sets can be put back from Backups.** Putting a file back is itself a
   write into the game, so it backs up the current files first. The file is put back only if
   its bytes still match the SHA-256 the backup's manifest recorded. A backup made from another
   game folder (an install that moved, or another copy of the game) is put back only after a

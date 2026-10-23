@@ -16,7 +16,8 @@ internal sealed class HomePage : Page
     private readonly AppServices _app;
     private readonly TextureRect _art;
     private readonly Emblem _emblem;
-    private readonly Label _heroStatus, _folderLine, _backupLine;
+    private readonly Label _heroStatus, _folderLine, _backupLine, _heroTitle;
+    private readonly CeHomePanel _ce;
     private readonly PanelContainer _askBackups, _backupsOn, _oldCopies;
     private readonly Label _oldCopiesNote, _virtualStoreNote;
     private readonly PanelContainer _virtualStore;
@@ -33,6 +34,16 @@ internal sealed class HomePage : Page
         _app = app;
         (ScrollContainer scroll, VBoxContainer content) = Build.Scroller(18);
         Root = scroll;
+
+        HBoxContainer targetRow = content.Add(Build.Row(12));
+        targetRow.Add(Build.Text("Game", "Strong", wrap: false));
+        Target = targetRow.Add(new OptionButton { CustomMinimumSize = new Vector2(240, 0) });
+        Target.AddItem("Original Battle Engine Aquila", (int)GameTarget.Original);
+        Target.AddItem("Onslaught CE", (int)GameTarget.OnslaughtCe);
+        Target.ItemSelected += index =>
+        {
+            if (_app.SelectTarget is not null) _app.Status.Track(_app.SelectTarget((GameTarget)index));
+        };
 
         // The banner: the Battle Engine render from the game's manual, shaded so the words stay readable.
         PanelContainer hero = content.Add(new PanelContainer { ThemeTypeVariation = "Hero", ClipContents = true,
@@ -61,7 +72,7 @@ internal sealed class HomePage : Page
         words.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         VBoxContainer heroColumn = words.Add(Build.Column(6));
         heroColumn.Add(Build.Eyebrow("Your game"));
-        heroColumn.Add(Build.Text("Battle Engine Aquila", "HeroTitle", wrap: false));
+        _heroTitle = heroColumn.Add(Build.Text("Battle Engine Aquila", "HeroTitle", wrap: false));
         _heroStatus = heroColumn.Add(Build.Text("Looking for your game…", "HeroText"));
         _heroStatus.CustomMinimumSize = new Vector2(520, 0);
         _heroStatus.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
@@ -71,6 +82,9 @@ internal sealed class HomePage : Page
         Play.Icon = Icons.Get("play");
         ChooseFolder = heroActions.Add(Build.Button("Choose game folder…", "", "The folder that contains BEA.exe and the data folder."));
         ChooseFolder.Icon = Icons.Get("folder");
+
+        _ce = new CeHomePanel(app);
+        content.Add(_ce.Root);
 
         _columns = content.Add(new GridContainer { Columns = 2 });
         _columns.AddThemeConstantOverride("h_separation", 18);
@@ -105,8 +119,8 @@ internal sealed class HomePage : Page
         (PanelContainer safety, VBoxContainer safetyBody) = Build.Card("Your safety net", 10);
         (_askBackups, VBoxContainer ask) = Build.Panel("CautionNotice", 8);
         ask.Add(Build.Text("Keep automatic backups?", "Strong"));
-        ask.Add(Build.Text("When the companion opens, and when you close the original game while it is open, it copies that game's " +
-            "careers and settings to a backup folder if anything changed. Nothing is ever deleted.", "Muted"));
+        ask.Add(Build.Text("When the companion opens, and when you close the game while it is open, it copies the selected game's " +
+            "careers to a backup folder if anything changed. Original-game backups also include default settings. Nothing is ever deleted.", "Muted"));
         HBoxContainer askActions = ask.Add(Build.Row(10));
         TurnOnBackups = askActions.Add(Build.Button("Turn on automatic backups", "Primary"));
         NotNow = askActions.Add(Build.Button("Not now"));
@@ -121,9 +135,9 @@ internal sealed class HomePage : Page
         safetyBody.Add(_backupsOn);
         foreach (string promise in new[]
         {
-            "Nothing in your original game changes without a backup first.",
+            "Career changes are backed up before they replace a file.",
             "Nothing is written into it while it or Onslaught CE is running." + OnslaughtCe.UntestedCheckNote,
-            "Any earlier version of its careers and settings can be put back from Backups.",
+            "Verified career backups can be put back from Backups.",
         })
         {
             HBoxContainer line = safetyBody.Add(Build.Row(10));
@@ -173,6 +187,15 @@ internal sealed class HomePage : Page
 
         Play.Pressed += () =>
         {
+            if (_app.Game.Target == GameTarget.OnslaughtCe)
+            {
+                if (_app.Game.Ce is CeInstallation ce)
+                {
+                    Outcome<string> launched = ce.Launch();
+                    _app.Status.Show(launched.Message, launched.Ok ? StatusKind.Success : StatusKind.Failure);
+                }
+                return;
+            }
             _app.OpenUrl($"steam://rungameid/{SteamLibraries.AppId}");
             _app.Status.Show("Asking Steam to start Battle Engine Aquila…");
         };
@@ -184,7 +207,7 @@ internal sealed class HomePage : Page
         AddDialog.FileSelected += AskToAdd;
         Manual.Pressed += () =>
         {
-            if (GameArt.Manual(_app.Game.Folder?.Root) is string manual) _app.OpenUrl(manual);
+            if (GameArt.Manual(_app.Game.Folder?.AssetRoot) is string manual) _app.OpenUrl(manual);
         };
         TurnOnBackups.Pressed += () => _app.Status.Track(TurnOnAutomaticBackupsAsync());
         NotNow.Pressed += () =>
@@ -203,6 +226,8 @@ internal sealed class HomePage : Page
     internal override Control Root { get; }
     internal override string Subtitle => "Your game, your careers and your safety net";
 
+    internal OptionButton Target { get; }
+    internal CeHomePanel CePanel => _ce;
     internal Button Play { get; }
     internal Button ChooseFolder { get; }
     internal Button AddCareer { get; }
@@ -301,14 +326,23 @@ internal sealed class HomePage : Page
     internal void ShowGame()
     {
         GameFolder? folder = _app.Game.Folder;
-        Texture2D? art = GameArt.Load(folder?.Root, GameArt.Banner);
+        bool ce = _app.Game.Target == GameTarget.OnslaughtCe;
+        Target.Select((int)_app.Game.Target);
+        Target.Disabled = _app.Game.Busy || _app.Workspace.Busy;
+        _heroTitle.Text = ce ? "Onslaught CE" : "Battle Engine Aquila";
+        _ce.Refresh();
+        Texture2D? art = GameArt.Load(folder?.AssetRoot, GameArt.Banner);
         _art.Texture = art;
         _emblem.Visible = art is null;
-        ChooseFolder.Disabled = _app.Game.Busy;
+        ChooseFolder.Disabled = _app.Game.Busy || _app.Workspace.Busy;
         ChooseFolder.ThemeTypeVariation = folder is null && !_app.Game.Busy ? "Primary" : "";
-        ChooseFolder.Text = folder is null ? "Choose game folder…" : "Change folder…";
-        Play.Visible = folder is not null && folder.Root.Replace('\\', '/').Contains("/steamapps/", StringComparison.OrdinalIgnoreCase);
-        Manual.Visible = GameArt.Manual(folder?.Root) is not null;
+        ChooseFolder.Text = ce ? "Choose media folder…" : folder is null ? "Choose game folder…" : "Change folder…";
+        ChooseFolder.TooltipText = ce ? "Original installation used for the companion's media. CE chooses its own data when it starts."
+            : "The folder that contains BEA.exe and the data folder.";
+        Play.Visible = ce ? _app.Game.Ce is not null : folder is not null && folder.Root.Replace('\\', '/').Contains("/steamapps/", StringComparison.OrdinalIgnoreCase);
+        Play.Disabled = _app.Game.Busy || _app.Workspace.Busy || _app.GameRunning();
+        Play.TooltipText = ce ? "Starts the selected CE launcher; it handles updates." : "Starts the original game through Steam.";
+        Manual.Visible = GameArt.Manual(folder?.AssetRoot) is not null;
         AddCareer.Disabled = folder is null;
         Careers.Show();
 
@@ -325,7 +359,7 @@ internal sealed class HomePage : Page
         }
         else
         {
-            string version = folder.Executable.State switch
+            string version = ce ? _app.Game.CeVersionMessage : folder.Executable.State switch
             {
                 ExecutableState.Retail => "Original game (Steam, unmodified)",
                 ExecutableState.Different => "Original game (its BEA.exe differs from the Steam release; on Steam, Verify integrity of " +
@@ -345,8 +379,8 @@ internal sealed class HomePage : Page
             $"\nFolder: {_app.Backups.Folder}";
         BackUpNow.Disabled = folder is null || _app.Workspace.Busy;
         ShowOldCopies();
-        ShowVirtualStore(folder?.Root);
-        _folderLine.Text = folder is null ? "" : $"Game folder: {folder.Root}  ({(folder.Source.StartsWith("Found through Steam", StringComparison.Ordinal) ? "found through Steam" : "chosen by you")})";
+        ShowVirtualStore(ce ? null : folder?.Root);
+        _folderLine.Text = folder is null ? "" : $"{(ce ? "CE user folder" : "Game folder")}: {folder.Root}  ({(folder.Source.StartsWith("Found through Steam", StringComparison.Ordinal) ? "found through Steam" : "chosen by you")})";
     }
 
     /// <summary>Lists the old toolkit's careers again when they changed; the panel shows only when there are some.</summary>

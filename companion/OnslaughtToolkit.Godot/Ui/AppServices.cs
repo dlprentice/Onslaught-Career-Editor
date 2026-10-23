@@ -18,6 +18,8 @@ internal sealed class AppServices
     internal required Func<bool> GameRunning { get; init; }
 
     internal required Action<string> OpenUrl { get; init; }
+    internal Func<GameTarget, Task>? SelectTarget { get; init; }
+
     internal required Action<string> Navigate { get; init; }
     /// <summary>Opens a career read-only as the open one, without asking; for the companion's own reopen after a save.</summary>
     internal required Func<string, Task<Outcome<SaveSession>>> OpenCareer { get; init; }

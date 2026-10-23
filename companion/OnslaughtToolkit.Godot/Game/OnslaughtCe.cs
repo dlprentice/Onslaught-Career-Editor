@@ -8,8 +8,8 @@ namespace OnslaughtToolkit.Companion.Game;
 /// The process rule was seen finding a running Onslaught CE 0.1 on Linux on 2026-10-22 (its <c>bea</c> started from the
 /// package folder, before and after its file was replaced while it ran; the check's output is kept in the ignored
 /// <c>local-data/companion/evidence/ce-running-check-2026-10-22.log</c>); it has not been tried on Windows. The
-/// companion does not read or write CE's folder yet; it only refuses to
-/// save copies there and counts CE as the game while it runs, because CE reads the original install's careers too.
+/// companion treats CE as a separate target. Unprotected separate-copy destinations remain excluded; CE careers
+/// use the same backed-up installation path as original careers, against the CE user folder only.
 /// </summary>
 public static class OnslaughtCe
 {

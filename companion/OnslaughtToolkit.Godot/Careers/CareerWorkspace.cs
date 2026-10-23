@@ -27,6 +27,14 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
     /// <summary>Raised after a different career becomes the open one.</summary>
     public event Action? SessionOpened;
 
+    public void CloseSession()
+    {
+        if (Busy) return;
+        Session = null;
+        LastVerifiedOutput = "";
+        Changed?.Invoke();
+    }
+
     public async Task<Outcome<SaveSession>> OpenAsync(string path)
     {
         if (Busy) return Outcome<SaveSession>.Refusal("A file operation is already running.");
@@ -204,6 +212,19 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
         {
             SetBusy(false);
         }
+    }
+
+    public async Task<InstallReceipt> SaveCeSettingsAsync(Options.CeSettings settings, bool updateCheck, bool recordSessions,
+        string backupRoot, Func<bool> gameRunning)
+    {
+        if (Busy) return new InstallReceipt(false, "A file operation is already running.", settings.Path);
+        SetBusy(true);
+        try
+        {
+            return await worker.RunExclusiveAsync(_ => settings.Save(updateCheck, recordSessions, backupRoot, gameRunning, DateTime.Now),
+                message => new InstallReceipt(false, message, settings.Path));
+        }
+        finally { SetBusy(false); }
     }
 
     /// <summary>Blocks until a running transaction finishes; used only while the application closes.</summary>

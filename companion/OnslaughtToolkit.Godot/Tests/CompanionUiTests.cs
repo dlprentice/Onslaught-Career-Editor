@@ -72,8 +72,8 @@ internal static class CompanionUiTests
         check.That(app.Status.Game.Text.Contains("differs from the Steam release") && app.Home.HeroStatus.StartsWith("Original game", StringComparison.Ordinal),
             "the status bar and Home say the test executable is the original game but not the Steam release");
         check.That(app.Sidebar.Root.FindChildren("*", nameof(Label), true, false).OfType<Label>().Any(label => label.Text == "COMPANION") &&
-            app.Home.Promises.Count == 3 && app.Home.Promises[0].Text.Contains("original game") && app.Home.Promises[1].Text.Contains("Onslaught CE"),
-            "the sidebar names Onslaught Companion and Home's promises say they cover the original game, and CE while it runs");
+            app.Home.Promises.Count == 3 && app.Home.Promises[0].Text.Contains("Career changes") && app.Home.Promises[1].Text.Contains("Onslaught CE"),
+            "the sidebar names Onslaught Companion and Home's promises cover backed-up career changes and refuse while CE runs");
         check.That(app.Home.AskingAboutBackups, "Home asks once whether to keep automatic backups");
         check.That(app.Home.ShowsGameArt && app.Home.Manual.Visible, "Home shows the game's own art and offers its manual when the install has them");
         check.That(!app.Sidebar.IsOpen("Advanced") && app.Sidebar.Items.Count == app.Pages.Count,
