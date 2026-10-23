@@ -1,7 +1,7 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-10-22 (SPDX prose excluded from REUSE parsing; Onslaught CE and onslaught-godot linked; earlier: the retired AppCore patching core removed, inbound = outbound licensing)
+Last updated: 2026-10-23 (companion and lore issues go to this repository's issues; earlier: SPDX prose excluded from REUSE parsing; Onslaught CE and onslaught-godot linked; the retired AppCore patching core removed, inbound = outbound licensing)
 Summary: what a focused change looks like here, what must never be added to the
 repository, and which checks a change owes.
 
@@ -9,7 +9,9 @@ This public repository holds the Godot toolkit companion (paused until new requi
 *Battle Engine Aquila* as prose and specs, our tools and a frozen copy of the Godot
 rebuild, which is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot). The byte-matching decompilation's public export is
 [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp); its native port is published separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce);
-report port problems in [its issues](https://github.com/dlprentice/onslaught-ce/issues). [GOAL.md](GOAL.md) states the
+report port problems in [its issues](https://github.com/dlprentice/onslaught-ce/issues). Report companion, lore and
+documentation problems in [this repository's issues](https://github.com/dlprentice/Onslaught-Career-Editor/issues), and
+rebuild problems in [onslaught-godot](https://github.com/dlprentice/onslaught-godot/issues). [GOAL.md](GOAL.md) states the
 direction and [PROGRAM.md](PROGRAM.md) the work queue. Keep changes focused and use existing records and
 validation.
 

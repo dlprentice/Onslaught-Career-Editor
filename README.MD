@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-10-22 (titled Onslaught Companion; Onslaught CE's install behaviour described; reverse-engineering/ marked as moved to onslaught-preservation; the related repositories are public and linked; the rebuild moved to onslaught-godot)
+Last updated: 2026-10-23 (where to report problems; earlier: titled Onslaught Companion; Onslaught CE's install behaviour described; reverse-engineering/ marked as moved to onslaught-preservation; the related repositories are public and linked; the rebuild moved to onslaught-godot)
 Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
 
 Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
@@ -31,6 +31,12 @@ retail game, its assets, names, or trademarks.
 
 To play the game, use Onslaught CE, the native source port. It needs your own installation of the game for its data.
 Its source and downloads are at [Onslaught CE](https://github.com/dlprentice/onslaught-ce).
+
+## Report a problem
+
+- The game (Onslaught CE): [Onslaught CE's issues](https://github.com/dlprentice/onslaught-ce/issues).
+- The companion, lore or this repository's documentation: [this repository's issues](https://github.com/dlprentice/Onslaught-Career-Editor/issues).
+- The Godot rebuild: [onslaught-godot's issues](https://github.com/dlprentice/onslaught-godot/issues).
 
 ## Related repositories
 
