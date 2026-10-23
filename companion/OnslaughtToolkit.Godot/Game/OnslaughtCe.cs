@@ -3,7 +3,7 @@ namespace OnslaughtToolkit.Companion.Game;
 
 /// <summary>
 /// What the companion knows about Onslaught CE, the native port, read as a documented contract from the port's own
-/// source (bea-decomp <c>port/platform/linux/paths.cpp</c>, <c>port/platform/windows/files.cpp</c> and
+/// source (Onslaught CE's <c>port/platform/linux/paths.cpp</c>, <c>port/platform/windows/files.cpp</c> and
 /// <c>port/tools/package.py</c>): where CE keeps its own careers and settings, and which programs a CE package holds.
 /// The process rule was seen finding a running Onslaught CE 0.1 on Linux on 2026-10-22 (its <c>bea</c> started from the
 /// package folder, before and after its file was replaced while it ran; the check's output is kept in the ignored

@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-22 (the decompilation cited as onslaught-decomp; the related repositories are linked; rebuild gate wording; the companion moved to Godot 4.8 beta1 and .NET 10.0.13, Windows backups default to an unsynced local folder; AppCore removed, its test facts now in the companion's tests; careers in old WinUI safe copies listed on Home; companion review fixes: CE running check seen on Linux, backups from another game folder after confirmation; the companion is Onslaught Companion and works with the original game only; AppCore patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-22 (Onslaught CE's install behaviour described; the decompilation cited as onslaught-decomp; the related repositories are linked; rebuild gate wording; the companion moved to Godot 4.8 beta1 and .NET 10.0.13, Windows backups default to an unsynced local folder; AppCore removed, its test facts now in the companion's tests; careers in old WinUI safe copies listed on Home; companion review fixes: CE running check seen on Linux, backups from another game folder after confirmation; the companion is Onslaught Companion and works with the original game only; AppCore patching and safe launch retired; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -234,7 +234,7 @@ demonstrated features and receipts remain in Git history.
 The WinUI app's core library, AppCore (executable patch plans, guarded application, copied-install
 "safe launch" profiles and their save and options services), and the `patches/` catalog it read
 were removed on 2026-10-22; Git keeps them. Executable patching and safe launch are not planned
-for the companion: Onslaught CE replaces them and never modifies the install. AppCore's save-layout
+for the companion: Onslaught CE replaces them; it reads the install and keeps its own files in its own folder. AppCore's save-layout
 and file-safety test facts were carried into the companion's own tests first. On Windows, Home
 lists every `.bes` left in the old toolkit's safe copies
 (`%APPDATA%\OnslaughtCareerEditor\GameProfiles\*`, in each copy's `savegames`, `saves` and `Save`

@@ -1,10 +1,11 @@
-# Onslaught Toolkit
+# Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-10-22 (reverse-engineering/ marked as moved to onslaught-preservation; the related repositories are public and linked; the rebuild moved to onslaught-godot)
+Last updated: 2026-10-22 (titled Onslaught Companion; Onslaught CE's install behaviour described; reverse-engineering/ marked as moved to onslaught-preservation; the related repositories are public and linked; the rebuild moved to onslaught-godot)
 Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
 
-Onslaught Toolkit is a preservation project for *Battle Engine Aquila* (2003, Lost Toys).
+Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
+repository holds it and the project's overview.
 
 - **The decompilation is done.** A byte-matching decompilation of the retail executable is the project's
   reverse-engineering authority. Its public export is [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp).
@@ -48,8 +49,8 @@ The companion has no published release yet; build it from source (below). It nee
 game to work on your careers, settings and media. The older Windows-only WinUI toolkit on the
 [Releases](https://github.com/dlprentice/Onslaught-Career-Editor/releases) page (v1.0.11, tag `winui-v1.0.11`) is
 retired and no longer maintained; its source is in the project's private pre-flatten history. Its executable patching
-and copied-install "safe launch" are not in the current companion and are not coming back: Onslaught CE replaces them,
-and never modifies your install. Their last code here (the AppCore library and the `patches/` catalog) was removed on
+and copied-install "safe launch" are not in the current companion and are not coming back: Onslaught CE replaces them:
+it reads your install and keeps its own files in its own folder. Their last code here (the AppCore library and the `patches/` catalog) was removed on
 2026-10-22; Git keeps it. A player who used that toolkit's safe launch on Windows finds any careers left in its copies
 on the companion's Home page, where each can be saved as a copy elsewhere.
 

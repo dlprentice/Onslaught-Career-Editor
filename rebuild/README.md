@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
 Status: active — scoped proof of concept (reactivated 2026-10-15): startup to exit 1:1 with retail, level 100 playable to completion
-Last updated: 2026-10-22 (the reference environment as a table of variables, values kept outside the repository; earlier entries keep their dates)
+Last updated: 2026-10-22 (the decompilation named as onslaught-decomp; the reference environment as a table of variables, values kept outside the repository; earlier entries keep their dates)
 Summary: the Godot/C# reconstruction: the new float-exact parity core and its harness, and the earlier fixed-point rebuild kept as reference.
 [`PROVENANCE.md`](PROVENANCE.md) is the authority for its evidence boundary.
 [`DETERMINISM.md`](DETERMINISM.md) is the determinism contract (the first
@@ -122,7 +122,7 @@ ported), and the front end's particles and battle-engine model. Diagnostics:
 ## The earlier rebuild (history)
 
 History: on 2026-10-15 David first parked the fixed-point rebuild in favour of the native source port of the
-byte-matching decompilation (private bea-decomp), then reactivated the lane the same day as the parity-core proof of
+byte-matching decompilation (now public as onslaught-decomp), then reactivated the lane the same day as the parity-core proof of
 concept above. The fixed-point code described from here on is the state
 at the old tag archive/godot-rebuild-20260926 (kept in the private RE archive since the history flatten): C# only and built in code, Level 100 winnable through the player-input
 surface with a deterministic replay tape, World 110 built in Core from retail data (not playable in the Godot
