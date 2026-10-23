@@ -17,6 +17,7 @@
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="BouncyCastle.Cryptography" Version="[2.7.0]" />
     <Compile Include="Assets/**/*.cs;Careers/**/*.cs;Files/**/*.cs;Game/**/*.cs;Lore/**/*.cs;Media/**/*.cs;Options/**/*.cs;Ui/**/*.cs" />
     <!-- The project's own lore articles and the reader's front door, embedded as text. -->
     <EmbeddedResource Include="../../lore/*.md" LogicalName="lore/%(Filename)%(Extension)" />

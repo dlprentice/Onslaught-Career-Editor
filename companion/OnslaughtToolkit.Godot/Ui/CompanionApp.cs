@@ -8,7 +8,8 @@ namespace OnslaughtToolkit.Companion.Ui;
 
 /// <summary>Where the companion looks for Steam, keeps its settings and puts backups; tests and captures supply their own.</summary>
 internal sealed record CompanionEnvironment(IReadOnlyList<string> SteamRoots, string SettingsPath, Func<bool>? GameRunning = null,
-    Action<string>? OpenUrl = null, string? DefaultBackupFolder = null, Action? Quit = null, string? OldCopiesFolder = null)
+    Action<string>? OpenUrl = null, string? DefaultBackupFolder = null, Action? Quit = null, string? OldCopiesFolder = null,
+    string? CeUserFolder = null, Func<string, bool>? CeInstallSupported = null)
 {
     internal const string BackupFolderName = "Battle Engine Aquila Backups";
 
@@ -98,7 +99,9 @@ public partial class CompanionApp : Control
         Workspace = new CareerWorkspace(new SaveFileWorker(_files));
         CompanionEnvironment environment = _environment ?? CompanionEnvironment.Default();
         SettingsStore settings = new(environment.SettingsPath);
-        Game = new GameLibrary(environment.SteamRoots, settings);
+        Game = new GameLibrary(environment.SteamRoots, settings,
+            environment.CeUserFolder ?? (_managesWindow ? null : System.IO.Path.Combine(System.IO.Path.GetDirectoryName(environment.SettingsPath)!, "ce-user")),
+            _managesWindow ? null : _ => null, environment.CeInstallSupported);
         Status = new StatusLine();
         _gameRunning = environment.GameRunning ?? GameProcess.IsRunning;
         _quit = environment.Quit ?? (() => GetTree().Quit());
@@ -110,7 +113,7 @@ public partial class CompanionApp : Control
         {
             Workspace = Workspace, Game = Game, Status = Status, Backups = new BackupLocation(settings, environment.BackupFolder()),
             GameRunning = () => _gameRunning(), OpenUrl = openUrl, Navigate = Navigate, OpenCareer = OpenCareerAsync,
-            ChooseCareer = ChooseCareerAsync, Popups = popups,
+            ChooseCareer = ChooseCareerAsync, Popups = popups, SelectTarget = SelectTargetAsync,
             CatchUp = () => CatchUpAsync(force: true, backUp: false),
             OpenCareerFile = () => Home.OpenDialog.PopupCenteredRatio(0.75f),
             OldCopiesFolder = environment.OldCopiesFolder ?? OldSafeCopies.DefaultRoot(),
@@ -323,6 +326,23 @@ public partial class CompanionApp : Control
         return false;
     }
 
+    internal async Task SelectTargetAsync(GameTarget target)
+    {
+        if (Game.Busy || Workspace.Busy || target == Game.Target) return;
+        if (EditCareer.HasChanges || Settings.HasChanges)
+        {
+            Status.Show("Save or undo your career and settings changes before switching games.", StatusKind.Failure);
+            Home.ShowGame();
+            return;
+        }
+        Workspace.CloseSession();
+        Settings.ResetTarget();
+        _openedFirstCareer = false;
+        _autoBackupDone = false;
+        await Game.SelectTargetAsync(target);
+        Navigate("home");
+    }
+
     private bool CloseWouldAbandonWrite()
     {
         if (!Workspace.Busy) return false;
@@ -352,6 +372,7 @@ public partial class CompanionApp : Control
             _running = running;
             RunningBadge.Visible = running;
             Home.ShowGame();
+            Settings.Refresh();
             Status.Game.Text = GameLine();
         }
         if ((closed || catchUp) && !running && _catchUp.IsCompleted)
@@ -369,13 +390,16 @@ public partial class CompanionApp : Control
     /// </summary>
     internal async Task CatchUpAsync(bool force, bool backUp)
     {
-        if (Game.Busy || Workspace.Busy || Game.Folder is null || (!force && !Game.FilesChanged())) return;
+        if (Game.Busy || Workspace.Busy || Game.Folder is null) return;
+        if (Game.Target == GameTarget.OnslaughtCe) await Settings.CatchUpAsync();
+        if (!force && !Game.FilesChanged()) return;
         await Game.RescanAsync();
         if (Game.Folder is not GameFolder folder) return;
         if (backUp && Game.Settings.Load().AutoBackup == true) await AutoBackUpAsync(folder);
         if (Workspace.Session is SaveSession session && !Workspace.Busy &&
-            folder.Careers.FirstOrDefault(file => string.Equals(file.Path, session.Path, StringComparison.Ordinal)) is { Sha256: string now } career &&
-            now != session.Sha256)
+            folder.Careers.FirstOrDefault(file => string.Equals(file.Path, session.Path, StringComparison.Ordinal) ||
+                folder.Target == GameTarget.OnslaughtCe && file.Name.Equals(System.IO.Path.GetFileName(session.Path), StringComparison.OrdinalIgnoreCase)) is { Sha256: string now } career &&
+            (now != session.Sha256 || career.Path != session.Path))
         {
             if (EditCareer.HasChanges)
             {
@@ -443,7 +467,7 @@ public partial class CompanionApp : Control
     {
         // An automatic backup may be running; wait for it rather than refusing.
         for (int frame = 0; frame < 600 && Workspace.Busy; frame++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        if (Workspace.Session is not null) return;
+        if (Workspace.Session is not null || Game.Folder?.Careers.Any(file => file.Path == path) != true) return;
         _quietOpen = true;
         try
         {
@@ -465,7 +489,7 @@ public partial class CompanionApp : Control
     }
 
     private string GameLine() => Game.Busy ? "Checking the game folder…" : Game.Folder is GameFolder folder
-        ? (_running ? "Game running" : folder.Executable.State == ExecutableState.Retail ? "Original game (Steam, unmodified)"
+        ? (_running ? "Game running" : folder.Target == GameTarget.OnslaughtCe ? "Onslaught CE" : folder.Executable.State == ExecutableState.Retail ? "Original game (Steam, unmodified)"
             : "Original game (BEA.exe differs from the Steam release)")
         : "No game folder";
 
@@ -477,7 +501,7 @@ public partial class CompanionApp : Control
         string? open = Workspace.Session?.Path;
         foreach (GameFile career in Game.Folder?.Careers.Where(file => file.Supported) ?? [])
         {
-            menu.AddRadioCheckItem(career.DisplayName, _careerMenuPaths.Count);
+            menu.AddRadioCheckItem(career.DisplayName + (career.FromOriginalInstall ? " (original game, read-only)" : ""), _careerMenuPaths.Count);
             menu.SetItemChecked(menu.ItemCount - 1, string.Equals(career.Path, open, StringComparison.Ordinal));
             _careerMenuPaths.Add(career.Path);
         }

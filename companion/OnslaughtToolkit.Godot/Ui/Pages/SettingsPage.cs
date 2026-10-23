@@ -17,6 +17,8 @@ namespace OnslaughtToolkit.Companion.Ui;
 internal sealed class SettingsPage : Page
 {
     private readonly AppServices _app;
+    private readonly CeSettingsPanel _ce;
+    private readonly Control _originalRoot;
     private readonly Label _empty, _rawLine, _resultText;
     private readonly VBoxContainer _changes;
     private readonly FileDetails _details;
@@ -43,7 +45,13 @@ internal sealed class SettingsPage : Page
         _app = app;
         (_scroll, VBoxContainer content) = Build.Scroller();
         Bar = new ChangesBar("Save settings…");
-        Root = Bar.Wrap(_scroll);
+        _originalRoot = Bar.Wrap(_scroll);
+        VBoxContainer all = Build.Column(0);
+        _ce = new CeSettingsPanel(app);
+        all.Add(_ce.Root);
+        all.Add(_originalRoot);
+        _originalRoot.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+        Root = all;
 
         (PanelContainer which, VBoxContainer whichBody) = Build.Card("Which settings");
         whichBody.Add(Build.Text("The game starts with its default settings. Each career also stores a copy of the settings; the game " +
@@ -154,12 +162,13 @@ internal sealed class SettingsPage : Page
     }
 
     internal override Control Root { get; }
-    internal override string Subtitle => _file is SaveSession file ? $"Changing {Describe(file.Path)}" : "Sound, controls, mouse, screen and keys";
+    internal override string Subtitle => _app.Game.Target == GameTarget.OnslaughtCe ? "CE launcher settings" : _file is SaveSession file ? $"Changing {Describe(file.Path)}" : "Sound, controls, mouse, screen and keys";
     internal OptionButton Source { get; }
     internal ChangesBar Bar { get; }
     internal Button OpenOther { get; }
     internal Button UndoKeys { get; }
-    internal Button Save => Bar.Save;
+    internal Button Save => _app.Game.Target == GameTarget.OnslaughtCe ? _ce.Save : Bar.Save;
+    internal CeSettingsPanel CePanel => _ce;
     internal Button UndoAll => Bar.Undo;
     internal PanelContainer ChangesCard { get; }
     internal FileDialog OpenDialog { get; }
@@ -179,13 +188,26 @@ internal sealed class SettingsPage : Page
     /// refuses for another reason (a key on a file whose control-scheme index is unknown) still counts, because its
     /// other choices could be saved once the refused one is undone.
     /// </summary>
-    internal bool HasChanges => !_edit.IsEmpty && (_plan.Value is OptionsPlan || _plan.Message != OptionsFile.NoChange);
+    internal bool HasChanges => _app.Game.Target == GameTarget.OnslaughtCe ? _ce.HasChanges : !_edit.IsEmpty && (_plan.Value is OptionsPlan || _plan.Message != OptionsFile.NoChange);
 
     /// <summary>How many settings are changed and not saved yet.</summary>
-    internal int ChangeCount => _plan.Value is OptionsPlan plan ? plan.Lines.Count : HasChanges ? _edit.Count : 0;
+    internal int ChangeCount => _app.Game.Target == GameTarget.OnslaughtCe ? _ce.ChangeCount : _plan.Value is OptionsPlan plan ? plan.Lines.Count : HasChanges ? _edit.Count : 0;
+
+    internal void ResetTarget()
+    {
+        _file = null;
+        _reading = null;
+        _edit = new OptionsEdit();
+        _ce.ResetTarget();
+        foreach (Control section in _needsFile) section.Visible = false;
+    }
 
     internal override void Refresh()
     {
+        bool ce = _app.Game.Target == GameTarget.OnslaughtCe;
+        _originalRoot.Visible = !ce;
+        _ce.Root.Visible = ce;
+        if (ce) { _ce.Refresh(); return; }
         if (_file is null && _app.Game.Folder is not null && !_app.Workspace.Busy && Source.ItemCount > 0 && Source.Selected >= 0)
         {
             OpenSelected(Source.Selected);
@@ -239,6 +261,11 @@ internal sealed class SettingsPage : Page
     /// <summary>Reopens the settings shown if the game changed their file since, unless something here is unsaved.</summary>
     internal async Task CatchUpAsync()
     {
+        if (_app.Game.Target == GameTarget.OnslaughtCe)
+        {
+            if (!_ce.HasChanges) await _ce.LoadAsync();
+            return;
+        }
         if (_file is not SaveSession file || HasChanges || InGame(file.Path) is not { Sha256: string now } || now == file.Sha256) return;
         await OpenAsync(file.Path);
     }
@@ -273,6 +300,7 @@ internal sealed class SettingsPage : Page
 
     internal void AskToSave()
     {
+        if (_app.Game.Target == GameTarget.OnslaughtCe) { _ce.AskToSave(); return; }
         if (_file is not SaveSession file || _plan.Value is null) return;
         bool inGame = InGame(file.Path) is not null;
         _saveChoice.Open("Save your settings", null, inGame ? Describe(file.Path) : null,

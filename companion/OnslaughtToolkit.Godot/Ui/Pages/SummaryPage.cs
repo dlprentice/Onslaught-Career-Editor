@@ -44,7 +44,9 @@ internal sealed class SummaryPage : Page
         (_campaign, VBoxContainer campaignBody) = Build.Card("Your path through the campaign");
         content.Add(_campaign);
         Map = campaignBody.Add(new CampaignMap());
-        HBoxContainer key = campaignBody.Add(Build.Row(14));
+        HFlowContainer key = campaignBody.Add(new HFlowContainer());
+        key.AddThemeConstantOverride("h_separation", 14);
+        key.AddThemeConstantOverride("v_separation", 6);
         foreach ((string kind, string text) in new[]
         {
             ("complete", "Complete, with your rank"), ("open", "Open to play"), ("closed", "Not reached yet"),

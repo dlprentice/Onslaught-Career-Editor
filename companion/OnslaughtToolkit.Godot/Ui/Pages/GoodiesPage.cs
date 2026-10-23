@@ -205,7 +205,7 @@ internal sealed class GoodiesPage : Page
         GoodieContent content;
         try
         {
-            content = GoodieResources.Read(folder.Root, index);
+            content = GoodieResources.Read(folder.AssetRoot, index);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidDataException)
         {
@@ -213,7 +213,7 @@ internal sealed class GoodiesPage : Page
             return;
         }
         Content = content;
-        string resources = Path.Combine(folder.Root, "data", "resources");
+        string resources = Path.Combine(folder.AssetRoot, "data", "resources");
         string missing = content.Missing.Count == 0 ? "" : "\nYour game is missing " + string.Join(", ", content.Missing) + ".";
         switch (content.Kind)
         {

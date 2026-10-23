@@ -22,20 +22,20 @@ public static partial class GameAudio
     public static IReadOnlyList<GameAudioItem> Catalog(GameFolder game, GameText? text)
     {
         List<GameAudioItem> items = [];
-        foreach (string file in Files(Path.Combine(game.Root, "data", "Music"), "*.ogg"))
+        foreach (string file in Files(Path.Combine(game.AssetRoot, "data", "Music"), "*.ogg"))
         {
             string stem = Path.GetFileNameWithoutExtension(file);
             Match number = TrackNumber().Match(stem);
             items.Add(new GameAudioItem(number.Success ? $"Soundtrack {number.Groups[1].Value}" : stem.Replace('_', ' '), file,
                 AudioKind.Music, "Soundtrack", 0, null));
         }
-        foreach (string file in Files(Path.Combine(game.Root, "data", "sounds", "english", "MessageBox"), "*.ogg"))
+        foreach (string file in Files(Path.Combine(game.AssetRoot, "data", "sounds", "english", "MessageBox"), "*.ogg"))
         {
             string stem = Path.GetFileNameWithoutExtension(file);
             (string group, int order) = VoiceGroup(stem, text);
             items.Add(new GameAudioItem(stem, file, AudioKind.Voice, group, order, text?.VoiceLine(stem)));
         }
-        foreach (string file in Files(Path.Combine(game.Root, "data", "video", "cutscenes"), "*.vid"))
+        foreach (string file in Files(Path.Combine(game.AssetRoot, "data", "video", "cutscenes"), "*.vid"))
             items.Add(new GameAudioItem(Path.GetFileNameWithoutExtension(file), file, AudioKind.Cutscene, "Cutscenes (Bink video)", 99999, null));
         return items.OrderBy(item => item.GroupOrder).ThenBy(item => item.Group, StringComparer.OrdinalIgnoreCase)
             .ThenBy(item => item.Title, StringComparer.OrdinalIgnoreCase).ToArray();

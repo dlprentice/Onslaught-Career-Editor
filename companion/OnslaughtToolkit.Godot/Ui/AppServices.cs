@@ -18,6 +18,8 @@ internal sealed class AppServices
     internal required Func<bool> GameRunning { get; init; }
 
     internal required Action<string> OpenUrl { get; init; }
+    internal Func<GameTarget, Task>? SelectTarget { get; init; }
+
     internal required Action<string> Navigate { get; init; }
     /// <summary>Opens a career read-only as the open one, without asking; for the companion's own reopen after a save.</summary>
     internal required Func<string, Task<Outcome<SaveSession>>> OpenCareer { get; init; }
@@ -40,7 +42,7 @@ internal sealed class AppServices
     /// <summary>The backup folder, created if needed, or null with the reason shown to the player.</summary>
     internal string? BackupFolderOrReport()
     {
-        if (Backups.Ensure() is string folder) return folder;
+        if (Backups.Ensure(Game.CePackageRoot, Game.CeOriginalRoot) is string folder) return folder;
         Status.Show($"The backup folder {Backups.Folder} could not be created. Choose another on Backups; nothing was changed.",
             StatusKind.Failure);
         return null;

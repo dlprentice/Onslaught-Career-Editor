@@ -186,7 +186,7 @@ internal sealed class LorePage : Page
 
     private void ShowMap()
     {
-        if (GameArt.Load(_game.Folder?.Root, GameArt.Map) is not Texture2D map)
+        if (GameArt.Load(_game.Folder?.AssetRoot, GameArt.Map) is not Texture2D map)
         {
             _status.Show("The map comes from your game's manual; choose your game folder on Home to see it.", StatusKind.Failure);
             return;
@@ -229,7 +229,7 @@ internal sealed class LorePage : Page
         Library.Clear();
         TreeItem root = Library.CreateItem();
         if (LoreLibrary.Home is LoreArticle home) Entry(root, home, _labels[home.Id], "What this is, the shelves, and where to start.");
-        if (GameArt.Load(_game.Folder?.Root, GameArt.Map) is not null)
+        if (GameArt.Load(_game.Folder?.AssetRoot, GameArt.Map) is not null)
         {
             TreeItem map = Library.CreateItem(root);
             map.SetText(0, "The map of Allium");
@@ -241,7 +241,7 @@ internal sealed class LorePage : Page
                 Library.ScrollToItem(map);
             }
         }
-        if (GameArt.Manual(_game.Folder?.Root) is not null)
+        if (GameArt.Manual(_game.Folder?.AssetRoot) is not null)
         {
             TreeItem manual = Library.CreateItem(root);
             manual.SetText(0, "The game's manual  ↗");
@@ -286,7 +286,7 @@ internal sealed class LorePage : Page
         if (_syncing || Library.GetSelected()?.GetMetadata(0).AsString() is not string target || target.Length == 0) return;
         if (target == "manual")
         {
-            if (GameArt.Manual(_game.Folder?.Root) is string manual)
+            if (GameArt.Manual(_game.Folder?.AssetRoot) is string manual)
             {
                 _openUrl(manual);
                 _status.Show("Opened the game's manual in your browser.");

@@ -132,7 +132,7 @@ internal sealed class AssetsPage : Page
         if (_services.Game.Busy) return;
         // A listing of two folders is quick, so it is read again each time: the install may have changed.
         GameFolder? folder = _services.Game.Folder;
-        _library = folder is null ? null : AssetLibrary.Scan(folder.Root);
+        _library = folder is null ? null : AssetLibrary.Scan(folder.AssetRoot);
         bool any = _library is { } l && l.Models.Count + l.Textures.Count + l.Sounds.Count > 0;
         _empty.Text = folder is null ? "Choose your game folder on Home to see its models, textures and sound effects."
             : "No models, textures or sound effects were found in your game's data folder.";
@@ -258,7 +258,7 @@ internal sealed class AssetsPage : Page
                 : Sound is not null ? (XapBank.Wav(Sound), ".wav") : (Png(Texture!), ".png");
             if (Sound is not null) stem += $" ({Selected.Group})";
             receipt = ExportFiles.Write(folder, stem + extension, bytes,
-                [_services.Game.Folder?.Root, _services.Backups.Folder]);
+                [_services.Game.Folder?.Root, _services.Game.Folder?.AssetRoot, _services.Backups.Folder]);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidDataException)
         {
