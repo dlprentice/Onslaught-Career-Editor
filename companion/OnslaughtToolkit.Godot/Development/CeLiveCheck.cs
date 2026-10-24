@@ -22,6 +22,7 @@ public partial class CeLiveCheck : SceneTree
     private readonly List<object> _observations = [];
     private CompanionApp? _app;
     private string _owner = "";
+    private bool _ownerAdmitted;
 
     public override void _Initialize() => _ = RunAsync();
 
@@ -38,7 +39,11 @@ public partial class CeLiveCheck : SceneTree
             _owner = Path.GetFullPath(Required("owner"));
             if (!File.Exists(Path.Combine(_owner, ".companion-owned")))
                 throw new IOException("Prepared isolated owner marker required.");
-            phase = Required("phase");
+            _ownerAdmitted = true;
+            string requestedPhase = Required("phase");
+            if (requestedPhase is not ("prepare" or "launch" or "restore" or "settings"))
+                throw new IOException("Phase must be prepare, launch, restore or settings.");
+            phase = requestedPhase;
             string launcher = Owned(Required("launcher")), user = Owned(Required("user")),
                 baseline = Owned(Required("baseline")), backups = Owned(Required("backups"));
             string career = Owned(Path.Combine(user, "savegames", "Companion Pilot.bes"));
@@ -76,8 +81,8 @@ public partial class CeLiveCheck : SceneTree
         catch (Exception error) { Observe("failure", error.ToString()); GD.PrintErr(error); }
         finally
         {
-            if (_owner.Length > 0)
-                File.WriteAllText(Path.Combine(_owner, phase + "-result-" + DateTime.UtcNow.ToString("yyyyMMddTHHmmssfff") + ".json"), JsonSerializer.Serialize(
+            if (_ownerAdmitted)
+                File.WriteAllText(Owned(Path.Combine(_owner, phase + "-result-" + DateTime.UtcNow.ToString("yyyyMMddTHHmmssfff") + ".json")), JsonSerializer.Serialize(
                     new { passed = exit == 0, phase, utc = DateTime.UtcNow, observations = _observations }, new JsonSerializerOptions { WriteIndented = true }));
             if (_app is not null)
             {
@@ -215,13 +220,13 @@ public partial class CeLiveCheck : SceneTree
                 before, Owned(Path.Combine(_owner, "backups")), GameProcess.IsRunning, DateTime.Now,
                 expectedSha256: SaveSession.Digest(before));
             Observe("actual-running-refusal", refused);
-            Require(!refused.Ok && File.ReadAllBytes(career).AsSpan().SequenceEqual(before), "Write refused while actual CE launcher/game runs");
+            Require(IsRunningRefusal(refused) && File.ReadAllBytes(career).AsSpan().SequenceEqual(before), "Write refused while actual CE launcher/game runs");
             await _app.Settings.CePanel.LoadAsync();
             byte[] settingsBefore = File.ReadAllBytes(_app.Game.Ce.SettingsPath);
             _app.Settings.CePanel.RecordSessions.ButtonPressed = !_app.Settings.CePanel.RecordSessions.ButtonPressed;
             InstallReceipt settingsRefused = await _app.Settings.CePanel.SaveAsync();
             Observe("actual-running-settings-refusal", settingsRefused);
-            Require(!settingsRefused.Ok && File.ReadAllBytes(_app.Game.Ce.SettingsPath).AsSpan().SequenceEqual(settingsBefore),
+            Require(IsRunningRefusal(settingsRefused) && File.ReadAllBytes(_app.Game.Ce.SettingsPath).AsSpan().SequenceEqual(settingsBefore),
                 "Settings write refused while actual CE runs");
             await _app.Settings.CePanel.LoadAsync();
             await Until(() => launcher.HasExited, 150, "Bounded CE run exited normally");
@@ -237,15 +242,15 @@ public partial class CeLiveCheck : SceneTree
         {
             if (launcher is not null)
             {
-                if (!launcher.HasExited)
+                try
                 {
+                    // A launcher can exit before its game. Discover and clean recorded game identities
+                    // independently of parent liveness; no process-tree signal is ever sent.
                     FindOwnedGame();
-                    foreach ((int pid, (DateTime started, string image)) in gameProcesses)
-                        await StopOwned(pid, started, image);
-                    await StopOwned(launcher.Id, launcherStarted, OperatingSystem.IsWindows() ? _app.Game.Ce!.LauncherPath :
-                        Path.Combine(_app.Game.Ce!.Folder, OnslaughtCe.LinuxLauncher));
+                    await CleanupOwned(launcher, launcherStarted, OperatingSystem.IsWindows() ? _app.Game.Ce!.LauncherPath :
+                        Path.Combine(_app.Game.Ce!.Folder, OnslaughtCe.LinuxLauncher), gameProcesses, Observe);
                 }
-                launcher.Dispose();
+                finally { launcher.Dispose(); }
             }
         }
     }
@@ -284,7 +289,18 @@ public partial class CeLiveCheck : SceneTree
             File.ReadAllText(path).Contains("future_kept=acceptance"), "UI reopened disabled test settings and preserved both unknown lines");
     }
 
-    private async Task StopOwned(int pid, DateTime started, string image)
+    internal static bool IsRunningRefusal(InstallReceipt receipt) =>
+        !receipt.Ok && receipt.Message == GameInstaller.RunningMessage && !receipt.MayHaveChanged && receipt.BackupFolder is null;
+
+    internal static async Task CleanupOwned(Process launcher, DateTime launcherStarted, string launcherImage,
+        IReadOnlyDictionary<int, (DateTime Started, string Image)> gameProcesses, Action<string, object> observe)
+    {
+        foreach ((int pid, (DateTime started, string image)) in gameProcesses)
+            await StopOwned(pid, started, image, observe);
+        if (!launcher.HasExited) await StopOwned(launcher.Id, launcherStarted, launcherImage, observe);
+    }
+
+    private static async Task StopOwned(int pid, DateTime started, string image, Action<string, object> observe)
     {
         try
         {
@@ -292,12 +308,12 @@ public partial class CeLiveCheck : SceneTree
             if (process.HasExited) return;
             if (process.StartTime.ToUniversalTime() != started || process.MainModule?.FileName != image)
             {
-                Observe("cleanup-refused", new { pid, expectedImage = image, reason = "Process identity changed; no signal sent." });
+                observe("cleanup-refused", new { pid, expectedImage = image, reason = "Process identity changed; no signal sent." });
                 return;
             }
-            Observe("cleanup-owned-pid", new { pid, image, started });
+            observe("cleanup-owned-pid", new { pid, image, started });
             process.Kill();
-            await process.WaitForExitAsync();
+            await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5));
         }
         catch (ArgumentException) { } // It exited between checks.
     }

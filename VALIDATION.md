@@ -94,6 +94,17 @@ runner's output owner to the internal worktree and disabled old-output pruning, 
 uninitialized reference submodules in the new worktree; checking out their existing pinned commits resolved
 those links without changing the pins. The ordinary suite does not run the opt-in CE process check.
 
+Follow-up failure-path review fixed three development-hook defects: a rejected owner could receive a receipt,
+an invalid phase could escape into its filename, and a launcher that exited before its game skipped child
+cleanup. `Development/CeLiveCheckTests.cs` passed 16 focused checks through `godot-headless`: actual rejected
+configurations write nowhere outside an admitted owner; a recorded dummy child is cleaned after its parent
+exits; wrong executable and start-time identities refuse signals. No game is launched by these checks.
+Running refusals now require the exact running-game reason, no backup and no possible file change; both
+existing actual-CE receipts already meet those conditions. Evidence is in the worktree's
+`local-data/ce-live-20261024/hook-negatives-1.log` and
+`local-data/companion/godot-dotnet-test-uhq6q57e/test-output/ce-hook-negatives/`.
+The successful game-load route was not repeated for these development-only failure-path corrections.
+
 ## Earlier engine and RE checks
 
 September 19 engine migration: both installed 4.8 dev6 editions and matching

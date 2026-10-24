@@ -268,8 +268,9 @@ are never thrown away for this; the companion says so instead.
 
 - Linux CE 0.1.4 launch, version reading and loading an edited copy of a real career passed the
   isolated check above. This does not establish complete campaign play or every save variant.
-- Nothing has been run on Windows; the Windows package is cross-exported and inspected only.
-  The possible version-output issue is described under **Which game it works with** above.
+- The companion UI and complete protected-file workflow have not been run on Windows; its package
+  is cross-exported and inspected. Separate native CE launcher checks confirmed the version-output
+  issue described under **Which game it works with** above; they do not validate the companion UI.
 - Nobody has clicked through the app by hand or listened to its music and voices.
 - The model preview shows each model at its first frame; the app never plays an animation. On
   2026-10-16, playing the exported animations inside a headless Godot (a development check, not the
