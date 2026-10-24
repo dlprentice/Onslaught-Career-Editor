@@ -113,7 +113,7 @@ internal sealed class BackupsPage : Page
             $"This backup was made from another game folder:\n{set.Game}\nIt will be put into the game folder you use now:\n{game.Root}\n\n") +
             "Your current careers" + (game.Target == GameTarget.Original ? " and original-game settings" : "") +
             " are backed up first, so you can undo this too. Nothing is written while the game or Onslaught CE " +
-            "is running, and the backup copy must still match the fingerprint recorded when it was made." + OnslaughtCe.UntestedCheckNote;
+            "is running, and the backup copy must still match the fingerprint recorded when it was made.";
         Confirm.PopupCentered();
     }
 

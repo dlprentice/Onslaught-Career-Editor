@@ -136,7 +136,7 @@ internal sealed class HomePage : Page
         foreach (string promise in new[]
         {
             "Career changes are backed up before they replace a file.",
-            "Nothing is written to game files while Battle Engine Aquila or Onslaught CE is running." + OnslaughtCe.UntestedCheckNote,
+            "Nothing is written to game files while Battle Engine Aquila or Onslaught CE is running.",
             "Verified career backups can be put back from Backups.",
         })
         {
