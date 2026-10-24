@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-10-22 (Onslaught CE, the decompilation export and the rebuild are public in their own repositories; earlier: the companion is Onslaught Companion, the future CE launcher; exe patching and safe launch retired)
+Last updated: 2026-10-23 (companion scope reflects original-game and CE support; remaining acceptance is recorded in PROGRAM.md)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
@@ -20,12 +20,13 @@ archive.
   career it writes identical to retail's. `OnslaughtRebuild.Parity` owns the simulation and `OnslaughtRebuild.Host`
   the presentation; parity is measured against retail and native-port recordings Present by Present, and
   onslaught-godot records it. `rebuild/` here is a frozen copy.
-- **The companion, Onslaught Companion, is the player app and the future Onslaught CE launcher**, paused until David
-  sets new requirements. A Godot .NET app for Linux and Windows, for players: careers, Goodies, settings, backups,
-  music, voices and lore, with no known data-loss path. Today it works with the original game; next it finds, launches
-  and updates Onslaught CE and manages CE's careers and settings. Original-game save editing stays, with protected
-  writes; executable patching and copied-install safe launch are retired, and enhancements belong in CE as opt-in
-  options.
+- **The companion, Onslaught Companion, is the player app and Onslaught CE launcher.** A Godot .NET app for Linux
+  and Windows, for players: careers, Goodies, settings, backups, music, voices and lore, with no known data-loss path.
+  It supports original-game and CE careers and backups, CE launcher settings and signed update information; the CE
+  launcher installs updates. Its [known limits](companion/OnslaughtToolkit.Godot/README.md#known-limits) distinguish
+  tested file operations from real CE launch and Windows execution still awaiting validation. Original-game save
+  editing stays, with protected writes; executable patching and copied-install safe launch are retired, and
+  enhancements belong in CE as opt-in options.
 - **This repository documents the game in public**: formats, behaviours and findings as prose and specs, with our
   own tools. It carries no Ghidra database, decompiler output, retail binaries or data, or decomp source.
 
@@ -51,6 +52,7 @@ Unknowns are written as open questions with the cheapest falsifier.
 ## Where the goal stands
 
 Not met. The decompilation is done; the native port is public as Onslaught CE, with its 0.1 preview as the first
-release; the rebuild proof of concept is in progress in onslaught-godot; the companion is paused.
+release; the rebuild proof of concept is in progress in onslaught-godot; the companion supports the original game
+and CE, with remaining acceptance and release work in [PROGRAM.md](PROGRAM.md#companion--ce-integration).
 [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) owns what is demonstrated, [PROGRAM.md](PROGRAM.md) the work
 queue and [VALIDATION.md](VALIDATION.md) the checks.

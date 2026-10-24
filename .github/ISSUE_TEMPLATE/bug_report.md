@@ -1,10 +1,16 @@
 ---
 name: Bug report
-about: Report a problem with the companion app, its tools or this repository's documentation (game documentation: onslaught-preservation)
+about: "Report a problem with the companion app, its tools or this repository's documentation (game documentation: onslaught-preservation)"
 title: "[Bug] "
 labels: bug
 assignees: ""
 ---
+
+<!--
+Status: active issue template
+Last updated: 2026-10-23
+Summary: report companion bugs with valid template metadata and the protected-write contract.
+-->
 
 ## Area
 
@@ -45,7 +51,8 @@ that is the game's material rather than a picture of a problem.
       proof bundles, secrets, or unredacted private paths are included.
 - [ ] Any screenshot shows the app or the game running, with local paths
       redacted - not extracted game content.
-- [ ] The installed game folder and original `BEA.exe` were not mutated.
+- [ ] Any career or settings write into the game folder was explicitly chosen and had a verified recovery backup;
+      no game executable was modified.
 
 For private-data, proprietary-content, security, or online-session concerns,
 follow `SECURITY.md` instead of posting sensitive details.

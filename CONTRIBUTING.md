@@ -1,11 +1,11 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-10-23 (companion and lore issues go to this repository's issues; earlier: SPDX prose excluded from REUSE parsing; Onslaught CE and onslaught-godot linked; the retired AppCore patching core removed, inbound = outbound licensing)
+Last updated: 2026-10-23 (the companion supports the original game and CE; companion and lore issues go to this repository's issues; earlier: SPDX prose excluded from REUSE parsing; Onslaught CE and onslaught-godot linked; the retired AppCore patching core removed, inbound = outbound licensing)
 Summary: what a focused change looks like here, what must never be added to the
 repository, and which checks a change owes.
 
-This public repository holds the Godot toolkit companion (paused until new requirements), documentation of
+This public repository holds Onslaught Companion for the original game and Onslaught CE, documentation of
 *Battle Engine Aquila* as prose and specs, our tools and a frozen copy of the Godot
 rebuild, which is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot). The byte-matching decompilation's public export is
 [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp); its native port is published separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce);

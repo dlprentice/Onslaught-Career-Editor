@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-10-22 (the related repositories are linked; `rebuild/` is a frozen copy; earlier: AppCore and the `patches/` catalog removed)
+Last updated: 2026-10-23 (the companion owns original-game and CE support; the related repositories and frozen rebuild are linked)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository: the companion, the game documentation, tools and the
 Godot rebuild.
@@ -33,8 +33,8 @@ flowchart LR
 
 The arrows are source dependencies, not priority. `rebuild/` is a frozen copy; the rebuild is developed in
 [onslaught-godot](https://github.com/dlprentice/onslaught-godot). In it, `OnslaughtRebuild.Parity` owns the simulation and `OnslaughtRebuild.Host` the presentation; the earlier Core, Client, Headless and Godot projects are
-reference material. The companion is the public player product, paused until new requirements. The companion is a C# application built in code and owns its file-safety
-source.
+reference material. The companion is the public player product for the original game and Onslaught CE. It is a C#
+application built in code and owns its file-safety source.
 The companion (GPL-3.0-only) has no dependency on the rebuild or private retail assets.
 
 | Project | Declared role and dependencies |
