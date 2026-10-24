@@ -1,7 +1,7 @@
 # Documentation standard — five fields, derived from what this repository already does, and mechanically enforced
 
 Status: active — the header contract for tracked documentation
-Date: 2026-10-15
+Last updated: 2026-10-23 (removed a volatile count from the active header guidance; historical measurements remain dated)
 Summary: every tracked document declares whether it is live, how old its claim
 is, and what it settles; a finding additionally declares whether its evidence is
 MEASURED, SOURCE, INFERRED or UNKNOWN, and names its specimen when it quotes
@@ -43,7 +43,7 @@ routinely lands on the continuation line.
 ### `Status:` — is this live?
 
 Free text, non-empty, not a placeholder. Deliberately **not** a closed
-vocabulary: the 63 documents already carrying a `Status:` use it to say things a
+vocabulary: documents carrying a `Status:` use it to say things a
 fixed token cannot, and the sharpest of them is
 `reverse-engineering/game-mechanics/shield-retail-to-core-translation-policy.md`:
 
