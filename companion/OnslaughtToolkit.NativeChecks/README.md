@@ -52,3 +52,13 @@ Each phase prints a JSON report and returns zero only on success. Retain the rep
 fixture provenance/hash, selected launcher hash/version, Windows version and actual CE launch/exit evidence in private
 `local-data/`. These reports contain local paths and do not belong in Git. A failing phase stops at its first failure
 and preserves its private root for diagnosis; use a new root for another file-phase run.
+
+Native Windows 11 Enterprise Evaluation (build 26300) was exercised on 2026-10-24 with the pinned .NET runtime.
+The file/settings workflow and actual CE process refusal passed. A separate CE replay loaded the restored baseline;
+its written options container matched the baseline exactly. Unicode publication and discovery passed in the companion
+backend; loading that edited Unicode career in Windows CE was not established. This does not validate the Godot UI.
+
+The initial version queries hit the production five-second deadline. Later queries through the same production
+implementation succeeded, as did independent native and .NET subprocess controls. The initial refusals are retained
+as a transient limit, with no established cause and no timeout workaround. A warm version pass does not establish
+reliable first-launch timing on every Windows system. Preserve failed and successful reports together.
