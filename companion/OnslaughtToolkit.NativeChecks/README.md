@@ -58,7 +58,8 @@ The file/settings workflow and actual CE process refusal passed. A separate CE r
 its written options container matched the baseline exactly. Unicode publication and discovery passed in the companion
 backend; loading that edited Unicode career in Windows CE was not established. This does not validate the Godot UI.
 
-The initial version queries hit the production five-second deadline. Later queries through the same production
-implementation succeeded, as did independent native and .NET subprocess controls. The initial refusals are retained
-as a transient limit, with no established cause and no timeout workaround. A warm version pass does not establish
-reliable first-launch timing on every Windows system. Preserve failed and successful reports together.
+Repeated standalone version queries, including the final check, hit the production five-second deadline. Queries
+through the same production implementation inside a small diagnostic succeeded, as did independent native and .NET
+subprocess controls; one intervening standalone query also passed. The version phase is therefore not reliably
+passing in this environment. Its cause remains unresolved, and no timeout workaround was applied. Preserve failed
+and successful reports together; the passing controls do not cancel the observed refusals.
