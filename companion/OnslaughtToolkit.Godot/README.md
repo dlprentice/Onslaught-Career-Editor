@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-23 (CE sources and runtime limits clarified; signed feed extensions and version-label comparison documented)
+Last updated: 2026-10-24 (real Linux CE launcher and edited-career load acceptance; current CE save-source contract)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it offers CE launch and reads signed public update information.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -18,8 +18,8 @@ the companion shows CE's own careers and additional original-game files for brow
 When both folders have the same filename, ignoring letter case, the companion shows CE's own copy.
 It labels careers from the original installation as read-only:
 changes can be saved as a new named CE copy, but cannot replace the original through the CE choice.
-Showing an original-game file here does not promise it appears in CE's Load menu; the Linux
-and Windows source differ as described below. Original files also supply music, voices and art.
+CE 0.1.4 merges these sources on Linux and Windows; older Linux CE releases could omit the original
+folder once a CE savegames folder existed. Original files also supply music, voices and art.
 For careers, the companion checks the two game data files required by CE, tries `BEA_GAME_DIR`
 then `ce.ini`'s `gamedir`, and finally searches CE's Steam locations. Choosing a different original
 folder for pictures and music does not change that CE career source.
@@ -27,9 +27,12 @@ folder for pictures and music does not change that CE career source.
 CE's Play button uses `onslaught-ce` (Linux) or `onslaught-ce.exe` (Windows). The companion looks
 for a launcher among installed commands and remembers a launcher you choose; portable CE packages
 can live elsewhere. It asks that launcher for its version with `--version`, without starting the
-game. **These launch and version paths have fixture tests only: the companion has not started a
-real CE launcher or read its version.** Career tests use copies of the tracked real-save fixture;
-an edited career has not been checked in a running CE game.
+game. An isolated Linux acceptance run read CE 0.1.4's actual version and launched its real package.
+It edited a copy of a game-created career through the companion's controls, made and verified backups,
+and loaded the edited Unicode-named career through CE's own keyboard-driven Load menu. The game reached
+level selection and wrote the exact edited career bytes through its successful-load path. This is an
+automated offscreen check, not a human click-through or a full mission playthrough; see
+[the acceptance record](../../VALIDATION.md#companion-with-real-onslaught-ce--october-24).
 
 CE's writable user folder is chosen in this order: `BEA_USER_DIR`, then Linux
 `$XDG_DATA_HOME/onslaught-ce` or `~/.local/share/onslaught-ce`; Windows uses
@@ -61,25 +64,23 @@ not ordered; the companion reports that comparison is unavailable. Identical lab
 equal, and ordinary dotted numeric releases compare numerically. The CE launcher decides which
 updates to offer.
 
-The source contract was inspected at
-[CE commit 72a44140](https://github.com/dlprentice/onslaught-ce/tree/72a44140c6db3e093cc07b1bed40a0584fdfecd2):
+The current source contract is
+[CE 0.1.4](https://github.com/dlprentice/onslaught-ce/tree/93ea9145d6d4d9f36f7cd9a800506ebf5bcbd788):
 `port/updater/ce_launch.c`, `port/updater/ce_report.h`, `port/tools/package.py` and
-`port/tools/sign_release.py`. In this pinned source,
-[Linux files.cpp](https://github.com/dlprentice/onslaught-ce/blob/72a44140c6db3e093cc07b1bed40a0584fdfecd2/port/platform/linux/files.cpp#L76)
-and [Windows files.cpp](https://github.com/dlprentice/onslaught-ce/blob/72a44140c6db3e093cc07b1bed40a0584fdfecd2/port/platform/windows/files.cpp#L172)
-take different listing paths: Windows merges both folders, but Linux's directory lookup resolves
-back to the user folder once its `savegames` exists, skipping the original-folder scan despite
-the merge comment. See [Linux paths.cpp](https://github.com/dlprentice/onslaught-ce/blob/72a44140c6db3e093cc07b1bed40a0584fdfecd2/port/platform/linux/paths.cpp#L163).
-This is a static source finding, not a runtime check performed by the companion lane. The companion
-labels original files without claiming they are currently visible in CE. Its data-folder selection follows
-[the launcher's validation and search](https://github.com/dlprentice/onslaught-ce/blob/72a44140c6db3e093cc07b1bed40a0584fdfecd2/port/updater/ce_launch.c#L538).
+`port/tools/sign_release.py`. Both
+[Linux files.cpp](https://github.com/dlprentice/onslaught-ce/blob/93ea9145d6d4d9f36f7cd9a800506ebf5bcbd788/port/platform/linux/files.cpp)
+and [Windows files.cpp](https://github.com/dlprentice/onslaught-ce/blob/93ea9145d6d4d9f36f7cd9a800506ebf5bcbd788/port/platform/windows/files.cpp)
+merge careers from the user and original-data folders. The original-install rows remain read-only in the
+companion's CE mode. Its data-folder selection follows
+[the launcher's validation and search](https://github.com/dlprentice/onslaught-ce/blob/93ea9145d6d4d9f36f7cd9a800506ebf5bcbd788/port/updater/ce_launch.c).
 
 Windows process detection, reading the launcher's version and protected file writes still need
 Windows runtime validation. In the pinned source, the launcher uses
-[`AttachConsole(ATTACH_PARENT_PROCESS)` and `CONOUT$`](https://github.com/dlprentice/onslaught-ce/blob/72a44140c6db3e093cc07b1bed40a0584fdfecd2/port/updater/ce_launch.c#L1333).
-If the companion was started from a console, this may send the version reply there instead of to
-the companion, leaving the installed version unreadable. That consequence is inferred from the
-source and has not been reproduced on Windows. Linux tests do not establish Windows behavior.
+[`AttachConsole(ATTACH_PARENT_PROCESS)` and `CONOUT$`](https://github.com/dlprentice/onslaught-ce/blob/93ea9145d6d4d9f36f7cd9a800506ebf5bcbd788/port/updater/ce_launch.c).
+Separate native Windows launcher checks reproduced CE 0.1.4 sending redirected version output to
+an attached console instead of its pipe. A launcher correction is under validation for the next CE release;
+it is not a released companion fix. The companion's full Windows workflow remains unvalidated.
+Linux tests do not establish Windows behavior.
 
 ## Layout
 
@@ -265,10 +266,11 @@ are never thrown away for this; the companion says so instead.
 
 ## Known limits
 
-- A real CE launcher has not been started or version-read by the companion, and an edited
-  career has not been checked in a running CE game. The launch and file tests use isolated fixtures.
-- Nothing has been run on Windows; the Windows package is cross-exported and inspected only.
-  The possible version-output issue is described under **Which game it works with** above.
+- Linux CE 0.1.4 launch, version reading and loading an edited copy of a real career passed the
+  isolated check above. This does not establish complete campaign play or every save variant.
+- The companion UI and complete protected-file workflow have not been run on Windows; its package
+  is cross-exported and inspected. Separate native CE launcher checks confirmed the version-output
+  issue described under **Which game it works with** above; they do not validate the companion UI.
 - Nobody has clicked through the app by hand or listened to its music and voices.
 - The model preview shows each model at its first frame; the app never plays an animation. On
   2026-10-16, playing the exported animations inside a headless Godot (a development check, not the

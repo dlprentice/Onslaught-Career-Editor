@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-23 (CE save sources clarified; fixture evidence separated from real-launch and Windows validation gaps)
+Last updated: 2026-10-24 (real Linux CE launch and edited-career acceptance separated from remaining Windows and player checks)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -159,23 +159,25 @@ CE copy, and CE writes go to its user folder. The companion offers Play through 
 a signature-verified public release version, and edits only the launcher's `update_check` and `record_sessions`
 switches. Original data also supplies music, voices and art. CE settings backups are separate verified files; the career Backups page does
 not restore `ce.ini`.
-These extra original-file entries do not assert CE's Load menu contains them. The pinned Windows source merges
-both lists; the pinned Linux directory lookup omits original entries once user `savegames` exists despite its
-merge comment. This is a static finding, not a runtime result here; see the linked source in the companion README.
+CE 0.1.4 merges both lists on Linux and Windows; the older Linux listing defect described in earlier records
+was corrected in that CE release. See the linked current source in the companion README.
 CE's original data folder is admitted by its two data-file hashes, using its environment/configuration/Steam
 search order; the companion's separate pictures-and-music choice does not override that.
 
 **CE evidence and gaps:** [CE career tests](companion/OnslaughtToolkit.Godot/Tests/CeTargetTests.cs) and
 [original-career browsing tests](companion/OnslaughtToolkit.Godot/Tests/CeOverlayTests.cs) use owned copies
 of the tracked real-save fixture in isolated folders. [Launcher and settings tests](companion/OnslaughtToolkit.Godot/Tests/CeSettingsTests.cs)
-check the launch request and capture a tiny fixture script's version reply; the companion has not started a real CE
-launcher or read its version, and an edited career has not been checked in a running CE game.
+check the launch request and capture a tiny fixture script's version reply. In addition, the
+[real Linux CE acceptance](VALIDATION.md#companion-with-real-onslaught-ce--october-24) read CE 0.1.4's version,
+started its launcher, edited and backed up a copy of a game-created career, and loaded the edited Unicode-named
+career through CE's own menu. The game's successful-load output equals the edited file byte for byte;
+its level-selection screen was inspected. This does not establish complete campaign play.
 [Data-folder tests](companion/OnslaughtToolkit.Godot/Tests/CeGameDataTests.cs) exercise the two-file validation and
 folder selection using owned tiny inputs; these are not a game-content or launch acceptance test.
 [Update tests](companion/OnslaughtToolkit.Godot/Tests/CeUpdateFeedTests.cs) check signature verification and refused
 responses. Windows process detection, version-output capture and protected file writes have not run on Windows;
-the portable write logic is exercised on Linux. A Windows launcher started from a console may send its version to
-that console instead of the companion, which would display it as unreadable; see the
+the portable write logic is exercised on Linux. Separate native launcher checks reproduced CE 0.1.4 sending
+redirected version output to an attached Windows console; a launcher fix is pending release. See the
 [companion README](companion/OnslaughtToolkit.Godot/README.md#which-game-it-works-with).
 
 Its sidebar:

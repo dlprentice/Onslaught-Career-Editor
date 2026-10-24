@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-23 (CE validation and release work stated without branch or phase status)
+Last updated: 2026-10-24 (Linux CE launch and edited-career acceptance completed; Windows and player acceptance remain)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
@@ -29,9 +29,9 @@ launcher settings and signed public update information. The CE launcher installs
 
 Remaining acceptance and release work:
 
-- Start a real CE launcher from the companion and read its installed version. These paths have fixture tests,
-  but neither has been exercised with a real CE launcher. Check an edited career in CE itself; the file tests do
-  not establish acceptance by the running game.
+- Extend the now-demonstrated Linux CE launcher and edited-career workflow to the supported Windows path.
+  The [Linux acceptance](VALIDATION.md#companion-with-real-onslaught-ce--october-24) uses the real CE 0.1.4 launcher,
+  protected edits of a game-created career copy and the game's own Load menu; it is not full campaign acceptance.
 - Run the Windows package, including process detection, reading the launcher's version and protected file writes.
   The portable write path has run only on Linux; Windows cross-export and package checks do not establish Windows
   execution. The companion README describes the possible Windows console-output issue.
