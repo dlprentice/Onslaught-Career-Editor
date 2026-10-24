@@ -74,13 +74,15 @@ merge careers from the user and original-data folders. The original-install rows
 companion's CE mode. Its data-folder selection follows
 [the launcher's validation and search](https://github.com/dlprentice/onslaught-ce/blob/93ea9145d6d4d9f36f7cd9a800506ebf5bcbd788/port/updater/ce_launch.c).
 
-Windows process detection, reading the launcher's version and protected file writes still need
-Windows runtime validation. In the pinned source, the launcher uses
+Native Windows checks exercised production process detection and protected file/settings writes;
+CE also loaded the edited Unicode career through its own menu. The Godot UI remains untested on
+Windows. In the pinned source, the launcher uses
 [`AttachConsole(ATTACH_PARENT_PROCESS)` and `CONOUT$`](https://github.com/dlprentice/onslaught-ce/blob/93ea9145d6d4d9f36f7cd9a800506ebf5bcbd788/port/updater/ce_launch.c).
 Separate native Windows launcher checks reproduced CE 0.1.4 sending redirected version output to
 an attached console instead of its pipe. A launcher correction is under validation for the next CE release;
-it is not a released companion fix. The companion's full Windows workflow remains unvalidated.
-Linux tests do not establish Windows behavior.
+it is not a released companion fix. Standalone version queries additionally show an intermittent
+Windows loader wait opening SDL3.dll, still unresolved. See
+[NativeChecks](../OnslaughtToolkit.NativeChecks/README.md) for the executed paths and limits.
 
 ## Layout
 

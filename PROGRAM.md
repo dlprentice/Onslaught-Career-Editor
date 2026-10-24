@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-24 (Linux CE launch and edited-career acceptance completed; Windows and player acceptance remain)
+Last updated: 2026-10-24 (Linux CE workflow and native Windows backend/load checks completed; Windows UI and player checks remain)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
@@ -29,12 +29,13 @@ launcher settings and signed public update information. The CE launcher installs
 
 Remaining acceptance and release work:
 
-- Extend the now-demonstrated Linux CE launcher and edited-career workflow to the supported Windows path.
-  The [Linux acceptance](VALIDATION.md#companion-with-real-onslaught-ce--october-24) uses the real CE 0.1.4 launcher,
-  protected edits of a game-created career copy and the game's own Load menu; it is not full campaign acceptance.
-- Run the Windows package, including process detection, reading the launcher's version and protected file writes.
-  The portable write path has run only on Linux; Windows cross-export and package checks do not establish Windows
-  execution. The companion README describes the possible Windows console-output issue.
+- Exercise the Windows Godot UI. The [Linux acceptance](VALIDATION.md#companion-with-real-onslaught-ce--october-24)
+  uses the real CE launcher, protected edits and the game's own Load menu. The separate
+  [native Windows checks](companion/OnslaughtToolkit.NativeChecks/README.md) now cover production file/settings
+  writes, real-process refusal, and CE loading the edited Unicode career. Neither is full campaign acceptance.
+- Resolve the intermittent Windows launcher-version timeout: a reproduced failure waits in loader startup
+  opening SDL3.dll, before the launcher's own version handling. The independently reproduced redirected-output
+  defect has a CE correction awaiting release; it does not explain this separate startup wait.
 - A human click-through and listening to the music and voices. See the companion README for the pinned source
   contract, backup scope and other limits. Public release remains at David's direction.
 

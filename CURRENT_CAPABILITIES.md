@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-24 (real Linux CE launch and edited-career acceptance separated from remaining Windows and player checks)
+Last updated: 2026-10-24 (Linux CE workflow and native Windows backend/load evidence; remaining UI/version and player limits)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -175,9 +175,12 @@ its level-selection screen was inspected. This does not establish complete campa
 [Data-folder tests](companion/OnslaughtToolkit.Godot/Tests/CeGameDataTests.cs) exercise the two-file validation and
 folder selection using owned tiny inputs; these are not a game-content or launch acceptance test.
 [Update tests](companion/OnslaughtToolkit.Godot/Tests/CeUpdateFeedTests.cs) check signature verification and refused
-responses. Windows process detection, version-output capture and protected file writes have not run on Windows;
-the portable write logic is exercised on Linux. Separate native launcher checks reproduced CE 0.1.4 sending
-redirected version output to an attached Windows console; a launcher fix is pending release. See the
+responses. [Native Windows checks](companion/OnslaughtToolkit.NativeChecks/README.md) now exercise production
+process detection, protected career/settings writes and actual-game running refusals. CE also loads the edited
+Unicode career and writes exactly its bytes as options. The Windows Godot UI has not been exercised. Version
+queries still intermittently time out while Windows opens SDL3.dll during loader startup. Separate native
+launcher checks reproduced CE 0.1.4 sending redirected output to an attached console; that correction awaits
+release and does not resolve the distinct startup wait. See the
 [companion README](companion/OnslaughtToolkit.Godot/README.md#which-game-it-works-with).
 
 Its sidebar:
@@ -250,8 +253,9 @@ in [their validation section](VALIDATION.md#companion-approved-workflows--septem
 the migration's in [its section](VALIDATION.md#companion-c-migration--september-25).
 Art & sound and the Goodies page's "What it shows" are covered by the contract suite on
 synthetic models, textures, a sound bank and Goodie archives; no dated receipt for them is
-recorded here. **Windows execution (the portable write path has run only on Linux), a human
-click-through and listening to the audio remain pending.** The companion does not patch
+recorded here. **The Windows Godot UI, a human click-through and listening to the audio remain pending.**
+The native Windows backend and CE career-load checks described above are narrower executed evidence.
+The companion does not patch
 `BEA.exe` and that is not planned; mission, rank and link edits are not offered; no legacy
 feature parity or retail gameplay acceptance is implied.
 
