@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RuntimeFrameworkVersion>10.0.13</RuntimeFrameworkVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Deterministic>true</Deterministic>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <!-- Native acceptance exercises the app's implementations, not copied test implementations. -->
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="../OnslaughtToolkit.Godot/Careers/CareerSave.cs" Link="Production/CareerSave.cs" />
+    <Compile Include="../OnslaughtToolkit.Godot/Careers/SaveSession.cs" Link="Production/SaveSession.cs" />
+    <Compile Include="../OnslaughtToolkit.Godot/Files/FileMutationSafety.cs" Link="Production/FileMutationSafety.cs" />
+    <Compile Include="../OnslaughtToolkit.Godot/Files/SaveLabFileTransaction.cs" Link="Production/SaveLabFileTransaction.cs" />
+    <Compile Include="../OnslaughtToolkit.Godot/Files/ProtectedSaveFiles.cs" Link="Production/ProtectedSaveFiles.cs" />
+    <Compile Include="../OnslaughtToolkit.Godot/Files/GameWrites.cs" Link="Production/GameWrites.cs" />
+    <Compile Include="../OnslaughtToolkit.Godot/Game/CeInstallation.cs" Link="Production/CeInstallation.cs" />
+    <Compile Include="../OnslaughtToolkit.Godot/Game/CeGameData.cs" Link="Production/CeGameData.cs" />
+    <Compile Include="../OnslaughtToolkit.Godot/Game/GameFolder.cs" Link="Production/GameFolder.cs" />
+    <Compile Include="../OnslaughtToolkit.Godot/Game/OnslaughtCe.cs" Link="Production/OnslaughtCe.cs" />
+    <Compile Include="../OnslaughtToolkit.Godot/Game/SteamLibraries.cs" Link="Production/SteamLibraries.cs" />
+    <Compile Include="../OnslaughtToolkit.Godot/Game/WindowsFolders.cs" Link="Production/WindowsFolders.cs" />
+    <Compile Include="../OnslaughtToolkit.Godot/Options/CeSettings.cs" Link="Production/CeSettings.cs" />
+  </ItemGroup>
+</Project>
