@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-24 (real Linux CE launcher and edited-career load acceptance; current CE save-source contract)
+Last updated: 2026-10-24 (native Windows backend acceptance and remaining UI/version limits; real Linux CE workflow)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it offers CE launch and reads signed public update information.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -268,9 +268,12 @@ are never thrown away for this; the companion says so instead.
 
 - Linux CE 0.1.4 launch, version reading and loading an edited copy of a real career passed the
   isolated check above. This does not establish complete campaign play or every save variant.
-- The companion UI and complete protected-file workflow have not been run on Windows; its package
-  is cross-exported and inspected. Separate native CE launcher checks confirmed the version-output
-  issue described under **Which game it works with** above; they do not validate the companion UI.
+- The Windows Godot UI has not been exercised. The production file/settings backend did run natively
+  on Windows 11 using [NativeChecks](../OnslaughtToolkit.NativeChecks/README.md): real-career backup,
+  edit, reopen, restore, Unicode publication, stale-source and sharing refusals, and refusal while
+  CE runs passed. A separate CE replay loaded the restored baseline; loading the edited Unicode
+  career remains pending. Standalone launcher version queries still intermittently hit their
+  five-second deadline, even with the launcher output correction; the cause remains unresolved.
 - Nobody has clicked through the app by hand or listened to its music and voices.
 - The model preview shows each model at its first frame; the app never plays an animation. On
   2026-10-16, playing the exported animations inside a headless Godot (a development check, not the
@@ -280,9 +283,9 @@ are never thrown away for this; the companion says so instead.
 - The handedness conversion follows the game's culling convention; no mirrored text on a model
   has been checked against it.
 - Behavior after a power loss during a write is not proven (see below).
-- The Onslaught CE running check has been seen against a running CE only on Linux (Onslaught
-  CE 0.1, its `bea` started from the package folder); spotting CE on Windows is untested, and
-  there the companion says so beside its promise. CE's folder locations come from the port's
+- The Onslaught CE running check has been exercised against actual CE processes on Linux and
+  Windows. Native Windows backend checks required the exact running-game refusal and verified
+  unchanged careers, settings and backup directories. CE's folder locations come from the port's
   source and packaging; only `BEA_USER_DIR` has been seen in use.
 - Which player each binding slot serves (Slot 1 or Slot 2) has not been checked in the game, and
   key classes no game-written row confirms (for example top-row digits, punctuation and the
@@ -330,9 +333,11 @@ code keeps them:
   extracted package beside `onslaught-ce-launch`), before and after its `bea` file was replaced,
   and stopped finding it once CE exited (`Development/RunningCheck.cs` output saved in the ignored
   `local-data/companion/evidence/ce-running-check-2026-10-22.log` beside the harness that ran it);
-  it has not been tried on Windows. On
-  2026-09-26, with the Steam game running under Proton, the check found exactly the game's own process (`BEA.exe`, argv[0] `S:\steamapps\common\Battle Engine
-  Aquila\BEA.exe`) and not Steam's launcher shim, the Proton script or the runtime wrapper;
+  native Windows checks on 2026-10-24 also detected the selected package's actual `bea.exe` and
+  refused both career and CE-settings writes with the running-game reason, without changing files
+  or creating backups ([NativeChecks](../OnslaughtToolkit.NativeChecks/README.md)). On 2026-09-26, with the Steam
+  game running under Proton, the check found exactly the game's own process (`BEA.exe`, argv[0]
+  `S:\steamapps\common\Battle Engine Aquila\BEA.exe`) and not Steam's launcher shim, the Proton script or the runtime wrapper;
   `python tools/companion_godot.py test --script Development/RunningCheck.cs` prints what it sees.
 - **Career backup sets can be put back from Backups.** Putting a file back is itself a
   write into the game, so it backs up the current files first. The file is put back only if
@@ -367,7 +372,9 @@ companion while Edit career or Game settings holds unsaved changes asks first.
 On Windows the same writes use portable .NET file calls: a new file is moved into place
 without replacing anything, and a replaced file is swapped with `File.Replace`, which keeps
 the displaced file so it can be compared with its backup and the swap undone. That path's
-logic runs in the tests on Linux; it has not been executed on Windows.
+logic runs in the tests on Linux and in the native Windows backend workflow described above.
+The Windows workflow exercised actual replacement, verified backup, reopen and restore; it does
+not establish every failure path or behavior after power loss.
 
 The tests inject the two hard cases rather than meeting them for real: a switch makes the
 exchange report itself unsupported, and a failure is raised just after the file is in place,
@@ -391,8 +398,9 @@ file, flushes it, and publishes with a no-clobber link. [GameWrites](Files/GameW
 builds backups and game-folder writes on the same primitives, with the portable path
 described above for other systems. The Windows copy path locks ancestors and verifies
 identity, but releases its staging quarantine and closes the handle before a path-based
-move, then verifies the published identity; Windows execution remains unverified here, and
-a Windows cross-export is not acceptance.
+move, then verifies the published identity. Native Windows checks exercised protected reads,
+Unicode publication/discovery and stale-source refusal. An adversarial race at every publication
+boundary remains untested; neither these backend checks nor a cross-export validate the Windows UI.
 
 ## Exact toolchain and rollback
 

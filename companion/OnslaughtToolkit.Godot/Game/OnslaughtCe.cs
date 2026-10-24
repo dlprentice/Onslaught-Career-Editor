@@ -7,9 +7,11 @@ namespace OnslaughtToolkit.Companion.Game;
 /// <c>port/tools/package.py</c>): where CE keeps its own careers and settings, and which programs a CE package holds.
 /// The process rule was seen finding a running Onslaught CE 0.1 on Linux on 2026-10-22 (its <c>bea</c> started from the
 /// package folder, before and after its file was replaced while it ran; the check's output is kept in the ignored
-/// <c>local-data/companion/evidence/ce-running-check-2026-10-22.log</c>); it has not been tried on Windows. The
-/// companion treats CE as a separate target. Unprotected separate-copy destinations remain excluded; CE careers
-/// use the same backed-up installation path as original careers, against the CE user folder only.
+/// <c>local-data/companion/evidence/ce-running-check-2026-10-22.log</c>). Native Windows checks on 2026-10-24
+/// also detected the selected package's actual game and refused both career and CE-settings writes
+/// (OnslaughtToolkit.NativeChecks). The companion treats CE as a separate target. Unprotected separate-copy
+/// destinations remain excluded; CE careers use the same backed-up installation path as original careers,
+/// against the CE user folder only.
 /// </summary>
 public static class OnslaughtCe
 {
@@ -21,13 +23,6 @@ public static class OnslaughtCe
 
     /// <summary>The game program beside the launcher: <c>bea</c> on Linux, <c>bea.exe</c> on Windows.</summary>
     public const string LinuxGame = "bea", WindowsGame = "bea.exe";
-
-    /// <summary>
-    /// Said beside the promise not to write while CE runs, where that check has not been tried against a running CE
-    /// (Windows); empty on Linux, where it has.
-    /// </summary>
-    public static string UntestedCheckNote => OperatingSystem.IsWindows()
-        ? " Spotting Onslaught CE has not been tested on Windows yet, so close CE yourself before saving into the game." : "";
 
     /// <summary>The CE user folders for this process's environment.</summary>
     public static IReadOnlyList<string> UserFolders() =>
