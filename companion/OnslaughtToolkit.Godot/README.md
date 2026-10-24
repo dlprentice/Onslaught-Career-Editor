@@ -271,8 +271,9 @@ are never thrown away for this; the companion says so instead.
 - The Windows Godot UI has not been exercised. The production file/settings backend did run natively
   on Windows 11 using [NativeChecks](../OnslaughtToolkit.NativeChecks/README.md): real-career backup,
   edit, reopen, restore, Unicode publication, stale-source and sharing refusals, and refusal while
-  CE runs passed. A separate CE replay loaded the restored baseline; loading the edited Unicode
-  career remains pending. Standalone launcher version queries still intermittently hit their
+  CE runs passed. Separate CE replays loaded both the restored baseline and the edited Unicode
+  career, with the loaded options container matching each selected career exactly. Standalone
+  launcher version queries still intermittently hit their
   five-second deadline, even with the launcher output correction; the cause remains unresolved.
 - Nobody has clicked through the app by hand or listened to its music and voices.
 - The model preview shows each model at its first frame; the app never plays an animation. On

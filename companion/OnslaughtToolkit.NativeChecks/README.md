@@ -55,11 +55,17 @@ and preserves its private root for diagnosis; use a new root for another file-ph
 
 Native Windows 11 Enterprise Evaluation (build 26300) was exercised on 2026-10-24 with the pinned .NET runtime.
 The file/settings workflow and actual CE process refusal passed. A separate CE replay loaded the restored baseline;
-its written options container matched the baseline exactly. Unicode publication and discovery passed in the companion
-backend; loading that edited Unicode career in Windows CE was not established. This does not validate the Godot UI.
+its written options container matched the baseline exactly. A second replay loaded the production-written edited
+`CE Élan 日本語.bes` from a fresh copied profile, reached level selection and exited normally. CE's written options
+container matched the edited career exactly, and the career itself was unchanged. The capture was inspected. These
+backend and game-load checks do not validate the Godot UI, hardware audio or complete campaign play.
 
 Repeated standalone version queries, including the final check, hit the production five-second deadline. Queries
 through the same production implementation inside a small diagnostic succeeded, as did independent native and .NET
 subprocess controls; one intervening standalone query also passed. The version phase is therefore not reliably
-passing in this environment. Its cause remains unresolved, and no timeout workaround was applied. Preserve failed
-and successful reports together; the passing controls do not cancel the observed refusals.
+passing in this environment. An external observer captured a recurring failure without modifying the launcher:
+one thread waited in Windows loader initialization while another thread remained in `NtOpenFile` at both
+samples. This narrows the observed stall to startup outside the launcher's version-output path; the specific file
+and reason for that wait remain unresolved. The observer resumed each briefly suspended thread, and the production
+five-second deadline cleaned up its owned child. No timeout workaround was applied. Preserve failed and successful
+reports together; the passing controls do not cancel the observed refusals.
