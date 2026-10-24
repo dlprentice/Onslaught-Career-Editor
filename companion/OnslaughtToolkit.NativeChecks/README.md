@@ -65,7 +65,9 @@ through the same production implementation inside a small diagnostic succeeded, 
 subprocess controls; one intervening standalone query also passed. The version phase is therefore not reliably
 passing in this environment. An external observer captured a recurring failure without modifying the launcher:
 one thread waited in Windows loader initialization while another thread remained in `NtOpenFile` at both
-samples. This narrows the observed stall to startup outside the launcher's version-output path; the specific file
-and reason for that wait remain unresolved. The observer resumed each briefly suspended thread, and the production
+samples. A further ABI-checked, read-only observation identified that open as the package's `SDL3.dll`.
+This narrows the observed stall to startup outside the launcher's version-output path; why Windows delayed that
+file open remains unresolved. It does not establish a bug in SDL code or identify a filesystem filter.
+The observer resumed each briefly suspended thread, and the production
 five-second deadline cleaned up its owned child. No timeout workaround was applied. Preserve failed and successful
 reports together; the passing controls do not cancel the observed refusals.
