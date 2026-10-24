@@ -107,12 +107,12 @@ internal static class Program
                 string[] backupBefore = Directory.GetDirectories(backups).Order().ToArray();
                 InstallReceipt refused = GameInstaller.Install(Files, Game(), "baseline.bes", edited, backups, GameProcess.IsRunning,
                     DateTime.Now, expectedSha256: SaveSession.Digest(before));
-                Check(!refused.Ok && !refused.MayHaveChanged && refused.BackupFolder is null &&
+                Check(!refused.Ok && refused.Message == GameInstaller.RunningMessage && !refused.MayHaveChanged && refused.BackupFolder is null &&
                     File.ReadAllBytes(career).AsSpan().SequenceEqual(before), "running-career-refusal", refused);
                 CeSettings settings = Need(CeSettings.Read(user));
                 InstallReceipt settingsRefused = settings.Save(!settings.UpdateCheck, !settings.RecordSessions, backups,
                     GameProcess.IsRunning, DateTime.Now, packageRoot: ce.Folder);
-                Check(!settingsRefused.Ok && !settingsRefused.MayHaveChanged && settingsRefused.BackupFolder is null &&
+                Check(!settingsRefused.Ok && settingsRefused.Message == GameInstaller.RunningMessage && !settingsRefused.MayHaveChanged && settingsRefused.BackupFolder is null &&
                     File.ReadAllBytes(ce.SettingsPath).AsSpan().SequenceEqual(settingsBefore), "running-settings-refusal", settingsRefused);
                 Check(backupBefore.SequenceEqual(Directory.GetDirectories(backups).Order()), "running-no-backup-write", backups);
             }
