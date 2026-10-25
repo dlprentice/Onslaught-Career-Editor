@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-10-23 (companion scope reflects original-game and CE support; remaining acceptance is recorded in PROGRAM.md)
+Last updated: 2026-10-25 (Linux and native Windows evidence reconciled; Windows Godot UI remains open)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
