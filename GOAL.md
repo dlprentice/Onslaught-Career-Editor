@@ -24,7 +24,8 @@ archive.
   and Windows, for players: careers, Goodies, settings, backups, music, voices and lore, with no known data-loss path.
   It supports original-game and CE careers and backups, CE launcher settings and signed update information; the CE
   launcher installs updates. Its [known limits](companion/OnslaughtToolkit.Godot/README.md#known-limits) distinguish
-  tested file operations from real CE launch and Windows execution still awaiting validation. Original-game save
+  the exercised Linux CE workflow and native Windows backend/load checks from Windows Godot UI
+  acceptance still awaiting validation. Original-game save
   editing stays, with protected writes; executable patching and copied-install safe launch are retired, and
   enhancements belong in CE as opt-in options.
 - **This repository documents the game in public**: formats, behaviours and findings as prose and specs, with our

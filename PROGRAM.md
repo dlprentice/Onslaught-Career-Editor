@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-24 (Linux CE workflow and native Windows backend/load checks completed; Windows UI and player checks remain)
+Last updated: 2026-10-25 (Linux CE workflow and native Windows backend/load checks completed; Windows UI and player checks remain)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
@@ -35,7 +35,7 @@ Remaining acceptance and release work:
   writes, real-process refusal, and CE loading the edited Unicode career. Neither is full campaign acceptance.
 - Resolve the intermittent Windows launcher-version timeout: a reproduced failure waits in loader startup
   opening SDL3.dll, before the launcher's own version handling. The independently reproduced redirected-output
-  defect has a CE correction awaiting release; it does not explain this separate startup wait.
+  defect is corrected in CE 0.1.5; it does not explain this separate startup wait.
 - A human click-through and listening to the music and voices. See the companion README for the pinned source
   contract, backup scope and other limits. Public release remains at David's direction.
 

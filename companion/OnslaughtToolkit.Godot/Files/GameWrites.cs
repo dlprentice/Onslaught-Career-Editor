@@ -458,8 +458,8 @@ public static partial class GameInstaller
 /// a replaced file is swapped with <see cref="File.Replace(string, string, string?, bool)"/>, which keeps
 /// the displaced file under a temporary name so it can be compared with the backed-up original and the
 /// swap undone if another program changed it in between. On Windows the folder's ancestors are held by
-/// FileMutationSafety's directory locks. Tests run this same path on Linux to check its logic; it
-/// has not been executed on Windows.
+/// FileMutationSafety's directory locks. Tests exercise this path on Linux, and the native Windows
+/// backend checks exercise protected writes and refusals; the Windows Godot UI remains untested.
 /// </summary>
 internal static class PortableInstall
 {
