@@ -163,7 +163,7 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
     /// replaced; the write is refused if the game has changed it since.
     /// </summary>
     public async Task<InstallReceipt> InstallBytesAsync(Game.GameFolder game, string targetName, byte[] prepared, string backupRoot,
-        Func<bool> gameRunning, string? expectedSha256, string reason)
+        Func<bool> gameRunning, string? expectedSha256, string reason, bool requireNew = false)
     {
         if (Busy) return new InstallReceipt(false, "A file operation is already running.", targetName);
         SetBusy(true);
@@ -171,7 +171,7 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
         {
             byte[] bytes = prepared.ToArray();
             return await worker.RunExclusiveAsync(files => GameInstaller.Install(files, game, targetName, bytes, backupRoot, gameRunning,
-                DateTime.Now, expectedSha256: expectedSha256, reason: reason), message => new InstallReceipt(false, message, targetName));
+                DateTime.Now, expectedSha256: expectedSha256, reason: reason, requireNew: requireNew), message => new InstallReceipt(false, message, targetName));
         }
         finally
         {
@@ -186,7 +186,7 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
     /// back): if the bytes read now differ, the backup copy changed after it was made and nothing is written.
     /// </summary>
     public async Task<InstallReceipt> InstallAsync(Game.GameFolder game, string sourcePath, string targetName, string backupRoot,
-        Func<bool> gameRunning, string reason = "Before a change to your game", string? expectedSourceSha256 = null)
+        Func<bool> gameRunning, string reason = "Before a change to your game", string? expectedSourceSha256 = null, bool requireNew = false)
     {
         if (Busy) return new InstallReceipt(false, "A file operation is already running.", targetName);
         bool options = string.Equals(targetName, GameInstaller.OptionsName, StringComparison.OrdinalIgnoreCase);
@@ -205,7 +205,7 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
                     return new InstallReceipt(false, $"This backup copy of {System.IO.Path.GetFileName(sourcePath)} has changed since it was " +
                         "made (it no longer matches the fingerprint its backup recorded), so it was not put back. Nothing was written.",
                         targetName);
-                return GameInstaller.Install(files, game, targetName, bytes, backupRoot, gameRunning, DateTime.Now, reason: reason);
+                return GameInstaller.Install(files, game, targetName, bytes, backupRoot, gameRunning, DateTime.Now, reason: reason, requireNew: requireNew);
             }, message => new InstallReceipt(false, message, targetName));
         }
         finally

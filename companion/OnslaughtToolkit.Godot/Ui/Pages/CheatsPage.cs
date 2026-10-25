@@ -133,7 +133,7 @@ internal sealed class CheatsPage : Page
         string name = Composed.Name;
         _app.Status.Show("Backing up, then adding the cheat career…");
         InstallReceipt receipt = await _app.Workspace.InstallBytesAsync(game, Composed.FileName, session.CopyBytes(), backups,
-            _app.GameRunning, null, $"Before adding {name}");
+            _app.GameRunning, null, $"Before adding {name}", requireNew: true);
         ShowResult(receipt.Ok ? $"{name} is now in your game's career list. Load it in the game to play with the cheats on." : receipt.Message,
             receipt.Ok);
         _app.Status.Show(receipt.Ok ? $"{name} added to your game." : receipt.Message, receipt.Ok ? StatusKind.Success : StatusKind.Failure);

@@ -100,11 +100,11 @@ public sealed record GameFolder(string Root, string Source, ExecutableIdentity E
     }
 
     internal static IEnumerable<FileInfo> CeCareerFiles(string root)
-    {
-        string saves = CeSavegamesPath(root);
-        return Directory.Exists(saves) ? new DirectoryInfo(saves).EnumerateFiles().Where(file =>
+        => CareerFiles(CeSavegamesPath(root));
+
+    internal static IEnumerable<FileInfo> CareerFiles(string saves)
+        => Directory.Exists(saves) ? new DirectoryInfo(saves).EnumerateFiles().Where(file =>
             file.Extension.Equals(".bes", StringComparison.OrdinalIgnoreCase)) : [];
-    }
 
     public string SavegamesPath => Target == GameTarget.OnslaughtCe ? CeSavegamesPath(Root) : System.IO.Path.Combine(Root, "savegames");
     public string OptionsPath => System.IO.Path.Combine(Root, "defaultoptions.bea");
@@ -120,7 +120,7 @@ public sealed record GameFolder(string Root, string Source, ExecutableIdentity E
         List<GameFile> careers = [];
         if (Directory.Exists(savegames))
         {
-            foreach (FileInfo file in new DirectoryInfo(savegames).EnumerateFiles("*.bes").OrderBy(file => file.Name, StringComparer.OrdinalIgnoreCase))
+            foreach (FileInfo file in CareerFiles(savegames).OrderBy(file => file.Name, StringComparer.OrdinalIgnoreCase))
                 careers.Add(Describe(file));
         }
         FileInfo options = new(System.IO.Path.Combine(root, "defaultoptions.bea"));

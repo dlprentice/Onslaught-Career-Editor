@@ -196,7 +196,7 @@ public sealed class GameLibrary(IReadOnlyList<string> steamRoots, SettingsStore 
             }
             else if (Directory.Exists(folder.SavegamesPath))
             {
-                foreach (FileInfo file in new DirectoryInfo(folder.SavegamesPath).EnumerateFiles("*.bes"))
+                foreach (FileInfo file in GameFolder.CareerFiles(folder.SavegamesPath))
                     now.Add((file.FullName, file.Length, file.LastWriteTime));
             }
             FileInfo options = new(folder.OptionsPath);

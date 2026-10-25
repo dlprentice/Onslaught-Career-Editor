@@ -277,7 +277,7 @@ internal sealed class HomePage : Page
         if (_app.BackupFolderOrReport() is not string backups) return new InstallReceipt(false, "No backup folder.", name);
         _app.Status.Show("Backing up, then adding the career…");
         InstallReceipt receipt = await _app.Workspace.InstallAsync(game, _addSource, name + ".bes", backups, _app.GameRunning,
-            $"Before adding {name}");
+            $"Before adding {name}", requireNew: true);
         _app.Status.Show(receipt.Ok ? $"{name} is now in your game. Your earlier careers are in the backup." : receipt.Message,
             receipt.Ok ? StatusKind.Success : StatusKind.Failure);
         await _app.Game.RescanAsync();

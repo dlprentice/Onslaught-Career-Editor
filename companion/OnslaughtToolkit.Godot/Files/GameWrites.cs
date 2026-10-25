@@ -128,6 +128,7 @@ public static class GameProcess
 public static class Backups
 {
     public const string ManifestName = "onslaught-backup.json";
+    private const int MaximumManifestBytes = 16 * 1024 * 1024;
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
 
     public static BackupReceipt Create(IProtectedSaveFiles files, GameFolder game, string root, DateTime now, string reason = "Backup")
@@ -184,6 +185,8 @@ public static class Backups
         {
             using FileStream manifest = new(Path.Combine(folder, ManifestName), FileMode.CreateNew, FileAccess.Write);
             JsonSerializer.Serialize(manifest, set, Json);
+            if (manifest.Position > MaximumManifestBytes)
+                return new BackupReceipt(false, "The copies were verified but their manifest is too large to read safely.", PartialFolder: folder);
             manifest.Flush(flushToDisk: true);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
@@ -257,7 +260,7 @@ public static class Backups
                 try
                 {
                     string manifest = Path.Combine(folder, ManifestName);
-                    if (File.Exists(manifest) && JsonSerializer.Deserialize<BackupSet>(File.ReadAllText(manifest)) is BackupSet set)
+                    if (File.Exists(manifest) && ReadManifest(manifest) is BackupSet set)
                         sets.Add(set with { Folder = folder });
                 }
                 catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException)
@@ -270,6 +273,37 @@ public static class Backups
         }
         return sets.OrderByDescending(set => set.Created).ToArray();
     }
+
+    // Manifests can be copied from another machine or edited independently of the app. Admit their structure
+    // before UI and automatic-backup consumers use it; nullable annotations do not validate deserialized JSON.
+    private static BackupSet? ReadManifest(string path)
+    {
+        using FileStream stream = new(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        if (stream.Length > MaximumManifestBytes) return null;
+        byte[] bytes = new byte[checked((int)stream.Length)];
+        stream.ReadExactly(bytes);
+        if (stream.ReadByte() != -1) return null;
+        ReadOnlySpan<byte> json = bytes;
+        if (json.StartsWith(new byte[] { 0xEF, 0xBB, 0xBF })) json = json[3..];
+        if (JsonSerializer.Deserialize<BackupSet>(json) is not BackupSet set || set.Created == default ||
+            !RecordedPath(set.Game) || set.Files is null || set.Target is GameTarget target && !Enum.IsDefined(target)) return null;
+        HashSet<string> names = new(StringComparer.Ordinal);
+        foreach (BackupFile file in set.Files)
+        {
+            if (file is null || string.IsNullOrEmpty(file.Name) || file.Name.IndexOfAny(['/', '\\', '\0']) >= 0 ||
+                !(file.Name.EndsWith(".bes", StringComparison.OrdinalIgnoreCase) ||
+                    file.Name.Equals(GameInstaller.OptionsName, StringComparison.OrdinalIgnoreCase)) ||
+                !names.Add(file.Name) || file.Size != CareerSave.Size || file.Sha256 is not { Length: 64 } hash ||
+                !hash.All(Uri.IsHexDigit) || !RecordedPath(file.Original) ||
+                !file.Original[(file.Original.LastIndexOfAny(['/', '\\']) + 1)..].Equals(file.Name, StringComparison.Ordinal)) return null;
+        }
+        return set;
+    }
+
+    // Foreign-platform backup sets remain importable: their recorded source is descriptive, never a write path.
+    private static bool RecordedPath(string? path) => !string.IsNullOrWhiteSpace(path) && path.Length <= 4096 &&
+        !path.Contains('\0') && (path.StartsWith('/') || path.Length >= 3 && char.IsAsciiLetter(path[0]) &&
+            path[1] == ':' && path[2] is '/' or '\\');
 
     internal static bool IsInside(string path, string folder)
     {
@@ -301,9 +335,10 @@ public static partial class GameInstaller
     /// For a replacement made from a career the player opened: the content they opened. If the file in the
     /// game differs (the game saved it since), nothing is written.
     /// </param>
+    /// <param name="requireNew">An Add choice must remain create-only even if a file appears before the fresh scan or publication.</param>
     public static InstallReceipt Install(IProtectedSaveFiles files, GameFolder game, string targetName, byte[] prepared,
         string backupRoot, Func<bool> gameRunning, DateTime now, Action? beforeCheck = null, Action? beforeSwap = null,
-        string? expectedSha256 = null, string reason = "Before a change to your game", Action? afterPublish = null)
+        string? expectedSha256 = null, string reason = "Before a change to your game", Action? afterPublish = null, bool requireNew = false)
     {
         // The page's list may be stale; every decision below uses a fresh read of the folder.
         if (!game.IsAvailable)
@@ -337,6 +372,8 @@ public static partial class GameInstaller
         if (!Directory.Exists(Path.GetDirectoryName(target)))
             return new InstallReceipt(false, "The game has no savegames folder yet. Save a career in the game once, then try again.", target);
         FileInfo existing = new(target);
+        if (requireNew && (existing.Exists || Directory.Exists(target) || existing.LinkTarget is not null))
+            return new InstallReceipt(false, $"{Path.GetFileName(target)} already exists; choose another name to add a new career. Nothing was written.", target);
         if (existing.LinkTarget is not null)
             return new InstallReceipt(false, "The file in the game folder is a link; replace it yourself after checking where it points.", target);
         GameFile? current = game.Careers.Append(game.Options).OfType<GameFile>()
@@ -380,9 +417,11 @@ public static partial class GameInstaller
                     CeInstallation.RejectFolderInPackage(backupRoot, package, "The backup folder");
                 }
             };
+            // Even a backup containing this name cannot turn an Add choice into replacement consent.
+            string? replaceHash = requireNew ? null : saved?.Sha256;
             return OperatingSystem.IsLinux() && !UsePortableInstall
-                ? LinuxInstall.Write(target, prepared, saved?.Sha256, set.Folder, beforeCheck, beforeSwapChecked, afterPublish)
-                : PortableInstall.Write(target, prepared, saved?.Sha256, set.Folder, beforeCheck, beforeSwapChecked, afterPublish);
+                ? LinuxInstall.Write(target, prepared, replaceHash, set.Folder, beforeCheck, beforeSwapChecked, afterPublish)
+                : PortableInstall.Write(target, prepared, replaceHash, set.Folder, beforeCheck, beforeSwapChecked, afterPublish);
         }
         catch (GameStartedException)
         {
@@ -427,8 +466,10 @@ public static partial class GameInstaller
         if (name.Length is < 5 or > 128 || !name.EndsWith(".bes", StringComparison.OrdinalIgnoreCase) ||
             PortableNameProblem(name[..^4]) is not null)
             return null;
-        if (game.Target == GameTarget.OnslaughtCe && game.Careers.FirstOrDefault(file => !file.FromOriginalInstall &&
-            file.Name.Equals(name, StringComparison.OrdinalIgnoreCase)) is GameFile existing) return existing.Path;
+        IEnumerable<GameFile> writable = game.Careers.Where(file => !file.FromOriginalInstall);
+        GameFile? existing = writable.FirstOrDefault(file => file.Name.Equals(name, StringComparison.Ordinal)) ??
+            writable.FirstOrDefault(file => file.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        if (existing is not null) return existing.Path;
         return Path.Combine(game.SavegamesPath, name);
     }
 

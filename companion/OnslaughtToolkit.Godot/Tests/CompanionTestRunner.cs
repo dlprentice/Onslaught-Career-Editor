@@ -57,6 +57,7 @@ public partial class CompanionTestRunner : SceneTree
                 await CeTargetTests.RunAsync(this, original, output, check);
                 await CeOverlayTests.RunAsync(this, original, output, check);
                 await CePanelTests.RunAsync(this, original, output, check);
+                await FoundationSafetyTests.RunAsync(this, original, output, check);
                 check.That(File.ReadAllBytes(fixture).AsSpan().SequenceEqual(original), "the owned fixture copy is restored");
             }
             foreach (string failure in check.Failures) GD.PrintErr("FAIL: " + failure);

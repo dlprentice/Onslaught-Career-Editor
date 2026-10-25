@@ -262,12 +262,13 @@ internal sealed class EditCareerPage : Page
         if (_app.BackupFolderOrReport() is not string backups) return new InstallReceipt(false, "No backup folder.", newName);
         string name = System.IO.Path.GetFileNameWithoutExtension(session.Path);
         bool replace = target == SaveTarget.Replace;
-        if (replace && InGame(session) is not { FromOriginalInstall: false })
+        GameFile? opened = InGame(session);
+        if (replace && opened is not { FromOriginalInstall: false })
             return new InstallReceipt(false, "This career cannot be replaced here. For an original-game career shown in CE, save a new named CE copy.", name);
-        string targetName = (replace ? name : newName) + ".bes";
+        string targetName = replace ? opened!.Name : newName + ".bes";
         _app.Status.Show("Backing up, then saving into your game…");
         InstallReceipt receipt = await _app.Workspace.InstallBytesAsync(game, targetName, plan.CopyBytes(), backups, _app.GameRunning,
-            replace ? session.Sha256 : null, replace ? $"Before changing {name}" : $"Before adding {newName}");
+            replace ? session.Sha256 : null, replace ? $"Before changing {name}" : $"Before adding {newName}", requireNew: !replace);
         string saved = System.IO.Path.GetFileNameWithoutExtension(targetName);
         if (receipt.Ok)
         {
