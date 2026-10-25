@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-24 (Linux CE workflow and native Windows backend/load evidence; remaining UI/version and player limits)
+Last updated: 2026-10-25 (CE 0.1.5 publishes the redirected-output correction; earlier: Linux CE workflow and native Windows backend/load evidence; remaining UI/version and player limits)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -179,8 +179,8 @@ responses. [Native Windows checks](companion/OnslaughtToolkit.NativeChecks/READM
 process detection, protected career/settings writes and actual-game running refusals. CE also loads the edited
 Unicode career and writes exactly its bytes as options. The Windows Godot UI has not been exercised. Version
 queries still intermittently time out while Windows opens SDL3.dll during loader startup. Separate native
-launcher checks reproduced CE 0.1.4 sending redirected output to an attached console; that correction awaits
-release and does not resolve the distinct startup wait. See the
+launcher checks reproduced CE 0.1.4 sending redirected output to an attached console; Onslaught CE 0.1.5
+publishes that correction, which does not resolve the distinct startup wait. See the
 [companion README](companion/OnslaughtToolkit.Godot/README.md#which-game-it-works-with).
 
 Its sidebar:

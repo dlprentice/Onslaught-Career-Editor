@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-24 (native Windows backend acceptance and remaining UI/version limits; real Linux CE workflow)
+Last updated: 2026-10-25 (CE 0.1.5 publishes the redirected-output correction; earlier: native Windows backend acceptance and remaining UI/version limits; real Linux CE workflow)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it offers CE launch and reads signed public update information.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -79,8 +79,9 @@ CE also loaded the edited Unicode career through its own menu. The Godot UI rema
 Windows. In the pinned source, the launcher uses
 [`AttachConsole(ATTACH_PARENT_PROCESS)` and `CONOUT$`](https://github.com/dlprentice/onslaught-ce/blob/93ea9145d6d4d9f36f7cd9a800506ebf5bcbd788/port/updater/ce_launch.c).
 Separate native Windows launcher checks reproduced CE 0.1.4 sending redirected version output to
-an attached console instead of its pipe. A launcher correction is under validation for the next CE release;
-it is not a released companion fix. Standalone version queries additionally show an intermittent
+an attached console instead of its pipe. Onslaught CE 0.1.5 publishes that launcher correction
+([the 0.1.5 source](https://github.com/dlprentice/onslaught-ce/blob/52c8c1f91e98cd2ff3573978ce608987c2ab170e/port/updater/ce_launch.c));
+the separate intermittent startup wait remains. Standalone version queries additionally show an intermittent
 Windows loader wait opening SDL3.dll, still unresolved. See
 [NativeChecks](../OnslaughtToolkit.NativeChecks/README.md) for the executed paths and limits.
 
