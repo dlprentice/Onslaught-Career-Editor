@@ -154,7 +154,8 @@ public sealed class CeSettings
                 if (gameRunning()) throw new IOException(GameInstaller.RunningMessage);
             };
             InstallReceipt result = Write(Path, bytes, Exists ? Sha256 : null, backupFolder, beforeCheck, beforeSwapChecked);
-            return result.Ok ? result with { Message = "CE launcher settings saved and verified. Earlier settings are in " + backupFolder + "." } : result;
+            // The caller presents the structured BackupFolder; keep the status free of a second recovery path.
+            return result.Ok ? result with { Message = "CE launcher settings saved and verified." } : result;
         }
         catch (Exception error) when (IsFileError(error))
         {

@@ -7,8 +7,30 @@ using OnslaughtToolkit.Companion.Ui;
 namespace OnslaughtToolkit.Companion.Tests;
 
 /// <summary>CE UI routes on owned fixture copies; feed access is injected and no launcher or game executes.</summary>
-internal static class CePanelTests
+public partial class CePanelTests : SceneTree
 {
+    public override void _Initialize() => _ = RunEntryAsync();
+
+    private async Task RunEntryAsync()
+    {
+        int exit = 1;
+        try
+        {
+            string Argument(string key) => OS.GetCmdlineUserArgs().Single(value => value.StartsWith(key, StringComparison.Ordinal))[key.Length..];
+            string fixture = Argument("--fixture="), output = Argument("--output-dir=");
+            byte[] original = File.ReadAllBytes(fixture);
+            Checks check = new();
+            await Frame(this);
+            await RunAsync(this, original, output, check);
+            check.That(File.ReadAllBytes(fixture).AsSpan().SequenceEqual(original), "The owned input fixture remains unchanged.");
+            foreach (string failure in check.Failures) GD.PrintErr("FAIL: " + failure);
+            GD.Print($"CE_PANEL_TESTS: {check.Failures.Count} failures in {check.Count} checks.");
+            exit = check.Failures.Count == 0 ? 0 : 1;
+        }
+        catch (Exception error) { GD.PrintErr(error); }
+        finally { Quit(exit); }
+    }
+
     internal static async Task RunAsync(SceneTree tree, byte[] original, string output, Checks check)
     {
         check.Suite("CE panels");
@@ -21,9 +43,12 @@ internal static class CePanelTests
         File.WriteAllText(ini, baseline);
         string settingsPath = Path.Combine(root, "settings.json");
         new SettingsStore(settingsPath).Save(new CompanionSettings { Target = GameTarget.OnslaughtCe, AutoBackup = false });
-        bool running = false;
-        CompanionEnvironment environment = new([], settingsPath, GameRunning: () => running,
-            DefaultBackupFolder: Path.Combine(root, "backups"), CeUserFolder: user);
+        bool running = false, stopAfterBackup = false;
+        string backups = Path.Combine(root, "backups");
+        int priorSettingsBackups = 0;
+        CompanionEnvironment environment = new([], settingsPath, GameRunning: () => running ||
+            (stopAfterBackup && Directory.GetDirectories(backups, "onslaught-ce-settings-*").Length > priorSettingsBackups),
+            DefaultBackupFolder: backups, CeUserFolder: user);
         CompanionApp app = new(new ProtectedSaveFiles(), managesWindow: false, environment);
         tree.Root.AddChild(app);
         try
@@ -74,6 +99,25 @@ internal static class CePanelTests
             check.That(saved.Ok && saved.BackupFolder is not null && changed.Contains("record_sessions=1") &&
                 changed.Contains("unknown=leave-me") && changed.Contains("# retained comment") && !panel.HasChanges,
                 "CE UI save reopens the verified result, preserves unknown text and reports its backup");
+            check.That(saved.BackupFolder is string savedFolder && Occurrences(panel.ResultText, savedFolder) == 1 &&
+                panel.ResultText.Contains("saved and verified", StringComparison.Ordinal),
+                "saved CE settings show verified status and the complete backup location exactly once");
+            check.That(app.Status.Kind == StatusKind.Success && app.Status.Label.Text.Contains("saved and verified", StringComparison.Ordinal) &&
+                saved.BackupFolder is string footerFolder && !app.Status.Label.Text.Contains(footerFolder, StringComparison.Ordinal),
+                "the success footer keeps verified status while the settings panel owns the backup location");
+
+            priorSettingsBackups = Directory.GetDirectories(backups, "onslaught-ce-settings-*").Length;
+            stopAfterBackup = true;
+            panel.RecordSessions.ButtonPressed = false;
+            InstallReceipt afterBackup = await panel.SaveAsync();
+            stopAfterBackup = false;
+            check.That(!afterBackup.Ok && !afterBackup.MayHaveChanged && afterBackup.BackupFolder is string refusedFolder &&
+                File.ReadAllText(Path.Combine(refusedFolder, "ce.ini")) == changed && File.ReadAllText(ini) == changed,
+                "a real game-start refusal after backup preserves both settings and their recovery copy");
+            check.That(afterBackup.BackupFolder is string recoveryFolder && Occurrences(panel.ResultText, recoveryFolder) == 1 &&
+                panel.ResultText.Contains(afterBackup.Message, StringComparison.Ordinal) &&
+                app.Status.Kind == StatusKind.Failure && app.Status.Label.TooltipText == afterBackup.Message,
+                "a failed CE save keeps its complete failure reason and full recovery location");
             panel.UpdateCheck.ButtonPressed = false;
             await panel.LoadAsync();
             check.That(!panel.HasChanges && panel.UpdateCheck.ButtonPressed, "undo reloads the current CE settings without writing");
@@ -83,10 +127,14 @@ internal static class CePanelTests
         }
         finally
         {
+            for (int frame = 0; frame < 600 && (app.Game.Busy || app.Workspace.Busy); frame++) await Frame(tree);
+            await app.PendingCatchUp;
             app.QueueFree();
             await Frame(tree);
         }
     }
 
     private static async Task Frame(SceneTree tree) => await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+
+    private static int Occurrences(string text, string value) => text.Split(value, StringSplitOptions.None).Length - 1;
 }

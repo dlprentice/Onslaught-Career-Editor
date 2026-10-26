@@ -59,6 +59,11 @@ public partial class CeCapture : SceneTree
                 app.Settings.CePanel.RecordSessions.ButtonPressed = true;
                 app.Settings.CePanel.AskToSave(); await Shot("ce-settings-confirm");
                 app.Settings.CePanel.Confirm.Hide();
+                InstallReceipt saved = await app.Settings.CePanel.SaveAsync();
+                if (!saved.Ok || saved.BackupFolder is not string settingsBackup ||
+                    app.Settings.CePanel.ResultText.Split(settingsBackup, StringSplitOptions.None).Length != 2)
+                    throw new IOException("The saved settings must show their complete backup location exactly once.");
+                await Shot("ce-settings-saved");
                 string backups = Path.Combine(work, "backups");
                 Directory.CreateDirectory(backups);
                 BackupSet originalBackup = Backups.Create(new ProtectedSaveFiles(), app.Game.Original!, backups,

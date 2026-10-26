@@ -75,8 +75,9 @@ Observed in the native run:
 - The original `workflow-home.png`, `workflow-settings.png` and `workflow-restored.png` captures were inspected
   first-hand at 1280 × 781. Home showed the selected version, Settings showed the saved launcher choices and
   verified-save status, and Backups showed restored-career status with readable Unicode names. The selected
-  controls and text were readable. Settings repeated its backup location in two status lines; this remains a
-  presentation issue, with no code change or broader UI-quality claim from this gate.
+  controls and text were readable. Settings repeated its backup location in two status lines in these frozen
+  Windows captures. A later wording correction leaves the location to the settings panel; focused success/refusal
+  controls and fresh 1024×700 and 1920×1080 Linux captures cover that change. It was not rerun natively on Windows.
 
 Private receipts are retained under `companion-ui-b4b32d0f-9ed-r1-host/native-receipts/`: `assessment.json`,
 `collected/native.jsonl`, `collected/godot.log`, `collected/workflow-result.json` and those three PNGs.
