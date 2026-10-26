@@ -29,8 +29,9 @@ import aya_archive_inventory as aai
 from safe_generated_output import SecuredOutputRoot
 
 
-CATALOG_SCHEMA_VERSION = 2
+CATALOG_SCHEMA_VERSION = 3
 CATALOG_PATH_CONTRACT = "bundle-root-relative"
+CATALOG_EXPORT_CONTRACT = "source-bound-verified-outputs-only"
 
 
 def repo_rel(path: Path, repo_root: Path) -> str:
@@ -52,6 +53,29 @@ def bundle_rel(path: Path, bundle_root: Path, label: str) -> str:
 
 def read_json(path: Path) -> object:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def legacy_export_attempt(row: dict[str, object], bundle_root: Path, kind: str) -> dict[str, object]:
+    """Keep a legacy export declaration without promoting it to source-bound output proof.
+
+    The harness's ok/skipped_existing/error rows have no source/output hashes or
+    conversion validator. Even an existing file or a supplied 'verified' field
+    cannot establish correspondence to these source bytes. Retain failed and
+    unverified attempts for callers to inspect; success paths remain empty until
+    an actual identity-bound output producer is connected to this catalog.
+    """
+    status = row.get("status")
+    output = row.get("output")
+    if output is not None and (not isinstance(output, str) or not output):
+        raise ValueError("catalog export output must be a nonempty path or null")
+    return {
+        "attempt_status": status if status in ("ok", "skipped_existing", "error") else "notReported",
+        "verification_status": "failed" if status == "error" else "unverified",
+        "output_kind": kind,
+        "requested_output_path": bundle_rel(Path(output), bundle_root, "requested export") if output else None,
+        "verified_output_path": None,
+        "limitation": "Legacy declaration has no source-bound output identity or conversion validation.",
+    }
 
 
 def choose_texture_ref(refs: set[str], fallback_name: str) -> str:
@@ -119,7 +143,8 @@ def build_texture_catalog(
 
     for row in texture_manifest:
         input_path = Path(row["input"])
-        output_path = Path(row["output"])
+        attempt = legacy_export_attempt(row, bundle_root, "png")
+        attempt["source_aya_path"] = repo_rel(input_path, repo_root)
         refs = texture_aliases_for_catalog(input_path.name)
         canonical_ref = choose_texture_ref(refs, input_path.stem)
         entry = catalog.setdefault(
@@ -132,13 +157,15 @@ def build_texture_catalog(
                 "source_aya_paths": [],
                 "source_roots": set(),
                 "loose_export_pngs": [],
+                "export_records": [],
                 "packed_text_ref_count": text_map.get(canonical_ref, {}).get("count", 0),
                 "gdie_ref_count": gdie_map.get(canonical_ref, {}).get("count", 0),
             },
         )
+        entry["aliases"] = sorted(set(entry["aliases"]) | refs)
         entry["source_aya_paths"].append(repo_rel(input_path, repo_root))
         entry["source_roots"].add(input_path.parent.name.lower())
-        entry["loose_export_pngs"].append(bundle_rel(output_path, bundle_root, "texture export"))
+        entry["export_records"].append(attempt)
 
     out: list[dict[str, object]] = []
     for key in sorted(catalog):
@@ -153,11 +180,14 @@ def build_texture_catalog(
                 "kind": entry["kind"],
                 "canonical_ref": entry["canonical_ref"],
                 "aliases": entry["aliases"],
+                "description": None,
+                "description_status": "not-visually-reviewed",
                 "source_aya_count": len(source_paths),
                 "source_aya_paths": source_paths,
                 "source_roots": sorted(entry["source_roots"]),
                 "export_png_count": len(export_paths),
                 "export_png_paths": export_paths,
+                "export_records": sorted(entry["export_records"], key=lambda value: json.dumps(value, sort_keys=True)),
                 "packed_text_ref_count": packed_text,
                 "gdie_ref_count": gdie,
                 "total_packed_ref_count": packed_text + gdie,
@@ -179,7 +209,8 @@ def build_loose_mesh_catalog(
 
     for row in mesh_manifest:
         input_path = Path(row["input"])
-        output_path = Path(row["output"])
+        attempt = legacy_export_attempt(row, bundle_root, "fbx")
+        attempt["source_aya_path"] = repo_rel(input_path, repo_root)
         aliases = mesh_aliases_from_loose_name(input_path.name)
         canonical_ref = choose_mesh_ref(aliases)
         entry = catalog.setdefault(
@@ -191,12 +222,14 @@ def build_loose_mesh_catalog(
                 "aliases": aliases,
                 "source_aya_paths": [],
                 "export_fbx_paths": [],
+                "export_records": [],
                 "packed_reference_count": reference_map.get(canonical_ref, {}).get("count", 0),
                 "gdie_ref_count": gdie_map.get(canonical_ref, {}).get("count", 0),
             },
         )
+        entry["aliases"] = sorted(set(entry["aliases"]) | set(aliases))
         entry["source_aya_paths"].append(repo_rel(input_path, repo_root))
-        entry["export_fbx_paths"].append(bundle_rel(output_path, bundle_root, "loose-mesh export"))
+        entry["export_records"].append(attempt)
 
     out: list[dict[str, object]] = []
     for key in sorted(catalog):
@@ -211,10 +244,13 @@ def build_loose_mesh_catalog(
                 "kind": entry["kind"],
                 "canonical_ref": entry["canonical_ref"],
                 "aliases": entry["aliases"],
+                "description": None,
+                "description_status": "not-visually-reviewed",
                 "source_aya_count": len(source_paths),
                 "source_aya_paths": source_paths,
                 "export_fbx_count": len(export_paths),
                 "export_fbx_paths": export_paths,
+                "export_records": sorted(entry["export_records"], key=lambda value: json.dumps(value, sort_keys=True)),
                 "packed_reference_count": packed_ref,
                 "gdie_ref_count": gdie,
                 "total_packed_ref_count": packed_ref + gdie,
@@ -232,20 +268,29 @@ def build_embedded_mesh_catalog(
     out: list[dict[str, object]] = []
     for row in embedded_manifest:
         input_path = Path(row["input"])
-        output_path = Path(row["output"])
+        attempt = legacy_export_attempt(row, bundle_root, "fbx")
+        attempt["source_body_path"] = repo_rel(input_path, repo_root)
         source_archive = input_path.parent.name
         body_name = input_path.stem
         out.append(
             {
                 "catalog_id": f"embedded_mesh:{source_archive}/{body_name}",
                 "kind": "embedded_mesh",
+                "description": None,
+                "description_status": "not-visually-reviewed",
                 "source_archive": source_archive,
                 "body_name": body_name,
                 "source_body_path": repo_rel(input_path, repo_root),
-                "export_fbx_path": bundle_rel(output_path, bundle_root, "embedded-mesh export"),
+                "export_fbx_path": None,
+                "export_records": [attempt],
             }
         )
-    return sorted(out, key=lambda item: item["catalog_id"])
+    id_counts = Counter(item["catalog_id"] for item in out)
+    for entry in out:
+        # Legacy archive/body names are lookup aliases, not unique content/occurrence identities.
+        entry["logical_id_ambiguous"] = id_counts[entry["catalog_id"]] > 1
+    return sorted(out, key=lambda item: (item["catalog_id"], item["source_body_path"],
+                                        json.dumps(item, sort_keys=True)))
 
 
 def build_video_catalog(video_manifest: dict[str, object]) -> list[dict[str, object]]:
@@ -632,11 +677,14 @@ def run_self_test() -> int:
         assert summary["video_family_counts"] == {"briefing": 1, "cutscene_numeric": 1}
         assert summary["goodie_family_counts"] == {"Model": 1, "Video": 1}
         assert textures[0]["canonical_ref"] == "meshtex\\cloud.tga"
-        assert textures[0]["export_png_paths"] == ["exports\\cloud.png"]
+        assert textures[0]["export_png_paths"] == []
+        assert textures[0]["export_records"][0]["requested_output_path"] == "exports\\cloud.png"
         assert loose_meshes[0]["canonical_ref"] == "fighter"
-        assert loose_meshes[0]["export_fbx_paths"] == ["exports\\fighter.fbx"]
+        assert loose_meshes[0]["export_fbx_paths"] == []
+        assert loose_meshes[0]["export_records"][0]["requested_output_path"] == "exports\\fighter.fbx"
         assert embedded_meshes[0]["source_archive"] == "001_res_PC.aya"
-        assert embedded_meshes[0]["export_fbx_path"] == "exports\\body00.fbx"
+        assert embedded_meshes[0]["export_fbx_path"] is None
+        assert embedded_meshes[0]["export_records"][0]["requested_output_path"] == "exports\\body00.fbx"
         assert language_rows[0]["text_present_count"] == 1
         assert language_rows[0]["audio_present_count"] == 1
         assert goodies[0]["index"] == 8
@@ -702,6 +750,7 @@ def main() -> int:
         catalog = {
             "schema_version": CATALOG_SCHEMA_VERSION,
             "path_contract": CATALOG_PATH_CONTRACT,
+            "export_verification_contract": CATALOG_EXPORT_CONTRACT,
             "summary": summary,
             "textures": textures,
             "loose_meshes": loose_meshes,
