@@ -343,6 +343,8 @@ class ModelMetadataTests(unittest.TestCase):
             (meshes / "authored.msh.aya").write_bytes(struct.pack("<I", len(compressed)) + compressed)
             (meshes / "unsupported.msh.aya").write_bytes(b"authored invalid envelope")
             report = census.build_census(root)
+            with patch.object(census, "parse_top_level_chunks_bounded", side_effect=ValueError("authored metadata refusal")):
+                refused_metadata = census.build_census(root)
         self.assertEqual(2, len(report["meshes"]))
         coverage = report["modelMetadataCoverage"]
         self.assertEqual((2, 1), (coverage["selectedOccurrences"], coverage["legacyJoinEligible"]))
@@ -350,6 +352,9 @@ class ModelMetadataTests(unittest.TestCase):
         self.assertEqual(1, len(coverage["unknownOccurrences"]))
         self.assertEqual(1, report["meshSummary"]["parts"])
         json.dumps(report, allow_nan=False)
+        self.assertEqual(1, refused_metadata["modelMetadataCoverage"]["legacyJoinEligible"])
+        self.assertEqual({"unparsed": 2}, refused_metadata["modelMetadataCoverage"]["outcomeCounts"])
+        self.assertEqual(2, len(refused_metadata["modelMetadataCoverage"]["unknownOccurrences"]))
 
     def test_absolute_escaping_and_ambiguous_source_coordinates_are_rejected(self) -> None:
         for logical in ("/tmp/source.aya", "../source.aya", "a/../source.aya", "a//b.aya", "a/./b.aya", "C:/source.aya", "a\\b.aya"):

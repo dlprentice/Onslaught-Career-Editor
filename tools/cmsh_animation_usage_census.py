@@ -1391,7 +1391,8 @@ def build_census(data_root: Path, mirror_index: Path | None = None) -> dict[str,
                 str(record["modelMetadata"]["status"]) for record in mesh_records
             ).items())),
             "unknownOccurrences": [record["modelMetadata"]["identity"]["occurrenceId"]
-                                   for record, mesh in outcomes if mesh is None],
+                                   for record, _mesh in outcomes
+                                   if record["modelMetadata"]["status"] == "unparsed"],
             "scope": "selected loose *.msh.aya files; not a complete archive or platform inventory",
         },
         "meshes": mesh_records,
