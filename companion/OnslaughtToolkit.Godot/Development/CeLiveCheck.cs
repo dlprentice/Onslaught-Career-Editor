@@ -19,14 +19,25 @@ namespace OnslaughtToolkit.Companion.Development;
 /// </summary>
 public partial class CeLiveCheck : SceneTree
 {
+    public override void _Initialize() => _ = new CeLiveWorkflow(this).RunAsync();
+
+    internal static void AdmitWorkflow(JsonElement config, string launcher, string baseline, string career)
+        => CeLiveWorkflow.AdmitWorkflow(config, launcher, baseline, career);
+    internal static bool IsRunningRefusal(InstallReceipt receipt) => CeLiveWorkflow.IsRunningRefusal(receipt);
+    internal static Task CleanupOwned(Process launcher, DateTime launcherStarted, string launcherImage,
+        IReadOnlyDictionary<int, (DateTime Started, string Image)> gameProcesses, Action<string, object> observe)
+        => CeLiveWorkflow.CleanupOwned(launcher, launcherStarted, launcherImage, gameProcesses, observe);
+}
+
+/// <summary>One workflow owner shared by the source SceneTree entry and the opt-in development package's Node entry.</summary>
+internal sealed class CeLiveWorkflow(SceneTree tree)
+{
     private readonly List<object> _observations = [];
     private CompanionApp? _app;
     private string _owner = "";
     private bool _ownerAdmitted;
 
-    public override void _Initialize() => _ = RunAsync();
-
-    private async Task RunAsync()
+    internal async Task RunAsync()
     {
         int exit = 1;
         string phase = "unknown";
@@ -65,7 +76,7 @@ public partial class CeLiveCheck : SceneTree
                 GameFolder = game, AutoBackup = false });
             _app = new CompanionApp(new ProtectedSaveFiles(), false, new CompanionEnvironment([], settings.FilePath,
                 DefaultBackupFolder: backups, CeUserFolder: user, OldCopiesFolder: Owned(Path.Combine(_owner, "old-copies"))));
-            Root.AddChild(_app);
+            tree.Root.AddChild(_app);
             await Frame();
             await Until(() => !_app.Game.Busy && _app.Game.CeVersion is not null, 15, "CE discovery and actual --version");
             Require(_app.Game.Ce is not null && _app.Game.Folder?.Root == user, "CE package and user folder discovered");
@@ -112,7 +123,7 @@ public partial class CeLiveCheck : SceneTree
                 _app.QueueFree(); await Frame();
             }
             GD.Print($"CE_LIVE_DONE {phase} exit={exit}");
-            Quit(exit);
+            tree.Quit(exit);
         }
     }
 
@@ -121,8 +132,8 @@ public partial class CeLiveCheck : SceneTree
         string path = Owned(Path.Combine(_owner, "workflow-" + label + ".png"));
         if (File.Exists(path)) throw new IOException("Workflow screenshot already exists; use a fresh owned root.");
         for (int frame = 0; frame < 6; frame++) await Frame();
-        await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
-        using Image image = Root.GetTexture().GetImage();
+        await tree.ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+        using Image image = tree.Root.GetTexture().GetImage();
         if (image.IsEmpty() || image.SavePng(path) != Error.Ok) throw new IOException("Workflow screenshot could not be captured.");
         Observe("screenshot", new { path, width = image.GetWidth(), height = image.GetHeight(), firstHandInspection = "pending" });
     }
@@ -413,5 +424,5 @@ public partial class CeLiveCheck : SceneTree
         Require(predicate(), label);
     }
 
-    private async Task Frame() => await ToSignal(this, SignalName.ProcessFrame);
+    private async Task Frame() => await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
 }

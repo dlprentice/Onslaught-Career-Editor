@@ -98,9 +98,10 @@ Place the `.companion-owned` marker below the owner and supply this private JSON
 }
 ```
 
-Invoke the development package with `--script res://Development/CeLiveCheck.cs`, under an external 90-second
-owned-process deadline, a private HOME/USERPROFILE/APPDATA/LOCALAPPDATA/TEMP, and cleared inherited `BEA_*`
-overrides. The operator owns native Windows execution; no VM is started by this entry. Use rendering for
+The acceptance package uses a one-node `CeWorkflowEntry` wrapper to call the same workflow. Invoke that
+explicit development package under an external 90-second owned-process deadline, a private
+HOME/USERPROFILE/APPDATA/LOCALAPPDATA/TEMP, and cleared inherited `BEA_*` overrides. Source/editor runs can
+instead use `--script res://Development/CeLiveCheck.cs`; export templates do not expose that editor argument. The operator owns native Windows execution; no VM is started by this entry. Use rendering for
 `capture: true`; a headless invocation refuses that request. Retain the full package inventory and source
 commit with the configuration and receipt. Never reuse a successful owner for another workflow.
 
