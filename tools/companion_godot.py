@@ -455,12 +455,16 @@ def export_platform(engine: Path, project: Path, templates: Path, pins: dict[str
     (package / "README.txt").write_text(
         f"Onslaught Companion, for Battle Engine Aquila players ({platform.capitalize()})\n\n"
         f"To start, {start}. Keep the .pck file and the data folder beside it.\n"
-        "It works with the original game (the install with BEA.exe), which it finds through Steam; if it does not,\n"
-        "choose the game folder on Home. It does not yet read or launch Onslaught CE.\n\n"
-        "Your careers stay safe. Before the companion changes anything in the original game's folder it backs up every\n"
+        "Choose Original Battle Engine Aquila or Onslaught CE on Home. The original game (the install with BEA.exe)\n"
+        "is found through Steam, or you can choose its folder. For CE, choose the extracted package's launcher:\n"
+        "onslaught-ce on Linux or onslaught-ce.exe on Windows. Play starts that launcher; it owns CE updates.\n"
+        "CE careers and ce.ini use CE's separate user folder. Original-install careers shown under CE are read-only;\n"
+        "save changes as a new named CE copy. CE settings edits cover update_check and record_sessions only.\n\n"
+        "Before the companion changes anything in the selected game's folder it backs up every\n"
         "career and the settings file, it writes nothing while the game or Onslaught CE is running (checked before the\n"
         "backup and again just before the swap), and Backups can put any earlier version back.\n" +
-        ("Spotting a running Onslaught CE has not been tested on Windows yet; close CE yourself before saving into the game.\n"
+        ("Native Windows checks exercised CE process detection and protected career/settings writes. The Godot UI\n"
+         "workflow and this exported package still require native Windows acceptance. See the source validation record.\n"
          if platform == "windows" else "") +
         ("Backups go to \"Battle Engine Aquila Backups\" in %LOCALAPPDATA%\\Onslaught Companion (a folder Windows does not sync)\n"
          "unless you choose another folder. A game in Program Files may have careers Windows kept in VirtualStore;\n"
