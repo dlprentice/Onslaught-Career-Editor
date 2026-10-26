@@ -160,11 +160,25 @@ public static class Backups
         try
         {
             Directory.CreateDirectory(folder);
+            // Per-file copies release their handles on return. Keep this set's directory identity
+            // across all copies and manifest publication, so a moved/replaced folder cannot license a write.
+            using LinuxSaveDirectory? linux = OperatingSystem.IsLinux() ? LinuxSaveDirectory.Open(folder) : null;
+            using GuardedFileMutation? windows = OperatingSystem.IsWindows()
+                ? FileMutationSafety.BeginGeneratedVacant(Path.Combine(folder, ManifestName)) : null;
+            if (linux is null && windows is null)
+                throw new PlatformNotSupportedException("Verified backups currently support Linux and Windows.");
+            return CreateHeld(files, game, folder, now, reason, linux, windows);
         }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or Win32Exception or NotSupportedException)
         {
-            return new BackupReceipt(false, "The backup folder could not be created: " + error.Message);
+            return new BackupReceipt(false, "The backup set could not be completed and verified: " + error.Message +
+                " Nothing in the game changed.", PartialFolder: folder);
         }
+    }
+
+    private static BackupReceipt CreateHeld(IProtectedSaveFiles files, GameFolder game, string folder, DateTime now, string reason,
+        LinuxSaveDirectory? linux, GuardedFileMutation? windows)
+    {
         List<BackupFile> saved = [];
         IEnumerable<GameFile> sources = game.Careers.Where(file => file.Supported);
         if (game.Options is { Supported: true } options) sources = sources.Append(options);
@@ -181,18 +195,63 @@ public static class Backups
             saved.Add(new BackupFile(file.Name, file.Path, bytes.Length, copy.Sha256.ToLowerInvariant()));
         }
         BackupSet set = new(folder, now, game.Root, saved, reason, game.Target);
-        try
+        byte[] manifest = JsonSerializer.SerializeToUtf8Bytes(set, Json);
+        if (manifest.Length > MaximumManifestBytes)
+            return new BackupReceipt(false, "The copies were verified but their manifest is too large to read safely.", PartialFolder: folder);
+        string? manifestIdentity = null;
+        if (linux is not null)
         {
-            using FileStream manifest = new(Path.Combine(folder, ManifestName), FileMode.CreateNew, FileAccess.Write);
-            JsonSerializer.Serialize(manifest, set, Json);
-            if (manifest.Position > MaximumManifestBytes)
-                return new BackupReceipt(false, "The copies were verified but their manifest is too large to read safely.", PartialFolder: folder);
-            manifest.Flush(flushToDisk: true);
+            linux.Verify();
+            linux.RequireVacant(ManifestName);
+            using FileStream staged = linux.CreateUnnamed();
+            staged.Write(manifest);
+            staged.Flush(flushToDisk: true);
+            LinuxSaveNative.Stat identity = LinuxSaveNative.Inspect(staged.SafeFileHandle);
+            LinuxSaveNative.RequireRegular(identity, links: 0);
+            if (!ReadManifestBytes(staged).AsSpan().SequenceEqual(manifest))
+                throw new IOException("The staged backup manifest did not verify.");
+            linux.Verify();
+            linux.RequireVacant(ManifestName);
+            linux.Publish(staged.SafeFileHandle, ManifestName);
+            linux.Flush();
+            manifestIdentity = identity.Identity;
         }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        else
         {
-            return new BackupReceipt(false, "The copies were verified but the manifest could not be written: " + error.Message,
-                PartialFolder: folder);
+            // The guarded transaction keeps the Windows ancestors and verified committed file held
+            // until the payload reopens below finish; it never replaces an existing manifest.
+            windows!.Commit(manifest);
+        }
+        foreach (BackupFile file in saved)
+        {
+            if (linux is not null)
+            {
+                // Read the directory we held, even if another process briefly substitutes its spelling.
+                using FileStream copy = linux.OpenRead(file.Name);
+                string identity = LinuxSaveNative.Inspect(copy.SafeFileHandle).Identity;
+                byte[] bytes = SaveLabSource.ReadSaveBytes(copy);
+                using FileStream named = linux.OpenRead(file.Name);
+                if (bytes.Length != file.Size ||
+                    !string.Equals(Convert.ToHexString(SHA256.HashData(bytes)), file.Sha256, StringComparison.OrdinalIgnoreCase) ||
+                    LinuxSaveNative.Inspect(named.SafeFileHandle).Identity != identity ||
+                    !SaveLabSource.ReadSaveBytes(named).AsSpan().SequenceEqual(bytes))
+                    throw new IOException($"The recovery copy of {file.Name} changed before verification finished.");
+            }
+            else
+            {
+                ProtectedRead read = files.OpenCareer(Path.Combine(folder, file.Name));
+                if (!read.Ok || read.Size != file.Size || !string.Equals(read.Sha256, file.Sha256, StringComparison.OrdinalIgnoreCase))
+                    throw new IOException($"The recovery copy of {file.Name} could not be reopened and verified.");
+            }
+        }
+        if (linux is not null)
+        {
+            linux.Verify();
+            using FileStream reopened = linux.OpenRead(ManifestName);
+            if (LinuxSaveNative.Inspect(reopened.SafeFileHandle).Identity != manifestIdentity ||
+                !ReadManifestBytes(reopened).AsSpan().SequenceEqual(manifest))
+                throw new IOException("The completed backup manifest changed before verification finished.");
+            linux.Verify();
         }
         int skipped = game.Careers.Count(file => !file.Supported) + (game.Options is { Supported: false } ? 1 : 0);
         return new BackupReceipt(true, $"Backed up and verified {saved.Count} file{(saved.Count == 1 ? "" : "s")}" +
@@ -287,10 +346,7 @@ public static class Backups
     private static BackupSet? ReadManifest(string path)
     {
         using FileStream stream = new(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-        if (stream.Length > MaximumManifestBytes) return null;
-        byte[] bytes = new byte[checked((int)stream.Length)];
-        stream.ReadExactly(bytes);
-        if (stream.ReadByte() != -1) return null;
+        byte[] bytes = ReadManifestBytes(stream);
         ReadOnlySpan<byte> json = bytes;
         if (json.StartsWith(new byte[] { 0xEF, 0xBB, 0xBF })) json = json[3..];
         if (JsonSerializer.Deserialize<BackupSet>(json) is not BackupSet set || set.Created == default ||
@@ -306,6 +362,17 @@ public static class Backups
                 !file.Original[(file.Original.LastIndexOfAny(['/', '\\']) + 1)..].Equals(file.Name, StringComparison.Ordinal)) return null;
         }
         return set;
+    }
+
+    private static byte[] ReadManifestBytes(FileStream stream)
+    {
+        if (stream.Length > MaximumManifestBytes)
+            throw new IOException("The backup manifest is too large to read safely.");
+        byte[] bytes = new byte[checked((int)stream.Length)];
+        stream.Position = 0;
+        stream.ReadExactly(bytes);
+        if (stream.ReadByte() != -1) throw new IOException("The backup manifest changed length while being read.");
+        return bytes;
     }
 
     // Foreign-platform backup sets remain importable: their recorded source is descriptive, never a write path.

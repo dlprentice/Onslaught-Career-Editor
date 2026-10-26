@@ -111,6 +111,7 @@ internal static class InstallTests
         GameStartsDuringWrite(original, root, now, files, check);
         BackupsPerGameFolder(original, root, now, files, check);
         BackupRecoveryIntegrity(original, root, now, files, check);
+        BackupCompletion(original, root, now, files, check);
         PublicationBoundary(original, root, now, files, check);
         PortableWrites(original, root, now, files, check);
     }
@@ -296,6 +297,95 @@ internal static class InstallTests
             File.WriteAllBytes(copy, original);
             check.That(!Backups.ChangedSinceLatest(game, backups), $"{target}: the exact restored recovery set avoids unnecessary backup duplication.");
             check.That(Unchanged(install, original), $"{target}: recovery inspection leaves all original game files untouched.");
+        }
+    }
+
+    /// <summary>Each copy can succeed before the set's folder or payload changes; no such set licenses a game write.</summary>
+    private static void BackupCompletion(byte[] original, string root, DateTime now, ProtectedSaveFiles files, Checks check)
+    {
+        if (!OperatingSystem.IsLinux()) return; // Native Windows handle ownership needs a Windows run, not these Linux races.
+        foreach (GameTarget target in new[] { GameTarget.Original, GameTarget.OnslaughtCe })
+        foreach (bool installCareer in new[] { false, true })
+        foreach (string scenario in new[] { "normal", "linked-folder", "replacement-folder", "changed-payload", "manifest-collision" })
+        {
+            string name = $"{target}-{installCareer}-{scenario}";
+            string owner = Path.Combine(root, "backup-completion-" + name);
+            FakeInstall install = FakeInstall.Create(Path.Combine(owner, "game"), original);
+            string career = install.Career;
+            GameFolder game;
+            if (target == GameTarget.OnslaughtCe)
+            {
+                string user = Path.Combine(owner, "ce-user");
+                Directory.CreateDirectory(Path.Combine(user, "savegames"));
+                career = Path.Combine(user, "savegames", "Career One.bes");
+                File.WriteAllBytes(career, original);
+                game = GameFolder.InspectCe(user, install.Game, install.Game);
+            }
+            else game = GameFolder.Inspect(install.Game, "test");
+            string backups = Path.Combine(owner, "backups"), outside = Path.Combine(owner, "outside");
+            string retained = Path.Combine(owner, "retained-payloads");
+            Directory.CreateDirectory(backups); Directory.CreateDirectory(outside);
+            int copies = game.Careers.Count(file => file.Supported) + (game.Options is { Supported: true } ? 1 : 0);
+            string? completed = null;
+            bool triggered = false;
+            AfterBackupCopies boundary = new(files, copies, afterCopies: folder =>
+            {
+                completed = folder;
+                if (scenario is "linked-folder" or "replacement-folder")
+                {
+                    Directory.Move(folder, retained); // Keep the real, verified copies at a known owned path.
+                    if (scenario == "linked-folder") Directory.CreateSymbolicLink(folder, outside);
+                    else Directory.CreateDirectory(folder);
+                    triggered = true;
+                }
+                if (scenario == "changed-payload")
+                {
+                    string copy = Path.Combine(folder, "Career One.bes");
+                    File.Copy(copy, Path.Combine(owner, "retained-original-payload.bes"));
+                    byte[] changed = original.ToArray(); changed[0x2406] ^= 0x5A;
+                    File.WriteAllBytes(copy, changed);
+                    triggered = true;
+                }
+                if (scenario == "manifest-collision")
+                {
+                    File.WriteAllText(Path.Combine(folder, Backups.ManifestName), "Owned preexisting manifest; keep it.");
+                    triggered = true;
+                }
+            });
+            byte[] prepared = original.ToArray(); prepared[0x2406] ^= 0x5A;
+            bool ok = installCareer
+                ? GameInstaller.Install(boundary, game, "Career One.bes", prepared, backups, () => false, now,
+                    expectedSha256: files.OpenCareer(career).Sha256).Ok
+                : Backups.Create(boundary, game, backups, now).Ok;
+            check.That(ok == (scenario == "normal"), $"{name}: only an intact completed backup permits success.");
+            check.That(scenario == "normal" || triggered, $"{name}: the owned completion fault actually ran.");
+            byte[] expectedCareer = installCareer && scenario == "normal" ? prepared : original;
+            check.That(File.ReadAllBytes(career).AsSpan().SequenceEqual(expectedCareer) &&
+                File.ReadAllBytes(install.Options).AsSpan().SequenceEqual(original) &&
+                (target != GameTarget.OnslaughtCe || File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(original)),
+                $"{name}: a failed backup cannot change the game's career or options.");
+            check.That(!File.Exists(Path.Combine(outside, Backups.ManifestName)), $"{name}: no manifest escapes the selected backup root.");
+            if (scenario is "linked-folder" or "replacement-folder")
+                check.That(completed is not null && !File.Exists(Path.Combine(completed, Backups.ManifestName)) &&
+                    File.Exists(Path.Combine(retained, "Career One.bes")) &&
+                    File.ReadAllBytes(Path.Combine(retained, "Career One.bes")).AsSpan().SequenceEqual(original),
+                    $"{name}: a replaced directory gets no manifest and the real copied bytes are retained.");
+            if (scenario == "manifest-collision")
+                check.That(completed is not null && File.Exists(Path.Combine(completed, Backups.ManifestName)) &&
+                    File.ReadAllText(Path.Combine(completed, Backups.ManifestName)) == "Owned preexisting manifest; keep it.",
+                    $"{name}: manifest publication never overwrites an existing file.");
+        }
+    }
+
+    private sealed class AfterBackupCopies(IProtectedSaveFiles inner, int count, Action<string> afterCopies) : IProtectedSaveFiles
+    {
+        private int _copies;
+        public ProtectedRead OpenCareer(string path) => inner.OpenCareer(path);
+        public PublicationReceipt PublishCopy(string input, string identity, string hash, string output, byte[] prepared)
+        {
+            PublicationReceipt receipt = inner.PublishCopy(input, identity, hash, output, prepared);
+            if (receipt.Ok && ++_copies == count) afterCopies(Path.GetDirectoryName(output)!);
+            return receipt;
         }
     }
 
