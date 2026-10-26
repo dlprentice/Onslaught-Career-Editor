@@ -20,9 +20,11 @@ import argparse
 import collections
 import hashlib
 import os
+import stat
 import struct
 import sys
 import zlib
+from dataclasses import dataclass
 from pathlib import Path
 
 DDSD_PITCH, DDSD_MIPMAPCOUNT, DDSD_LINEARSIZE = 0x8, 0x20000, 0x80000
@@ -33,6 +35,249 @@ SIZE_BANDS = ((64, ">=64"), (16, "16-32"), (4, "4-8"), (1, "1-2"))
 
 class TextureError(ValueError):
     pass
+
+
+@dataclass(frozen=True)
+class TextureMetadataLimits:
+    """Admission limits for metadata only; callers may lower, never raise, them.
+
+    No decoded image is allocated. Alpha inspection has its own pixel budget;
+    exceeding it leaves alpha unknown without losing the stored-byte metadata.
+    These limits do not change the older census/preview API below.
+    """
+
+    source_bytes: int = 64 * 1024 * 1024
+    dds_bytes: int = 128 * 1024 * 1024
+    members: int = 4096
+    dimension: int = 16384
+    mip_levels: int = 15
+    alpha_pixels: int = 4 * 1024 * 1024
+
+    def __post_init__(self):
+        ceilings = (64 * 1024 * 1024, 128 * 1024 * 1024, 4096, 16384, 15, 4 * 1024 * 1024)
+        for name, ceiling in zip(self.__dataclass_fields__, ceilings):
+            value = getattr(self, name)
+            if type(value) is not int or not 1 <= value <= ceiling:
+                raise ValueError(f"{name} must be an integer in 1..{ceiling}")
+
+
+class _MetadataUnsupported(TextureError):
+    pass
+
+
+def _metadata_dds(source: bytes, envelope: str, limits: TextureMetadataLimits) -> bytes:
+    """Decode only an explicitly selected, bounded envelope, accounting for all bytes."""
+    if envelope == "dds":
+        if len(source) > limits.dds_bytes:
+            raise _MetadataUnsupported("DDS exceeds the admitted expanded-byte limit")
+        return source
+    out, position, members = bytearray(), 0, 0
+    source_view = memoryview(source)
+    while position < len(source):
+        if len(source) - position < 4:
+            raise TextureError("truncated AYA member length")
+        length, = struct.unpack_from("<I", source, position)
+        position += 4
+        if not length or length > len(source) - position:
+            raise TextureError("bad AYA member length")
+        members += 1
+        if members > limits.members:
+            raise _MetadataUnsupported("AYA exceeds the admitted member-count limit")
+        decoder = zlib.decompressobj()
+        try:
+            decoded = decoder.decompress(source_view[position:position + length], limits.dds_bytes - len(out) + 1)
+        except zlib.error as error:
+            raise TextureError("invalid AYA zlib member") from error
+        if len(decoded) > limits.dds_bytes - len(out):
+            raise _MetadataUnsupported("AYA exceeds the admitted expanded-byte limit")
+        if not decoder.eof or decoder.unused_data or decoder.unconsumed_tail:
+            raise TextureError("AYA member is truncated or contains trailing compressed bytes")
+        out.extend(decoded)
+        position += length
+    if not members:
+        raise TextureError("empty AYA envelope")
+    return bytes(out)
+
+
+def _metadata_alpha(layout: str, top: memoryview, width: int, height: int, budget: int) -> dict:
+    """Classify only actual top-mip texels, excluding edge-block padding."""
+    result = {"classification": "unknown", "scope": "top-mip-valid-texels", "reason": None}
+    if width * height > budget:
+        result["reason"] = "alpha pixel budget exceeded"
+        return result
+    if layout in ("DXT4", "DXT5"):
+        result["reason"] = "alpha decoding is not admitted for this stored format"
+        return result
+    saw_transparent = False
+    if layout in ("A1R5G5B5", "A8R8G8B8"):
+        alpha = (value >> 7 for value in top[1::2]) if layout == "A1R5G5B5" else iter(top[3::4])
+        full = 1 if layout == "A1R5G5B5" else 255
+        for value in alpha:
+            if value not in (0, full):
+                result["classification"] = "graded"
+                return result
+            saw_transparent |= value == 0
+    else:
+        block_bytes = 8 if layout == "DXT1" else 16
+        blocks_wide = (width + 3) // 4
+        for block_y in range((height + 3) // 4):
+            for block_x in range(blocks_wide):
+                offset = (block_y * blocks_wide + block_x) * block_bytes
+                if layout == "DXT1":
+                    c0, c1, selectors = struct.unpack_from("<HHI", top, offset)
+                    if c0 > c1:
+                        continue
+                else:
+                    alpha_bits, = struct.unpack_from("<Q", top, offset)
+                for y in range(min(4, height - block_y * 4)):
+                    for x in range(min(4, width - block_x * 4)):
+                        pixel = y * 4 + x
+                        if layout == "DXT1":
+                            if (selectors >> (2 * pixel)) & 3 == 3:
+                                result["classification"] = "binary"
+                                return result
+                        else:
+                            value = (alpha_bits >> (4 * pixel)) & 15
+                            if value not in (0, 15):
+                                result["classification"] = "graded"
+                                return result
+                            saw_transparent |= value == 0
+    result["classification"] = "binary" if saw_transparent else "none"
+    return result
+
+
+def texture_metadata(source: bytes, *, envelope: str = "dds", limits: TextureMetadataLimits | None = None) -> dict:
+    """Inspect immutable DDS bytes or length-framed zlib AYA members, without image conversion.
+
+    Returns ``status`` valid, unsupported, or malformed. Unknown alpha is separate
+    from parsing status. Source and inflated DDS SHA-256 identities are retained;
+    equal names must never collapse unequal identities. Every accepted mip offset
+    is relative to the complete inflated DDS, including its 128-byte header.
+    Unsupported or malformed records contain no accepted mip ranges. A malformed
+    record's source/DDS hashes identify the rejected bytes, not a valid texture.
+
+    ``source`` must be bytes, not a caller-mutable buffer. Invalid invocation and
+    an input larger than the admitted source bound raise TextureError/ValueError;
+    envelope/format defects and expanded-size limits become explicit dispositions.
+    Filesystem errors are handled separately by read_texture_metadata(). This is
+    a metadata API, not a replacement for the legacy census or image decoder.
+    """
+    limits = TextureMetadataLimits() if limits is None else limits
+    if not isinstance(limits, TextureMetadataLimits):
+        raise TypeError("limits must be TextureMetadataLimits")
+    if type(source) is not bytes:
+        raise TypeError("metadata input must be immutable bytes")
+    if envelope not in ("dds", "aya"):
+        raise ValueError("envelope must be explicitly dds or aya")
+    if len(source) > limits.source_bytes:
+        raise TextureError("source exceeds the admitted source-byte limit")
+    result = {
+        "status": "malformed", "source": {"envelope": envelope, "size": len(source), "sha256": hashlib.sha256(source).hexdigest()},
+        "dds": None, "header": None, "stored_format": None, "mips": [],
+        "alpha": {"classification": "unknown", "scope": "top-mip-valid-texels", "reason": "texture not admitted"},
+        "problems": [],
+    }
+    try:
+        dds = _metadata_dds(source, envelope, limits)
+        result["dds"] = {"size": len(dds), "sha256": hashlib.sha256(dds).hexdigest()}
+        h = header(dds)
+        result["header"] = dict(h)
+        pf_flags, = struct.unpack_from("<I", dds, 80)
+        bits, rmask, gmask, bmask, amask = struct.unpack_from("<5I", dds, 88)
+        result["header"]["pixel_format"] = {"flags": pf_flags, "bits": bits, "masks": [rmask, gmask, bmask, amask]}
+        result["stored_format"] = h["layout"]
+        if not h["width"] or not h["height"]:
+            raise TextureError("zero DDS dimension")
+        if h["flags"] & 0x1007 != 0x1007 or not h["caps1"] & DDSCAPS_TEXTURE:
+            raise TextureError("DDS omits required surface flags or texture capability")
+        if h["flags"] & DDSD_MIPMAPCOUNT:
+            if not h["mips"]:
+                raise TextureError("DDS declares a mip count of zero")
+        elif h["mips"] > 1:
+            raise TextureError("DDS mip count lacks its header flag")
+        count = max(1, h["mips"])
+        if count > max(h["width"], h["height"]).bit_length():
+            raise TextureError("DDS mip count repeats levels below 1x1")
+        if h["width"] > limits.dimension or h["height"] > limits.dimension or count > limits.mip_levels:
+            raise _MetadataUnsupported("DDS dimensions or mip count exceed the admitted profile")
+        if h["caps2"] or h["depth"] > 1 or h["flags"] & 0x800000:
+            raise _MetadataUnsupported("cube/volume/extended surface metadata is not admitted")
+        if h["layout"] not in ("DXT1", "DXT2", "DXT3", "DXT4", "DXT5", "A1R5G5B5", "A8R8G8B8"):
+            raise _MetadataUnsupported("stored pixel format is not admitted")
+        levels = chain(h)
+        top_bytes = levels[0][2]
+        problems = []
+        if len(dds) != 128 + sum(size for _, _, size in levels):
+            problems.append("DDS payload does not equal the declared mip chain")
+        if h["flags"] & DDSD_LINEARSIZE and h["pitch"] != top_bytes:
+            problems.append("DDS linear size differs from the top mip length")
+        row_bytes = h["width"] * (2 if h["layout"] == "A1R5G5B5" else 4)
+        if h["flags"] & DDSD_PITCH and (h["layout"].startswith("DXT") or h["pitch"] != row_bytes):
+            problems.append("DDS row pitch is inconsistent with the admitted tight layout")
+        if (count > 1) != bool(h["caps1"] & DDSCAPS_MIPMAP) or (count > 1 and not h["caps1"] & DDSCAPS_COMPLEX):
+            problems.append("DDS mip capability flags disagree with its levels")
+        if problems:
+            result["problems"] = problems
+            return result
+        view, offset = memoryview(dds), 128
+        for index, (width, height, length) in enumerate(levels):
+            result["mips"].append({"index": index, "width": width, "height": height, "offset": offset,
+                                   "length": length, "sha256": hashlib.sha256(view[offset:offset + length]).hexdigest()})
+            offset += length
+        result["alpha"] = _metadata_alpha(h["layout"], view[128:128 + top_bytes], h["width"], h["height"], limits.alpha_pixels)
+        result["status"] = "valid"
+    except _MetadataUnsupported as error:
+        result["status"] = "unsupported"
+        result["problems"] = [str(error)]
+    except (TextureError, struct.error) as error:
+        result["problems"] = [str(error)]
+    return result
+
+
+def read_texture_metadata(path: Path, *, envelope: str = "aya", limits: TextureMetadataLimits | None = None) -> dict:
+    """Read one regular file through a retained FD; refuse a symlink, size excess or source change.
+
+    No paths are discovered and no filesystem path enters the returned metadata.
+    The caller owns the path/container/name join and must retain all source variants.
+    I/O failures and unstable sources raise, rather than masquerading as bad DDS data.
+    This file API requires O_NOFOLLOW; the immutable-bytes API has no OS dependency.
+    """
+    limits = TextureMetadataLimits() if limits is None else limits
+    if not isinstance(limits, TextureMetadataLimits):
+        raise TypeError("limits must be TextureMetadataLimits")
+    if envelope not in ("dds", "aya"):
+        raise ValueError("envelope must be explicitly dds or aya")
+    if not hasattr(os, "O_NOFOLLOW"):
+        raise TextureError("descriptor-safe metadata reads require O_NOFOLLOW")
+    path = Path(path)
+    fingerprint = lambda item: (item.st_dev, item.st_ino, item.st_mode, item.st_size, item.st_mtime_ns, item.st_ctime_ns)
+    initial_path = path.stat(follow_symlinks=False)
+    if not stat.S_ISREG(initial_path.st_mode):
+        raise TextureError("metadata source is not a regular file")
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    try:
+        initial = os.fstat(fd)
+        if not stat.S_ISREG(initial.st_mode) or fingerprint(initial) != fingerprint(initial_path):
+            raise TextureError("metadata source changed while opening")
+        if initial.st_size > limits.source_bytes:
+            raise TextureError("source exceeds the admitted source-byte limit")
+        chunks, length = [], 0
+        while True:
+            chunk = os.read(fd, min(1024 * 1024, limits.source_bytes - length + 1))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            length += len(chunk)
+            if length > limits.source_bytes:
+                raise TextureError("source exceeds the admitted source-byte limit")
+        result = texture_metadata(b"".join(chunks), envelope=envelope, limits=limits)
+        if length != initial.st_size or fingerprint(os.fstat(fd)) != fingerprint(initial):
+            raise TextureError("metadata source changed while reading")
+        if fingerprint(path.stat(follow_symlinks=False)) != fingerprint(initial):
+            raise TextureError("metadata source path changed while reading")
+        return result
+    finally:
+        os.close(fd)
 
 
 def inflate_aya(data: bytes) -> bytes:
