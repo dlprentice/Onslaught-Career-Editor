@@ -146,7 +146,7 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
         SetBusy(true);
         try
         {
-            return await worker.RunExclusiveAsync(files => Backups.ChangedSinceLatest(game, backupRoot)
+            return await worker.RunExclusiveAsync(files => Backups.ChangedSinceLatest(game, backupRoot, files)
                     ? Backups.Create(files, game, backupRoot, DateTime.Now, "Automatic backup")
                     : new BackupReceipt(true, "Nothing has changed since the last backup."),
                 message => new BackupReceipt(false, message));

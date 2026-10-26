@@ -201,13 +201,14 @@ public static class Backups
 
     /// <summary>
     /// Whether any career or the options file differs from the newest backup set made from this game folder (a
-    /// file added, removed or changed), so an automatic backup is only made when there is something new. Sets
-    /// made from another game folder in the same backup folder are not compared. Reads only.
+    /// file added, removed or changed), or that set no longer holds verified recovery copies. Sets made from
+    /// another game folder in the same backup folder are not compared. Reads only through the protected boundary.
     /// </summary>
-    public static bool ChangedSinceLatest(GameFolder game, string root)
+    public static bool ChangedSinceLatest(GameFolder game, string root, IProtectedSaveFiles? files = null)
     {
         if (List(root, game).FirstOrDefault() is not BackupSet latest) return true;
-        Dictionary<string, string> backed = latest.Files.ToDictionary(file => file.Name, file => file.Sha256, StringComparer.Ordinal);
+        IProtectedSaveFiles reader = files ?? new ProtectedSaveFiles();
+        Dictionary<string, BackupFile> backed = latest.Files.ToDictionary(file => file.Name, StringComparer.Ordinal);
         List<GameFile> current = [.. game.Careers.Where(file => file.Supported)];
         if (game.Options is { Supported: true } options) current.Add(options);
         if (current.Count != backed.Count) return true;
@@ -215,8 +216,8 @@ public static class Backups
         {
             try
             {
-                if (!backed.TryGetValue(file.Name, out string? sha) ||
-                    !string.Equals(Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(file.Path))), sha, StringComparison.OrdinalIgnoreCase))
+                if (!backed.TryGetValue(file.Name, out BackupFile? saved) || saved is null || !Matches(file.Path, saved) ||
+                    !Matches(Path.Combine(latest.Folder, saved.Name), saved))
                     return true;
             }
             catch (Exception error) when (error is IOException or UnauthorizedAccessException)
@@ -225,6 +226,13 @@ public static class Backups
             }
         }
         return false;
+
+        bool Matches(string path, BackupFile saved)
+        {
+            ProtectedRead read = reader.OpenCareer(path);
+            return read.Ok && read.Size == saved.Size &&
+                string.Equals(read.Sha256, saved.Sha256, StringComparison.OrdinalIgnoreCase);
+        }
     }
 
     /// <summary>Backup sets in a folder that were made from this game folder, newest first.</summary>

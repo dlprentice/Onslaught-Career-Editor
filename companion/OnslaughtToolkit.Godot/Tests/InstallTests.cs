@@ -110,6 +110,7 @@ internal static class InstallTests
         ChangeGuards(original, root, now, files, check);
         GameStartsDuringWrite(original, root, now, files, check);
         BackupsPerGameFolder(original, root, now, files, check);
+        BackupRecoveryIntegrity(original, root, now, files, check);
         PublicationBoundary(original, root, now, files, check);
         PortableWrites(original, root, now, files, check);
     }
@@ -255,6 +256,47 @@ internal static class InstallTests
         check.That(!Backups.SameGame(ones[0] with { Game = "" }, one) && !Backups.SameGame(ones[0] with { Game = "relative/game" }, one) &&
             Backups.SameGame(ones[0] with { Game = first.Game + Path.DirectorySeparatorChar }, one),
             "A set without a full game folder path matches no game; a trailing separator does not matter.");
+    }
+
+    /// <summary>An unchanged game still needs a fresh backup if its recorded recovery copy is no longer usable.</summary>
+    private static void BackupRecoveryIntegrity(byte[] original, string root, DateTime now, ProtectedSaveFiles files, Checks check)
+    {
+        foreach (GameTarget target in new[] { GameTarget.Original, GameTarget.OnslaughtCe })
+        {
+            string owner = Path.Combine(root, "backup-recovery-" + target);
+            FakeInstall install = FakeInstall.Create(Path.Combine(owner, "game"), original);
+            GameFolder game = target == GameTarget.Original ? GameFolder.Inspect(install.Game, "test") : GameFolder.InspectCe(install.Game);
+            string backups = Path.Combine(owner, "backups"); Directory.CreateDirectory(backups);
+            BackupReceipt made = Backups.Create(files, game, backups, now);
+            check.That(made.Ok && made.Set is not null && !Backups.ChangedSinceLatest(game, backups),
+                $"{target}: an intact verified recovery set avoids a duplicate automatic backup.");
+            if (made.Set is not BackupSet set) continue;
+            string copy = Path.Combine(set.Folder, "Career One.bes");
+            File.Delete(copy);
+            check.That(Backups.ChangedSinceLatest(game, backups), $"{target}: a deleted recovery copy cannot suppress a fresh automatic backup.");
+            byte[] changed = original.ToArray(); changed[^1] ^= 0x5A;
+            File.WriteAllBytes(copy, changed);
+            check.That(Backups.ChangedSinceLatest(game, backups), $"{target}: a changed recovery copy cannot stand in for the manifest's recorded bytes.");
+            File.WriteAllBytes(copy, [1, 2, 3]);
+            check.That(Backups.ChangedSinceLatest(game, backups), $"{target}: a truncated recovery copy is not a usable backup.");
+            File.Delete(copy); Directory.CreateDirectory(copy);
+            check.That(Backups.ChangedSinceLatest(game, backups), $"{target}: a directory at the recovery filename is not a usable backup.");
+            Directory.Delete(copy);
+            if (OperatingSystem.IsLinux())
+            {
+                File.CreateSymbolicLink(copy, install.Career);
+                check.That(Backups.ChangedSinceLatest(game, backups), $"{target}: a recovery symlink to unchanged game bytes is refused.");
+                File.Delete(copy);
+                string alias = Path.Combine(owner, "linked-source.bes"); File.WriteAllBytes(alias, original);
+                check.That(LinuxSaveNative.LinkAt(LinuxSaveNative.AtCurrentDirectory, alias,
+                    LinuxSaveNative.AtCurrentDirectory, copy, 0) == 0, $"{target}: the owned hardlink control was created.");
+                check.That(Backups.ChangedSinceLatest(game, backups), $"{target}: a linked recovery file is not an independent verified backup.");
+                File.Delete(copy);
+            }
+            File.WriteAllBytes(copy, original);
+            check.That(!Backups.ChangedSinceLatest(game, backups), $"{target}: the exact restored recovery set avoids unnecessary backup duplication.");
+            check.That(Unchanged(install, original), $"{target}: recovery inspection leaves all original game files untouched.");
+        }
     }
 
     /// <summary>
