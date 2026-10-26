@@ -2,7 +2,7 @@
 
 Status: active development check
 Last updated: 2026-10-25
-Summary: exercises native file/process/launcher boundaries and defines the separate opt-in Godot UI workflow gate.
+Summary: exercises native file/process/launcher boundaries and records the separate bounded development Godot UI workflow gate.
 
 This console executable compile-links the app's production implementations. It does not carry a second save codec,
 file publisher, process detector or platform override. Its Windows checks complement the Godot UI checks; they do not
@@ -72,6 +72,12 @@ The observer resumed each briefly suspended thread, and the production
 five-second deadline cleaned up its owned child. No timeout workaround was applied. Preserve failed and successful
 reports together; the passing controls do not cancel the observed refusals.
 
+The later selected CE `0.1.6-dev` launcher, source `9ed8c56e81d3`, returned its actual version through
+production discovery in the October 25 rendered development workflow. This is a passing observation for
+that package and invocation, not a general resolution of the earlier loader wait. The source/package pins,
+native process evidence, byte assertions and inspected screenshots are recorded in
+[the dated acceptance entry](../../VALIDATION.md#companion-native-windows-development-ui--october-25).
+
 ## Godot UI workflow gate
 
 `Development/CeLiveCheck.cs` also accepts an explicit `workflow` phase in a **development** Godot build.
@@ -116,7 +122,9 @@ permission-failure arm runs on Linux; this gate does not claim a Windows ACL-fai
 With capture enabled, it retains Home, saved Settings and restored Backups screenshots. A zero exit and
 `passed: true` workflow receipt establish those automated control/byte checks only. Inspect the screenshots
 first-hand before claiming visual acceptance. The gate never starts CE gameplay, checks the public feed,
-tests physical input or establishes hardware audio. Native Windows UI execution remains pending.
+tests physical input or establishes hardware audio. The selected native Windows development workflow passed
+under `DEBUG_PROCESS` and a private job, with first-hand inspection of all three screenshots. Ordinary release
+invocation, physical input, file dialogs, Windows ACL failures and hardware GPU rendering remain unvalidated.
 
 The offline/headless fixture control is:
 

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-10-24 (real Linux CE integration acceptance; Windows launcher checks distinguished from companion acceptance; each dated section keeps its own date).
+Last updated: 2026-10-25 (selected native Windows development UI acceptance; real Linux CE integration; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -25,7 +25,7 @@ Commit ids cited below predate the 2026-10 history flatten; they resolve in the 
 
 The WinUI shell, its UI tests, the Windows-targeted CLI and the ZIP procedure were
 removed on 2026-10-15; dated entries below that name them are history. The unused
-evaluation VM was retired; the later dedicated CE Windows test VM does not itself establish companion acceptance.
+evaluation VM was retired; native Windows companion evidence is limited to the executed gates below.
 The rebuild's Windows PowerShell launchers were retired on
 2026-09-26; its only launcher is the Linux one. Archive/manifest
 verification on Linux does not establish Windows runtime behavior.
@@ -43,6 +43,50 @@ companion's tests); dated entries below that name them are history.
 | Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` refuses GDScript, saved resources and multi-node scenes, then builds the C# companion; `export:companion-godot` produces normal Godot .NET Linux/Windows exports. Builds are headless. |
 | Tools | The affected `tools/<name>_tests.py`; `npm run test:tools` runs every registered suite (`worldheaders_decode --self-test` needs the retail `worldheaders.dat`). |
 | Game documentation claim | Cite the decompiled function, capture, byte comparison or source line; never paste decompiler output (`reverse-engineering/REVIEW-PROTOCOL.md` for optional reviews). |
+
+## Companion native Windows development UI — October 25
+
+The opt-in [workflow gate](companion/OnslaughtToolkit.NativeChecks/README.md#godot-ui-workflow-gate)
+passed on Windows with companion source `b4b32d0ffca7471bdb4e7aee10f0843a727e34f9` and the selected CE
+`0.1.6-dev` package from source `9ed8c56e81d33a6c9331b0954c0ad3ab5d1a6b21`. This was a development
+Godot package under checked `DEBUG_PROCESS` observation and a private Windows job, using programmatic
+production-page actions. It was not an ordinary release invocation or physical input test. Its private
+owner, copied career and backups were separate from the player's profiles; original game data was read-only.
+
+The selected launcher SHA-256 was `4ca191c71c75e06d488f7c07d5f22c62d1635979472aac9bfa1ca18aaae29163`.
+The CE ZIP SHA-256 was `2f1ade9d645a408843e2f6bf7e86ea4c1ec91216ed55bf8d777646f670d5b5c6`.
+This names that development package only; it is not acceptance of published CE 0.1.5 or another 0.1.6-dev build.
+
+Observed in the native run:
+
+- Production discovery read `Onslaught CE v0.1.6-dev (preview), build 9ed8c56e81d3` from the actual launcher.
+  Native process observation admitted exactly one `--version` child; it and the companion exited normally
+  with zero status. The workflow finished in 25.453 seconds under the external 90-second deadline, with no
+  forced termination or remaining process in its job.
+- The real career page edited one selected kill counter, verified its exact pre-edit backup, preserved every
+  unselected and unknown byte, reopened the result and published `CE Élan.bes`. A stale career snapshot was
+  refused without changing the newer file. The real settings page saved and reopened both supported switches,
+  preserved unknown lines, verified its backups and refused stale settings.
+- The Backups page restored and reopened the exact 10,004-byte baseline, SHA-256
+  `0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb`, and first preserved the displaced
+  edit in its own verified backup. All admitted immutable app/package inputs retained their exact hashes.
+- Godot 4.8 beta1 fell back from native OpenGL to embedded ANGLE, reporting Microsoft Basic Render Driver
+  with D3D11 software rendering. No GPU assignment, graphics installation or new renderer dependency was needed.
+- The original `workflow-home.png`, `workflow-settings.png` and `workflow-restored.png` captures were inspected
+  first-hand at 1280 × 781. Home showed the selected version, Settings showed the saved launcher choices and
+  verified-save status, and Backups showed restored-career status with readable Unicode names. The selected
+  controls and text were readable. Settings repeated its backup location in two status lines; this remains a
+  presentation issue, with no code change or broader UI-quality claim from this gate.
+
+Private receipts are retained under `companion-ui-b4b32d0f-9ed-r1-host/native-receipts/`: `assessment.json`,
+`collected/native.jsonl`, `collected/godot.log`, `collected/workflow-result.json` and those three PNGs.
+The workflow receipt SHA-256 is `0f913c281e32d58551ca83bb75022c996a81dab5f351fa2bf4aea54866c858ca`.
+Its timestamp is October 26 UTC (October 25 local). Frozen inputs and earlier failed evidence were preserved.
+
+This establishes the selected rendered development control/byte workflow and inspected views. Ordinary release
+invocation, physical mouse/keyboard and file-dialog routes, Windows ACL-failure behavior, hardware GPU rendering,
+audio and full UI coverage remain open. The gate did not launch CE gameplay or request an update feed. The successful
+version query does not establish a general fix for the earlier intermittent Windows SDL3.dll loader wait.
 
 ## Companion with real Onslaught CE — October 24
 

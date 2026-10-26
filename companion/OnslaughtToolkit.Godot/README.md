@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-25 (pinned development UI workflow gate prepared; CE 0.1.5 publishes the redirected-output correction; native Windows backend acceptance and remaining UI/version limits)
+Last updated: 2026-10-25 (selected native Windows development UI workflow and screenshots inspected; CE 0.1.5 redirected-output correction and remaining platform limits)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it offers CE launch and reads signed public update information.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -77,20 +77,27 @@ companion's CE mode. Its data-folder selection follows
 Native Windows checks exercised production process detection and protected file/settings writes;
 CE also loaded the edited Unicode career through its own menu. Those backend/load experiments used the
 then-admitted CE development builds; they are not companion UI acceptance of the final 0.1.5 package.
-The Godot UI remains untested on Windows. In the pinned source, the launcher uses
+In the pinned 0.1.4 source, the launcher uses
 [`AttachConsole(ATTACH_PARENT_PROCESS)` and `CONOUT$`](https://github.com/dlprentice/onslaught-ce/blob/93ea9145d6d4d9f36f7cd9a800506ebf5bcbd788/port/updater/ce_launch.c).
 Separate native Windows launcher checks reproduced CE 0.1.4 sending redirected version output to
 an attached console instead of its pipe. Onslaught CE 0.1.5 publishes that launcher correction
-([the 0.1.5 source](https://github.com/dlprentice/onslaught-ce/blob/52c8c1f91e98cd2ff3573978ce608987c2ab170e/port/updater/ce_launch.c));
-the separate intermittent startup wait remains. Standalone version queries additionally show an intermittent
-Windows loader wait opening SDL3.dll, still unresolved. See
+([the 0.1.5 source](https://github.com/dlprentice/onslaught-ce/blob/52c8c1f91e98cd2ff3573978ce608987c2ab170e/port/updater/ce_launch.c)).
+Earlier standalone version queries also captured an intermittent Windows loader wait opening SDL3.dll.
+The later selected development workflow below read its actual version successfully; it does not establish
+a general resolution of those earlier startup waits. See
 [NativeChecks](../OnslaughtToolkit.NativeChecks/README.md) for the executed paths and limits.
 
-A development-only `CeLiveCheck` workflow can exercise the real Godot career/settings/restore controls against
-an explicitly copied CE profile. It pins the launcher, baseline career and expected version, and can retain
-rendered screenshots for inspection. It never starts a game or requests updates. Its Linux fixture control
-does not establish Windows UI acceptance; the native Windows workflow and first-hand screenshot review remain
-pending. See [the opt-in workflow contract](../OnslaughtToolkit.NativeChecks/README.md#godot-ui-workflow-gate).
+A native Windows development package at companion source `b4b32d0f` passed the `CeLiveCheck` workflow with
+the selected CE `0.1.6-dev` package, source `9ed8c56e81d3`. Production discovery read the actual launcher
+version, then programmatic production-page actions edited, backed up and reopened a copied real career,
+published a Unicode-named copy, refused stale inputs, saved both supported settings and restored the exact
+baseline. Home, Settings and restored Backups screenshots were inspected first-hand and their selected
+controls and text were readable. Godot used its embedded ANGLE fallback with Microsoft Basic Render Driver
+over D3D11 software. This was a development invocation under `DEBUG_PROCESS` and a private Windows job;
+ordinary release invocation, physical mouse/keyboard input, file dialogs, Windows ACL failures, hardware
+GPU rendering and audio remain unvalidated. The gate never starts a game or requests updates. See
+[the dated acceptance record](../../VALIDATION.md#companion-native-windows-development-ui--october-25) and
+[the opt-in workflow contract](../OnslaughtToolkit.NativeChecks/README.md#godot-ui-workflow-gate).
 
 ## Layout
 
@@ -278,13 +285,15 @@ are never thrown away for this; the companion says so instead.
 
 - Linux CE 0.1.4 launch, version reading and loading an edited copy of a real career passed the
   isolated check above. This does not establish complete campaign play or every save variant.
-- The Windows Godot UI has not been exercised. The production file/settings backend did run natively
-  on Windows 11 using [NativeChecks](../OnslaughtToolkit.NativeChecks/README.md): real-career backup,
+- The selected Windows development UI workflow above passed with inspected screenshots. Ordinary release
+  invocation, physical input and file dialogs remain open. The production file/settings backend also ran
+  natively on Windows 11 using [NativeChecks](../OnslaughtToolkit.NativeChecks/README.md): real-career backup,
   edit, reopen, restore, Unicode publication, stale-source and sharing refusals, and refusal while
   CE runs passed. Separate CE replays loaded both the restored baseline and the edited Unicode
-  career, with the loaded options container matching each selected career exactly. Standalone
-  launcher version queries still intermittently hit their
-  five-second deadline, even with the launcher output correction; the cause remains unresolved.
+  career, with the loaded options container matching each selected career exactly. Earlier standalone
+  launcher queries intermittently hit their five-second deadline, even with the launcher output correction.
+  The selected `9ed8c56e81d3` launcher passed its production version query in the rendered development gate;
+  that observation does not resolve the earlier intermittent loader wait for other builds or invocations.
 - Nobody has clicked through the app by hand or listened to its music and voices.
 - The model preview shows each model at its first frame; the app never plays an animation. On
   2026-10-16, playing the exported animations inside a headless Godot (a development check, not the
