@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-25 (selected native Windows development UI workflow and screenshots inspected; CE 0.1.5 redirected-output correction and remaining platform limits)
+Last updated: 2026-10-26 (shared toolchain prerequisites clarified; October 25 native Windows development workflow and its limits retained)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it offers CE launch and reads signed public update information.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -141,10 +141,11 @@ that [toolchain.json](toolchain.json) names, installed by
 the shared game toolchain (`game_pipeline_shared`) under
 `~/.local/opt/game-pipeline`, its lock at `~/Projects/game-dev/game_pipeline_shared/toolchain.linux.lock.json`
 (or `--shared-lock FILE`), and .NET SDK 10.0.402. The engine defaults to the pinned install;
-`--engine PATH` names another copy of the same build. A contributor without that toolchain can
-install the same Godot 4.8 beta1 .NET editor, templates and SDK from their official downloads,
-check them against the hashes in `toolchain.json`, and point `--shared-lock` at a lock file of
-the same shape; the runner refuses any other build. `audit` restores outside locked mode with
+`--engine PATH` must resolve to that install's executable and does not bypass its checks.
+The runner also requires the shared installer's `.game-pipeline-source.json` provenance markers and
+`scripts/linux_toolchain.py` beside the selected lock file. Official Godot, template and SDK downloads plus
+a lock file with the same schema are not sufficient for these commands; this repository does not yet provide a
+standalone setup route for them. `audit` restores outside locked mode with
 NuGet's vulnerability audit over direct and transitive packages (it needs nuget.org); the
 build's own restore stays locked and does not audit, so a new advisory never changes a build.
 Each check, build, test, run and audit leaves an output folder; the runner keeps the newest five

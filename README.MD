@@ -1,16 +1,20 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-10-23 (original-game and CE support described in player terms; companion ownership and validation limits clarified)
+Last updated: 2026-10-26 (decompilation concessions and native-port validation scope clarified)
 Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
 
 Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
 repository holds it and the project's overview.
 
-- **The decompilation is done.** A byte-matching decompilation of the retail executable is the project's
-  reverse-engineering authority. Its public export is [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp).
-- **The native source port is the faithful game**, for Windows and Linux. Its source and downloads are published
-  separately as **[Onslaught CE](https://github.com/dlprentice/onslaught-ce)** (GPL-3.0-only, no game files), not from this repository.
+- **The byte-matching decompilation is the reverse-engineering authority.** Its public export,
+  [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), documents matching coverage, excluded code and
+  source and build concessions. Matching function sections and relocations is separate from reproducing the
+  complete linked executable or proving gameplay parity.
+- **Onslaught CE is the native Windows and Linux port.** Its source and downloads are published separately as
+  **[Onslaught CE](https://github.com/dlprentice/onslaught-ce)** (GPL-3.0-only, no game files), not from this repository.
+  Its [release notes](https://github.com/dlprentice/onslaught-ce/releases/latest) identify the tested routes,
+  corrections and remaining limits.
 - **The companion, Onslaught Companion, manages careers for the original game and Onslaught CE.** It is a Godot
   .NET app that shows progress and Goodies, edits careers and settings after a verified backup and a clear choice,
   and keeps automatic backups that can be put back. It offers CE launch, two CE launcher settings and a check of
