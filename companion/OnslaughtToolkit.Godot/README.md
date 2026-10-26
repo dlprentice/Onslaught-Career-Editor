@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-25 (CE 0.1.5 publishes the redirected-output correction; earlier: native Windows backend acceptance and remaining UI/version limits; real Linux CE workflow)
+Last updated: 2026-10-25 (pinned development UI workflow gate prepared; CE 0.1.5 publishes the redirected-output correction; native Windows backend acceptance and remaining UI/version limits)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it offers CE launch and reads signed public update information.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -85,6 +85,12 @@ an attached console instead of its pipe. Onslaught CE 0.1.5 publishes that launc
 the separate intermittent startup wait remains. Standalone version queries additionally show an intermittent
 Windows loader wait opening SDL3.dll, still unresolved. See
 [NativeChecks](../OnslaughtToolkit.NativeChecks/README.md) for the executed paths and limits.
+
+A development-only `CeLiveCheck` workflow can exercise the real Godot career/settings/restore controls against
+an explicitly copied CE profile. It pins the launcher, baseline career and expected version, and can retain
+rendered screenshots for inspection. It never starts a game or requests updates. Its Linux fixture control
+does not establish Windows UI acceptance; the native Windows workflow and first-hand screenshot review remain
+pending. See [the opt-in workflow contract](../OnslaughtToolkit.NativeChecks/README.md#godot-ui-workflow-gate).
 
 ## Layout
 

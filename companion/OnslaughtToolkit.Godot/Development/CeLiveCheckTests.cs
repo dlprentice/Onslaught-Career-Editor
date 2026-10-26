@@ -33,12 +33,14 @@ public partial class CeLiveCheckTests : SceneTree
             Directory.CreateDirectory(admitted);
             File.WriteAllText(Path.Combine(admitted, ".companion-owned"), "Owned failure-path test\n");
             await RefuseConfiguration(root, "invalid-phase", new { owner = admitted, phase = "../escaped" },
-                "Phase must be prepare, launch, restore or settings.");
+                "Phase must be prepare, launch, restore, settings or workflow.");
             string[] receipts = Directory.GetFiles(admitted, "unknown-result-*.json");
             Require(receipts.Length == 1, "Invalid phase produces one bounded unknown-phase receipt inside admitted owner");
             Require(Directory.GetFiles(root, "escaped*").Length == 0, "Invalid phase cannot escape owner in receipt path");
             using (JsonDocument receipt = JsonDocument.Parse(File.ReadAllText(receipts.Single())))
                 Require(!receipt.RootElement.GetProperty("passed").GetBoolean(), "Invalid-phase receipt records failure");
+            WorkflowAdmission(root);
+            await WorkflowControls(root);
 
             await ParentExitCleanup(root);
             InstallReceipt refused = new(false, GameInstaller.RunningMessage, "unused");
@@ -52,6 +54,86 @@ public partial class CeLiveCheckTests : SceneTree
         catch (Exception error) { GD.PrintErr(error); }
         GD.Print($"CE_HOOK_NEGATIVES checks={_checks} exit={exit}");
         Quit(exit);
+    }
+
+    private void WorkflowAdmission(string root)
+    {
+        string fixture = OS.GetCmdlineUserArgs().Single(arg => arg.StartsWith("--fixture="))[10..];
+        string launcher = Path.Combine(root, "launcher-marker"), baseline = Path.Combine(root, "baseline.bes"), career = Path.Combine(root, "career.bes");
+        File.WriteAllText(launcher, "owned inert launcher marker; never executed");
+        File.Copy(fixture, baseline); File.Copy(fixture, career);
+        string launcherHash = Careers.SaveSession.Digest(File.ReadAllBytes(launcher)), baselineHash = Careers.SaveSession.Digest(File.ReadAllBytes(baseline));
+        void Admit(string version, string launchHash, string careerHash)
+        {
+            using JsonDocument config = JsonDocument.Parse(JsonSerializer.Serialize(new
+                { expectedVersion = version, launcherSha256 = launchHash, baselineSha256 = careerHash }));
+            CeLiveCheck.AdmitWorkflow(config.RootElement, launcher, baseline, career);
+        }
+        void Refuse(Action action, string label)
+        {
+            try { action(); throw new InvalidOperationException("Incorrectly admitted: " + label); }
+            catch (IOException) { Require(true, label); }
+        }
+        Admit("0.1.5", launcherHash, baselineHash);
+        Require(true, "Pinned workflow baseline, career and launcher hashes admitted without executing a launcher");
+        Refuse(() => Admit("", launcherHash, baselineHash), "Missing expected version refused before UI initialization");
+        Refuse(() => Admit("0.1.5", new string('0', 64), baselineHash), "Changed selected launcher refused before UI initialization");
+        Refuse(() => Admit("0.1.5", launcherHash, new string('0', 64)), "Changed baseline hash refused before UI initialization");
+        File.AppendAllText(career, "changed");
+        Refuse(() => Admit("0.1.5", launcherHash, baselineHash), "Changed initial copied career refused before UI initialization");
+        File.Copy(fixture, career, true);
+        File.WriteAllBytes(baseline, new byte[10004]);
+        File.Copy(baseline, career, true);
+        Refuse(() => Admit("0.1.5", launcherHash, Careers.SaveSession.Digest(File.ReadAllBytes(baseline))), "Unsupported career container refused even with matching hashes");
+    }
+
+    private async Task WorkflowControls(string root)
+    {
+        if (!OperatingSystem.IsLinux()) throw new IOException("The owned shell-launcher control is Linux-only.");
+        string fixture = OS.GetCmdlineUserArgs().Single(arg => arg.StartsWith("--fixture="))[10..];
+        string owner = Path.Combine(root, "workflow-controls");
+        Directory.CreateDirectory(owner);
+        File.WriteAllText(Path.Combine(owner, ".companion-owned"), "Owned workflow-control root\n");
+        Tests.FakeInstall install = Tests.FakeInstall.Create(Path.Combine(owner, "original"), File.ReadAllBytes(fixture));
+        string package = Path.Combine(owner, "package"), user = Path.Combine(owner, "user"), backups = Path.Combine(owner, "backups");
+        Directory.CreateDirectory(package); Directory.CreateDirectory(backups); Directory.CreateDirectory(Path.Combine(user, "savegames"));
+        string launcher = Path.Combine(package, "onslaught-ce"), baseline = Path.Combine(owner, "baseline.bes");
+        File.WriteAllText(launcher, "#!/bin/sh\n[ \"$#\" = 1 ] && [ \"$1\" = --version ] || exit 23\nprintf 'Onslaught CE v0.1.5, build workflow-fixture\\n'\n");
+        File.SetUnixFileMode(launcher, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        File.WriteAllText(Path.Combine(package, "onslaught-ce-launch"), "Owned inert package marker; never executed");
+        File.Copy(fixture, baseline); File.Copy(fixture, Path.Combine(user, "savegames", "Companion Pilot.bes"));
+        File.WriteAllText(Path.Combine(user, "ce.ini"), "update_check=0\nrecord_sessions=0\nfuture_kept=acceptance\n");
+        string path = Path.Combine(root, "workflow-controls.json");
+        File.WriteAllText(path, JsonSerializer.Serialize(new { owner, phase = "workflow", launcher, user, baseline, backups,
+            game = install.Game, expectedVersion = "0.1.5", launcherSha256 = Careers.SaveSession.Digest(File.ReadAllBytes(launcher)),
+            baselineSha256 = Careers.SaveSession.Digest(File.ReadAllBytes(baseline)) }));
+        ProcessStartInfo start = new(Environment.GetEnvironmentVariable("ONSLAUGHT_GODOT_HEADLESS") ??
+            throw new IOException("ONSLAUGHT_GODOT_HEADLESS wrapper is required."))
+        { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true };
+        start.ArgumentList.Add("--path"); start.ArgumentList.Add(ProjectSettings.GlobalizePath("res://"));
+        start.ArgumentList.Add("--script"); start.ArgumentList.Add("res://Development/CeLiveCheck.cs");
+        start.Environment["ONSLAUGHT_CE_LIVE_CHECK"] = path;
+        using Process child = Process.Start(start) ?? throw new IOException("Cannot start bounded headless workflow control.");
+        Task<string> stdout = child.StandardOutput.ReadToEndAsync(), stderr = child.StandardError.ReadToEndAsync();
+        await child.WaitForExitAsync();
+        string transcript = await stdout + await stderr;
+        File.WriteAllText(Path.Combine(root, "workflow-controls.log"), transcript);
+        Require(child.ExitCode == 0, "Fixture workflow completed its production UI-control edit/settings/restore path");
+        using JsonDocument result = JsonDocument.Parse(File.ReadAllText(Directory.GetFiles(owner, "workflow-result-*.json").Single()));
+        Require(result.RootElement.GetProperty("passed").GetBoolean() && result.RootElement.GetProperty("phase").GetString() == "workflow",
+            "Fixture workflow emitted a successful explicit workflow receipt; no real CE/game/Windows claim");
+        Require(File.ReadAllBytes(Path.Combine(user, "savegames", "Companion Pilot.bes")).AsSpan().SequenceEqual(File.ReadAllBytes(fixture)),
+            "Fixture workflow finished with byte-exact restored career");
+        Dictionary<string, object> rendering = JsonSerializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(path))!;
+        rendering["capture"] = true;
+        await RefuseConfiguration(root, "workflow-rendering-required", rendering,
+            "Workflow screenshots require rendering; headless execution cannot establish visual acceptance.");
+        rendering["capture"] = false;
+        rendering["expectedVersion"] = "0.1.6-wrong-fixture";
+        await RefuseConfiguration(root, "workflow-wrong-version", rendering,
+            "Actual selected launcher version equals the pinned expected version");
+        Require(File.ReadAllBytes(Path.Combine(user, "savegames", "Companion Pilot.bes")).AsSpan().SequenceEqual(File.ReadAllBytes(fixture)),
+            "Wrong actual version refuses before workflow career edits");
     }
 
     private async Task RefuseConfiguration(string root, string label, object configuration, string expectedError)
@@ -75,13 +157,15 @@ public partial class CeLiveCheckTests : SceneTree
 
     private async Task ParentExitCleanup(string root)
     {
-        ProcessStartInfo start = new("/bin/sh") { UseShellExecute = false, RedirectStandardOutput = true };
+        ProcessStartInfo start = new("/bin/sh") { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardInput = true };
         start.ArgumentList.Add("-c");
-        start.ArgumentList.Add("sleep 30 </dev/null >/dev/null 2>&1 & echo $!; sleep 1");
+        start.ArgumentList.Add("sleep 30 </dev/null >/dev/null 2>&1 & echo $!; read finish");
         using Process parent = Process.Start(start) ?? throw new IOException("Cannot start owned dummy parent.");
-        DateTime parentStarted = parent.StartTime.ToUniversalTime();
-        string parentImage = parent.MainModule!.FileName;
+        // The echo proves that /bin/sh finished exec before its MainModule is inspected. Hold it until both
+        // exact identities are observed instead of racing startup or assuming a one-second observation budget.
         int childPid = int.Parse((await parent.StandardOutput.ReadLineAsync())!);
+        DateTime parentStarted = parent.StartTime.ToUniversalTime();
+        string parentImage = parent.MainModule?.FileName ?? throw new IOException("Owned dummy parent image was not observed.");
         DateTime childStarted = default;
         string childImage = "";
         List<object> observations = [];
@@ -97,6 +181,8 @@ public partial class CeLiveCheckTests : SceneTree
                 await Task.Delay(10);
             }
             Require(childImage.Length > 0, "Recorded owned dummy child's PID, executable and start time after exec");
+            await parent.StandardInput.WriteLineAsync("finish");
+            parent.StandardInput.Close();
             await parent.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5));
             Require(parent.HasExited && Alive(childPid), "Owned parent exited while owned child remains running");
 

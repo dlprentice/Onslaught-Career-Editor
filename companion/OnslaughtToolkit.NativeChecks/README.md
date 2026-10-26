@@ -1,8 +1,8 @@
 # Native Windows companion checks
 
 Status: active development check
-Last updated: 2026-10-24
-Summary: exercises the companion's production file, process and launcher boundaries on native Windows without Godot.
+Last updated: 2026-10-25
+Summary: exercises native file/process/launcher boundaries and defines the separate opt-in Godot UI workflow gate.
 
 This console executable compile-links the app's production implementations. It does not carry a second save codec,
 file publisher, process detector or platform override. Its Windows checks complement the Godot UI checks; they do not
@@ -71,3 +71,59 @@ file open remains unresolved. It does not establish a bug in SDL code or identif
 The observer resumed each briefly suspended thread, and the production
 five-second deadline cleaned up its owned child. No timeout workaround was applied. Preserve failed and successful
 reports together; the passing controls do not cancel the observed refusals.
+
+## Godot UI workflow gate
+
+`Development/CeLiveCheck.cs` also accepts an explicit `workflow` phase in a **development** Godot build.
+Normal release exports exclude this entry. Use a copied CE package and profile below a new disposable owner,
+outside the real Windows profile; keep the admitted real baseline byte-identical. Prepare an existing empty
+backup folder, `user/savegames/Companion Pilot.bes` copied from that baseline, and `user/ce.ini` containing
+`update_check=0`, `record_sessions=0` and `future_kept=acceptance`. The original game folder is read-only input.
+Place the `.companion-owned` marker below the owner and supply this private JSON through
+`ONSLAUGHT_CE_LIVE_CHECK`:
+
+```json
+{
+  "owner": "C:/companion-ui/run01",
+  "phase": "workflow",
+  "launcher": "C:/companion-ui/run01/ce/onslaught-ce.exe",
+  "user": "C:/companion-ui/run01/user",
+  "baseline": "C:/companion-ui/run01/baseline.bes",
+  "backups": "C:/companion-ui/run01/backups",
+  "game": "C:/read-only-game-data",
+  "expectedVersion": "SELECTED_VERSION",
+  "launcherSha256": "SELECTED_LAUNCHER_SHA256",
+  "baselineSha256": "ADMITTED_REAL_BASELINE_SHA256",
+  "capture": true
+}
+```
+
+Invoke the development package with `--script res://Development/CeLiveCheck.cs`, under an external 90-second
+owned-process deadline, a private HOME/USERPROFILE/APPDATA/LOCALAPPDATA/TEMP, and cleared inherited `BEA_*`
+overrides. The operator owns native Windows execution; no VM is started by this entry. Use rendering for
+`capture: true`; a headless invocation refuses that request. Retain the full package inventory and source
+commit with the configuration and receipt. Never reuse a successful owner for another workflow.
+
+Before UI initialization, the workflow checks the exact launcher, baseline and initial career hashes and
+refuses linked input ancestors. Production discovery must read the expected launcher version. The workflow
+then edits one kill counter through the actual career page, verifies the backup and every unselected byte,
+creates a named Unicode CE career, checks stale-input refusal, changes and reopens both supported launcher
+settings while preserving unknown lines, checks stale-settings refusal, and restores/reopens the baseline
+through the Backups page while verifying the displaced career's recovery copy. Only the existing Linux
+permission-failure arm runs on Linux; this gate does not claim a Windows ACL-failure test.
+
+With capture enabled, it retains Home, saved Settings and restored Backups screenshots. A zero exit and
+`passed: true` workflow receipt establish those automated control/byte checks only. Inspect the screenshots
+first-hand before claiming visual acceptance. The gate never starts CE gameplay, checks the public feed,
+tests physical input or establishes hardware audio. Native Windows UI execution remains pending.
+
+The offline/headless fixture control is:
+
+```sh
+ONSLAUGHT_GODOT_HEADLESS=godot-headless python tools/companion_godot.py test \
+  --script Development/CeLiveCheckTests.cs --timeout 120
+```
+
+It uses the tracked real-save fixture and an owned `--version`-only shell script, with no real game or Windows
+claim. It exercises hash/version admission refusals, the complete fixture UI workflow, and refusal of a
+rendering claim from headless execution.

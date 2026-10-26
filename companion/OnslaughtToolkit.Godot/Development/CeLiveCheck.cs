@@ -41,8 +41,8 @@ public partial class CeLiveCheck : SceneTree
                 throw new IOException("Prepared isolated owner marker required.");
             _ownerAdmitted = true;
             string requestedPhase = Required("phase");
-            if (requestedPhase is not ("prepare" or "launch" or "restore" or "settings"))
-                throw new IOException("Phase must be prepare, launch, restore or settings.");
+            if (requestedPhase is not ("prepare" or "launch" or "restore" or "settings" or "workflow"))
+                throw new IOException("Phase must be prepare, launch, restore, settings or workflow.");
             phase = requestedPhase;
             string launcher = Owned(Required("launcher")), user = Owned(Required("user")),
                 baseline = Owned(Required("baseline")), backups = Owned(Required("backups"));
@@ -50,6 +50,13 @@ public partial class CeLiveCheck : SceneTree
             string game = Path.GetFullPath(Required("game"));
             if (!File.Exists(baseline) || !File.Exists(career) || !Directory.Exists(backups))
                 throw new IOException("Prepare the copied real career, baseline and backup directory first.");
+            bool captureWorkflow = phase == "workflow" && config.RootElement.TryGetProperty("capture", out JsonElement capture) && capture.GetBoolean();
+            if (phase == "workflow")
+            {
+                AdmitWorkflow(config.RootElement, launcher, baseline, career);
+                if (captureWorkflow && DisplayServer.GetName() == "headless")
+                    throw new IOException("Workflow screenshots require rendering; headless execution cannot establish visual acceptance.");
+            }
             if (GameProcess.IsRunning()) throw new IOException("A game is already running; acceptance must have exclusive game ownership.");
             Environment.SetEnvironmentVariable("BEA_USER_DIR", user);
             Environment.SetEnvironmentVariable("BEA_GAME_DIR", game);
@@ -62,6 +69,8 @@ public partial class CeLiveCheck : SceneTree
             await Frame();
             await Until(() => !_app.Game.Busy && _app.Game.CeVersion is not null, 15, "CE discovery and actual --version");
             Require(_app.Game.Ce is not null && _app.Game.Folder?.Root == user, "CE package and user folder discovered");
+            if (phase == "workflow")
+                Require(_app.Game.CeVersion?.Version == Required("expectedVersion"), "Actual selected launcher version equals the pinned expected version");
             Observe("version", _app.Game.CeVersion!);
             await Until(() => !_app.Game.Busy && !_app.Workspace.Busy && _app.Workspace.Session is not null, 15,
                 "Automatic career opening completed");
@@ -75,7 +84,18 @@ public partial class CeLiveCheck : SceneTree
             else if (phase == "launch") await Launch(config.RootElement, career);
             else if (phase == "restore") await Restore(career, backups, original);
             else if (phase == "settings") await Settings();
-            else throw new IOException("Phase must be prepare, launch, restore or settings.");
+            else if (phase == "workflow")
+            {
+                _app.Navigate("home");
+                if (captureWorkflow) await WorkflowShot("home");
+                await Prepare(career, baseline, backups, original);
+                await Settings();
+                if (captureWorkflow) await WorkflowShot("settings");
+                await Restore(career, backups, original);
+                if (captureWorkflow) await WorkflowShot("restored");
+                Require(File.ReadAllBytes(baseline).AsSpan().SequenceEqual(original), "Preserved workflow baseline remains byte-identical");
+                Observe("workflow-limit", "Production Godot controls and byte workflow only; no game launch/load, physical input, audio or visual acceptance is established.");
+            }
             exit = 0;
         }
         catch (Exception error) { Observe("failure", error.ToString()); GD.PrintErr(error); }
@@ -94,6 +114,38 @@ public partial class CeLiveCheck : SceneTree
             GD.Print($"CE_LIVE_DONE {phase} exit={exit}");
             Quit(exit);
         }
+    }
+
+    private async Task WorkflowShot(string label)
+    {
+        string path = Owned(Path.Combine(_owner, "workflow-" + label + ".png"));
+        if (File.Exists(path)) throw new IOException("Workflow screenshot already exists; use a fresh owned root.");
+        for (int frame = 0; frame < 6; frame++) await Frame();
+        await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+        using Image image = Root.GetTexture().GetImage();
+        if (image.IsEmpty() || image.SavePng(path) != Error.Ok) throw new IOException("Workflow screenshot could not be captured.");
+        Observe("screenshot", new { path, width = image.GetWidth(), height = image.GetHeight(), firstHandInspection = "pending" });
+    }
+
+    internal static void AdmitWorkflow(JsonElement config, string launcher, string baseline, string career)
+    {
+        static void ExactHash(JsonElement config, string key, string path)
+        {
+            FileMutationSafety.RejectExistingReparseAncestors(path, "Workflow input");
+            string expected = config.GetProperty(key).GetString() ?? "";
+            if (expected.Length != 64 || expected.Any(c => !char.IsAsciiHexDigitLower(c)) ||
+                !File.Exists(path) || (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0 ||
+                SaveSession.Digest(File.ReadAllBytes(path)) != expected)
+                throw new IOException("Workflow input hash differs: " + key);
+        }
+        string expectedVersion = config.GetProperty("expectedVersion").GetString() ?? "";
+        if (expectedVersion.Length is < 1 or > 128 || expectedVersion.Any(char.IsWhiteSpace))
+            throw new IOException("Workflow needs an exact expectedVersion.");
+        ExactHash(config, "launcherSha256", launcher);
+        ExactHash(config, "baselineSha256", baseline);
+        ExactHash(config, "baselineSha256", career);
+        if (!CareerSave.Inspect(File.ReadAllBytes(baseline)).Ok)
+            throw new IOException("Workflow baseline is not an admitted career container.");
     }
 
     private async Task Prepare(string career, string baseline, string backups, byte[] original)
