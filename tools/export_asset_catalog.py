@@ -19,8 +19,12 @@ Examples:
 from __future__ import annotations
 
 import argparse
+import errno
+import hashlib
 import json
+import os
 import re
+import stat
 import tempfile
 from collections import Counter
 from pathlib import Path
@@ -32,6 +36,236 @@ from safe_generated_output import SecuredOutputRoot
 CATALOG_SCHEMA_VERSION = 3
 CATALOG_PATH_CONTRACT = "bundle-root-relative"
 CATALOG_EXPORT_CONTRACT = "source-bound-verified-outputs-only"
+CATALOG_INSPECTION_SCHEMA = "onslaught.catalog-source-selection.v1"
+MAX_INSPECTED_SOURCES = 256
+MAX_INSPECTED_SOURCE_BYTES = 256 * 1024 * 1024
+MAX_SINGLE_SOURCE_BYTES = 64 * 1024 * 1024
+
+
+def _identity_hash(domain: str, value: object) -> str:
+    encoded = json.dumps(value, sort_keys=True, ensure_ascii=True, separators=(",", ":")).encode("ascii")
+    return hashlib.sha256(domain.encode("ascii") + b"\0" + encoded).hexdigest()
+
+
+class SourceInspectionError(ValueError):
+    def __init__(self, status: str, reason: str):
+        self.status, self.reason = status, reason
+        super().__init__(reason)
+
+
+def _file_fingerprint(value: os.stat_result) -> tuple[int, ...]:
+    return (value.st_dev, value.st_ino, value.st_mode, value.st_size,
+            value.st_mtime_ns, value.st_ctime_ns, value.st_nlink)
+
+
+def _read_selected_source(source_root: Path, source_path: Path, remaining: int) -> bytes:
+    """Bounded openat read; retain/revalidate every directory and the file handle.
+
+    No discovery, symlink traversal, hardlinked file, or absolute source outside
+    the explicit root is admitted. Directory descriptors prevent path races from
+    redirecting a selected read; post-read name checks reject moved/replaced inputs.
+    """
+    if not hasattr(os, "O_NOFOLLOW") or not hasattr(os, "O_DIRECTORY"):
+        raise SourceInspectionError("unsupported", "descriptor-safe reads unavailable")
+    root = Path(os.path.abspath(source_root))
+    path = Path(os.path.abspath(source_path))
+    try:
+        relative = path.relative_to(root)
+    except ValueError as error:
+        raise SourceInspectionError("rejected", "source outside explicit inspection root") from error
+    if not relative.parts:
+        raise SourceInspectionError("rejected", "source must be a file below the inspection root")
+    descriptors: list[int] = []
+    links: list[tuple[int, str, os.stat_result]] = []
+    try:
+        fd = os.open(root.anchor, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        descriptors.append(fd)
+        for component in (*root.parts[1:], *relative.parts[:-1]):
+            child = os.open(component, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
+            descriptors.append(child)
+            metadata = os.fstat(child)
+            links.append((fd, component, metadata))
+            fd = child
+        source = os.open(relative.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd)
+        descriptors.append(source)
+        before = os.fstat(source)
+        if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1:
+            raise SourceInspectionError("rejected", "source must be a regular single-link file")
+        if before.st_size > MAX_SINGLE_SOURCE_BYTES:
+            raise SourceInspectionError("unsupported", "source exceeds single-source byte limit")
+        if before.st_size > remaining:
+            raise SourceInspectionError("notAttempted", "selection byte budget exhausted")
+        chunks, count = [], 0
+        while True:
+            chunk = os.read(source, min(1024 * 1024, min(remaining, MAX_SINGLE_SOURCE_BYTES) - count + 1))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            count += len(chunk)
+            if count > min(remaining, MAX_SINGLE_SOURCE_BYTES):
+                raise SourceInspectionError("rejected", "source grew beyond admitted byte limit")
+        if count != before.st_size or _file_fingerprint(os.fstat(source)) != _file_fingerprint(before):
+            raise SourceInspectionError("rejected", "source changed during held read")
+        after = os.stat(relative.name, dir_fd=fd, follow_symlinks=False)
+        if _file_fingerprint(after) != _file_fingerprint(before):
+            raise SourceInspectionError("rejected", "source path changed during held read")
+        for parent, name, expected in links:
+            current = os.stat(name, dir_fd=parent, follow_symlinks=False)
+            if (current.st_dev, current.st_ino, current.st_mode) != (expected.st_dev, expected.st_ino, expected.st_mode):
+                raise SourceInspectionError("rejected", "source directory changed during held read")
+        return b"".join(chunks)
+    except OSError as error:
+        if error.errno in (errno.ELOOP, errno.ENOTDIR):
+            raise SourceInspectionError("rejected", "source path is a link or not a directory/file") from error
+        raise SourceInspectionError("unavailable", "source could not be read") from error
+    finally:
+        for descriptor in reversed(descriptors):
+            os.close(descriptor)
+
+
+def _source_metadata(kind: str, source: bytes, path: Path, logical: str) -> tuple[dict[str, object], dict[str, object] | None]:
+    """Use existing bounded parsers; never infer embedded-body framing/offsets."""
+    if kind == "texture":
+        import dds_census
+        envelope = "dds" if path.suffix.lower() == ".dds" else "aya"
+        metadata = dds_census.texture_metadata(source, envelope=envelope)
+        payload = metadata["dds"]
+        if payload is None:
+            return {"status": metadata["status"], "measured": metadata}, None
+        identity = {"length": payload["size"], "sha256": payload["sha256"]}
+        # Source-envelope fields belong to the occurrence, not a shared payload variant.
+        measured = {key: value for key, value in metadata.items() if key != "source"}
+        return {"status": metadata["status"], "envelope": envelope}, {
+            "payload_domain": "dds-stream", "payload_identity": identity,
+            "parser": "dds_census.texture_metadata", "measured": measured,
+        }
+    import cmsh_animation_usage_census as models
+    if path.suffix.lower() == ".aya" and kind == "loose_mesh":
+        try:
+            payload_bytes = models.inflate_aya(source)
+        except models.CmshProfileError as error:
+            return {"status": "unparsed", "reason": {"category": error.category,
+                    "falsifier": "supply a supported bounded AYA/CMSH source"}}, None
+        envelope = "aya"
+    elif source.startswith(b"CMSH"):
+        payload_bytes, envelope = source, "raw-cmsh-stream"
+    else:
+        return {"status": "unknown", "reason": {
+            "category": "raw mesh framing not established",
+            "falsifier": "provide an independently located complete CMSH stream"}}, None
+    row, _mesh = models.mesh_record_from_stream(
+        payload_bytes, source_path=logical, archive_sha256=hashlib.sha256(source).hexdigest())
+    metadata = dict(row["modelMetadata"])
+    metadata.pop("identity", None)  # Its archive coordinates do not describe a standalone raw file.
+    metadata["summary"] = {key: value for key, value in row.items() if key not in ("file", "modelMetadata")}
+    return {"status": metadata["status"], "envelope": envelope}, {
+        "payload_domain": "cmsh-stream", "payload_identity": {
+            "length": len(payload_bytes), "sha256": hashlib.sha256(payload_bytes).hexdigest()},
+        "parser": "cmsh_animation_usage_census.mesh_record_from_stream", "measured": metadata,
+    }
+
+
+def inspect_catalog_sources(
+    textures: list[dict[str, object]], loose_meshes: list[dict[str, object]],
+    embedded_meshes: list[dict[str, object]], *, source_root: Path,
+    source_manifests: tuple[list[dict[str, object]], list[dict[str, object]], list[dict[str, object]]],
+    repo_root: Path | None = None,
+) -> dict[str, object]:
+    """Join only the explicit catalog selection, never an exhaustive AYA universe.
+
+    Callers must opt in. Source paths are root-relative logical locations; exact
+    variants use payload bytes, while occurrence IDs include selection, location
+    and the complete held-source identity. Unreadable/rejected rows remain visible.
+    """
+    root = Path(os.path.abspath(source_root))
+    path_base = root if repo_root is None else Path(os.path.abspath(repo_root))
+    entries = [*textures, *loose_meshes, *embedded_meshes]
+    selected: dict[tuple[str, str], dict[str, object]] = {}
+    grouped: dict[tuple[str, str, str | None], list[tuple[str, str]]] = {}
+    if len(source_manifests) != 3:
+        raise ValueError("inspection needs the original texture/loose/embedded manifest selections")
+    for kind, manifest in zip(("texture", "loose_mesh", "embedded_mesh"), source_manifests):
+        for declaration in manifest:
+            # Do not reconstruct paths from repo_rel() display fields: those
+            # legacy fields resolve links and lose the original selected path.
+            declared = Path(declaration["input"])
+            path = declared
+            if not path.is_absolute():
+                path = path_base / path
+            path = Path(os.path.abspath(path))
+            key = (str(kind), str(path))
+            selected.setdefault(key, {"kind": kind, "path": path})
+            if kind == "texture":
+                aliases = texture_aliases_for_catalog(declared.name)
+                catalog_id = "texture:" + choose_texture_ref(aliases, declared.stem)
+            elif kind == "loose_mesh":
+                catalog_id = "mesh:" + choose_mesh_ref(mesh_aliases_from_loose_name(declared.name))
+            else:
+                catalog_id = f"embedded_mesh:{declared.parent.name}/{declared.stem}"
+            provenance = repo_rel(declared, path_base) if kind == "embedded_mesh" else None
+            grouped.setdefault((kind, catalog_id, provenance), []).append(key)
+    entry_keys = [grouped.get((str(entry["kind"]), str(entry["catalog_id"]),
+                              entry.get("source_body_path") if entry["kind"] == "embedded_mesh" else None), [])
+                  for entry in entries]
+    observed: dict[tuple[str, str], dict[str, object]] = {}
+    consumed = 0
+    for index, key in enumerate(sorted(selected)):
+        request = selected[key]
+        path, kind = request["path"], request["kind"]
+        try:
+            logical = path.relative_to(root).as_posix()
+        except ValueError:
+            logical = None
+        row: dict[str, object] = {"kind": kind, "logical_source_path": logical,
+                                 "source_identity": None, "variant": None}
+        try:
+            if index >= MAX_INSPECTED_SOURCES:
+                raise SourceInspectionError("notAttempted", "selection source-count budget exhausted")
+            source = _read_selected_source(root, path, MAX_INSPECTED_SOURCE_BYTES - consumed)
+            consumed += len(source)
+            row["source_identity"] = {"length": len(source), "sha256": hashlib.sha256(source).hexdigest()}
+            status, variant = _source_metadata(str(kind), source, path, str(logical))
+            row.update(status)
+            row["variant"] = variant
+        except SourceInspectionError as error:
+            row.update(status=error.status, reason={"category": error.reason,
+                       "falsifier": "provide a stable supported regular source under the explicit root"})
+        observed[key] = row
+    namespace_rows = sorted(
+        ({name: value for name, value in row.items() if name != "variant"} for row in observed.values()),
+        key=lambda value: json.dumps(value, sort_keys=True))
+    namespace = _identity_hash(CATALOG_INSPECTION_SCHEMA, namespace_rows)
+    for entry, keys in zip(entries, entry_keys):
+        variants: dict[str, dict[str, object]] = {}
+        occurrences = []
+        for key in sorted(set(keys)):
+            record = dict(observed[key])
+            variant = record.pop("variant")
+            variant_id = None
+            if variant is not None:
+                variant_id = "asset-variant:" + _identity_hash("onslaught.asset-variant.v1", {
+                    "kind": "texture" if record["kind"] == "texture" else "mesh",
+                    "domain": variant["payload_domain"], "identity": variant["payload_identity"]})
+                variants[variant_id] = {"variant_id": variant_id,
+                    "asset_kind": "texture" if record["kind"] == "texture" else "mesh", **variant,
+                    "description": None, "description_status": "not-visually-reviewed", "annotations": []}
+            record["variant_id"] = variant_id
+            record["occurrence_id"] = ("asset-occurrence:" + _identity_hash("onslaught.asset-occurrence.v1", {
+                "selection_namespace": namespace, "kind": record["kind"],
+                "logical_source_path": record["logical_source_path"], "source_identity": record["source_identity"]})
+                if record["source_identity"] is not None else None)
+            occurrences.append(record)
+        entry["variants"] = [variants[key] for key in sorted(variants)]
+        entry["occurrences"] = sorted(occurrences, key=lambda value: json.dumps(value, sort_keys=True))
+        entry["exact_variant_count"], entry["occurrence_count"] = len(variants), len(occurrences)
+        entry["occurrence_count_scope"] = "declared-source-locations"
+        entry["observed_occurrence_count"] = sum(row["source_identity"] is not None for row in occurrences)
+    return {"schema": CATALOG_INSPECTION_SCHEMA, "selection_namespace": namespace,
+            "scope": "explicit-manifest-source-selection-not-full-aya-universe",
+            "source_count": len(observed), "source_bytes_read": consumed,
+            "source_limit": MAX_INSPECTED_SOURCES, "source_byte_limit": MAX_INSPECTED_SOURCE_BYTES,
+            "status_counts": dict(sorted(Counter(row["status"] for row in observed.values()).items())),
+            "description_status": "not-visually-reviewed", "export_verification": "not-established"}
 
 
 def repo_rel(path: Path, repo_root: Path) -> str:
@@ -562,6 +796,8 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--language-matrix", type=Path, default=Path(".artifacts/language-export/merged_matrix.json"))
     ap.add_argument("--out-dir", type=Path, default=Path(".artifacts/asset-catalog"))
     ap.add_argument("--self-test", action="store_true", help="Run built-in catalog assembly checks without game assets")
+    ap.add_argument("--inspect-source-root", type=Path,
+                    help="Opt in to bounded metadata reads of manifest-selected sources below this explicit root; no discovery")
     return ap.parse_args()
 
 
@@ -745,12 +981,19 @@ def main() -> int:
         videos = build_video_catalog(video_manifest)
         language_rows = build_language_catalog(language_matrix)
         goodies = build_goodie_catalog(packed_manifest, videos, language_rows)
+        source_inspection = {"status": "notRequested"}
+        if args.inspect_source_root is not None:
+            source_inspection = inspect_catalog_sources(
+                textures, loose_meshes, embedded_meshes,
+                source_root=args.inspect_source_root, repo_root=args.repo_root,
+                source_manifests=(texture_manifest, loose_mesh_manifest, embedded_mesh_manifest))
         summary = build_summary(textures, loose_meshes, embedded_meshes, videos, language_rows, goodies)
 
         catalog = {
             "schema_version": CATALOG_SCHEMA_VERSION,
             "path_contract": CATALOG_PATH_CONTRACT,
             "export_verification_contract": CATALOG_EXPORT_CONTRACT,
+            "source_inspection": source_inspection,
             "summary": summary,
             "textures": textures,
             "loose_meshes": loose_meshes,
