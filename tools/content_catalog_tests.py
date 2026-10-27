@@ -36,7 +36,8 @@ def dds_dxt1_4x4() -> bytes:
     return bytes(header) + struct.pack("<HHI", 0xFFFF, 0x0000, 0)
 
 
-def text_record(name: str, *, tex_format: int = 1, requested: int = 1, compressible: int = 1) -> bytes:
+def text_record(name: str, *, tex_format: int = 1, requested: int = 1, compressible: int = 1, levels: int = -1,
+                tag: bytes = b"TEXT") -> bytes:
     obj = bytearray(0x158)
     obj[0x08:0x08 + len(name)] = name.encode("ascii")
     struct.pack_into("<i", obj, 0x08 + 0xA0, requested)
@@ -44,10 +45,32 @@ def text_record(name: str, *, tex_format: int = 1, requested: int = 1, compressi
     struct.pack_into("<h", obj, 0x08 + 0xA8, 4)
     struct.pack_into("<i", obj, 0x138, 1)
     struct.pack_into("<i", obj, 0x144, tex_format)
-    struct.pack_into("<i", obj, 0x148, -1)
+    struct.pack_into("<i", obj, 0x148, levels)
     obj[0x154] = compressible
     body = chunk(b"CTEX", bytes(obj)) + chunk(b"TFRM", struct.pack("<I", 1))
-    return chunk(b"TEXT", chunk(b"DXTX", body))
+    return chunk(tag, chunk(b"DXTX", body))
+
+
+def imposter_chunk() -> bytes:
+    texture = text_record("Imposters_100", tag=b"BTXT")
+    label = bytearray(76)
+    label[4:4 + 12] = b"authored.msh"
+    impt = chunk(b"CIMP", bytes(label)) + chunk(b"IMSH", struct.pack("<i", 7)) + chunk(b"VIEW", bytes(144))
+    impo = struct.pack("<I", 1) + chunk(b"IMPT", impt)
+    return chunk(b"IMPS", chunk(b"DATA", bytes(8)) + texture + chunk(b"IMPO", impo))
+
+
+def goodie_archive() -> bytes:
+    gdat = struct.pack("<ii", 3, 0) + text_record("goodies\\art.tga")[8:]
+    return aya(chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1))
+               + chunk(b"AYAD", bytes(24)) + chunk(b"GDIE", chunk(b"GDAT", gdat)))
+
+
+PARTICLES = (
+    "ParticleSystemEd_File_(C)2000_Lost_Toys_Ltd\n"
+    "Particle_Descriptor_Type 1\nParticle_Descriptor_Name Spark\nBlend_Mode 1\n"
+    "Texture C:\\dev\\Onslaught2\\data\\textures\\Particle\\spark.tga\n"
+)
 
 
 def named_mesh_record(name: str) -> bytes:
@@ -81,7 +104,13 @@ def authored_install(root: Path) -> None:
         "data/resources/meshes/m_authored.msh.aya": aya(mesh_stream()),
         "data/resources/100_res_PC.aya": aya(
             chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1))
-            + chunk(b"AYAD", bytes(24)) + text_record("meshtex\\skin.tga") + named_mesh_record("authored.msh")),
+            + chunk(b"AYAD", bytes(24)) + text_record("meshtex\\skin.tga") + named_mesh_record("authored.msh")
+            + text_record("Particle\\spark.tga", requested=2, levels=1) + imposter_chunk()),
+        "data/resources/goodie_03_res_PC.aya": goodie_archive(),
+        "data/resources/dxtntextures/goodies%art.tga(0)A1R5G5B5.aya": aya(dds_dxt1_4x4()),
+        "data/resources/dxtntextures/Particle%spark.tga(0)A1R5G5B5.aya": aya(dds_dxt1_4x4()),
+        "data/resources/dxtntextures/Imposters_100(0)A1R5G5B5.aya": aya(dds_dxt1_4x4()),
+        "data/ParticleSets/MainSet.par": PARTICLES.encode("latin-1"),
         "data/sounds/english/MessageBox/hello.ogg": ogg_file(),
         "data/video/briefings/PC_100_exact.vid": bink_file(),
         "data/MissionScripts/level100/main.msl": b"// authored\n",
@@ -96,10 +125,16 @@ def authored_install(root: Path) -> None:
 class AuthoredInstallTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        with tempfile.TemporaryDirectory() as temp:
+        with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as decomp_temp:
             game = Path(temp)
             authored_install(game)
-            cls.catalog = catalog.build_catalog(game)
+            decomp = Path(decomp_temp)
+            (decomp / "src").mkdir(parents=True)
+            (decomp / "src" / "Hud.cpp").write_text(
+                'void CHud::Init()\t// FUNCTION: 0x00401000\n{\n'
+                '\tmTex = CDXTexture::FindTexture("Particle\\\\spark.tga", 2, 0, 1, 1, 1);\n'
+                '\tmMesh = CMesh::GetMesh("authored.msh");\n}\n', encoding="latin-1")
+            cls.catalog = catalog.build_catalog(game, decomp)
         cls.coverage = catalog.build_coverage(cls.catalog)
         cls.assets = {asset["id"]: asset for asset in cls.catalog["assets"]}
 
@@ -110,12 +145,13 @@ class AuthoredInstallTests(unittest.TestCase):
         survey = self.catalog["survey"]
         self.assertEqual(survey["unclassified"], [])
         counts = {f["family"]: f["files"] for f in survey["families"]}
-        self.assertEqual(counts["dds-texture-dxtn"], 2)
+        self.assertEqual(counts["dds-texture-dxtn"], 5)
         self.assertEqual(counts["mission-script-msl"], 1)
         self.assertEqual(counts["executable-code"], 1)
 
     def test_text_record_resolves_to_its_loose_dds_by_the_loader_path_rule(self) -> None:
-        [desc] = [a for a in self.catalog["assets"] if a["type"] == "texture-descriptor"]
+        [desc] = [a for a in self.catalog["assets"] if a["type"] == "texture-descriptor"
+                  and a["name"] == "meshtex\\skin.tga"]
         [pixels] = [r for r in desc["relationships"] if r["type"] == "pixels-from"]
         self.assertEqual(pixels["status"], "resolved")
         self.assertEqual(pixels["target"], "texture:data/resources/dxtntextures/meshtex%skin.tga(0)a1r5g5b5.aya")
@@ -169,9 +205,38 @@ class AuthoredInstallTests(unittest.TestCase):
             self.assertEqual(errors, [], asset["id"])
 
     def test_coverage_counts(self) -> None:
-        self.assertEqual(self.coverage["assetsByType"]["texture"], 2)
-        self.assertEqual(self.coverage["textureFilesReferencedByADescriptor"], 1)
-        self.assertEqual(self.coverage["relationshipStatus"]["uses-texture"], {"resolved": 1})
+        self.assertEqual(self.coverage["assetsByType"]["texture"], 5)
+        self.assertEqual(self.coverage["textureFilesReferencedByADescriptor"], 4)
+        self.assertEqual(self.coverage["textureFilesNotLoaded"],
+                         ["data/resources/dxtntextures/unused.tga(0)A1R5G5B5.aya"])
+
+    def test_imposter_texture_links_its_mesh_by_resource_id(self) -> None:
+        [desc] = [a for a in self.catalog["assets"] if a["type"] == "texture-descriptor" and a["name"] == "Imposters_100"]
+        [imp] = [r for r in desc["relationships"] if r["type"] == "imposter-of-mesh"]
+        self.assertEqual((imp["status"], imp["target"]), ("resolved", "mesh:data/resources/meshes/m_authored.msh.aya"))
+        self.assertEqual(desc["textureDescriptor"]["occurrences"][0]["via"], "IMPS")
+
+    def test_goodie_image_shows_its_texture(self) -> None:
+        goodie = self.assets["goodie:003"]
+        self.assertEqual(goodie["goodie"]["goodieType"], "image")
+        [shows] = self.relation("goodie:003", "shows-texture")
+        desc = self.assets[shows["target"]]
+        self.assertEqual(desc["name"], "goodies\\art.tga")
+        self.assertIn(3, desc["usage"]["goodies"])
+
+    def test_particle_texture_uses_blend_mode_plus_one_format(self) -> None:
+        [effect] = [a for a in self.catalog["assets"] if a["type"] == "effect"]
+        [uses] = effect["relationships"]
+        self.assertEqual((uses["status"], uses["requestedFormat"], uses["targetName"]),
+                         ("resolved", 2, "Particle\\spark.tga"))
+
+    def test_code_literals_name_textures_and_meshes(self) -> None:
+        refs = self.catalog["codeReferences"]
+        self.assertEqual((refs["textureSites"], refs["meshSites"], refs["unresolvedTextureNames"]), (1, 1, []))
+        mesh = self.assets["mesh:data/resources/meshes/m_authored.msh.aya"]
+        self.assertEqual(mesh["usage"]["codeSites"], 1)
+        [code] = [r for r in mesh["relationships"] if r["type"] == "named-by-code"]
+        self.assertTrue(code["evidence"][0]["source"].endswith("src/Hud.cpp:4 CHud::Init @0x00401000"))
 
 
 class BoundaryTests(unittest.TestCase):

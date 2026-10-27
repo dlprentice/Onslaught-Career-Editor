@@ -58,10 +58,10 @@ An evidence-based inventory of the game's content (textures, meshes, animations,
 scripts, effects, interface art) with JSON metadata, as the basis for HD successors, modding, editors, multiplayer
 compatibility and the rebuild. `tools/content_catalog.py` (schema `tools/content_catalog.schema.json`) surveys a
 selected install and catalogues the families existing parsers read; every relationship names the loader function or
-data that establishes it. Its output is retail-derived and stays in ignored `local-data/`. Next: the goodie archives'
-`GDIE` content, the level payloads (`WRES` placements, `ERES`, `IMPS`, `LNDS`, `SURF`, `SSHD`), particle sets and
-their textures, mission scripts and text, and texture use by code call sites. A catalogue is a foundation, not the
-mod system or an HD conversion.
+data that establishes it, and meshes and textures carry a usage summary for HD prioritisation. Its output is
+retail-derived and stays in ignored `local-data/`. Next: the other `WRES` record families (waypoints, triggers,
+paths), the structure of `ERES`, `SURF` and `SSHD`, texture names that code builds with `sprintf` (terrain mixers),
+and mission-script contents. A catalogue is a foundation, not the mod system or an HD conversion.
 
 ### Decompilation and native port
 

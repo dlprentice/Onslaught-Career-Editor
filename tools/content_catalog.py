@@ -2,10 +2,14 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """Battle Engine Aquila content catalogue: an evidence-based inventory of a retail PC install.
 
-Phase 1 surveys every file of a selected install (container families, counts, sizes, the loader that reads each
-family and whether a repository parser already reads it) and catalogues the families existing parsers read:
-loose DDS textures, the texture records (TEXT) and mesh records (MESH) inside the level resource archives, loose
-and embedded CMSH meshes with their stored animation modes, XAP bank samples, Ogg Vorbis files and Bink videos.
+It surveys every file of a selected install (container families, counts, sizes, the loader that reads each family
+and whether a repository parser already reads it) and catalogues: loose DDS textures; the texture records in the
+resource archives (TEXT, and those inside imposter IMPS, font PLAT and goodie GDIE chunks); loose and embedded CMSH
+meshes with their animation modes; levels, their Unit/Feature placements (WRES) and the physics definitions they
+instantiate; goodies; particle effects; XAP samples, Ogg Vorbis music and voice (with the transcript line that
+names each voice file), Bink films; and an inventory of mission scripts, text and symbol tables. With --decomp it
+also records the texture and mesh names game code looks up literally. Each mesh and texture gets a usage summary
+(placements, levels, unit/feature names, effects, goodies, code sites) derived from its relationships.
 
 Every asset gets a stable id, its container and coordinates, a SHA-256 of its bytes, format metadata, an "upscale"
 section and provenance. Relationships are recorded only when a loader rule in the decompilation or the data itself
@@ -16,7 +20,7 @@ bytes), so it is written only below this checkout's ignored local-data/ director
 generated file carries the generatedRetailDerived marker that tools/public_allowlist_safety_check.py rejects.
 The schema is tools/content_catalog.schema.json.
 
-Run:  python ./tools/content_catalog.py --game GAME_FOLDER [--out local-data/content-catalog]
+Run:  python ./tools/content_catalog.py --game GAME_FOLDER [--decomp ONSLAUGHT_DECOMP] [--out local-data/content-catalog]
       python ./tools/content_catalog.py --self-test
 """
 from __future__ import annotations
@@ -44,6 +48,8 @@ import aya_cross_platform_compare as cross  # noqa: E402
 import aya_texture_fidelity_census as packed  # noqa: E402
 import cmsh_animation_usage_census as meshcensus  # noqa: E402
 import dds_census  # noqa: E402
+import language_dat_decode  # noqa: E402
+import worldheaders_decode  # noqa: E402
 import xap_bank_walk  # noqa: E402
 from safe_generated_output import SecuredOutputRoot  # noqa: E402
 
@@ -115,22 +121,23 @@ FAMILIES = (
      "tools/content_catalog.py (Bink header)", "catalogued"),
     ("sfx-catalog", lambda p: p.startswith("data/sounds/") and p.endswith(".sfx"),
      "sound-event table", L_SFX, "none in tools/ (text; documented in onslaught-preservation formats/ogg-audio.md)",
-     "unparsed"),
+     "inventoried"),
     ("language-dat", lambda p: p.startswith("data/language/") and p.endswith(".dat"),
-     "localized text", L_TEXT, "tools/language_dat_decode.py; tools/export_language_corpus.py", "parsed-elsewhere"),
+     "localized text", L_TEXT, "tools/language_dat_decode.py (entries, voice names, goodie titles)", "catalogued"),
     ("mission-script-msl", lambda p: p.startswith("data/missionscripts/") and (p.endswith(".msl") or p.endswith(".h")),
      "mission script source", "runtime reader not established in the decompilation (onsldef.msl is #included by "
-     "Career.cpp and game.cpp)", "tools/cmsh_animation_usage_census.py (animation calls only)", "unparsed"),
+     "Career.cpp and game.cpp)", "inventory only; placements name their script", "inventoried"),
     ("mission-text-txt", lambda p: p.startswith("data/missionscripts/") and p.endswith(".txt"),
-     "mission text", "runtime owner unknown", "none", "unparsed"),
+     "mission text", "runtime owner unknown", "inventory only", "inventoried"),
     ("stf-text-table", lambda p: p.endswith(".stf"), "text symbol table",
-     "#included by FrontEndText.cpp, MenuItem.cpp, FEPGoodies.cpp (build-time)", "none", "unparsed"),
+     "#included by FrontEndText.cpp, MenuItem.cpp, FEPGoodies.cpp (build-time)",
+     "tools/language_dat_decode.py:parse_text_stf (symbol names)", "inventoried"),
     ("particle-set-par", lambda p: p.startswith("data/particlesets/") and p.endswith(".par"),
-     "particle effects", L_PARTICLES, "rebuild TokenArchive (onslaught-godot); none in tools/", "unparsed"),
-    ("world-headers-dat", lambda p: p == "data/worldheaders.dat", "level headers", L_HEADERS, "none in tools/",
-     "unparsed"),
+     "particle effects", L_PARTICLES, "tools/content_catalog.py (descriptor names, types, textures)", "catalogued"),
+    ("world-headers-dat", lambda p: p == "data/worldheaders.dat", "level headers", L_HEADERS,
+     "tools/worldheaders_decode.py", "catalogued"),
     ("default-physics-dat", lambda p: p == "data/default physics.dat", "physics/unit definitions", L_PHYSICS,
-     "tools/cmsh_animation_usage_census.py (mesh fields only)", "unparsed"),
+     "tools/cmsh_animation_usage_census.py (definition names, mesh and behaviour fields only)", "catalogued"),
     ("battle-engine-config-dat", lambda p: p == "data/battle engine configurations.dat", "battle engine loadouts",
      L_BECONFIG, "none in tools/", "unparsed"),
     ("dial-raw", lambda p: p == "data/dial.raw", "HUD sprite (raw bytes)", L_BYTESPRITE + " (data\\%s.raw)", "none",
@@ -362,8 +369,8 @@ ARCHIVE_RE = re.compile(r"^(?:(?P<level>[0-9]{3})|goodie_(?P<goodie>[0-9]+)|(?P<
                         r"_res_pc\.aya$", re.IGNORECASE)
 
 
-def catalog_archives(game: Path, files: list[dict], texture_index: dict[str, dict], loose_meshes: dict[str, dict]
-                     ) -> tuple[list[dict], list[dict], list[tuple[str, bytes, dict]], dict]:
+def catalog_archives(game: Path, files: list[dict], texture_index: dict[str, dict], loose_meshes: dict[str, dict],
+                     collect: dict | None = None) -> tuple[list[dict], list[dict], list[tuple[str, bytes, dict]], dict]:
     """Archive records, texture-descriptor records, anonymous embedded mesh streams and per-archive mesh names."""
     archives, descriptors = [], {}
     embedded: list[tuple[str, bytes, dict]] = []
@@ -399,7 +406,8 @@ def catalog_archives(game: Path, files: list[dict], texture_index: dict[str, dic
             payload = raw[chunk.offset + 8:chunk.offset + 8 + chunk.size]
             if chunk.tag == "TEXT":
                 stats["textChunks"] += 1
-                add_descriptor(descriptors, rel, source_sha, chunk, payload, texture_index, stats)
+                add_descriptor(descriptors, rel, source_sha, chunk.index, chunk.offset + 8, payload, texture_index,
+                               stats)
             elif chunk.tag == "MESH":
                 stats["meshChunks"] += 1
                 try:
@@ -407,11 +415,14 @@ def catalog_archives(game: Path, files: list[dict], texture_index: dict[str, dic
                 except ValueError as error:
                     mesh_rows.append({"chunk": chunk.index, "status": "unparsed", "reason": str(error)})
                     continue
+                name_at = 16 if method.startswith("PMSH/PMS2") else 8
+                runtime_id = (struct.unpack_from("<i", payload, name_at + 300)[0]
+                              if len(payload) >= name_at + 304 else None)
                 if display:
                     target_file = f"data/resources/meshes/m_{display}.aya".casefold()
                     target = loose_meshes.get(target_file)
                     mesh_rows.append({"chunk": chunk.index, "name": display, "nameField": method,
-                                      "target": target["id"] if target else None})
+                                      "runtimeId": runtime_id, "target": target["id"] if target else None})
                     stats["namedMeshResolved" if target else "namedMeshUnresolved"] += 1
                 else:
                     try:
@@ -424,10 +435,15 @@ def catalog_archives(game: Path, files: list[dict], texture_index: dict[str, dic
                     offset = chunk.offset + 8 + payload.find(stream[:380])
                     embedded.append((rel, stream, {"archive": rec, "chunk": chunk.index, "offset": offset,
                                                    "archiveSha": source_sha}))
-                    mesh_rows.append({"chunk": chunk.index, "name": "",
+                    mesh_rows.append({"chunk": chunk.index, "name": "", "runtimeId": runtime_id,
                                       "target": f"mesh:embedded:{rel.casefold()}#{chunk.index}"})
                     stats["embeddedMeshes"] += 1
+            elif collect is not None and chunk.tag not in ("LVLR", "TARG", "AYAD"):
+                collect_chunk(collect, rel, rec, source_sha, chunk, payload, descriptors, texture_index, stats)
         rec["archive"]["meshChunks"] = mesh_rows
+        if collect is not None:
+            collect["meshIds"][rel] = {m["runtimeId"]: m["target"] for m in mesh_rows
+                                       if m.get("runtimeId") is not None and m.get("target")}
         for mrow in mesh_rows:
             if mrow.get("target"):
                 rule = ("a named MESH record opens data\\resources\\meshes\\m_<name>.aya" if mrow.get("name")
@@ -448,34 +464,36 @@ def catalog_archives(game: Path, files: list[dict], texture_index: dict[str, dic
             desc["relationships"].append(relation(
                 "loaded-by-archive", archive_id, "resolved",
                 [evidence("loader-code", L_READ_RESOURCES + " -> " + L_TEX_DESERIALIZE,
-                          "each TEXT chunk deserializes one texture record")]))
+                          "each TEXT chunk, and the texture records inside IMPS, PLAT and GDIE, deserialize one "
+                          "texture (CDXImposter::DeserializeAll, CPCPlatform::Deserialize, CFEPGoodies::Deserialise)")]))
     return archives, list(descriptors.values()), embedded, stats
 
 
-def add_descriptor(descriptors: dict, rel: str, archive_sha: str, chunk, payload: bytes, texture_index: dict,
-                   stats: collections.Counter) -> None:
+def add_descriptor(descriptors: dict, rel: str, archive_sha: str, chunk_index: int, offset: int, payload: bytes,
+                   texture_index: dict, stats: collections.Counter, via: str = "TEXT") -> str:
+    """Record one serialized texture (a DXTX payload) and return its descriptor id."""
     payload_sha = sha256(payload)
-    occurrence = {"archive": rel, "chunk": chunk.index, "offset": chunk.offset + 8}
+    occurrence = {"archive": rel, "chunk": chunk_index, "offset": offset, "via": via}
     if payload_sha in descriptors:
         descriptors[payload_sha]["textureDescriptor"]["occurrences"].append(occurrence)
-        return
+        return descriptors[payload_sha]["id"]
     try:
         fields = parse_text_record(payload)
     except (ValueError, struct.error) as error:
         stats["textUnparsed"] += 1
         rec = base_record(f"texture-descriptor:unparsed:{payload_sha[:16]}", "texture-descriptor", "", rel,
-                          archive_sha, envelope="lvlr-chunk(TEXT)", offset=chunk.offset + 8, length=len(payload),
-                          raw_sha=payload_sha, sha_scope="TEXT chunk payload", parser=TOOL + ":parse_text_record",
-                          chunk_path=[chunk.index])
+                          archive_sha, envelope=f"lvlr-chunk({via})", offset=offset, length=len(payload),
+                          raw_sha=payload_sha, sha_scope="DXTX texture record", parser=TOOL + ":parse_text_record",
+                          chunk_path=[chunk_index])
         rec["textureDescriptor"] = {"status": "unparsed", "reason": str(error), "occurrences": [occurrence]}
         descriptors[payload_sha] = rec
-        return
+        return rec["id"]
     name = fields["name"]
     rec = base_record(f"texture-descriptor:{fold(name)}:{payload_sha[:12]}", "texture-descriptor", name, rel,
-                      archive_sha, envelope="lvlr-chunk(TEXT)", offset=chunk.offset + 8, length=len(payload),
-                      raw_sha=payload_sha, sha_scope="TEXT chunk payload (DXTX/CTEX/TFRM)",
+                      archive_sha, envelope=f"lvlr-chunk({via})", offset=offset, length=len(payload),
+                      raw_sha=payload_sha, sha_scope="DXTX texture record (DXTX/CTEX/TFRM)",
                       parser="tools/aya_texture_fidelity_census.py:parse_serialized_texture + " + TOOL,
-                      chunk_path=[chunk.index])
+                      chunk_path=[chunk_index])
     fields["texFormatName"] = TEX_FORMAT_NAMES.get(fields["texFormat"], "nk")
     rec["textureDescriptor"] = {"status": "parsed", **fields, "occurrences": [occurrence],
                                 "fieldLayout": "onslaught-decomp src/Texture.h, src/DXTexture.h"}
@@ -491,6 +509,7 @@ def add_descriptor(descriptors: dict, rel: str, archive_sha: str, chunk, payload
             frame=frame, expectedPath=expected))
         stats["descriptorFramesResolved" if target else "descriptorFramesUnresolved"] += 1
     descriptors[payload_sha] = rec
+    return rec["id"]
 
 
 # ---------------------------------------------------------------------------------------------------------- meshes
@@ -687,6 +706,36 @@ def apply_tiling(meshes: list[dict], descriptors: list[dict], textures: list[dic
                 refs.append(desc["id"])
 
 
+def link_unloaded_mesh_names(textures: list[dict], meshes: list[dict]) -> None:
+    """A texture file no texture record loads, whose name equals a slot of a mesh no archive loads (data only)."""
+    loaded = {m["id"] for m in meshes if any(r["type"] == "loaded-by-archive" for r in m["relationships"])}
+    slots = collections.defaultdict(list)
+    for m in meshes:
+        if m["id"] in loaded:
+            continue
+        for slot in m["mesh"]["textures"]:
+            slots[fold(slot["name"])].append(m["id"])
+    loaded_files = collections.defaultdict(list)
+    for t in textures:
+        if t.get("loadedByDescriptors"):
+            loaded_files[(fold(t["name"]), t["texture"]["frame"])].append(t["id"])
+    for t in textures:
+        if t.get("loadedByDescriptors") or t["texture"]["frame"] is None:
+            continue
+        twins = loaded_files.get((fold(t["name"]), t["texture"]["frame"]))
+        if twins:
+            t["relationships"].append(relation(
+                "same-name-other-shelf", None, "name-match-unloaded", [evidence(
+                    "loader-code", L_TEX_LOADFRAME, "every texture record of this name selects the other shelf by "
+                    "its compressible flag, so this copy is not read")], targets=twins))
+        owners = slots.get(fold(t["name"]))
+        if owners:
+            t["relationships"].append(relation(
+                "same-name-as-mesh-slot", None, "name-match-unloaded", [evidence(
+                    "data", t["source"]["container"], "the file's flattened name equals a texture slot name of a "
+                    "mesh that no retail archive loads; no loader joins them")], targets=sorted(set(owners))))
+
+
 # ----------------------------------------------------------------------------------------------------------- audio
 VOICE_LANG_RE = re.compile(r"^data/sounds/(?P<lang>[a-z]+)/", re.IGNORECASE)
 
@@ -817,8 +866,744 @@ def catalog_video(game: Path, files: list[dict]) -> list[dict]:
     return records
 
 
+# ------------------------------------------------------------------------------------- phase 2: nested resources
+L_IMPOSTERS = cite("DXImposter.cpp", "CDXImposter::DeserializeAll", "0x00543d90")
+L_IMPOSTER_CREATE = cite("DXImposter.cpp", "CDXImposter::Create", "0x00543f50")
+L_MESH_BY_ID = cite("mesh.cpp", "CMesh::GetMeshByResourceID", "0x004ab330")
+L_PLATFORM = cite("PCPlatform.cpp", "CPCPlatform::Deserialize", "0x00515b10")
+L_GOODIE_FMV = cite("FEPGoodies.cpp", "get_goodie_fmv (CFEPGoodies::Process)", "0x0045dac3")
+L_CUTSCENE_NAME = cite("game.cpp", "MakeCutsceneName", "0x0046d810")
+L_GOODIE_LEVEL = cite("FEPGoodies.cpp", "get_goodie_level", "n/a")
+L_GOODIE_TITLE = cite("FEPGoodies.cpp", "get_goodie_title, get_goodie_num_texts, get_goodie_text_type_hack", "0x0045ff80")
+L_FOLLOWING = cite("text.cpp", "CText::GetFollowingString", "0x004f2500")
+L_SOUNDNAME = cite("text.cpp", "CText::GetSoundName", "0x004f24b0")
+L_MSGBOX = cite("MessageBox.cpp", "CMessageBox::StartMessage", "0x004b7ea0")
+L_TEXT_LOAD = cite("text.cpp", "CText::Load", "0x004f21f0")
+L_WORLD = cite("world.cpp", "CWorld::Deserialize", "0x0050b780")
+L_PARTICLE_TEX = cite("DXParticleTexture.cpp", "CDXParticleTexture::Get", "0x0054fbc0")
+L_PARTICLE_READ = cite("ParticleSet.cpp", "CParticleSet::ReadData", "0x004cd7f0")
+L_FMV_PLAY = cite("fmv.cpp", "CFMV::PlayFullscreen", "0x00465640")
+PAYLOAD_LOADERS = {
+    "ERES": cite("engine.cpp", "CEngine::Deserialize", "0x0044a6e0"),
+    "SURF": cite("DXSurf.cpp", "CDXSurf::Deserialize", "0x00556490"),
+    "SSHD": cite("StaticShadows.cpp", "CStaticShadows::DeserializeAll", "0x004ee8a0"),
+    "VSDS": cite("VertexShader.cpp", "CVertexShader::DeserializeAll", "0x005042f0"),
+    "LNDS": "skipped on PC by " + L_READ_RESOURCES,
+    "PMIB": "PATCHMANAGER.DeserializeAll via " + L_READ_RESOURCES,
+    "DMKR": "landscape damage DeserializeAll via " + L_READ_RESOURCES,
+    "WRES": L_WORLD,
+}
+WORLD_KINDS = ("BSWD", "RLWD")
+GOODIE_TYPES = {0: "image", 1: "mesh", 2: "fmv", 3: "level", 4: "cheat"}  # EGoodieType, FEPgoodies.h
+
+
+def scan_dxtx(payload: bytes) -> list[tuple[int, bytes]]:
+    """Every complete, parseable DXTX texture record inside a payload (offset, record bytes)."""
+    found, cursor = [], 0
+    while True:
+        at = payload.find(b"DXTX", cursor)
+        if at < 0 or at + 8 > len(payload):
+            return found
+        size = struct.unpack_from("<I", payload, at + 4)[0]
+        record = payload[at:at + 8 + size]
+        cursor = at + 4
+        if len(record) == 8 + size and record[8:12] == b"CTEX":
+            try:
+                parse_text_record(record)
+            except (ValueError, struct.error):
+                continue
+            found.append((at, record))
+            cursor = at + 8 + size
+
+
+def chunk_list(data: bytes) -> list[tuple[str, int, bytes]] | None:
+    rows, pos = [], 0
+    while pos + 8 <= len(data):
+        tag = data[pos:pos + 4]
+        size = struct.unpack_from("<I", data, pos + 4)[0]
+        if not all(0x20 <= b < 0x7F for b in tag) or pos + 8 + size > len(data):
+            return None
+        rows.append((tag.decode("ascii"), pos, data[pos + 8:pos + 8 + size]))
+        pos += 8 + size
+    return rows if pos == len(data) else None
+
+
+def parse_imposters(payload: bytes) -> list[dict]:
+    """IMPS: the IMPO list of IMPT records, each with its mesh resource id (IMSH) and view frames (VIEW)."""
+    at = payload.find(b"IMPO")
+    if at < 0:
+        return []
+    body = payload[at + 8:at + 8 + struct.unpack_from("<I", payload, at + 4)[0]]
+    count = struct.unpack_from("<I", body, 0)[0]
+    rows = chunk_list(body[4:]) or []
+    out = []
+    for tag, _pos, impt in rows:
+        if tag != "IMPT":
+            continue
+        inner = {t: d for t, _p, d in (chunk_list(impt) or [])}
+        if "IMSH" not in inner or len(inner["IMSH"]) != 4:
+            continue
+        label = inner.get("CIMP", b"")[4:68].split(b"\0", 1)[0].decode("latin-1")
+        out.append({"meshResourceId": struct.unpack("<i", inner["IMSH"])[0], "storedLabel": label,
+                    "viewBytes": len(inner.get("VIEW", b""))})
+    if len(out) != count:
+        raise ValueError(f"IMPO declares {count} imposters, {len(out)} framed")
+    return out
+
+
+def collect_chunk(collect: dict, rel: str, rec: dict, source_sha: str, chunk, payload: bytes, descriptors: dict,
+                  texture_index: dict, stats: collections.Counter) -> None:
+    base = chunk.offset + 8
+    tag = chunk.tag
+    if tag in ("IMPS", "PLAT", "GDIE"):
+        ids = [add_descriptor(descriptors, rel, source_sha, chunk.index, base + at, record, texture_index, stats, via=tag)
+               for at, record in scan_dxtx(payload)]
+        stats[f"nestedTextures{tag}"] += len(ids)
+        if tag == "IMPS":
+            try:
+                imposters = parse_imposters(payload)
+            except (ValueError, struct.error) as error:
+                imposters, stats["imposterUnparsed"] = [], stats["imposterUnparsed"] + 1
+                rec["archive"]["imposterError"] = str(error)
+            collect["imposters"].append({"archive": rel, "archiveRec": rec, "descriptors": ids, "imposters": imposters})
+        elif tag == "PLAT":
+            collect["platform"].append({"archive": rel, "descriptors": ids})
+        else:
+            number, gtype = struct.unpack_from("<ii", payload, 8)
+            mesh_name = None
+            at = payload.find(b"PMSH")
+            if at >= 0:
+                size = struct.unpack_from("<I", payload, at + 4)[0]
+                try:
+                    _k, mesh_name, _m = cross.logical_key("MESH", payload[at:at + 8 + size])
+                except ValueError:
+                    mesh_name = None
+            collect["goodies"].append({"archive": rel, "archiveRec": rec, "sha": source_sha, "chunk": chunk.index,
+                                       "number": number, "type": gtype, "descriptors": ids, "meshName": mesh_name})
+        return
+    if tag == "WRES":
+        collect["wres"][rel] = payload
+    rows = chunk_list(payload)
+    collect["payloads"].append({"archive": rel, "archiveRec": rec, "sha": source_sha, "tag": tag,
+                                "chunk": chunk.index, "offset": base, "length": len(payload),
+                                "payloadSha": sha256(payload),
+                                "innerTags": [t for t, _p, _d in rows][:16] if rows else None})
+
+
+class DescriptorIndex:
+    """CDXTexture::FindTexture's match: stricmp name, requested format (0 = any) and mip levels (-1 or exact)."""
+
+    def __init__(self, descriptors: list[dict]):
+        self.by_name: dict[str, list[dict]] = collections.defaultdict(list)
+        for d in descriptors:
+            if d["textureDescriptor"]["status"] == "parsed":
+                self.by_name[fold(d["name"])].append(d)
+
+    def find(self, name: str, fmt: int | None, levels: int | None, archives: set[str] | None = None) -> list[dict]:
+        out = []
+        for d in self.by_name.get(fold(name), []):
+            td = d["textureDescriptor"]
+            if fmt not in (None, 0) and td["requestedFormat"] != fmt:
+                continue
+            if levels is not None and td["levels"] != levels:
+                continue
+            if archives is not None and not ({o["archive"].casefold() for o in td["occurrences"]} & archives):
+                continue
+            out.append(d)
+        return out
+
+
+def find_relation(rtype: str, found: list[dict], ev: list[dict], **extra) -> dict:
+    status = "resolved" if len(found) == 1 else "resolved-per-archive" if found else "unresolved"
+    return relation(rtype, found[0]["id"] if len(found) == 1 else None, status, ev,
+                    targets=[d["id"] for d in found] if len(found) > 1 else None, **extra)
+
+
+def catalog_goodies(collect: dict, game: Path, loose: dict, dindex: DescriptorIndex, videos: dict, text: dict
+                    ) -> list[dict]:
+    titles = goodie_titles(text)
+    records = []
+    for g in sorted(collect["goodies"], key=lambda x: x["number"]):
+        number = g["number"]
+        rec = base_record(f"goodie:{number:03d}", "goodie", titles.get(number) or f"goodie {number}", g["archive"],
+                          g["sha"], envelope="lvlr-chunk(GDIE)", offset=None, length=0, raw_sha=g["sha"],
+                          sha_scope="stored goodie archive", parser=TOOL + ":collect_chunk", chunk_path=[g["chunk"]])
+        rec["goodie"] = {"number": number, "goodieType": GOODIE_TYPES.get(g["type"], str(g["type"])),
+                         "archive": g["archive"]}
+        rec["provenance"]["loader"] = L_GOODIES
+        if number in titles:
+            rec["description"] = {"text": titles[number], "evidence": "english.dat entry GOODIE_TEXT_1_TITLE + the "
+                                  "goodie's text offset (" + L_GOODIE_TITLE + "; " + L_FOLLOWING + ")"}
+        for did in g["descriptors"]:
+            rec["relationships"].append(relation("shows-texture", did, "resolved", [evidence(
+                "loader-code", L_GOODIES + " -> " + L_TEX_DESERIALIZE, "the goodie's texture records")]))
+        if g["meshName"]:
+            target = loose.get(f"data/resources/meshes/m_{g['meshName']}.aya".casefold())
+            rec["relationships"].append(relation("shows-mesh", target["id"] if target else None,
+                                                 "resolved" if target else "unresolved", [evidence(
+                    "loader-code", L_GOODIES + " -> " + L_MESH_DESERIALIZE,
+                    "a named MESH record opens data\\resources\\meshes\\m_<name>.aya")], targetName=g["meshName"]))
+        if rec["goodie"]["goodieType"] == "fmv":
+            if 201 <= number <= 232:
+                n = 33 if number == 232 else number - 200
+                names = [f"cutscenes/{n:02d}", f"cutscenes/{n:02d}_small"]
+                rule = "goodies 201-232 play MakeCutsceneName(n): cutscenes\\%02d.vid, else cutscenes\\%02d_small.vid"
+            else:
+                names = ["UsTheMovie"] if number == 77 else ["GILL_M_on_a_fork"]
+                rule = "goodie 77 plays UsTheMovie, every other FMV goodie GILL_M_on_a_fork"
+            target = next((videos[k] for k in (f"video:data/video/{n}.vid".casefold() for n in names) if k in videos), None)
+            rec["relationships"].append(relation("plays-video", target, "resolved" if target else "unresolved",
+                                                 [evidence("loader-code", L_GOODIE_FMV + "; " + L_CUTSCENE_NAME + "; "
+                                                           + L_FMV_PLAY, rule)]))
+        if rec["goodie"]["goodieType"] == "level":
+            level = {66: 901, 67: 902, 68: 903, 69: 904, 70: 905}.get(number, 901)
+            rec["relationships"].append(relation("opens-level", f"level:{level:03d}", "resolved", [evidence(
+                "loader-code", L_GOODIE_LEVEL, "goodies 66-70 open levels 901-905 (default 901)")]))
+        records.append(rec)
+    return records
+
+
+def goodie_titles(text: dict) -> dict[int, str]:
+    """get_goodie_title: English entry GOODIE_TEXT_1_TITLE followed by the sum of the earlier goodies' text counts."""
+    english = text.get("english")
+    symbol_ids = text.get("symbols", {})
+    first = symbol_ids.get("GOODIE_TEXT_1_TITLE")
+    if not english or first is None:
+        return {}
+    entries = english["entries"]
+    start = next((i for i, e in enumerate(entries) if e["id"] == first), None)
+    if start is None:
+        return {}
+
+    def num_texts(n: int) -> int:
+        if n > 77:
+            return 0
+        if n > 65:
+            return 9
+        return 12 if n <= 7 else 9
+
+    titles, offset = {}, 0
+    for n in range(78):
+        if start + offset < len(entries) and entries[start + offset]["text"]:
+            titles[n] = entries[start + offset]["text"]
+        offset += num_texts(n)
+    return titles
+
+
+def link_imposters(collect: dict, descriptors_by_id: dict) -> None:
+    for row in collect["imposters"]:
+        mesh_ids = collect["meshIds"].get(row["archive"], {})
+        for did in row["descriptors"]:
+            desc = descriptors_by_id[did]
+            for imp in row["imposters"]:
+                target = mesh_ids.get(imp["meshResourceId"])
+                desc["relationships"].append(relation(
+                    "imposter-of-mesh", target, "resolved" if target else "unresolved",
+                    [evidence("loader-code", L_IMPOSTERS + " -> " + L_IMPOSTER_CREATE + " -> " + L_MESH_BY_ID,
+                              "IMSH resource id matched to the runtime id in this archive's MESH record (PMS2 +300)"),
+                     evidence("data", row["archive"], f"IMPT label {imp['storedLabel']!r}")],
+                    archive=row["archive"].casefold(), meshResourceId=imp["meshResourceId"]))
+
+
+def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], meshes_by_id: dict) -> tuple[list, list]:
+    """WRES Unit/Feature placements joined through default physics.dat to the archive's named MESH and loose CMSH."""
+    physics_path = game / "data" / "default physics.dat"
+    if not physics_path.is_file():
+        return [], []
+    physics_bytes = read_install_file(physics_path)
+    physics = meshcensus._physics_mesh_definitions(physics_bytes)
+    physics_sha = sha256(physics_bytes)
+    unit_shell = {u["definition"]: u for u in physics["unitDefinitions"]}
+    definitions = []
+    for name, cands in physics["definitions"].items():
+        rec = base_record(f"definition:{fold(name)}", "definition", name, "data/default physics.dat", physics_sha,
+                          envelope="physics-statement-table", offset=None, length=0, raw_sha=physics_sha,
+                          sha_scope="whole definitions file", parser="tools/cmsh_animation_usage_census.py:"
+                          "_physics_mesh_definitions")
+        rec["provenance"]["loader"] = L_PHYSICS
+        shell = unit_shell.get(name)
+        rec["definition"] = {"kinds": sorted({"unit" if c["physicsRecordType"] == 1 else "feature" for c in cands}),
+                             "memberShell": shell["memberShell"] if shell else None,
+                             "meshNames": [c["mesh"] for c in cands]}
+        for c in cands:
+            target = loose.get("data/resources/meshes/" + meshcensus._loose_mesh_key(c["mesh"]))
+            rec["relationships"].append(relation(
+                "uses-mesh", target["id"] if target else None, "resolved" if target else "unresolved",
+                [evidence("data", "data/default physics.dat", f"record type {c['physicsRecordType']} field "
+                          f"{c['meshFieldId']} names mesh {c['mesh']!r} (onslaught-preservation "
+                          "formats/wres-instance-join.md)")], targetName=c["mesh"]))
+        definitions.append(rec)
+    def_by_name = {d["name"]: d for d in definitions}
+    placements = []
+    archive_by_rel = {a["source"]["container"]: a for a in archives}
+    for rel, wres in sorted(collect["wres"].items()):
+        arc = archive_by_rel[rel]
+        level = arc["archive"].get("level")
+        if level is None:
+            continue
+        named = {meshcensus._normalized_mesh_identity(m["name"]): m for m in arc["archive"]["meshChunks"] if m.get("name")}
+        try:
+            wrld = meshcensus._chunk_payload(wres, "WRLD", rel)
+        except ValueError:
+            continue
+        for wc in aai.parse_top_level_chunks(wrld):
+            if wc.tag not in WORLD_KINDS:
+                continue
+            body = wrld[wc.offset + 8:wc.offset + 8 + wc.size]
+            scanned = meshcensus._scan_wres_definition_instances(body, physics["definitions"], f"{level:03d}", wc.tag)
+            for inst in scanned["instances"]:
+                pid = f"placement:{level:03d}:{wc.tag.lower()}@{inst['recordOffset']}"
+                rec = base_record(pid, "placement", inst["name"] or inst["definition"], rel,
+                                  arc["source"]["containerSha256"], envelope="lvlr-chunk(WRES/WRLD/" + wc.tag + ")",
+                                  offset=inst["recordOffset"], length=0, raw_sha=arc["sha256"],
+                                  sha_scope="inflated archive (placements are not hashed separately)",
+                                  parser="tools/cmsh_animation_usage_census.py:_scan_wres_definition_instances")
+                rec["provenance"]["loader"] = L_WORLD
+                rec["placement"] = {"level": level, "world": wc.tag, "definition": inst["definition"],
+                                    "thingType": inst["thingType"], "position": inst["position"],
+                                    "orientation": inst["orientation"], "allegiance": inst["allegiance"],
+                                    "active": inst["active"], "script": inst["script"] or None,
+                                    "spawnScript": inst["spawnScript"] or None}
+                d = def_by_name.get(inst["definition"])
+                rec["relationships"].append(relation("instance-of", d["id"] if d else None,
+                                                     "resolved" if d else "unresolved", [evidence(
+                        "data", rel, "the placement record's definition string names a physics definition "
+                        "(onslaught-preservation formats/wres-instance-join.md)")]))
+                exact = []
+                for cand in inst["physicsMeshCandidates"]:
+                    row = named.get(meshcensus._normalized_mesh_identity(cand["mesh"]))
+                    if row and row.get("target"):
+                        exact.append(row)
+                if len(exact) == 1:
+                    rec["relationships"].append(relation("uses-mesh", exact[0]["target"], "resolved", [
+                        evidence("data", "data/default physics.dat", "definition mesh field"),
+                        evidence("loader-code", L_READ_RESOURCES + " -> " + L_MESH_DESERIALIZE,
+                                 f"this archive's MESH chunk {exact[0]['chunk']} loads that mesh")]))
+                else:
+                    rec["relationships"].append(relation("uses-mesh", None, "unresolved", [evidence(
+                        "data", "data/default physics.dat", f"{len(exact)} same-archive named MESH candidates")]))
+                if inst["script"]:
+                    script = f"data/MissionScripts/level{level:03d}/{inst['script']}.msl"
+                    rec["relationships"].append(relation("script-source", "script:" + script.casefold(),
+                                                         "name-match", [evidence(
+                            "data", rel, "placement script string equals the .msl file stem in the level's "
+                            "MissionScripts folder (the runtime script owner is not established)")]))
+                placements.append(rec)
+    return definitions, placements
+
+
+PAR_TEXTURE_PREFIX = 32  # CDXParticleTexture::Get looks up path + 32 ("C:\dev\Onslaught2\data\textures\")
+
+
+def catalog_particles(game: Path, files: list[dict], dindex: DescriptorIndex) -> list[dict]:
+    records = []
+    for row in files:
+        if row["family"] != "particle-set-par":
+            continue
+        rel = row["path"]
+        data = read_install_file(game / rel)
+        lines = data.decode("latin-1").splitlines()
+        blocks, current = [], None
+        for line in lines:
+            key, _, value = line.partition(" ")
+            if key == "Particle_Descriptor_Type":
+                current = {"type": int(value), "fields": []}
+                blocks.append(current)
+            elif current is not None:
+                current["fields"].append((key, value))
+        for ordinal, block in enumerate(blocks):
+            name = next((v for k, v in block["fields"] if k == "Particle_Descriptor_Name"), "")
+            rec = base_record(f"effect:{rel.casefold()}#{ordinal}", "effect", name, rel, sha256(data),
+                              envelope="token-archive-text", offset=None, length=0, raw_sha=sha256(data),
+                              sha_scope="whole particle-set file", parser=TOOL + ":catalog_particles",
+                              chunk_path=[ordinal])
+            rec["provenance"]["loader"] = L_PARTICLES + "; " + L_PARTICLE_READ
+            refs = [v for k, v in block["fields"] if k in ("Initial", "Death", "Mover") and v != "NONE"]
+            textures, mode = [], None
+            for key, value in block["fields"]:
+                if key == "Blend_Mode":
+                    mode = int(value)
+                elif key == "Texture" and len(value) > PAR_TEXTURE_PREFIX:
+                    textures.append((value, mode))
+            rec["effect"] = {"descriptorType": block["type"], "textures": [t for t, _m in textures],
+                             "references": refs}
+            for path, mode in textures:
+                lookup = path[PAR_TEXTURE_PREFIX:]
+                # CParticleDescriptor reads Texture as Get(sval, mBlendMode + 1); Get's format is A4R4G4B4 for
+                # modes 2-3, else R5G6B5. Without an earlier Blend_Mode the member's value is not established.
+                fmt = None if mode is None else (2 if 2 <= mode + 1 <= 3 else 5)
+                rec["relationships"].append(find_relation(
+                    "uses-texture", dindex.find(lookup, fmt, 1),
+                    [evidence("data", rel, f"Texture token of descriptor {name!r} (Blend_Mode {mode})"),
+                     evidence("loader-code", cite("ParticleDescriptor.cpp", "texture token: Get(sval, mBlendMode + 1)",
+                                                  "n/a") + " -> " + L_PARTICLE_TEX + " -> " + L_TEX_FIND,
+                              "name = path + 32; format A4R4G4B4 when Blend_Mode + 1 is 2-3, else R5G6B5; mip "
+                              "levels 1" + ("" if mode is not None else "; no Blend_Mode before the texture, so "
+                                            "only name and levels are matched"))],
+                    targetName=lookup, requestedFormat=fmt))
+            records.append(rec)
+    return records
+
+
+CODE_TEXTURE_RE = re.compile(r'\b(FindTexture|GetTextureByName)\(\s*"((?:[^"\\]|\\.)+)"\s*(,[^;]*?)?\)\s*[;,)]')
+CODE_MESH_RE = re.compile(r'\bGetMesh\(\s*"((?:[^"\\]|\\.)+)"')
+FUNCTION_RE = re.compile(r"^(?P<sig>.*?\b(?P<name>[A-Za-z_][\w:~]*)\s*\([^;]*)//\s*FUNCTION:\s*(?P<va>0x[0-9a-fA-F]+)")
+
+
+def code_int(token: str) -> int | None:
+    token = token.strip()
+    if re.fullmatch(r"-?\d+", token):
+        return int(token)
+    if token.startswith("TEXFMT_"):
+        names = {v: k for k, v in TEX_FORMAT_NAMES.items()}
+        return names.get(token[7:])
+    return {"TEX_NORMAL": 0}.get(token)
+
+
+def code_references(decomp: Path | None) -> dict:
+    """Literal texture and mesh names passed to the lookups in the decompilation's sources (optional input)."""
+    refs = {"textures": [], "meshes": [], "source": None}
+    if decomp is None:
+        return refs
+    src = decomp / "src"
+    refs["source"] = "onslaught-decomp src/ (" + (git_head_of(decomp) or "unknown commit") + ")"
+    for path in sorted(src.glob("*.cpp"), key=lambda p: p.name.casefold()):
+        function = None
+        for number, line in enumerate(path.read_text(encoding="latin-1").splitlines(), 1):
+            m = FUNCTION_RE.match(line)
+            if m:
+                function = f"{m.group('name')} @{m.group('va').lower()}"
+            for m in CODE_TEXTURE_RE.finditer(line):
+                args = [a for a in (m.group(3) or "").lstrip(",").split(",") if a.strip()]
+                values = [code_int(a) for a in args]
+                if m.group(1) == "GetTextureByName":
+                    fmt = values[0] if len(values) > 0 else 0
+                    levels = values[2] if len(values) > 2 else -1
+                else:
+                    fmt = values[0] if len(values) > 0 else None
+                    levels = values[2] if len(values) > 2 else None
+                refs["textures"].append({"name": m.group(2).replace("\\\\", "\\"), "format": fmt, "levels": levels,
+                                         "site": f"{DECOMP} src/{path.name}:{number} {function or '(file scope)'}",
+                                         "call": m.group(1)})
+            for m in CODE_MESH_RE.finditer(line):
+                refs["meshes"].append({"name": m.group(1).replace("\\\\", "\\"),
+                                       "site": f"{DECOMP} src/{path.name}:{number} {function or '(file scope)'}"})
+    return refs
+
+
+def git_head_of(path: Path) -> str | None:
+    try:
+        return subprocess.run(["git", "-C", str(path), "rev-parse", "--short", "HEAD"], capture_output=True,
+                              text=True, check=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
+def link_code_references(refs: dict, dindex: DescriptorIndex, descriptors_by_id: dict, loose: dict,
+                         stats: collections.Counter) -> list[dict]:
+    unresolved = []
+    for ref in refs["textures"]:
+        found = dindex.find(ref["name"], ref["format"], ref["levels"])
+        stats["codeTextureSites"] += 1
+        if not found:
+            stats["codeTextureSitesUnresolved"] += 1
+            unresolved.append(ref)
+        for d in found:
+            d["relationships"].append(relation("named-by-code", None, "code-site", [evidence(
+                "loader-code", ref["site"], f"{ref['call']}(\"{ref['name']}\", format {ref['format']}, levels "
+                f"{ref['levels']}) finds this loaded texture by name" + (
+                    "" if ref["format"] is not None and ref["levels"] is not None else
+                    " (non-literal format or levels: name-only match)"))]))
+    for ref in refs["meshes"]:
+        target = loose.get("data/resources/meshes/" + meshcensus._loose_mesh_key(ref["name"]))
+        stats["codeMeshSites"] += 1
+        if target is None:
+            stats["codeMeshSitesUnresolved"] += 1
+            continue
+        target["relationships"].append(relation("named-by-code", None, "code-site", [evidence(
+            "loader-code", ref["site"], f"CMesh::GetMesh(\"{ref['name']}\") names this mesh")]))
+    return unresolved
+
+
+LANGUAGE_LANES = ("english", "french", "german", "spanish", "italian")
+
+
+def read_text_tables(game: Path, files: list[dict]) -> dict:
+    """Language tables (entries with id, text and voice name) and the text.stf symbol ids."""
+    out: dict = {"tables": {}, "symbols": {}}
+    for row in files:
+        if row["family"] == "language-dat":
+            path = game / row["path"]
+            data = read_install_file(path)
+            lang = language_dat_decode.parse_lang_dat(path)
+            entries = [language_dat_decode.entry_record(lang, data, e) for e in lang.entries]
+            out["tables"][PurePosixPath(row["path"]).stem.casefold()] = {"path": row["path"], "sha": sha256(data),
+                                                                          "entries": entries, "version": lang.ver}
+    stf = game / "data" / "MissionScripts" / "text" / "text.stf"
+    if stf.is_file():
+        out["symbols"] = {name: ident for ident, name in language_dat_decode.parse_text_stf(stf).items()}
+    out["english"] = out["tables"].get("english")
+    return out
+
+
+def link_voice(text: dict, audio_by_path: dict, stats: collections.Counter) -> None:
+    names = {ident: name for name, ident in text["symbols"].items()}
+    for lane in LANGUAGE_LANES:
+        table = text["tables"].get(lane)
+        if not table:
+            continue
+        for entry in table["entries"]:
+            if not entry["audio"]:
+                continue
+            path = f"data/sounds/{lane}/messagebox/{entry['audio']}.ogg".casefold()
+            rec = audio_by_path.get(path)
+            stats["voiceEntries"] += 1
+            if rec is None:
+                stats["voiceEntriesWithoutFile"] += 1
+                continue
+            stats["voiceFilesLinked"] += 1
+            rec["description"] = {"text": entry["text"], "evidence": f"{table['path']} entry {entry['hex']} "
+                                  f"({names.get(entry['id']) or 'no text.stf symbol'}) names this sound; "
+                                  f"{L_SOUNDNAME} -> {L_MSGBOX} plays data\\sounds\\<language>\\messagebox\\<name>.ogg"}
+            rec["audio"]["textId"] = entry["id"]
+            rec["audio"]["textSymbol"] = names.get(entry["id"])
+
+
+def catalog_text_inventory(game: Path, files: list[dict], text: dict) -> list[dict]:
+    records = []
+    for row in files:
+        fam, rel = row["family"], row["path"]
+        if fam not in ("mission-script-msl", "mission-text-txt", "stf-text-table", "language-dat", "sfx-catalog"):
+            continue
+        data = read_install_file(game / rel)
+        atype = {"mission-script-msl": "script", "mission-text-txt": "mission-text", "stf-text-table": "text-symbols",
+                 "language-dat": "text-table", "sfx-catalog": "sound-table"}[fam]
+        rec = base_record(f"{atype}:{rel.casefold()}", atype, PurePosixPath(rel).name, rel, sha256(data),
+                          envelope="file", offset=0, length=len(data), raw_sha=sha256(data), sha_scope="whole file",
+                          parser=TOOL + ":catalog_text_inventory")
+        info: dict = {"lines": data.count(b"\n")}
+        level = re.match(r"data/missionscripts/level(\d{3})/", rel, re.IGNORECASE)
+        if level:
+            info["levelFolder"] = int(level.group(1))
+        if fam == "stf-text-table":
+            info["defines"] = len(re.findall(rb"(?m)^\s*#define\s", data))
+            rec["provenance"]["loader"] = "build-time #include (FrontEndText.cpp, MenuItem.cpp, FEPGoodies.cpp)"
+        elif fam == "language-dat":
+            table = text["tables"].get(PurePosixPath(rel).stem.casefold())
+            if table:
+                info.update(entries=len(table["entries"]), withVoice=sum(1 for e in table["entries"] if e["audio"]),
+                            version=table["version"])
+            rec["provenance"]["loader"] = L_TEXT_LOAD
+            rec["provenance"]["parser"] = "tools/language_dat_decode.py:parse_lang_dat"
+        elif fam == "mission-script-msl":
+            info["includes"] = re.findall(r'(?m)^\s*#include\s+"([^"]+)"', data.decode("latin-1"))[:32]
+            rec["provenance"]["loader"] = "runtime reader not established (compiled scripts travel in the level data)"
+        elif fam == "sfx-catalog":
+            rec["provenance"]["loader"] = L_SFX
+        else:
+            rec["provenance"]["loader"] = "runtime owner unknown"
+        rec["file"] = info
+        records.append(rec)
+    return records
+
+
+def catalog_payloads(collect: dict) -> list[dict]:
+    records = []
+    for p in collect["payloads"]:
+        rec = base_record(f"level-payload:{p['archive'].casefold()}#{p['chunk']}", "level-payload",
+                          f"{p['tag']} of {PurePosixPath(p['archive']).name}", p["archive"], p["sha"],
+                          envelope=f"lvlr-chunk({p['tag']})", offset=p["offset"], length=p["length"],
+                          raw_sha=p["payloadSha"], sha_scope=f"{p['tag']} chunk payload", parser=TOOL + ":collect_chunk",
+                          chunk_path=[p["chunk"]])
+        rec["provenance"]["loader"] = PAYLOAD_LOADERS.get(p["tag"], "unknown tag (traced and skipped)")
+        rec["payload"] = {"tag": p["tag"], "innerTags": p["innerTags"],
+                          "structure": "placements itemised (see placement records)" if p["tag"] == "WRES"
+                          else "not itemised yet"}
+        records.append(rec)
+    return records
+
+
+def catalog_levels(archives: list[dict], placements: list[dict], videos: list[dict], game: Path, files: list[dict]
+                   ) -> list[dict]:
+    headers = {}
+    wh_path = game / "data" / "worldheaders.dat"
+    if wh_path.is_file():
+        for r in worldheaders_decode.parse_worldheaders(read_install_file(wh_path)).records:
+            headers[r.world_id] = r.configs
+    folders = collections.Counter()
+    for row in files:
+        m = re.match(r"data/missionscripts/level(\d{3})/", row["path"], re.IGNORECASE)
+        if m:
+            folders[int(m.group(1))] += 1
+    by_level = collections.defaultdict(list)
+    for p in placements:
+        by_level[p["placement"]["level"]].append(p)
+    briefings = collections.defaultdict(list)
+    for v in videos:
+        for r in v["relationships"]:
+            if r["type"] == "briefing-for-level":
+                briefings[int(r["target"].split(":")[1])].append(v["id"])
+    levels = []
+    numbers = sorted({a["archive"]["level"] for a in archives if a["archive"].get("level") is not None}
+                     | set(headers) | set(folders))
+    for n in numbers:
+        arc = next((a for a in archives if a["archive"].get("level") == n), None)
+        rec = base_record(f"level:{n:03d}", "level", f"level {n:03d}", arc["source"]["container"] if arc else
+                          "data/worldheaders.dat", arc["source"]["containerSha256"] if arc else "0" * 64,
+                          envelope="logical", offset=None, length=0, raw_sha=arc["sha256"] if arc else "0" * 64,
+                          sha_scope="the level's inflated resource archive" if arc else "none (no resource archive)",
+                          parser=TOOL + ":catalog_levels")
+        defs = collections.Counter(p["placement"]["definition"] for p in by_level.get(n, []))
+        rec["level"] = {"resourceArchive": arc["id"] if arc else None, "worldHeaderConfigurations": headers.get(n),
+                        "missionScriptFiles": folders.get(n, 0), "placements": len(by_level.get(n, [])),
+                        "placementsByDefinition": dict(defs.most_common()),
+                        "meshesLoaded": len(arc["archive"]["meshChunks"]) if arc else 0,
+                        "briefingVideos": briefings.get(n, [])}
+        if arc:
+            rec["relationships"].append(relation("resources", arc["id"], "resolved", [evidence(
+                "loader-code", L_RESOURCE_NAME, "level N reads data\\Resources\\%03d_res_%s.aya")]))
+        if n in headers:
+            rec["relationships"].append(relation("world-header", None, "resolved", [evidence(
+                "loader-code", L_HEADERS, f"worldheaders.dat record world_id {n}")]))
+        levels.append(rec)
+    return levels
+
+
+LEVEL_ARCHIVE_RE = re.compile(r"data/resources/(\d{3})_res_pc\.aya$")
+
+
+def compute_usage(assets: list[dict]) -> None:
+    """Per-asset usage from the resolved relationships (derived; every fact traces to a relationship).
+
+    Placements are counted per (mesh, level) pair once, and a texture record only counts the levels whose
+    archive carries it, so per-archive copies of one texture never multiply a placement.
+    """
+    by_id = {a["id"]: a for a in assets}
+    pair_count: collections.Counter = collections.Counter()
+    pair_defs: dict[tuple, set] = collections.defaultdict(set)
+    mesh_extra: dict[str, dict] = collections.defaultdict(lambda: {"goodies": set(), "archiveLevels": set(),
+                                                                    "imposterLevels": set(), "codeSites": 0})
+    for a in assets:
+        for r in a["relationships"]:
+            targets = [r["target"]] if r.get("target") else (r.get("targets") or [])
+            for t in targets:
+                if not t.startswith("mesh:"):
+                    continue
+                if a["type"] == "placement" and r["type"] == "uses-mesh":
+                    key = (t, a["placement"]["level"])
+                    pair_count[key] += 1
+                    pair_defs[key].add(a["placement"]["definition"])
+                elif a["type"] == "goodie":
+                    mesh_extra[t]["goodies"].add(a["goodie"]["number"])
+                elif a["type"] == "resource-archive" and r["type"] == "loads-mesh" and a["archive"].get("level") is not None:
+                    mesh_extra[t]["archiveLevels"].add(a["archive"]["level"])
+                elif r["type"] == "imposter-of-mesh":
+                    m = LEVEL_ARCHIVE_RE.search(r["archive"])
+                    if m:
+                        mesh_extra[t]["imposterLevels"].add(int(m.group(1)))
+        if a["type"] == "mesh":
+            mesh_extra[a["id"]]["codeSites"] += sum(1 for r in a["relationships"] if r["type"] == "named-by-code")
+    pairs_of_mesh: dict[str, set] = collections.defaultdict(set)
+    for key in pair_count:
+        pairs_of_mesh[key[0]].add(key)
+
+    def from_pairs(pairs: set) -> dict:
+        defs = set()
+        for key in pairs:
+            defs |= pair_defs[key]
+        return {"placements": sum(pair_count[k] for k in pairs), "levels": sorted({f"{k[1]:03d}" for k in pairs}),
+                "definitions": sorted(defs)}
+
+    basis = "derived from resolved relationships in this catalogue; placements counted once per (mesh, level)"
+    for a in assets:
+        if a["type"] != "mesh":
+            continue
+        extra = mesh_extra[a["id"]]
+        u = {**from_pairs(pairs_of_mesh[a["id"]]), "goodies": sorted(extra["goodies"]),
+             "archiveLevels": [f"{n:03d}" for n in sorted(extra["archiveLevels"])],
+             "imposterLevels": [f"{n:03d}" for n in sorted(extra["imposterLevels"])], "codeSites": extra["codeSites"]}
+        a["usage"] = {**u, "summary": usage_sentence(u, "mesh"), "basis": basis}
+    desc_state: dict[str, dict] = {}
+    for a in assets:
+        if a["type"] != "texture-descriptor":
+            continue
+        td = a["textureDescriptor"]
+        levels = set()
+        for o in td["occurrences"]:
+            m = LEVEL_ARCHIVE_RE.search(o["archive"].casefold())
+            if m:
+                levels.add(int(m.group(1)))
+        desc_state[a["id"]] = {"pairs": set(), "levelsCarried": levels, "meshes": set(), "effects": set(),
+                               "goodies": set(), "archives": {o["archive"] for o in td["occurrences"]},
+                               "roles": {{"TEXT": "level/front-end texture", "IMPS": "imposter atlas", "PLAT": "font",
+                                          "GDIE": "goodie"}[o.get("via", "TEXT")] for o in td["occurrences"]},
+                               "codeSites": sum(1 for r in a["relationships"] if r["type"] == "named-by-code")}
+    for a in assets:
+        for r in a["relationships"]:
+            targets = [r["target"]] if r.get("target") else (r.get("targets") or [])
+            for t in targets:
+                st = desc_state.get(t)
+                if st is None:
+                    continue
+                if a["type"] == "mesh" and r["type"] == "uses-texture":
+                    st["meshes"].add(a["id"])
+                    st["pairs"] |= {k for k in pairs_of_mesh[a["id"]] if k[1] in st["levelsCarried"]}
+                elif a["type"] == "effect":
+                    st["effects"].add(a["name"])
+                elif a["type"] == "goodie":
+                    st["goodies"].add(a["goodie"]["number"])
+
+    def texture_usage(states: list[dict]) -> dict:
+        pairs, out = set(), {"meshes": set(), "effects": set(), "goodies": set(), "archives": set(), "roles": set()}
+        code = 0
+        for st in states:
+            pairs |= st["pairs"]
+            code += st["codeSites"]
+            for k in out:
+                out[k] |= st[k]
+        u = {**from_pairs(pairs), **{k: sorted(v) for k, v in out.items()}, "codeSites": code}
+        u["archives"] = len(u["archives"])
+        return u
+
+    for a in assets:
+        if a["type"] == "texture-descriptor":
+            u = texture_usage([desc_state[a["id"]]])
+        elif a["type"] == "texture":
+            u = texture_usage([desc_state[d] for d in a.get("loadedByDescriptors", [])])
+        else:
+            continue
+        a["usage"] = {**u, "summary": usage_sentence(u, "texture"), "basis": basis}
+
+
+def usage_sentence(u: dict, kind: str) -> str:
+    parts = []
+    if u.get("definitions"):
+        names = u["definitions"]
+        parts.append(f"placed {u['placements']} times as {', '.join(names[:4])}"
+                     + (f" (+{len(names) - 4} more)" if len(names) > 4 else "")
+                     + f" in levels {', '.join(u['levels'][:8])}" + (" ..." if len(u["levels"]) > 8 else ""))
+    if kind == "mesh" and u.get("archiveLevels"):
+        parts.append(f"loaded by {len(u['archiveLevels'])} level archive(s)")
+    if kind == "mesh" and u.get("imposterLevels"):
+        parts.append(f"has imposters in {len(u['imposterLevels'])} level(s)")
+    if kind == "texture" and u.get("meshes"):
+        parts.append(f"on {len(u['meshes'])} mesh(es)")
+    if u.get("effects"):
+        parts.append(f"in {len(u['effects'])} particle effect(s)")
+    if u.get("goodies"):
+        parts.append("goodie " + ", ".join(str(g) for g in u["goodies"][:6]))
+    if u.get("codeSites"):
+        parts.append(f"named by {u['codeSites']} code site(s)")
+    roles = [r for r in u.get("roles", []) if r in ("font", "imposter atlas")]
+    if roles:
+        parts.append(" and ".join(roles))
+    if not parts and u.get("archives"):
+        parts.append(f"carried by {u['archives']} archive(s); no mesh, effect, goodie or code use established")
+    return "; ".join(parts) or "no use established"
+
+
 # -------------------------------------------------------------------------------------------------------- pipeline
-def build_catalog(game: Path) -> dict:
+def build_catalog(game: Path, decomp: Path | None = None) -> dict:
     files = walk_install(game)
     survey = build_survey(files)
     textures, texture_index = catalog_textures(game, files)
@@ -836,7 +1621,8 @@ def build_catalog(game: Path) -> dict:
         meshes.append(rec)
         animations.extend(anims)
         loose[rel.casefold()] = rec
-    archives, descriptors, embedded, archive_stats = catalog_archives(game, files, texture_index, loose)
+    collect = {"imposters": [], "platform": [], "goodies": [], "wres": {}, "payloads": [], "meshIds": {}}
+    archives, descriptors, embedded, archive_stats = catalog_archives(game, files, texture_index, loose, collect)
     for rel, stream, where in embedded:
         rec, anims, _uv = catalog_mesh(stream, asset_id=f"mesh:embedded:{rel.casefold()}#{where['chunk']}", name="",
                                        container=rel, container_sha=where["archiveSha"],
@@ -847,14 +1633,34 @@ def build_catalog(game: Path) -> dict:
         animations.extend(anims)
     link_mesh_textures(meshes, descriptors, archives)
     apply_tiling(meshes, descriptors, textures)
+    dindex = DescriptorIndex(descriptors)
+    descriptors_by_id = {d["id"]: d for d in descriptors}
+    link_imposters(collect, descriptors_by_id)
     audio = catalog_audio(game, files)
     video = catalog_video(game, files)
-    assets = archives + descriptors + textures + meshes + animations + audio + video
+    text = read_text_tables(game, files)
+    link_voice(text, {a["source"]["container"].casefold(): a for a in audio if a["source"]["envelope"] == "ogg"},
+               archive_stats)
+    goodies = catalog_goodies(collect, game, loose, dindex, {v["id"]: v["id"] for v in video}, text)
+    definitions, placements = catalog_world(collect, game, loose, archives, {m["id"]: m for m in meshes})
+    effects = catalog_particles(game, files, dindex)
+    refs = code_references(decomp)
+    unresolved_code = link_code_references(refs, dindex, descriptors_by_id, loose, archive_stats)
+    link_unloaded_mesh_names(textures, meshes)
+    inventory = catalog_text_inventory(game, files, text)
+    payloads = catalog_payloads(collect)
+    levels = catalog_levels(archives, placements, video, game, files)
+    assets = (levels + archives + payloads + descriptors + textures + meshes + animations + definitions + placements
+              + goodies + effects + audio + video + inventory)
+    compute_usage(assets)
     ids = collections.Counter(a["id"] for a in assets)
     duplicates = [i for i, n in ids.items() if n > 1]
     if duplicates:
         raise ValueError(f"duplicate asset ids: {duplicates[:5]}")
-    return {"files": files, "survey": survey, "assets": assets, "archiveStats": dict(archive_stats)}
+    return {"files": files, "survey": survey, "assets": assets, "archiveStats": dict(archive_stats),
+            "codeReferences": {"source": refs["source"], "textureSites": len(refs["textures"]),
+                               "meshSites": len(refs["meshes"]),
+                               "unresolvedTextureNames": sorted({r["name"] for r in unresolved_code})}}
 
 
 def build_coverage(catalog: dict) -> dict:
@@ -879,6 +1685,7 @@ def build_coverage(catalog: dict) -> dict:
         "installFiles": survey["files"], "installBytes": survey["bytes"],
         "filesInCataloguedFamilies": sum(f["files"] for f in survey["families"] if f["status"] == "catalogued"),
         "filesInParsedElsewhereFamilies": sum(f["files"] for f in survey["families"] if f["status"] == "parsed-elsewhere"),
+        "filesInInventoriedFamilies": sum(f["files"] for f in survey["families"] if f["status"] == "inventoried"),
         "filesInUnparsedFamilies": sum(f["files"] for f in survey["families"] if f["status"] == "unparsed"),
         "filesNotContent": sum(f["files"] for f in survey["families"] if f["status"] == "not-content"),
         "unclassified": survey["unclassified"],
@@ -888,17 +1695,23 @@ def build_coverage(catalog: dict) -> dict:
         "archiveStats": catalog["archiveStats"],
         "textureFilesReferencedByADescriptor": sum(1 for t in textures if t.get("loadedByDescriptors")),
         "textureFilesUsedByAMesh": sum(1 for t in textures if t.get("referencedBy")),
+        "textureFilesWithAnEstablishedUse": sum(1 for t in textures if t["usage"]["meshes"] or t["usage"]["effects"]
+                                                or t["usage"]["goodies"] or t["usage"]["codeSites"]
+                                                or {"font", "imposter atlas"} & set(t["usage"]["roles"])),
+        "textureFilesNotLoaded": sorted(t["source"]["container"] for t in textures if not t.get("loadedByDescriptors")),
+        "codeReferences": catalog["codeReferences"],
+        "placementsByLevel": dict(sorted(collections.Counter(
+            f"{a['placement']['level']:03d}" for a in assets if a["type"] == "placement").items())),
         "textureTiling": dict(collections.Counter(t["upscale"]["tiling"]["status"] for t in textures)),
         "families": file_coverage,
-        "unparsedFamilies": [f["family"] for f in survey["families"] if f["status"] in ("unparsed", "parsed-elsewhere")],
+        "unparsedFamilies": [f["family"] for f in survey["families"] if f["status"] in ("unparsed", "inventoried")],
         "notYetCatalogued": [
-            "GDIE goodie archives: textures/meshes inside 232 goodie archives (CFEPGoodies::Deserialise) are counted "
-            "as archive chunks only",
-            "WRES/ERES/IMPS/LNDS/SURF/SSHD level payloads (world placements, entities, imposters, terrain, water, "
-            "static shadows): level/map content is not yet itemised",
-            "particle sets (*.par) and their texture references",
-            "mission scripts (*.msl), mission text and STF tables, language tables",
-            "HUD/front-end texture use by code (FindTexture/GetTextureByName call sites) as relationships",
+            "WRES records other than the Unit/Feature definition family (waypoints, triggers, paths, other things)",
+            "ERES (engine/terrain), SURF (water), SSHD (static shadows), VSDS, PMIB, DMKR payload structure: "
+            "itemised as payload records with hashes only",
+            "terrain mixer textures and other names built with sprintf in code (only literal lookups are joined)",
+            "mission script contents (.msl), mission text, sounds.sfx event table, battle engine configurations",
+            "Dial.raw and the splash TGA",
         ],
         "notes": {"loaderCitations": families["cmsh-mesh"]["loader"]},
     }
@@ -1027,6 +1840,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--game", type=Path, default=os.environ.get("BEA_GAME"))
     parser.add_argument("--out", type=Path, default=ROOT / "local-data" / "content-catalog")
+    parser.add_argument("--decomp", type=Path, help="optional onslaught-decomp checkout: adds texture and mesh "
+                        "names that game code looks up literally")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args(argv)
     if args.self_test:
@@ -1039,7 +1854,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--out must be a git-ignored directory below this checkout's local-data/")
     if os.path.commonpath((game, out)) == str(game):
         parser.error("--out must not be inside the game folder")
-    catalog = build_catalog(game)
+    catalog = build_catalog(game, Path(os.path.abspath(args.decomp)) if args.decomp else None)
     coverage = build_coverage(catalog)
     for path in write_outputs(out, game, catalog, coverage):
         print(path)
