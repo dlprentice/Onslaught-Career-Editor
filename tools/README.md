@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-27 (single-archive texture catalog; earlier bounded level, texture and mission-script metadata)
+Last updated: 2026-10-28 (content catalogue phase 1; earlier: single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -70,6 +70,15 @@ publish, sign, or install anything by themselves.
   mirror-hash-verified join across loose CMSH pose/skeleton lanes, numeric-LVLR
   `MESH` membership, and authored MSL animation calls. Its JSON output is
   restricted to ignored `local-lab` or `.artifacts` paths.
+- `content_catalog.py` surveys every file of a selected retail install (family, count, size, the game function that
+  reads it, and whether a repository parser already reads it) and writes the content catalogue: one JSON record per
+  texture file, archive texture record, mesh (loose and embedded), animation mode, sample, Ogg file, film and
+  resource archive, with container coordinates, SHA-256, format metadata, an upscale section and provenance
+  ([schema](content_catalog.schema.json)). Relationships (archive to mesh, texture record to its DDS file, mesh slot
+  to texture record, animation to mesh, briefing film to level) are emitted only from a loader rule in the public
+  decompilation or from the data, and each names that evidence; unresolved links stay explicit. Output is accepted
+  only below the ignored `local-data/`, and every generated file carries a marker that
+  `public_allowlist_safety_check.py` refuses, as it refuses any tracked `local-data/` path.
 - `export_game_assets.py`, `export_asset_catalog.py`,
   `export_language_corpus.py`, and `export_video_manifest.py` operate on
   user-supplied local inputs and write to a separate local output root.

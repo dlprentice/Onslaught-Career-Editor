@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dlprentice/Onslaught-Career-Editor/tools/content_catalog.schema.json",
+  "title": "Battle Engine Aquila content catalogue asset record (onslaught.content-catalog.asset.v1)",
+  "description": "One line of assets.jsonl written by tools/content_catalog.py. Generated records are retail-derived metadata (names, sizes, hashes) and stay in ignored local-data/. Relationships exist only with evidence; descriptions stay null unless evidenced.",
+  "type": "object",
+  "required": ["schema", "id", "type", "name", "source", "sha256", "sha256Scope", "description", "relationships",
+               "upscale", "provenance", "generatedRetailDerived"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "onslaught.content-catalog.asset.v1"},
+    "generatedRetailDerived": {"const": true,
+      "description": "Marks generated output; tools/public_allowlist_safety_check.py refuses any tracked file carrying it."},
+    "id": {"type": "string", "pattern": "^(archive|texture|texture-descriptor|mesh|animation|audio|video):.+",
+      "description": "Stable id. Files: <type>:<lower-cased install-relative path>; archive members: the container plus #chunk or #ordinal; texture records: name plus a payload-hash prefix; animations: <mesh id>/<ordinal>."},
+    "type": {"enum": ["resource-archive", "texture", "texture-descriptor", "mesh", "animation", "audio", "video"]},
+    "name": {"type": "string", "description": "The name the data stores (texture/mesh/sample name) or the file stem."},
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["container", "containerSha256", "envelope", "offset", "chunkPath", "length"],
+      "properties": {
+        "container": {"type": "string", "description": "Install-relative path of the file holding the asset."},
+        "containerSha256": {"$ref": "#/$defs/sha256"},
+        "envelope": {"type": "string", "description": "How the bytes are wrapped, e.g. aya-zlib-members(dds), lvlr-chunk(TEXT)."},
+        "offset": {"type": ["integer", "null"], "description": "Byte offset of the asset inside the decoded container."},
+        "chunkPath": {"type": "array", "items": {"type": "integer"}, "description": "Top-level chunk index (or sample ordinal) in the container."},
+        "length": {"type": "integer", "minimum": 0}
+      }
+    },
+    "sha256": {"$ref": "#/$defs/sha256"},
+    "sha256Scope": {"type": "string", "description": "Which bytes sha256 covers (e.g. inflated DDS file, CMSH stream, TEXT chunk payload)."},
+    "description": {
+      "type": "object", "additionalProperties": false, "required": ["text", "evidence"],
+      "properties": {"text": {"type": ["string", "null"]}, "evidence": {"type": ["string", "null"]}}
+    },
+    "relationships": {"type": "array", "items": {"$ref": "#/$defs/relationship"}},
+    "referencedBy": {"type": "array", "items": {"type": "string"},
+      "description": "Derived reverse index: mesh ids whose resolved uses-texture links reach this record."},
+    "loadedByDescriptors": {"type": "array", "items": {"type": "string"},
+      "description": "Derived reverse index (texture files): texture-descriptor ids whose pixels-from link resolves here."},
+    "upscale": {"type": ["object", "null"], "description": "Facts for HD successors and a rule-derived suggestion; never a visual review.",
+      "properties": {
+        "sourceResolution": {"type": "array", "items": {"type": ["integer", "null"]}},
+        "storedFormat": {"type": ["string", "null"]},
+        "sourceFormat": {"type": ["string", "null"], "description": "The format the runtime asked for (texture file name)."},
+        "mipLevels": {"type": "integer"},
+        "alpha": {"enum": ["none", "binary", "graded", "unknown"]},
+        "compressed": {"type": "boolean"},
+        "palette": {"type": "null", "description": "No palettised texture is stored; null until one is found."},
+        "premultipliedAlpha": {"type": ["boolean", "null"]},
+        "tiling": {"type": "object", "required": ["status", "uvRange", "meshes"],
+          "properties": {"status": {"enum": ["no-mesh-evidence", "within-0-1", "repeats-beyond-0-1"]},
+                         "uvRange": {"type": ["array", "null"], "items": {"type": "number"}, "minItems": 4, "maxItems": 4},
+                         "meshes": {"type": "integer"}, "evidence": {"type": "string"}}},
+        "suggestedTreatment": {"type": "array", "items": {"type": "string"}},
+        "treatmentBasis": {"type": "string"}
+      }
+    },
+    "provenance": {
+      "type": "object", "required": ["tool", "parser", "schemaVersion"],
+      "properties": {"tool": {"const": "tools/content_catalog.py"}, "parser": {"type": "string"},
+                     "loader": {"type": "string", "description": "The game function that reads this family (decompilation citation)."},
+                     "schemaVersion": {"const": 1}}
+    },
+    "archive": {"type": "object", "required": ["kind", "members", "topLevelChunks", "tagCounts", "meshChunks"],
+      "properties": {"kind": {"enum": ["level", "goodie", "base", "frontend", "loading", "unknown"]},
+                     "level": {"type": "integer"}, "goodie": {"type": "integer"}}},
+    "texture": {"type": "object", "required": ["status", "shelf", "frame", "width", "height", "storedFormat", "mips", "alpha"],
+      "properties": {"status": {"enum": ["valid", "unsupported", "malformed"]},
+                     "sourceFormatFromName": {"type": ["string", "null"]},
+                     "fileNameTruncated": {"type": "boolean"}, "mustbe": {"type": "boolean"}}},
+    "textureDescriptor": {"type": "object", "required": ["status", "occurrences"],
+      "properties": {"status": {"enum": ["parsed", "unparsed"]},
+                     "occurrences": {"type": "array", "items": {"type": "object", "required": ["archive", "chunk", "offset"]}}}},
+    "mesh": {"type": "object", "required": ["status", "parts", "vertices", "triangles", "textures", "hierarchy"],
+      "properties": {"status": {"enum": ["parsed", "partial", "unparsed"]},
+                     "textures": {"type": "array", "items": {"type": "object", "required": ["slot", "name", "requestedFormat", "uvRange"]}}}},
+    "animation": {"type": "object", "required": ["mode", "startFrame", "lastFrame", "frameCount", "rate", "skeleton"]},
+    "audio": {"type": "object", "required": ["status", "role"],
+      "properties": {"role": {"enum": ["music", "voice", "sound-effect"]}}},
+    "video": {"type": "object", "required": ["status"]}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "evidence": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "source", "rule"],
+      "properties": {
+        "kind": {"enum": ["loader-code", "data"], "description": "loader-code: a function in the public decompilation decides the link; data: the bytes themselves state it."},
+        "source": {"type": "string"}, "rule": {"type": "string"}
+      }
+    },
+    "relationship": {
+      "type": "object", "required": ["type", "target", "status", "evidence"],
+      "properties": {
+        "type": {"enum": ["resources-of-level", "loads-mesh", "loaded-by-archive", "pixels-from", "uses-texture",
+                          "has-animation", "animates", "briefing-for-level"]},
+        "target": {"type": ["string", "null"], "description": "Asset id, or level:NNN (targetKind logical-level); null when unresolved or several targets apply."},
+        "targets": {"type": ["array", "null"], "items": {"type": "string"}},
+        "status": {"enum": ["resolved", "resolved-per-archive", "unresolved", "unresolved-in-loading-archives"]},
+        "evidence": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/evidence"}}
+      }
+    }
+  }
+}
