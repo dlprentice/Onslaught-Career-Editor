@@ -17,9 +17,19 @@ public sealed record CeUpdateState(bool Verified, string? LatestVersion, CeUpdat
 /// writes configuration, or performs updates. Contract: Onslaught CE commit 72a44140c6db3e093cc07b1bed40a0584fdfecd2,
 /// port/updater/ce_launch.c (PUBLIC_KEY_HEX, check_for_update) and port/tools/sign_release.py.
 /// The signature authenticates exact feed bytes; it cannot establish when those bytes were published.
+/// While CE's automatic updating is suspended (0.1.7 onwards) no feed is published, and the companion's Home panel
+/// uses <see cref="SuspendedAsync"/>, which contacts nothing; the verifier stays for tests and a future design.
 /// </summary>
 public static class CeUpdateFeed
 {
+    public const string SuspendedMessage = "Automatic CE updates are suspended. Download 0.1.7 or later from " +
+        "github.com/dlprentice/onslaught-ce/releases and install it by hand into a new empty folder. Do not start a " +
+        "0.1.0–0.1.6 launcher to update it.";
+
+    /// <summary>The Home panel's manual-update answer: no network request, no version claim.</summary>
+    public static Task<CeUpdateState> SuspendedAsync(string? installedVersion, CancellationToken cancellationToken = default) =>
+        Task.FromResult(new CeUpdateState(false, null, CeUpdateAvailability.Unknown, SuspendedMessage));
+
     public const string FeedUrl = "https://github.com/dlprentice/onslaught-ce/releases/latest/download/latest.json";
     public const string SignatureUrl = FeedUrl + ".sig";
     public const string PublicKeyHex = "b6cf39b727c92cd8a1682c31f315a5d38427dce912e406ccbd4802f0f7634510";

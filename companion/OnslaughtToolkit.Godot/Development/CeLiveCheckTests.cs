@@ -98,14 +98,15 @@ public partial class CeLiveCheckTests : SceneTree
         string package = Path.Combine(owner, "package"), user = Path.Combine(owner, "user"), backups = Path.Combine(owner, "backups");
         Directory.CreateDirectory(package); Directory.CreateDirectory(backups); Directory.CreateDirectory(Path.Combine(user, "savegames"));
         string launcher = Path.Combine(package, "onslaught-ce"), baseline = Path.Combine(owner, "baseline.bes");
-        File.WriteAllText(launcher, "#!/bin/sh\n[ \"$#\" = 1 ] && [ \"$1\" = --version ] || exit 23\nprintf 'Onslaught CE v0.1.5, build workflow-fixture\\n'\n");
+        File.WriteAllText(launcher, "#!/bin/sh\n[ \"$#\" = 1 ] && [ \"$1\" = --version ] || exit 23\nprintf 'Onslaught CE v0.1.7, build workflow-fixture\\n'\n");
         File.SetUnixFileMode(launcher, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
         File.WriteAllText(Path.Combine(package, "onslaught-ce-launch"), "Owned inert package marker; never executed");
+        File.WriteAllText(Path.Combine(package, "README.txt"), "Onslaught CE 0.1.7 (preview)\n");
         File.Copy(fixture, baseline); File.Copy(fixture, Path.Combine(user, "savegames", "Companion Pilot.bes"));
         File.WriteAllText(Path.Combine(user, "ce.ini"), "update_check=0\nrecord_sessions=0\nfuture_kept=acceptance\n");
         string path = Path.Combine(root, "workflow-controls.json");
         File.WriteAllText(path, JsonSerializer.Serialize(new { owner, phase = "workflow", launcher, user, baseline, backups,
-            game = install.Game, expectedVersion = "0.1.5", launcherSha256 = Careers.SaveSession.Digest(File.ReadAllBytes(launcher)),
+            game = install.Game, expectedVersion = "0.1.7", launcherSha256 = Careers.SaveSession.Digest(File.ReadAllBytes(launcher)),
             baselineSha256 = Careers.SaveSession.Digest(File.ReadAllBytes(baseline)) }));
         ProcessStartInfo start = new(Environment.GetEnvironmentVariable("ONSLAUGHT_GODOT_HEADLESS") ??
             throw new IOException("ONSLAUGHT_GODOT_HEADLESS wrapper is required."))

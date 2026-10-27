@@ -192,14 +192,77 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
         return start;
     }
 
+    /// <summary>Where players are sent instead of starting an affected launcher.</summary>
+    public const string MigrationUrl = "https://github.com/dlprentice/onslaught-ce#manual-migration-from-affected-launchers";
+
+    /// <summary>
+    /// Released CE launchers 0.1.0 to 0.1.6 delete neighbouring "&lt;package folder&gt;.old-*" paths when they start,
+    /// even with update checks off, and CE's guidance is not to start them even to read a version. Before executing
+    /// anything, the package's README.txt header (written by package.py since 0.1.0) must name 0.1.7 or later. An
+    /// unreadable or missing header is refused: the companion cannot tell such a package is safe.
+    /// </summary>
+    public Outcome<string> CheckLauncherSafety() => CheckPackageSafety(Folder);
+
+    public static Outcome<string> CheckPackageSafety(string packageFolder)
+    {
+        string? version;
+        try
+        {
+            version = PackageVersion(packageFolder);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            version = null;
+        }
+        if (version is null)
+            return Outcome<string>.Refusal("The companion could not read this CE package's version from its README.txt, so it " +
+                "will not start it. Onslaught CE 0.1.0–0.1.6 launchers can delete neighbouring folders when they start. " +
+                "Install 0.1.7 or later by hand into a new empty folder: " + MigrationUrl);
+        if (IsAffectedVersion(version))
+            return Outcome<string>.Refusal($"This package is Onslaught CE {version}. Its launcher can delete neighbouring " +
+                "\"<program folder>.old-*\" paths when it starts, so the companion will not start it, not even to read its " +
+                "version. Keep the old folder and its neighbours untouched and install 0.1.7 or later by hand into a new " +
+                "empty folder: " + MigrationUrl);
+        return Outcome<string>.Success(version, "CE package " + version + " is not an affected launcher.");
+    }
+
+    /// <summary>The version on README.txt's first line ("Onslaught CE X.Y[.Z] (preview)"), or null.</summary>
+    public static string? PackageVersion(string packageFolder)
+    {
+        string path = Path.Combine(packageFolder, "README.txt");
+        if (!File.Exists(path)) return null;
+        byte[] buffer = new byte[256];
+        int count;
+        using (FileStream stream = File.OpenRead(path)) count = stream.ReadAtLeast(buffer, buffer.Length, throwOnEndOfStream: false);
+        string text = Encoding.UTF8.GetString(buffer, 0, count);
+        int end = text.IndexOfAny(['\r', '\n']);
+        if (end < 0) return null;
+        Match match = PackageHeader().Match(text[..end]);
+        return match.Success ? match.Groups[1].Value : null;
+    }
+
+    /// <summary>0.1, 0.1.0 ... 0.1.6 are affected; anything unparsable counts as affected.</summary>
+    public static bool IsAffectedVersion(string version)
+    {
+        string[] parts = version.Split('.');
+        if (parts.Length is < 2 or > 3) return true;
+        int[] numbers = new int[3];
+        for (int i = 0; i < parts.Length; i++)
+            if (!int.TryParse(parts[i], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out numbers[i]))
+                return true;
+        return numbers[0] == 0 && numbers[1] == 1 && numbers[2] <= 6;
+    }
+
     public Outcome<string> Launch(Func<ProcessStartInfo, bool>? start = null)
     {
         Outcome<CeInstallation> inspected = Inspect(LauncherPath, UserFolder);
         if (inspected.Value is not CeInstallation current) return Outcome<string>.Refusal(inspected.Message);
+        Outcome<string> safety = current.CheckLauncherSafety();
+        if (!safety.Ok) return Outcome<string>.Refusal(safety.Message);
         try
         {
             bool launched = start is not null ? start(current.StartInfo(versionOnly: false)) : StartLauncher(current.StartInfo(versionOnly: false));
-            return launched ? Outcome<string>.Success(LauncherPath, "Started the Onslaught CE launcher. It checks and applies updates itself.") :
+            return launched ? Outcome<string>.Success(LauncherPath, "Started the Onslaught CE launcher.") :
                 Outcome<string>.Refusal("The CE launcher could not be started.");
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or Win32Exception or InvalidOperationException)
@@ -213,11 +276,19 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
     {
         Outcome<CeInstallation> inspected = Inspect(LauncherPath, UserFolder);
         if (inspected.Value is not CeInstallation current) return Outcome<CeVersion>.Refusal(inspected.Message);
+        Outcome<string> safety = current.CheckLauncherSafety();
+        if (safety.Value is not string packaged) return Outcome<CeVersion>.Refusal(safety.Message);
         try
         {
             string output = await (read is null ? RunVersionAsync(current.StartInfo(versionOnly: true), cancellationToken) :
                 read(current.StartInfo(versionOnly: true), cancellationToken));
-            return ParseVersion(output);
+            Outcome<CeVersion> parsed = ParseVersion(output);
+            // The README header chose to execute this launcher; its own answer must agree with it.
+            if (parsed.Value is CeVersion reported && reported.Version != packaged)
+                return Outcome<CeVersion>.Refusal($"The CE launcher reports version {reported.Version}, but its package says " +
+                    $"{packaged}. The companion will not start a mixed package. Install 0.1.7 or later by hand into a new " +
+                    "empty folder: " + MigrationUrl);
+            return parsed;
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or Win32Exception or InvalidOperationException or OperationCanceledException)
         {
@@ -235,6 +306,9 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
 
     [GeneratedRegex(@"\AOnslaught CE v([^\s,]+)(?: \([^\r\n]*\))?, build ([^\s,]+)\z", RegexOptions.CultureInvariant)]
     private static partial Regex VersionLine();
+
+    [GeneratedRegex(@"\AOnslaught CE ([0-9]+\.[0-9]+(?:\.[0-9]+)?)(?: \([^\r\n]*\))?\z", RegexOptions.CultureInvariant)]
+    private static partial Regex PackageHeader();
 
     private static bool StartLauncher(ProcessStartInfo start)
     {

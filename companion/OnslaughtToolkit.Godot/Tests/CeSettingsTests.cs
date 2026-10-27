@@ -39,6 +39,7 @@ internal static class CeSettingsTests
         File.WriteAllText(launcher, "test-only launcher marker; never run");
         File.WriteAllText(Path.Combine(package, "onslaught-ce-launch"), "test-only binary marker");
         File.WriteAllText(binary, "test-only game marker");
+        File.WriteAllText(Path.Combine(package, "README.txt"), "Onslaught CE 0.1.7 (preview)\n\nQuick start\n");
         environment["PATH"] = package;
         CeInstallation? installation = CeInstallation.Find(null, user, Env, false, home);
         check.That(installation?.LauncherPath == launcher && installation.UserFolder == user && !Directory.Exists(user),
@@ -53,7 +54,7 @@ internal static class CeSettingsTests
             var version = await installation.ReadVersionAsync(read: (start, _) =>
             {
                 requested = start;
-                return Task.FromResult("Onslaught CE v0.1.2 (preview), build abcd1234");
+                return Task.FromResult("Onslaught CE v0.1.7 (preview), build abcd1234");
             });
             check.That(version.Ok && requested?.FileName == launcher && requested.ArgumentList.SequenceEqual(["--version"]) &&
                 requested.Environment["BEA_USER_DIR"] == user && !requested.UseShellExecute,
@@ -64,7 +65,7 @@ internal static class CeSettingsTests
                 launched = start.FileName == launcher && start.ArgumentList.Count == 0 && start.Environment["BEA_USER_DIR"] == user;
                 return true;
             }).Ok && launched, "Play starts the launcher with no direct bea invocation or update arguments.");
-            File.WriteAllText(launcher, "#!/bin/sh\n[ \"$#\" = 1 ] && [ \"$1\" = --version ] || exit 23\nprintf 'Onslaught CE v0.1.2 (preview), build fixture\\n'\n");
+            File.WriteAllText(launcher, "#!/bin/sh\n[ \"$#\" = 1 ] && [ \"$1\" = --version ] || exit 23\nprintf 'Onslaught CE v0.1.7 (preview), build fixture\\n'\n");
             File.SetUnixFileMode(launcher, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             check.That((await installation.ReadVersionAsync()).Value is { Build: "fixture" } && !Directory.Exists(user),
                 "The actual version process reader captures a tiny isolated fixture script without initializing user data.");
@@ -72,6 +73,33 @@ internal static class CeSettingsTests
             using CancellationTokenSource cancel = new(TimeSpan.FromMilliseconds(100));
             check.That(!(await installation.ReadVersionAsync(cancel.Token)).Ok,
                 "A canceled version query terminates only its owned fixture process and returns a refusal.");
+
+            // Affected launchers (0.1.0 to 0.1.6) are never executed, not even for --version; unknown packages neither.
+            string readme = Path.Combine(package, "README.txt");
+            foreach (string header in new[] { "Onslaught CE 0.1 (preview)", "Onslaught CE 0.1.0 (preview)", "Onslaught CE 0.1.6 (preview)",
+                "Onslaught CE 0.1.6", "Onslaught CE vdev (preview)", "not a CE readme", "" })
+            {
+                File.WriteAllText(readme, header + "\n\nQuick start\n");
+                bool executed = false;
+                var refusedPlay = installation.Launch(_ => { executed = true; return true; });
+                var refusedVersion = await installation.ReadVersionAsync(read: (_, _) =>
+                {
+                    executed = true;
+                    return Task.FromResult("Onslaught CE v0.1.6 (preview), build fixture");
+                });
+                check.That(!refusedPlay.Ok && !refusedVersion.Ok && !executed && refusedPlay.Message.Contains(CeInstallation.MigrationUrl, StringComparison.Ordinal),
+                    $"Package header '{header}' is refused before any launcher process, with the manual migration link.");
+            }
+            File.Delete(readme);
+            bool startedWithoutReadme = false;
+            check.That(!installation.Launch(_ => { startedWithoutReadme = true; return true; }).Ok && !startedWithoutReadme,
+                "A package without README.txt is not started.");
+            File.WriteAllText(readme, "Onslaught CE 0.1.7 (preview)\r\n");
+            check.That(!(await installation.ReadVersionAsync(read: (_, _) => Task.FromResult("Onslaught CE v0.1.6 (preview), build mixed"))).Ok,
+                "A launcher whose own version disagrees with its package header is refused.");
+            check.That(CeInstallation.IsAffectedVersion("0.1") && CeInstallation.IsAffectedVersion("0.1.6") && CeInstallation.IsAffectedVersion("0.1.x") &&
+                !CeInstallation.IsAffectedVersion("0.1.7") && !CeInstallation.IsAffectedVersion("0.1.10") && !CeInstallation.IsAffectedVersion("0.2"),
+                "Only 0.1.0 to 0.1.6 (and unparsable versions) count as affected.");
         }
 
         const string original = "# preserved\r\ngamedir=/original/data\r\nunknown=π\r\n update_check=0\r\nupdate_check=0\r\nupdate_check=1\r\nrecord_sessions=1\r\ncheat_malloy=1\r\nlast=keep";
