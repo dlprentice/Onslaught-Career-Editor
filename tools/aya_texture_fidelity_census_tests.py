@@ -5,10 +5,13 @@
 from __future__ import annotations
 
 import csv
+import hashlib
+import json
 import struct
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import aya_cross_platform_compare as cross
 import aya_texture_fidelity_census as census
@@ -354,6 +357,173 @@ class AyaTextureFidelityCensusTests(unittest.TestCase):
             pairs, summary = census.read_geometry_pairs(path)
         self.assertEqual(1, len(pairs))
         self.assertEqual(2, summary["rowCount"])
+
+
+class SerializedTextureMetadataTests(unittest.TestCase):
+    def project(self, payload: bytes, **kwargs):
+        options = dict(platform="PC", source_path="data/resources/100_res_PC.aya",
+                       archive_sha256="a" * 64, payload_offset=128, chunk_path=(4,))
+        options.update(kwargs)
+        return census.serialized_texture_metadata(payload, **options)
+
+    def test_pc_formats_and_policy_are_distinct_raw_source_fields(self):
+        payload = bytearray(texture_payload(platform="PC", format_code=2))
+        struct.pack_into("<i", payload, census.CTEX_BODY_START + 0xA8, 4)
+        struct.pack_into("<i", payload, census.CTEX_BODY_START + 0x148, -1)
+        payload[census.CTEX_BODY_START + 0x154] = 3
+        row = self.project(bytes(payload))
+        self.assertEqual("parsed", row["status"])
+        descriptor = row["descriptor"]
+        self.assertEqual((4, 2, -1, 3), tuple(descriptor[k] for k in (
+            "requestedFormatCode", "resourceFileFormatCode", "mipLevelsRaw", "compressibleRaw")))
+        self.assertEqual("A4R4G4B4", descriptor["serializedFormatMeaning"])
+        self.assertIsNone(descriptor["ddsStorageFormat"])
+        self.assertFalse(row["runtimeSelectionEstablished"])
+
+    def test_pc_multiframe_counts_do_not_invent_external_pixel_hashes(self):
+        payload = texture_payload(platform="PC", frame_mips=(3, 1, 2))
+        row = self.project(payload)
+        self.assertEqual([3, 1, 2], [f["declaredMipCount"] for f in row["frames"]])
+        self.assertEqual(3, row["descriptor"]["declaredFrameCount"])
+        self.assertEqual([(8, 8), (4, 4), (2, 2)], [
+            (m["width"], m["height"]) for m in row["frames"][0]["mips"]])
+        for frame in row["frames"]:
+            start = frame["offsetWithinPayload"]
+            raw = payload[start:start + frame["byteLength"]]
+            self.assertEqual(hashlib.sha256(raw).hexdigest(), frame["sha256"])
+            for mip in frame["mips"]:
+                self.assertEqual("external-DDS-not-selected", mip["storage"])
+                self.assertIsNone(mip["sha256"])
+                self.assertIsNone(mip["byteLength"])
+                self.assertIsNone(mip["offsetWithinPayload"])
+
+    def test_xbox_multiframe_hashes_only_actual_inline_bytes(self):
+        payload = texture_payload(platform="XBOX", frame_mips=(2, 1))
+        row = self.project(payload, platform="XBOX")
+        self.assertEqual("parsed", row["status"])
+        self.assertIsNone(row["descriptor"]["requestedFormatCode"])
+        self.assertIsNone(row["descriptor"]["resourceFileFormatCode"])
+        self.assertIsNone(row["descriptor"]["compressibleRaw"])
+        self.assertEqual(6, row["descriptor"]["serializedFormatCode"])
+        for frame in row["frames"]:
+            for mip in frame["mips"]:
+                start = mip["offsetWithinPayload"]
+                data = payload[start:start + mip["byteLength"]]
+                self.assertEqual(hashlib.sha256(data).hexdigest(), mip["sha256"])
+                self.assertEqual("inline-TMIP", mip["storage"])
+        self.assertNotIn('"data":', json.dumps(row))
+
+    def test_exact_identity_and_occurrence_do_not_collapse_same_names(self):
+        payload = texture_payload(platform="PC")
+        base = self.project(payload)
+        self.assertEqual(hashlib.sha256(payload).hexdigest(), base["identity"]["payloadSha256"])
+        variants = [self.project(payload, source_path="data/resources/101_res_PC.aya"),
+                    self.project(payload, archive_sha256="b" * 64),
+                    self.project(payload, payload_offset=129),
+                    self.project(payload, chunk_path=(5,))]
+        changed = bytearray(payload)
+        changed[census.CTEX_BODY_START + 0x94] ^= 1  # Uninterpreted saved field still binds exact identity.
+        variants.append(self.project(bytes(changed)))
+        ids = {row["identity"]["occurrenceId"] for row in [base, *variants]}
+        self.assertEqual(6, len(ids))
+        self.assertTrue(all(row["descriptor"]["name"] == base["descriptor"]["name"] for row in variants))
+        self.assertEqual(base, self.project(payload))
+
+    def test_unknown_requested_format_survives_without_guess(self):
+        payload = bytearray(texture_payload(platform="PC"))
+        struct.pack_into("<i", payload, census.CTEX_BODY_START + 0xA8, -123)
+        self.assertEqual(-123, self.project(bytes(payload))["descriptor"]["requestedFormatCode"])
+
+    def test_malformed_rows_keep_full_identity_and_no_partial_frame_rows(self):
+        samples = [b"", texture_payload(platform="PC")[:-1],
+                   texture_payload(platform="PC") + b"orphan"]
+        malformed = bytearray(texture_payload(platform="XBOX"))
+        struct.pack_into("<I", malformed, census.CTEX_END + 16, 31)
+        samples.append(bytes(malformed))
+        for index, payload in enumerate(samples):
+            with self.subTest(index=index):
+                row = self.project(payload, platform="XBOX" if index == 3 else "PC")
+                self.assertEqual("unparsed", row["status"])
+                self.assertEqual([], row["frames"])
+                self.assertIsNone(row["descriptor"])
+                self.assertEqual(len(payload), row["identity"]["payloadLength"])
+                self.assertEqual(hashlib.sha256(payload).hexdigest(), row["identity"]["payloadSha256"])
+
+    def test_unsupported_platform_is_hashed_without_parser(self):
+        payload = texture_payload(platform="PC")
+        with patch.object(census, "parse_serialized_texture", side_effect=AssertionError("must not run")):
+            row = self.project(payload, platform="PS2")
+        self.assertEqual("unsupported", row["status"])
+        self.assertEqual([], row["frames"])
+        self.assertEqual(hashlib.sha256(payload).hexdigest(), row["identity"]["payloadSha256"])
+
+    def test_limits_refuse_before_legacy_parser_allocates(self):
+        payload = texture_payload(platform="PC", frame_mips=(3, 2))
+        cases = [dict(max_source_bytes=len(payload) - 1), dict(max_frames=1),
+                 dict(max_mips_per_frame=2), dict(max_total_mips=4)]
+        for settings in cases:
+            with self.subTest(settings=settings), patch.object(
+                    census, "parse_serialized_texture", side_effect=AssertionError("must not run")):
+                row = self.project(payload, limits=census.TextureDescriptorLimits(**settings))
+                self.assertEqual("unsupported", row["status"])
+                self.assertEqual([], row["frames"])
+                self.assertTrue(row["reason"].startswith("metadata limit:"))
+                self.assertEqual(hashlib.sha256(payload).hexdigest(), row["identity"]["payloadSha256"])
+
+    def test_exact_limit_boundaries_admit(self):
+        payload = texture_payload(platform="PC", frame_mips=(3, 2))
+        row = self.project(payload, limits=census.TextureDescriptorLimits(
+            max_source_bytes=len(payload), max_frames=2,
+            max_mips_per_frame=3, max_total_mips=5))
+        self.assertEqual("parsed", row["status"])
+        self.assertEqual(5, sum(len(f["mips"]) for f in row["frames"]))
+
+    def test_default_aggregate_limit_admits_1024_and_refuses_1025_before_parser(self):
+        allowed = texture_payload(platform="PC", frame_mips=(32,) * 32)
+        self.assertEqual("parsed", self.project(allowed)["status"])
+        excessive = texture_payload(platform="PC", frame_mips=(32,) * 32 + (1,))
+        with patch.object(census, "parse_serialized_texture", side_effect=AssertionError("must not run")):
+            row = self.project(excessive)
+        self.assertEqual("metadata limit: aggregate mip count", row["reason"])
+        self.assertEqual([], row["frames"])
+
+    def test_bad_root_or_nested_owner_never_becomes_successful_metadata(self):
+        for offset, value in ((0, b"NOPE"), (8, b"NOPE"),
+                              (4, struct.pack("<I", 1)), (12, struct.pack("<I", 343))):
+            payload = bytearray(texture_payload(platform="PC"))
+            payload[offset:offset + len(value)] = value
+            with self.subTest(offset=offset):
+                row = self.project(bytes(payload))
+                self.assertEqual("unparsed", row["status"])
+                self.assertIsNone(row["descriptor"])
+                self.assertEqual([], row["frames"])
+
+    def test_large_count_is_refused_before_parser_and_malformed_small_count_is_not_truncated(self):
+        payload = bytearray(texture_payload(platform="PC"))
+        struct.pack_into("<I", payload, census.CTEX_FRAME_COUNT_OFFSET, 2**32 - 1)
+        with patch.object(census, "parse_serialized_texture", side_effect=AssertionError("must not run")):
+            self.assertEqual("unsupported", self.project(bytes(payload))["status"])
+        struct.pack_into("<I", payload, census.CTEX_FRAME_COUNT_OFFSET, 2)
+        self.assertEqual("unparsed", self.project(bytes(payload))["status"])
+
+    def test_identity_inputs_refuse_host_paths_ambiguity_and_non_bytes(self):
+        payload = texture_payload(platform="PC")
+        for path in ("/home/player/data.aya", "../data.aya", "data//x.aya", "C:/data.aya", "data\\x.aya", "data/./x", "data\nfile"):
+            with self.subTest(path=path), self.assertRaises(ValueError):
+                self.project(payload, source_path=path)
+        for options in (dict(archive_sha256="A" * 64), dict(payload_offset=True),
+                        dict(payload_offset=2**64 - 1), dict(chunk_path=(True,)),
+                        dict(chunk_path=(0,) * 33), dict(platform="X" * 33)):
+            with self.subTest(options=options), self.assertRaises(ValueError):
+                self.project(payload, **options)
+        with self.assertRaises(ValueError):
+            self.project(bytearray(payload))
+
+    def test_limits_are_positive_bounded_integers(self):
+        for kwargs in (dict(max_source_bytes=0), dict(max_frames=True),
+                       dict(max_mips_per_frame=33), dict(max_total_mips=1025)):
+            with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
+                census.TextureDescriptorLimits(**kwargs)
 
 
 if __name__ == "__main__":

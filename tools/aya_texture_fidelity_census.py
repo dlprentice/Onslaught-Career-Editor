@@ -23,7 +23,7 @@ import re
 import struct
 from collections import Counter, defaultdict
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Iterable, Sequence
 from zipfile import ZipFile, ZipInfo
 
@@ -37,6 +37,25 @@ OCCURRENCE_SCHEMA = "bea.pc-xbox-aya-texture-occurrence.v1"
 FRAME_SCHEMA = "bea.pc-xbox-aya-texture-frame.v1"
 MIP_SCHEMA = "bea.pc-xbox-aya-texture-mip.v1"
 VARIANT_SCHEMA = "bea.xbox-aya-texture-source-frame-variants.v1"
+DESCRIPTOR_SCHEMA = "onslaught.serialized-texture-metadata.v1"
+
+
+@dataclass(frozen=True)
+class TextureDescriptorLimits:
+    """Engineering limits for a metadata projection, not native format limits."""
+
+    max_source_bytes: int = 16 * 1024 * 1024
+    max_frames: int = 256
+    max_mips_per_frame: int = 32
+    max_total_mips: int = 1024
+
+    def __post_init__(self) -> None:
+        for name, ceiling in (("max_source_bytes", 16 * 1024 * 1024),
+                              ("max_frames", 256), ("max_mips_per_frame", 32),
+                              ("max_total_mips", 1024)):
+            value = getattr(self, name)
+            if type(value) is not int or not 1 <= value <= ceiling:
+                raise ValueError(f"{name} must be a positive bounded integer <= {ceiling}")
 
 CTEX_BODY_SIZE = 344
 CTEX_START = 8
@@ -348,6 +367,167 @@ def parse_serialized_texture(payload: bytes, *, platform: str) -> SerializedText
         format_code=format_code,
         frames=tuple(frames),
     )
+
+
+def _descriptor_count_preflight(
+    payload: bytes, platform: str, limits: TextureDescriptorLimits,
+) -> None:
+    """Walk scalar framing before the legacy parser allocates frame/mip rows."""
+    if len(payload) > limits.max_source_bytes:
+        raise ValueError("metadata limit: source bytes")
+    if len(payload) < CTEX_END:
+        raise ValueError("truncated texture descriptor")
+    frames = u32(payload, CTEX_FRAME_COUNT_OFFSET)
+    if not 1 <= frames <= limits.max_frames:
+        raise ValueError("metadata limit: frame count")
+    total_mips = 0
+    offset = CTEX_END
+    for _frame in range(frames):
+        if offset + 12 > len(payload) or payload[offset:offset + 4] != b"TFRM":
+            raise ValueError("missing or truncated TFRM")
+        size = u32(payload, offset + 4)
+        end = offset + 8 + size
+        if size < 4 or end > len(payload):
+            raise ValueError("TFRM escapes texture descriptor")
+        mips = u32(payload, offset + 8)
+        if not 1 <= mips <= limits.max_mips_per_frame:
+            raise ValueError("metadata limit: per-frame mip count")
+        total_mips += mips
+        if total_mips > limits.max_total_mips:
+            raise ValueError("metadata limit: aggregate mip count")
+        if platform == "XBOX":
+            nested = offset + 12
+            for _mip in range(mips):
+                if nested + 8 > end or payload[nested:nested + 4] != b"TMIP":
+                    raise ValueError("missing or truncated TMIP")
+                nested += 8 + u32(payload, nested + 4)
+                if nested > end:
+                    raise ValueError("TMIP escapes its TFRM")
+            if nested != end:
+                raise ValueError("TFRM has unowned bytes")
+        offset = end
+    if offset != len(payload):
+        raise ValueError("texture descriptor has unowned bytes")
+
+
+def serialized_texture_metadata(
+    payload: bytes, *, platform: str, source_path: str, archive_sha256: str,
+    payload_offset: int = 0, chunk_path: tuple[int, ...] = (),
+    limits: TextureDescriptorLimits = TextureDescriptorLimits(),
+) -> dict[str, object]:
+    """Project one held TEXT payload without reading files or resolving textures.
+
+    The supplied archive hash and coordinates are unverified caller provenance;
+    the exact payload hash is measured here. PC TFRM owns mip counts only, never
+    pixel bytes. Xbox TMIP bytes can be hashed but do not establish a DDS codec
+    or visual equivalence. No animation clock or runtime texture choice is inferred.
+    """
+    if not isinstance(payload, bytes):
+        raise ValueError("texture payload must be immutable held bytes")
+    if not isinstance(limits, TextureDescriptorLimits):
+        raise ValueError("invalid texture metadata limits")
+    if (not isinstance(source_path, str) or not 1 <= len(source_path) <= 4096 or "\\" in source_path
+            or ":" in source_path or any(ord(c) < 32 for c in source_path)
+            or PurePosixPath(source_path).is_absolute()
+            or any(p in ("", ".", "..") for p in source_path.split("/"))):
+        raise ValueError("source_path must be a logical root-relative path")
+    if not isinstance(archive_sha256, str) or re.fullmatch(r"[0-9a-f]{64}", archive_sha256) is None:
+        raise ValueError("archive_sha256 must be a lowercase SHA-256")
+    if (type(payload_offset) is not int or not 0 <= payload_offset < 2**64
+            or payload_offset + len(payload) > 2**64):
+        raise ValueError("payload_offset must be an unsigned 64-bit coordinate")
+    if (not isinstance(chunk_path, tuple) or len(chunk_path) > 32
+            or any(type(n) is not int or not 0 <= n < 2**32 for n in chunk_path)):
+        raise ValueError("chunk_path must contain at most 32 unsigned ordinals")
+    if not isinstance(platform, str) or re.fullmatch(r"[A-Za-z0-9_-]{1,32}", platform) is None:
+        raise ValueError("platform must be a bounded ASCII profile label")
+    identity = {
+        "sourcePath": source_path, "archiveSha256": archive_sha256,
+        "coordinateSpace": "inflated-archive",
+        "payloadOffset": payload_offset, "chunkPath": list(chunk_path),
+        "platform": platform, "payloadLength": len(payload),
+        "payloadSha256": sha256_bytes(payload),
+        "archiveProvenance": "caller-supplied; not verified by this projection",
+    }
+    coordinates = json.dumps(identity, sort_keys=True, separators=(",", ":"),
+                             ensure_ascii=True).encode("ascii")
+    identity["occurrenceId"] = "texture-occurrence:" + sha256_bytes(
+        DESCRIPTOR_SCHEMA.encode("ascii") + b"\0" + coordinates)
+    result: dict[str, object] = {
+        "schema": DESCRIPTOR_SCHEMA, "status": "unparsed", "identity": identity,
+        "descriptor": None, "frames": [], "runtimeSelectionEstablished": False,
+        "evidenceClass": "static framing and source-derived PC field meanings",
+        "limits": {"sourceBytes": limits.max_source_bytes, "frames": limits.max_frames,
+                   "mipsPerFrame": limits.max_mips_per_frame,
+                   "totalMips": limits.max_total_mips, "kind": "engineering admission bounds"},
+        "unknowns": ["animation clock and frame selection", "runtime texture lookup and fallback",
+                     "visual appearance and decoded-pixel equivalence"],
+    }
+    if platform not in ("PC", "XBOX"):
+        result.update(status="unsupported", reason="unsupported platform profile")
+        return result
+    try:
+        _descriptor_count_preflight(payload, platform, limits)
+        texture = parse_serialized_texture(payload, platform=platform)
+    except ValueError as error:
+        reason = str(error)
+        result.update(status="unsupported" if reason.startswith("metadata limit:") else "unparsed",
+                      reason=reason)
+        return result
+
+    # PC CDXTexture::Deserialize00559be0 reads a 0x158-byte object verbatim.
+    # CTEX body starts at TEXT+0x10; the two format fields have different uses:
+    # mFormat (+0xa8) is FindTexture004f27f0's lookup key, while mTexFormat
+    # (+0x144) supplies LoadFrame00557300's resource filename, not DDS storage.
+    descriptor: dict[str, object] = {
+        "name": texture.name, "normalizedName": texture.normalized_name,
+        "width": texture.width, "height": texture.height,
+        "declaredFrameCount": len(texture.frames),
+        "serializedFormatCode": texture.format_code,
+        "serializedFormatMeaning": (SOURCE_FORMAT_NAMES if platform == "PC" else XBOX_FORMAT_NAMES).get(texture.format_code),
+        "resourceFileFormatCode": texture.format_code if platform == "PC" else None,
+        "ctexBodySha256": sha256_bytes(payload[CTEX_BODY_START:CTEX_END]),
+        "ddsStorageFormat": None,
+    }
+    if platform == "PC":
+        descriptor.update(
+            requestedFormatCode=struct.unpack_from("<i", payload, CTEX_BODY_START + 0xA8)[0],
+            mipLevelsRaw=struct.unpack_from("<i", payload, CTEX_BODY_START + 0x148)[0],
+            compressibleRaw=payload[CTEX_BODY_START + 0x154],
+        )
+    else:
+        # The matching Xbox field identities have not been grounded here.
+        descriptor.update(requestedFormatCode=None, mipLevelsRaw=None, compressibleRaw=None)
+        result["unknowns"].append("Xbox requested-format, mip-policy and compression-flag field meanings")
+    frames: list[dict[str, object]] = []
+    offset = CTEX_END
+    for frame_index, frame in enumerate(texture.frames):
+        frame_end = offset + 8 + u32(payload, offset + 4)
+        nested = offset + 12
+        mips = []
+        for level, mip in enumerate(frame.mips):
+            inline = platform == "XBOX"
+            mips.append({
+                "level": level, "width": mip.width, "height": mip.height,
+                "offsetWithinPayload": nested + 8 if inline else None,
+                "byteLength": len(mip.data) if inline else None,
+                "sha256": mip.sha256 if inline else None,
+                "storage": "inline-TMIP" if inline else "external-DDS-not-selected",
+            })
+            if inline:
+                nested += 8 + len(mip.data)
+        frames.append({
+            "frameIndex": frame_index,
+            "occurrenceId": identity["occurrenceId"] + "/frame:" + str(frame_index),
+            "offsetWithinPayload": offset, "byteLength": frame_end - offset,
+            "sha256": sha256_bytes(payload[offset:frame_end]),
+            "declaredMipCount": len(mips), "mips": mips,
+        })
+        offset = frame_end
+    result.update(status="parsed", descriptor=descriptor, frames=frames)
+    if platform == "PC":
+        result["unknowns"].append("external DDS payload identity, dimensions and storage format until independently joined")
+    return result
 
 
 def identify_dds_storage(data: bytes) -> str:
