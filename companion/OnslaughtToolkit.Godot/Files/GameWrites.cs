@@ -606,7 +606,7 @@ internal static class PortableInstall
                 // A failed swap usually changes nothing; if the original is no longer in place, say so.
                 if (string.Equals(TryHash(destination, readBytes), backedUpSha256, StringComparison.OrdinalIgnoreCase)) throw;
                 return new InstallReceipt(false, $"{name} could not be swapped cleanly ({error.Message}). Check the game folder; the " +
-                    "backup holds the earlier files.", target, backupFolder, MayHaveChanged: true);
+                    $"backup path is {backupFolder}. Verify it before attempting recovery.", target, backupFolder, MayHaveChanged: true);
             }
             return GameInstaller.AfterPublication(target, backupFolder, replaced: true, () =>
             {
@@ -639,8 +639,8 @@ internal static class PortableInstall
     {
         byte[] bytes = ReadFile(destination, readBytes);
         if (!bytes.AsSpan().SequenceEqual(prepared))
-            return new InstallReceipt(false, "The write finished but the file in the game folder did not verify. Inspect it; the backup " +
-                "holds the earlier bytes.", target, backupFolder, replaced, MayHaveChanged: true);
+            return new InstallReceipt(false, "The write finished but the file in the game folder did not verify. Inspect it; " +
+                $"the backup path is {backupFolder}. Verify it before attempting recovery.", target, backupFolder, replaced, MayHaveChanged: true);
         return new InstallReceipt(true, (replaced ? "Replaced and verified" : "Added and verified") +
             $" {name}. The earlier files are in the verified backup.", target, backupFolder, replaced, Sha256: Hash(bytes));
     }
@@ -784,8 +784,8 @@ internal static class LinuxInstall
         folder.Flush();
         (LinuxSaveNative.Stat written, byte[] bytes) = folder.ReadFile(name, readBytes);
         if (written.Identity != staged.Identity || !bytes.AsSpan().SequenceEqual(prepared))
-            return new InstallReceipt(false, "The write finished but the file in the game folder did not verify. Inspect it; the backup " +
-                "holds the earlier bytes.", target, backupFolder, replaced, MayHaveChanged: true);
+            return new InstallReceipt(false, "The write finished but the file in the game folder did not verify. Inspect it; " +
+                $"the backup path is {backupFolder}. Verify it before attempting recovery.", target, backupFolder, replaced, MayHaveChanged: true);
         return new InstallReceipt(true, (replaced ? "Replaced and verified" : "Added and verified") +
             $" {name}. The earlier files are in the verified backup.", target, backupFolder, replaced, Sha256: Hash(bytes), Exchanged: exchanged);
     }

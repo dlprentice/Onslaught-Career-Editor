@@ -101,14 +101,23 @@ internal static class BackupDirectoryTests
         using HeldBackup held = Backups.CreateHeld(new ProtectedSaveFiles(), game, backups, now, "Owned uncertain-result control");
         check.That(held.Receipt.Ok, "An uncertain-result control starts with an actually held, verified backup");
         if (held.Receipt.Set is not BackupSet set) return;
+        byte[] prepared = original.ToArray(); prepared[0x2406] ^= 0x5A;
+        byte[] external = prepared.ToArray(); external[^2] ^= 0x5A;
+        // Reach the real writer's failed final read-back, then change recovery before the caller's final check.
+        Action afterPublish = () => File.WriteAllBytes(install.Career, external);
+        InstallReceipt uncertain = portable
+            ? PortableInstall.Write(install.Career, prepared, OnslaughtToolkit.Companion.Careers.SaveSession.Digest(original), set.Folder, null, null, afterPublish)
+            : LinuxInstall.Write(install.Career, prepared, OnslaughtToolkit.Companion.Careers.SaveSession.Digest(original), set.Folder, null, null, afterPublish);
+        check.That(!uncertain.Ok && uncertain.MayHaveChanged && uncertain.Message.Contains("did not verify", StringComparison.Ordinal) &&
+            !uncertain.Message.Contains("holds the earlier", StringComparison.Ordinal),
+            "Actual writer read-back failures identify a backup path without promising its present usability");
         byte[] changed = original.ToArray(); changed[^1] ^= 0x5A;
         File.WriteAllBytes(Path.Combine(set.Folder, "Career One.bes"), changed);
-        InstallReceipt uncertain = new(false, "Owned primitive failure: result unknown.", install.Career, set.Folder, MayHaveChanged: true);
         InstallReceipt result = GameInstaller.VerifyCompletedBackup(uncertain, held);
         check.That(!result.Ok && result.MayHaveChanged && result.Message.Contains("may have changed", StringComparison.Ordinal) &&
             result.Message.Contains(uncertain.Message, StringComparison.Ordinal) && !result.Message.Contains("was written", StringComparison.Ordinal) &&
-            File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(original),
-            "Uncertain primitive-result composition retains its failure context and uncertainty without claiming publication or a usable backup");
+            !result.Message.Contains("holds the earlier", StringComparison.Ordinal) && File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(external),
+            "Actual failed read-back plus recovery loss retains its failure context and uncertainty, preserves the observed career, and never claims a usable backup");
     }
 
     private static void Change(string folder, string mode, string backups, string outside, string owner)
