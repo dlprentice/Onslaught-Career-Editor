@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-26 (shared toolchain prerequisites clarified; October 25 native Windows development workflow and its limits retained)
+Last updated: 2026-10-26 (backup-directory and recovery-copy bindings held through career publication; Windows execution of this change remains unverified)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it offers CE launch and reads signed public update information.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -328,7 +328,13 @@ code keeps them:
   or `defaultoptions.bea` is ever written. First, every career and settings file the companion
   can read (a 10,004-byte career or settings file) is copied to a new backup set outside the
   game folder, each copy read back and verified and listed with its SHA-256 in a manifest; any
-  other file there is left untouched, and the backup says how many were skipped. A file being
+  other file there is left untouched, and the backup says how many were skipped. The new backup
+  directory, its recovery copies and its manifest remain held through the game-file operation.
+  Linux creates and publishes them relative to protected directory handles; Windows reuses its
+  ancestor and file sharing locks. Directory or recovery-file changes refuse a write before the
+  swap; a change detected afterwards reports that the career may have changed and that the backup
+  needs inspection. These race controls ran on Linux through both writer paths; this new binding
+  has not run on Windows. A file being
   replaced must be one of the backed-up files and still match its fresh backup, and a career
   or settings file you opened must still match what you opened: if the game saved it since,
   nothing is written. The new file is staged, verified, swapped in
