@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-22 (relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-10-26 (bounded level, texture-descriptor and mission-script metadata; earlier relicensing)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -59,7 +59,13 @@ publish, sign, or install anything by themselves.
 
 - `aya_archive_inventory.py`, `aya_cross_platform_compare.py`, and
   `aya_texture_fidelity_census.py` provide fail-closed AYA inventory,
-  cross-platform pairing, and stored-texture geometry/block comparison.
+  cross-platform pairing, and stored-texture geometry/block comparison. The
+  texture census also exposes a bounded `serialized_texture_metadata` API for
+  selected held TEXT payloads; external PC mip contents and runtime selection
+  remain unknown.
+- `mission_script_inspect.py` inspects one explicitly selected, hash-bound
+  compiled-script record or range. Its bounded output describes stored
+  structure and unknowns; it does not execute scripts or edit missions.
 - `cmsh_animation_usage_census.py` performs a read-only, optionally
   mirror-hash-verified join across loose CMSH pose/skeleton lanes, numeric-LVLR
   `MESH` membership, and authored MSL animation calls. Its JSON output is
@@ -107,7 +113,9 @@ writes at all, to ignored local paths. Their findings are documented under
 - Formats and corpora: `aya_corpus_chunk_inventory.py` (corpus-wide AYA chunk inventory),
   `aya_extractor_source_audit.py` (source/history audit of the pinned AYAResourceExtractor fork),
   `battle_engine_config_decode.py` (reads and re-encodes `battle engine configurations.dat` in memory),
-  `worldheaders_decode.py` (decodes `data/worldheaders.dat` byte-exactly; its self-test needs the retail file),
+  `worldheaders_decode.py` (decodes `data/worldheaders.dat` byte-exactly; its
+  `--metadata-json` option projects bounded level modes and optional
+  configuration-name membership, not proof of playable multiplayer),
   `heightfield_node_array_probe.py` (checks whether any shipped heightfield header fills the per-node array).
 - Meshes: `cmsh_grammar_walk.py` walks PC CMSH streams with the grammar in
   [`asset-formats/cmsh-fields.md`](../reverse-engineering/asset-formats/cmsh-fields.md) and proves it accounts for
