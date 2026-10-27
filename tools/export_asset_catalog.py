@@ -19,18 +19,269 @@ Examples:
 from __future__ import annotations
 
 import argparse
+import errno
+import hashlib
 import json
+import os
 import re
+import stat
 import tempfile
 from collections import Counter
 from pathlib import Path
 
 import aya_archive_inventory as aai
-from safe_generated_output import SecuredOutputRoot
+from safe_generated_output import SecuredOutputRoot, UnsafeGeneratedOutputError
 
 
-CATALOG_SCHEMA_VERSION = 2
+CATALOG_SCHEMA_VERSION = 3
 CATALOG_PATH_CONTRACT = "bundle-root-relative"
+CATALOG_EXPORT_CONTRACT = "source-bound-verified-outputs-only"
+CATALOG_INSPECTION_SCHEMA = "onslaught.catalog-source-selection.v1"
+MAX_INSPECTED_SOURCES = 256
+MAX_INSPECTED_SOURCE_BYTES = 256 * 1024 * 1024
+MAX_SINGLE_SOURCE_BYTES = 64 * 1024 * 1024
+
+
+def _identity_hash(domain: str, value: object) -> str:
+    encoded = json.dumps(value, sort_keys=True, ensure_ascii=True, separators=(",", ":")).encode("ascii")
+    return hashlib.sha256(domain.encode("ascii") + b"\0" + encoded).hexdigest()
+
+
+class SourceInspectionError(ValueError):
+    def __init__(self, status: str, reason: str):
+        self.status, self.reason = status, reason
+        super().__init__(reason)
+
+
+class SourceReadBudget:
+    """Charge bytes as read, including sources that later fail identity checks."""
+    def __init__(self, limit: int):
+        self.limit = limit
+        self.bytes_read = 0
+
+    @property
+    def remaining(self) -> int:
+        return max(0, self.limit - self.bytes_read)
+
+
+def _file_fingerprint(value: os.stat_result) -> tuple[int, ...]:
+    return (value.st_dev, value.st_ino, value.st_mode, value.st_size,
+            value.st_mtime_ns, value.st_ctime_ns, value.st_nlink)
+
+
+def _read_selected_source(source_root: Path, source_path: Path, budget: SourceReadBudget) -> bytes:
+    """Bounded openat read; retain/revalidate every directory and the file handle.
+
+    No discovery, symlink traversal, hardlinked file, or absolute source outside
+    the explicit root is admitted. Directory descriptors prevent path races from
+    redirecting a selected read; post-read name checks reject moved/replaced inputs.
+    """
+    if not hasattr(os, "O_NOFOLLOW") or not hasattr(os, "O_DIRECTORY"):
+        raise SourceInspectionError("unsupported", "descriptor-safe reads unavailable")
+    root = Path(os.path.abspath(source_root))
+    path = Path(os.path.abspath(source_path))
+    try:
+        relative = path.relative_to(root)
+    except ValueError as error:
+        raise SourceInspectionError("rejected", "source outside explicit inspection root") from error
+    if not relative.parts:
+        raise SourceInspectionError("rejected", "source must be a file below the inspection root")
+    descriptors: list[int] = []
+    links: list[tuple[int, str, os.stat_result]] = []
+    try:
+        fd = os.open(root.anchor, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        descriptors.append(fd)
+        for component in (*root.parts[1:], *relative.parts[:-1]):
+            child = os.open(component, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
+            descriptors.append(child)
+            metadata = os.fstat(child)
+            links.append((fd, component, metadata))
+            fd = child
+        source = os.open(relative.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd)
+        descriptors.append(source)
+        before = os.fstat(source)
+        if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1:
+            raise SourceInspectionError("rejected", "source must be a regular single-link file")
+        if before.st_size > MAX_SINGLE_SOURCE_BYTES:
+            raise SourceInspectionError("unsupported", "source exceeds single-source byte limit")
+        if before.st_size > budget.remaining:
+            raise SourceInspectionError("notAttempted", "selection byte budget exhausted")
+        chunks, count = [], 0
+        # Read only the size already admitted by the held descriptor. The final metadata checks
+        # catch growth without a one-byte EOF probe beyond either byte limit.
+        while count < before.st_size:
+            requested = min(1024 * 1024, before.st_size - count, budget.remaining)
+            if requested <= 0:
+                raise SourceInspectionError("notAttempted", "selection byte budget exhausted")
+            chunk = os.read(source, requested)
+            budget.bytes_read += len(chunk)
+            if not chunk:
+                break
+            count += len(chunk)
+            if len(chunk) > requested or count > MAX_SINGLE_SOURCE_BYTES:
+                raise SourceInspectionError("rejected", "source read exceeded admitted byte limit")
+            chunks.append(chunk)
+        if count != before.st_size or _file_fingerprint(os.fstat(source)) != _file_fingerprint(before):
+            raise SourceInspectionError("rejected", "source changed during held read")
+        after = os.stat(relative.name, dir_fd=fd, follow_symlinks=False)
+        if _file_fingerprint(after) != _file_fingerprint(before):
+            raise SourceInspectionError("rejected", "source path changed during held read")
+        for parent, name, expected in links:
+            current = os.stat(name, dir_fd=parent, follow_symlinks=False)
+            if (current.st_dev, current.st_ino, current.st_mode) != (expected.st_dev, expected.st_ino, expected.st_mode):
+                raise SourceInspectionError("rejected", "source directory changed during held read")
+        return b"".join(chunks)
+    except OSError as error:
+        if error.errno in (errno.ELOOP, errno.ENOTDIR):
+            raise SourceInspectionError("rejected", "source path is a link or not a directory/file") from error
+        raise SourceInspectionError("unavailable", "source could not be read") from error
+    finally:
+        for descriptor in reversed(descriptors):
+            os.close(descriptor)
+
+
+def _source_metadata(kind: str, source: bytes, path: Path, logical: str) -> tuple[dict[str, object], dict[str, object] | None]:
+    """Use existing bounded parsers; never infer embedded-body framing/offsets."""
+    if kind == "texture":
+        import dds_census
+        envelope = "dds" if path.suffix.lower() == ".dds" else "aya"
+        metadata = dds_census.texture_metadata(source, envelope=envelope)
+        payload = metadata["dds"]
+        if payload is None:
+            return {"status": metadata["status"], "measured": metadata}, None
+        identity = {"length": payload["size"], "sha256": payload["sha256"]}
+        # Source-envelope fields belong to the occurrence, not a shared payload variant.
+        measured = {key: value for key, value in metadata.items() if key != "source"}
+        return {"status": metadata["status"], "envelope": envelope}, {
+            "payload_domain": "dds-stream", "payload_identity": identity,
+            "parser": "dds_census.texture_metadata", "measured": measured,
+        }
+    import cmsh_animation_usage_census as models
+    if path.suffix.lower() == ".aya" and kind == "loose_mesh":
+        try:
+            payload_bytes = models.inflate_aya(source)
+        except models.CmshProfileError as error:
+            return {"status": "unparsed", "reason": {"category": error.category,
+                    "falsifier": "supply a supported bounded AYA/CMSH source"}}, None
+        envelope = "aya"
+    elif source.startswith(b"CMSH"):
+        payload_bytes, envelope = source, "raw-cmsh-stream"
+    else:
+        return {"status": "unknown", "reason": {
+            "category": "raw mesh framing not established",
+            "falsifier": "provide an independently located complete CMSH stream"}}, None
+    row, _mesh = models.mesh_record_from_stream(
+        payload_bytes, source_path=logical, archive_sha256=hashlib.sha256(source).hexdigest())
+    metadata = dict(row["modelMetadata"])
+    metadata.pop("identity", None)  # Its archive coordinates do not describe a standalone raw file.
+    metadata["summary"] = {key: value for key, value in row.items() if key not in ("file", "modelMetadata")}
+    return {"status": metadata["status"], "envelope": envelope}, {
+        "payload_domain": "cmsh-stream", "payload_identity": {
+            "length": len(payload_bytes), "sha256": hashlib.sha256(payload_bytes).hexdigest()},
+        "parser": "cmsh_animation_usage_census.mesh_record_from_stream", "measured": metadata,
+    }
+
+
+def inspect_catalog_sources(
+    textures: list[dict[str, object]], loose_meshes: list[dict[str, object]],
+    embedded_meshes: list[dict[str, object]], *, source_root: Path,
+    source_manifests: tuple[list[dict[str, object]], list[dict[str, object]], list[dict[str, object]]],
+    repo_root: Path | None = None,
+) -> dict[str, object]:
+    """Join only the explicit catalog selection, never an exhaustive AYA universe.
+
+    Callers must opt in. Source paths are root-relative logical locations; exact
+    variants use payload bytes, while occurrence IDs include selection, location
+    and the complete held-source identity. Unreadable/rejected rows remain visible.
+    """
+    root = Path(os.path.abspath(source_root))
+    path_base = root if repo_root is None else Path(os.path.abspath(repo_root))
+    entries = [*textures, *loose_meshes, *embedded_meshes]
+    selected: dict[tuple[str, str], dict[str, object]] = {}
+    grouped: dict[tuple[str, str, str | None], list[tuple[str, str]]] = {}
+    if len(source_manifests) != 3:
+        raise ValueError("inspection needs the original texture/loose/embedded manifest selections")
+    for kind, manifest in zip(("texture", "loose_mesh", "embedded_mesh"), source_manifests):
+        for declaration in manifest:
+            # Do not reconstruct paths from repo_rel() display fields: those
+            # legacy fields resolve links and lose the original selected path.
+            declared = Path(declaration["input"])
+            path = declared
+            if not path.is_absolute():
+                path = path_base / path
+            path = Path(os.path.abspath(path))
+            key = (str(kind), str(path))
+            selected.setdefault(key, {"kind": kind, "path": path})
+            if kind == "texture":
+                aliases = texture_aliases_for_catalog(declared.name)
+                catalog_id = "texture:" + choose_texture_ref(aliases, declared.stem)
+            elif kind == "loose_mesh":
+                catalog_id = "mesh:" + choose_mesh_ref(mesh_aliases_from_loose_name(declared.name))
+            else:
+                catalog_id = f"embedded_mesh:{declared.parent.name}/{declared.stem}"
+            provenance = repo_rel(declared, path_base) if kind == "embedded_mesh" else None
+            grouped.setdefault((kind, catalog_id, provenance), []).append(key)
+    entry_keys = [grouped.get((str(entry["kind"]), str(entry["catalog_id"]),
+                              entry.get("source_body_path") if entry["kind"] == "embedded_mesh" else None), [])
+                  for entry in entries]
+    observed: dict[tuple[str, str], dict[str, object]] = {}
+    budget = SourceReadBudget(MAX_INSPECTED_SOURCE_BYTES)
+    for index, key in enumerate(sorted(selected)):
+        request = selected[key]
+        path, kind = request["path"], request["kind"]
+        try:
+            logical = path.relative_to(root).as_posix()
+        except ValueError:
+            logical = None
+        row: dict[str, object] = {"kind": kind, "logical_source_path": logical,
+                                 "source_identity": None, "variant": None}
+        try:
+            if index >= MAX_INSPECTED_SOURCES:
+                raise SourceInspectionError("notAttempted", "selection source-count budget exhausted")
+            source = _read_selected_source(root, path, budget)
+            row["source_identity"] = {"length": len(source), "sha256": hashlib.sha256(source).hexdigest()}
+            status, variant = _source_metadata(str(kind), source, path, str(logical))
+            row.update(status)
+            row["variant"] = variant
+        except SourceInspectionError as error:
+            row.update(status=error.status, reason={"category": error.reason,
+                       "falsifier": "provide a stable supported regular source under the explicit root"})
+        observed[key] = row
+    namespace_rows = sorted(
+        ({name: value for name, value in row.items() if name != "variant"} for row in observed.values()),
+        key=lambda value: json.dumps(value, sort_keys=True))
+    namespace = _identity_hash(CATALOG_INSPECTION_SCHEMA, namespace_rows)
+    for entry, keys in zip(entries, entry_keys):
+        variants: dict[str, dict[str, object]] = {}
+        occurrences = []
+        for key in sorted(set(keys)):
+            record = dict(observed[key])
+            variant = record.pop("variant")
+            variant_id = None
+            if variant is not None:
+                variant_id = "asset-variant:" + _identity_hash("onslaught.asset-variant.v1", {
+                    "kind": "texture" if record["kind"] == "texture" else "mesh",
+                    "domain": variant["payload_domain"], "identity": variant["payload_identity"]})
+                variants[variant_id] = {"variant_id": variant_id,
+                    "asset_kind": "texture" if record["kind"] == "texture" else "mesh", **variant,
+                    "description": None, "description_status": "not-visually-reviewed", "annotations": []}
+            record["variant_id"] = variant_id
+            record["occurrence_id"] = ("asset-occurrence:" + _identity_hash("onslaught.asset-occurrence.v1", {
+                "selection_namespace": namespace, "kind": record["kind"],
+                "logical_source_path": record["logical_source_path"], "source_identity": record["source_identity"]})
+                if record["source_identity"] is not None else None)
+            occurrences.append(record)
+        entry["variants"] = [variants[key] for key in sorted(variants)]
+        entry["occurrences"] = sorted(occurrences, key=lambda value: json.dumps(value, sort_keys=True))
+        entry["exact_variant_count"], entry["occurrence_count"] = len(variants), len(occurrences)
+        entry["occurrence_count_scope"] = "declared-source-locations"
+        entry["observed_occurrence_count"] = sum(row["source_identity"] is not None for row in occurrences)
+    return {"schema": CATALOG_INSPECTION_SCHEMA, "selection_namespace": namespace,
+            "scope": "explicit-manifest-source-selection-not-full-aya-universe",
+            "source_count": len(observed), "source_bytes_read": budget.bytes_read,
+            "source_limit": MAX_INSPECTED_SOURCES, "source_byte_limit": MAX_INSPECTED_SOURCE_BYTES,
+            "status_counts": dict(sorted(Counter(row["status"] for row in observed.values()).items())),
+            "description_status": "not-visually-reviewed", "export_verification": "not-established"}
 
 
 def repo_rel(path: Path, repo_root: Path) -> str:
@@ -38,6 +289,36 @@ def repo_rel(path: Path, repo_root: Path) -> str:
         return str(path.resolve().relative_to(repo_root.resolve())).replace("/", "\\")
     except Exception:
         return str(path).replace("/", "\\")
+
+
+def protect_catalog_source_locations(out_dir: Path, manifests: tuple[list[dict[str, object]], ...], repo_root: Path) -> None:
+    """Protect declared originals even when optional source inspection is disabled.
+
+    A dangling/unreadable source is still a catalog disposition, not a reason to
+    follow it or fail the whole selection. Compare lexical locations first, then
+    any resolvable physical location. Publication itself stays descriptor-bound.
+    """
+    output = Path(os.path.abspath(out_dir))
+    physical_output = output.resolve(strict=True)
+    for manifest in manifests:
+        for declaration in manifest:
+            source = Path(declaration["input"])
+            if not source.is_absolute():
+                source = repo_root / source
+            source = Path(os.path.abspath(source))
+            locations = [source]
+            try:
+                locations.append(source.resolve(strict=False))
+            except (OSError, RuntimeError):
+                pass  # The inspection reader owns this unavailable/rejected row.
+            for location in locations:
+                for target in (output, physical_output):
+                    try:
+                        common = os.path.commonpath((os.path.normcase(location), os.path.normcase(target)))
+                    except ValueError:
+                        continue
+                    if common in (os.path.normcase(location), os.path.normcase(target)):
+                        raise UnsafeGeneratedOutputError("output root must not overlap protected source")
 
 
 def bundle_rel(path: Path, bundle_root: Path, label: str) -> str:
@@ -52,6 +333,29 @@ def bundle_rel(path: Path, bundle_root: Path, label: str) -> str:
 
 def read_json(path: Path) -> object:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def legacy_export_attempt(row: dict[str, object], bundle_root: Path, kind: str) -> dict[str, object]:
+    """Keep a legacy export declaration without promoting it to source-bound output proof.
+
+    The harness's ok/skipped_existing/error rows have no source/output hashes or
+    conversion validator. Even an existing file or a supplied 'verified' field
+    cannot establish correspondence to these source bytes. Retain failed and
+    unverified attempts for callers to inspect; success paths remain empty until
+    an actual identity-bound output producer is connected to this catalog.
+    """
+    status = row.get("status")
+    output = row.get("output")
+    if output is not None and (not isinstance(output, str) or not output):
+        raise ValueError("catalog export output must be a nonempty path or null")
+    return {
+        "attempt_status": status if status in ("ok", "skipped_existing", "error") else "notReported",
+        "verification_status": "failed" if status == "error" else "unverified",
+        "output_kind": kind,
+        "requested_output_path": bundle_rel(Path(output), bundle_root, "requested export") if output else None,
+        "verified_output_path": None,
+        "limitation": "Legacy declaration has no source-bound output identity or conversion validation.",
+    }
 
 
 def choose_texture_ref(refs: set[str], fallback_name: str) -> str:
@@ -119,7 +423,8 @@ def build_texture_catalog(
 
     for row in texture_manifest:
         input_path = Path(row["input"])
-        output_path = Path(row["output"])
+        attempt = legacy_export_attempt(row, bundle_root, "png")
+        attempt["source_aya_path"] = repo_rel(input_path, repo_root)
         refs = texture_aliases_for_catalog(input_path.name)
         canonical_ref = choose_texture_ref(refs, input_path.stem)
         entry = catalog.setdefault(
@@ -132,13 +437,15 @@ def build_texture_catalog(
                 "source_aya_paths": [],
                 "source_roots": set(),
                 "loose_export_pngs": [],
+                "export_records": [],
                 "packed_text_ref_count": text_map.get(canonical_ref, {}).get("count", 0),
                 "gdie_ref_count": gdie_map.get(canonical_ref, {}).get("count", 0),
             },
         )
+        entry["aliases"] = sorted(set(entry["aliases"]) | refs)
         entry["source_aya_paths"].append(repo_rel(input_path, repo_root))
         entry["source_roots"].add(input_path.parent.name.lower())
-        entry["loose_export_pngs"].append(bundle_rel(output_path, bundle_root, "texture export"))
+        entry["export_records"].append(attempt)
 
     out: list[dict[str, object]] = []
     for key in sorted(catalog):
@@ -153,11 +460,14 @@ def build_texture_catalog(
                 "kind": entry["kind"],
                 "canonical_ref": entry["canonical_ref"],
                 "aliases": entry["aliases"],
+                "description": None,
+                "description_status": "not-visually-reviewed",
                 "source_aya_count": len(source_paths),
                 "source_aya_paths": source_paths,
                 "source_roots": sorted(entry["source_roots"]),
                 "export_png_count": len(export_paths),
                 "export_png_paths": export_paths,
+                "export_records": sorted(entry["export_records"], key=lambda value: json.dumps(value, sort_keys=True)),
                 "packed_text_ref_count": packed_text,
                 "gdie_ref_count": gdie,
                 "total_packed_ref_count": packed_text + gdie,
@@ -179,7 +489,8 @@ def build_loose_mesh_catalog(
 
     for row in mesh_manifest:
         input_path = Path(row["input"])
-        output_path = Path(row["output"])
+        attempt = legacy_export_attempt(row, bundle_root, "fbx")
+        attempt["source_aya_path"] = repo_rel(input_path, repo_root)
         aliases = mesh_aliases_from_loose_name(input_path.name)
         canonical_ref = choose_mesh_ref(aliases)
         entry = catalog.setdefault(
@@ -191,12 +502,14 @@ def build_loose_mesh_catalog(
                 "aliases": aliases,
                 "source_aya_paths": [],
                 "export_fbx_paths": [],
+                "export_records": [],
                 "packed_reference_count": reference_map.get(canonical_ref, {}).get("count", 0),
                 "gdie_ref_count": gdie_map.get(canonical_ref, {}).get("count", 0),
             },
         )
+        entry["aliases"] = sorted(set(entry["aliases"]) | set(aliases))
         entry["source_aya_paths"].append(repo_rel(input_path, repo_root))
-        entry["export_fbx_paths"].append(bundle_rel(output_path, bundle_root, "loose-mesh export"))
+        entry["export_records"].append(attempt)
 
     out: list[dict[str, object]] = []
     for key in sorted(catalog):
@@ -211,10 +524,13 @@ def build_loose_mesh_catalog(
                 "kind": entry["kind"],
                 "canonical_ref": entry["canonical_ref"],
                 "aliases": entry["aliases"],
+                "description": None,
+                "description_status": "not-visually-reviewed",
                 "source_aya_count": len(source_paths),
                 "source_aya_paths": source_paths,
                 "export_fbx_count": len(export_paths),
                 "export_fbx_paths": export_paths,
+                "export_records": sorted(entry["export_records"], key=lambda value: json.dumps(value, sort_keys=True)),
                 "packed_reference_count": packed_ref,
                 "gdie_ref_count": gdie,
                 "total_packed_ref_count": packed_ref + gdie,
@@ -232,20 +548,29 @@ def build_embedded_mesh_catalog(
     out: list[dict[str, object]] = []
     for row in embedded_manifest:
         input_path = Path(row["input"])
-        output_path = Path(row["output"])
+        attempt = legacy_export_attempt(row, bundle_root, "fbx")
+        attempt["source_body_path"] = repo_rel(input_path, repo_root)
         source_archive = input_path.parent.name
         body_name = input_path.stem
         out.append(
             {
                 "catalog_id": f"embedded_mesh:{source_archive}/{body_name}",
                 "kind": "embedded_mesh",
+                "description": None,
+                "description_status": "not-visually-reviewed",
                 "source_archive": source_archive,
                 "body_name": body_name,
                 "source_body_path": repo_rel(input_path, repo_root),
-                "export_fbx_path": bundle_rel(output_path, bundle_root, "embedded-mesh export"),
+                "export_fbx_path": None,
+                "export_records": [attempt],
             }
         )
-    return sorted(out, key=lambda item: item["catalog_id"])
+    id_counts = Counter(item["catalog_id"] for item in out)
+    for entry in out:
+        # Legacy archive/body names are lookup aliases, not unique content/occurrence identities.
+        entry["logical_id_ambiguous"] = id_counts[entry["catalog_id"]] > 1
+    return sorted(out, key=lambda item: (item["catalog_id"], item["source_body_path"],
+                                        json.dumps(item, sort_keys=True)))
 
 
 def build_video_catalog(video_manifest: dict[str, object]) -> list[dict[str, object]]:
@@ -517,6 +842,8 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--language-matrix", type=Path, default=Path(".artifacts/language-export/merged_matrix.json"))
     ap.add_argument("--out-dir", type=Path, default=Path(".artifacts/asset-catalog"))
     ap.add_argument("--self-test", action="store_true", help="Run built-in catalog assembly checks without game assets")
+    ap.add_argument("--inspect-source-root", type=Path,
+                    help="Opt in to bounded metadata reads of manifest-selected sources below this explicit root; no discovery")
     return ap.parse_args()
 
 
@@ -632,11 +959,14 @@ def run_self_test() -> int:
         assert summary["video_family_counts"] == {"briefing": 1, "cutscene_numeric": 1}
         assert summary["goodie_family_counts"] == {"Model": 1, "Video": 1}
         assert textures[0]["canonical_ref"] == "meshtex\\cloud.tga"
-        assert textures[0]["export_png_paths"] == ["exports\\cloud.png"]
+        assert textures[0]["export_png_paths"] == []
+        assert textures[0]["export_records"][0]["requested_output_path"] == "exports\\cloud.png"
         assert loose_meshes[0]["canonical_ref"] == "fighter"
-        assert loose_meshes[0]["export_fbx_paths"] == ["exports\\fighter.fbx"]
+        assert loose_meshes[0]["export_fbx_paths"] == []
+        assert loose_meshes[0]["export_records"][0]["requested_output_path"] == "exports\\fighter.fbx"
         assert embedded_meshes[0]["source_archive"] == "001_res_PC.aya"
-        assert embedded_meshes[0]["export_fbx_path"] == "exports\\body00.fbx"
+        assert embedded_meshes[0]["export_fbx_path"] is None
+        assert embedded_meshes[0]["export_records"][0]["requested_output_path"] == "exports\\body00.fbx"
         assert language_rows[0]["text_present_count"] == 1
         assert language_rows[0]["audio_present_count"] == 1
         assert goodies[0]["index"] == 8
@@ -691,17 +1021,28 @@ def main() -> int:
         video_manifest = read_json(input_paths[4])
         language_matrix = read_json(input_paths[5])
 
+        protect_catalog_source_locations(args.out_dir,
+            (texture_manifest, loose_mesh_manifest, embedded_mesh_manifest), args.repo_root)
+
         textures = build_texture_catalog(texture_manifest, packed_manifest, args.repo_root, bundle_root)
         loose_meshes = build_loose_mesh_catalog(loose_mesh_manifest, packed_manifest, args.repo_root, bundle_root)
         embedded_meshes = build_embedded_mesh_catalog(embedded_mesh_manifest, args.repo_root, bundle_root)
         videos = build_video_catalog(video_manifest)
         language_rows = build_language_catalog(language_matrix)
         goodies = build_goodie_catalog(packed_manifest, videos, language_rows)
+        source_inspection = {"status": "notRequested"}
+        if args.inspect_source_root is not None:
+            source_inspection = inspect_catalog_sources(
+                textures, loose_meshes, embedded_meshes,
+                source_root=args.inspect_source_root, repo_root=args.repo_root,
+                source_manifests=(texture_manifest, loose_mesh_manifest, embedded_mesh_manifest))
         summary = build_summary(textures, loose_meshes, embedded_meshes, videos, language_rows, goodies)
 
         catalog = {
             "schema_version": CATALOG_SCHEMA_VERSION,
             "path_contract": CATALOG_PATH_CONTRACT,
+            "export_verification_contract": CATALOG_EXPORT_CONTRACT,
+            "source_inspection": source_inspection,
             "summary": summary,
             "textures": textures,
             "loose_meshes": loose_meshes,
