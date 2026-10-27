@@ -30,7 +30,7 @@ from collections import Counter
 from pathlib import Path
 
 import aya_archive_inventory as aai
-from safe_generated_output import SecuredOutputRoot
+from safe_generated_output import SecuredOutputRoot, validate_disjoint_output_root
 
 
 CATALOG_SCHEMA_VERSION = 3
@@ -53,12 +53,23 @@ class SourceInspectionError(ValueError):
         super().__init__(reason)
 
 
+class SourceReadBudget:
+    """Charge bytes as read, including sources that later fail identity checks."""
+    def __init__(self, limit: int):
+        self.limit = limit
+        self.bytes_read = 0
+
+    @property
+    def remaining(self) -> int:
+        return max(0, self.limit - self.bytes_read)
+
+
 def _file_fingerprint(value: os.stat_result) -> tuple[int, ...]:
     return (value.st_dev, value.st_ino, value.st_mode, value.st_size,
             value.st_mtime_ns, value.st_ctime_ns, value.st_nlink)
 
 
-def _read_selected_source(source_root: Path, source_path: Path, remaining: int) -> bytes:
+def _read_selected_source(source_root: Path, source_path: Path, budget: SourceReadBudget) -> bytes:
     """Bounded openat read; retain/revalidate every directory and the file handle.
 
     No discovery, symlink traversal, hardlinked file, or absolute source outside
@@ -93,17 +104,23 @@ def _read_selected_source(source_root: Path, source_path: Path, remaining: int) 
             raise SourceInspectionError("rejected", "source must be a regular single-link file")
         if before.st_size > MAX_SINGLE_SOURCE_BYTES:
             raise SourceInspectionError("unsupported", "source exceeds single-source byte limit")
-        if before.st_size > remaining:
+        if before.st_size > budget.remaining:
             raise SourceInspectionError("notAttempted", "selection byte budget exhausted")
         chunks, count = [], 0
-        while True:
-            chunk = os.read(source, min(1024 * 1024, min(remaining, MAX_SINGLE_SOURCE_BYTES) - count + 1))
+        # Read only the size already admitted by the held descriptor. The final metadata checks
+        # catch growth without a one-byte EOF probe beyond either byte limit.
+        while count < before.st_size:
+            requested = min(1024 * 1024, before.st_size - count, budget.remaining)
+            if requested <= 0:
+                raise SourceInspectionError("notAttempted", "selection byte budget exhausted")
+            chunk = os.read(source, requested)
+            budget.bytes_read += len(chunk)
             if not chunk:
                 break
-            chunks.append(chunk)
             count += len(chunk)
-            if count > min(remaining, MAX_SINGLE_SOURCE_BYTES):
-                raise SourceInspectionError("rejected", "source grew beyond admitted byte limit")
+            if len(chunk) > requested or count > MAX_SINGLE_SOURCE_BYTES:
+                raise SourceInspectionError("rejected", "source read exceeded admitted byte limit")
+            chunks.append(chunk)
         if count != before.st_size or _file_fingerprint(os.fstat(source)) != _file_fingerprint(before):
             raise SourceInspectionError("rejected", "source changed during held read")
         after = os.stat(relative.name, dir_fd=fd, follow_symlinks=False)
@@ -208,7 +225,7 @@ def inspect_catalog_sources(
                               entry.get("source_body_path") if entry["kind"] == "embedded_mesh" else None), [])
                   for entry in entries]
     observed: dict[tuple[str, str], dict[str, object]] = {}
-    consumed = 0
+    budget = SourceReadBudget(MAX_INSPECTED_SOURCE_BYTES)
     for index, key in enumerate(sorted(selected)):
         request = selected[key]
         path, kind = request["path"], request["kind"]
@@ -221,8 +238,7 @@ def inspect_catalog_sources(
         try:
             if index >= MAX_INSPECTED_SOURCES:
                 raise SourceInspectionError("notAttempted", "selection source-count budget exhausted")
-            source = _read_selected_source(root, path, MAX_INSPECTED_SOURCE_BYTES - consumed)
-            consumed += len(source)
+            source = _read_selected_source(root, path, budget)
             row["source_identity"] = {"length": len(source), "sha256": hashlib.sha256(source).hexdigest()}
             status, variant = _source_metadata(str(kind), source, path, str(logical))
             row.update(status)
@@ -262,7 +278,7 @@ def inspect_catalog_sources(
         entry["observed_occurrence_count"] = sum(row["source_identity"] is not None for row in occurrences)
     return {"schema": CATALOG_INSPECTION_SCHEMA, "selection_namespace": namespace,
             "scope": "explicit-manifest-source-selection-not-full-aya-universe",
-            "source_count": len(observed), "source_bytes_read": consumed,
+            "source_count": len(observed), "source_bytes_read": budget.bytes_read,
             "source_limit": MAX_INSPECTED_SOURCES, "source_byte_limit": MAX_INSPECTED_SOURCE_BYTES,
             "status_counts": dict(sorted(Counter(row["status"] for row in observed.values()).items())),
             "description_status": "not-visually-reviewed", "export_verification": "not-established"}
@@ -974,6 +990,19 @@ def main() -> int:
         embedded_mesh_manifest = read_json(input_paths[3])
         video_manifest = read_json(input_paths[4])
         language_matrix = read_json(input_paths[5])
+
+        if args.inspect_source_root is not None:
+            # Inspecting a source never authorizes replacing it with a generated catalog. Protect
+            # each declared location, including unavailable/rejected rows, without forbidding a
+            # safe sibling output under a broad inspection root. Check before any publication.
+            declared_sources = []
+            for manifest in (texture_manifest, loose_mesh_manifest, embedded_mesh_manifest):
+                for declaration in manifest:
+                    declared = Path(declaration["input"])
+                    if not declared.is_absolute():
+                        declared = args.repo_root / declared
+                    declared_sources.append(Path(os.path.abspath(declared)))
+            validate_disjoint_output_root(args.out_dir, declared_sources)
 
         textures = build_texture_catalog(texture_manifest, packed_manifest, args.repo_root, bundle_root)
         loose_meshes = build_loose_mesh_catalog(loose_mesh_manifest, packed_manifest, args.repo_root, bundle_root)

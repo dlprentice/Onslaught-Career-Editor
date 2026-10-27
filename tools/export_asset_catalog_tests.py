@@ -14,6 +14,7 @@ import zlib
 
 import export_asset_catalog as catalog
 from dds_census_tests import dds
+from safe_generated_output import UnsafeGeneratedOutputError
 
 
 def envelope(payload, level=6):
@@ -259,6 +260,125 @@ class CatalogSourceInspectionTests(unittest.TestCase):
             result = self.inspect(self.texture_catalog(paths))
         self.assertEqual({"notAttempted": 2}, result["status_counts"])
         self.assertEqual(0, result["source_bytes_read"])
+
+    def test_rejected_changed_reads_consume_the_aggregate_byte_budget(self):
+        paths = [self.source(f"{index}.tga.aya", b"abc") for index in range(4)]
+        rows = self.texture_catalog(paths)
+        original_read = os.read
+        read_bytes = 0
+        def changed_read(fd, count):
+            nonlocal read_bytes
+            data = original_read(fd, count)
+            read_bytes += len(data)
+            if data:
+                paths[0].write_bytes(b"changed")
+            return data
+        with patch.object(catalog, "MAX_INSPECTED_SOURCE_BYTES", 3), \
+                patch.object(catalog.os, "read", side_effect=changed_read):
+            result = self.inspect(rows)
+        self.assertEqual(3, read_bytes)
+        self.assertEqual(read_bytes, result["source_bytes_read"])
+        self.assertEqual({"notAttempted": 3, "rejected": 1}, result["status_counts"])
+        self.assertTrue(all(row["occurrences"][0]["source_identity"] is None for row in rows))
+
+    def test_growing_source_never_reads_past_its_admitted_size(self):
+        path = self.source("growing.tga.aya", b"abc")
+        rows = self.texture_catalog([path])
+        original_read = os.read
+        requests, read_bytes = [], 0
+        def growing_read(fd, count):
+            nonlocal read_bytes
+            requests.append(count)
+            data = original_read(fd, count)
+            read_bytes += len(data)
+            if data:
+                with path.open("ab") as stream:
+                    stream.write(b"appended beyond the admitted limit")
+            return data
+        with patch.object(catalog, "MAX_INSPECTED_SOURCE_BYTES", 3), \
+                patch.object(catalog.os, "read", side_effect=growing_read):
+            result = self.inspect(rows)
+        self.assertEqual([3], requests)
+        self.assertEqual(3, read_bytes)
+        self.assertEqual(3, result["source_bytes_read"])
+        self.assertEqual({"rejected": 1}, result["status_counts"])
+
+    def test_partial_read_then_error_is_also_charged(self):
+        paths = [self.source(f"{index}.tga.aya", b"abc") for index in range(2)]
+        rows = self.texture_catalog(paths)
+        original_read = os.read
+        calls = 0
+        def failing_read(fd, count):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                return original_read(fd, 2)
+            raise OSError(5, "authored I/O failure")
+        with patch.object(catalog, "MAX_INSPECTED_SOURCE_BYTES", 3), \
+                patch.object(catalog.os, "read", side_effect=failing_read):
+            result = self.inspect(rows)
+        self.assertEqual(2, calls)
+        self.assertEqual(2, result["source_bytes_read"])
+        self.assertEqual({"notAttempted": 1, "unavailable": 1}, result["status_counts"])
+
+    def test_oversize_source_refuses_without_a_payload_read(self):
+        path = self.source("oversize.tga.aya", b"abcd")
+        rows = self.texture_catalog([path])
+        with patch.object(catalog, "MAX_SINGLE_SOURCE_BYTES", 3), \
+                patch.object(catalog.os, "read", side_effect=AssertionError("oversize source read")):
+            result = self.inspect(rows)
+        self.assertEqual({"unsupported": 1}, result["status_counts"])
+        self.assertEqual(0, result["source_bytes_read"])
+
+    def test_oversized_reader_result_is_rejected_charged_and_stops_later_reads(self):
+        paths = [self.source(f"{index}.tga.aya", b"abc") for index in range(2)]
+        rows = self.texture_catalog(paths)
+        # os.read cannot actually exceed count; this adverse API seam proves accounting still
+        # reports every returned byte and never tries a second source after such a violation.
+        with patch.object(catalog, "MAX_INSPECTED_SOURCE_BYTES", 3), \
+                patch.object(catalog.os, "read", return_value=b"abcd") as read:
+            result = self.inspect(rows)
+        self.assertEqual(1, read.call_count)
+        self.assertEqual(3, read.call_args.args[1])
+        self.assertEqual(4, result["source_bytes_read"])
+        self.assertEqual({"notAttempted": 1, "rejected": 1}, result["status_counts"])
+
+    def _inspection_cli(self, source, inspection_root):
+        inputs = {"packed": dict(self.packed, gdie_families=[]), "texture": [self.row(source)],
+                  "mesh": [], "embedded": [], "video": {"files": []}, "language": {"rows": []}}
+        flags = {"packed": "--packed-manifest", "texture": "--texture-manifest",
+                 "mesh": "--loose-mesh-manifest", "embedded": "--embedded-mesh-manifest",
+                 "video": "--video-manifest", "language": "--language-matrix"}
+        args = ["export_asset_catalog.py", "--repo-root", str(self.repo), "--bundle-root", str(self.bundle),
+                "--out-dir", str(self.bundle / "asset_catalog"), "--inspect-source-root", str(inspection_root)]
+        for name, data in inputs.items():
+            manifest = self.repo / (name + ".json")
+            manifest.write_text(json.dumps(data))
+            args += [flags[name], str(manifest)]
+        return args
+
+    def test_actual_cli_refuses_selected_source_under_output_without_overwriting_it(self):
+        output = self.bundle / "asset_catalog"
+        output.mkdir()
+        source = output / "catalog.json"
+        original = dds(4, 4)
+        source.write_bytes(original)
+        # Relative declarations use the same repo-root anchor as normal inspection.
+        args = self._inspection_cli(source.relative_to(self.repo), self.bundle)
+        with patch("sys.argv", args), contextlib.redirect_stdout(io.StringIO()), \
+                self.assertRaisesRegex(UnsafeGeneratedOutputError, "overlap protected source"):
+            catalog.main()
+        self.assertEqual(original, source.read_bytes())
+        self.assertFalse((output / "summary.json").exists())
+
+    def test_broad_inspection_root_allows_disjoint_selected_source_and_output(self):
+        source = self.source("textures/good.dds", dds(4, 4))
+        args = self._inspection_cli(source, self.repo)
+        with patch("sys.argv", args), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0, catalog.main())
+        result = json.loads((self.bundle / "asset_catalog/catalog.json").read_text())
+        self.assertEqual({"valid": 1}, result["source_inspection"]["status_counts"])
+        self.assertEqual(dds(4, 4), source.read_bytes())
 
     def test_raw_embedded_framing_is_unknown_until_complete_cmsh_is_supplied(self):
         from cmsh_animation_usage_census_tests import _catalog_stream
