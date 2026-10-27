@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-26 (bounded level, texture-descriptor and mission-script metadata; earlier relicensing)
+Last updated: 2026-10-27 (single-archive texture catalog; earlier bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -85,6 +85,27 @@ Generated catalogs, retail assets, conversions, and bulk exports remain ignored
 local material. Source retains only the bounded recipe and implementation.
 Passing an output safety test proves neither format completeness nor visual
 fidelity.
+
+The asset catalog can also inspect **one explicitly selected PC archive**. In
+addition to the usual catalog manifest and output arguments, pass
+`--archive-source-root <directory> --inspect-pc-text-archive <file>`; a relative
+file path is relative to that directory. The options must appear together and
+only once. This separate opt-in reads the selected regular, single-link file
+under the explicit root, rejects path or parent replacement, and does no
+discovery. When manifest-source inspection is also enabled, the archive cannot
+be selected there as well. The caller selects the PC chunked-zlib profile; a name
+alone does not establish the archive's platform.
+
+The optional `pc_archive_texture_inspection` in `catalog.json` records the held
+archive and inflated-stream hashes, then the ordinal, inflated payload offset,
+length, hash and bounded metadata for each admitted top-level `TEXT` occurrence.
+Repeated names and payloads remain separate occurrences; same-name groups include
+only successfully parsed admitted records. Archive, record and aggregate mip
+budgets can yield an explicit refusal or partial result, with omitted counts.
+The report contains no raw archive, payload or pixel bytes. It does not join
+these occurrences to loose DDS files, models or the manifest catalog, and does
+not establish runtime selection or appearance. Generated reports remain private
+local material; omitting these options leaves the existing catalog unchanged.
 
 ## Parity measurement
 

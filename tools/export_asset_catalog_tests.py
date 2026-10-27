@@ -24,6 +24,10 @@ def envelope(payload, level=6):
     return len(member).to_bytes(4, "little") + member
 
 
+def archive_chunk(tag, payload=b""):
+    return tag + len(payload).to_bytes(4, "little") + payload
+
+
 class CatalogExportTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -695,6 +699,238 @@ class CatalogSourceInspectionTests(unittest.TestCase):
             catalog.main()
         self.assertEqual(payload, path.read_bytes())
         self.assertFalse((output / "summary.json").exists())
+
+    def test_one_archive_measures_exact_occurrences_without_name_or_dds_joins(self):
+        first = texture_payload(platform="PC", name="MeshTex/Foo.tga", frame_mips=(2, 1))
+        other = texture_payload(platform="PC", name="meshtex\\foo.tga", format_code=2, frame_mips=(1,))
+        marker = b"PRIVATE-NON-TEXT-PAYLOAD-MUST-NOT-BE-EMITTED"
+        prefix = archive_chunk(b"MESH", marker)
+        raw = prefix + archive_chunk(b"TEXT", first) + archive_chunk(b"TEXT", first) + archive_chunk(b"TEXT", other)
+        split = len(prefix) + 27  # A member boundary may occur inside a TEXT payload.
+        archive = envelope(raw[:split]) + envelope(raw[split:])
+        source = self.source("archive/selected.aya", archive)
+        result = catalog.inspect_pc_texture_archive(self.sources, source)
+        self.assertEqual("complete", result["status"])
+        self.assertEqual({"length": len(archive), "sha256": hashlib.sha256(archive).hexdigest()}, result["archive_identity"])
+        self.assertEqual({"length": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}, result["inflated_identity"])
+        self.assertEqual((2, 4, 3, 0, 7), (result["member_count"], result["top_level_chunk_count"],
+                         result["observed_text_count"], result["omitted_text_count"], result["projected_mips"]))
+        rows = result["occurrences"]
+        self.assertEqual([1, 2, 3], [r["top_level_ordinal"] for r in rows])
+        self.assertEqual([len(prefix) + 8, len(prefix) + len(first) + 16,
+                          len(prefix) + 2 * len(first) + 24], [r["inflated_payload_offset"] for r in rows])
+        self.assertEqual([hashlib.sha256(p).hexdigest() for p in (first, first, other)],
+                         [r["payload_identity"]["sha256"] for r in rows])
+        self.assertEqual(3, len({r["occurrence_id"] for r in rows}))
+        self.assertEqual({1, 2}, {r["metadata"]["descriptor"]["serializedFormatCode"] for r in rows})
+        groups = result["duplicate_normalized_names"]
+        self.assertEqual(1, len(groups))
+        self.assertEqual("meshtex\\foo.tga", groups[0]["normalized_name"])
+        self.assertEqual([r["occurrence_id"] for r in rows], groups[0]["occurrence_ids"])
+        self.assertTrue(all(value == "not-established" for value in result["joins"].values()))
+        self.assertTrue(all(r["metadata"]["descriptor"]["ddsStorageFormat"] is None for r in rows))
+        self.assertTrue(all(m["sha256"] is None for r in rows for f in r["metadata"]["frames"] for m in f["mips"]))
+        self.assertNotIn(marker.decode(), json.dumps(result))
+        self.assertNotIn("archiveProvenance", json.dumps(result))
+        self.assertNotIn(str(self.sources), json.dumps(result))
+        standalone = packed.serialized_texture_metadata(first, platform="PC", source_path="standalone.text",
+                                                        archive_sha256=hashlib.sha256(first).hexdigest())
+        self.assertEqual(standalone["descriptor"], rows[0]["metadata"]["descriptor"])
+        self.assertEqual(archive, source.read_bytes())
+
+    def test_same_payload_in_different_archives_has_distinct_occurrences_and_stable_payload_hash(self):
+        payload = texture_payload(platform="PC")
+        first = self.source("one/file.aya", envelope(archive_chunk(b"TEXT", payload)))
+        second = self.source("two/file.aya", envelope(archive_chunk(b"MESH", b"other") + archive_chunk(b"TEXT", payload)))
+        a = catalog.inspect_pc_texture_archive(self.sources / "one", Path("file.aya"))
+        b = catalog.inspect_pc_texture_archive(self.sources / "two", Path("file.aya"))
+        self.assertEqual(a, catalog.inspect_pc_texture_archive(self.sources / "one", first))
+        self.assertNotEqual(a["archive_identity"]["sha256"], b["archive_identity"]["sha256"])
+        self.assertEqual(a["occurrences"][0]["payload_identity"], b["occurrences"][0]["payload_identity"])
+        self.assertNotEqual(a["occurrences"][0]["occurrence_id"], b["occurrences"][0]["occurrence_id"])
+        self.assertNotEqual(first.read_bytes(), second.read_bytes())
+
+    def test_bad_archive_framing_and_zlib_are_terminal_but_measured(self):
+        raw = archive_chunk(b"TEXT", texture_payload(platform="PC"))
+        compressed = zlib.compress(raw)
+        cases = [
+            (b"", "empty_archive"),
+            (b"\x01\x00", "truncated_member_header"),
+            (len(compressed).to_bytes(4, "little") + compressed[:-1], "member_overrun"),
+            ((len(compressed) - 1).to_bytes(4, "little") + compressed[:-1], "incomplete_zlib_member"),
+            ((len(compressed) + 1).to_bytes(4, "little") + compressed + b"X", "trailing_zlib_data"),
+            (envelope(b"TEXT\x10\x00\x00\x00short"), "chunk_overrun"),
+        ]
+        for index, (archive, category) in enumerate(cases):
+            with self.subTest(category=category):
+                source = self.source(f"bad/{index}.aya", archive)
+                result = catalog.inspect_pc_texture_archive(self.sources, source)
+                self.assertEqual("unparsed", result["status"])
+                self.assertEqual(category, result["reason"]["category"])
+                self.assertEqual(hashlib.sha256(archive).hexdigest(), result["archive_identity"]["sha256"])
+                self.assertIsNone(result["inflated_identity"])
+                self.assertEqual([], result["occurrences"])
+
+    def test_archive_and_chunk_limits_refuse_without_unbounded_decoding(self):
+        raw = archive_chunk(b"TEXT", texture_payload(platform="PC")) * 2
+        source = self.source("bounds/selected.aya", envelope(raw))
+        for target, name, limit, category in ((catalog.aai, "MAX_INFLATED_BYTES", 32, "inflate_limit"),
+                                               (catalog.aai, "MAX_TOP_LEVEL_CHUNKS", 1, "chunk_count_limit"),
+                                               (catalog.aai, "MAX_MEMBER_COMPRESSED_BYTES", 1, "member_length_limit")):
+            with self.subTest(category=category), patch.object(target, name, limit):
+                result = catalog.inspect_pc_texture_archive(self.sources, source)
+                self.assertEqual("unsupported", result["status"])
+                self.assertEqual(category, result["reason"]["category"])
+                self.assertEqual([], result["occurrences"])
+        with patch.object(catalog, "MAX_SINGLE_SOURCE_BYTES", 1), \
+                patch.object(catalog.os, "read", side_effect=AssertionError("oversized archive read")):
+            result = catalog.inspect_pc_texture_archive(self.sources, source)
+        self.assertEqual("unsupported", result["status"])
+        self.assertEqual(0, result["source_bytes_read"])
+        self.assertIsNone(result["archive_identity"])
+
+    def test_record_mip_and_descriptor_caps_retain_partial_dispositions(self):
+        three = texture_payload(platform="PC", frame_mips=(3,))
+        one = texture_payload(platform="PC", frame_mips=(1,))
+        raw = b"".join(archive_chunk(b"TEXT", payload) for payload in (three, three, one, one))
+        source = self.source("bounds/records.aya", envelope(raw))
+        with patch.object(catalog, "MAX_PACKED_TEXTURE_MIPS", 4), \
+                patch.object(packed, "parse_serialized_texture", wraps=packed.parse_serialized_texture) as parse:
+            result = catalog.inspect_pc_texture_archive(self.sources, source)
+        self.assertEqual("partial", result["status"])
+        self.assertEqual(2, parse.call_count)
+        self.assertEqual(["parsed", "notAttempted", "parsed", "notAttempted"],
+                         [r["status"] for r in result["occurrences"]])
+        self.assertEqual(4, result["projected_mips"])
+        self.assertEqual(4, len({r["occurrence_id"] for r in result["occurrences"]}))
+        self.assertTrue(all(r["payload_identity"]["sha256"] for r in result["occurrences"]))
+        with patch.object(catalog, "MAX_ARCHIVE_TEXTURE_RECORDS", 2):
+            result = catalog.inspect_pc_texture_archive(self.sources, source)
+        self.assertEqual(("partial", 4, 2, 2), (result["status"], result["observed_text_count"],
+                         result["omitted_text_count"], len(result["occurrences"])))
+        too_large = b"X" * (packed.TextureDescriptorLimits().max_source_bytes + 1)
+        large_source = self.source("bounds/large.aya", envelope(archive_chunk(b"TEXT", too_large)))
+        with patch.object(packed, "serialized_texture_metadata", side_effect=AssertionError("oversized payload parsed")):
+            result = catalog.inspect_pc_texture_archive(self.sources, large_source)
+        self.assertEqual("partial", result["status"])
+        self.assertEqual("unsupported", result["occurrences"][0]["status"])
+        self.assertEqual(hashlib.sha256(too_large).hexdigest(), result["occurrences"][0]["payload_identity"]["sha256"])
+
+    def test_bad_text_does_not_discard_an_independently_framed_later_occurrence(self):
+        valid = texture_payload(platform="PC")
+        raw = archive_chunk(b"TEXT", valid[:-1]) + archive_chunk(b"TEXT", valid)
+        result = catalog.inspect_pc_texture_archive(self.sources, self.source("bad/text.aya", envelope(raw)))
+        self.assertEqual("partial", result["status"])
+        self.assertEqual(["unparsed", "parsed"], [r["status"] for r in result["occurrences"]])
+        self.assertEqual([], result["occurrences"][0]["metadata"]["frames"])
+        self.assertEqual(hashlib.sha256(valid[:-1]).hexdigest(), result["occurrences"][0]["payload_identity"]["sha256"])
+
+    def test_failed_parser_work_is_charged_against_the_aggregate_mip_budget(self):
+        malformed = bytearray(texture_payload(platform="PC", frame_mips=(2, 1)))
+        malformed.append(0)  # Preflight accepts the framed tail; the PC parser rejects it in frame two.
+        malformed[4:8] = (len(malformed) - 8).to_bytes(4, "little")
+        size_offset = packed.CTEX_END + 12 + 4
+        malformed[size_offset:size_offset + 4] = (5).to_bytes(4, "little")
+        three = texture_payload(platform="PC", frame_mips=(3,))
+        one = texture_payload(platform="PC", frame_mips=(1,))
+        source = self.source("bounds/invalid-format.aya", envelope(b"".join(
+            archive_chunk(b"TEXT", payload) for payload in (bytes(malformed), three, one, one))))
+        with patch.object(catalog, "MAX_PACKED_TEXTURE_MIPS", 4), \
+                patch.object(packed, "parse_serialized_texture", wraps=packed.parse_serialized_texture) as parse:
+            result = catalog.inspect_pc_texture_archive(self.sources, source)
+        self.assertEqual(["unparsed", "notAttempted", "parsed", "notAttempted"],
+                         [r["status"] for r in result["occurrences"]])
+        self.assertEqual(2, parse.call_count)
+        self.assertEqual((4, 1), (result["admitted_mips"], result["projected_mips"]))
+        self.assertEqual(4, result["limits"]["admitted_mips"])
+        self.assertEqual((256, 32, 1024), (result["limits"]["frames_per_record"],
+                          result["limits"]["mips_per_frame"], result["limits"]["mips_per_record"]))
+
+    def test_archive_path_links_hardlinks_and_escape_are_rejected_before_decode(self):
+        good = self.source("safe/selected.aya", envelope(archive_chunk(b"TEXT", texture_payload(platform="PC"))))
+        leaf = self.sources / "leaf.aya"
+        leaf.symlink_to(good)
+        parent = self.sources / "parent"
+        parent.symlink_to(good.parent, target_is_directory=True)
+        hard = self.sources / "hard.aya"
+        os.link(good, hard)
+        outside = self.repo / "outside.aya"
+        outside.write_bytes(good.read_bytes())
+        with patch.object(catalog.aai, "decode_archive_envelope", side_effect=AssertionError("unsafe source decoded")):
+            for path in (leaf, parent / good.name, hard, outside, Path("../outside.aya")):
+                with self.subTest(path=path):
+                    result = catalog.inspect_pc_texture_archive(self.sources, path)
+                    self.assertEqual("rejected", result["status"])
+                    self.assertIsNone(result["archive_identity"])
+                    self.assertEqual([], result["occurrences"])
+
+    def test_archive_file_and_parent_replacements_are_rejected_before_decoding(self):
+        archive = envelope(archive_chunk(b"TEXT", texture_payload(platform="PC")))
+        for which in ("file", "parent"):
+            with self.subTest(which=which):
+                source = self.source(f"race-{which}/selected.aya", archive)
+                read = catalog.os.read
+                changed = False
+                def replace(fd, count):
+                    nonlocal changed
+                    data = read(fd, count)
+                    if not changed:
+                        changed = True
+                        if which == "file":
+                            source.rename(source.with_name("held.aya"))
+                            source.write_bytes(archive)
+                        else:
+                            source.parent.rename(self.sources / ("held-" + which))
+                            source.parent.mkdir()
+                            source.write_bytes(archive)
+                    return data
+                with patch.object(catalog.os, "read", side_effect=replace), \
+                        patch.object(catalog.aai, "decode_archive_envelope", side_effect=AssertionError("changed archive decoded")):
+                    result = catalog.inspect_pc_texture_archive(self.sources, source)
+                self.assertEqual("rejected", result["status"])
+                self.assertEqual(len(archive), result["source_bytes_read"])
+                self.assertIsNone(result["archive_identity"])
+
+    def test_archive_cli_is_single_opt_in_and_cannot_overwrite_source(self):
+        loose = self.source("textures/loose.dds", dds(4, 4))
+        archive = envelope(archive_chunk(b"TEXT", texture_payload(platform="PC")))
+        source = self.source("archive/selected.aya", archive)
+        args = self._inspection_cli(loose, self.sources)
+        index = args.index("--inspect-source-root")
+        del args[index:index + 2]
+        with patch("sys.argv", args), patch.object(catalog.aai, "decode_archive_envelope", side_effect=AssertionError("implicit archive read")), \
+                contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0, catalog.main())
+        output = self.bundle / "asset_catalog"
+        legacy = json.loads((output / "catalog.json").read_text())
+        self.assertNotIn("pc_archive_texture_inspection", legacy)
+        flags = ["--archive-source-root", str(self.sources), "--inspect-pc-text-archive", "archive/selected.aya"]
+        with patch("sys.argv", args + flags), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0, catalog.main())
+        result = json.loads((output / "catalog.json").read_text())
+        inspection = result.pop("pc_archive_texture_inspection")
+        self.assertEqual(legacy, result)
+        self.assertEqual("complete", inspection["status"])
+        self.assertEqual("archive/selected.aya", inspection["logical_source_path"])
+        self.assertEqual(archive, source.read_bytes())
+        conflicting_args = self._inspection_cli(source, self.sources) + flags
+        with patch("sys.argv", conflicting_args), \
+                patch.object(catalog, "_read_selected_source", side_effect=AssertionError("duplicate source read")), \
+                contextlib.redirect_stdout(io.StringIO()), \
+                self.assertRaisesRegex(SystemExit, "cannot also be a manifest source"):
+            catalog.main()
+        for incomplete in (["--inspect-pc-text-archive", str(source)], ["--archive-source-root", str(self.sources)],
+                           flags + ["--inspect-pc-text-archive", str(source)], flags + ["--archive-source-root", str(self.sources)]):
+            with self.subTest(flags=incomplete), patch("sys.argv", args + incomplete), \
+                    self.assertRaisesRegex(SystemExit, "exactly one"):
+                catalog.main()
+        overlapping = output / "catalog.json"
+        overlapping.write_bytes(archive)
+        with patch("sys.argv", args + ["--archive-source-root", str(self.bundle),
+                                       "--inspect-pc-text-archive", "asset_catalog/catalog.json"]), \
+                contextlib.redirect_stdout(io.StringIO()), self.assertRaisesRegex(UnsafeGeneratedOutputError, "overlap protected source"):
+            catalog.main()
+        self.assertEqual(archive, overlapping.read_bytes())
 
 
 if __name__ == "__main__":

@@ -380,7 +380,7 @@ def parse_serialized_texture(payload: bytes, *, platform: str) -> SerializedText
 
 def _descriptor_count_preflight(
     payload: bytes, platform: str, limits: TextureDescriptorLimits,
-) -> None:
+) -> int:
     """Walk scalar framing before the legacy parser allocates frame/mip rows."""
     if len(payload) > limits.max_source_bytes:
         raise ValueError("metadata limit: source bytes")
@@ -417,6 +417,7 @@ def _descriptor_count_preflight(
         offset = end
     if offset != len(payload):
         raise ValueError("texture descriptor has unowned bytes")
+    return total_mips
 
 
 def serialized_texture_metadata(

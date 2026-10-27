@@ -37,10 +37,12 @@ CATALOG_SCHEMA_VERSION = 3
 CATALOG_PATH_CONTRACT = "bundle-root-relative"
 CATALOG_EXPORT_CONTRACT = "source-bound-verified-outputs-only"
 CATALOG_INSPECTION_SCHEMA = "onslaught.catalog-source-selection.v1"
+ARCHIVE_TEXTURE_SCHEMA = "onslaught.catalog-pc-archive-textures.v1"
 MAX_INSPECTED_SOURCES = 256
 MAX_INSPECTED_SOURCE_BYTES = 256 * 1024 * 1024
 MAX_SINGLE_SOURCE_BYTES = 64 * 1024 * 1024
 MAX_PACKED_TEXTURE_MIPS = 4096
+MAX_ARCHIVE_TEXTURE_RECORDS = 4096
 
 
 def _identity_hash(domain: str, value: object) -> str:
@@ -385,6 +387,134 @@ def inspect_catalog_sources(
         result.update(packed_texture_scope="explicit-standalone-TEXT-payloads-not-original-archive-selection",
                       packed_texture_mips_projected=packed_mips,
                       packed_texture_mip_limit=MAX_PACKED_TEXTURE_MIPS)
+    return result
+
+
+def inspect_pc_texture_archive(source_root: Path, source_path: Path) -> dict[str, object]:
+    """Project top-level TEXT occurrences from one held PC archive.
+
+    This is a separate selection from the manifest catalog, with no name-based
+    joins. Limits are engineering admission bounds, not game-format limits.
+    Compressed source bytes are read once and revalidated before decoding; raw
+    archive and TEXT payload bytes never leave this function.
+    """
+    import aya_texture_fidelity_census as packed
+
+    root = Path(os.path.abspath(source_root))
+    path = Path(os.path.abspath(source_path if source_path.is_absolute() else root / source_path))
+    try:
+        logical = path.relative_to(root).as_posix()
+    except ValueError:
+        logical = None
+    descriptor_limits = packed.TextureDescriptorLimits()
+    budget = SourceReadBudget(min(MAX_SINGLE_SOURCE_BYTES, aai.MAX_COMPRESSED_BYTES))
+    result: dict[str, object] = {
+        "schema": ARCHIVE_TEXTURE_SCHEMA,
+        "scope": "one-explicit-pc-chunked-zlib-archive-top-level-TEXT-only",
+        "status": "notAttempted", "logical_source_path": logical,
+        "archive_identity": None, "inflated_identity": None,
+        "source_bytes_read": 0, "member_count": None, "top_level_chunk_count": None,
+        "observed_text_count": None, "omitted_text_count": None,
+        "occurrences": [], "duplicate_normalized_names": [],
+        "name_group_scope": "parsed-projected-records-only; equal names do not prove a runtime lookup",
+        "joins": {"manifest_catalog": "not-established", "external_dds": "not-established",
+                  "model_membership": "not-established", "runtime_selection": "not-established"},
+        "limits": {"compressed_bytes": min(MAX_SINGLE_SOURCE_BYTES, aai.MAX_COMPRESSED_BYTES),
+                   "inflated_bytes": aai.MAX_INFLATED_BYTES, "members": aai.MAX_MEMBERS,
+                   "member_compressed_bytes": aai.MAX_MEMBER_COMPRESSED_BYTES,
+                   "top_level_chunks": aai.MAX_TOP_LEVEL_CHUNKS, "chunk_bytes": aai.MAX_CHUNK_BYTES,
+                   "text_records": MAX_ARCHIVE_TEXTURE_RECORDS,
+                   "text_payload_bytes": descriptor_limits.max_source_bytes,
+                   "frames_per_record": descriptor_limits.max_frames,
+                   "mips_per_frame": descriptor_limits.max_mips_per_frame,
+                   "mips_per_record": descriptor_limits.max_total_mips,
+                   "admitted_mips": MAX_PACKED_TEXTURE_MIPS,
+                   "kind": "engineering admission bounds"},
+    }
+    try:
+        if (logical is None or not 1 <= len(logical) <= 4096 or logical == "."
+                or "\\" in logical or ":" in logical or any(ord(c) < 32 for c in logical)
+                or any(part in ("", ".", "..") for part in logical.split("/"))):
+            raise SourceInspectionError("rejected", "invalid logical path below explicit archive root")
+        source = _read_selected_source(root, path, budget)
+        archive_hash = hashlib.sha256(source).hexdigest()
+        result["archive_identity"] = {"length": len(source), "sha256": archive_hash}
+        raw, chunks, members, _envelope = aai.decode_archive_envelope(source, "pc-chunked-zlib")
+    except SourceInspectionError as error:
+        result.update(status=error.status, reason={"category": error.reason})
+        return result
+    except aai.ArchiveObservationError as error:
+        result.update(status="unsupported" if error.category.endswith("_limit") else "unparsed",
+                      reason={"category": error.category})
+        return result
+    finally:
+        result["source_bytes_read"] = budget.bytes_read
+
+    result.update(inflated_identity={"length": len(raw), "sha256": hashlib.sha256(raw).hexdigest()},
+                  member_count=members, top_level_chunk_count=len(chunks))
+    text_chunks = [chunk for chunk in chunks if chunk.tag == "TEXT"]
+    result["observed_text_count"] = len(text_chunks)
+    result["omitted_text_count"] = max(0, len(text_chunks) - MAX_ARCHIVE_TEXTURE_RECORDS)
+    occurrences: list[dict[str, object]] = result["occurrences"]
+    names: dict[str, list[str]] = {}
+    mips_admitted = 0
+    mips_projected = 0
+    for chunk in text_chunks[:MAX_ARCHIVE_TEXTURE_RECORDS]:
+        offset = chunk.offset + 8
+        payload = memoryview(raw)[offset:offset + chunk.size]
+        payload_identity = {"length": chunk.size, "sha256": hashlib.sha256(payload).hexdigest()}
+        coordinates = {"source_path": logical, "archive_sha256": archive_hash, "platform": "PC",
+                       "top_level_ordinal": chunk.index, "inflated_payload_offset": offset,
+                       "payload_identity": payload_identity}
+        occurrence_id = "archive-texture-occurrence:" + _identity_hash(ARCHIVE_TEXTURE_SCHEMA, coordinates)
+        row: dict[str, object] = {"occurrence_id": occurrence_id, "top_level_ordinal": chunk.index,
+                                  "inflated_payload_offset": offset, "payload_identity": payload_identity,
+                                  "status": "notAttempted", "metadata": None}
+        if chunk.size > descriptor_limits.max_source_bytes:
+            row.update(status="unsupported", reason="metadata limit: source bytes")
+        elif mips_admitted >= MAX_PACKED_TEXTURE_MIPS:
+            row.update(reason="selection packed-text mip budget exhausted")
+        else:
+            remaining = MAX_PACKED_TEXTURE_MIPS - mips_admitted
+            limits = packed.TextureDescriptorLimits(max_total_mips=min(descriptor_limits.max_total_mips, remaining))
+            held_payload = bytes(payload)
+            try:
+                # Charge the admitted work even if the legacy parser later rejects
+                # another descriptor field. A failed preflight allocates no mips.
+                mips_admitted += packed._descriptor_count_preflight(held_payload, "PC", limits)
+            except ValueError:
+                pass  # The projection reports the same preflight refusal below.
+            metadata = packed.serialized_texture_metadata(
+                held_payload, platform="PC", source_path=logical, archive_sha256=archive_hash,
+                payload_offset=offset, chunk_path=(chunk.index,),
+                limits=limits)
+            # The surrounding row owns the independently measured source and
+            # coordinates. The parser's caller-supplied provenance and frame IDs
+            # cannot attest this archive read, so do not publish them as proof.
+            metadata.pop("identity")
+            metadata.pop("limits")
+            for frame in metadata["frames"]:
+                frame.pop("occurrenceId")
+            status = metadata["status"]
+            if (status == "unsupported" and metadata.get("reason") == "metadata limit: aggregate mip count"
+                    and remaining < descriptor_limits.max_total_mips):
+                status = "notAttempted"
+                metadata["status"] = status
+            row.update(status=status, metadata=metadata)
+            if status == "parsed":
+                mips_projected += sum(len(frame["mips"]) for frame in metadata["frames"])
+                name = metadata["descriptor"]["normalizedName"]
+                names.setdefault(name, []).append(occurrence_id)
+        occurrences.append(row)
+    result["admitted_mips"] = mips_admitted
+    result["projected_mips"] = mips_projected
+    result["duplicate_normalized_names"] = [
+        {"normalized_name": name, "occurrence_ids": ids}
+        for name, ids in sorted(names.items()) if len(ids) > 1
+    ]
+    result["status_counts"] = dict(sorted(Counter(row["status"] for row in occurrences).items()))
+    result["status"] = ("partial" if result["omitted_text_count"] or
+                        any(row["status"] != "parsed" for row in occurrences) else "complete")
     return result
 
 
@@ -949,6 +1079,10 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--inspect-source-root", type=Path,
                     help="Opt in to bounded metadata reads of manifest-selected sources below this explicit root; "
                          "raw TEXT requires texture row source_inspection kind=packed-text and platform=PC/XBOX; no discovery")
+    ap.add_argument("--inspect-pc-text-archive", type=Path, action="append",
+                    help="Inspect exactly one explicitly selected PC chunked-zlib AYA; no DDS or catalog joins")
+    ap.add_argument("--archive-source-root", type=Path, action="append",
+                    help="Explicit root for --inspect-pc-text-archive; a relative archive path is relative to this root")
     return ap.parse_args()
 
 
@@ -1097,6 +1231,16 @@ def main() -> int:
     if args.self_test:
         return run_self_test()
 
+    archive_selection = args.inspect_pc_text_archive or []
+    archive_roots = args.archive_source_root or []
+    if len(archive_selection) > 1 or len(archive_roots) > 1 or bool(archive_selection) != bool(archive_roots):
+        raise SystemExit("select exactly one --inspect-pc-text-archive and one --archive-source-root together")
+    archive_root = Path(os.path.abspath(archive_roots[0])) if archive_roots else None
+    archive_source = None
+    if archive_selection:
+        selected = archive_selection[0]
+        archive_source = Path(os.path.abspath(selected if selected.is_absolute() else archive_root / selected))
+
     args.repo_root = args.repo_root.resolve()
     args.out_dir = args.out_dir.resolve()
     bundle_root = (
@@ -1127,7 +1271,17 @@ def main() -> int:
         language_matrix = read_json(input_paths[5])
 
         protect_catalog_source_locations(args.out_dir,
-            (texture_manifest, loose_mesh_manifest, embedded_mesh_manifest), args.repo_root)
+            (texture_manifest, loose_mesh_manifest, embedded_mesh_manifest,
+             [{"input": str(archive_source)}] if archive_source is not None else []), args.repo_root)
+
+        if archive_source is not None and args.inspect_source_root is not None:
+            for manifest in (texture_manifest, loose_mesh_manifest, embedded_mesh_manifest):
+                for declaration in manifest:
+                    declared = Path(declaration["input"])
+                    if not declared.is_absolute():
+                        declared = args.repo_root / declared
+                    if Path(os.path.abspath(declared)) == archive_source:
+                        raise SystemExit("the selected archive cannot also be a manifest source inspection")
 
         textures = build_texture_catalog(texture_manifest, packed_manifest, args.repo_root, bundle_root)
         loose_meshes = build_loose_mesh_catalog(loose_mesh_manifest, packed_manifest, args.repo_root, bundle_root)
@@ -1156,6 +1310,9 @@ def main() -> int:
             "language_rows": language_rows,
             "goodies": goodies,
         }
+
+        if archive_source is not None:
+            catalog["pc_archive_texture_inspection"] = inspect_pc_texture_archive(archive_root, archive_source)
 
         output.atomic_write_json(args.out_dir / "summary.json", summary)
         output.atomic_write_json(args.out_dir / "catalog.json", catalog)

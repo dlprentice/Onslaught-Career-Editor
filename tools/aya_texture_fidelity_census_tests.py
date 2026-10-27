@@ -513,6 +513,16 @@ class SerializedTextureMetadataTests(unittest.TestCase):
         self.assertEqual("parsed", row["status"])
         self.assertEqual(5, sum(len(f["mips"]) for f in row["frames"]))
 
+    def test_preflight_reports_admitted_mip_work_for_pc_and_xbox(self):
+        for platform in ("PC", "XBOX"):
+            with self.subTest(platform=platform):
+                payload = texture_payload(platform=platform, frame_mips=(3, 2))
+                limits = census.TextureDescriptorLimits(max_total_mips=5)
+                self.assertEqual(5, census._descriptor_count_preflight(payload, platform, limits))
+                with self.assertRaisesRegex(ValueError, "aggregate mip count"):
+                    census._descriptor_count_preflight(payload, platform,
+                        census.TextureDescriptorLimits(max_total_mips=4))
+
     def test_default_aggregate_limit_admits_1024_and_refuses_1025_before_parser(self):
         allowed = texture_payload(platform="PC", frame_mips=(32,) * 32)
         self.assertEqual("parsed", self.project(allowed)["status"])
