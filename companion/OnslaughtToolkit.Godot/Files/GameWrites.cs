@@ -298,10 +298,7 @@ public static class Backups
     private static BackupSet? ReadManifest(string path)
     {
         using FileStream stream = new(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-        if (stream.Length > MaximumManifestBytes) return null;
-        byte[] bytes = new byte[checked((int)stream.Length)];
-        stream.ReadExactly(bytes);
-        if (stream.ReadByte() != -1) return null;
+        byte[] bytes = ReadManifestBytes(stream);
         ReadOnlySpan<byte> json = bytes;
         if (json.StartsWith(new byte[] { 0xEF, 0xBB, 0xBF })) json = json[3..];
         if (JsonSerializer.Deserialize<BackupSet>(json) is not BackupSet set || set.Created == default ||
@@ -317,6 +314,17 @@ public static class Backups
                 !file.Original[(file.Original.LastIndexOfAny(['/', '\\']) + 1)..].Equals(file.Name, StringComparison.Ordinal)) return null;
         }
         return set;
+    }
+
+    private static byte[] ReadManifestBytes(FileStream stream)
+    {
+        if (stream.Length > MaximumManifestBytes)
+            throw new IOException("The backup manifest is too large to read safely.");
+        byte[] bytes = new byte[checked((int)stream.Length)];
+        stream.Position = 0;
+        stream.ReadExactly(bytes);
+        if (stream.ReadByte() != -1) throw new IOException("The backup manifest changed length while being read.");
+        return bytes;
     }
 
     // Foreign-platform backup sets remain importable: their recorded source is descriptive, never a write path.
@@ -444,7 +452,7 @@ public static partial class GameInstaller
             InstallReceipt result = OperatingSystem.IsLinux() && !UsePortableInstall
                 ? LinuxInstall.Write(target, prepared, replaceHash, set.Folder, beforeCheck, beforeSwapChecked, afterPublishChecked)
                 : PortableInstall.Write(target, prepared, replaceHash, set.Folder, beforeCheck, beforeSwapChecked, afterPublishChecked);
-            return result.Ok ? AfterPublication(target, set.Folder, result.Replaced, () => { heldBackup.Verify(); return result; }) : result;
+            return VerifyCompletedBackup(result, heldBackup);
         }
         catch (GameStartedException)
         {
@@ -455,6 +463,22 @@ public static partial class GameInstaller
         {
             return new InstallReceipt(false, $"Nothing was written: {error.Message}", target, set.Folder);
         }
+    }
+
+    internal static InstallReceipt VerifyCompletedBackup(InstallReceipt result, HeldBackup heldBackup)
+    {
+        if (result.Ok)
+            return AfterPublication(result.Target, result.BackupFolder!, result.Replaced, () => { heldBackup.Verify(); return result; });
+        if (result.MayHaveChanged)
+        {
+            try { heldBackup.Verify(); }
+            catch (BackupVerificationException)
+            {
+                return result with { Message = "The career may have changed and the recovery backup could not be verified. " +
+                    "Inspect both before playing or attempting recovery. Earlier failure: " + result.Message };
+            }
+        }
+        return result;
     }
 
     /// <summary>
@@ -475,8 +499,8 @@ public static partial class GameInstaller
                     $"The career was left as it is; inspect it and {backupFolder} before playing or attempting recovery.",
                     target, backupFolder, replaced, MayHaveChanged: true);
             return new InstallReceipt(false, $"{name} was written into your game, but a check afterwards failed ({error.Message}). " +
-                $"It may not hold what you saved, and it was left as it is. Look at {name} before playing; the backup holds the " +
-                "earlier files.", target, backupFolder, replaced, MayHaveChanged: true);
+                $"It may not hold what you saved, and it was left as it is. Look at {name} before playing; " +
+                $"the backup path is {backupFolder}. Verify it before attempting recovery.", target, backupFolder, replaced, MayHaveChanged: true);
         }
     }
 

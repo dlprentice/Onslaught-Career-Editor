@@ -21,8 +21,11 @@ internal static class BackupDirectoryTests
                 foreach (string mode in new[] { "control", "link-after-copy", "directory-after-copy", "root-after-copy",
                     "link-before-swap", "directory-before-swap", "corrupt-copy-before-swap", "corrupt-manifest-before-swap",
                     "link-at-running-check", "corrupt-copy-at-running-check",
+                    "hardlink-copy-before-swap", "hardlink-manifest-before-swap", "replace-copy-before-swap", "replace-manifest-before-swap",
+                    "hardlink-copy-after-publish", "hardlink-manifest-after-publish", "replace-copy-after-publish", "replace-manifest-after-publish",
                     "link-after-publish", "corrupt-copy-after-publish", "corrupt-manifest-after-publish" })
                     InstallCase(original, root, now, check, target, portable, mode);
+                UncertainResult(original, root, now, check, target, portable);
                 foreach (bool replaceWithLink in new[] { false, true })
                     BackupCase(original, root, now, check, target, portable, replaceWithLink);
             }
@@ -88,8 +91,43 @@ internal static class BackupDirectoryTests
             $"{target}/{portable}/{replaceWithLink}: direct backup refuses a changed directory before manifest publication and leaves the source intact");
     }
 
+    private static void UncertainResult(byte[] original, string root, DateTime now, Checks check, GameTarget target, bool portable)
+    {
+        string owner = Path.Combine(root, "backup-binding-uncertain", $"{target}-{portable}");
+        FakeInstall install = FakeInstall.Create(Path.Combine(owner, "game"), original);
+        if (target == GameTarget.OnslaughtCe) File.Delete(Path.Combine(install.Game, "BEA.exe"));
+        GameFolder game = target == GameTarget.Original ? GameFolder.Inspect(install.Game, "fixture") : GameFolder.InspectCe(install.Game);
+        string backups = Path.Combine(owner, "backups"); Directory.CreateDirectory(backups);
+        using HeldBackup held = Backups.CreateHeld(new ProtectedSaveFiles(), game, backups, now, "Owned uncertain-result control");
+        check.That(held.Receipt.Ok, "An uncertain-result control starts with an actually held, verified backup");
+        if (held.Receipt.Set is not BackupSet set) return;
+        byte[] changed = original.ToArray(); changed[^1] ^= 0x5A;
+        File.WriteAllBytes(Path.Combine(set.Folder, "Career One.bes"), changed);
+        InstallReceipt uncertain = new(false, "Owned primitive failure: result unknown.", install.Career, set.Folder, MayHaveChanged: true);
+        InstallReceipt result = GameInstaller.VerifyCompletedBackup(uncertain, held);
+        check.That(!result.Ok && result.MayHaveChanged && result.Message.Contains("may have changed", StringComparison.Ordinal) &&
+            result.Message.Contains(uncertain.Message, StringComparison.Ordinal) && !result.Message.Contains("was written", StringComparison.Ordinal) &&
+            File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(original),
+            "Uncertain primitive-result composition retains its failure context and uncertainty without claiming publication or a usable backup");
+    }
+
     private static void Change(string folder, string mode, string backups, string outside, string owner)
     {
+        if (mode.StartsWith("hardlink-", StringComparison.Ordinal))
+        {
+            string path = Path.Combine(folder, mode.StartsWith("hardlink-copy", StringComparison.Ordinal) ? "Career One.bes" : Backups.ManifestName);
+            if (LinuxSaveNative.LinkAt(LinuxSaveNative.AtCurrentDirectory, path,
+                LinuxSaveNative.AtCurrentDirectory, Path.Combine(owner, "additional-alias"), 0) != 0)
+                throw new IOException("The owned hardlink fault could not be created.");
+            return;
+        }
+        if (mode.StartsWith("replace-", StringComparison.Ordinal))
+        {
+            string path = Path.Combine(folder, mode.StartsWith("replace-copy", StringComparison.Ordinal) ? "Career One.bes" : Backups.ManifestName);
+            byte[] bytes = File.ReadAllBytes(path);
+            File.Move(path, Path.Combine(owner, "retained-file"));
+            File.WriteAllBytes(path, bytes); return;
+        }
         if (mode.StartsWith("corrupt-copy", StringComparison.Ordinal))
         {
             string path = Path.Combine(folder, "Career One.bes"); byte[] bytes = File.ReadAllBytes(path);

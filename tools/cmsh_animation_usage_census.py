@@ -15,7 +15,7 @@ import hashlib
 import json
 import math
 import os
-from pathlib import Path, PureWindowsPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
 import re
 import struct
 import sys
@@ -24,16 +24,19 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "rebuild" / "tools"))
 
-from cmsh_static_preview import inflate_aya, parse_cmsh_stream  # noqa: E402
+from cmsh_static_preview import CmshProfileError, inflate_aya, parse_cmsh_stream  # noqa: E402
 from aya_archive_inventory import (  # noqa: E402
     inflate_aya_bytes,
     parse_top_level_chunks,
+    parse_top_level_chunks_bounded,
     read_held_archive,
 )
 from aya_cross_platform_compare import logical_key  # noqa: E402
 from safe_generated_output import SecuredOutputRoot  # noqa: E402
 
 SCHEMA = "onslaught.cmsh-animation-usage-census.v3"
+MODEL_METADATA_SCHEMA = "onslaught.cmsh-model-metadata.v1"
+MAX_LOD_DEPTH = 32
 INDEX_SCHEMA = "onslaught.asset-mirror-index.v1"
 PMS2_HEADER_BYTES = 309
 PHYSICS_MESH_FIELDS = {
@@ -120,8 +123,356 @@ def _motion_class(parts: tuple[Any, ...]) -> tuple[str, list[dict[str, object]]]
     return "mixed-moving-map-closure", moving
 
 
-def _mesh_record(path: Path) -> tuple[dict[str, object], Any]:
-    mesh = parse_cmsh_stream(inflate_aya(read_held_archive(path)))
+def _words(data: bytes) -> list[int]:
+    """Raw little-endian words, including non-finite floats and author data."""
+    if len(data) % 4:
+        raise ValueError("metadata word lane is not a multiple of four bytes")
+    return list(struct.unpack(f"<{len(data) // 4}I", data))
+
+
+def _identity(
+    stream: bytes | None, *, source_path: str, archive_sha256: str,
+    source_universe_id: str | None, platform: str | None,
+    payload_offset: int, chunk_path: tuple[int, ...],
+) -> dict[str, object]:
+    logical = PurePosixPath(source_path)
+    if (not source_path or "\0" in source_path or logical.is_absolute() or "\\" in source_path
+            or any(part in ("", ".", "..") for part in source_path.split("/"))
+            or re.match(r"^[A-Za-z]:", source_path)):
+        raise ValueError("source_path must be a normalized relative logical path")
+    if not re.fullmatch(r"[0-9a-f]{64}", archive_sha256):
+        raise ValueError("archive_sha256 must be a lowercase SHA-256 digest")
+    if (type(payload_offset) is not int or payload_offset < 0
+            or any(type(index) is not int or index < 0 for index in chunk_path)):
+        raise ValueError("source offsets and chunk indices must be nonnegative integers")
+    for label, value in (("source_universe_id", source_universe_id), ("platform", platform)):
+        if value is not None and (not isinstance(value, str) or not value.strip()):
+            raise ValueError(f"{label} must be a nonempty string or None")
+    coordinate = {
+        "sourcePath": logical.as_posix(), "archiveSha256": archive_sha256,
+        "sourceUniverseId": source_universe_id, "platform": platform,
+        "coordinateSpace": "inflated-archive", "payloadOffset": payload_offset,
+        "chunkPath": list(chunk_path),
+        "payloadSha256": hashlib.sha256(stream).hexdigest() if stream is not None else None,
+        "payloadBytes": len(stream) if stream is not None else None,
+    }
+    transcript = json.dumps(coordinate, sort_keys=True, ensure_ascii=True, separators=(",", ":"))
+    return {
+        **coordinate,
+        "occurrenceId": "mesh-occurrence:" + hashlib.sha256(
+            b"onslaught.cmsh-source-occurrence.v1\0" + transcript.encode("utf-8")
+        ).hexdigest(),
+        "contentId": "sha256:" + coordinate["payloadSha256"] if stream is not None else None,
+        "scopeLabelsPresent": source_universe_id is not None and platform is not None,
+        "scopeProvenance": "caller-supplied labels; not independently verified",
+    }
+
+
+def _unparsed(identity: dict[str, object], error: Exception) -> dict[str, object]:
+    # Do not serialize arbitrary exception text: it can contain a host path.
+    reason = {"category": "unparsed source", "falsifier": "supply a supported bounded CMSH stream"}
+    if isinstance(error, CmshProfileError):
+        reason.update(category=error.category, offset=error.offset, space=error.space, role=error.role)
+    return {
+        "schema": MODEL_METADATA_SCHEMA, "status": "unparsed", "identity": identity,
+        "reason": reason, "parts": [], "animations": {"status": "unknown", "rows": []},
+        "emitters": {"status": "unknown", "rows": []}, "lodChildren": [],
+        "description": {"status": "unknown", "text": None},
+    }
+
+
+def _sibling_metadata(mesh: Any, tag: bytes, decode: Any) -> dict[str, object]:
+    matches = [item.raw_payload for item in mesh.siblings if item.tag == tag]
+    if not matches:
+        return {"status": "absent", "rows": []}
+    payload = matches[0]
+    envelope = {"payloadSha256": hashlib.sha256(payload).hexdigest(), "payloadBytes": len(payload)}
+    try:
+        if len(matches) != 1:
+            raise ValueError("duplicate sibling")
+        return {**envelope, "status": "decoded", "rows": decode(payload)}
+    except (ValueError, struct.error):
+        return {**envelope, "status": "unparsed", "rows": [],
+                "reason": "invalid or unsupported framed " + tag.decode("ascii") + " metadata",
+                "falsifier": "check declared counts, bounded record lengths and source reader"}
+
+
+def _animation_metadata(mesh: Any) -> dict[str, object]:
+    def decode(payload: bytes) -> list[dict[str, object]]:
+        count = struct.unpack_from("<I", mesh.raw_header, 0x14)[0]
+        if len(payload) != count * 36:
+            raise ValueError("CAMD declared count/length mismatch")
+        rows = []
+        for ordinal in range(count):
+            record = payload[ordinal * 36:(ordinal + 1) * 36]
+            name = record[:16].split(b"\0", 1)[0].decode("ascii")
+            mode, start, last, scaler = struct.unpack_from("<4i", record, 16)
+            rows.append({"ordinal": ordinal, "name": name, "mode": mode,
+                         "start": start, "last": last, "frameScaler": scaler,
+                         "rateBits": struct.unpack_from("<I", record, 32)[0],
+                         "rateSemantics": "normalized-mode-increment-per-game-tick",
+                         "recordSha256": hashlib.sha256(record).hexdigest()})
+        names = collections.Counter(row["name"].casefold() for row in rows)
+        modes = collections.Counter(row["mode"] for row in rows)
+        for row in rows:
+            row["localNameMultiplicity"] = names[row["name"].casefold()]
+            row["localModeMultiplicity"] = modes[row["mode"]]
+        return rows
+    result = _sibling_metadata(mesh, b"CAMD", decode)
+    if result["status"] == "absent" and struct.unpack_from("<I", mesh.raw_header, 0x14)[0]:
+        result.update(status="unparsed", reason="declared CAMD records are absent",
+                      falsifier="supply the declared bounded CAMD records")
+    result["evidence"] = "onslaught-decomp:CMesh::Deserialize@004aab90; CMesh::GetFrameIncrement@004aa7e0"
+    result["runtimeScheduling"] = "unknown; stored modes do not prove a call or playback"
+    return result
+
+
+def _emitter_metadata(mesh: Any) -> dict[str, object]:
+    def decode(payload: bytes) -> list[dict[str, object]]:
+        # The parser owns framing, record size, ASCII and part-index checks.
+        bindings = mesh.emitter_bindings()
+        if len(bindings) != struct.unpack_from("<I", mesh.raw_header, 0x1c)[0]:
+            raise ValueError("CEMT declared count mismatch")
+        multiplicity = collections.Counter((b.name.casefold(), b.selector) for b in bindings)
+        rows = []
+        offset = 4
+        for ordinal, binding in enumerate(bindings):
+            record = payload[offset:offset + 336]
+            offset += 336 + (4 if binding.part_ordinal is not None else 0)
+            tracking, subpart = struct.unpack_from("<2i", record, 0x44)
+            rows.append({
+                "ordinal": ordinal, "name": binding.name, "number": binding.selector,
+                "partOrdinal": binding.part_ordinal, "trackingVertex": tracking,
+                "subpartEmitter": subpart, "positionWords": _words(record[:16]),
+                "orientationWords": _words(record[16:64]),
+                "recordSha256": hashlib.sha256(record).hexdigest(),
+                "localNameNumberMultiplicity": multiplicity[(binding.name.casefold(), binding.selector)],
+                "lookup": "case-insensitive-name-and-number; ordinal-is-a-separate-lookup",
+                "lookupScope": "this LOD; an earlier LOD can shadow later matches",
+                "poseDependencies": (["part hierarchy", "selected animation/render frame", "thing transform"]
+                                     if binding.part_ordinal is not None else ["no bound part; consumer-specific fallback"]),
+                "usageContext": "unknown; cockpit, exterior weapon, particle and other uses must be joined separately",
+                "worldMuzzle": "not established by this stored record",
+            })
+        return rows
+    result = _sibling_metadata(mesh, b"CEMT", decode)
+    if result["status"] == "absent" and struct.unpack_from("<I", mesh.raw_header, 0x1c)[0]:
+        result.update(status="unparsed", reason="declared CEMT records are absent",
+                      falsifier="supply the declared bounded CEMT records")
+    result["evidence"] = "onslaught-decomp:CMesh::GetEmitterSubpart@004aa820; CRTMesh::GetRTEmitter@004dd160"
+    return result
+
+
+def _part_metadata(part: Any, ordinal: int, payload: bytes) -> dict[str, object]:
+    raw = part.raw_cmsp
+    groups = []
+    for piece, group in enumerate(part.groups):
+        surviving = sum(len(set(group.indices[k:k + 3])) == 3 for k in range(len(group.indices) - 2))
+        slots = [value if value < 0x80000000 else value - 0x100000000 for value in group.raw_texr_u32]
+        groups.append({"pieceOrdinal": piece, "indexCount": len(group.indices),
+                       "indexSha256": hashlib.sha256(struct.pack(f"<{len(group.indices)}H", *group.indices)).hexdigest(),
+                       "stripPrimitiveCount": max(0, len(group.indices) - 2),
+                       "distinctIndexTriangleCount": surviving,
+                       "repeatedIndexTriangleCount": max(0, len(group.indices) - 2) - surviving,
+                       "textureSlots": slots, "vertexBufferOwnerPiece": 0})
+    cmvb = part.raw_cmvb
+    stride, fvf, primitive = struct.unpack_from("<3I", cmvb, 276)
+    bounds = [c for c in parse_top_level_chunks_bounded(payload) if c.tag == "BBOX"]
+    bound_payload = payload[bounds[0].offset + 8:bounds[0].offset + 8 + bounds[0].size]
+    # The bounded parser already validated outer BBOX -> BBOX(40).
+    bounds_words = _words(bound_payload[8:])
+    return {
+        "ordinal": ordinal, "name": raw[0xdc:0xfc].split(b"\0", 1)[0].decode("utf-8", errors="replace"),
+        "partNumber": struct.unpack_from("<i", raw, 0x88)[0], "partType": part.part_type,
+        "recordSha256": hashlib.sha256(raw).hexdigest(),
+        "payloadSha256": hashlib.sha256(payload).hexdigest(),
+        "relations": {"parentOrdinal": part.parent, "childOrdinals": list(part.children),
+                      "referenceGeometryOrdinal": part.reference, "nextDamagePartOrdinal": part.nmic,
+                      "damageChainCount": struct.unpack_from("<i", raw, 0xa0)[0],
+                      "isDamageChainMember": struct.unpack_from("<i", raw, 0xa4)[0]},
+        "orientationWords": _words(raw[:48]), "baseOrientationWords": _words(raw[48:96]),
+        "offsetPositionWords": _words(raw[96:112]), "basePositionWords": _words(raw[112:128]),
+        "boundingBoxWords": bounds_words,
+        "radiusBits": struct.unpack_from("<I", raw, 0x12c)[0],
+        "cueFactorBits": struct.unpack_from("<I", raw, 0x130)[0],
+        "frameLanes": {"positionSetCount": part.anim_frames,
+                       "virtualFrameCount": len(part.track.frame_map),
+                       "hierarchyPoseCount": len(part.track.hierarchy),
+                       "frameMapSha256": hashlib.sha256(bytes(part.track.frame_map)).hexdigest(),
+                       "hfovWords": _words(part.raw_hfov) if part.raw_hfov is not None else None,
+                       "cachedPositionBytes": len(part.track.cached_position_bytes),
+                       "cachedOrientationBytes": len(part.track.cached_orientation_bytes)},
+        "skinning": {"bonePartOrdinals": list(part.bones),
+                     "boneSlotUse": dict(sorted(collections.Counter(
+                         str(slot) for vertex in part.vertices for slot in (vertex.bone_slots or ())
+                     ).items())),
+                     "weightSemantics": "not inferred from palette slots"},
+        "geometry": {"ownership": "reference" if part.reference is not None else "original",
+                     "originalVertexCount": len(part.vertices), "stride": stride, "fvf": fvf,
+                     "primitiveCode": primitive,
+                     "primitiveMeaning": "triangle-strip" if groups and primitive == 4 else "unused-or-unknown",
+                     "pieces": groups, "degeneracyTest": "repeated indices only; not geometric area"},
+        "unknowns": ["opaque PBKT semantics", "uninterpreted CMSP/CMVB author fields"],
+    }
+
+
+def _model_metadata(stream: bytes, mesh: Any, identity: dict[str, object], depth: int) -> dict[str, object]:
+    chunks = parse_top_level_chunks_bounded(stream)
+    parts = mesh.file_parts()
+    part_chunks = chunks[2 + len(mesh.textures):2 + len(mesh.textures) + len(parts)]
+    result = {
+        "schema": MODEL_METADATA_SCHEMA, "status": "parsed", "identity": identity,
+        "evidenceClass": "static structure and source-derived field meanings; not full semantic or runtime acceptance",
+        "lodOrdinal": depth,
+        "radiusBits": struct.unpack_from("<I", mesh.raw_header, 0x164)[0],
+        "cueFactorBits": struct.unpack_from("<I", mesh.raw_header, 0x168)[0],
+        "parts": [_part_metadata(part, ordinal, stream[c.offset + 8:c.offset + 8 + c.size])
+                  for ordinal, (part, c) in enumerate(zip(parts, part_chunks))],
+        "animations": _animation_metadata(mesh), "emitters": _emitter_metadata(mesh),
+        "textures": [{"slotOrdinal": index, "name": texture.name,
+                      "declaredFrameCount": struct.unpack_from("<I", texture.raw_cmst_entry, 8)[0],
+                      "laneStatus": "decoded-single-frame" if struct.unpack_from("<I", texture.raw_cmst_entry, 8)[0] == 1 else "unknown-frame-layout",
+                      "storedLaneWords": _words(texture.raw_texb_metadata),
+                      "laneOrder": ["Blend", "OffsetU", "OffsetV", "ScaleU", "ScaleV"],
+                      "resolution": "name reference; require unique source-variant join"}
+                     for index, texture in enumerate(mesh.textures)],
+        "description": {"status": "unknown", "text": None},
+        "lodChildren": [], "unknowns": [],
+        "evidence": "onslaught-decomp:CMesh::Deserialize@004aab90; CMeshPart::Deserialize@004b27a0; CDXMeshVB::Load@0054e160",
+    }
+    names = collections.Counter(part["name"].casefold() for part in result["parts"])
+    for part in result["parts"]:
+        part["occurrenceId"] = identity["occurrenceId"] + "/part:" + str(part["ordinal"])
+        part["localNameMultiplicity"] = names[part["name"].casefold()]
+        for group in part["geometry"]["pieces"]:
+            group["materialBindings"] = [
+                {"layerOrdinal": layer, "textureSlotOrdinal": slot,
+                 "status": "absent" if slot == -1 else "resolved-slot" if 0 <= slot < len(mesh.textures) else "unresolved-slot"}
+                for layer, slot in enumerate(group["textureSlots"])
+            ]
+    for lane, identifier in (("animations", "animation"), ("emitters", "emitter")):
+        for row in result[lane]["rows"]:
+            row["occurrenceId"] = identity["occurrenceId"] + "/" + identifier + ":" + str(row["ordinal"])
+    siblings = chunks[2 + len(mesh.textures) + len(parts):]
+    bbox = [c for c in siblings if c.tag == "BBOX"]
+    result["boundingBoxWords"] = None
+    if bbox:
+        c = bbox[0]
+        payload = stream[c.offset + 8:c.offset + 8 + c.size]
+        if len(payload) == 48 and payload[:8] == b"BBOX" + struct.pack("<I", 40):
+            result["boundingBoxWords"] = _words(payload[8:])
+        else:
+            result["unknowns"].append("invalid or unsupported mesh bounding box")
+    next_marker = struct.unpack_from("<I", mesh.raw_header, 8)[0] != 0
+    nested_chunks = [c for c in siblings if c.tag in ("PMS2", "PMSH")]
+    for c in nested_chunks:
+        payload = stream[c.offset + 8:c.offset + 8 + c.size]
+        child_offset = c.offset + 8
+        child_path = [*identity["chunkPath"], c.index]
+        if c.tag == "PMSH":
+            try:
+                inner = parse_top_level_chunks_bounded(payload)
+            except ValueError:
+                inner = []
+            if len(inner) != 1 or inner[0].tag != "PMS2":
+                child_identity = _identity(payload, source_path=identity["sourcePath"],
+                                           archive_sha256=identity["archiveSha256"],
+                                           source_universe_id=identity["sourceUniverseId"], platform=identity["platform"],
+                                           payload_offset=identity["payloadOffset"] + child_offset,
+                                           chunk_path=tuple(child_path))
+                result["lodChildren"].append({"relationship": "unresolved-nested-mesh", "framingPrefixBytes": None,
+                                              "model": _unparsed(child_identity, CmshProfileError(
+                                                  "unsupported profile", 0, "framed PMSH LOD child"))})
+                result["unknowns"].append("unsupported framed PMSH LOD child")
+                continue
+            child_offset += 8
+            child_path.append(inner[0].index)
+            payload = payload[8:]
+        starts = [offset for offset in (0, PMS2_HEADER_BYTES)
+                  if payload[offset:offset + 8] == b"CMSH" + struct.pack("<I", 372)]
+        # A bare stream is retained as an observed nested shape, not asserted
+        # to be the retail 309-byte header route. Never pick one of two leads.
+        ambiguous = len(starts) != 1
+        prefix = starts[0] if not ambiguous else 0
+        child_offset += prefix
+        child_stream = payload[prefix:]
+        child_identity = _identity(child_stream, source_path=identity["sourcePath"],
+                                   archive_sha256=identity["archiveSha256"],
+                                   source_universe_id=identity["sourceUniverseId"], platform=identity["platform"],
+                                   payload_offset=identity["payloadOffset"] + child_offset,
+                                   chunk_path=tuple(child_path))
+        try:
+            if ambiguous:
+                raise CmshProfileError("unsupported profile", 0, "missing or ambiguous PMS2 CMSH boundary")
+            if depth >= MAX_LOD_DEPTH:
+                raise CmshProfileError("limit exceeded", 0, "metadata LOD depth")
+            child_mesh = parse_cmsh_stream(child_stream)
+            child = _model_metadata(child_stream, child_mesh, child_identity, depth + 1)
+        except (ValueError, struct.error) as error:
+            child = _unparsed(child_identity, error)
+            child["lodOrdinal"] = depth + 1
+        result["lodChildren"].append({"relationship": "mesh-lod" if next_marker and prefix == PMS2_HEADER_BYTES else "unresolved-nested-mesh",
+                                      "framingPrefixBytes": prefix, "model": child})
+    if next_marker != bool(result["lodChildren"]):
+        result["unknowns"].append("LOD presence marker and decoded child disagree")
+    if (any(result[lane]["status"] == "unparsed" for lane in ("animations", "emitters"))
+            or any(child["model"]["status"] != "parsed" for child in result["lodChildren"])
+            or any(child["relationship"] != "mesh-lod" for child in result["lodChildren"])
+            or any(texture["laneStatus"] != "decoded-single-frame" for texture in result["textures"])
+            or result["unknowns"]):
+        result["status"] = "partial"
+    return result
+
+
+def mesh_record_from_stream(
+    stream: bytes, *, source_path: str, archive_sha256: str,
+    source_universe_id: str | None = None, platform: str | None = None,
+    payload_offset: int = 0, chunk_path: tuple[int, ...] = (),
+) -> tuple[dict[str, object], Any | None]:
+    """Metadata from held decoded bytes; callers own/pin the source envelope.
+
+    Coordinates are relative to the inflated archive, never a host pathname.
+    Scope labels are declarations, not attestation. Unsupported source rows
+    retain exact identity and a refusal instead of disappearing. No gameplay,
+    rendering, muzzle position or animation scheduling is established here.
+    """
+    if not isinstance(stream, bytes):
+        raise ValueError("stream must be immutable held bytes")
+    identity = _identity(stream, source_path=source_path, archive_sha256=archive_sha256,
+                         source_universe_id=source_universe_id, platform=platform,
+                         payload_offset=payload_offset, chunk_path=chunk_path)
+    try:
+        mesh = parse_cmsh_stream(stream)
+        record = _parsed_mesh_record(mesh)
+    except ValueError as error:
+        return ({"file": PurePosixPath(source_path).name, "modelMetadata": _unparsed(identity, error)}, None)
+    try:
+        metadata = _model_metadata(stream, mesh, identity, 0)
+    except (ValueError, struct.error) as error:
+        metadata = _unparsed(identity, error)
+    record.update(file=PurePosixPath(source_path).name, modelMetadata=metadata)
+    return record, mesh
+
+
+def _mesh_record(
+    path: Path, *, source_root: Path | None = None,
+    source_universe_id: str | None = None, platform: str | None = "pc",
+) -> tuple[dict[str, object], Any | None]:
+    source = read_held_archive(path)
+    logical = path.relative_to(source_root).as_posix() if source_root is not None else path.name
+    archive_sha = hashlib.sha256(source).hexdigest()
+    try:
+        stream = inflate_aya(source)
+    except CmshProfileError as error:
+        identity = _identity(None, source_path=logical, archive_sha256=archive_sha,
+                             source_universe_id=source_universe_id, platform=platform,
+                             payload_offset=0, chunk_path=())
+        return ({"file": path.name, "modelMetadata": _unparsed(identity, error)}, None)
+    return mesh_record_from_stream(stream, source_path=logical, archive_sha256=archive_sha,
+                                   source_universe_id=source_universe_id, platform=platform)
+
+
+def _parsed_mesh_record(mesh: Any) -> dict[str, object]:
     parts = mesh.file_parts()
     motion_class, moving = _motion_class(parts)
     carriers: list[dict[str, object]] = []
@@ -148,27 +499,25 @@ def _mesh_record(path: Path) -> tuple[dict[str, object], Any]:
         {
             "partIndex": part_index,
             "partName": part.name,
-            "values": list(part.hfov or ()),
+            "values": (list(part.hfov) if part.hfov is not None
+                       and all(math.isfinite(value) for value in part.hfov) else None),
+            "rawWords": _words(part.raw_hfov),
         }
         for part_index, part in enumerate(parts)
         if part.raw_hfov is not None
     ]
     a_frames = collections.Counter(part.anim_frames for part in parts)
-    return (
-        {
-            "file": path.name,
-            "internalName": mesh.name,
-            "partCount": len(parts),
-            "aFrameValueCounts": {str(value): a_frames[value] for value in sorted(a_frames)},
-            "maxVirtualFrames": max(len(part.track.frame_map) for part in parts),
-            "maxHierarchyFrames": max(len(part.track.hierarchy) for part in parts),
-            "movingParts": moving,
-            "motionClass": motion_class,
-            "boneCarriers": carriers,
-            "hfov": hfov,
-        },
-        mesh,
-    )
+    return {
+        "internalName": mesh.name,
+        "partCount": len(parts),
+        "aFrameValueCounts": {str(value): a_frames[value] for value in sorted(a_frames)},
+        "maxVirtualFrames": max(len(part.track.frame_map) for part in parts),
+        "maxHierarchyFrames": max(len(part.track.hierarchy) for part in parts),
+        "movingParts": moving,
+        "motionClass": motion_class,
+        "boneCarriers": carriers,
+        "hfov": hfov,
+    }
 
 
 def _animation_calls(script_root: Path) -> dict[str, object]:
@@ -992,8 +1341,10 @@ def build_census(data_root: Path, mirror_index: Path | None = None) -> dict[str,
         mesh_root.glob("*.msh.aya", case_sensitive=False),
         key=lambda item: item.name.casefold(),
     )
-    parsed = [_mesh_record(path) for path in mesh_paths]
-    mesh_records = [record for record, _mesh in parsed]
+    outcomes = [_mesh_record(path, source_root=data_root) for path in mesh_paths]
+    mesh_records = [record for record, _mesh in outcomes]
+    parsed = [(record, mesh) for record, mesh in outcomes if mesh is not None]
+    parsed_records = [record for record, _mesh in parsed]
     membership = _level_mesh_membership(resource_root, parsed)
     calls = _animation_calls(script_root)
     world_instances = _world_instance_join(data_root, parsed, membership, calls)
@@ -1020,20 +1371,30 @@ def build_census(data_root: Path, mirror_index: Path | None = None) -> dict[str,
     )
     summary = {
         "meshes": len(mesh_records),
-        "parts": sum(int(record["partCount"]) for record in mesh_records),
-        "meshesWithNontrivialFrameMaps": sum(bool(record["movingParts"]) for record in mesh_records),
-        "partsWithNontrivialFrameMaps": sum(len(record["movingParts"]) for record in mesh_records),
-        "motionClassCounts": dict(collections.Counter(str(record["motionClass"]) for record in mesh_records)),
-        "boneMeshes": sum(bool(record["boneCarriers"]) for record in mesh_records),
-        "boneCarriers": sum(len(record["boneCarriers"]) for record in mesh_records),
-        "hfovMeshes": sum(bool(record["hfov"]) for record in mesh_records),
-        "hfovParts": sum(len(record["hfov"]) for record in mesh_records),
+        "parts": sum(int(record["partCount"]) for record in parsed_records),
+        "meshesWithNontrivialFrameMaps": sum(bool(record["movingParts"]) for record in parsed_records),
+        "partsWithNontrivialFrameMaps": sum(len(record["movingParts"]) for record in parsed_records),
+        "motionClassCounts": dict(collections.Counter(str(record["motionClass"]) for record in parsed_records)),
+        "boneMeshes": sum(bool(record["boneCarriers"]) for record in parsed_records),
+        "boneCarriers": sum(len(record["boneCarriers"]) for record in parsed_records),
+        "hfovMeshes": sum(bool(record["hfov"]) for record in parsed_records),
+        "hfovParts": sum(len(record["hfov"]) for record in parsed_records),
         "aFrameValueCounts": dict(sorted(a_frames.items())),
     }
     return {
         "schema": SCHEMA,
         "inputVerification": verification,
         "meshSummary": summary,
+        "modelMetadataCoverage": {
+            "selectedOccurrences": len(outcomes), "legacyJoinEligible": len(parsed),
+            "outcomeCounts": dict(sorted(collections.Counter(
+                str(record["modelMetadata"]["status"]) for record in mesh_records
+            ).items())),
+            "unknownOccurrences": [record["modelMetadata"]["identity"]["occurrenceId"]
+                                   for record, _mesh in outcomes
+                                   if record["modelMetadata"]["status"] == "unparsed"],
+            "scope": "selected loose *.msh.aya files; not a complete archive or platform inventory",
+        },
         "meshes": mesh_records,
         "levelMeshMembership": membership,
         "missionAnimationCalls": calls,
