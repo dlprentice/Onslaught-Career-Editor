@@ -1105,7 +1105,8 @@ def link_imposters(collect: dict, descriptors_by_id: dict) -> None:
                     archive=row["archive"].casefold(), meshResourceId=imp["meshResourceId"]))
 
 
-def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], meshes_by_id: dict) -> tuple[list, list]:
+def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], script_ids: set[str]
+                  ) -> tuple[list, list]:
     """WRES Unit/Feature placements joined through default physics.dat to the archive's named MESH and loose CMSH."""
     physics_path = game / "data" / "default physics.dat"
     if not physics_path.is_file():
@@ -1184,10 +1185,15 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
                         "data", "data/default physics.dat", f"{len(exact)} same-archive named MESH candidates")]))
                 if inst["script"]:
                     script = f"data/MissionScripts/level{level:03d}/{inst['script']}.msl"
-                    rec["relationships"].append(relation("script-source", "script:" + script.casefold(),
-                                                         "name-match", [evidence(
-                            "data", rel, "placement script string equals the .msl file stem in the level's "
-                            "MissionScripts folder (the runtime script owner is not established)")]))
+                    script_id = "script:" + script.casefold()
+                    found = script_id in script_ids
+                    rec["relationships"].append(relation(
+                        "script-source", script_id if found else None, "name-match" if found else "unresolved",
+                        [evidence("data", rel, "placement script string " + (
+                            "equals the .msl file stem in the level's MissionScripts folder (the runtime script "
+                            "owner is not established)" if found else
+                            "has no .msl file of that stem in the level's MissionScripts folder"))],
+                        targetName=script))
                 placements.append(rec)
     return definitions, placements
 
@@ -1423,6 +1429,13 @@ def catalog_payloads(collect: dict) -> list[dict]:
     return records
 
 
+# CFEPBriefing::ActiveNotification: the briefing a selected level shows (a level's variants share the first one's).
+BRIEFING_LEVEL = {**{n: n for n in (100, 110, 200, 211, 221, 231, 300, 311, 321, 331, 400, 411, 421, 431, 500, 511,
+                                    512, 521, 523, 600, 611, 621, 700, 710, 720, 731, 741, 800)},
+                  212: 211, 222: 221, 232: 231, 312: 311, 322: 321, 332: 331, 412: 411, 422: 421, 432: 431,
+                  522: 521, 524: 523, 612: 611, 622: 621, 732: 731, 742: 741}
+
+
 def catalog_levels(archives: list[dict], placements: list[dict], videos: list[dict], game: Path, files: list[dict]
                    ) -> list[dict]:
     headers = {}
@@ -1462,6 +1475,12 @@ def catalog_levels(archives: list[dict], placements: list[dict], videos: list[di
         if arc:
             rec["relationships"].append(relation("resources", arc["id"], "resolved", [evidence(
                 "loader-code", L_RESOURCE_NAME, "level N reads data\\Resources\\%03d_res_%s.aya")]))
+        shown = BRIEFING_LEVEL.get(n)
+        if shown is not None:
+            for vid in briefings.get(shown, []):
+                rec["relationships"].append(relation("briefing-video", vid, "resolved", [evidence(
+                    "loader-code", L_BRIEFING, f"the briefing for level {n} is level {shown}'s "
+                    "(the switch on the selected level)")]))
         if n in headers:
             rec["relationships"].append(relation("world-header", None, "resolved", [evidence(
                 "loader-code", L_HEADERS, f"worldheaders.dat record world_id {n}")]))
@@ -1603,6 +1622,13 @@ def usage_sentence(u: dict, kind: str) -> str:
 
 
 # -------------------------------------------------------------------------------------------------------- pipeline
+def dangling_targets(assets: list[dict]) -> list[str]:
+    """Relationship targets that name no catalogued asset (every target must be an asset id or null)."""
+    ids = {a["id"] for a in assets}
+    return sorted({t for a in assets for r in a["relationships"]
+                   for t in ([r["target"]] if r.get("target") else []) + list(r.get("targets") or []) if t not in ids})
+
+
 def build_catalog(game: Path, decomp: Path | None = None) -> dict:
     files = walk_install(game)
     survey = build_survey(files)
@@ -1642,7 +1668,8 @@ def build_catalog(game: Path, decomp: Path | None = None) -> dict:
     link_voice(text, {a["source"]["container"].casefold(): a for a in audio if a["source"]["envelope"] == "ogg"},
                archive_stats)
     goodies = catalog_goodies(collect, game, loose, dindex, {v["id"]: v["id"] for v in video}, text)
-    definitions, placements = catalog_world(collect, game, loose, archives, {m["id"]: m for m in meshes})
+    script_ids = {"script:" + r["path"].casefold() for r in files if r["family"] == "mission-script-msl"}
+    definitions, placements = catalog_world(collect, game, loose, archives, script_ids)
     effects = catalog_particles(game, files, dindex)
     refs = code_references(decomp)
     unresolved_code = link_code_references(refs, dindex, descriptors_by_id, loose, archive_stats)
@@ -1653,6 +1680,9 @@ def build_catalog(game: Path, decomp: Path | None = None) -> dict:
     assets = (levels + archives + payloads + descriptors + textures + meshes + animations + definitions + placements
               + goodies + effects + audio + video + inventory)
     compute_usage(assets)
+    dangling = dangling_targets(assets)
+    if dangling:
+        raise ValueError(f"relationships target absent ids: {dangling[:5]}")
     ids = collections.Counter(a["id"] for a in assets)
     duplicates = [i for i, n in ids.items() if n > 1]
     if duplicates:

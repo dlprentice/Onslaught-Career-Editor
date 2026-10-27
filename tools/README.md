@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-28 (content catalogue phase 1; earlier: single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-27 (content catalogue; earlier: single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,

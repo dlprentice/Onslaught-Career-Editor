@@ -186,6 +186,11 @@ class AuthoredInstallTests(unittest.TestCase):
         self.assertEqual(video["video"]["seconds"], 3.0)
         self.assertEqual(video["relationships"][0]["target"], "level:100")
 
+    def test_no_relationship_targets_an_absent_id(self) -> None:
+        self.assertEqual(catalog.dangling_targets(self.catalog["assets"]), [])
+        broken = [{"id": "a", "relationships": [{"target": "mesh:missing"}, {"target": None, "targets": ["a"]}]}]
+        self.assertEqual(catalog.dangling_targets(broken), ["mesh:missing"])
+
     def test_every_relationship_carries_evidence(self) -> None:
         for asset in self.catalog["assets"]:
             for rel in asset["relationships"]:

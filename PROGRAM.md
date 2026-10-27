@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-28 (content catalogue phase 1: survey, schema and generator; earlier: Linux CE workflow and native Windows backend/load checks completed)
+Last updated: 2026-10-27 (content catalogue: survey, schema, generator, levels, placements and usage; earlier: Linux CE workflow and native Windows backend/load checks completed)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in

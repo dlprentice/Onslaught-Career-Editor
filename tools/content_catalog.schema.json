@@ -566,7 +566,8 @@
             "resources",
             "world-header",
             "same-name-as-mesh-slot",
-            "same-name-other-shelf"
+            "same-name-other-shelf",
+            "briefing-video"
           ]
         },
         "target": {
@@ -574,7 +575,7 @@
             "string",
             "null"
           ],
-          "description": "Asset id, or level:NNN (targetKind logical-level); null when unresolved or several targets apply."
+          "description": "An id of a record in the same catalogue (never an absent id), or null when unresolved or several targets apply (then targets lists them)."
         },
         "targets": {
           "type": [
