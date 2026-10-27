@@ -299,8 +299,17 @@ def parse_serialized_texture(payload: bytes, *, platform: str) -> SerializedText
         raise ValueError("CTEX body size is not the measured 344 bytes")
 
     name = read_fixed_c_string(payload, CTEX_NAME_OFFSET, CTEX_NAME_LENGTH)
-    width = u32(payload, CTEX_WIDTH_OFFSET)
-    height = u32(payload, CTEX_HEIGHT_OFFSET)
+    if platform == "PC":
+        # Native CDXTexture: width SINT at +0xac, height SWORD at +0xb0,
+        # followed by a separate SWORD loss shift at +0xb2. Reading height
+        # as u32 accidentally combines the two fields (retail00559d7f).
+        width = struct.unpack_from("<i", payload, CTEX_WIDTH_OFFSET)[0]
+        height = struct.unpack_from("<h", payload, CTEX_HEIGHT_OFFSET)[0]
+    else:
+        # Preserve the existing measured Xbox geometry profile. Its adjacent
+        # field types/meanings are not established by the PC object layout.
+        width = u32(payload, CTEX_WIDTH_OFFSET)
+        height = u32(payload, CTEX_HEIGHT_OFFSET)
     frame_count = u32(payload, CTEX_FRAME_COUNT_OFFSET)
     format_code = u32(payload, CTEX_FORMAT_OFFSET)
     if width <= 0 or height <= 0 or width > 16_384 or height > 16_384:
@@ -487,6 +496,8 @@ def serialized_texture_metadata(
         "serializedFormatMeaning": (SOURCE_FORMAT_NAMES if platform == "PC" else XBOX_FORMAT_NAMES).get(texture.format_code),
         "resourceFileFormatCode": texture.format_code if platform == "PC" else None,
         "ctexBodySha256": sha256_bytes(payload[CTEX_BODY_START:CTEX_END]),
+        "ctexWidthWordRaw": u32(payload, CTEX_WIDTH_OFFSET),
+        "ctexHeightWordRaw": u32(payload, CTEX_HEIGHT_OFFSET),
         "ddsStorageFormat": None,
     }
     if platform == "PC":
@@ -494,10 +505,14 @@ def serialized_texture_metadata(
             requestedFormatCode=struct.unpack_from("<i", payload, CTEX_BODY_START + 0xA8)[0],
             mipLevelsRaw=struct.unpack_from("<i", payload, CTEX_BODY_START + 0x148)[0],
             compressibleRaw=payload[CTEX_BODY_START + 0x154],
+            widthRawSigned=struct.unpack_from("<i", payload, CTEX_WIDTH_OFFSET)[0],
+            heightRawSigned=struct.unpack_from("<h", payload, CTEX_HEIGHT_OFFSET)[0],
+            lossShiftRaw=struct.unpack_from("<h", payload, CTEX_HEIGHT_OFFSET + 2)[0],
         )
     else:
         # The matching Xbox field identities have not been grounded here.
-        descriptor.update(requestedFormatCode=None, mipLevelsRaw=None, compressibleRaw=None)
+        descriptor.update(requestedFormatCode=None, mipLevelsRaw=None, compressibleRaw=None,
+                          widthRawSigned=None, heightRawSigned=None, lossShiftRaw=None)
         result["unknowns"].append("Xbox requested-format, mip-policy and compression-flag field meanings")
     frames: list[dict[str, object]] = []
     offset = CTEX_END
@@ -509,6 +524,7 @@ def serialized_texture_metadata(
             inline = platform == "XBOX"
             mips.append({
                 "level": level, "width": mip.width, "height": mip.height,
+                "extentEvidence": "inferred from CTEX stored dimensions and mip ordinal",
                 "offsetWithinPayload": nested + 8 if inline else None,
                 "byteLength": len(mip.data) if inline else None,
                 "sha256": mip.sha256 if inline else None,

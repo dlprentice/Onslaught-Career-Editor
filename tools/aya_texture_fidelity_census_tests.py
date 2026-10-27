@@ -380,6 +380,41 @@ class SerializedTextureMetadataTests(unittest.TestCase):
         self.assertIsNone(descriptor["ddsStorageFormat"])
         self.assertFalse(row["runtimeSelectionEstablished"])
 
+    def test_pc_signed_height_and_adjacent_loss_shift_are_independent(self):
+        for shift in (1, -1, 32767, -32768):
+            payload = bytearray(texture_payload(platform="PC", width=8, height=8))
+            struct.pack_into("<h", payload, census.CTEX_HEIGHT_OFFSET + 2, shift)
+            with self.subTest(shift=shift):
+                parsed = census.parse_serialized_texture(bytes(payload), platform="PC")
+                self.assertEqual((8, 8), (parsed.width, parsed.height))
+                row = self.project(bytes(payload))
+                self.assertEqual("parsed", row["status"])
+                d = row["descriptor"]
+                self.assertEqual((8, 8, shift), (d["widthRawSigned"], d["heightRawSigned"], d["lossShiftRaw"]))
+                self.assertEqual(8 | ((shift & 0xffff) << 16), d["ctexHeightWordRaw"])
+                self.assertEqual((8, 8), (row["frames"][0]["mips"][0]["width"],
+                                          row["frames"][0]["mips"][0]["height"]))
+                self.assertIn("inferred", row["frames"][0]["mips"][0]["extentEvidence"])
+
+    def test_nonpositive_pc_signed_dimensions_still_refuse(self):
+        for offset, fmt, value in ((census.CTEX_WIDTH_OFFSET, "<i", -1),
+                                   (census.CTEX_WIDTH_OFFSET, "<i", 0),
+                                   (census.CTEX_HEIGHT_OFFSET, "<h", -1),
+                                   (census.CTEX_HEIGHT_OFFSET, "<h", 0)):
+            payload = bytearray(texture_payload(platform="PC"))
+            struct.pack_into(fmt, payload, offset, value)
+            row = self.project(bytes(payload))
+            self.assertEqual("unparsed", row["status"])
+            self.assertEqual([], row["frames"])
+            self.assertEqual(hashlib.sha256(payload).hexdigest(), row["identity"]["payloadSha256"])
+
+    def test_pc_loss_shift_layout_does_not_silently_change_xbox_profile(self):
+        payload = bytearray(texture_payload(platform="XBOX"))
+        struct.pack_into("<h", payload, census.CTEX_HEIGHT_OFFSET + 2, 1)
+        self.assertEqual("unparsed", self.project(bytes(payload), platform="XBOX")["status"])
+        row = self.project(texture_payload(platform="XBOX"), platform="XBOX")
+        self.assertIsNone(row["descriptor"]["lossShiftRaw"])
+
     def test_pc_multiframe_counts_do_not_invent_external_pixel_hashes(self):
         payload = texture_payload(platform="PC", frame_mips=(3, 1, 2))
         row = self.project(payload)
