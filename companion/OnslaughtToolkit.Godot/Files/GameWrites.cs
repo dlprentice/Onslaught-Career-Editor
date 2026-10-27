@@ -133,6 +133,34 @@ public static class Backups
 
     public static BackupReceipt Create(IProtectedSaveFiles files, GameFolder game, string root, DateTime now, string reason = "Backup")
     {
+        using HeldBackup held = CreateHeld(files, game, root, now, reason);
+        return held.Receipt;
+    }
+
+    internal static HeldBackup CreateHeld(IProtectedSaveFiles files, GameFolder game, string root, DateTime now, string reason)
+    {
+        BackupDirectory? directory = null;
+        try
+        {
+            BackupReceipt receipt = CreateCore(files, game, root, now, reason, out directory);
+            if (receipt.Ok) return new HeldBackup(receipt, directory);
+            directory?.Dispose();
+            return new HeldBackup(receipt, null);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException or
+            Win32Exception or NotSupportedException or ArgumentException)
+        {
+            string? partial = directory?.Folder;
+            directory?.Dispose();
+            return new HeldBackup(new BackupReceipt(false, "No verified backup could be completed: " + error.Message +
+                " Nothing in the game changed.", PartialFolder: partial), null);
+        }
+    }
+
+    private static BackupReceipt CreateCore(IProtectedSaveFiles files, GameFolder game, string root, DateTime now, string reason,
+        out BackupDirectory? directory)
+    {
+        directory = null;
         try
         {
             CeInstallation.RejectFolderInAnyPackage(root, "The backup folder");
@@ -154,17 +182,8 @@ public static class Backups
             return new BackupReceipt(false, "Choose an existing backup folder.");
         if (SteamLibraries.Canonical(root) is not string realRoot || (IsInside(realRoot, game.Root) || IsInside(realRoot, game.AssetRoot)))
             return new BackupReceipt(false, "Choose a backup folder outside the game folder.");
-        string folder = Path.Combine(realRoot, $"onslaught-backup-{now:yyyyMMdd-HHmmss}");
-        for (int suffix = 2; Path.Exists(folder); suffix++)
-            folder = Path.Combine(realRoot, $"onslaught-backup-{now:yyyyMMdd-HHmmss}-{suffix}");
-        try
-        {
-            Directory.CreateDirectory(folder);
-        }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
-        {
-            return new BackupReceipt(false, "The backup folder could not be created: " + error.Message);
-        }
+        directory = BackupDirectory.Create(realRoot, now);
+        string folder = directory.Folder;
         List<BackupFile> saved = [];
         IEnumerable<GameFile> sources = game.Careers.Where(file => file.Supported);
         if (game.Options is { Supported: true } options) sources = sources.Append(options);
@@ -178,22 +197,14 @@ public static class Backups
             if (!copy.Ok)
                 return new BackupReceipt(false, $"{file.Name} could not be backed up: {copy.Message} Nothing in the game changed.",
                     PartialFolder: folder);
-            saved.Add(new BackupFile(file.Name, file.Path, bytes.Length, copy.Sha256.ToLowerInvariant()));
+            directory.HoldCopy(file.Name, bytes);
+            saved.Add(new BackupFile(file.Name, file.Path, bytes.Length, SaveSession.Digest(bytes).ToLowerInvariant()));
         }
         BackupSet set = new(folder, now, game.Root, saved, reason, game.Target);
-        try
-        {
-            using FileStream manifest = new(Path.Combine(folder, ManifestName), FileMode.CreateNew, FileAccess.Write);
-            JsonSerializer.Serialize(manifest, set, Json);
-            if (manifest.Position > MaximumManifestBytes)
-                return new BackupReceipt(false, "The copies were verified but their manifest is too large to read safely.", PartialFolder: folder);
-            manifest.Flush(flushToDisk: true);
-        }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
-        {
-            return new BackupReceipt(false, "The copies were verified but the manifest could not be written: " + error.Message,
-                PartialFolder: folder);
-        }
+        byte[] manifest = JsonSerializer.SerializeToUtf8Bytes(set, Json);
+        if (manifest.Length > MaximumManifestBytes)
+            return new BackupReceipt(false, "The copies were verified but their manifest is too large to read safely.", PartialFolder: folder);
+        directory.PublishManifest(manifest);
         int skipped = game.Careers.Count(file => !file.Supported) + (game.Options is { Supported: false } ? 1 : 0);
         return new BackupReceipt(true, $"Backed up and verified {saved.Count} file{(saved.Count == 1 ? "" : "s")}" +
             (skipped > 0 ? $"; {skipped} unsupported file{(skipped == 1 ? " was" : "s were")} left untouched" : "") + ".", set);
@@ -392,7 +403,8 @@ public static partial class GameInstaller
 
         if (expectedSha256 is not null && !existing.Exists)
             return new InstallReceipt(false, $"{Path.GetFileName(target)} is no longer in your game, so it was not replaced.", target);
-        BackupReceipt backup = Backups.Create(files, game, backupRoot, now, reason);
+        using HeldBackup heldBackup = Backups.CreateHeld(files, game, backupRoot, now, reason);
+        BackupReceipt backup = heldBackup.Receipt;
         if (backup.Set is not BackupSet set)
             return new InstallReceipt(false, "No verified backup could be made, so nothing was written. " + backup.Message, target,
                 backup.PartialFolder);
@@ -424,12 +436,15 @@ public static partial class GameInstaller
                     CeInstallation.RejectFolderInPackage(game.Root, package, "CE's user folder");
                     CeInstallation.RejectFolderInPackage(backupRoot, package, "The backup folder");
                 }
+                heldBackup.Verify();
             };
             // Even a backup containing this name cannot turn an Add choice into replacement consent.
             string? replaceHash = requireNew ? null : saved?.Sha256;
-            return OperatingSystem.IsLinux() && !UsePortableInstall
-                ? LinuxInstall.Write(target, prepared, replaceHash, set.Folder, beforeCheck, beforeSwapChecked, afterPublish)
-                : PortableInstall.Write(target, prepared, replaceHash, set.Folder, beforeCheck, beforeSwapChecked, afterPublish);
+            Action afterPublishChecked = () => { afterPublish?.Invoke(); heldBackup.Verify(); };
+            InstallReceipt result = OperatingSystem.IsLinux() && !UsePortableInstall
+                ? LinuxInstall.Write(target, prepared, replaceHash, set.Folder, beforeCheck, beforeSwapChecked, afterPublishChecked)
+                : PortableInstall.Write(target, prepared, replaceHash, set.Folder, beforeCheck, beforeSwapChecked, afterPublishChecked);
+            return result.Ok ? AfterPublication(target, set.Folder, result.Replaced, () => { heldBackup.Verify(); return result; }) : result;
         }
         catch (GameStartedException)
         {
@@ -455,6 +470,10 @@ public static partial class GameInstaller
         catch (Exception error)
         {
             string name = Path.GetFileName(target);
+            if (error is BackupVerificationException)
+                return new InstallReceipt(false, $"{name} was written into your game, but the recovery backup could not be verified. " +
+                    $"The career was left as it is; inspect it and {backupFolder} before playing or attempting recovery.",
+                    target, backupFolder, replaced, MayHaveChanged: true);
             return new InstallReceipt(false, $"{name} was written into your game, but a check afterwards failed ({error.Message}). " +
                 $"It may not hold what you saved, and it was left as it is. Look at {name} before playing; the backup holds the " +
                 "earlier files.", target, backupFolder, replaced, MayHaveChanged: true);

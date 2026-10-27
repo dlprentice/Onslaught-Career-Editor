@@ -111,6 +111,7 @@ internal static class InstallTests
         GameStartsDuringWrite(original, root, now, files, check);
         BackupsPerGameFolder(original, root, now, files, check);
         BackupRecoveryIntegrity(original, root, now, files, check);
+        BackupDirectoryTests.Run(original, root, now, check);
         PublicationBoundary(original, root, now, files, check);
         PortableWrites(original, root, now, files, check);
     }

@@ -261,6 +261,23 @@ internal sealed class LinuxSaveDirectory : IDisposable
         catch { current.Dispose(); throw; }
     }
 
+    internal LinuxSaveDirectory CreateChild(string name)
+    {
+        if (string.IsNullOrEmpty(name) || name is "." or ".." || name.IndexOfAny(['/', '\\', '\0']) >= 0)
+            throw new ArgumentException("A backup subfolder must have one filename component.");
+        Verify();
+        if (LinuxSaveNative.MakeDirectoryAt(_handle.DangerousGetHandle().ToInt32(), name, 0x1C0) != 0) // 0700
+            throw LinuxSaveNative.Failure("The backup folder could not be created exclusively.", Marshal.GetLastWin32Error());
+        SafeFileHandle child = LinuxSaveNative.OpenAt(_handle.DangerousGetHandle().ToInt32(), name, LinuxSaveNative.ReadDirectory, 0);
+        try
+        {
+            LinuxSaveDirectory result = new(System.IO.Path.Combine(_path, name), child);
+            Verify(); result.Verify(); Flush();
+            return result;
+        }
+        catch { child.Dispose(); throw; }
+    }
+
     internal void Verify()
     {
         using LinuxSaveDirectory current = Open(_path);
@@ -391,6 +408,9 @@ internal static class LinuxSaveNative
     [DllImport("libc", EntryPoint = "linkat", SetLastError = true)]
     internal static extern int LinkAt(int oldDirectory, [MarshalAs(UnmanagedType.LPUTF8Str)] string oldName,
         int newDirectory, [MarshalAs(UnmanagedType.LPUTF8Str)] string newName, int flags);
+
+    [DllImport("libc", EntryPoint = "mkdirat", SetLastError = true)]
+    internal static extern int MakeDirectoryAt(int directory, [MarshalAs(UnmanagedType.LPUTF8Str)] string name, uint mode);
 
     [DllImport("libc", EntryPoint = "fsync", SetLastError = true)]
     internal static extern int Sync(int fd);
