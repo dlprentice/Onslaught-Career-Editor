@@ -40,6 +40,7 @@ CATALOG_INSPECTION_SCHEMA = "onslaught.catalog-source-selection.v1"
 MAX_INSPECTED_SOURCES = 256
 MAX_INSPECTED_SOURCE_BYTES = 256 * 1024 * 1024
 MAX_SINGLE_SOURCE_BYTES = 64 * 1024 * 1024
+MAX_PACKED_TEXTURE_MIPS = 4096
 
 
 def _identity_hash(domain: str, value: object) -> str:
@@ -140,9 +141,88 @@ def _read_selected_source(source_root: Path, source_path: Path, budget: SourceRe
             os.close(descriptor)
 
 
-def _source_metadata(kind: str, source: bytes, path: Path, logical: str) -> tuple[dict[str, object], dict[str, object] | None]:
+def _texture_inspection_declaration(value: object) -> dict[str, object] | None:
+    """Validate the optional raw-TEXT selector; origin is never a verified join.
+
+    A texture-manifest row may add ``source_inspection`` containing
+    ``{"kind":"packed-text","platform":"PC"}`` (or XBOX), optionally with
+    ``origin`` fields source_path/archive_sha256/payload_offset/chunk_path.
+    The selected input is one complete raw DXTX payload, not an AYA archive.
+    """
+    if value is None:
+        return None
+    if (not isinstance(value, dict) or len(value) > 3
+            or any(key not in ("kind", "platform", "origin") for key in value)
+            or value.get("kind") != "packed-text" or value.get("platform") not in ("PC", "XBOX")):
+        raise SourceInspectionError("rejected", "invalid packed-text inspection declaration")
+    result: dict[str, object] = {"kind": "packed-text", "platform": value["platform"]}
+    if "origin" not in value:
+        return result
+    origin = value["origin"]
+    if (not isinstance(origin, dict) or len(origin) > 4
+            or any(key not in ("source_path", "archive_sha256", "payload_offset", "chunk_path") for key in origin)):
+        raise SourceInspectionError("rejected", "invalid unverified packed-text origin annotation")
+    normalized: dict[str, object] = {}
+    for name, item in origin.items():
+        if name == "source_path":
+            valid = (isinstance(item, str) and 1 <= len(item) <= 4096
+                     and not item.startswith("/") and "\\" not in item and ":" not in item
+                     and not any(ord(c) < 32 for c in item)
+                     and all(p not in ("", ".", "..") for p in item.split("/")))
+        elif name == "archive_sha256":
+            valid = isinstance(item, str) and re.fullmatch(r"[0-9a-f]{64}", item) is not None
+        elif name == "payload_offset":
+            valid = type(item) is int and 0 <= item < 2**64
+        else:
+            valid = (isinstance(item, list) and len(item) <= 32
+                     and all(type(n) is int and 0 <= n < 2**32 for n in item))
+        if not valid:
+            raise SourceInspectionError("rejected", "invalid unverified packed-text origin field")
+        normalized[name] = list(item) if name == "chunk_path" else item
+    result["origin"] = normalized
+    return result
+
+
+def _source_metadata(
+    kind: str, source: bytes, path: Path, logical: str, *,
+    inspection: dict[str, object] | None = None,
+    packed_mips_remaining: int = MAX_PACKED_TEXTURE_MIPS,
+) -> tuple[dict[str, object], dict[str, object] | None]:
     """Use existing bounded parsers; never infer embedded-body framing/offsets."""
     if kind == "texture":
+        if inspection is not None:
+            import aya_texture_fidelity_census as packed
+            status: dict[str, object] = {"envelope": "raw-TEXT-payload",
+                "inspection_profile": "packed-text-" + str(inspection["platform"]),
+                "catalog_name_join": "legacy filename grouping; not verified resource lookup"}
+            if "origin" in inspection:
+                status["origin_annotation"] = {"verification": "caller-supplied-not-verified",
+                                               "declared": inspection["origin"]}
+            if packed_mips_remaining <= 0:
+                return {**status, "status": "notAttempted", "reason": {
+                    "category": "selection packed-text mip budget exhausted"}}, None
+            metadata = packed.serialized_texture_metadata(
+                source, platform=str(inspection["platform"]), source_path=logical,
+                archive_sha256=hashlib.sha256(source).hexdigest(),
+                limits=packed.TextureDescriptorLimits(max_total_mips=min(1024, packed_mips_remaining)))
+            # These API coordinates describe an archive only when its caller has
+            # verified that envelope. Here the held input is a standalone payload:
+            # publish its measured variant, not synthetic archive/frame identities.
+            metadata.pop("identity")
+            metadata.pop("limits")  # Selection-dependent admission is not payload metadata.
+            for frame in metadata["frames"]:
+                frame.pop("occurrenceId")
+            status["status"] = metadata["status"]
+            if metadata["status"] != "parsed":
+                if (metadata.get("reason") == "metadata limit: aggregate mip count"
+                        and packed_mips_remaining < 1024):
+                    status["status"] = "notAttempted"
+                return {**status, "measured": metadata}, None
+            return status, {
+                "payload_domain": "serialized-TEXT-" + str(inspection["platform"]),
+                "payload_identity": {"length": len(source), "sha256": hashlib.sha256(source).hexdigest()},
+                "parser": "aya_texture_fidelity_census.serialized_texture_metadata", "measured": metadata,
+            }
         import dds_census
         envelope = "dds" if path.suffix.lower() == ".dds" else "aya"
         metadata = dds_census.texture_metadata(source, envelope=envelope)
@@ -211,7 +291,18 @@ def inspect_catalog_sources(
                 path = path_base / path
             path = Path(os.path.abspath(path))
             key = (str(kind), str(path))
-            selected.setdefault(key, {"kind": kind, "path": path})
+            request = selected.setdefault(key, {"kind": kind, "path": path})
+            if kind == "texture":
+                value = declaration.get("source_inspection")
+                request["packed_requested"] = request.get("packed_requested", False) or value is not None
+                try:
+                    normalized = _texture_inspection_declaration(value)
+                    if "inspection" not in request:
+                        request["inspection"] = normalized
+                    elif request["inspection"] != normalized:
+                        raise SourceInspectionError("rejected", "conflicting source-inspection declarations")
+                except SourceInspectionError as error:
+                    request["inspection_error"] = (error.status, error.reason)
             if kind == "texture":
                 aliases = texture_aliases_for_catalog(declared.name)
                 catalog_id = "texture:" + choose_texture_ref(aliases, declared.stem)
@@ -226,6 +317,8 @@ def inspect_catalog_sources(
                   for entry in entries]
     observed: dict[tuple[str, str], dict[str, object]] = {}
     budget = SourceReadBudget(MAX_INSPECTED_SOURCE_BYTES)
+    packed_mips = 0
+    packed_requested = any(r.get("packed_requested", False) for r in selected.values())
     for index, key in enumerate(sorted(selected)):
         request = selected[key]
         path, kind = request["path"], request["kind"]
@@ -240,7 +333,13 @@ def inspect_catalog_sources(
                 raise SourceInspectionError("notAttempted", "selection source-count budget exhausted")
             source = _read_selected_source(root, path, budget)
             row["source_identity"] = {"length": len(source), "sha256": hashlib.sha256(source).hexdigest()}
-            status, variant = _source_metadata(str(kind), source, path, str(logical))
+            if "inspection_error" in request:
+                raise SourceInspectionError(*request["inspection_error"])
+            status, variant = _source_metadata(str(kind), source, path, str(logical),
+                                               inspection=request.get("inspection"),
+                                               packed_mips_remaining=MAX_PACKED_TEXTURE_MIPS - packed_mips)
+            if variant is not None and variant["payload_domain"].startswith("serialized-TEXT-"):
+                packed_mips += sum(len(frame["mips"]) for frame in variant["measured"]["frames"])
             row.update(status)
             row["variant"] = variant
         except SourceInspectionError as error:
@@ -248,7 +347,7 @@ def inspect_catalog_sources(
                        "falsifier": "provide a stable supported regular source under the explicit root"})
         observed[key] = row
     namespace_rows = sorted(
-        ({name: value for name, value in row.items() if name != "variant"} for row in observed.values()),
+        ({name: value for name, value in row.items() if name not in ("variant", "origin_annotation")} for row in observed.values()),
         key=lambda value: json.dumps(value, sort_keys=True))
     namespace = _identity_hash(CATALOG_INSPECTION_SCHEMA, namespace_rows)
     for entry, keys in zip(entries, entry_keys):
@@ -276,12 +375,17 @@ def inspect_catalog_sources(
         entry["exact_variant_count"], entry["occurrence_count"] = len(variants), len(occurrences)
         entry["occurrence_count_scope"] = "declared-source-locations"
         entry["observed_occurrence_count"] = sum(row["source_identity"] is not None for row in occurrences)
-    return {"schema": CATALOG_INSPECTION_SCHEMA, "selection_namespace": namespace,
+    result = {"schema": CATALOG_INSPECTION_SCHEMA, "selection_namespace": namespace,
             "scope": "explicit-manifest-source-selection-not-full-aya-universe",
             "source_count": len(observed), "source_bytes_read": budget.bytes_read,
             "source_limit": MAX_INSPECTED_SOURCES, "source_byte_limit": MAX_INSPECTED_SOURCE_BYTES,
             "status_counts": dict(sorted(Counter(row["status"] for row in observed.values()).items())),
             "description_status": "not-visually-reviewed", "export_verification": "not-established"}
+    if packed_requested:
+        result.update(packed_texture_scope="explicit-standalone-TEXT-payloads-not-original-archive-selection",
+                      packed_texture_mips_projected=packed_mips,
+                      packed_texture_mip_limit=MAX_PACKED_TEXTURE_MIPS)
+    return result
 
 
 def repo_rel(path: Path, repo_root: Path) -> str:
@@ -843,7 +947,8 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--out-dir", type=Path, default=Path(".artifacts/asset-catalog"))
     ap.add_argument("--self-test", action="store_true", help="Run built-in catalog assembly checks without game assets")
     ap.add_argument("--inspect-source-root", type=Path,
-                    help="Opt in to bounded metadata reads of manifest-selected sources below this explicit root; no discovery")
+                    help="Opt in to bounded metadata reads of manifest-selected sources below this explicit root; "
+                         "raw TEXT requires texture row source_inspection kind=packed-text and platform=PC/XBOX; no discovery")
     return ap.parse_args()
 
 
