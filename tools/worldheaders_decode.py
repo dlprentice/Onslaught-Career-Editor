@@ -72,6 +72,9 @@ USAGE
     python tools/worldheaders_decode.py <input> --metadata-json --configurations <config-input>
     python tools/worldheaders_decode.py "<path to worldheaders.dat>"
 
+Without a path it reads $BEA_GAME/data/worldheaders.dat, else the Steam install
+(~/.local/share/Steam/... on Linux, Program Files on Windows).
+
 The byte-exact round-trip assertion runs on EVERY invocation, not only under
 --self-test.
 """
@@ -82,16 +85,30 @@ import argparse
 from collections import Counter
 import hashlib
 import json
+import os
 import re
 import struct
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 
-DEFAULT_PATH = Path(
+WINDOWS_DEFAULT_PATH = Path(
     r"C:\Program Files (x86)\Steam\steamapps\common"
     r"\Battle Engine Aquila\data\worldheaders.dat"
 )
+LINUX_STEAM_GAME = Path.home() / ".local/share/Steam/steamapps/common/Battle Engine Aquila"
+
+
+def default_path() -> Path:
+    """The selected install's worldheaders.dat: BEA_GAME (the game folder) first, then the usual Steam folders."""
+    game = os.environ.get("BEA_GAME")
+    if game:
+        return Path(game) / "data" / "worldheaders.dat"
+    linux = LINUX_STEAM_GAME / "data" / "worldheaders.dat"
+    return linux if sys.platform != "win32" and linux.is_file() else WINDOWS_DEFAULT_PATH
+
+
+DEFAULT_PATH = default_path()
 
 FILE_HEADER_SIZE = 0x08
 RECORD_PREFIX_SIZE = 0x08  # version + payload_size

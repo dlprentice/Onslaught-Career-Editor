@@ -38,6 +38,7 @@ DENY_ROOTS = (
     "local-game/",
     "local-ghidra/",
     "local-lab/",
+    "local-data/",
     "local-media/",
     "local-rom-input/",
     "local-proofs/",
@@ -54,6 +55,7 @@ DENY_CONTAINS = (
     "/__pycache__/",
     ".rep/",
     "/.rep/",
+    "/local-data/",
     "/secrets/",
     "/credentials/",
     "/.codex/auth/",
@@ -192,6 +194,9 @@ STACK_TRACE_RE = re.compile(r"(?im)^\s*(?:ChildEBP|Child-SP|RetAddr)\s+")
 DATA_IMAGE_RE = re.compile(r"data:image/(?:png|jpeg|jpg|gif|webp|bmp);base64,", re.IGNORECASE)
 EMBEDDED_PNG_RE = re.compile(r"(?:\\x89PNG|iVBORw0KGgo)", re.IGNORECASE)
 EMBEDDED_JPEG_RE = re.compile(r"(?:\\xff\\xd8\\xff|/9j/4AAQSkZJRgABAQ)", re.IGNORECASE)
+# Every file tools/content_catalog.py generates sets this marker: its retail-derived catalogue stays in ignored
+# local-data/ and is never published (the tool, its schema and its tests carry no generated record).
+GENERATED_CATALOGUE_RE = re.compile(r'"generatedRetailDerived"\s*:\s*true')
 BASE64_TOKEN_RE = re.compile(r"(?<![A-Za-z0-9+/=])[A-Za-z0-9+/=]{512,}(?![A-Za-z0-9+/=])")
 
 MAGIC_DENY_SIGNATURES = (
@@ -462,6 +467,8 @@ def content_signature_findings(path: str, text: str) -> list[Finding]:
         )
     if DATA_IMAGE_RE.search(text):
         findings.append(Finding(path, "deny-data-image-url", "data:image/*;base64"))
+    if GENERATED_CATALOGUE_RE.search(text):
+        findings.append(Finding(path, "deny-generated-retail-catalogue", "generatedRetailDerived marker"))
     if EMBEDDED_PNG_RE.search(text):
         findings.append(Finding(path, "deny-embedded-png-header", "png header/base64 marker"))
     if EMBEDDED_JPEG_RE.search(text):
@@ -699,6 +706,11 @@ def run_self_test() -> int:
             ".echo command script fixture\nvertarget\ng\n",
             encoding="utf-8",
         )
+        (root / "notes").mkdir(exist_ok=True)
+        (root / "notes" / "catalogue-copy.jsonl").write_text(
+            '{"id": "texture:x", "generatedRetailDerived": true}\n',
+            encoding="utf-8",
+        )
         (root / "github-token-note.md").write_text(
             f"Accidental token example {github_fixture}\n",
             encoding="utf-8",
@@ -735,6 +747,7 @@ def run_self_test() -> int:
             "deny-stripe-key",
             "deny-huggingface-token",
             "deny-raw-cdb-text-transcript",
+            "deny-generated-retail-catalogue",
         }
         missing = sorted(required - labels)
         if missing:

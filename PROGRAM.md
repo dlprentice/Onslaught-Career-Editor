@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-25 (Linux CE workflow and native Windows backend/load checks completed; Windows UI and player checks remain)
+Last updated: 2026-10-27 (content catalogue: survey, schema, generator, levels, placements and usage; earlier: Linux CE workflow and native Windows backend/load checks completed)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
@@ -51,6 +51,17 @@ Write what the decompilation establishes as prose and specs under [`reverse-engi
 citing functions rather than quoting code. The companion's CE work (careers, settings, launch) is the next
 consumer. Sections whose decompiler listings moved to the private archive on 2026-10-15 keep a pointer and,
 where needed, a short summary; a fuller prose description is welcome wherever a reader needs one.
+
+### Content catalogue
+
+An evidence-based inventory of the game's content (textures, meshes, animations, sound, music, films, levels,
+scripts, effects, interface art) with JSON metadata, as the basis for HD successors, modding, editors, multiplayer
+compatibility and the rebuild. `tools/content_catalog.py` (schema `tools/content_catalog.schema.json`) surveys a
+selected install and catalogues the families existing parsers read; every relationship names the loader function or
+data that establishes it, and meshes and textures carry a usage summary for HD prioritisation. Its output is
+retail-derived and stays in ignored `local-data/`. Next: the other `WRES` record families (waypoints, triggers,
+paths), the structure of `ERES`, `SURF` and `SSHD`, texture names that code builds with `sprintf` (terrain mixers),
+and mission-script contents. A catalogue is a foundation, not the mod system or an HD conversion.
 
 ### Decompilation and native port
 
