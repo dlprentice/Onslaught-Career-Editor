@@ -13,6 +13,8 @@ from unittest.mock import patch
 import zlib
 
 import export_asset_catalog as catalog
+import aya_texture_fidelity_census as packed
+from aya_texture_fidelity_census_tests import texture_payload
 from dds_census_tests import dds
 from safe_generated_output import UnsafeGeneratedOutputError
 
@@ -475,6 +477,224 @@ class CatalogSourceInspectionTests(unittest.TestCase):
         result = json.loads((self.bundle / "asset_catalog/catalog.json").read_text())
         self.assertEqual({"valid": 1}, result["source_inspection"]["status_counts"])
         self.assertEqual(1, result["textures"][0]["exact_variant_count"])
+
+    def packed_row(self, path, platform="PC", **inspection):
+        return dict(self.row(path), source_inspection=dict(kind="packed-text", platform=platform, **inspection))
+
+    def inspect_packed(self, declarations):
+        rows = catalog.build_texture_catalog(declarations, self.packed, self.repo, self.bundle)
+        result = self.inspect(rows, texture_sources=declarations)
+        return rows, result
+
+    def test_explicit_raw_text_projects_multiframe_metadata_without_verified_name_or_archive_join(self):
+        payload = texture_payload(platform="PC", name="meshtex\\actual.tga", frame_mips=(2, 1))
+        path = self.source("raw/filename.tga.text", payload)
+        origin = dict(source_path="data/resources/100_res_PC.aya", archive_sha256="a" * 64,
+                      payload_offset=1234, chunk_path=[7])
+        rows, result = self.inspect_packed([self.packed_row(path, origin=origin)])
+        self.assertEqual({"parsed": 1}, result["status_counts"])
+        self.assertEqual(3, result["packed_texture_mips_projected"])
+        self.assertIn("not-original-archive-selection", result["packed_texture_scope"])
+        self.assertEqual("filename.tga", rows[0]["canonical_ref"])
+        variant = rows[0]["variants"][0]
+        self.assertEqual("serialized-TEXT-PC", variant["payload_domain"])
+        self.assertEqual(hashlib.sha256(payload).hexdigest(), variant["payload_identity"]["sha256"])
+        measured = variant["measured"]
+        self.assertEqual("meshtex\\actual.tga", measured["descriptor"]["name"])
+        self.assertEqual([2, 1], [f["declaredMipCount"] for f in measured["frames"]])
+        self.assertNotIn("identity", measured)
+        self.assertNotIn("limits", measured)
+        self.assertTrue(all("occurrenceId" not in f for f in measured["frames"]))
+        self.assertTrue(all(m["sha256"] is None for f in measured["frames"] for m in f["mips"]))
+        occurrence = rows[0]["occurrences"][0]
+        self.assertEqual(hashlib.sha256(payload).hexdigest(), occurrence["source_identity"]["sha256"])
+        self.assertEqual({"declared": origin, "verification": "caller-supplied-not-verified"}, occurrence["origin_annotation"])
+        self.assertIn("not verified", occurrence["catalog_name_join"])
+        self.assertNotIn("origin", json.dumps(variant))
+        self.assertEqual([], rows[0]["export_png_paths"])
+
+    def test_origin_annotations_cannot_change_measured_variant_or_occurrence_identity(self):
+        path = self.source("raw/foo.tga.text", texture_payload(platform="PC"))
+        one, first = self.inspect_packed([self.packed_row(path, origin={"archive_sha256": "a" * 64})])
+        two, second = self.inspect_packed([self.packed_row(path, origin={"archive_sha256": "b" * 64})])
+        self.assertEqual(one[0]["variants"], two[0]["variants"])
+        self.assertEqual(first["selection_namespace"], second["selection_namespace"])
+        self.assertEqual(one[0]["occurrences"][0]["occurrence_id"], two[0]["occurrences"][0]["occurrence_id"])
+        self.assertNotEqual(one[0]["occurrences"][0]["origin_annotation"], two[0]["occurrences"][0]["origin_annotation"])
+
+    def test_same_payload_at_two_locations_deduplicates_without_deduplicating_occurrences(self):
+        payload = texture_payload(platform="PC")
+        paths = [self.source(name, payload) for name in ("one/foo.tga.text", "two/foo.tga.text")]
+        rows, _result = self.inspect_packed([self.packed_row(p) for p in paths])
+        self.assertEqual(1, rows[0]["exact_variant_count"])
+        self.assertEqual(2, rows[0]["observed_occurrence_count"])
+        self.assertEqual(2, len({o["occurrence_id"] for o in rows[0]["occurrences"]}))
+        self.assertNotIn(str(self.sources), json.dumps(rows[0]["variants"]))
+
+    def test_distinct_same_named_texts_and_dds_remain_separate_unjoined_variants(self):
+        first = texture_payload(platform="PC")
+        second = bytearray(first)
+        second[packed.CTEX_BODY_START + 0x94] ^= 1
+        a = self.source("one/foo.tga.text", first)
+        b = self.source("two/foo.tga.text", bytes(second))
+        d = self.source("textures/foo.tga.dds", dds(4, 4))
+        rows, _result = self.inspect_packed([self.packed_row(a), self.packed_row(b), self.row(d)])
+        self.assertEqual(3, rows[0]["exact_variant_count"])
+        self.assertEqual({"serialized-TEXT-PC", "dds-stream"}, {v["payload_domain"] for v in rows[0]["variants"]})
+        for variant in rows[0]["variants"]:
+            if variant["payload_domain"] == "serialized-TEXT-PC":
+                self.assertIsNone(variant["measured"]["descriptor"]["ddsStorageFormat"])
+
+    def test_xbox_inline_mips_keep_actual_hashes_and_unproved_pc_fields_null(self):
+        payload = texture_payload(platform="XBOX", frame_mips=(2, 1))
+        path = self.source("raw/foo.tga.text", payload)
+        rows, _result = self.inspect_packed([self.packed_row(path, platform="XBOX")])
+        variant = rows[0]["variants"][0]
+        self.assertEqual("serialized-TEXT-XBOX", variant["payload_domain"])
+        measured = variant["measured"]
+        self.assertIsNone(measured["descriptor"]["lossShiftRaw"])
+        for frame in measured["frames"]:
+            for mip in frame["mips"]:
+                start = mip["offsetWithinPayload"]
+                self.assertEqual(hashlib.sha256(payload[start:start + mip["byteLength"]]).hexdigest(), mip["sha256"])
+
+    def test_missing_declaration_retains_legacy_dds_path_and_no_new_summary_keys(self):
+        path = self.source("raw/foo.tga.text", texture_payload(platform="PC"))
+        with patch.object(packed, "serialized_texture_metadata", side_effect=AssertionError("implicit TEXT parser")):
+            rows, result = self.inspect_packed([self.row(path)])
+        self.assertEqual([], rows[0]["variants"])
+        self.assertNotIn("packed_texture_scope", result)
+        good = self.source("textures/foo.tga.dds", dds(4, 4))
+        legacy, first = self.inspect_packed([self.row(good)])
+        explicit_null, second = self.inspect_packed([dict(self.row(good), source_inspection=None)])
+        self.assertEqual(legacy, explicit_null)
+        self.assertEqual(first, second)
+
+    def test_conflicting_duplicate_selectors_refuse_instead_of_first_wins(self):
+        path = self.source("raw/foo.tga.text", texture_payload(platform="PC"))
+        selectors = [self.packed_row(path), self.packed_row(path, platform="XBOX")]
+        with patch.object(packed, "serialized_texture_metadata", side_effect=AssertionError("ambiguous projection")):
+            rows, first = self.inspect_packed(selectors)
+            reordered, second = self.inspect_packed(list(reversed(selectors)))
+        self.assertEqual(rows, reordered)
+        self.assertEqual(first, second)
+        self.assertEqual({"rejected": 1}, first["status_counts"])
+        self.assertEqual([], rows[0]["variants"])
+        self.assertIsNotNone(rows[0]["occurrences"][0]["source_identity"])
+
+    def test_invalid_or_unbounded_annotations_remain_rejected_measured_sources(self):
+        path = self.source("raw/foo.tga.text", texture_payload(platform="PC"))
+        invalid = [True, {}, {"kind": "packed-text", "platform": "auto"},
+                   {"kind": "packed-text", "platform": "PC", "extra": True}]
+        invalid += [dict(kind="packed-text", platform="PC", origin=origin) for origin in (
+            {"source_path": "/home/player/private.aya"}, {"source_path": "../x"},
+            {"source_path": "x" * 4097}, {"archive_sha256": "A" * 64},
+            {"payload_offset": True}, {"payload_offset": 2**64},
+            {"chunk_path": [True]}, {"chunk_path": [0] * 33}, {"unknown": "x"})]
+        with patch.object(packed, "serialized_texture_metadata", side_effect=AssertionError("invalid annotation parser")):
+            for annotation in invalid:
+                with self.subTest(annotation=annotation):
+                    rows, result = self.inspect_packed([dict(self.row(path), source_inspection=annotation)])
+                    self.assertEqual({"rejected": 1}, result["status_counts"])
+                    self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), rows[0]["occurrences"][0]["source_identity"]["sha256"])
+
+    def test_global_mip_budget_refuses_before_second_legacy_parser_expansion(self):
+        paths = [self.source(f"raw/{n}.tga.text", texture_payload(platform="PC", frame_mips=(3,))) for n in (0, 1)]
+        with patch.object(catalog, "MAX_PACKED_TEXTURE_MIPS", 4), \
+                patch.object(packed, "parse_serialized_texture", wraps=packed.parse_serialized_texture) as parse:
+            rows, result = self.inspect_packed([self.packed_row(p) for p in paths])
+        self.assertEqual(1, parse.call_count)
+        self.assertEqual(3, result["packed_texture_mips_projected"])
+        self.assertEqual({"parsed": 1, "notAttempted": 1}, result["status_counts"])
+        refused = next(o for row in rows for o in row["occurrences"] if o["status"] == "notAttempted")
+        self.assertEqual([], refused["measured"]["frames"])
+
+    def test_global_mip_exact_boundary_and_exhausted_budget(self):
+        declarations = [self.packed_row(self.source(f"raw/{n}.tga.text", texture_payload(platform="PC", frame_mips=(2,)))) for n in range(3)]
+        with patch.object(catalog, "MAX_PACKED_TEXTURE_MIPS", 4), \
+                patch.object(packed, "serialized_texture_metadata", wraps=packed.serialized_texture_metadata) as project:
+            _rows, result = self.inspect_packed(declarations)
+        self.assertEqual(2, project.call_count)
+        self.assertEqual(4, result["packed_texture_mips_projected"])
+        self.assertEqual({"parsed": 2, "notAttempted": 1}, result["status_counts"])
+
+    def test_malformed_selected_text_preserves_source_and_no_partial_variant(self):
+        payload = texture_payload(platform="PC", frame_mips=(2, 1))[:-1]
+        path = self.source("raw/foo.tga.text", payload)
+        rows, result = self.inspect_packed([self.packed_row(path)])
+        self.assertEqual({"unparsed": 1}, result["status_counts"])
+        self.assertEqual([], rows[0]["variants"])
+        occurrence = rows[0]["occurrences"][0]
+        self.assertEqual([], occurrence["measured"]["frames"])
+        self.assertEqual(hashlib.sha256(payload).hexdigest(), occurrence["source_identity"]["sha256"])
+
+    def test_annotation_does_not_decode_an_original_archive(self):
+        path = self.source("raw/foo.tga.aya", envelope(texture_payload(platform="PC")))
+        with patch.object(catalog.aai, "decode_archive_envelope", side_effect=AssertionError("implicit archive discovery")):
+            rows, result = self.inspect_packed([self.packed_row(path)])
+        self.assertEqual({"unparsed": 1}, result["status_counts"])
+        self.assertEqual([], rows[0]["variants"])
+
+    def test_parent_replacement_with_identical_bytes_is_refused_before_metadata(self):
+        payload = texture_payload(platform="PC")
+        path = self.source("raw/foo.tga.text", payload)
+        read = catalog.os.read
+        changed = False
+        before = path.stat()
+        def replace_parent(fd, count):
+            nonlocal changed
+            data = read(fd, count)
+            if not changed:
+                changed = True
+                path.parent.rename(self.sources / "held-raw")
+                path.parent.mkdir()
+                path.write_bytes(payload)
+            return data
+        with patch.object(catalog.os, "read", side_effect=replace_parent), \
+                patch.object(packed, "serialized_texture_metadata", side_effect=AssertionError("changed path reached parser")):
+            rows, result = self.inspect_packed([self.packed_row(path)])
+        held = (self.sources / "held-raw" / path.name).stat()
+        self.assertEqual(catalog._file_fingerprint(before), catalog._file_fingerprint(held))
+        self.assertEqual({"rejected": 1}, result["status_counts"])
+        self.assertIsNone(rows[0]["occurrences"][0]["source_identity"])
+        self.assertEqual(len(payload), result["source_bytes_read"])
+
+    def test_actual_cli_publishes_only_opted_in_descriptor_metadata(self):
+        payload = texture_payload(platform="PC", frame_mips=(2, 1))
+        path = self.source("raw/foo.tga.text", payload)
+        arguments = self._inspection_cli(path, self.sources)
+        manifest = self.repo / "texture.json"
+        manifest.write_text(json.dumps([self.packed_row(path)]))
+        with patch("sys.argv", arguments), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0, catalog.main())
+        result = json.loads((self.bundle / "asset_catalog/catalog.json").read_text())
+        self.assertEqual(3, result["schema_version"])
+        self.assertEqual(2, len(result["textures"][0]["variants"][0]["measured"]["frames"]))
+        self.assertEqual([], result["textures"][0]["export_png_paths"])
+        self.assertEqual(payload, path.read_bytes())
+        index = arguments.index("--inspect-source-root")
+        del arguments[index:index + 2]
+        with patch("sys.argv", arguments), contextlib.redirect_stdout(io.StringIO()), \
+                patch.object(packed, "serialized_texture_metadata", side_effect=AssertionError("non-opt-in projection")):
+            self.assertEqual(0, catalog.main())
+        legacy = json.loads((self.bundle / "asset_catalog/catalog.json").read_text())
+        self.assertEqual({"status": "notRequested"}, legacy["source_inspection"])
+        self.assertNotIn("variants", legacy["textures"][0])
+
+    def test_packed_origin_annotations_cannot_bypass_source_output_overlap_guard(self):
+        output = self.bundle / "asset_catalog"
+        output.mkdir()
+        path = output / "catalog.json"
+        payload = texture_payload(platform="PC")
+        path.write_bytes(payload)
+        arguments = self._inspection_cli(path, self.bundle)
+        (self.repo / "texture.json").write_text(json.dumps([
+            self.packed_row(path, origin={"source_path": "elsewhere/source.aya"})]))
+        with patch("sys.argv", arguments), contextlib.redirect_stdout(io.StringIO()), \
+                self.assertRaisesRegex(UnsafeGeneratedOutputError, "overlap protected source"):
+            catalog.main()
+        self.assertEqual(payload, path.read_bytes())
+        self.assertFalse((output / "summary.json").exists())
 
 
 if __name__ == "__main__":
