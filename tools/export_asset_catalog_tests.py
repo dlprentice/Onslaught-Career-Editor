@@ -14,6 +14,7 @@ import zlib
 
 import export_asset_catalog as catalog
 import aya_texture_fidelity_census as packed
+import safe_generated_output as safe_output
 from aya_texture_fidelity_census_tests import texture_payload
 from dds_census_tests import dds
 from safe_generated_output import UnsafeGeneratedOutputError
@@ -905,8 +906,19 @@ class CatalogSourceInspectionTests(unittest.TestCase):
         legacy = json.loads((output / "catalog.json").read_text())
         self.assertNotIn("pc_archive_texture_inspection", legacy)
         flags = ["--archive-source-root", str(self.sources), "--inspect-pc-text-archive", "archive/selected.aya"]
+        previous = {path.name: path.read_bytes() for path in output.iterdir()}
+        with patch("sys.argv", args + flags), contextlib.redirect_stdout(io.StringIO()), \
+                self.assertRaisesRegex(UnsafeGeneratedOutputError, "already exists"):
+            catalog.main()
+        self.assertEqual(previous, {path.name: path.read_bytes() for path in output.iterdir()})
+        self.bundle = self.repo / "fresh-bundle"
+        self.bundle.mkdir()
+        args = self._inspection_cli(loose, self.sources)
+        index = args.index("--inspect-source-root")
+        del args[index:index + 2]
         with patch("sys.argv", args + flags), contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(0, catalog.main())
+        output = self.bundle / "asset_catalog"
         result = json.loads((output / "catalog.json").read_text())
         inspection = result.pop("pc_archive_texture_inspection")
         self.assertEqual(legacy, result)
@@ -931,6 +943,75 @@ class CatalogSourceInspectionTests(unittest.TestCase):
                 contextlib.redirect_stdout(io.StringIO()), self.assertRaisesRegex(UnsafeGeneratedOutputError, "overlap protected source"):
             catalog.main()
         self.assertEqual(archive, overlapping.read_bytes())
+
+    def test_archive_moved_into_output_after_inspection_is_not_overwritten(self):
+        loose = self.source("textures/loose.dds", dds(4, 4))
+        archive = envelope(archive_chunk(b"TEXT", texture_payload(platform="PC")))
+        source = self.source("selected/archive.aya", archive)
+        original = source.stat()
+        args = self._inspection_cli(loose, self.sources)
+        index = args.index("--inspect-source-root")
+        del args[index:index + 2]
+        args += ["--archive-source-root", str(self.sources), "--inspect-pc-text-archive", "selected/archive.aya"]
+        destination = self.bundle / "asset_catalog/catalog.json"
+        inspect = catalog.inspect_pc_texture_archive
+        def move_after_inspection(*arguments, **keywords):
+            result = inspect(*arguments, **keywords)
+            os.rename(source, destination)
+            return result
+        with patch("sys.argv", args), \
+                patch.object(catalog, "inspect_pc_texture_archive", side_effect=move_after_inspection), \
+                contextlib.redirect_stdout(io.StringIO()), \
+                self.assertRaisesRegex(UnsafeGeneratedOutputError, "already exists"):
+            catalog.main()
+        self.assertEqual(archive, destination.read_bytes())
+        self.assertEqual((original.st_dev, original.st_ino), (destination.stat().st_dev, destination.stat().st_ino))
+        self.assertFalse((destination.parent / "summary.json").exists())
+
+    def test_archive_preflight_preserves_existing_later_output_before_writing_anything(self):
+        loose = self.source("textures/loose.dds", dds(4, 4))
+        archive = envelope(archive_chunk(b"TEXT", texture_payload(platform="PC")))
+        source = self.source("selected/archive.aya", archive)
+        output = self.bundle / "asset_catalog"
+        output.mkdir()
+        existing = output / "goodies.json"
+        existing.write_bytes(b"previous output")
+        args = self._inspection_cli(loose, self.sources)
+        index = args.index("--inspect-source-root")
+        del args[index:index + 2]
+        args += ["--archive-source-root", str(self.sources), "--inspect-pc-text-archive", "selected/archive.aya"]
+        with patch("sys.argv", args), contextlib.redirect_stdout(io.StringIO()), \
+                self.assertRaisesRegex(UnsafeGeneratedOutputError, "already exists"):
+            catalog.main()
+        self.assertEqual(b"previous output", existing.read_bytes())
+        self.assertEqual(["goodies.json"], sorted(path.name for path in output.iterdir()))
+        self.assertEqual(archive, source.read_bytes())
+
+    @unittest.skipIf(os.name == "nt", "POSIX no-replace race control")
+    def test_archive_moved_after_output_preflight_is_not_replaced_at_publish(self):
+        loose = self.source("textures/loose.dds", dds(4, 4))
+        archive = envelope(archive_chunk(b"TEXT", texture_payload(platform="PC")))
+        source = self.source("selected/archive.aya", archive)
+        original = source.stat()
+        args = self._inspection_cli(loose, self.sources)
+        index = args.index("--inspect-source-root")
+        del args[index:index + 2]
+        args += ["--archive-source-root", str(self.sources), "--inspect-pc-text-archive", "selected/archive.aya"]
+        destination = self.bundle / "asset_catalog/catalog.json"
+        rename = safe_output._posix_rename_no_replace
+        def move_during_publish(directory_fd, temporary_name, destination_name):
+            if destination_name == "catalog.json":
+                os.rename(source, destination)
+            return rename(directory_fd, temporary_name, destination_name)
+        with patch("sys.argv", args), \
+                patch.object(safe_output, "_posix_rename_no_replace", side_effect=move_during_publish), \
+                contextlib.redirect_stdout(io.StringIO()), \
+                self.assertRaisesRegex(UnsafeGeneratedOutputError, "already exists"):
+            catalog.main()
+        self.assertEqual(archive, destination.read_bytes())
+        self.assertEqual((original.st_dev, original.st_ino), (destination.stat().st_dev, destination.stat().st_ino))
+        self.assertTrue((destination.parent / "summary.json").exists())  # Earlier fresh outputs may remain.
+        self.assertEqual([], list(destination.parent.glob(".*.tmp-*")))
 
 
 if __name__ == "__main__":

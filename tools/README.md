@@ -105,7 +105,12 @@ budgets can yield an explicit refusal or partial result, with omitted counts.
 The report contains no raw archive, payload or pixel bytes. It does not join
 these occurrences to loose DDS files, models or the manifest catalog, and does
 not establish runtime selection or appearance. Generated reports remain private
-local material; omitting these options leaves the existing catalog unchanged.
+local material. Archive inspection requires fresh catalog output filenames; its
+atomic no-replace publication preserves any existing file, including a source
+moved into an output name during the run. A concurrent collision can leave a
+partial set of newly created reports; use a fresh output location to retry. This
+path requires Linux `renameat2` no-replace support and fails closed without it.
+Omitting the archive options leaves the existing catalog publication unchanged.
 
 ## Parity measurement
 

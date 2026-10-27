@@ -38,6 +38,40 @@ class DescriptorPublicationTests(unittest.TestCase):
             self.assertEqual(b"second\0payload", destination.read_bytes())
             self.assertEqual([], list(self.destination_root.glob(".*.tmp-*")))
 
+    def test_new_json_preserves_existing_destination_and_cleans_its_temporary(self):
+        with output.SecuredOutputRoot(self.destination_root) as secured:
+            destination = self.destination_root / "catalog.json"
+            secured.atomic_write_new_json(destination, {"first": True})
+            first = destination.read_bytes()
+            with self.assertRaisesRegex(output.UnsafeGeneratedOutputError, "already exists"):
+                secured.atomic_write_new_json(destination, {"replacement": True})
+            self.assertEqual(first, destination.read_bytes())
+            self.assertEqual([], list(self.destination_root.glob(".*.tmp-*")))
+
+    def test_new_json_refuses_file_moved_into_destination_at_atomic_publish(self):
+        destination = self.destination_root / "catalog.json"
+        before = self.original.stat()
+        rename = output._posix_rename_no_replace
+        def move_original(directory_fd, source_name, destination_name):
+            self.assertEqual("catalog.json", destination_name)
+            os.rename(self.original, destination)
+            return rename(directory_fd, source_name, destination_name)
+        with output.SecuredOutputRoot(self.destination_root) as secured, \
+                patch.object(output, "_posix_rename_no_replace", side_effect=move_original), \
+                self.assertRaisesRegex(output.UnsafeGeneratedOutputError, "already exists"):
+            secured.atomic_write_new_json(destination, {"metadata": True})
+        self.assertEqual(b"original source", destination.read_bytes())
+        self.assertEqual((before.st_dev, before.st_ino), (destination.stat().st_dev, destination.stat().st_ino))
+        self.assertEqual([], list(self.destination_root.glob(".*.tmp-*")))
+
+    def test_new_json_fails_closed_without_atomic_no_replace_support(self):
+        with output.SecuredOutputRoot(self.destination_root) as secured, \
+                patch.object(output.ctypes, "CDLL", side_effect=OSError("missing primitive")), \
+                self.assertRaisesRegex(output.UnsafeGeneratedOutputError, "no-replace publication unavailable"):
+            secured.atomic_write_new_json(self.destination_root / "catalog.json", {"metadata": True})
+        self.assertFalse((self.destination_root / "catalog.json").exists())
+        self.assertEqual([], list(self.destination_root.glob(".*.tmp-*")))
+
     def test_cached_output_parent_rename_and_symlink_refuses_before_creation(self):
         with output.SecuredOutputRoot(self.destination_root) as secured:
             held = self.swap()

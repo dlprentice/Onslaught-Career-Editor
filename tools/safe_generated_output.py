@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import ctypes
+import errno
 import hashlib
 import io
 import json
@@ -254,6 +255,25 @@ def _windows_rename_handle(
         raise UnsafeGeneratedOutputError(
             f"could not atomically publish generated output ({error}): {destination}"
         )
+
+
+def _posix_rename_no_replace(directory_fd: int, source: str, destination: str) -> None:
+    """Atomically publish into an absent name, or fail without replacing it.
+
+    Linux renameat2 is deliberately required: a pre-check followed by replace
+    has a race, and unsupported filesystems must fail closed.
+    """
+    try:
+        rename = ctypes.CDLL(None, use_errno=True).renameat2
+    except (AttributeError, OSError) as error:
+        raise UnsafeGeneratedOutputError("atomic no-replace publication unavailable") from error
+    rename.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
+    rename.restype = ctypes.c_int
+    if rename(directory_fd, os.fsencode(source), directory_fd, os.fsencode(destination), 1) != 0:
+        error = ctypes.get_errno()
+        if error == errno.EEXIST:
+            raise UnsafeGeneratedOutputError("fresh generated-output destination already exists")
+        raise UnsafeGeneratedOutputError(f"atomic no-replace publication unavailable ({error})")
 
 
 def _normalized(path: Path) -> str:
@@ -874,7 +894,7 @@ class SecuredOutputRoot:
         return path
 
     @contextlib.contextmanager
-    def _posix_atomic_writer(self, destination: Path, *, binary: bool) -> Iterator[IO]:
+    def _posix_atomic_writer(self, destination: Path, *, binary: bool, replace_existing: bool = True) -> Iterator[IO]:
         self.ensure_directory(destination.parent)
         parent = self._held_directories[_normalized(destination.parent)]
         parent_fd = parent._fd
@@ -902,7 +922,10 @@ class SecuredOutputRoot:
                     raise UnsafeGeneratedOutputError("generated-output temporary changed identity or gained an alias")
                 # Both names belong to this exact held directory. A last-moment pathname swap
                 # cannot send the temporary, replacement, validation or cleanup into another tree.
-                os.replace(temporary, destination.name, src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
+                if replace_existing:
+                    os.replace(temporary, destination.name, src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
+                else:
+                    _posix_rename_no_replace(parent_fd, temporary, destination.name)
                 committed = True
                 published = os.stat(destination.name, dir_fd=parent_fd, follow_symlinks=False)
                 if not stat.S_ISREG(published.st_mode) or published.st_nlink != 1 or (published.st_dev, published.st_ino) != identity:
@@ -920,10 +943,14 @@ class SecuredOutputRoot:
                     pass
 
     @contextlib.contextmanager
-    def atomic_text_writer(self, path: Path) -> Iterator[IO[str]]:
+    def atomic_text_writer(self, path: Path, *, replace_existing: bool = True) -> Iterator[IO[str]]:
         destination = self.destination(path)
         temporary = destination.parent / f".{destination.name}.tmp-{uuid.uuid4().hex}"
         if os.name == "nt":
+            # The selected-archive reader is descriptor-safe on POSIX only.
+            # Do not claim an untested fresh-publication contract on Windows.
+            if not replace_existing:
+                raise UnsafeGeneratedOutputError("atomic no-replace publication unavailable on this host")
             atomic = _WindowsAtomicFile(temporary, destination)
             writer = io.TextIOWrapper(
                 atomic.stream,
@@ -950,7 +977,7 @@ class SecuredOutputRoot:
                             pass
             return
 
-        with self._posix_atomic_writer(destination, binary=False) as stream:
+        with self._posix_atomic_writer(destination, binary=False, replace_existing=replace_existing) as stream:
             yield stream
 
     @contextlib.contextmanager
@@ -990,6 +1017,11 @@ class SecuredOutputRoot:
 
     def atomic_write_json(self, path: Path, payload: object) -> None:
         self.atomic_write_text(path, json.dumps(payload, indent=2))
+
+    def atomic_write_new_json(self, path: Path, payload: object) -> None:
+        """Publish a JSON file only if the destination is atomically absent."""
+        with self.atomic_text_writer(path, replace_existing=False) as stream:
+            stream.write(json.dumps(payload, indent=2))
 
 
 def run_self_test() -> int:

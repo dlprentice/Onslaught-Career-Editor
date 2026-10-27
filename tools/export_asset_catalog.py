@@ -1314,14 +1314,19 @@ def main() -> int:
         if archive_source is not None:
             catalog["pc_archive_texture_inspection"] = inspect_pc_texture_archive(archive_root, archive_source)
 
-        output.atomic_write_json(args.out_dir / "summary.json", summary)
-        output.atomic_write_json(args.out_dir / "catalog.json", catalog)
-        output.atomic_write_json(args.out_dir / "textures.json", textures)
-        output.atomic_write_json(args.out_dir / "loose_meshes.json", loose_meshes)
-        output.atomic_write_json(args.out_dir / "embedded_meshes.json", embedded_meshes)
-        output.atomic_write_json(args.out_dir / "videos.json", videos)
-        output.atomic_write_json(args.out_dir / "language_rows.json", language_rows)
-        output.atomic_write_json(args.out_dir / "goodies.json", goodies)
+        outputs = (("summary.json", summary), ("catalog.json", catalog), ("textures.json", textures),
+                   ("loose_meshes.json", loose_meshes), ("embedded_meshes.json", embedded_meshes),
+                   ("videos.json", videos), ("language_rows.json", language_rows), ("goodies.json", goodies))
+        if archive_source is not None:
+            # Preflight all destinations so ordinary reruns do not leave a partial
+            # set. The no-replace rename below, not this check, closes the race.
+            for name, _payload in outputs:
+                destination = output.destination(args.out_dir / name)
+                if os.path.lexists(destination):
+                    raise UnsafeGeneratedOutputError("fresh generated-output destination already exists")
+        write_json = output.atomic_write_new_json if archive_source is not None else output.atomic_write_json
+        for name, payload in outputs:
+            write_json(args.out_dir / name, payload)
 
     print(json.dumps({"out_dir": str(args.out_dir), "summary": summary}, indent=2))
     return 0
