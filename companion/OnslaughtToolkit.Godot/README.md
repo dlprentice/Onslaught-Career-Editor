@@ -1,8 +1,8 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-27 (CE 0.1.0–0.1.6 launchers are never started; CE update checks suspended)
-Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and gives manual-update guidance.
+Last updated: 2026-10-27 (CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
+Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
 changes in the game is backed up first and can be put back. Retail reverse engineering, the
@@ -29,8 +29,10 @@ folder for pictures and music does not change that CE career source.
 [manual migration](https://github.com/dlprentice/onslaught-ce#manual-migration-from-affected-launchers)
 says not to start them at all. Before executing a launcher, the companion reads the version on the first
 line of the package's `README.txt` and refuses Play and the version query for 0.1.0–0.1.6, for a missing or
-unreadable header, and for a launcher whose `--version` answer disagrees with that header. Install 0.1.7 or
-later by hand into a new empty folder.
+unreadable header, and for a launcher whose `--version` answer disagrees with that header. The one accepted
+difference is a 0.1.8 or later package whose launcher reports a newer version: CE's updater installed that version
+under the package's own `versions` folder and the launcher hands off to it. Install 0.1.8 or later by hand into a
+new empty folder.
 
 CE's Play button uses `onslaught-ce` (Linux) or `onslaught-ce.exe` (Windows). The companion looks
 for a launcher among installed commands and remembers a launcher you choose; portable CE packages
@@ -61,14 +63,15 @@ and checks the saved bytes. These settings backups are named `onslaught-ce-setti
 separately from career backup sets; automatic backups and the Backups page manage careers, not
 these settings copies.
 
-**Manual updates** on Home contacts nothing. CE's automatic updating is suspended from 0.1.7 and no
-update feed is published, so the button shows the manual steps: download 0.1.7 or later from the
-release page and install it by hand into a new empty folder. The **Check for updates** setting
-(`update_check`) is kept in `ce.ini` for older files; CE 0.1.7 and later make no update checks, and
-turning it off does not make a 0.1.0–0.1.6 launcher safe to start. The signed-feed verifier
-(`CeUpdateFeed`, with CE's pinned Ed25519 key and the MIT-licensed BouncyCastle.Cryptography package,
-whose notice is included in exports) stays in the source for its tests and a future update design; the
-companion does not call it.
+**Updates** on Home contacts nothing. CE 0.1.8 and later check CE's signed update feed when they start and
+install a new version only when the player chooses Update; 0.1.7 has no update code, so players on 0.1.7 or
+older download 0.1.8 or later once and extract it by hand into a new empty folder. The button shows those steps.
+The **Check for updates** setting (`update_check`) is the `ce.ini` switch CE 0.1.8 and later read
+(`update_check=0` turns checking off); turning it off does not make a 0.1.0–0.1.6 launcher safe to start. The
+signed-feed verifier (`CeUpdateFeed`: CE's update feed v2, `ce-update-v2.json`, with CE's pinned Ed25519 key over
+the feed's domain prefix and exact bytes, and the MIT-licensed BouncyCastle.Cryptography package, whose notice is
+included in exports) stays in the source for its tests; the companion does not call it and never reads the old
+`latest.json`.
 
 The current source contract is
 [CE 0.1.4](https://github.com/dlprentice/onslaught-ce/tree/93ea9145d6d4d9f36f7cd9a800506ebf5bcbd788):

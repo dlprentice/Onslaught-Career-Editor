@@ -5,7 +5,7 @@ using OnslaughtToolkit.Companion.Game;
 
 namespace OnslaughtToolkit.Companion.Ui;
 
-/// <summary>CE package selection and manual-update guidance on Home (CE's automatic updating is suspended).</summary>
+/// <summary>CE package selection and update guidance on Home (CE 0.1.8 and later launchers update themselves).</summary>
 internal sealed class CeHomePanel
 {
     private readonly AppServices _app;
@@ -17,7 +17,7 @@ internal sealed class CeHomePanel
     internal CeHomePanel(AppServices app, Func<string?, CancellationToken, Task<CeUpdateState>>? check = null)
     {
         _app = app;
-        _check = check ?? CeUpdateFeed.SuspendedAsync;
+        _check = check ?? CeUpdateFeed.ManualAsync;
         (PanelContainer panel, VBoxContainer body) = Build.Card("CE launcher", 8);
         Root = panel;
         _version = body.Add(Build.Text("", "Strong"));
@@ -25,8 +25,8 @@ internal sealed class CeHomePanel
         _userFolder = body.Add(Build.Text("", "Muted"));
         HBoxContainer actions = body.Add(Build.Row(12));
         ChooseLauncher = actions.Add(Build.Button("Choose CE launcher…", "", "Choose onslaught-ce on Linux, or onslaught-ce.exe on Windows."));
-        CheckUpdates = actions.Add(Build.Button("Manual updates", "", "Show how to install a newer CE by hand; nothing is contacted, downloaded or installed."));
-        _update = body.Add(Build.Text("Automatic CE updates are suspended. Install 0.1.7 or later by hand into a new empty folder.", "Muted"));
+        CheckUpdates = actions.Add(Build.Button("Updates", "", "Show how CE updates and how to install a newer CE by hand; the companion contacts, downloads and installs nothing."));
+        _update = body.Add(Build.Text("CE 0.1.8 and later offer updates when they start. From an older CE, install 0.1.8 or later by hand into a new empty folder.", "Muted"));
         body.Add(Build.Text("Do not start a CE 0.1.0–0.1.6 launcher, even to update it: its startup cleanup can delete " +
             "neighbouring folders. The companion will not start one. Steps: " + CeInstallation.MigrationUrl, "Faint"));
         LauncherDialog = app.Popups.Add(Build.FilePicker("Choose the Onslaught CE launcher", FileDialog.FileModeEnum.OpenFile));
@@ -80,7 +80,7 @@ internal sealed class CeHomePanel
             _update.Text = installed != _app.Game.CeVersion?.Version && result.Verified
                 ? $"Signed release: CE {result.LatestVersion}. Check again to compare the selected launcher."
                 : result.Message;
-            _update.ThemeTypeVariation = result.Verified ? "Good" : result.Message == CeUpdateFeed.SuspendedMessage ? "Muted" : "Bad";
+            _update.ThemeTypeVariation = result.Verified ? "Good" : result.Message == CeUpdateFeed.ManualMessage ? "Muted" : "Bad";
         }
         finally
         {

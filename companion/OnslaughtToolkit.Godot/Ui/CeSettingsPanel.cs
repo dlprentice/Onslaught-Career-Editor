@@ -25,7 +25,7 @@ internal sealed class CeSettingsPanel
         content.Add(card);
         _path = body.Add(Build.Text("", "Faint"));
         body.Add(Build.Text("These choices apply the next time you start CE. Other settings in ce.ini are kept as they are.", "Muted"));
-        UpdateCheck = body.Add(new CheckBox { Text = "Check for updates when CE starts (update_check; CE 0.1.7 and later make no checks)" });
+        UpdateCheck = body.Add(new CheckBox { Text = "Check for updates when CE starts (update_check; read by CE 0.1.8 and later)" });
         body.Add(Build.Text("Turning update checks off does not make CE 0.1.0–0.1.6 safe to start: their startup cleanup " +
             "can delete neighbouring folders either way.", "Faint"));
         RecordSessions = body.Add(new CheckBox { Text = "Offer to record a session when CE starts" });

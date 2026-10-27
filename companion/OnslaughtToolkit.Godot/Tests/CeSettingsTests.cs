@@ -48,6 +48,9 @@ internal static class CeSettingsTests
         check.That(CeInstallation.ParseVersion("Onslaught CE v0.1.2 (preview), build abcd1234\n").Value is { Version: "0.1.2", Build: "abcd1234" } &&
             CeInstallation.ParseVersion("Onslaught CE vdev (preview), build unknown").Ok && !CeInstallation.ParseVersion("not CE").Ok &&
             !CeInstallation.ParseVersion("Onslaught CE v0.1.2, build abc\nextra output").Ok, "Version parsing admits only a complete CE version response.");
+        check.That(CeInstallation.ParseVersion("Onslaught CE V0.1.8, build 2cfb8c45e3bb\n").Value is { Version: "0.1.8", Build: "2cfb8c45e3bb" } &&
+            CeInstallation.ParseVersion("Onslaught CE V0.1.8.1, build abcd").Value is { Version: "0.1.8.1" },
+            "The 0.1.8 launcher's answer (capital V, as printed since 0.1.8) is read.");
         if (installation is not null && OperatingSystem.IsLinux())
         {
             ProcessStartInfo? requested = null;
@@ -77,7 +80,7 @@ internal static class CeSettingsTests
             // Affected launchers (0.1.0 to 0.1.6) are never executed, not even for --version; unknown packages neither.
             string readme = Path.Combine(package, "README.txt");
             foreach (string header in new[] { "Onslaught CE 0.1 (preview)", "Onslaught CE 0.1.0 (preview)", "Onslaught CE 0.1.6 (preview)",
-                "Onslaught CE 0.1.6", "Onslaught CE vdev (preview)", "not a CE readme", "" })
+                "Onslaught CE 0.1.6", "Onslaught CE V0.1.6", "Onslaught CE V0.1.6.1", "Onslaught CE vdev (preview)", "Onslaught CE Vdev", "not a CE readme", "" })
             {
                 File.WriteAllText(readme, header + "\n\nQuick start\n");
                 bool executed = false;
@@ -100,6 +103,29 @@ internal static class CeSettingsTests
             check.That(CeInstallation.IsAffectedVersion("0.1") && CeInstallation.IsAffectedVersion("0.1.6") && CeInstallation.IsAffectedVersion("0.1.x") &&
                 !CeInstallation.IsAffectedVersion("0.1.7") && !CeInstallation.IsAffectedVersion("0.1.10") && !CeInstallation.IsAffectedVersion("0.2"),
                 "Only 0.1.0 to 0.1.6 (and unparsable versions) count as affected.");
+            check.That(CeInstallation.IsAffectedVersion("0.1.6.1") && CeInstallation.IsAffectedVersion("0.1.8.1.2") &&
+                !CeInstallation.IsAffectedVersion("0.1.8.1"), "Four-part versions from the CE updater are judged by their first three parts.");
+
+            // The published 0.1.8 package header, and the versions CE's updater (v2) hands --version off to.
+            File.WriteAllText(readme, "Onslaught CE V0.1.8\n\nQuick start\n");
+            check.That(CeInstallation.PackageVersion(package) == "0.1.8" &&
+                (await installation.ReadVersionAsync(read: (_, _) => Task.FromResult("Onslaught CE V0.1.8, build 2cfb8c45e3bb"))).Value is { Version: "0.1.8" },
+                "A 0.1.8 package (README.txt 'Onslaught CE V0.1.8', --version 'Onslaught CE V0.1.8, build …') is accepted.");
+            bool started018 = false;
+            check.That(installation.Launch(_ => { started018 = true; return true; }).Ok && started018, "Play starts a 0.1.8 package.");
+            check.That((await installation.ReadVersionAsync(read: (_, _) => Task.FromResult("Onslaught CE V0.1.8.1, build abcd"))).Value is { Version: "0.1.8.1" },
+                "A 0.1.8 base whose launcher hands off to an updated 0.1.8.1 is not a mixed package.");
+            foreach (string reported in new[] { "0.1.7", "0.1.6", "0.1.6.1", "dev" })
+                check.That(!(await installation.ReadVersionAsync(read: (_, _) => Task.FromResult($"Onslaught CE V{reported}, build mixed"))).Ok,
+                    $"A 0.1.8 base reporting older or unparsable {reported} is refused.");
+            File.WriteAllText(readme, "Onslaught CE V0.1.8.1\n");
+            check.That(CeInstallation.PackageVersion(package) == "0.1.8.1", "A four-part package header is read.");
+            File.WriteAllText(readme, "Onslaught CE 0.1.7 (preview)\n");
+            check.That(!(await installation.ReadVersionAsync(read: (_, _) => Task.FromResult("Onslaught CE V0.1.8, build mixed"))).Ok,
+                "A 0.1.7 package (no updater) reporting a newer version is still a mixed package.");
+            check.That(CeInstallation.IsUpdatedFrom("0.1.8", "0.1.8.1") && CeInstallation.IsUpdatedFrom("0.1.8", "0.2") &&
+                !CeInstallation.IsUpdatedFrom("0.1.8", "0.1.8") && !CeInstallation.IsUpdatedFrom("0.1.8.1", "0.1.8") &&
+                !CeInstallation.IsUpdatedFrom("0.1.7", "0.1.8"), "Only a newer version over a 0.1.8 or later base counts as updated.");
         }
 
         const string original = "# preserved\r\ngamedir=/original/data\r\nunknown=π\r\n update_check=0\r\nupdate_check=0\r\nupdate_check=1\r\nrecord_sessions=1\r\ncheat_malloy=1\r\nlast=keep";

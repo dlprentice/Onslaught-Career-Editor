@@ -13,27 +13,33 @@ public enum CeUpdateAvailability { Unknown, Current, Newer, Older }
 public sealed record CeUpdateState(bool Verified, string? LatestVersion, CeUpdateAvailability Availability, string Message);
 
 /// <summary>
-/// Reads only the public CE release feed and its detached signature, on explicit request. It never fetches packages,
-/// writes configuration, or performs updates. Contract: Onslaught CE commit 72a44140c6db3e093cc07b1bed40a0584fdfecd2,
-/// port/updater/ce_launch.c (PUBLIC_KEY_HEX, check_for_update) and port/tools/sign_release.py.
+/// Reads only the public CE update feed v2 and its detached signature, on explicit request. It never fetches packages,
+/// writes configuration, or performs updates. Contract: Onslaught CE v0.1.8 (commit 2cfb8c45),
+/// port/updater/UPDATER-V2.md, port/updater/ce_launch.c (PUBLIC_KEY_HEX, UPD_SIG_DOMAIN) and ce_update_v2.h.
 /// The signature authenticates exact feed bytes; it cannot establish when those bytes were published.
-/// While CE's automatic updating is suspended (0.1.7 onwards) no feed is published, and the companion's Home panel
-/// uses <see cref="SuspendedAsync"/>, which contacts nothing; the verifier stays for tests and a future design.
+/// CE 0.1.8 and later launchers check and install updates themselves; the companion's Home panel uses
+/// <see cref="ManualAsync"/>, which contacts nothing, and this verifier stays for tests. The 0.1.0–0.1.6 feed
+/// (latest.json) is never published again and is never read here.
 /// </summary>
 public static class CeUpdateFeed
 {
-    public const string SuspendedMessage = "Automatic CE updates are suspended. Download 0.1.7 or later from " +
-        "github.com/dlprentice/onslaught-ce/releases and install it by hand into a new empty folder. Do not start a " +
-        "0.1.0–0.1.6 launcher to update it.";
+    public const string ManualMessage = "Onslaught CE 0.1.8 and later check for updates when they start and install " +
+        "them only when you choose Update (or run the launcher with --update-only). From 0.1.7 or older, download 0.1.8 " +
+        "or later once from github.com/dlprentice/onslaught-ce/releases and extract it by hand into a new empty folder. " +
+        "Do not start a 0.1.0–0.1.6 launcher to update it.";
 
-    /// <summary>The Home panel's manual-update answer: no network request, no version claim.</summary>
-    public static Task<CeUpdateState> SuspendedAsync(string? installedVersion, CancellationToken cancellationToken = default) =>
-        Task.FromResult(new CeUpdateState(false, null, CeUpdateAvailability.Unknown, SuspendedMessage));
+    /// <summary>The Home panel's update guidance: no network request, no version claim.</summary>
+    public static Task<CeUpdateState> ManualAsync(string? installedVersion, CancellationToken cancellationToken = default) =>
+        Task.FromResult(new CeUpdateState(false, null, CeUpdateAvailability.Unknown, ManualMessage));
 
-    public const string FeedUrl = "https://github.com/dlprentice/onslaught-ce/releases/latest/download/latest.json";
+    public const string FeedUrl = "https://github.com/dlprentice/onslaught-ce/releases/latest/download/ce-update-v2.json";
     public const string SignatureUrl = FeedUrl + ".sig";
     public const string PublicKeyHex = "b6cf39b727c92cd8a1682c31f315a5d38427dce912e406ccbd4802f0f7634510";
+    public const string FeedFormat = "onslaught-ce-update-v2";
+    /// <summary>Prefixed to the feed bytes before signing, so a v2 pair never verifies as an old latest.json pair.</summary>
+    internal static readonly byte[] SignatureDomain = "onslaught-ce update feed v2\n"u8.ToArray();
     internal const int MaximumFeedBytes = 16 * 1024;
+    private const long MaximumPackageBytes = 512L * 1024 * 1024;
     private const int MaximumSignatureBytes = 130;
     private const string ReleasePath = "/dlprentice/onslaught-ce/releases/";
     private const string PackagePrefix = "https://github.com/dlprentice/onslaught-ce/releases/download/";
@@ -45,7 +51,7 @@ public static class CeUpdateFeed
     }) { Timeout = Timeout.InfiniteTimeSpan };
 
     /// <summary>
-    /// Contacts GitHub's public latest.json and latest.json.sig (and GitHub's HTTPS release-asset redirects).
+    /// Contacts GitHub's public ce-update-v2.json and ce-update-v2.json.sig (and GitHub's HTTPS release-asset redirects).
     /// No account, credentials, local paths, installed version or usage information is sent.
     /// </summary>
     public static Task<CeUpdateState> CheckAsync(string? installedVersion, CancellationToken cancellationToken = default) =>
@@ -72,29 +78,33 @@ public static class CeUpdateFeed
         }
     }
 
-    /// <summary>Verifies the exact bytes against CE's pinned release key before parsing any fields.</summary>
+    /// <summary>Verifies the domain-prefixed exact bytes against CE's pinned release key before parsing any fields.</summary>
     public static CeUpdateState Validate(byte[] json, byte[] signatureText, string? installedVersion) =>
         Validate(json, signatureText, PublicKey, installedVersion);
 
     internal static CeUpdateState Validate(byte[] json, byte[] signatureText, byte[] publicKey, string? installedVersion)
     {
         if (json.Length is 0 or > MaximumFeedBytes || !TrySignature(signatureText, out byte[] signature) ||
-            publicKey.Length != 32 || !Ed25519.Verify(signature, publicKey, json))
+            publicKey.Length != 32 || !Ed25519.Verify(signature, publicKey, [.. SignatureDomain, .. json]))
             return Failure("The release signature could not be verified. No update information is trusted; CE has not been changed.");
 
         try
         {
             using JsonDocument document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 4 });
             JsonElement root = document.RootElement;
-            if (!RequiredFields(root, ["name", "version", "linux-i686", "windows-i686"]) ||
-                Text(root, "name") != "Onslaught CE" || Text(root, "version") is not string version ||
-                !ValidVersionLabel(version) || !Package(root.GetProperty("linux-i686")) || !Package(root.GetProperty("windows-i686")))
+            if (!RequiredFields(root, ["format", "version", "packages"]) || Text(root, "format") != FeedFormat ||
+                Text(root, "version") is not string version || !TryVersion(version, out int[] parts) || parts.Length > 4 ||
+                root.GetProperty("packages") is not { ValueKind: JsonValueKind.Object } packages ||
+                !RequiredFields(packages, ["linux-i686", "windows-i686"]) ||
+                !Package(packages.GetProperty("linux-i686"), version, "linux-i686", ".tar.gz") ||
+                !Package(packages.GetProperty("windows-i686"), version, "windows-i686", ".zip"))
                 return Failure("The signed release information has a format this companion does not support. CE has not been changed.");
 
             CeUpdateAvailability availability = Compare(version, installedVersion);
             string message = availability switch
             {
-                CeUpdateAvailability.Newer => $"CE {version} is available. Start CE to let its launcher offer the update.",
+                CeUpdateAvailability.Newer => $"CE {version} is available. A 0.1.8 or later launcher offers it when CE starts; " +
+                    "from 0.1.7 or older, install it by hand into a new empty folder.",
                 CeUpdateAvailability.Current => $"Your CE version matches the signed release, {version}.",
                 CeUpdateAvailability.Older => $"The signed release is {version}; your installed version is newer.",
                 _ => $"Signed release: CE {version}. Your installed version could not be compared.",
@@ -174,11 +184,13 @@ public static class CeUpdateFeed
     private static string? Text(JsonElement value, string key) =>
         value.TryGetProperty(key, out JsonElement field) && field.ValueKind == JsonValueKind.String ? field.GetString() : null;
 
-    private static bool Package(JsonElement value) => RequiredFields(value, ["url", "sha256"]) &&
-        Text(value, "url") is string url && url.StartsWith(PackagePrefix, StringComparison.Ordinal) &&
-        Uri.TryCreate(url, UriKind.Absolute, out Uri? parsed) && AllowedRequest(parsed) &&
-        parsed.AbsolutePath.StartsWith(ReleasePath + "download/", StringComparison.Ordinal) && parsed.Query.Length == 0 &&
-        Text(value, "sha256") is { Length: 64 } hash && hash.All(Uri.IsHexDigit);
+    /// <summary>Only this repository's release asset with the exact versioned name, as ce_update_url_allowed requires.</summary>
+    private static bool Package(JsonElement value, string version, string platform, string extension) =>
+        RequiredFields(value, ["url", "sha256", "size"]) &&
+        Text(value, "url") == $"{PackagePrefix}v{version}/onslaught-ce-{version}-{platform}{extension}" &&
+        Text(value, "sha256") is { Length: 64 } hash && hash.All(character => char.IsAsciiDigit(character) || character is >= 'a' and <= 'f') &&
+        value.GetProperty("size") is { ValueKind: JsonValueKind.Number } size && size.TryGetInt64(out long bytes) &&
+        bytes is > 0 and <= MaximumPackageBytes;
 
     private static bool TryVersion(string? version, out int[] parts)
     {
@@ -193,20 +205,10 @@ public static class CeUpdateFeed
         return true;
     }
 
-    private static bool ValidVersionLabel(string version)
-    {
-        if (version.Length is 0 or > 63) return false;
-        int suffix = version.IndexOfAny(['-', '+']);
-        if (suffix < 0) return TryVersion(version, out _);
-        return suffix > 0 && suffix < version.Length - 1 && TryVersion(version[..suffix], out _) &&
-            char.IsAsciiLetterOrDigit(version[suffix + 1]) &&
-            version[(suffix + 1)..].All(character => char.IsAsciiLetterOrDigit(character) || character is '.' or '-' or '+');
-    }
-
     private static CeUpdateAvailability Compare(string latest, string? installed)
     {
         if (string.Equals(latest, installed, StringComparison.Ordinal)) return CeUpdateAvailability.Current;
-        // CE's version_cmp is numeric, not a prerelease-ordering contract. Different suffix labels remain incomparable.
+        // CE's version comparison is numeric; any other installed label is incomparable.
         if (!TryVersion(latest, out int[] a) || !TryVersion(installed, out int[] b)) return CeUpdateAvailability.Unknown;
         for (int i = 0; i < Math.Max(a.Length, b.Length); i++)
         {

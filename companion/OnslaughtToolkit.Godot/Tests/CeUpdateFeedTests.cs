@@ -30,13 +30,22 @@ internal static class CeUpdateFeedTests
         byte[] signature = Sign(data);
         CeUpdateState valid = CeUpdateFeed.Validate(data, signature, TestKey, "0.1.1");
         check.That(valid is { Verified: true, LatestVersion: "0.1.2", Availability: CeUpdateAvailability.Newer },
-            "An authenticated release newer than installed is reported, without applying it.");
+            "An authenticated v2 release newer than installed is reported, without applying it.");
+        check.That(CeUpdateFeed.FeedUrl.EndsWith("/releases/latest/download/ce-update-v2.json", StringComparison.Ordinal) &&
+            !CeUpdateFeed.FeedUrl.Contains("latest.json", StringComparison.Ordinal),
+            "The verifier reads CE's v2 feed name, never the retired latest.json.");
         check.That(CeUpdateFeed.Validate(data, signature, "0.1.1") is { Verified: false, LatestVersion: null },
             "The public entry always uses the pinned CE key, never a fixture or environment key.");
+        check.That(CeUpdateFeed.Validate(data, SignBare(data), TestKey, "0.1.1") is { Verified: false, LatestVersion: null },
+            "A signature over the bare feed bytes (the old latest.json scheme) does not verify: the v2 domain prefix is required.");
+        byte[] oldFeed = Encoding.UTF8.GetBytes(OldFeed());
+        check.That(CeUpdateFeed.Validate(oldFeed, SignBare(oldFeed), TestKey, "0.1.1") is { Verified: false, LatestVersion: null } &&
+            CeUpdateFeed.Validate(oldFeed, Sign(oldFeed), TestKey, "0.1.1") is { Verified: false, LatestVersion: null },
+            "An old latest.json feed is refused, whichever way it is signed.");
         foreach ((string? installed, CeUpdateAvailability expected) in new (string?, CeUpdateAvailability)[]
         {
             ("0.1.2", CeUpdateAvailability.Current), ("0.1.2.0", CeUpdateAvailability.Current),
-            ("0.2", CeUpdateAvailability.Older), ("0.1.10", CeUpdateAvailability.Older),
+            ("0.2", CeUpdateAvailability.Older), ("0.1.10", CeUpdateAvailability.Older), ("0.1.1.9", CeUpdateAvailability.Newer),
             ("dev", CeUpdateAvailability.Unknown), ("0.1.2-preview", CeUpdateAvailability.Unknown),
             (null, CeUpdateAvailability.Unknown), ("+0.1.1", CeUpdateAvailability.Unknown),
         })
@@ -61,24 +70,22 @@ internal static class CeUpdateFeedTests
             "The detached hex signature accepts no newline, LF and CRLF.");
 
         string good = Feed();
-        string extended = good.Insert(1, "\"future\":true,\"release-notes\":\"Optional release details\"," +
-            "\"linux-arm64\":{\"artifact\":\"future-package\",\"features\":[\"example\"]},");
+        string extended = good.Insert(1, "\"future\":true,\"release-notes\":\"Optional release details\",");
+        extended = extended.Replace("\"packages\":{", "\"packages\":{\"linux-arm64\":{\"artifact\":\"future-package\",\"features\":[\"example\"]},", StringComparison.Ordinal);
         byte[] extendedData = Encoding.UTF8.GetBytes(extended);
         check.That(CeUpdateFeed.Validate(extendedData, Sign(extendedData), TestKey, "0.1.1") is
             { Verified: true, LatestVersion: "0.1.2", Availability: CeUpdateAvailability.Newer },
-            "Authenticated optional top-level fields, including a future platform, preserve the known release result.");
+            "Authenticated optional fields, including a future platform, preserve the known release result.");
         check.That(CeUpdateFeed.Validate(extendedData, signature, TestKey, "0.1.1") is { Verified: false, LatestVersion: null },
             "Optional fields are accepted only when the signature authenticates their exact bytes.");
-        string extendedPackages = good.Replace("\"sha256\":", "\"size\":123,\"future\":{\"format\":\"archive\"},\"sha256\":", StringComparison.Ordinal);
+        string extendedPackages = good.Replace("\"sha256\":", "\"future\":{\"format\":\"archive\"},\"sha256\":", StringComparison.Ordinal);
         byte[] extendedPackageData = Encoding.UTF8.GetBytes(extendedPackages);
         check.That(CeUpdateFeed.Validate(extendedPackageData, Sign(extendedPackageData), TestKey, "0.1.1") is
             { Verified: true, LatestVersion: "0.1.2", Availability: CeUpdateAvailability.Newer },
-            "Authenticated optional scalar and object fields inside both platform objects preserve the release result.");
-        check.That(CeUpdateFeed.Validate(extendedPackageData, signature, TestKey, "0.1.1") is { Verified: false, LatestVersion: null },
-            "Additional platform fields require their own exact-byte signature.");
+            "Authenticated optional object fields inside both platform objects preserve the release result.");
         check.That(CeUpdateFeed.Validate("{"u8.ToArray(), signature, TestKey, "0.1.1").Message.Contains("signature", StringComparison.Ordinal),
             "Unauthenticated malformed JSON fails signature verification before parsing.");
-        foreach (string required in new[] { "name", "version", "linux-i686", "windows-i686" })
+        foreach (string required in new[] { "format", "version", "packages", "linux-i686", "windows-i686", "url", "sha256", "size" })
         {
             byte[] missing = Encoding.UTF8.GetBytes(extended.Replace($"\"{required}\":", $"\"future-{required}\":", StringComparison.Ordinal));
             check.That(CeUpdateFeed.Validate(missing, Sign(missing), TestKey, "0.1.1") is { Verified: false, LatestVersion: null },
@@ -88,10 +95,10 @@ internal static class CeUpdateFeedTests
         {
             good.Insert(1, "\"future\":true,\"future\":false,"),
             good.Insert(1, "\"future\":true,\"fut\\u0075re\":false,"),
-            extended.Replace("\"version\":", "\"version\":\"9.0\",\"version\":", StringComparison.Ordinal),
-            extendedPackages.Replace("\"size\":123", "\"size\":123,\"size\":456", StringComparison.Ordinal),
-            extendedPackages.Replace("\"size\":123", "\"size\":123,\"s\\u0069ze\":456", StringComparison.Ordinal),
-            extendedPackages.Replace("\"sha256\":", "\"sha256\":\"" + new string('a', 64) + "\",\"sha256\":", StringComparison.Ordinal),
+            good.Replace("\"version\":", "\"version\":\"9.0\",\"version\":", StringComparison.Ordinal),
+            good.Replace("\"size\":123", "\"size\":123,\"size\":456", StringComparison.Ordinal),
+            good.Replace("\"size\":123", "\"size\":123,\"s\\u0069ze\":456", StringComparison.Ordinal),
+            good.Replace("\"sha256\":", "\"sha256\":\"" + new string('a', 64) + "\",\"sha256\":", StringComparison.Ordinal),
         })
         {
             byte[] bytes = Encoding.UTF8.GetBytes(duplicate);
@@ -100,68 +107,50 @@ internal static class CeUpdateFeedTests
         }
         foreach (string malformed in new[]
         {
-            good.Replace("\"version\":\"0.1.2\"", "\"version\":\"0.1.2\",\"version\":\"9.0\"", StringComparison.Ordinal),
-            good.Replace("\"sha256\":", "\"url\":\"https://example.com\",\"sha256\":", StringComparison.Ordinal),
-            good.Replace("\"name\":\"Onslaught CE\"", "\"name\":\"Other\"", StringComparison.Ordinal),
+            good.Replace("\"onslaught-ce-update-v2\"", "\"onslaught-ce-update-v3\"", StringComparison.Ordinal),
             good.Replace("\"version\":\"0.1.2\"", "\"version\":12", StringComparison.Ordinal),
             good.Replace("\"0.1.2\"", "\"0.1.beta\"", StringComparison.Ordinal),
             good.Replace("\"0.1.2\"", "\"0..2\"", StringComparison.Ordinal),
             good.Replace("\"0.1.2\"", "\"2147483648.0\"", StringComparison.Ordinal),
+            good.Replace("\"0.1.2\"", "\"0.1.3\"", StringComparison.Ordinal),
             good.Replace("https://github.com/dlprentice/onslaught-ce/releases/download/", "https://example.com/", StringComparison.Ordinal),
             good.Replace("releases/download/v0.1.2", "releases/download/../../elsewhere", StringComparison.Ordinal),
+            good.Replace("linux-i686.tar.gz", "linux-i686.tar.gz?x=1", StringComparison.Ordinal),
+            good.Replace("onslaught-ce-0.1.2-windows-i686.zip", "onslaught-ce-0.1.2-linux-i686.tar.gz", StringComparison.Ordinal),
             good.Replace(new string('a', 64), new string('g', 64), StringComparison.Ordinal),
+            good.Replace(new string('a', 64), new string('A', 64), StringComparison.Ordinal),
+            good.Replace("\"size\":123", "\"size\":0", StringComparison.Ordinal),
+            good.Replace("\"size\":123", "\"size\":-1", StringComparison.Ordinal),
+            good.Replace("\"size\":123", "\"size\":\"123\"", StringComparison.Ordinal),
+            good.Replace("\"size\":123", "\"size\":536870913", StringComparison.Ordinal),
             good.Replace("\"windows-i686\"", "\"unexpected-platform\"", StringComparison.Ordinal),
-            extendedPackages.Replace("\"url\":", "\"future-url\":", StringComparison.Ordinal),
-            extendedPackages.Replace("\"sha256\":", "\"future-sha256\":", StringComparison.Ordinal),
-            extendedPackages.Replace("https://github.com/dlprentice/onslaught-ce/releases/download/", "https://example.com/", StringComparison.Ordinal),
-            extendedPackages.Replace(new string('a', 64), new string('g', 64), StringComparison.Ordinal),
-            extended.Replace("\"name\":\"Onslaught CE\"", "\"name\":\"Other\"", StringComparison.Ordinal),
-            extended.Replace("\"version\":\"0.1.2\"", "\"version\":12", StringComparison.Ordinal),
-            extended.Replace("https://github.com/dlprentice/onslaught-ce/releases/download/", "https://example.com/", StringComparison.Ordinal),
-            extended.Replace(new string('a', 64), new string('g', 64), StringComparison.Ordinal),
             "[]", "null", "{", good + "{}",
         })
         {
             byte[] bytes = Encoding.UTF8.GetBytes(malformed);
             check.That(CeUpdateFeed.Validate(bytes, Sign(bytes), TestKey, "0.1") is { Verified: false, LatestVersion: null },
-                "Even signed duplicate, malformed, wrong-type, unknown-schema or off-repository metadata is rejected.");
+                "Even signed duplicate, malformed, wrong-type, unknown-format or off-repository metadata is rejected.");
         }
         byte[] oversized = Encoding.UTF8.GetBytes(good + new string(' ', CeUpdateFeed.MaximumFeedBytes));
         check.That(!CeUpdateFeed.Validate(oversized, Sign(oversized), TestKey, "0.1").Verified, "Oversized signed JSON is refused.");
-        VersionLabelChecks(check);
+        VersionChecks(check);
         await HttpChecks(data, signature, check);
     }
 
-    private static void VersionLabelChecks(Checks check)
+    private static void VersionChecks(Checks check)
     {
-        static byte[] VersionData(string version) => Encoding.UTF8.GetBytes(Feed().Replace("\"version\":\"0.1.2\"",
-            "\"version\":" + JsonSerializer.Serialize(version), StringComparison.Ordinal));
-        foreach (string label in new[] { "0.2.0-rc1", "0.2.0-preview.2", "0.2.0+build.7", "0.2.0-rc1+build.7", "0.2.0-" + new string('a', 57) })
+        foreach (string version in new[] { "1", "0.2", "0.1.8", "0.1.8.1" })
         {
-            byte[] bytes = VersionData(label), signature = Sign(bytes);
-            CeUpdateState displayed = CeUpdateFeed.Validate(bytes, signature, TestKey, "0.1.2");
-            check.That(displayed.Verified && displayed.LatestVersion == label && displayed.Availability == CeUpdateAvailability.Unknown &&
-                displayed.Message.Contains(label, StringComparison.Ordinal),
-                "A signed suffix-bearing label is displayed without claiming numeric or prerelease ordering.");
-            check.That(CeUpdateFeed.Validate(bytes, signature, TestKey, label).Availability == CeUpdateAvailability.Current,
-                "An exact installed-label match is current without inventing suffix ordering.");
+            byte[] bytes = Encoding.UTF8.GetBytes(Feed(version));
+            check.That(CeUpdateFeed.Validate(bytes, Sign(bytes), TestKey, "0.1.7") is { Verified: true } displayed &&
+                displayed.LatestVersion == version && displayed.Availability == CeUpdateAvailability.Newer,
+                $"A signed numeric version of one to four parts ({version}) is accepted.");
         }
-        byte[] prerelease = VersionData("0.2.0-rc1"), prereleaseSignature = Sign(prerelease);
-        foreach (string installed in new[] { "0.2.0", "0.2.0-rc2", "0.2.0-RC1", "0.3.0", "0.1.0" })
-            check.That(CeUpdateFeed.Validate(prerelease, prereleaseSignature, TestKey, installed).Availability == CeUpdateAvailability.Unknown,
-                "Different suffix-bearing and stable labels are incomparable, including case-only suffix changes.");
-        check.That(CeUpdateFeed.Validate(VersionData("0.2.0-rc2"), prereleaseSignature, TestKey, "0.1.2") is
-            { Verified: false, LatestVersion: null }, "An authenticated label cannot be changed without invalidating its signature.");
-        foreach (string label in new[]
+        foreach (string version in new[] { "0.1.8.1.2", "0.2.0-rc1", "0.2.0+build.7", "", "0.2.0-" })
         {
-            "", "0.2.0-", "0.2.0+", "0.2.0-.rc1", "0.2.0-rc 1", "0.2.0-rc1\n", "0.2.0-rc1\u0000",
-            "0.2.0-rc1\u007f", "0.2.0-rc1\u0085", "0.2.0-rc1\u202e", "0.2.0-" + new string('a', 58),
-            "0..2-rc1", "2147483648.0-rc1", "+0.2.0", "0.2.0-rc/1",
-        })
-        {
-            byte[] bytes = VersionData(label);
-            check.That(CeUpdateFeed.Validate(bytes, Sign(bytes), TestKey, label) is { Verified: false, LatestVersion: null },
-                "Even signed labels reject malformed numeric cores, empty suffixes, excessive length and unsafe display characters.");
+            byte[] bytes = Encoding.UTF8.GetBytes(Feed(version));
+            check.That(CeUpdateFeed.Validate(bytes, Sign(bytes), TestKey, "0.1.7") is { Verified: false, LatestVersion: null },
+                $"A signed version that is not one to four numeric parts ('{version}') is refused, as the launcher refuses it.");
         }
     }
 
@@ -220,14 +209,24 @@ internal static class CeUpdateFeedTests
         check.That(!(await CeUpdateFeed.CheckAsync(chunked, TestKey, "0.1")).Verified, "Unknown-length HTTP bodies are bounded too.");
     }
 
-    private static byte[] Sign(byte[] data)
+    private static byte[] Sign(byte[] data) => SignBare([.. CeUpdateFeed.SignatureDomain, .. data]);
+
+    private static byte[] SignBare(byte[] data)
     {
         byte[] signature = new byte[64];
         Ed25519.Sign(TestSeed, 0, data, 0, data.Length, signature, 0);
         return Encoding.ASCII.GetBytes(Convert.ToHexString(signature).ToLowerInvariant() + "\n");
     }
 
-    private static string Feed() => "{\"name\":\"Onslaught CE\",\"version\":\"0.1.2\"," +
+    private static string Feed(string version = "0.1.2") => "{\"format\":\"onslaught-ce-update-v2\",\"version\":" +
+        JsonSerializer.Serialize(version) + ",\"packages\":{" +
+        "\"linux-i686\":{\"url\":\"https://github.com/dlprentice/onslaught-ce/releases/download/v" + version + "/onslaught-ce-" + version +
+        "-linux-i686.tar.gz\",\"sha256\":\"" + new string('a', 64) + "\",\"size\":123}," +
+        "\"windows-i686\":{\"url\":\"https://github.com/dlprentice/onslaught-ce/releases/download/v" + version + "/onslaught-ce-" + version +
+        "-windows-i686.zip\",\"sha256\":\"" + new string('b', 64) + "\",\"size\":456}}}";
+
+    /// <summary>The retired 0.1.0–0.1.6 latest.json shape.</summary>
+    private static string OldFeed() => "{\"name\":\"Onslaught CE\",\"version\":\"0.1.2\"," +
         "\"linux-i686\":{\"url\":\"https://github.com/dlprentice/onslaught-ce/releases/download/v0.1.2/linux.tar.gz\",\"sha256\":\"" + new string('a', 64) + "\"}," +
         "\"windows-i686\":{\"url\":\"https://github.com/dlprentice/onslaught-ce/releases/download/v0.1.2/windows.zip\",\"sha256\":\"" + new string('b', 64) + "\"}}";
 

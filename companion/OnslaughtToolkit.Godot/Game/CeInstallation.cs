@@ -199,7 +199,9 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
     /// Released CE launchers 0.1.0 to 0.1.6 delete neighbouring "&lt;package folder&gt;.old-*" paths when they start,
     /// even with update checks off, and CE's guidance is not to start them even to read a version. Before executing
     /// anything, the package's README.txt header (written by package.py since 0.1.0) must name 0.1.7 or later. An
-    /// unreadable or missing header is refused: the companion cannot tell such a package is safe.
+    /// unreadable or missing header is refused: the companion cannot tell such a package is safe. 0.1.8 and later
+    /// launchers may hand off to a newer version the CE updater installed under "&lt;package folder&gt;/versions/";
+    /// the package header stays the extracted (base) version.
     /// </summary>
     public Outcome<string> CheckLauncherSafety() => CheckPackageSafety(Folder);
 
@@ -217,16 +219,19 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
         if (version is null)
             return Outcome<string>.Refusal("The companion could not read this CE package's version from its README.txt, so it " +
                 "will not start it. Onslaught CE 0.1.0–0.1.6 launchers can delete neighbouring folders when they start. " +
-                "Install 0.1.7 or later by hand into a new empty folder: " + MigrationUrl);
+                "Install 0.1.8 or later by hand into a new empty folder: " + MigrationUrl);
         if (IsAffectedVersion(version))
             return Outcome<string>.Refusal($"This package is Onslaught CE {version}. Its launcher can delete neighbouring " +
                 "\"<program folder>.old-*\" paths when it starts, so the companion will not start it, not even to read its " +
-                "version. Keep the old folder and its neighbours untouched and install 0.1.7 or later by hand into a new " +
+                "version. Keep the old folder and its neighbours untouched and install 0.1.8 or later by hand into a new " +
                 "empty folder: " + MigrationUrl);
         return Outcome<string>.Success(version, "CE package " + version + " is not an affected launcher.");
     }
 
-    /// <summary>The version on README.txt's first line ("Onslaught CE X.Y[.Z] (preview)"), or null.</summary>
+    /// <summary>
+    /// The version on README.txt's first line, or null: "Onslaught CE X.Y[.Z] (preview)" up to 0.1.7 and
+    /// "Onslaught CE VX.Y.Z[.W]" from 0.1.8.
+    /// </summary>
     public static string? PackageVersion(string packageFolder)
     {
         string path = Path.Combine(packageFolder, "README.txt");
@@ -241,12 +246,12 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
         return match.Success ? match.Groups[1].Value : null;
     }
 
-    /// <summary>0.1, 0.1.0 ... 0.1.6 are affected; anything unparsable counts as affected.</summary>
+    /// <summary>0.1, 0.1.0 ... 0.1.6 (and any 0.1.0–0.1.6.x) are affected; anything unparsable counts as affected.</summary>
     public static bool IsAffectedVersion(string version)
     {
         string[] parts = version.Split('.');
-        if (parts.Length is < 2 or > 3) return true;
-        int[] numbers = new int[3];
+        if (parts.Length is < 2 or > 4) return true;
+        int[] numbers = new int[4];
         for (int i = 0; i < parts.Length; i++)
             if (!int.TryParse(parts[i], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out numbers[i]))
                 return true;
@@ -283,10 +288,11 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
             string output = await (read is null ? RunVersionAsync(current.StartInfo(versionOnly: true), cancellationToken) :
                 read(current.StartInfo(versionOnly: true), cancellationToken));
             Outcome<CeVersion> parsed = ParseVersion(output);
-            // The README header chose to execute this launcher; its own answer must agree with it.
-            if (parsed.Value is CeVersion reported && reported.Version != packaged)
+            // The README header chose to execute this launcher; its own answer must agree with it. A 0.1.8 or later
+            // base hands --version off to a newer version its updater installed, so a newer answer is accepted there.
+            if (parsed.Value is CeVersion reported && reported.Version != packaged && !IsUpdatedFrom(packaged, reported.Version))
                 return Outcome<CeVersion>.Refusal($"The CE launcher reports version {reported.Version}, but its package says " +
-                    $"{packaged}. The companion will not start a mixed package. Install 0.1.7 or later by hand into a new " +
+                    $"{packaged}. The companion will not start a mixed package. Install 0.1.8 or later by hand into a new " +
                     "empty folder: " + MigrationUrl);
             return parsed;
         }
@@ -294,6 +300,39 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
         {
             return Outcome<CeVersion>.Refusal("CE's version could not be read: " + error.Message);
         }
+    }
+
+    /// <summary>
+    /// True when <paramref name="reported"/> is newer than a 0.1.8 or later <paramref name="packaged"/> base: the
+    /// version the base's updater (CE updater v2) installed and hands off to. Both must be numeric release versions.
+    /// </summary>
+    public static bool IsUpdatedFrom(string packaged, string reported)
+    {
+        if (!TryNumericVersion(packaged, out int[] baseVersion) || !TryNumericVersion(reported, out int[] newer) ||
+            IsAffectedVersion(packaged) || IsAffectedVersion(reported) || Compare(baseVersion, [0, 1, 8]) < 0) return false;
+        return Compare(newer, baseVersion) > 0;
+    }
+
+    private static bool TryNumericVersion(string version, out int[] numbers)
+    {
+        string[] parts = version.Split('.');
+        numbers = new int[parts.Length];
+        if (parts.Length is < 1 or > 4) return false;
+        for (int i = 0; i < parts.Length; i++)
+            if (parts[i].Length is 0 or > 9 || !int.TryParse(parts[i], System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out numbers[i]))
+                return false;
+        return true;
+    }
+
+    private static int Compare(int[] a, int[] b)
+    {
+        for (int i = 0; i < Math.Max(a.Length, b.Length); i++)
+        {
+            int x = i < a.Length ? a[i] : 0, y = i < b.Length ? b[i] : 0;
+            if (x != y) return x > y ? 1 : -1;
+        }
+        return 0;
     }
 
     public static Outcome<CeVersion> ParseVersion(string output)
@@ -304,10 +343,10 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
             Outcome<CeVersion>.Refusal("CE did not return a readable version. You can still start it from Home.");
     }
 
-    [GeneratedRegex(@"\AOnslaught CE v([^\s,]+)(?: \([^\r\n]*\))?, build ([^\s,]+)\z", RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"\AOnslaught CE [vV]([^\s,]+)(?: \([^\r\n]*\))?, build ([^\s,]+)\z", RegexOptions.CultureInvariant)]
     private static partial Regex VersionLine();
 
-    [GeneratedRegex(@"\AOnslaught CE ([0-9]+\.[0-9]+(?:\.[0-9]+)?)(?: \([^\r\n]*\))?\z", RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"\AOnslaught CE V?([0-9]+\.[0-9]+(?:\.[0-9]+){0,2})(?: \([^\r\n]*\))?\z", RegexOptions.CultureInvariant)]
     private static partial Regex PackageHeader();
 
     private static bool StartLauncher(ProcessStartInfo start)
