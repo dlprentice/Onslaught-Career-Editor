@@ -46,11 +46,15 @@ world archive.
 
 MEANING vs LAYOUT
 -----------------
-Layout above is proved by byte-exact re-encode. MEANING is not. `world_id`,
+Layout above is checked by byte-exact re-encode. That alone does not prove
+field meanings. `world_id`,
 `config_count` and the string contents are self-evident (the strings are
 verbatim names from `battle engine configurations.dat`). The four trailing
-i32s are named field_a..field_d deliberately: their semantics are NOT
-established here, only their positions and values.
+i32s keep the legacy field_a..field_d names. The optional level metadata
+projection additionally identifies field_d as CWorld::mType from the decompilation's
+LoadHeader and EWorldType declarations; field_a..field_c remain uninterpreted.
+This stored world type is separate from CGame::IsMultiplayer's numeric level
+range, and neither establishes campaign co-op support.
 
 WHAT THIS TOOL REFUSES TO DO
 ----------------------------
@@ -65,6 +69,7 @@ USAGE
     python tools/worldheaders_decode.py --self-test
     python tools/worldheaders_decode.py --world 100
     python tools/worldheaders_decode.py --dump-json
+    python tools/worldheaders_decode.py <input> --metadata-json --configurations <config-input>
     python tools/worldheaders_decode.py "<path to worldheaders.dat>"
 
 The byte-exact round-trip assertion runs on EVERY invocation, not only under
@@ -74,11 +79,14 @@ The byte-exact round-trip assertion runs on EVERY invocation, not only under
 from __future__ import annotations
 
 import argparse
+from collections import Counter
+import hashlib
 import json
+import re
 import struct
 import sys
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 DEFAULT_PATH = Path(
     r"C:\Program Files (x86)\Steam\steamapps\common"
@@ -90,6 +98,26 @@ RECORD_PREFIX_SIZE = 0x08  # version + payload_size
 TRAILING_FIELD_COUNT = 4
 # world_id + config_count + four trailing i32s
 FIXED_PAYLOAD_BYTES = 4 + 4 + 4 * TRAILING_FIELD_COUNT  # 24
+LEVEL_METADATA_SCHEMA = "onslaught.level-header-metadata.v1"
+MAX_METADATA_BYTES = 16 * 1024 * 1024
+MAX_METADATA_RECORDS = 65_536
+WORLD_MODE_NAMES = {0: "single-player", 1: "cooperative-multiplayer", 2: "versus-multiplayer"}
+# Source-function pins describe the exact source used to derive these labels,
+# not attestation of an input file or of a later build's runtime behavior.
+LEVEL_METADATA_EVIDENCE = (
+    {"source": "onslaught-decomp:src/world.cpp", "function": "CWorld::LoadHeader", "address": "0x0050d4c0",
+     "functionSha256": "fa20f33b01caa1fcb7dc5a22e8a57fe499ac4aac065732b99f03c4063f41a690"},
+    {"source": "onslaught-decomp:src/world.h", "declaration": "CWorld::EWorldType",
+     "declarationSha256": "d4ad290340991717f6f4e48d53685efa689fdc3dc2766cc18eb83c398bf301d2"},
+    {"source": "onslaught-decomp:src/game.cpp", "function": "CGame::IsMultiplayer", "address": "0x004725d0",
+     "functionSha256": "06042e6bf074c23eaf60218f082f76f2eb2aa09c8b32a5881b9345f2361cdc8b"},
+    {"source": "onslaught-decomp:src/BattleEngineConfigurations.cpp", "function": "UBattleEngineConfigurations::Load", "address": "0x0040f180",
+     "functionSha256": "448c55496d7bdd705b86e444bacb29f3c0b3053a21366c84d3ea38e9a93c9a73"},
+    {"source": "onslaught-decomp:src/FEPBEConfig.cpp", "function": "CFEPBEConfig::Load",
+     "functionSha256": "e674b5e416f79e2b18511b047ccbd55be7d6826d5d5a8c9c8447f08aa1631fdc"},
+    {"source": "onslaught-decomp:src/BattleEngineDataManager.h", "function": "UBattleEngineDataManager::GetConfiguration(char*)",
+     "functionSha256": "babba77e33e630fd09a2841e62df63ebde60ea4662651fa46dc25564c24ebf42"},
+)
 
 
 def _i32(data: bytes, off: int) -> int:
@@ -269,6 +297,147 @@ def assert_round_trip(data: bytes, wh: WorldHeaders) -> None:
     raise WorldHeadersError("round trip differs (unlocated)")
 
 
+def _metadata_source(data: bytes, logical_path: str) -> dict[str, object]:
+    """Describe immutable held bytes without recording a machine pathname."""
+    if not isinstance(data, bytes):
+        raise ValueError("metadata inputs must be immutable held bytes")
+    if (not logical_path or "\0" in logical_path or "\\" in logical_path
+            or PurePosixPath(logical_path).is_absolute() or re.match(r"^[A-Za-z]:", logical_path)
+            or any(part in ("", ".", "..") for part in logical_path.split("/"))):
+        raise ValueError("metadata source paths must be normalized logical relative paths")
+    return {"path": logical_path, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+
+
+def _occurrence_id(source: dict[str, object], ordinal: int, offset: int, record_sha: str) -> str:
+    coordinate = [source["path"], source["sha256"], ordinal, offset, record_sha]
+    encoded = json.dumps(coordinate, ensure_ascii=True, separators=(",", ":")).encode("ascii")
+    return "level-header:" + hashlib.sha256(b"onslaught.level-header-occurrence.v1\0" + encoded).hexdigest()
+
+
+def _configuration_metadata(data: bytes | None, logical_path: str) -> tuple[dict[str, object], list[dict[str, object]]]:
+    if data is None:
+        return {"status": "not-supplied"}, []
+    source = _metadata_source(data, logical_path)
+    if len(data) > MAX_METADATA_BYTES:
+        return {"source": source, "status": "unparsed", "reason": "configuration input exceeds metadata byte limit"}, []
+    # One existing six-record/version-12 parser owns configuration framing and
+    # unknown spans. No new configuration format or runtime fallback is modeled.
+    from battle_engine_config_decode import BattleEngineConfigError, encode_config, parse_config
+    try:
+        parsed = parse_config(data)
+        if encode_config(parsed) != data:
+            raise BattleEngineConfigError("configuration round trip differs")
+    except (BattleEngineConfigError, UnicodeError, struct.error):
+        return {"source": source, "status": "unparsed",
+                "reason": "input is outside the existing configuration decoder profile",
+                "falsifier": "provide a bounded six-record version-12 input accepted by battle_engine_config_decode"}, []
+    rows = []
+    for record in parsed.records:
+        record_sha = hashlib.sha256(data[record.offset:record.end_offset]).hexdigest()
+        rows.append({"ordinal": record.index, "offset": record.offset, "endOffset": record.end_offset,
+                     "name": record.configuration_name, "recordSha256": record_sha,
+                     "occurrenceId": "configuration:" + hashlib.sha256(
+                         json.dumps([source["path"], source["sha256"], record.index, record.offset, record_sha],
+                                    separators=(",", ":")).encode("ascii")
+                     ).hexdigest()})
+    return {"source": source, "status": "projected", "records": rows,
+            "limit": "name membership only; not gameplay parameter or loaded-object validation"}, rows
+
+
+def project_level_metadata(
+    data: bytes, *, source_path: str = "data/worldheaders.dat",
+    configuration_data: bytes | None = None,
+    configuration_source_path: str = "data/battle engine configurations.dat",
+) -> dict[str, object]:
+    """Source-free private metadata from the existing version-3 decoder.
+
+    Hashes bind the held bytes actually parsed. Names/ordinals/raw integers
+    are retained, but no original records, scripts or assets are emitted.
+    Stored world mode, the separate retail numeric multiplayer predicate,
+    configuration name membership and CE support are deliberately distinct.
+    Malformed/unsupported input remains an explicit hashed source outcome.
+    This function never reads a game installation or changes any input.
+    """
+    source = _metadata_source(data, source_path)
+    configs, config_rows = _configuration_metadata(configuration_data, configuration_source_path)
+    report: dict[str, object] = {
+        "schema": LEVEL_METADATA_SCHEMA, "profile": "PC-file-version-1-record-version-3",
+        "source": source, "status": "unparsed", "records": [],
+        "configurationInput": configs, "sourceEvidence": [dict(row) for row in LEVEL_METADATA_EVIDENCE],
+        "evidenceClass": "bounded static metadata; source-derived meanings, not runtime acceptance",
+        "limits": ["selected header/configuration inputs only; no level archive or mission-script completeness claim",
+                   "stored cooperative mode does not establish CE campaign co-op, networking or player readiness",
+                   "unknown fields are retained as integers without inferred editor semantics"],
+    }
+    if len(data) > MAX_METADATA_BYTES:
+        report["reason"] = "world-header input exceeds metadata byte limit"
+        return report
+    if len(data) < FILE_HEADER_SIZE:
+        report["reason"] = "truncated world-header file header"
+        return report
+    file_version, record_count = struct.unpack_from("<ii", data)
+    report.update(fileVersion=file_version, declaredRecords=record_count)
+    if file_version != 1:
+        report.update(status="unsupported", reason="only file version 1 is admitted by this projection")
+        return report
+    if not 0 <= record_count <= MAX_METADATA_RECORDS:
+        report["reason"] = "world-header record count exceeds metadata profile"
+        return report
+    try:
+        parsed = parse_worldheaders(data)
+        assert_round_trip(data, parsed)
+    except (WorldHeadersError, UnicodeError, struct.error):
+        report.update(reason="malformed or unsupported world-header record framing",
+                      falsifier="check record versions, declared sizes, ASCII names, counts and exact EOF with the existing decoder")
+        return report
+    unsupported = [ordinal for ordinal, record in enumerate(parsed.records) if record.version != 3]
+    if unsupported:
+        report.update(status="unsupported", reason="only record version 3 is admitted by this projection",
+                      unsupportedRecordOrdinals=unsupported)
+        return report
+    world_multiplicity = Counter(record.world_id for record in parsed.records)
+    config_lookup: dict[str, list[dict[str, object]]] = {}
+    for record in config_rows:
+        config_lookup.setdefault(str(record["name"]), []).append(record)
+    rows = []
+    for ordinal, record in enumerate(parsed.records):
+        end = record.offset + RECORD_PREFIX_SIZE + record.payload_size
+        digest = hashlib.sha256(data[record.offset:end]).hexdigest()
+        identity = _occurrence_id(source, ordinal, record.offset, digest)
+        name_multiplicity = Counter(record.configs)
+        configurations = []
+        for index, name in enumerate(record.configs):
+            # Native Pascal length is a signed char, and native name lookup
+            # uses strcmp. Preserve unsafe/unresolved names; never case-fold,
+            # trim, choose an alias or apply the game's fallback profile.
+            safe_name = bool(name) and len(name) <= 127 and name.isascii() and name.isprintable()
+            matches = config_lookup.get(name, []) if safe_name else []
+            status = ("unresolved-native-name" if not safe_name else "not-checked" if configs["status"] == "not-supplied"
+                      else "unparsed-configuration-input" if configs["status"] != "projected"
+                      else "missing" if not matches else "unique-name-match" if len(matches) == 1 else "ambiguous")
+            configurations.append({"ordinal": index, "name": name, "localNameMultiplicity": name_multiplicity[name],
+                                   "occurrenceId": identity + "/configuration:" + str(index),
+                                   "resolution": status, "candidateOccurrenceIds": [row["occurrenceId"] for row in matches]})
+        mode = record.trailing[3]
+        rows.append({
+            "ordinal": ordinal, "occurrenceId": identity, "offset": record.offset, "endOffset": end,
+            "recordSha256": digest, "version": record.version, "payloadBytes": record.payload_size,
+            "worldId": record.world_id, "worldIdMultiplicity": world_multiplicity[record.world_id],
+            "configurations": configurations,
+            "rawTrailing": dict(zip(("field_a", "field_b", "field_c", "field_d"), record.trailing)),
+            "worldMode": {"raw": mode, "name": WORLD_MODE_NAMES.get(mode),
+                          "status": "source-enum" if mode in WORLD_MODE_NAMES else "unknown-enum-value"},
+            "retailGameMultiplayerLevelPredicate": 850 <= record.world_id < 900,
+            "modeAndLevelPredicateAgreement": None if mode not in WORLD_MODE_NAMES else ((mode in (1, 2)) == (850 <= record.world_id < 900)),
+            "uninterpretedFields": ["field_a", "field_b", "field_c"],
+            "ceNetworkAdmission": "not established by this metadata",
+            "missionScript": {"status": "not-in-this-input", "path": None},
+        })
+    report.update(status="projected", roundTrip="byte-exact", records=rows,
+                  duplicateWorldIds=sorted(world for world, count in world_multiplicity.items() if count > 1))
+    return report
+
+
 def run_self_test(path: Path) -> int:
     data = path.read_bytes()
     wh = parse_worldheaders(data)
@@ -363,7 +532,50 @@ def main(argv: list[str]) -> int:
         help="Only show this world_id (repeatable)",
     )
     ap.add_argument("--dump-json", action="store_true", help="Dump as JSON")
+    ap.add_argument("--metadata-json", action="store_true",
+                    help="Private source-free level metadata with exact input/record hashes; stdout only")
+    ap.add_argument("--source-path", default="data/worldheaders.dat",
+                    help="Logical relative source label used only by --metadata-json")
+    ap.add_argument("--configurations", type=Path,
+                    help="Optional selected configuration input for exact case-sensitive name membership")
+    ap.add_argument("--configuration-source-path", default="data/battle engine configurations.dat",
+                    help="Logical relative label for the optional configuration input")
     args = ap.parse_args(argv)
+
+    if args.metadata_json:
+        if args.self_test or args.dump_json or args.world:
+            ap.error("--metadata-json requires the complete selected input, without --world/--dump-json/--self-test")
+        from aya_archive_inventory import ArchiveObservationError, read_held_archive
+        try:
+            # Reuse the existing retained-handle, identity-revalidated reader.
+            # Metadata admission then enforces its smaller format byte bound.
+            data = read_held_archive(args.path)
+            config_unavailable = False
+            config_data = None
+            if args.configurations is not None:
+                _metadata_source(b"", args.configuration_source_path)  # validate label even when the file is unavailable
+                try:
+                    config_data = read_held_archive(args.configurations)
+                except ArchiveObservationError:
+                    config_unavailable = True
+            report = project_level_metadata(data, source_path=args.source_path,
+                                            configuration_data=config_data,
+                                            configuration_source_path=args.configuration_source_path)
+            if config_unavailable:
+                report["configurationInput"] = {"status": "unavailable", "path": args.configuration_source_path,
+                                                "reason": "selected optional configuration input was refused"}
+                for row in report["records"]:
+                    for configuration in row["configurations"]:
+                        if configuration["resolution"] == "not-checked":
+                            configuration["resolution"] = "unparsed-configuration-input"
+        except (ArchiveObservationError, ValueError):
+            print(json.dumps({"schema": LEVEL_METADATA_SCHEMA, "status": "unavailable",
+                              "reason": "selected metadata inputs or logical source labels were refused"}))
+            return 1
+        print(json.dumps(report, indent=2, allow_nan=False))
+        return 0 if report["status"] == "projected" else 1
+    if args.configurations is not None:
+        ap.error("--configurations is only used by --metadata-json")
 
     if not args.path.exists():
         raise SystemExit(f"not found: {args.path}")
