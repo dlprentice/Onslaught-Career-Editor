@@ -371,6 +371,48 @@ class CatalogSourceInspectionTests(unittest.TestCase):
         self.assertEqual(original, source.read_bytes())
         self.assertFalse((output / "summary.json").exists())
 
+    def test_default_cli_also_protects_declared_source_without_inspection(self):
+        output = self.bundle / "asset_catalog"
+        output.mkdir()
+        source = output / "catalog.json"
+        original = b"original source, not a generated result"
+        source.write_bytes(original)
+        args = self._inspection_cli(source, self.repo)
+        index = args.index("--inspect-source-root")
+        del args[index:index + 2]
+        with patch("sys.argv", args), contextlib.redirect_stdout(io.StringIO()), \
+                self.assertRaisesRegex(UnsafeGeneratedOutputError, "overlap protected source"):
+            catalog.main()
+        self.assertEqual(original, source.read_bytes())
+        self.assertFalse((output / "summary.json").exists())
+
+    def test_actual_cli_parent_swap_after_inspection_cannot_overwrite_sources(self):
+        source = self.source("catalog.json", b"original source")
+        args = self._inspection_cli(source, self.repo)
+        inspect = catalog.inspect_catalog_sources
+        def swap(*arguments, **keywords):
+            result = inspect(*arguments, **keywords)
+            output = self.bundle / "asset_catalog"
+            output.rename(self.bundle / "held-catalog-output")
+            output.symlink_to(self.sources, target_is_directory=True)
+            return result
+        with patch("sys.argv", args), patch.object(catalog, "inspect_catalog_sources", side_effect=swap), \
+                contextlib.redirect_stdout(io.StringIO()), self.assertRaises(UnsafeGeneratedOutputError):
+            catalog.main()
+        self.assertEqual(b"original source", source.read_bytes())
+        self.assertFalse((self.sources / "summary.json").exists())
+
+    def test_dangling_selected_source_link_retains_its_rejected_row(self):
+        source = self.sources / "missing.tga.aya"
+        source.symlink_to(self.sources / "nonexistent")
+        args = self._inspection_cli(source, self.repo)
+        with patch("sys.argv", args), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0, catalog.main())
+        result = json.loads((self.bundle / "asset_catalog/catalog.json").read_text())
+        self.assertEqual({"rejected": 1}, result["source_inspection"]["status_counts"])
+        self.assertIsNone(result["textures"][0]["occurrences"][0]["source_identity"])
+        self.assertTrue(source.is_symlink())
+
     def test_broad_inspection_root_allows_disjoint_selected_source_and_output(self):
         source = self.source("textures/good.dds", dds(4, 4))
         args = self._inspection_cli(source, self.repo)

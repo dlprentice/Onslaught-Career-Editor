@@ -30,7 +30,7 @@ from collections import Counter
 from pathlib import Path
 
 import aya_archive_inventory as aai
-from safe_generated_output import SecuredOutputRoot, validate_disjoint_output_root
+from safe_generated_output import SecuredOutputRoot, UnsafeGeneratedOutputError
 
 
 CATALOG_SCHEMA_VERSION = 3
@@ -289,6 +289,36 @@ def repo_rel(path: Path, repo_root: Path) -> str:
         return str(path.resolve().relative_to(repo_root.resolve())).replace("/", "\\")
     except Exception:
         return str(path).replace("/", "\\")
+
+
+def protect_catalog_source_locations(out_dir: Path, manifests: tuple[list[dict[str, object]], ...], repo_root: Path) -> None:
+    """Protect declared originals even when optional source inspection is disabled.
+
+    A dangling/unreadable source is still a catalog disposition, not a reason to
+    follow it or fail the whole selection. Compare lexical locations first, then
+    any resolvable physical location. Publication itself stays descriptor-bound.
+    """
+    output = Path(os.path.abspath(out_dir))
+    physical_output = output.resolve(strict=True)
+    for manifest in manifests:
+        for declaration in manifest:
+            source = Path(declaration["input"])
+            if not source.is_absolute():
+                source = repo_root / source
+            source = Path(os.path.abspath(source))
+            locations = [source]
+            try:
+                locations.append(source.resolve(strict=False))
+            except (OSError, RuntimeError):
+                pass  # The inspection reader owns this unavailable/rejected row.
+            for location in locations:
+                for target in (output, physical_output):
+                    try:
+                        common = os.path.commonpath((os.path.normcase(location), os.path.normcase(target)))
+                    except ValueError:
+                        continue
+                    if common in (os.path.normcase(location), os.path.normcase(target)):
+                        raise UnsafeGeneratedOutputError("output root must not overlap protected source")
 
 
 def bundle_rel(path: Path, bundle_root: Path, label: str) -> str:
@@ -991,18 +1021,8 @@ def main() -> int:
         video_manifest = read_json(input_paths[4])
         language_matrix = read_json(input_paths[5])
 
-        if args.inspect_source_root is not None:
-            # Inspecting a source never authorizes replacing it with a generated catalog. Protect
-            # each declared location, including unavailable/rejected rows, without forbidding a
-            # safe sibling output under a broad inspection root. Check before any publication.
-            declared_sources = []
-            for manifest in (texture_manifest, loose_mesh_manifest, embedded_mesh_manifest):
-                for declaration in manifest:
-                    declared = Path(declaration["input"])
-                    if not declared.is_absolute():
-                        declared = args.repo_root / declared
-                    declared_sources.append(Path(os.path.abspath(declared)))
-            validate_disjoint_output_root(args.out_dir, declared_sources)
+        protect_catalog_source_locations(args.out_dir,
+            (texture_manifest, loose_mesh_manifest, embedded_mesh_manifest), args.repo_root)
 
         textures = build_texture_catalog(texture_manifest, packed_manifest, args.repo_root, bundle_root)
         loose_meshes = build_loose_mesh_catalog(loose_mesh_manifest, packed_manifest, args.repo_root, bundle_root)

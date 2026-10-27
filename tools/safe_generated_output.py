@@ -427,7 +427,8 @@ def validate_disjoint_output_root(
 
 
 class _HeldDirectory:
-    def __init__(self, path: Path, *, guard_mutation: bool = False) -> None:
+    def __init__(self, path: Path, *, guard_mutation: bool = False,
+                 parent_fd: int | None = None) -> None:
         self.path = path
         self._handle: int | None = None
         self._sentinel_handle: int | None = None
@@ -438,12 +439,27 @@ class _HeldDirectory:
             flags = os.O_RDONLY
             flags |= getattr(os, "O_DIRECTORY", 0)
             flags |= getattr(os, "O_NOFOLLOW", 0)
-            self._fd = os.open(path, flags)
-            opened = os.fstat(self._fd)
-            current = os.stat(path, follow_symlinks=False)
-            if (opened.st_dev, opened.st_ino) != (current.st_dev, current.st_ino):
+            self._fd = os.open(path if parent_fd is None else path.name, flags, dir_fd=parent_fd)
+            try:
+                opened = os.fstat(self._fd)
+                current = os.stat(path if parent_fd is None else path.name,
+                                  dir_fd=parent_fd, follow_symlinks=False)
+                if (opened.st_dev, opened.st_ino) != (current.st_dev, current.st_ino):
+                    raise UnsafeGeneratedOutputError(f"directory changed while it was secured: {path}")
+            except BaseException:
                 self.close()
-                raise UnsafeGeneratedOutputError(f"directory changed while it was secured: {path}")
+                raise
+
+    def check_posix_binding(self, parent_fd: int, name: str) -> None:
+        if self._fd is None:
+            raise UnsafeGeneratedOutputError("secured directory is closed")
+        try:
+            named = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+            opened = os.fstat(self._fd)
+        except OSError as error:
+            raise UnsafeGeneratedOutputError(f"secured directory is no longer named: {self.path}") from error
+        if not stat.S_ISDIR(named.st_mode) or (named.st_dev, named.st_ino) != (opened.st_dev, opened.st_ino):
+            raise UnsafeGeneratedOutputError(f"secured directory changed identity: {self.path}")
 
     def _open_windows(self, *, guard_mutation: bool) -> None:
         kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
@@ -763,6 +779,36 @@ class SecuredOutputRoot:
         if path != self.root and not _is_within(path, self.root):
             raise UnsafeGeneratedOutputError(f"directory escapes generated-output root: {path}")
 
+        if os.name != "nt":
+            # Every creation/open is relative to a previously held directory, never a possibly
+            # redirected absolute parent. Recheck cached bindings instead of assuming an old FD
+            # still names the path: a rename followed by a symlink must refuse subsequent work.
+            current = Path(path.anchor)
+            anchor = _normalized(current)
+            if anchor not in self._held_directories:
+                self._held_directories[anchor] = _HeldDirectory(current)
+            parent = self._held_directories[anchor]
+            for component in path.parts[1:]:
+                _validate_component_name(component)
+                current /= component
+                key = _normalized(current)
+                if key not in self._held_directories:
+                    try:
+                        try:
+                            os.stat(component, dir_fd=parent._fd, follow_symlinks=False)
+                        except FileNotFoundError:
+                            try:
+                                os.mkdir(component, dir_fd=parent._fd)
+                            except FileExistsError:
+                                pass  # A concurrent creation must still pass the no-follow open below.
+                        self._held_directories[key] = _HeldDirectory(current, parent_fd=parent._fd)
+                    except OSError as error:
+                        raise UnsafeGeneratedOutputError(f"could not secure output directory: {current}") from error
+                held = self._held_directories[key]
+                held.check_posix_binding(parent._fd, component)
+                parent = held
+            return path
+
         current = Path(path.anchor)
         parts = path.parts[1:]
         for component in parts:
@@ -801,6 +847,16 @@ class SecuredOutputRoot:
                 self._validate_existing_destination(current_path / file_name)
 
     def _validate_existing_destination(self, path: Path) -> None:
+        if os.name != "nt":
+            self.ensure_directory(path.parent)
+            parent = self._held_directories[_normalized(path.parent)]
+            try:
+                metadata = os.stat(path.name, dir_fd=parent._fd, follow_symlinks=False)
+            except FileNotFoundError:
+                return
+            if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+                raise UnsafeGeneratedOutputError(f"unsafe generated-output file: {path}")
+            return
         if not _lexists(path):
             return
         metadata = os.lstat(path)
@@ -816,6 +872,52 @@ class SecuredOutputRoot:
         self.ensure_directory(path.parent)
         self._validate_existing_destination(path)
         return path
+
+    @contextlib.contextmanager
+    def _posix_atomic_writer(self, destination: Path, *, binary: bool) -> Iterator[IO]:
+        self.ensure_directory(destination.parent)
+        parent = self._held_directories[_normalized(destination.parent)]
+        parent_fd = parent._fd
+        temporary = f".{destination.name}.tmp-{uuid.uuid4().hex}"
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW
+        descriptor = os.open(temporary, flags, 0o600, dir_fd=parent_fd)
+        initial = None
+        stream = None
+        committed = False
+        try:
+            initial = os.fstat(descriptor)
+            kwargs = {} if binary else {"encoding": "utf-8", "newline": "\n"}
+            stream = os.fdopen(descriptor, "wb" if binary else "w", **kwargs)
+            with stream:
+                yield stream
+                stream.flush()
+                os.fsync(stream.fileno())
+                self._validate_existing_destination(destination)
+                named = os.stat(temporary, dir_fd=parent_fd, follow_symlinks=False)
+                opened = os.fstat(stream.fileno())
+                identity = (initial.st_dev, initial.st_ino)
+                if (not stat.S_ISREG(named.st_mode) or named.st_nlink != 1 or opened.st_nlink != 1
+                        or (named.st_dev, named.st_ino) != identity
+                        or (opened.st_dev, opened.st_ino) != identity):
+                    raise UnsafeGeneratedOutputError("generated-output temporary changed identity or gained an alias")
+                # Both names belong to this exact held directory. A last-moment pathname swap
+                # cannot send the temporary, replacement, validation or cleanup into another tree.
+                os.replace(temporary, destination.name, src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
+                committed = True
+                published = os.stat(destination.name, dir_fd=parent_fd, follow_symlinks=False)
+                if not stat.S_ISREG(published.st_mode) or published.st_nlink != 1 or (published.st_dev, published.st_ino) != identity:
+                    raise UnsafeGeneratedOutputError("published output changed identity or gained an alias")
+                self.ensure_directory(destination.parent)
+        finally:
+            if stream is None:
+                os.close(descriptor)
+            if not committed and initial is not None:
+                try:
+                    named = os.stat(temporary, dir_fd=parent_fd, follow_symlinks=False)
+                    if (named.st_dev, named.st_ino) == (initial.st_dev, initial.st_ino):
+                        os.unlink(temporary, dir_fd=parent_fd)
+                except FileNotFoundError:
+                    pass
 
     @contextlib.contextmanager
     def atomic_text_writer(self, path: Path) -> Iterator[IO[str]]:
@@ -848,25 +950,8 @@ class SecuredOutputRoot:
                             pass
             return
 
-        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-        flags |= getattr(os, "O_BINARY", 0)
-        descriptor = os.open(temporary, flags, 0o600)
-        committed = False
-        try:
-            with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as stream:
-                yield stream
-                stream.flush()
-                os.fsync(stream.fileno())
-            self._validate_existing_destination(destination)
-            os.replace(temporary, destination)
-            committed = True
-            self._validate_existing_destination(destination)
-        finally:
-            if not committed and _lexists(temporary):
-                try:
-                    temporary.unlink()
-                except OSError:
-                    pass
+        with self._posix_atomic_writer(destination, binary=False) as stream:
+            yield stream
 
     @contextlib.contextmanager
     def atomic_binary_writer(self, path: Path) -> Iterator[IO[bytes]]:
@@ -892,25 +977,8 @@ class SecuredOutputRoot:
                             pass
             return
 
-        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-        flags |= getattr(os, "O_BINARY", 0)
-        descriptor = os.open(temporary, flags, 0o600)
-        committed = False
-        try:
-            with os.fdopen(descriptor, "wb") as stream:
-                yield stream
-                stream.flush()
-                os.fsync(stream.fileno())
-            self._validate_existing_destination(destination)
-            os.replace(temporary, destination)
-            committed = True
-            self._validate_existing_destination(destination)
-        finally:
-            if not committed and _lexists(temporary):
-                try:
-                    temporary.unlink()
-                except OSError:
-                    pass
+        with self._posix_atomic_writer(destination, binary=True) as stream:
+            yield stream
 
     def atomic_write_text(self, path: Path, text: str) -> None:
         with self.atomic_text_writer(path) as stream:
