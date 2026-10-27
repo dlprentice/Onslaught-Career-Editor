@@ -66,6 +66,8 @@ class LevelMetadataTests(unittest.TestCase):
         self.assertEqual("unknown-enum-value", rows[-1]["worldMode"]["status"])
         self.assertTrue(all("not established" in r["ceNetworkAdmission"] for r in rows))
         self.assertTrue(all(r["missionScript"] == {"status": "not-in-this-input", "path": None} for r in rows))
+        first = headers.project_level_metadata(fixture((850, [], (0, 0, 0, 1))))["records"][0]
+        self.assertTrue(first["retailGameMultiplayerLevelPredicate"])
 
     def test_same_world_and_configuration_names_keep_all_occurrences(self) -> None:
         data = fixture((852, ["Standard", "Standard"], (1, 0, 0, 2)), (852, ["Standard"], (0, 0, 0, 2)))
@@ -150,6 +152,74 @@ class LevelMetadataTests(unittest.TestCase):
             self.assertEqual("unparsed", headers.project_level_metadata(original)["status"])
         with patch.object(headers, "MAX_METADATA_RECORDS", 0):
             self.assertEqual("unparsed", headers.project_level_metadata(original)["status"])
+
+    def test_per_record_amplification_is_refused_before_names_are_decoded(self) -> None:
+        # Reproduce the reviewer's 4,136-byte case, without any maximal run.
+        data = fixture((100, [""] * 4096, (0, 0, 0, 0)))
+        self.assertEqual(4136, len(data))
+        with patch.object(headers, "parse_worldheaders", side_effect=AssertionError("legacy allocation before preflight")):
+            report = headers.project_level_metadata(data)
+        self.assertEqual("unparsed", report["status"])
+        self.assertEqual("per-record configuration count exceeds metadata profile", report["reason"])
+        self.assertEqual([], report["records"])
+        self.assertEqual(hashlib.sha256(data).hexdigest(), report["source"]["sha256"])
+        # Count admission wins even when no encoded name or trailing words are
+        # present: the decoder must not enter the name loop to discover EOF.
+        truncated = data[:24]
+        report = headers.project_level_metadata(truncated)
+        self.assertEqual("per-record configuration count exceeds metadata profile", report["reason"])
+        self.assertEqual(hashlib.sha256(truncated).hexdigest(), report["source"]["sha256"])
+        with patch.object(headers, "WorldHeaderRecord", side_effect=AssertionError("record allocation before count admission")):
+            with self.assertRaisesRegex(headers.WorldHeadersProfileLimit, "per-record"):
+                headers.parse_worldheaders(data, max_configs_per_record=128, max_config_references=8192)
+
+    def test_aggregate_limit_refuses_many_individually_admitted_worlds_without_partial_output(self) -> None:
+        data = fixture((100, ["A", "B"], (0, 0, 0, 0)), (110, ["A", "B"], (0, 0, 0, 0)))
+        with patch.object(headers, "MAX_METADATA_CONFIGS_PER_RECORD", 2), patch.object(headers, "MAX_METADATA_CONFIG_REFERENCES", 3), \
+                patch.object(headers, "parse_worldheaders", side_effect=AssertionError("legacy allocation before aggregate preflight")):
+            report = headers.project_level_metadata(data)
+        self.assertEqual("unparsed", report["status"])
+        self.assertEqual("aggregate configuration references exceed metadata profile", report["reason"])
+        self.assertEqual([], report["records"])
+        self.assertEqual(hashlib.sha256(data).hexdigest(), report["source"]["sha256"])
+        # A causal opposite limit admits all four references, proving this is
+        # count admission rather than unrelated framing or content failure.
+        with patch.object(headers, "MAX_METADATA_CONFIGS_PER_RECORD", 2), patch.object(headers, "MAX_METADATA_CONFIG_REFERENCES", 4):
+            admitted = headers.project_level_metadata(data)
+        self.assertEqual("projected", admitted["status"])
+        self.assertEqual(4, sum(len(row["configurations"]) for row in admitted["records"]))
+
+    def test_exact_count_boundaries_are_admitted_and_next_reference_refuses(self) -> None:
+        bound = headers.MAX_METADATA_CONFIGS_PER_RECORD
+        data = fixture((100, ["A"] * bound, (0, 0, 0, 0)))
+        self.assertEqual(bound, len(headers.project_level_metadata(data)["records"][0]["configurations"]))
+        data = fixture((100, ["A"] * (bound + 1), (0, 0, 0, 0)))
+        self.assertEqual("per-record configuration count exceeds metadata profile", headers.project_level_metadata(data)["reason"])
+        # Two small declarations demonstrate independent aggregate enforcement.
+        with self.assertRaisesRegex(headers.WorldHeadersProfileLimit, "aggregate"):
+            headers.parse_worldheaders(fixture((1, ["A"], (0, 0, 0, 0)), (2, ["B"], (0, 0, 0, 0))),
+                                       max_configs_per_record=1, max_config_references=1)
+
+    def test_legacy_reader_remains_exact_while_metadata_profile_is_bounded(self) -> None:
+        data = fixture((100, [""] * 129, (0, 0, 0, 0)))
+        parsed = headers.parse_worldheaders(data)
+        self.assertEqual(129, len(parsed.records[0].configs))
+        self.assertEqual(data, headers.encode_worldheaders(parsed))
+        self.assertEqual("unparsed", headers.project_level_metadata(data)["status"])
+        for bad in (-1, True, 1.5):
+            with self.subTest(limit=bad), self.assertRaises(ValueError):
+                headers.parse_worldheaders(data, max_config_references=bad)
+
+    def test_configuration_input_cap_precedes_existing_span_decoder(self) -> None:
+        data = fixture((100, ["Standard"], (0, 0, 0, 0)))
+        config = b"X" * (headers.MAX_METADATA_CONFIGURATION_BYTES + 1)
+        with patch("battle_engine_config_decode.parse_config", side_effect=AssertionError("configuration spans allocated before size admission")):
+            report = headers.project_level_metadata(data, configuration_data=config)
+        self.assertEqual("projected", report["status"])
+        self.assertEqual("unparsed", report["configurationInput"]["status"])
+        self.assertEqual(hashlib.sha256(config).hexdigest(), report["configurationInput"]["source"]["sha256"])
+        self.assertIn("byte limit", report["configurationInput"]["reason"])
+        self.assertEqual("unparsed-configuration-input", report["records"][0]["configurations"][0]["resolution"])
 
     def test_metadata_contains_no_input_record_bytes_or_host_paths(self) -> None:
         report = headers.project_level_metadata(fixture((100, ["Standard"], (-1, -2, -3, 0))))

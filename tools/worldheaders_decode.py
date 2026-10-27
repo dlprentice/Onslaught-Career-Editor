@@ -101,6 +101,11 @@ FIXED_PAYLOAD_BYTES = 4 + 4 + 4 * TRAILING_FIELD_COUNT  # 24
 LEVEL_METADATA_SCHEMA = "onslaught.level-header-metadata.v1"
 MAX_METADATA_BYTES = 16 * 1024 * 1024
 MAX_METADATA_RECORDS = 65_536
+# Engineering projection bounds, not universal authored-format limits or
+# the native runtime's separate 20-slot configuration array capacity.
+MAX_METADATA_CONFIGS_PER_RECORD = 128
+MAX_METADATA_CONFIG_REFERENCES = 8_192
+MAX_METADATA_CONFIGURATION_BYTES = 64 * 1024
 WORLD_MODE_NAMES = {0: "single-player", 1: "cooperative-multiplayer", 2: "versus-multiplayer"}
 # Source-function pins describe the exact source used to derive these labels,
 # not attestation of an input file or of a later build's runtime behavior.
@@ -169,7 +174,49 @@ class WorldHeadersError(ValueError):
     """Raised when the file does not match the proven layout."""
 
 
-def parse_worldheaders(data: bytes) -> WorldHeaders:
+class WorldHeadersProfileLimit(WorldHeadersError):
+    """A declared metadata count exceeded a bound before list allocation."""
+
+
+class WorldHeadersUnsupportedVersion(WorldHeadersError):
+    """No record fields are interpreted from an unadmitted record version."""
+
+
+def _metadata_count_preflight(data: bytes, record_count: int) -> None:
+    """Scalar framing/count admission, before the legacy parser allocates.
+
+    Skip length-delimited record bodies; do not decode or collect names here.
+    The existing parser still owns all string/body/round-trip validation.
+    """
+    offset = FILE_HEADER_SIZE
+    references = 0
+    for _ordinal in range(record_count):
+        if offset + RECORD_PREFIX_SIZE + 8 > len(data):
+            raise WorldHeadersError("truncated metadata record prefix")
+        version, size, _world_id, count = struct.unpack_from("<4i", data, offset)
+        if version != 3:
+            raise WorldHeadersUnsupportedVersion("only record version 3 is admitted by this projection")
+        if count < 0:
+            raise WorldHeadersError("negative metadata configuration count")
+        if count > MAX_METADATA_CONFIGS_PER_RECORD:
+            raise WorldHeadersProfileLimit("per-record configuration count exceeds metadata profile")
+        if count > MAX_METADATA_CONFIG_REFERENCES - references:
+            raise WorldHeadersProfileLimit("aggregate configuration references exceed metadata profile")
+        if size < 8 or size > len(data) - offset - RECORD_PREFIX_SIZE:
+            raise WorldHeadersError("invalid metadata record size")
+        references += count
+        offset += RECORD_PREFIX_SIZE + size
+    if offset != len(data):
+        raise WorldHeadersError("unaccounted metadata record framing")
+
+
+def parse_worldheaders(
+    data: bytes, *, max_configs_per_record: int | None = None,
+    max_config_references: int | None = None,
+) -> WorldHeaders:
+    for value in (max_configs_per_record, max_config_references):
+        if value is not None and (type(value) is not int or value < 0):
+            raise ValueError("configuration count limits must be nonnegative integers or None")
     if len(data) < FILE_HEADER_SIZE:
         raise WorldHeadersError(f"too small: {len(data)} bytes")
 
@@ -180,6 +227,7 @@ def parse_worldheaders(data: bytes) -> WorldHeaders:
 
     off = FILE_HEADER_SIZE
     records: list[WorldHeaderRecord] = []
+    configuration_references = 0
 
     for index in range(record_count):
         rec_off = off
@@ -209,6 +257,14 @@ def parse_worldheaders(data: bytes) -> WorldHeaders:
             raise WorldHeadersError(
                 f"record {index}: negative config_count {config_count}"
             )
+        # Both checks precede the names list and decoding loop. The aggregate
+        # bound also rejects many individually small records before projection
+        # can expand their references into dictionaries. Never truncate.
+        if max_configs_per_record is not None and config_count > max_configs_per_record:
+            raise WorldHeadersProfileLimit("per-record configuration count exceeds metadata profile")
+        if max_config_references is not None and config_count > max_config_references - configuration_references:
+            raise WorldHeadersProfileLimit("aggregate configuration references exceed metadata profile")
+        configuration_references += config_count
 
         configs: list[str] = []
         for s_index in range(config_count):
@@ -318,7 +374,7 @@ def _configuration_metadata(data: bytes | None, logical_path: str) -> tuple[dict
     if data is None:
         return {"status": "not-supplied"}, []
     source = _metadata_source(data, logical_path)
-    if len(data) > MAX_METADATA_BYTES:
+    if len(data) > MAX_METADATA_CONFIGURATION_BYTES:
         return {"source": source, "status": "unparsed", "reason": "configuration input exceeds metadata byte limit"}, []
     # One existing six-record/version-12 parser owns configuration framing and
     # unknown spans. No new configuration format or runtime fallback is modeled.
@@ -364,6 +420,11 @@ def project_level_metadata(
         "schema": LEVEL_METADATA_SCHEMA, "profile": "PC-file-version-1-record-version-3",
         "source": source, "status": "unparsed", "records": [],
         "configurationInput": configs, "sourceEvidence": [dict(row) for row in LEVEL_METADATA_EVIDENCE],
+        "metadataLimits": {"sourceBytes": MAX_METADATA_BYTES, "worldRecords": MAX_METADATA_RECORDS,
+                           "configurationsPerRecord": MAX_METADATA_CONFIGS_PER_RECORD,
+                           "configurationReferences": MAX_METADATA_CONFIG_REFERENCES,
+                           "configurationInputBytes": MAX_METADATA_CONFIGURATION_BYTES,
+                           "meaning": "engineering projection bounds; not authored format or native runtime maxima"},
         "evidenceClass": "bounded static metadata; source-derived meanings, not runtime acceptance",
         "limits": ["selected header/configuration inputs only; no level archive or mission-script completeness claim",
                    "stored cooperative mode does not establish CE campaign co-op, networking or player readiness",
@@ -384,8 +445,17 @@ def project_level_metadata(
         report["reason"] = "world-header record count exceeds metadata profile"
         return report
     try:
-        parsed = parse_worldheaders(data)
+        _metadata_count_preflight(data, record_count)
+        parsed = parse_worldheaders(data, max_configs_per_record=MAX_METADATA_CONFIGS_PER_RECORD,
+                                   max_config_references=MAX_METADATA_CONFIG_REFERENCES)
         assert_round_trip(data, parsed)
+    except WorldHeadersUnsupportedVersion as error:
+        report.update(status="unsupported", reason=str(error))
+        return report
+    except WorldHeadersProfileLimit as error:
+        report.update(reason=str(error),
+                      falsifier="select an input within the declared metadata count bounds; no records were truncated")
+        return report
     except (WorldHeadersError, UnicodeError, struct.error):
         report.update(reason="malformed or unsupported world-header record framing",
                       falsifier="check record versions, declared sizes, ASCII names, counts and exact EOF with the existing decoder")
