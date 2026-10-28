@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-27 (CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
+Last updated: 2026-10-28 (cooperative CE settings lock; CE 0.1.8 packages and their updates are recognised; 0.1.0–0.1.6 launchers are never started)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -69,7 +69,8 @@ nonblocking lock on the persistent `ce.ini.lock` sidecar before rechecking the s
 publication and verification. If a cooperating CE writer holds the same sidecar, the companion refuses promptly and
 the player can retry. The sidecar is retained so writers continue to use the same lock. This only coordinates builds
 that implement the same protocol and resolve the same user folder; existing CE versions and other editors may not
-participate. CE's Windows path handling and this new cross-program lock have not been accepted on native Windows,
+participate. Replacing the sidecar or folder outside the protocol can also defeat the advisory lock. CE's Windows
+path handling and this new cross-program lock have not been accepted on native Windows,
 including Unicode user-folder names. Close CE and the original game before saving and wait for the save to finish
 before starting either; process detection still cannot rule out a game starting immediately after its last check.
 
