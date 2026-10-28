@@ -164,7 +164,7 @@ establish which controls or camera a particular player used.
 
 | Key | Virtual Button | Effect | Notes |
 |-----|----------------|--------|-------|
-| `V` | `BUTTON_TOGGLE_GOD_MODE` | Toggle god mode | **Internal builds only** |
+| `V` | `BUTTON_TOGGLE_GOD_MODE` | Toggle god mode | Historical source binding; no retail V default shown |
 | `A` | `BUTTON_TOGGLE_FREE_CAMERA` | Toggle free camera | Debug camera mode |
 | `F` | `BUTTON_TOGGLE_FREE_CAMERA` | Toggle free camera | Alternate binding |
 | `U` | `BUTTON_WIN_LEVEL` | Force win current level | Instant victory |

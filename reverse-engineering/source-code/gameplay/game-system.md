@@ -205,7 +205,7 @@ checks cheat 4, normally enabled by `Aurore` in the career name. The internal ro
 | `Space` | Skip cutscene | During cinematics |
 | `O` | Pause | Keyboard alternative |
 
-**Scope:** The remaining rows are historical source mappings; do not infer their retail availability from this table.
+**Scope:** The remaining rows are historical descriptions that were not individually rechecked; do not infer their retail availability from this table.
 
 ---
 
