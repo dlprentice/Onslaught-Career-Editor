@@ -574,6 +574,14 @@ def mesh_summary(meta: dict) -> dict:
             "partTypes": dict(sorted(collections.Counter(str(p["partType"]) for p in parts).items())),
             "lodChildren": len(lods),
             "lodChildParts": [len((c["model"].get("parts") or [])) for c in lods],
+            "nestedMeshDetails": [{"relationship": c["relationship"], "status": c["model"]["status"],
+                                   "partCount": None if c["model"]["status"] == "unparsed"
+                                   else len(c["model"].get("parts") or []),
+                                   "framingPrefixBytes": c["framingPrefixBytes"],
+                                   "payloadSha256": c["model"]["identity"]["payloadSha256"],
+                                   "reason": c.get("relationshipReason"),
+                                   "scope": c.get("relationshipScope", "unresolved; runtime loading not established")}
+                                  for c in lods],
             "hierarchy": [{"ordinal": p["ordinal"], "name": p["name"], "parent": p["relations"]["parentOrdinal"],
                            "type": p["partType"], "virtualFrames": p["frameLanes"]["virtualFrameCount"],
                            "hierarchyPoses": p["frameLanes"]["hierarchyPoseCount"],
@@ -584,7 +592,9 @@ def catalog_mesh(stream: bytes, *, asset_id: str, name: str, container: str, con
                  offset: int, chunk_path: list[int]) -> tuple[dict, list[dict], dict]:
     record, mesh = meshcensus.mesh_record_from_stream(stream, source_path=container, archive_sha256=container_sha,
                                                       platform="pc", payload_offset=offset,
-                                                      chunk_path=tuple(chunk_path))
+                                                      chunk_path=tuple(chunk_path),
+                                                      source_context={"aya-zlib-members(cmsh)": "loose-mesh",
+                                                                      "lvlr-chunk(MESH/PMSH/PMS2)": "embedded-mesh"}.get(envelope))
     meta = record["modelMetadata"]
     rec = base_record(asset_id, "mesh", name or record.get("internalName") or "", container, container_sha,
                       envelope=envelope, offset=offset, length=len(stream), raw_sha=sha256(stream),

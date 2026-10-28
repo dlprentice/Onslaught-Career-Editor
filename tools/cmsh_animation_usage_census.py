@@ -316,13 +316,16 @@ def _part_metadata(part: Any, ordinal: int, payload: bytes) -> dict[str, object]
     }
 
 
-def _model_metadata(stream: bytes, mesh: Any, identity: dict[str, object], depth: int) -> dict[str, object]:
+def _model_metadata(stream: bytes, mesh: Any, identity: dict[str, object], depth: int,
+                    source_context: str | None) -> dict[str, object]:
     chunks = parse_top_level_chunks_bounded(stream)
     parts = mesh.file_parts()
     part_chunks = chunks[2 + len(mesh.textures):2 + len(mesh.textures) + len(parts)]
     result = {
         "schema": MODEL_METADATA_SCHEMA, "status": "parsed", "identity": identity,
         "evidenceClass": "static structure and source-derived field meanings; not full semantic or runtime acceptance",
+        "sourceContext": source_context,
+        "sourceContextProvenance": "caller-supplied; runtime loading and the separate resource reader are not established",
         "lodOrdinal": depth,
         "radiusBits": struct.unpack_from("<I", mesh.raw_header, 0x164)[0],
         "cueFactorBits": struct.unpack_from("<I", mesh.raw_header, 0x168)[0],
@@ -338,7 +341,8 @@ def _model_metadata(stream: bytes, mesh: Any, identity: dict[str, object], depth
                      for index, texture in enumerate(mesh.textures)],
         "description": {"status": "unknown", "text": None},
         "lodChildren": [], "unknowns": [],
-        "evidence": "onslaught-decomp:CMesh::Deserialize@004aab90; CMeshPart::Deserialize@004b27a0; CDXMeshVB::Load@0054e160",
+        "evidence": "onslaught-decomp:CMesh::Deserialize@004aab90; CMeshPart::Deserialize@004b27a0; "
+                    "CDXMeshVB::Load@0054e160; CRTMesh::Render@004dcba0",
     }
     names = collections.Counter(part["name"].casefold() for part in result["parts"])
     for part in result["parts"]:
@@ -381,6 +385,7 @@ def _model_metadata(stream: bytes, mesh: Any, identity: dict[str, object], depth
                                            payload_offset=identity["payloadOffset"] + child_offset,
                                            chunk_path=tuple(child_path))
                 result["lodChildren"].append({"relationship": "unresolved-nested-mesh", "framingPrefixBytes": None,
+                                              "relationshipReason": "PMSH does not contain exactly one bounded PMS2",
                                               "model": _unparsed(child_identity, CmshProfileError(
                                                   "unsupported profile", 0, "framed PMSH LOD child"))})
                 result["unknowns"].append("unsupported framed PMSH LOD child")
@@ -390,8 +395,10 @@ def _model_metadata(stream: bytes, mesh: Any, identity: dict[str, object], depth
             payload = payload[8:]
         starts = [offset for offset in (0, PMS2_HEADER_BYTES)
                   if payload[offset:offset + 8] == b"CMSH" + struct.pack("<I", 372)]
-        # A bare stream is retained as an observed nested shape, not asserted
-        # to be the retail 309-byte header route. Never pick one of two leads.
+        # Loose-file and embedded resource readers encounter different nested
+        # shapes: the former enters PMS2 then CMSH; the latter enters PMSH,
+        # PMS2 and a 309-byte resource header before CMSH. Never pick one of
+        # two possible CMSH boundaries, or infer context from the pathname.
         ambiguous = len(starts) != 1
         prefix = starts[0] if not ambiguous else 0
         child_offset += prefix
@@ -407,12 +414,32 @@ def _model_metadata(stream: bytes, mesh: Any, identity: dict[str, object], depth
             if depth >= MAX_LOD_DEPTH:
                 raise CmshProfileError("limit exceeded", 0, "metadata LOD depth")
             child_mesh = parse_cmsh_stream(child_stream)
-            child = _model_metadata(child_stream, child_mesh, child_identity, depth + 1)
+            child = _model_metadata(child_stream, child_mesh, child_identity, depth + 1, source_context)
         except (ValueError, struct.error) as error:
             child = _unparsed(child_identity, error)
             child["lodOrdinal"] = depth + 1
-        result["lodChildren"].append({"relationship": "mesh-lod" if next_marker and prefix == PMS2_HEADER_BYTES else "unresolved-nested-mesh",
-                                      "framingPrefixBytes": prefix, "model": child})
+        loose_shape = source_context == "loose-mesh" and c.tag == "PMS2" and prefix == 0
+        embedded_shape = source_context == "embedded-mesh" and c.tag == "PMSH" and prefix == PMS2_HEADER_BYTES
+        declared_chain = (next_marker and not ambiguous and child["status"] != "unparsed"
+                          and (loose_shape or embedded_shape))
+        if declared_chain:
+            reason = None
+        elif not next_marker:
+            reason = "next-in-chain marker is zero"
+        elif ambiguous:
+            reason = "no unique CMSH boundary"
+        elif child["status"] == "unparsed":
+            reason = "nested CMSH did not parse"
+        elif source_context is None:
+            reason = "reader context is unknown"
+        else:
+            reason = "reader context does not match nested framing"
+        result["lodChildren"].append({"relationship": "mesh-lod" if declared_chain else "unresolved-nested-mesh",
+                                      "relationshipScope": ("serialized next-in-chain; runtime loading not established"
+                                                            if declared_chain else
+                                                            "unresolved nested structure; runtime loading not established"),
+                                      "relationshipReason": reason,
+                                      "framingPrefixBytes": None if ambiguous else prefix, "model": child})
     if next_marker != bool(result["lodChildren"]):
         result["unknowns"].append("LOD presence marker and decoded child disagree")
     if (any(result[lane]["status"] == "unparsed" for lane in ("animations", "emitters"))
@@ -427,17 +454,22 @@ def _model_metadata(stream: bytes, mesh: Any, identity: dict[str, object], depth
 def mesh_record_from_stream(
     stream: bytes, *, source_path: str, archive_sha256: str,
     source_universe_id: str | None = None, platform: str | None = None,
-    payload_offset: int = 0, chunk_path: tuple[int, ...] = (),
+    payload_offset: int = 0, chunk_path: tuple[int, ...] = (), source_context: str | None = None,
 ) -> tuple[dict[str, object], Any | None]:
     """Metadata from held decoded bytes; callers own/pin the source envelope.
 
     Coordinates are relative to the inflated archive, never a host pathname.
-    Scope labels are declarations, not attestation. Unsupported source rows
+    Scope labels and source_context are caller declarations, not attestation.
+    Context is 'loose-mesh' for the separate mesh-data reader, 'embedded-mesh'
+    for a shared resource reader, or None when that distinction is unknown.
+    Unsupported source rows
     retain exact identity and a refusal instead of disappearing. No gameplay,
     rendering, muzzle position or animation scheduling is established here.
     """
     if not isinstance(stream, bytes):
         raise ValueError("stream must be immutable held bytes")
+    if source_context not in (None, "loose-mesh", "embedded-mesh"):
+        raise ValueError("unsupported source context")
     identity = _identity(stream, source_path=source_path, archive_sha256=archive_sha256,
                          source_universe_id=source_universe_id, platform=platform,
                          payload_offset=payload_offset, chunk_path=chunk_path)
@@ -447,7 +479,7 @@ def mesh_record_from_stream(
     except ValueError as error:
         return ({"file": PurePosixPath(source_path).name, "modelMetadata": _unparsed(identity, error)}, None)
     try:
-        metadata = _model_metadata(stream, mesh, identity, 0)
+        metadata = _model_metadata(stream, mesh, identity, 0, source_context)
     except (ValueError, struct.error) as error:
         metadata = _unparsed(identity, error)
     record.update(file=PurePosixPath(source_path).name, modelMetadata=metadata)
@@ -457,6 +489,7 @@ def mesh_record_from_stream(
 def _mesh_record(
     path: Path, *, source_root: Path | None = None,
     source_universe_id: str | None = None, platform: str | None = "pc",
+    source_context: str | None = None,
 ) -> tuple[dict[str, object], Any | None]:
     source = read_held_archive(path)
     logical = path.relative_to(source_root).as_posix() if source_root is not None else path.name
@@ -469,7 +502,8 @@ def _mesh_record(
                              payload_offset=0, chunk_path=())
         return ({"file": path.name, "modelMetadata": _unparsed(identity, error)}, None)
     return mesh_record_from_stream(stream, source_path=logical, archive_sha256=archive_sha,
-                                   source_universe_id=source_universe_id, platform=platform)
+                                   source_universe_id=source_universe_id, platform=platform,
+                                   source_context=source_context)
 
 
 def _parsed_mesh_record(mesh: Any) -> dict[str, object]:
@@ -1341,7 +1375,7 @@ def build_census(data_root: Path, mirror_index: Path | None = None) -> dict[str,
         mesh_root.glob("*.msh.aya", case_sensitive=False),
         key=lambda item: item.name.casefold(),
     )
-    outcomes = [_mesh_record(path, source_root=data_root) for path in mesh_paths]
+    outcomes = [_mesh_record(path, source_root=data_root, source_context="loose-mesh") for path in mesh_paths]
     mesh_records = [record for record, _mesh in outcomes]
     parsed = [(record, mesh) for record, mesh in outcomes if mesh is not None]
     parsed_records = [record for record, _mesh in parsed]

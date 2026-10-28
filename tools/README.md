@@ -69,7 +69,11 @@ publish, sign, or install anything by themselves.
 - `cmsh_animation_usage_census.py` performs a read-only, optionally
   mirror-hash-verified join across loose CMSH pose/skeleton lanes, numeric-LVLR
   `MESH` membership, and authored MSL animation calls. Its JSON output is
-  restricted to ignored `local-lab` or `.artifacts` paths.
+  restricted to ignored `local-lab` or `.artifacts` paths. It distinguishes
+  the loose mesh's direct `PMS2` child from the embedded resource's
+  `PMSH`/`PMS2` plus 309-byte header, and keeps a mismatched or unknown reader
+  context unresolved. A recognized child is a serialized next-in-chain; it is
+  not proof that a particular resource record loads it at runtime.
 - `content_catalog.py` surveys every file of a selected retail install (family, count, size, the game function that
   reads it, and whether a repository parser already reads it) and writes the content catalogue: one JSON record per
   texture file, texture record (level, imposter, font and goodie), mesh, animation mode, level, world thing
@@ -79,6 +83,8 @@ publish, sign, or install anything by themselves.
   section, provenance and, for meshes and textures, a usage summary ([schema](content_catalog.schema.json)). Each
   admitted loose texture mip records the encoded bytes' SHA-256 and offset in the inflated DDS, so individual levels
   can be compared without exporting their pixels; unsupported or malformed textures have no admitted mip entries.
+  `nestedMeshDetails` reports each immediate child's relationship, parse status, count and hash; an unknown count is
+  `null`, and nested descendants are available in the CMSH census. No relationship asserts runtime loading.
   `world_resources_decode.py` decodes the level payloads in their loaders' read order and refuses unread bytes: the
   `WRES` world bodies (`CWorld::LoadWorld`: header, compiled scripts, things, trees, influence map, waypoint paths,
   timings, occupancy), `ERES` (mixer mips, heightfield settings and samples, mixer map), `SURF` and `SSHD`; `LNDS`
