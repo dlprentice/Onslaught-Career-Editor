@@ -29,8 +29,8 @@
     },
     "id": {
       "type": "string",
-      "pattern": "^(archive|texture|texture-descriptor|mesh|animation|audio|video|level|level-payload|definition|placement|goodie|effect|script|mission-text|text-symbols|text-table|sound-table):.+",
-      "description": "Stable id. Files: <type>:<lower-cased install-relative path>; archive members: the container plus #chunk or #ordinal; texture records: name plus a payload-hash prefix; animations: <mesh id>/<ordinal>. Levels: level:NNN; placements: placement:<level>:<world>@<record offset>; definitions: definition:<lower-cased name>; goodies: goodie:NNN; effects: effect:<file>#<ordinal>."
+      "pattern": "^(archive|texture|texture-descriptor|mesh|animation|audio|video|level|level-payload|definition|placement|marker|waypoint-path|script-code|goodie|effect|script|mission-text|text-symbols|text-table|sound-table):.+",
+      "description": "Stable id. Files: <type>:<lower-cased install-relative path>; archive members: the container plus #chunk or #ordinal; texture records: name plus a payload-hash prefix; animations: <mesh id>/<ordinal>. Levels: level:NNN; placements: placement:<level>:<world>@<record offset>; definitions: definition:<lower-cased name>; goodies: goodie:NNN; effects: effect:<file>#<ordinal>. Markers: marker:<level>:<world>@<record offset>; waypoint paths: waypoint-path:<level>:<world>#<ordinal>; compiled scripts: script-code:<level>:<world>#<ordinal>."
     },
     "type": {
       "enum": [
@@ -45,6 +45,9 @@
         "level-payload",
         "definition",
         "placement",
+        "marker",
+        "waypoint-path",
+        "script-code",
         "goodie",
         "effect",
         "script",
@@ -460,7 +463,17 @@
       "required": [
         "resourceArchive",
         "placements"
-      ]
+      ],
+      "properties": {
+        "worlds": {
+          "type": "object",
+          "description": "Per world body (BSWD, RLWD): header, timings, counts (CWorld::LoadWorld)."
+        },
+        "terrain": {
+          "type": "object",
+          "description": "Decoded ERES (heightfield settings and sample summary, mixer mips, mixer map), SURF and SSHD summaries, and the mixer texture file names the map's set implies."
+        }
+      }
     },
     "definition": {
       "type": "object",
@@ -476,8 +489,12 @@
         "world",
         "definition",
         "position",
-        "orientation"
-      ]
+        "orientation",
+        "kind",
+        "thingType",
+        "slot"
+      ],
+      "description": "A WRES thing that names a physics definition (unit, building, squad, feature), decoded in CWorld::LoadWorld's order. slot: its index in LoadWorld's things[] (null when the physics lookup fails and the record takes none)."
     },
     "goodie": {
       "type": "object",
@@ -497,13 +514,94 @@
       "type": "object",
       "required": [
         "tag"
-      ]
+      ],
+      "properties": {
+        "structure": {
+          "type": "string"
+        },
+        "decoded": {
+          "type": "object",
+          "required": [
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "decoded",
+                "undecoded",
+                "skipped-by-pc-loader"
+              ]
+            }
+          }
+        }
+      }
     },
     "file": {
       "type": "object",
       "required": [
         "lines"
       ]
+    },
+    "marker": {
+      "type": "object",
+      "required": [
+        "level",
+        "world",
+        "kind",
+        "thingType",
+        "ordinal",
+        "slot",
+        "position",
+        "orientation"
+      ],
+      "description": "Every other WRES thing (waypoint, spawner, level-script, safe-side, start, spawn-point, sphere-trigger, wingman-start, hazard, ...): its init record (CInitThing::Load and the subclass's fields).",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "slot": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        }
+      }
+    },
+    "waypointPath": {
+      "type": "object",
+      "required": [
+        "level",
+        "world",
+        "ordinal",
+        "members",
+        "waypoints",
+        "ignoredByLoader"
+      ],
+      "description": "A CWaypointPath: its member indices are slots of LoadWorld's things[]; members that are not waypoints are dropped by the loader (path-member relationships list the kept ones in order)."
+    },
+    "scriptCode": {
+      "type": "object",
+      "required": [
+        "level",
+        "world",
+        "ordinal",
+        "instructions",
+        "symbols",
+        "nativeCalls",
+        "objectives",
+        "textIds",
+        "units",
+        "argumentRule"
+      ],
+      "description": "A compiled mission script from a world body (CWorld::LoadScripts): counts, the natives it calls and the literal arguments of those calls by role (text ids, units, waypoint paths, thing names, scripts, events)."
     }
   },
   "$defs": {
@@ -567,7 +665,17 @@
             "world-header",
             "same-name-as-mesh-slot",
             "same-name-other-shelf",
-            "briefing-video"
+            "briefing-video",
+            "runs-script",
+            "sets-script",
+            "compiled-from",
+            "compiled-as",
+            "uses-text",
+            "spawns-unit",
+            "follows-path",
+            "names-thing",
+            "path-member",
+            "texture-by-rule"
           ]
         },
         "target": {
@@ -594,9 +702,10 @@
             "unresolved-in-loading-archives",
             "name-match",
             "name-match-unloaded",
-            "code-site"
+            "code-site",
+            "code-rule"
           ],
-          "description": "name-match: a stored string equals a file name but no loader joins them; name-match-unloaded: a data observation about content no retail loader reads; code-site: a literal lookup in game code (the evidence names the site)."
+          "description": "name-match: a stored string equals a file name but no loader joins them; name-match-unloaded: a data observation about content no retail loader reads; code-site: a literal lookup in game code (the evidence names the site); code-rule: a name game code builds with sprintf from a format rule and data (the evidence names the function and the rule). name-match also covers a script argument that equals a thing's name."
         },
         "evidence": {
           "type": "array",

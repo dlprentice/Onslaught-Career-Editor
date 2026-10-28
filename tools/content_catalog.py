@@ -5,11 +5,14 @@
 It surveys every file of a selected install (container families, counts, sizes, the loader that reads each family
 and whether a repository parser already reads it) and catalogues: loose DDS textures; the texture records in the
 resource archives (TEXT, and those inside imposter IMPS, font PLAT and goodie GDIE chunks); loose and embedded CMSH
-meshes with their animation modes; levels, their Unit/Feature placements (WRES) and the physics definitions they
-instantiate; goodies; particle effects; XAP samples, Ogg Vorbis music and voice (with the transcript line that
-names each voice file), Bink films; and an inventory of mission scripts, text and symbol tables. With --decomp it
-also records the texture and mesh names game code looks up literally. Each mesh and texture gets a usage summary
-(placements, levels, unit/feature names, effects, goodies, code sites) derived from its relationships.
+meshes with their animation modes; levels with their decoded world bodies (WRES: placements of units, squads and
+features, markers for every other thing, waypoint paths, the compiled mission scripts and what their literal call
+arguments name) and terrain payloads (ERES heightfield and mixers, SURF, SSHD; tools/world_resources_decode.py), the
+physics definitions they instantiate; goodies; particle effects; XAP samples, Ogg Vorbis music and voice (with the
+transcript line that names each voice file), Bink films; and an inventory of mission scripts, text and symbol
+tables. It joins the texture names code builds with sprintf from the map's numbers (sky cube, water, detail mixer)
+and the HUD's, and with --decomp also the texture and mesh names game code looks up literally. Each mesh and texture
+gets a usage summary (placements, levels, unit/feature names, effects, goodies, code sites) from its relationships.
 
 Every asset gets a stable id, its container and coordinates, a SHA-256 of its bytes, format metadata, an "upscale"
 section and provenance. Relationships are recorded only when a loader rule in the decompilation or the data itself
@@ -49,6 +52,7 @@ import aya_texture_fidelity_census as packed  # noqa: E402
 import cmsh_animation_usage_census as meshcensus  # noqa: E402
 import dds_census  # noqa: E402
 import language_dat_decode  # noqa: E402
+import world_resources_decode as wrd  # noqa: E402
 import worldheaders_decode  # noqa: E402
 import xap_bank_walk  # noqa: E402
 from safe_generated_output import SecuredOutputRoot  # noqa: E402
@@ -125,8 +129,9 @@ FAMILIES = (
     ("language-dat", lambda p: p.startswith("data/language/") and p.endswith(".dat"),
      "localized text", L_TEXT, "tools/language_dat_decode.py (entries, voice names, goodie titles)", "catalogued"),
     ("mission-script-msl", lambda p: p.startswith("data/missionscripts/") and (p.endswith(".msl") or p.endswith(".h")),
-     "mission script source", "runtime reader not established in the decompilation (onsldef.msl is #included by "
-     "Career.cpp and game.cpp)", "inventory only; placements name their script", "inventoried"),
+     "mission script source", "no runtime reader: the compiled form travels in WRES (" + wrd.L_LOADSCRIPTS + "); "
+     "onsldef.msl is #included by Career.cpp and game.cpp", "inventory; contents from the compiled copies "
+     "(tools/world_resources_decode.py:read_object_code, analyse_script)", "inventoried"),
     ("mission-text-txt", lambda p: p.startswith("data/missionscripts/") and p.endswith(".txt"),
      "mission text", "runtime owner unknown", "inventory only", "inventoried"),
     ("stf-text-table", lambda p: p.endswith(".stf"), "text symbol table",
@@ -987,7 +992,9 @@ def collect_chunk(collect: dict, rel: str, rec: dict, source_sha: str, chunk, pa
     collect["payloads"].append({"archive": rel, "archiveRec": rec, "sha": source_sha, "tag": tag,
                                 "chunk": chunk.index, "offset": base, "length": len(payload),
                                 "payloadSha": sha256(payload),
-                                "innerTags": [t for t, _p, _d in rows][:16] if rows else None})
+                                "innerTags": [t for t, _p, _d in rows][:16] if rows else None,
+                                "decoded": decode_payload(tag, payload)
+                                if tag in DECODED_TAGS or tag == "LNDS" else None})
 
 
 class DescriptorIndex:
@@ -1105,26 +1112,82 @@ def link_imposters(collect: dict, descriptors_by_id: dict) -> None:
                     archive=row["archive"].casefold(), meshResourceId=imp["meshResourceId"]))
 
 
-def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], script_ids: set[str]
-                  ) -> tuple[list, list]:
-    """WRES Unit/Feature placements joined through default physics.dat to the archive's named MESH and loose CMSH."""
+PHYSICS_STATEMENTS = {1: "unit", 8: "feature", 9: "hazard"}  # EPhysicsStatement (CPhysicsScriptStatements.h)
+# UPhysicsManager::SpawnSquad (0050f4b0): a squad exists for UB_MECH, UB_AIRCRAFT, UB_GROUND_UNIT, UB_INFANTRY and
+# UB_WARSPITE (the default arm); every other behaviour returns NULL (EUnitBehaviour, WorldPhysicsManager.h).
+SQUAD_BEHAVIOURS = frozenset({0, 1, 2, 3, 21})
+L_SPAWNSQUAD = cite("WorldPhysicsManager.cpp", "UPhysicsManager::SpawnSquad", "0x0050f4b0")
+PLACEMENT_OIDS = (8, 25, 28, 35)  # unit, building, squad, feature: the LoadWorld arms that name a physics definition
+TEXT_TABLE_ID = "text-table:data/language/english.dat"
+
+
+def physics_names(data: bytes) -> dict:
+    """The Unit, Feature and Hazard statement names in load order (UPhysicsManager::Reload; strcmp lookups)."""
+    if len(data) < 6 or struct.unpack_from("<H", data, 0)[0] != 0x12:
+        raise ValueError("unsupported physics-definition framing")
+    out: dict[str, list[str]] = {"unit": [], "feature": [], "hazard": []}
+    offset = 2
+    while struct.unpack_from("<i", data, offset)[0] != -1:
+        rtype, _size = struct.unpack_from("<II", data, offset)
+        offset += 8
+        end = data.index(b"\0", offset)
+        name = data[offset:end].decode("latin-1")
+        offset = end + 1
+        while True:
+            _fid, size = struct.unpack_from("<II", data, offset)
+            offset += 8 + size
+            marker = struct.unpack_from("<i", data, offset)[0]
+            offset += 4
+            if marker == -1:
+                break
+        if rtype in PHYSICS_STATEMENTS:
+            out[PHYSICS_STATEMENTS[rtype]].append(name)
+    return out
+
+
+def world_scripts_order(worlds: dict) -> list[tuple[str, dict]]:
+    """WORLD.mScripts as GetCopyOfScript walks it: LoadWorld reads the real world's scripts, then Load(base) appends
+    the base world's."""
+    return [(tag, s) for tag in ("RLWD", "BSWD") for s in worlds.get(tag, {}).get("scripts", [])]
+
+
+def world_paths_order(worlds: dict) -> list[tuple[str, dict]]:
+    """CWaypointManager::mPaths as FindNearest walks it: the nested base load appends its paths before the real
+    world reaches its own CWaypointManager::Load."""
+    return [(tag, p) for tag in ("BSWD", "RLWD") for p in worlds.get(tag, {}).get("waypointPaths", [])]
+
+
+def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], script_ids: set[str],
+                  text: dict, stats: collections.Counter) -> dict:
+    """WRES world bodies decoded in CWorld::LoadWorld's order: definitions, placements (things naming a physics
+    definition), markers (every other thing), waypoint paths and the compiled mission scripts, with their joins."""
+    out = {"definitions": [], "placements": [], "markers": [], "paths": [], "scripts": [], "worlds": {}}
     physics_path = game / "data" / "default physics.dat"
     if not physics_path.is_file():
-        return [], []
+        return out
     physics_bytes = read_install_file(physics_path)
     physics = meshcensus._physics_mesh_definitions(physics_bytes)
+    names = physics_names(physics_bytes)
     physics_sha = sha256(physics_bytes)
     unit_shell = {u["definition"]: u for u in physics["unitDefinitions"]}
-    definitions = []
-    for name, cands in physics["definitions"].items():
+    lookup = {"units": set(names["unit"]), "features": set(names["feature"]), "hazards": set(names["hazard"]),
+              "squadless": {u["definition"] for u in physics["unitDefinitions"]
+                            if u["factorySelector"] not in SQUAD_BEHAVIOURS}}
+    kinds_of: dict[str, set] = collections.defaultdict(set)
+    for kind, rows in names.items():
+        for name in rows:
+            kinds_of[name].add(kind)
+    def_by_name = {}
+    for name in sorted(kinds_of, key=lambda n: (fold(n), n)):
+        cands = physics["definitions"].get(name, [])
         rec = base_record(f"definition:{fold(name)}", "definition", name, "data/default physics.dat", physics_sha,
                           envelope="physics-statement-table", offset=None, length=0, raw_sha=physics_sha,
-                          sha_scope="whole definitions file", parser="tools/cmsh_animation_usage_census.py:"
-                          "_physics_mesh_definitions")
+                          sha_scope="whole definitions file", parser=TOOL + ":physics_names + tools/"
+                          "cmsh_animation_usage_census.py:_physics_mesh_definitions")
         rec["provenance"]["loader"] = L_PHYSICS
         shell = unit_shell.get(name)
-        rec["definition"] = {"kinds": sorted({"unit" if c["physicsRecordType"] == 1 else "feature" for c in cands}),
-                             "memberShell": shell["memberShell"] if shell else None,
+        rec["definition"] = {"kinds": sorted(kinds_of[name]), "memberShell": shell["memberShell"] if shell else None,
+                             "behaviour": shell["factorySelector"] if shell else None,
                              "meshNames": [c["mesh"] for c in cands]}
         for c in cands:
             target = loose.get("data/resources/meshes/" + meshcensus._loose_mesh_key(c["mesh"]))
@@ -1133,69 +1196,376 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
                 [evidence("data", "data/default physics.dat", f"record type {c['physicsRecordType']} field "
                           f"{c['meshFieldId']} names mesh {c['mesh']!r} (onslaught-preservation "
                           "formats/wres-instance-join.md)")], targetName=c["mesh"]))
-        definitions.append(rec)
-    def_by_name = {d["name"]: d for d in definitions}
-    placements = []
+        out["definitions"].append(rec)
+        def_by_name[name] = rec
     archive_by_rel = {a["source"]["container"]: a for a in archives}
+    english = text.get("english")
+    text_ids = {e["id"] for e in english["entries"]} if english else set()
+    symbol_of = {ident: name for name, ident in text.get("symbols", {}).items()}
+
+    def def_relation(rtype: str, name: str, rule: str, source: str = wrd.L_LOADWORLD) -> dict:
+        d = def_by_name.get(name)
+        return relation(rtype, d["id"] if d else None, "resolved" if d else "unresolved",
+                        [evidence("loader-code", source, rule)], targetName=name)
+
     for rel, wres in sorted(collect["wres"].items()):
         arc = archive_by_rel[rel]
         level = arc["archive"].get("level")
         if level is None:
             continue
-        named = {meshcensus._normalized_mesh_identity(m["name"]): m for m in arc["archive"]["meshChunks"] if m.get("name")}
         try:
             wrld = meshcensus._chunk_payload(wres, "WRLD", rel)
         except ValueError:
+            stats["worldBodiesUndecoded"] += 1
             continue
+        worlds = {}
+        wdat = next((wrld[c.offset + 8:c.offset + 16] for c in aai.parse_top_level_chunks(wrld) if c.tag == "WDAT"
+                     and c.size >= 8), None)
+        # CWorld::Deserialize reads the base and the real world's level numbers from WDAT
+        base_level, real_level = struct.unpack("<ii", wdat) if wdat else (None, level)
+        folder_of = {"RLWD": real_level, "BSWD": base_level}
         for wc in aai.parse_top_level_chunks(wrld):
             if wc.tag not in WORLD_KINDS:
                 continue
             body = wrld[wc.offset + 8:wc.offset + 8 + wc.size]
-            scanned = meshcensus._scan_wres_definition_instances(body, physics["definitions"], f"{level:03d}", wc.tag)
-            for inst in scanned["instances"]:
-                pid = f"placement:{level:03d}:{wc.tag.lower()}@{inst['recordOffset']}"
-                rec = base_record(pid, "placement", inst["name"] or inst["definition"], rel,
-                                  arc["source"]["containerSha256"], envelope="lvlr-chunk(WRES/WRLD/" + wc.tag + ")",
-                                  offset=inst["recordOffset"], length=0, raw_sha=arc["sha256"],
-                                  sha_scope="inflated archive (placements are not hashed separately)",
-                                  parser="tools/cmsh_animation_usage_census.py:_scan_wres_definition_instances")
-                rec["provenance"]["loader"] = L_WORLD
-                rec["placement"] = {"level": level, "world": wc.tag, "definition": inst["definition"],
-                                    "thingType": inst["thingType"], "position": inst["position"],
-                                    "orientation": inst["orientation"], "allegiance": inst["allegiance"],
-                                    "active": inst["active"], "script": inst["script"] or None,
-                                    "spawnScript": inst["spawnScript"] or None}
-                d = def_by_name.get(inst["definition"])
-                rec["relationships"].append(relation("instance-of", d["id"] if d else None,
-                                                     "resolved" if d else "unresolved", [evidence(
-                        "data", rel, "the placement record's definition string names a physics definition "
-                        "(onslaught-preservation formats/wres-instance-join.md)")]))
-                exact = []
-                for cand in inst["physicsMeshCandidates"]:
-                    row = named.get(meshcensus._normalized_mesh_identity(cand["mesh"]))
-                    if row and row.get("target"):
-                        exact.append(row)
-                if len(exact) == 1:
-                    rec["relationships"].append(relation("uses-mesh", exact[0]["target"], "resolved", [
-                        evidence("data", "data/default physics.dat", "definition mesh field"),
-                        evidence("loader-code", L_READ_RESOURCES + " -> " + L_MESH_DESERIALIZE,
-                                 f"this archive's MESH chunk {exact[0]['chunk']} loads that mesh")]))
+            try:
+                worlds[wc.tag] = wrd.parse_world_body(body, lookup, base=wc.tag == "BSWD")
+            except (wrd.DecodeError, struct.error) as error:
+                stats["worldBodiesUndecoded"] += 1
+                worlds[wc.tag] = {"error": str(error)}
+                continue
+            stats["worldBodiesDecoded"] += 1
+        decoded = {t: w for t, w in worlds.items() if "error" not in w}
+        out["worlds"][level] = worlds
+        named = {meshcensus._normalized_mesh_identity(m["name"]): m for m in arc["archive"]["meshChunks"] if m.get("name")}
+        script_ids_here: list[tuple[str, str, dict]] = []  # (world, id, script) in GetCopyOfScript order
+        for tag, s in world_scripts_order(decoded):
+            script_ids_here.append((tag, f"script-code:{level:03d}:{tag.lower()}#{s['ordinal']}", s))
+        path_ids_here = [(tag, f"waypoint-path:{level:03d}:{tag.lower()}#{p['ordinal']}", p)
+                         for tag, p in world_paths_order(decoded)]
+        thing_ids: dict[str, list[str]] = collections.defaultdict(list)  # exact thing name -> placement/marker ids
+
+        def script_relation(rtype: str, name: str, source_rule: str) -> dict:
+            hit = next((sid for _t, sid, s in script_ids_here if s["name"] == name), None)
+            return relation(rtype, hit, "resolved" if hit else "unresolved", [evidence(
+                "loader-code", wrd.L_SETSCRIPT + " -> " + wrd.L_COPYSCRIPT, source_rule + "; GetCopyOfScript takes the first "
+                "strcmp match in WORLD.mScripts (" + wrd.L_LOADWORLD + " reads the real world's scripts before the base "
+                "world's)")], targetName=name)
+
+        def msl_path(tag: str, name: str) -> str:
+            folder = folder_of.get(tag)
+            return f"data/MissionScripts/level{folder if folder is not None else level:03d}/{name}.msl"
+
+        def thing_common(rec: dict, init: dict, tag: str) -> None:
+            if init["script"]:
+                rec["relationships"].append(script_relation("runs-script", init["script"],
+                                                            "the thing's script string names its compiled script"))
+                msl = msl_path(tag, init["script"])
+                sid = "script:" + msl.casefold()
+                found = sid in script_ids
+                rec["relationships"].append(relation(
+                    "script-source", sid if found else None, "name-match" if found else "unresolved",
+                    [evidence("data", rel, "placement script string " + (
+                        "equals the .msl file stem in the world's MissionScripts folder (WDAT's level number; no "
+                        "runtime loader reads .msl files, the compiled script travels in WRES)" if found else
+                        "has no .msl file of that stem in the world's MissionScripts folder"))],
+                    targetName=msl))
+            if init["name"]:
+                thing_ids[init["name"]].append(rec["id"])
+
+        for tag, w in sorted(decoded.items()):
+            world_ev = "lvlr-chunk(WRES/WRLD/" + tag + ")"
+            for t in w["things"]:
+                init = t["init"]
+                oid = t["oid"]
+                is_placement = oid in PLACEMENT_OIDS
+                rid = f"{'placement' if is_placement else 'marker'}:{level:03d}:{tag.lower()}@{t['offset']}"
+                rec = base_record(rid, "placement" if is_placement else "marker",
+                                  init["name"] or t.get("definition") or t["kind"], rel,
+                                  arc["source"]["containerSha256"], envelope=world_ev, offset=t["offset"],
+                                  length=t["length"], raw_sha=arc["sha256"],
+                                  sha_scope="inflated archive (world records are not hashed separately)",
+                                  parser="tools/world_resources_decode.py:parse_world_body")
+                rec["provenance"]["loader"] = wrd.L_LOADWORLD + "; " + wrd.L_SPAWNINIT + "; " + wrd.L_INITLOAD
+                common = {"level": level, "world": tag, "worldLevel": folder_of.get(tag), "thingType": oid,
+                          "kind": t["kind"], "ordinal": t["ordinal"],
+                          "slot": t["slot"], "position": init["position"], "orientation": init["orientation"],
+                          "allegiance": init["allegiance"], "active": bool(init["active"]),
+                          "attachScriptsToUnits": None if init["attachScriptsToUnits"] is None
+                          else bool(init["attachScriptsToUnits"]), "meshNumber": init["meshNumber"],
+                          "target": init["target"], "name": init["name"] or None, "script": init["script"] or None,
+                          "spawnScript": init["spawnScript"] or None}
+                if is_placement:
+                    rec["placement"] = {**common, "definition": t["definition"], "diesOn": t["diesOn"]}
+                    if oid == 28:
+                        rec["placement"]["squad"] = init["squad"]
+                    rec["relationships"].append(def_relation(
+                        "instance-of", t["definition"], "the record's name string is passed to "
+                        "UPhysicsManager::GetUnitData / GetFeatureData (strcmp)"))
+                    want = 35 if oid == 35 else 8
+                    exact = []
+                    for cand in physics["definitions"].get(t["definition"], []):
+                        if int(cand["wresThingType"]) != want:
+                            continue
+                        row = named.get(meshcensus._normalized_mesh_identity(cand["mesh"]))
+                        if row and row.get("target"):
+                            exact.append(row)
+                    if len(exact) == 1:
+                        rec["relationships"].append(relation("uses-mesh", exact[0]["target"], "resolved", [
+                            evidence("data", "data/default physics.dat", "definition mesh field"),
+                            evidence("loader-code", L_READ_RESOURCES + " -> " + L_MESH_DESERIALIZE,
+                                     f"this archive's MESH chunk {exact[0]['chunk']} loads that mesh")]))
+                    else:
+                        rec["relationships"].append(relation("uses-mesh", None, "unresolved", [evidence(
+                            "data", "data/default physics.dat", f"{len(exact)} same-archive named MESH candidates")]))
+                    stats["placements"] += 1
                 else:
-                    rec["relationships"].append(relation("uses-mesh", None, "unresolved", [evidence(
-                        "data", "data/default physics.dat", f"{len(exact)} same-archive named MESH candidates")]))
-                if inst["script"]:
-                    script = f"data/MissionScripts/level{level:03d}/{inst['script']}.msl"
-                    script_id = "script:" + script.casefold()
-                    found = script_id in script_ids
+                    rec["marker"] = dict(common)
+                    for key in ("spawner", "start", "sphereTrigger", "cutscene", "tree", "wall"):
+                        if key in init:
+                            rec["marker"][key] = init[key]
+                    if oid == 39:
+                        rec["marker"]["definition"] = t["definition"]
+                        rec["marker"]["diesOn"] = t["diesOn"]
+                        rec["relationships"].append(def_relation(
+                            "instance-of", t["definition"], "a hazard's name string is passed to "
+                            "UPhysicsManager::GetHazardData (strcmp)"))
+                    if "spawner" in init:
+                        sp = init["spawner"]
+                        if sp["spawnUnit"]:
+                            rec["relationships"].append(def_relation(
+                                "spawns-unit", sp["spawnUnit"], "a spawner's spawn-unit string names a unit "
+                                "definition (CSpawnerInitThing::Load; strcmp lookup)", wrd.L_INITLOAD))
+                        if sp["spawnerSpawnScript"]:
+                            rec["relationships"].append(script_relation(
+                                "sets-script", sp["spawnerSpawnScript"], "the spawner's spawn script names the "
+                                "script its spawned units run"))
+                    stats["markers"] += 1
+                thing_common(rec, init, tag)
+                (out["placements"] if is_placement else out["markers"]).append(rec)
+        # waypoint paths: CWaypointPath::Load indexes LoadWorld's things[] (the record's slot), keeping waypoints only
+        for tag, pid, p in path_ids_here:
+            w = decoded[tag]
+            by_ordinal = {t["ordinal"]: t for t in w["things"]}
+            rec = base_record(pid, "waypoint-path", p["name"], rel, arc["source"]["containerSha256"],
+                              envelope="lvlr-chunk(WRES/WRLD/" + tag + ")", offset=p["offset"], length=0,
+                              raw_sha=arc["sha256"], sha_scope="inflated archive (paths are not hashed separately)",
+                              parser="tools/world_resources_decode.py:parse_world_body")
+            rec["provenance"]["loader"] = wrd.L_WAYPOINTS
+            kept = [m for m in p["members"] if m["isWaypoint"]]
+            rec["waypointPath"] = {"level": level, "world": tag, "ordinal": p["ordinal"], "members": len(p["members"]),
+                                   "waypoints": len(kept), "ignoredByLoader": len(p["members"]) - len(kept)}
+            for n, m in enumerate(kept):
+                t = by_ordinal[m["thingOrdinal"]]
+                rec["relationships"].append(relation(
+                    "path-member", f"marker:{level:03d}:{tag.lower()}@{t['offset']}", "resolved", [evidence(
+                        "loader-code", wrd.L_WAYPOINTS, "the path's index is a slot of LoadWorld's things[] (a record "
+                        "takes a slot only when its physics lookup or SpawnThing succeeds) and the thing is a "
+                        "waypoint")], order=n))
+            stats["pathMembersResolved"] += len(kept)
+            stats["pathMembersIgnored"] += len(p["members"]) - len(kept)
+            out["paths"].append(rec)
+        # compiled scripts
+        for tag, sid, s in script_ids_here:
+            code = s["code"]
+            analysis = wrd.analyse_script(code)
+            calls = analysis["calls"]
+            rec = base_record(sid, "script-code", s["name"], rel, arc["source"]["containerSha256"],
+                              envelope="lvlr-chunk(WRES/WRLD/" + tag + ")/script", offset=s["offset"],
+                              length=s["length"], raw_sha=s["sha256"],
+                              sha_scope="compiled script bytes (name, object code, 10-byte pad)",
+                              parser="tools/world_resources_decode.py:read_object_code + analyse_script")
+            rec["provenance"]["loader"] = wrd.L_LOADSCRIPTS + "; " + wrd.L_OBJECTCODE + "; " + wrd.L_SYMTAB
+            roles = {role: wrd.literal_args(calls, role) for role in sorted({r for r in wrd.ARG_ROLES.values()})}
+            values = lambda role: sorted({a["value"] for a in roles[role] if a["value"] is not None}, key=str)
+            objectives = [{"native": c["native"], "pc": c["pc"],
+                           "args": [None if a is None else a["value"] for a in c["args"]]}
+                          for c in calls if c["native"] in wrd.OBJECTIVE_NATIVES]
+            rec["scriptCode"] = {
+                "level": level, "world": tag, "worldLevel": folder_of.get(tag), "ordinal": s["ordinal"],
+                "instructions": len(code["instructions"]),
+                "symbols": len(code["symbols"]), "eventFunctions": len(code["eventFunctions"]),
+                "handledEvents": analysis["handledEvents"], "fixedEventHandlers": analysis["fixedEventHandlers"],
+                "nativeCalls": dict(sorted(collections.Counter(c["native"] for c in calls).items())),
+                "objectives": objectives,
+                # the VM holds a signed int; CText::GetString takes the DWORD id
+                "textIds": sorted({a["value"] & 0xFFFFFFFF for r in ("text", "text-speaker") for a in roles[r]
+                                   if isinstance(a["value"], int)}),
+                "units": values("unit"), "waypointPaths": values("waypoint-path"), "thingNames": values("thing-name"),
+                "scripts": values("script"), "postedEvents": values("event"), "samples": values("sample"),
+                "effects": values("effect"), "spawners": values("spawner"), "emitters": values("emitter"),
+                "nonLiteralArguments": {r: sum(1 for a in roles[r] if a["value"] is None) for r in roles
+                                        if any(a["value"] is None for a in roles[r])},
+                "argumentRule": "a CALL's arguments are its n preceding OP_PUSH instructions (" + wrd.L_SPAWNMESHES
+                                + "); a pushed symbol is literal when it holds a stored value and no OP_POP/OP_GETTOP "
+                                "writes it (" + wrd.L_PUSH + ")"}
+            stats["scriptCalls"] += len(calls)
+            stats["scriptCallArguments"] += sum(len(c["args"]) for c in calls)
+            stats["scriptCallArgumentsLiteral"] += sum(1 for c in calls for a in c["args"] if a is not None)
+            msl = msl_path(tag, s["name"])
+            msl_id = "script:" + msl.casefold()
+            if msl_id in script_ids:
+                rec["relationships"].append(relation("compiled-from", msl_id, "name-match", [evidence(
+                    "data", rel, "the compiled script's name equals the .msl file stem in the world's MissionScripts "
+                    "folder (WDAT's level number; the compiler is not part of the game; no loader reads .msl files)")],
+                    targetName=msl))
+            else:
+                rec["relationships"].append(relation("compiled-from", None, "unresolved", [evidence(
+                    "data", rel, "no .msl file of that stem in the world's MissionScripts folder")], targetName=msl))
+            seen = set()
+            for role in ("text-speaker", "text"):
+                for a in roles[role]:
+                    if not isinstance(a["value"], int) or (role, a["value"] & 0xFFFFFFFF) in seen:
+                        continue
+                    text_id = a["value"] & 0xFFFFFFFF
+                    seen.add((role, text_id))
+                    ok = text_id in text_ids
+                    stats["scriptTextIdsResolved" if ok else "scriptTextIdsUnresolved"] += 1
                     rec["relationships"].append(relation(
-                        "script-source", script_id if found else None, "name-match" if found else "unresolved",
-                        [evidence("data", rel, "placement script string " + (
-                            "equals the .msl file stem in the level's MissionScripts folder (the runtime script "
-                            "owner is not established)" if found else
-                            "has no .msl file of that stem in the level's MissionScripts folder"))],
-                        targetName=script))
-                placements.append(rec)
-    return definitions, placements
+                        "uses-text", TEXT_TABLE_ID if ok else None, "resolved" if ok else "unresolved", [evidence(
+                            "loader-code", wrd.L_NATIVES + " " + a["native"] + " -> " + wrd.L_TEXTGET,
+                            f"argument {a['argument']} is a text id (the int as a DWORD); english.dat " + (
+                                "has an entry with that id" if ok else "has no entry with that id"))],
+                        textId=text_id, textSymbol=symbol_of.get(text_id), role=role))
+            for name in values("unit"):
+                stats["scriptUnitsResolved" if name in def_by_name else "scriptUnitsUnresolved"] += 1
+                rec["relationships"].append(def_relation(
+                    "spawns-unit", name, "SpawnThing's first argument goes to UPhysicsManager::GetUnitData and "
+                    "SpawnThingByName (strcmp)", wrd.L_NATIVES + " SpawnThing"))
+            for name in values("waypoint-path"):
+                hit = next((pid for _t, pid, p in path_ids_here if fold(p["name"]) == fold(name)), None)
+                stats["scriptPathsResolved" if hit else "scriptPathsUnresolved"] += 1
+                rec["relationships"].append(relation(
+                    "follows-path", hit, "resolved" if hit else "unresolved", [evidence(
+                        "loader-code", wrd.L_NATIVES + " FollowWaypoint -> " + wrd.L_FINDNEAREST,
+                        "the first path whose name matches (_stricmp) in CWaypointManager::mPaths (the base world's "
+                        "paths load first)")], targetName=name))
+            for name in values("script"):
+                rec["relationships"].append(script_relation("sets-script", name, "SpawnThing's fourth argument, "
+                                                            "SetScript's and SetSpawnScript's names a script"))
+            rec["_thingNames"] = values("thing-name")
+            out["scripts"].append(rec)
+        for rec in out["scripts"]:
+            if rec["scriptCode"]["level"] != level or "_thingNames" not in rec:
+                continue
+            for name in rec.pop("_thingNames"):
+                hits = sorted(thing_ids.get(name, []))
+                stats["scriptThingNamesMatched" if hits else "scriptThingNamesUnmatched"] += 1
+                rec["relationships"].append(relation(
+                    "names-thing", hits[0] if len(hits) == 1 else None, "name-match" if hits else "unresolved",
+                    [evidence("loader-code", wrd.L_NATIVES + " GetThingRef/Teleport/PlayCutscene -> " + wrd.L_FINDTHING,
+                              "the argument is compared (strcmp) with the names of the world's named things; which "
+                              "things join WORLD.mNamedThings is not traced, so this is a name match with the level's "
+                              "placement and marker names")],
+                    targets=hits if len(hits) > 1 else None, targetName=name))
+    return out
+
+
+DECODED_TAGS = {"ERES": "parse_eres", "SURF": "parse_surf", "SSHD": "parse_sshd"}
+L_KEMPY = cite("DXKempyCube.cpp", "CDXKempyCube::Load", "0x005440a0") + " -> " + cite(
+    "landscape.cpp", "GetCubeTextureName", "0x0048de30")
+L_WATER = cite("DXWater.cpp", "CDXWater::Load", "0x0055b230")
+L_DETAIL = cite("landscape.cpp", "CLandscape::LoadMixerTexture", "0x0048dec0")
+L_MIXERS = cite("maptex.cpp", "CMapTex::LoadAll", "0x004914b0")
+L_HUD_SPEAKERS = cite("Hud.cpp", "CHud::InitResources", "0x00481650")
+CUBE_FACES = ("cent", "up", "right", "down", "left")
+MIXER_NAMES = ("grass", "rock", "sand", "snow", "road", "concrete")  # maptex.cpp MIXER_NAMES (0062da98)
+HUD_SPEAKERS = 6  # HUD_NUM_SPEAKERS (Hud.h)
+
+
+def decode_payload(tag: str, payload: bytes) -> dict:
+    """The structure a PC loader reads from a level payload, or the reason it could not be decoded."""
+    if tag == "LNDS":
+        return {"status": "skipped-by-pc-loader", "bytes": len(payload)}
+    try:
+        return {"status": "decoded", **getattr(wrd, DECODED_TAGS[tag])(payload)}
+    except (wrd.DecodeError, struct.error, ValueError) as error:
+        return {"status": "undecoded", "reason": str(error)}
+
+
+def level_rule_textures(terrain: dict) -> list[dict]:
+    """Texture names the level's map settings make the code build with sprintf (CMap::Deserialize's calls)."""
+    hf = terrain["heightField"]
+    rows = []
+    for face in CUBE_FACES:
+        rows.append({"role": "sky-cube", "name": f"cubes\\cube{hf['skyCube']:02d}_{face}.tga", "format": 0, "levels": 1,
+                     "site": L_KEMPY, "rule": "cubes\\cube%.2d_%s.tga from the map's sky-cube number (CMap::Deserialize "
+                     "-> CEngine::SetKempyCube) and the face (cent, up, right, down, left); FindTexture(name, 0, 0, 1)"})
+    for kind in ("reflection", "caustic"):
+        rows.append({"role": "water", "name": f"mixers\\{kind}{hf['water']:02d}.tga", "format": 0, "levels": -1,
+                     "site": L_WATER, "rule": f"mixers\\{kind}%.2d.tga from the map's water number (CMap::Deserialize "
+                     "-> CEngine::SetWater); FindTexture(name, 0, 0, -1)"})
+    rows.append({"role": "terrain-detail", "name": f"mixers\\detail{hf['detailMixer']:02d}.tga", "format": 0,
+                 "levels": -1, "site": L_DETAIL, "rule": "mixers\\detail%.2d.tga from the map's detail number "
+                 "(CMap::Deserialize); GetTextureByName(name) with its default format 0 and levels -1"})
+    return rows
+
+
+def hud_rule_textures() -> list[dict]:
+    return [{"role": "hud-speaker", "name": f"hud\\speaker{i}.tga", "format": 0, "levels": 1, "site": L_HUD_SPEAKERS,
+             "rule": "hud\\speaker%1d.tga for i in 0..HUD_NUM_SPEAKERS-1; GetTextureByName(name, TEXFMT_UNKNOWN, "
+             "TEX_NORMAL, 1)"} for i in range(HUD_SPEAKERS)]
+
+
+def link_rule_textures(levels: list[dict], terrain_by_level: dict, dindex: DescriptorIndex, descriptors_by_id: dict,
+                       stats: collections.Counter) -> list[dict]:
+    """Join the sprintf-built names to the loaded texture records: per level within its own archive, the HUD's in any
+    archive. Each joined record gets one named-by-code relation per rule role (the levels are listed in it)."""
+    report = []
+    reached: dict[tuple[str, str, str], list] = collections.defaultdict(list)
+    for lvl in levels:
+        n = lvl["level"]["number"]
+        terrain = terrain_by_level.get(n)
+        if not terrain:
+            continue
+        archive = lvl["level"]["resourceArchive"]
+        rel = archive.split(":", 1)[1] if archive else None
+        for row in level_rule_textures(terrain):
+            found = dindex.find(row["name"], row["format"], row["levels"], {rel} if rel else set())
+            stats["ruleTextureNamesResolved" if found else "ruleTextureNamesUnresolved"] += 1
+            lvl["relationships"].append(find_relation("texture-by-rule", found, [evidence(
+                "loader-code", row["site"], row["rule"] + "; looked up in this level's archive")],
+                role=row["role"], targetName=row["name"]))
+            for d in found:
+                reached[(d["id"], row["role"], row["site"] + "\t" + row["rule"])].append(f"{n:03d}")
+            report.append({"level": f"{n:03d}", "role": row["role"], "name": row["name"],
+                           "resolved": [d["id"] for d in found]})
+        hf = terrain["heightField"]
+        loaded = terrain["mixerMips"][0]["set"] != hf["mixerSet"] if terrain["mixerMips"] else None
+        lvl["level"]["terrain"]["mixerTextureFiles"] = {
+            "names": [f"data\\textures\\mixers\\{m}{hf['mixerSet']:02d}.tga" for m in MIXER_NAMES],
+            "readFromDisk": loaded, "rule": L_MIXERS + ": data\\textures\\mixers\\%s%.2d.tga for MIXER_NAMES and the "
+            "map's mixer set, read only when the deserialized set differs; " + (
+                "the ERES mixer mips already hold this set, so no file is read (the pixels are in ERES)"
+                if loaded is False else "the ERES mixer set differs, so the files would be read (none is installed)")}
+    for row in hud_rule_textures():
+        found = dindex.find(row["name"], row["format"], row["levels"])
+        stats["ruleTextureNamesResolved" if found else "ruleTextureNamesUnresolved"] += 1
+        for d in found:
+            reached[(d["id"], row["role"], row["site"] + "\t" + row["rule"])].append("all")
+        report.append({"level": None, "role": row["role"], "name": row["name"], "resolved": [d["id"] for d in found]})
+    for (did, role, site_rule), where in sorted(reached.items()):
+        site, rule = site_rule.split("\t", 1)
+        scope = "front end and every level" if where == ["all"] else "levels " + ", ".join(sorted(set(where)))
+        descriptors_by_id[did]["relationships"].append(relation("named-by-code", None, "code-rule", [evidence(
+            "loader-code", site, rule + f" ({scope})")], role=role))
+    return report
+
+
+def world_summary(w: dict) -> dict:
+    if "error" in w:
+        return {"status": "undecoded", "reason": w["error"]}
+    return {"status": "decoded", "version": w["version"], "worldType": w["header"]["worldType"],
+            "battleEngineConfigurations": w["header"]["battleEngineConfigurations"], "baseLevel": w["baseLevel"],
+            "mapNumber": w["mapNumber"], "namedMeshes": w["namedMeshes"], "scripts": len(w["scripts"]),
+            "things": len(w["things"]), "thingSlots": w["slotsCounted"],
+            "thingsByKind": dict(sorted(collections.Counter(t["kind"] for t in w["things"]).items())),
+            "thingsWithoutSlot": sorted({t.get("definition") or t["kind"] for t in w["things"] if t["slot"] is None}),
+            "treeGroups": w["treeGroups"], "treesInGroups": w["treesInGroups"],
+            "treeTypes": [{"name": t["name"], "count": t["count"]} for t in w["treeTypes"]],
+            "influenceMap": w["influenceMap"], "waypointPaths": len(w["waypointPaths"]), "timings": w["timings"],
+            "occupancyGridVersions": w["occupancyGridVersions"], "levelStartTime": w["levelStartTime"],
+            "loader": wrd.L_LOADWORLD}
 
 
 PAR_TEXTURE_PREFIX = 32  # CDXParticleTexture::Get looks up path + 32 ("C:\dev\Onslaught2\data\textures\")
@@ -1413,6 +1783,34 @@ def catalog_text_inventory(game: Path, files: list[dict], text: dict) -> list[di
     return records
 
 
+def link_compiled_scripts(inventory: list[dict], scripts: list[dict]) -> None:
+    """Each .msl record lists the compiled scripts whose name matches its stem in its level folder, and what they
+    reference (the union over those copies; the compiled form is the evidence, the .msl text is not parsed)."""
+    by_msl: dict[str, list[dict]] = collections.defaultdict(list)
+    for sc in scripts:
+        for r in sc["relationships"]:
+            if r["type"] == "compiled-from" and r["target"]:
+                by_msl[r["target"]].append(sc)
+    for rec in inventory:
+        if rec["type"] != "script":
+            continue
+        copies = sorted(by_msl.get(rec["id"], []), key=lambda x: x["id"])
+        for sc in copies:
+            rec["relationships"].append(relation("compiled-as", sc["id"], "name-match", [evidence(
+                "data", sc["source"]["container"], "a compiled script in a level's WRES carries this file's stem as "
+                "its name (no loader reads .msl files)")]))
+        if not copies:
+            continue
+        union = lambda key: sorted({v for sc in copies for v in sc["scriptCode"][key]}, key=str)
+        rec["file"]["compiled"] = {
+            "copies": len(copies), "units": union("units"), "textIds": union("textIds"),
+            "waypointPaths": union("waypointPaths"), "thingNames": union("thingNames"), "scripts": union("scripts"),
+            "postedEvents": union("postedEvents"), "handledEvents": union("handledEvents"),
+            "objectiveCallsPerCopy": max(len(sc["scriptCode"]["objectives"]) for sc in copies),
+            "objectiveNatives": sorted({o["native"] for sc in copies for o in sc["scriptCode"]["objectives"]}),
+            "basis": "the compiled copies' literal call arguments (" + wrd.L_OBJECTCODE + ")"}
+
+
 def catalog_payloads(collect: dict) -> list[dict]:
     records = []
     for p in collect["payloads"]:
@@ -1422,9 +1820,15 @@ def catalog_payloads(collect: dict) -> list[dict]:
                           raw_sha=p["payloadSha"], sha_scope=f"{p['tag']} chunk payload", parser=TOOL + ":collect_chunk",
                           chunk_path=[p["chunk"]])
         rec["provenance"]["loader"] = PAYLOAD_LOADERS.get(p["tag"], "unknown tag (traced and skipped)")
-        rec["payload"] = {"tag": p["tag"], "innerTags": p["innerTags"],
-                          "structure": "placements itemised (see placement records)" if p["tag"] == "WRES"
-                          else "not itemised yet"}
+        rec["payload"] = {"tag": p["tag"], "innerTags": p["innerTags"]}
+        if p["tag"] == "WRES":
+            rec["payload"]["structure"] = ("world bodies decoded in CWorld::LoadWorld's order: placement, marker, "
+                                           "waypoint-path and script-code records; level records carry the summaries")
+        elif p["decoded"] is not None:
+            rec["payload"]["structure"] = p["decoded"]["status"]
+            rec["payload"]["decoded"] = p["decoded"]
+        else:
+            rec["payload"]["structure"] = "not itemised yet"
         records.append(rec)
     return records
 
@@ -1436,8 +1840,8 @@ BRIEFING_LEVEL = {**{n: n for n in (100, 110, 200, 211, 221, 231, 300, 311, 321,
                   522: 521, 524: 523, 612: 611, 622: 621, 732: 731, 742: 741}
 
 
-def catalog_levels(archives: list[dict], placements: list[dict], videos: list[dict], game: Path, files: list[dict]
-                   ) -> list[dict]:
+def catalog_levels(archives: list[dict], placements: list[dict], videos: list[dict], game: Path, files: list[dict],
+                   worlds: dict | None = None, payloads: list[dict] | None = None) -> list[dict]:
     headers = {}
     wh_path = game / "data" / "worldheaders.dat"
     if wh_path.is_file():
@@ -1467,11 +1871,14 @@ def catalog_levels(archives: list[dict], placements: list[dict], videos: list[di
                           sha_scope="the level's inflated resource archive" if arc else "none (no resource archive)",
                           parser=TOOL + ":catalog_levels")
         defs = collections.Counter(p["placement"]["definition"] for p in by_level.get(n, []))
-        rec["level"] = {"resourceArchive": arc["id"] if arc else None, "worldHeaderConfigurations": headers.get(n),
+        rec["level"] = {"number": n, "resourceArchive": arc["id"] if arc else None,
+                        "worldHeaderConfigurations": headers.get(n),
                         "missionScriptFiles": folders.get(n, 0), "placements": len(by_level.get(n, [])),
                         "placementsByDefinition": dict(defs.most_common()),
                         "meshesLoaded": len(arc["archive"]["meshChunks"]) if arc else 0,
-                        "briefingVideos": briefings.get(n, [])}
+                        "briefingVideos": briefings.get(n, []),
+                        "worlds": {tag: world_summary(w) for tag, w in sorted((worlds or {}).get(n, {}).items())},
+                        "terrain": level_terrain(arc, payloads or [])}
         if arc:
             rec["relationships"].append(relation("resources", arc["id"], "resolved", [evidence(
                 "loader-code", L_RESOURCE_NAME, "level N reads data\\Resources\\%03d_res_%s.aya")]))
@@ -1486,6 +1893,28 @@ def catalog_levels(archives: list[dict], placements: list[dict], videos: list[di
                 "loader-code", L_HEADERS, f"worldheaders.dat record world_id {n}")]))
         levels.append(rec)
     return levels
+
+
+def level_terrain(arc: dict | None, payloads: list[dict]) -> dict:
+    """The decoded ERES, SURF, SSHD and LNDS payloads of the level's archive (summaries; no pixel or height bytes)."""
+    if arc is None:
+        return {}
+    out: dict = {}
+    for p in payloads:
+        if p["archive"] != arc["source"]["container"] or p["decoded"] is None:
+            continue
+        d = p["decoded"]
+        if p["tag"] == "ERES" and d["status"] == "decoded":
+            out["mapNumber"] = d["mapNumber"]
+            out["heightField"] = d["heightField"]
+            out["mixerMips"] = [{k: m[k] for k in ("mip", "set", "size", "textures")} for m in d["mixerMips"]]
+            out["mixerMap"] = d["mixerMap"]
+        key = {"ERES": "engine", "SURF": "surf", "SSHD": "staticShadows", "LNDS": "landscape"}[p["tag"]]
+        out.setdefault("payloads", {})[key] = {"status": d["status"], "payload": f"level-payload:"
+                                               f"{p['archive'].casefold()}#{p['chunk']}"}
+        if p["tag"] in ("SURF", "SSHD") and d["status"] == "decoded":
+            out[key] = {k: v for k, v in d.items() if k != "status"}
+    return out
 
 
 LEVEL_ARCHIVE_RE = re.compile(r"data/resources/(\d{3})_res_pc\.aya$")
@@ -1669,16 +2098,22 @@ def build_catalog(game: Path, decomp: Path | None = None) -> dict:
                archive_stats)
     goodies = catalog_goodies(collect, game, loose, dindex, {v["id"]: v["id"] for v in video}, text)
     script_ids = {"script:" + r["path"].casefold() for r in files if r["family"] == "mission-script-msl"}
-    definitions, placements = catalog_world(collect, game, loose, archives, script_ids)
+    world = catalog_world(collect, game, loose, archives, script_ids, text, archive_stats)
+    definitions, placements = world["definitions"], world["placements"]
     effects = catalog_particles(game, files, dindex)
     refs = code_references(decomp)
     unresolved_code = link_code_references(refs, dindex, descriptors_by_id, loose, archive_stats)
     link_unloaded_mesh_names(textures, meshes)
     inventory = catalog_text_inventory(game, files, text)
+    link_compiled_scripts(inventory, world["scripts"])
     payloads = catalog_payloads(collect)
-    levels = catalog_levels(archives, placements, video, game, files)
+    levels = catalog_levels(archives, placements, video, game, files, world["worlds"], collect["payloads"])
+    terrain = {lvl["level"]["number"]: d for lvl in levels for d in [next(
+        (p["decoded"] for p in collect["payloads"] if p["tag"] == "ERES" and p["decoded"]["status"] == "decoded"
+         and lvl["level"]["resourceArchive"] == "archive:" + p["archive"].casefold()), None)] if d}
+    rule_names = link_rule_textures(levels, terrain, dindex, descriptors_by_id, archive_stats)
     assets = (levels + archives + payloads + descriptors + textures + meshes + animations + definitions + placements
-              + goodies + effects + audio + video + inventory)
+              + world["markers"] + world["paths"] + world["scripts"] + goodies + effects + audio + video + inventory)
     compute_usage(assets)
     dangling = dangling_targets(assets)
     if dangling:
@@ -1690,7 +2125,10 @@ def build_catalog(game: Path, decomp: Path | None = None) -> dict:
     return {"files": files, "survey": survey, "assets": assets, "archiveStats": dict(archive_stats),
             "codeReferences": {"source": refs["source"], "textureSites": len(refs["textures"]),
                                "meshSites": len(refs["meshes"]),
-                               "unresolvedTextureNames": sorted({r["name"] for r in unresolved_code})}}
+                               "unresolvedTextureNames": sorted({r["name"] for r in unresolved_code}),
+                               "ruleBuiltTextureNames": len(rule_names),
+                               "ruleBuiltTextureNamesUnresolved": sorted({(r["level"] or "all") + " " + r["name"]
+                                                                          for r in rule_names if not r["resolved"]})}}
 
 
 def build_coverage(catalog: dict) -> dict:
@@ -1735,12 +2173,24 @@ def build_coverage(catalog: dict) -> dict:
         "textureTiling": dict(collections.Counter(t["upscale"]["tiling"]["status"] for t in textures)),
         "families": file_coverage,
         "unparsedFamilies": [f["family"] for f in survey["families"] if f["status"] in ("unparsed", "inventoried")],
+        "markersByKind": dict(sorted(collections.Counter(a["marker"]["kind"] for a in assets
+                                                         if a["type"] == "marker").items())),
+        "placementsByKind": dict(sorted(collections.Counter(a["placement"]["kind"] for a in assets
+                                                            if a["type"] == "placement").items())),
+        "levelPayloadDecode": dict(sorted(collections.Counter(
+            f"{a['payload']['tag']}:{a['payload']['structure'] if a['payload']['tag'] != 'WRES' else 'decoded'}"
+            for a in assets if a["type"] == "level-payload").items())),
         "notYetCatalogued": [
-            "WRES records other than the Unit/Feature definition family (waypoints, triggers, paths, other things)",
-            "ERES (engine/terrain), SURF (water), SSHD (static shadows), VSDS, PMIB, DMKR payload structure: "
-            "itemised as payload records with hashes only",
-            "terrain mixer textures and other names built with sprintf in code (only literal lookups are joined)",
-            "mission script contents (.msl), mission text, sounds.sfx event table, battle engine configurations",
+            "VSDS (vertex shaders), PMIB (patch manager), DMKR (landscape damage) payload structure: payload records "
+            "with hashes only",
+            "the mixer-map slot entries, heightfield samples and static-shadow cells are summarised (counts, ranges, "
+            "hashes), not itemised per cell",
+            "script arguments that are not literal pushes (computed values, variables) stay unresolved and are counted "
+            "per role; which things join WORLD.mNamedThings is not traced (names-thing is a name match)",
+            "names built with sprintf from data not decoded here: weapon HUD icons (hud\\%s.tga from physics weapon "
+            "icon names), screenshot and texture-dump paths (written, not read)",
+            "the .msl source text itself is not parsed (its compiled form is the evidence); mission text .txt, "
+            "sounds.sfx event table, battle engine configurations.dat",
             "Dial.raw and the splash TGA",
         ],
         "notes": {"loaderCitations": families["cmsh-mesh"]["loader"]},
