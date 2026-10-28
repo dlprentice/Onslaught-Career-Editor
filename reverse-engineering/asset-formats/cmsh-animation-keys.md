@@ -86,8 +86,9 @@ The selected-file reader requires Linux descriptor-relative `O_PATH` and `/proc/
 any source path component and files with multiple hard links, and performs a bounded read of each. It rechecks file
 identities before returning or emitting the report. Metadata checks detect many changes but are not an atomic
 filesystem snapshot or a lock; compare the recorded archive hash when using the result. `analyse_stream` accepts
-already-owned bytes on other platforms, with the caller responsible for source identity. The JSON schema checks
-structure and basic field limits, not semantic consistency among counts, parent/key ordinals or frame ranges.
+already-owned bytes on other platforms, with the caller responsible for source identity. The v2 JSON schema checks
+the name/status/hash combinations but cannot verify a digest without the original bytes. It checks structure and
+basic field limits, not semantic consistency among counts, parent/key ordinals or frame ranges.
 The report covers only the root stream's parent-relative keys: it counts nested mesh siblings without analysing them,
 and does not establish that a game animation selects a frame, a reflected world transform or an export's fidelity.
 

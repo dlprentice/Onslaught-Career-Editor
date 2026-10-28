@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "onslaught.model-transform-catalog.v2",
   "title": "Selected CMSH parent-relative orientation summary with bounded name identity",
-  "description": "Structural JSON validation only: cross-field counts, parent/key ordinals and frame-range ordering or bounds are not certified by this schema.",
+  "description": "Structural JSON validation, including name/status/hash shape. Hash values cannot be verified against unavailable name bytes; counts, parent/key ordinals and frame-range ordering or bounds are not certified.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "generatedRetailDerived", "basis", "meshes"],
@@ -45,6 +45,16 @@
       "required": ["ordinal", "name", "nameStatus", "nameBytesSha256", "parentOrdinal", "hierarchyPoseCount", "virtualFrameCount", "storedKeys",
                    "referencedDistinctKeys", "virtualFrameReferences", "reflectedKeyOrdinals", "reflectedVirtualFrameRanges",
                    "unreferencedKeyCount", "maxRowOrthogonalityError"],
+      "oneOf": [
+        {"properties": {"nameStatus": {"const": "empty"}, "name": {"const": ""},
+                        "nameBytesSha256": {"const": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}}},
+        {"properties": {"nameStatus": {"const": "utf8-decoded"}, "name": {"type": "string", "minLength": 1},
+                        "nameBytesSha256": {"$ref": "#/$defs/sha256"}}},
+        {"properties": {"nameStatus": {"const": "invalid-utf8"}, "name": {"type": "null"},
+                        "nameBytesSha256": {"$ref": "#/$defs/sha256"}}},
+        {"properties": {"nameStatus": {"const": "unterminated"}, "name": {"type": "null"},
+                        "nameBytesSha256": {"type": "null"}}}
+      ],
       "properties": {
         "ordinal": {"type": "integer", "minimum": 0},
         "name": {"type": ["string", "null"]},
@@ -69,6 +79,16 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["selectionOrdinal", "source", "meshName", "meshNameStatus", "meshNameBytesSha256", "parts", "summary"],
+      "oneOf": [
+        {"properties": {"meshNameStatus": {"const": "empty"}, "meshName": {"const": ""},
+                        "meshNameBytesSha256": {"const": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}}},
+        {"properties": {"meshNameStatus": {"const": "utf8-decoded"}, "meshName": {"type": "string", "minLength": 1},
+                        "meshNameBytesSha256": {"$ref": "#/$defs/sha256"}}},
+        {"properties": {"meshNameStatus": {"const": "invalid-utf8"}, "meshName": {"type": "null"},
+                        "meshNameBytesSha256": {"$ref": "#/$defs/sha256"}}},
+        {"properties": {"meshNameStatus": {"const": "unterminated"}, "meshName": {"type": "null"},
+                        "meshNameBytesSha256": {"type": "null"}}}
+      ],
       "properties": {
         "selectionOrdinal": {"type": "integer", "minimum": 0},
         "source": {

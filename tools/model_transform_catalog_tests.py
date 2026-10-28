@@ -614,6 +614,48 @@ runpy.run_path(sys.argv[0], run_name="__main__")
                 self.assertEqual(report["meshes"][0]["meshNameStatus"], status)
                 self.assertTrue(validator.is_valid(report), list(validator.iter_errors(report)))
 
+    def test_v2_schema_enforces_each_name_status_hash_combination(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        schema = json.loads((catalog.ROOT / "tools/model_transform_catalog.v2.schema.json").read_text())
+        validator = jsonschema.Draft202012Validator(schema)
+        baseline = catalog.report_for([self.source])
+        empty_sha = hashlib.sha256(b"").hexdigest()
+        valid = [
+            ("empty", "", empty_sha),
+            ("utf8-decoded", "Name", "a" * 64),
+            ("invalid-utf8", None, "b" * 64),
+            ("unterminated", None, None),
+        ]
+        invalid = [
+            ("empty", "Name", empty_sha),
+            ("empty", "", "a" * 64),
+            ("utf8-decoded", "", "a" * 64),
+            ("utf8-decoded", None, "a" * 64),
+            ("utf8-decoded", "Name", None),
+            ("invalid-utf8", "Name", "a" * 64),
+            ("invalid-utf8", None, None),
+            ("unterminated", "Name", None),
+            ("unterminated", None, "a" * 64),
+        ]
+        for role in ("mesh", "part"):
+            for expected, rows in ((True, valid), (False, invalid)):
+                for status, value, digest in rows:
+                    with self.subTest(role=role, status=status, value=value, digest=digest, expected=expected):
+                        report = json.loads(json.dumps(baseline))
+                        mesh = report["meshes"][0]
+                        target = mesh if role == "mesh" else mesh["parts"][0]
+                        prefix = "meshName" if role == "mesh" else "name"
+                        target[prefix] = value
+                        target[prefix + "Status"] = status
+                        target[prefix + "BytesSha256"] = digest
+                        self.assertEqual(validator.is_valid(report), expected)
+        # Shape validation cannot establish that a syntactically valid digest
+        # matches the unavailable original bytes: "a"*64 is not SHA-256("Name").
+        self.assertNotEqual(hashlib.sha256(b"Name").hexdigest(), "a" * 64)
+
 
 if __name__ == "__main__":
     unittest.main()
