@@ -561,6 +561,21 @@ def words_to_floats(words: list[int]) -> list[float | None]:
     return [v if v == v and abs(v) != float("inf") else None for v in values]
 
 
+def stored_part_bounds(words: list[int]) -> dict:
+    """Project the stored part BBOX; no hierarchy or animation is applied.
+
+    CMeshPart::ReadBoundingBox reads two 16-byte vectors, an i32 flag and a
+    float radius. The vectors' fourth words are not coordinates. A non-finite
+    field is unknown in JSON, and the stored flag is not a validity guarantee.
+    """
+    if len(words) != 10:
+        raise ValueError("part BBOX must contain ten words")
+    valid = words[8] if words[8] < 0x80000000 else words[8] - 0x100000000
+    return {"center": words_to_floats(words[0:3]),
+            "halfExtents": words_to_floats(words[4:7]),
+            "validFlag": valid, "radius": words_to_floats([words[9]])[0]}
+
+
 def mesh_summary(meta: dict) -> dict:
     parts = meta.get("parts") or []
     vertices = sum(p["geometry"]["originalVertexCount"] for p in parts)
@@ -577,7 +592,9 @@ def mesh_summary(meta: dict) -> dict:
             "hierarchy": [{"ordinal": p["ordinal"], "name": p["name"], "parent": p["relations"]["parentOrdinal"],
                            "type": p["partType"], "virtualFrames": p["frameLanes"]["virtualFrameCount"],
                            "hierarchyPoses": p["frameLanes"]["hierarchyPoseCount"],
-                           "bones": p["skinning"]["bonePartOrdinals"]} for p in parts]}
+                           "bones": p["skinning"]["bonePartOrdinals"],
+                           "partRecordSha256": p["recordSha256"], "partPayloadSha256": p["payloadSha256"],
+                           "storedBounds": stored_part_bounds(p["boundingBoxWords"])} for p in parts]}
 
 
 def catalog_mesh(stream: bytes, *, asset_id: str, name: str, container: str, container_sha: str, envelope: str,

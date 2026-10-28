@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-28 (per-mip DDS identities; world body encoder and loose-world staging; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-28 (per-part mesh bounds and identities; per-mip DDS identities; world body encoder and loose-world staging; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -79,6 +79,11 @@ publish, sign, or install anything by themselves.
   section, provenance and, for meshes and textures, a usage summary ([schema](content_catalog.schema.json)). Each
   admitted loose texture mip records the encoded bytes' SHA-256 and offset in the inflated DDS, so individual levels
   can be compared without exporting their pixels; unsupported or malformed textures have no admitted mip entries.
+  Mesh hierarchy rows also retain each part's CMSP and MESP payload hashes and its stored BBOX center, half-extents,
+  flag and radius, without exporting geometry. The flag is the stored value, not a validity check; non-finite numbers
+  are `null`. These are part records before transforms, not world-space or animated bounds. The source is
+  `CMeshPart::ReadBoundingBox` (`0x004b3180`); the record layout is in
+  [cmsh-fields.md](../reverse-engineering/asset-formats/cmsh-fields.md#bounding-box-bbox-40-bytes).
   `world_resources_decode.py` decodes the level payloads in their loaders' read order and refuses unread bytes: the
   `WRES` world bodies (`CWorld::LoadWorld`: header, compiled scripts, things, trees, influence map, waypoint paths,
   timings, occupancy), `ERES` (mixer mips, heightfield settings and samples, mixer map), `SURF` and `SSHD`; `LNDS`
