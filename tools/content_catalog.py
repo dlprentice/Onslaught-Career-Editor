@@ -2254,7 +2254,8 @@ def write_outputs(out: Path, game: Path, catalog: dict, coverage: dict) -> list[
                 "tool": TOOL, "toolCommit": git_head(), "assetSchema": "tools/content_catalog.schema.json",
                 "install": {"files": len(catalog["files"]), "pathSizeFingerprint": install_fingerprint(game, catalog["files"])},
                 "assetCount": len(catalog["assets"]),
-                "boundary": "retail-derived names, sizes and hashes only; no retail payload bytes; never commit"}
+                "boundary": "retail-derived metadata including names, sizes, hashes and numeric summaries; "
+                            "no retail payload bytes; never commit"}
     outputs = {"manifest.json": json.dumps(manifest, indent=2, sort_keys=True) + "\n",
                "survey.json": json.dumps(catalog["survey"], indent=2, sort_keys=True) + "\n",
                "coverage.json": json.dumps(coverage, indent=2, sort_keys=True) + "\n",
