@@ -9,6 +9,9 @@ import io
 import json
 import os
 from pathlib import Path
+import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -53,6 +56,10 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual(report["candidateBody"]["sha256"], hashlib.sha256(candidate).hexdigest())
         self.assertTrue(report["slotReview"]["thingsChanged"])
         self.assertFalse(report["slotReview"]["thingCountChanged"])
+        self.assertTrue(report["slotReview"]["positionFieldsChanged"])
+        self.assertFalse(report["slotReview"]["nonPositionFieldsOrOrderChanged"])
+        self.assertFalse(report["slotReview"]["exactRecordPermutationObserved"])
+        self.assertEqual(report["structuralReviewReasons"], ["placement-not-validated", "world-changes-not-fully-validated"])
         self.assertFalse(report["slotReview"]["waypointPathsChanged"])
         self.assertEqual(report["opaqueFields"]["changedGroups"], [])
         self.assertTrue(any(row["path"] == ["things", 0, "init", "position", 0]
@@ -63,8 +70,67 @@ class PreviewTests(unittest.TestCase):
         self.model["things"].append(json.loads(json.dumps(self.model["things"][0])))
         report = self.inspect()
         self.assertTrue(report["slotReview"]["thingCountChanged"])
+        self.assertIn("thing-count-changed", report["structuralReviewReasons"])
         self.assertIsNone(report["candidateBody"]["changedBytePositions"])
         self.assertIsNotNone(report["candidateBody"]["firstDifferentOffset"])
+
+    def test_removing_thing_requires_review_even_when_other_records_are_unchanged(self):
+        self.model["things"].pop()
+        report = self.inspect()
+        self.assertTrue(report["slotReview"]["thingCountChanged"])
+        self.assertIn("thing-count-changed", report["structuralReviewReasons"])
+
+    def test_exact_reorder_requires_review_and_does_not_claim_slot_identity(self):
+        self.model["things"][0], self.model["things"][1] = self.model["things"][1], self.model["things"][0]
+        report = self.inspect()
+        self.assertTrue(report["slotReview"]["exactRecordPermutationObserved"])
+        self.assertTrue(report["slotReview"]["nonPositionFieldsOrOrderChanged"])
+        self.assertIn("thing-record-permutation-observed", report["structuralReviewReasons"])
+        self.assertIn("do not prove record identity", report["slotReview"]["limit"])
+
+    def test_exact_reorder_of_otherwise_equal_records_is_not_mistaken_for_just_a_move(self):
+        model = encoder.read_world_model(self.body)
+        clone = json.loads(json.dumps(model["things"][0]))
+        clone["init"]["position"][0] = 33.0
+        model["things"].append(clone)
+        body = encoder.write_world_body(model)
+        model["things"][0], model["things"][-1] = model["things"][-1], model["things"][0]
+        report = preview.preview_bytes(body, model_bytes(model))
+        self.assertFalse(report["slotReview"]["nonPositionFieldsOrOrderChanged"])
+        self.assertTrue(report["slotReview"]["exactRecordPermutationObserved"])
+        self.assertIn("thing-record-permutation-observed", report["structuralReviewReasons"])
+        self.assertIn("placement-not-validated", report["structuralReviewReasons"])
+
+    def test_other_encoded_changes_are_not_silently_called_safe(self):
+        self.model["scripts"][0]["name"] = "renamed script"
+        report = self.inspect()
+        self.assertEqual(report["opaqueFields"]["changedGroups"], [])
+        self.assertFalse(report["scripts"]["structuralReviewRequired"])
+        self.assertEqual(report["structuralReviewReasons"], ["world-changes-not-fully-validated"])
+        self.model["things"][0]["init"]["position"][0] = 33.0
+        report = self.inspect()
+        self.assertEqual(report["structuralReviewReasons"], ["placement-not-validated", "world-changes-not-fully-validated"])
+
+    def test_definition_target_base_map_and_waypoint_edits_each_require_review(self):
+        cases = (
+            (lambda m: m["things"][0].__setitem__("definition", "AnotherUnit"),
+             "nonPositionFieldsOrOrderChanged", "thing-nonposition-fields-or-order-changed"),
+            (lambda m: m["things"][0]["init"].__setitem__("target", 2),
+             "targetFieldsChanged", "thing-target-fields-changed"),
+            (lambda m: m.__setitem__("baseLevel", m["baseLevel"] + 1),
+             "baseLevelChanged", "base-level-changed"),
+            (lambda m: m.__setitem__("mapNumber", m["mapNumber"] + 1),
+             "mapNumberChanged", "map-number-changed"),
+            (lambda m: m["waypointPaths"][0]["slots"].__setitem__(0, 9),
+             "waypointPathsChanged", "waypoint-paths-changed"),
+        )
+        for edit, flag, reason in cases:
+            with self.subTest(flag=flag):
+                model = encoder.read_world_model(self.body)
+                edit(model)
+                report = self.inspect(model)
+                self.assertTrue(report["slotReview"][flag])
+                self.assertIn(reason, report["structuralReviewReasons"])
 
     def test_waypoints_and_unknown_regions_are_reported_independently(self):
         self.model["waypointPaths"][0]["slots"][0] = 9
@@ -207,6 +273,36 @@ class PreviewFileTests(unittest.TestCase):
         self.assertTrue(json.loads(stdout.getvalue())["scripts"]["structuralReviewRequired"])
         self.assertEqual(before, {p.name: p.read_bytes() for p in self.root.iterdir()})
 
+    def test_cli_requires_review_for_an_appended_authored_thing(self):
+        model = encoder.read_world_model(self.body.read_bytes())
+        model["things"].append(json.loads(json.dumps(model["things"][0])))
+        self.model.write_bytes(model_bytes(model))
+        with contextlib.redirect_stdout(io.StringIO()) as stdout:
+            self.assertEqual(1, preview.main([str(self.body), str(self.model)]))
+        self.assertIn("thing-count-changed", json.loads(stdout.getvalue())["structuralReviewReasons"])
+
+    def test_fresh_cli_process_creates_no_import_caches_or_other_files(self):
+        isolated = self.root / "tools"
+        isolated.mkdir()
+        source = Path(preview.__file__).parent
+        for name in ("world_edit_preview.py", "world_resources_encode.py", "world_resources_decode.py",
+                     "mission_script_inspect.py", "aya_archive_inventory.py", "safe_generated_output.py"):
+            shutil.copyfile(source / name, isolated / name)
+
+        def tree_snapshot():
+            return {str(path.relative_to(self.root)): ("dir" if path.is_dir() else hashlib.sha256(path.read_bytes()).hexdigest())
+                    for path in self.root.rglob("*")}
+
+        before = tree_snapshot()
+        environment = os.environ.copy()
+        for key in ("PYTHONDONTWRITEBYTECODE", "PYTHONPYCACHEPREFIX", "PYTHONPATH"):
+            environment.pop(key, None)
+        result = subprocess.run([sys.executable, str(isolated / "world_edit_preview.py"), str(self.body), str(self.model)],
+                                cwd=self.root, env=environment, capture_output=True, text=True, timeout=20)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(json.loads(result.stdout)["candidateBody"]["identicalToBaseline"])
+        self.assertEqual(before, tree_snapshot())
+
     def test_symlink_at_leaf_or_parent_and_fifo_are_refused(self):
         leaf = self.root / "link.wrd"
         leaf.symlink_to(self.body)
@@ -220,6 +316,19 @@ class PreviewFileTests(unittest.TestCase):
         os.mkfifo(fifo)
         with self.assertRaisesRegex(preview.PreviewError, "input-type-or-byte-limit"):
             preview._read_snapshot(fifo, preview.MAX_BODY_BYTES)
+
+    def test_parent_component_cannot_hide_a_symlink_or_select_a_different_file(self):
+        elsewhere = self.root / "elsewhere"
+        (elsewhere / "inner").mkdir(parents=True)
+        (elsewhere / self.body.name).write_bytes(b"another authored body")
+        link = self.root / "link"
+        link.symlink_to(elsewhere / "inner", target_is_directory=True)
+        ambiguous = link / ".." / self.body.name
+        self.assertNotEqual(ambiguous.read_bytes(), self.body.read_bytes())
+        with self.assertRaisesRegex(preview.PreviewError, "input-path-parent-component-not-allowed"):
+            preview._read_snapshot(ambiguous, preview.MAX_BODY_BYTES)
+        with self.assertRaisesRegex(preview.PreviewError, "input-path-parent-component-not-allowed"):
+            preview._read_snapshot(elsewhere / ".." / self.body.name, preview.MAX_BODY_BYTES)
 
     def test_oversized_file_and_input_path_replaced_during_read_are_refused(self):
         with self.assertRaisesRegex(preview.PreviewError, "input-type-or-byte-limit"):

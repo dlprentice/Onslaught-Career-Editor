@@ -41,6 +41,7 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/cmsh_grammar_walk_tests.py",),
     ("tools/content_catalog_tests.py",),
     ("tools/world_resources_encode_tests.py",),
+    ("tools/world_edit_preview_tests.py",),
     ("tools/aya_texture_fidelity_census_tests.py",),
     ("tools/export_game_assets_tests.py",),
     ("rebuild/tools/materialize_retail_assets_tests.py",),

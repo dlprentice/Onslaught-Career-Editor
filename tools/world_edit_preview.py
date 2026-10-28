@@ -6,13 +6,21 @@
     python tools/world_edit_preview.py world100.wrd world100.json --baseline-sha256 SHA --model-sha256 SHA
 
 Both paths are explicit, bounded inputs. Output contains hashes, field paths, changed-byte counts when the lengths
-match, opaque-region changes and structural mission-script findings, never the world or script payloads. A preview
+match, opaque-region changes and structural mission-script findings, never the world or script payloads. Field paths
+include any user-supplied JSON keys verbatim; inspect reports before sharing them. A preview
 is not tied automatically to a later encode/stage command: compare the two input identities before using that command.
 It does not check placement against terrain, resolve runtime slots/physics, run scripts or prove a level playable.
 """
 from __future__ import annotations
 
+import sys
+
+# The command promises not to write files, including import bytecode beside the tools.
+if __name__ == "__main__":
+    sys.dont_write_bytecode = True
+
 import argparse
+from collections import Counter
 import hashlib
 import json
 import math
@@ -21,7 +29,6 @@ from pathlib import Path
 import re
 import stat
 import struct
-import sys
 
 import mission_script_inspect as mission
 import world_resources_decode as decoder
@@ -209,6 +216,35 @@ def _script_report(model):
             "records": rows}
 
 
+def _thing_without_position(thing):
+    """An ordinal comparison aid, not a stable or runtime thing identity."""
+    return {**thing, "init": {key: value for key, value in thing["init"].items() if key != "position"}}
+
+
+def _slot_review(original, candidate):
+    before, after = original["things"], candidate["things"]
+    old = [_json_identity(thing) for thing in before]
+    new = [_json_identity(thing) for thing in after]
+    old_nonposition = [_json_identity(_thing_without_position(thing)) for thing in before]
+    new_nonposition = [_json_identity(_thing_without_position(thing)) for thing in after]
+    same_count = len(before) == len(after)
+    return {
+        "thingsChanged": old != new,
+        "thingCountChanged": not same_count,
+        # Serialized record values form a permutation; this alone cannot establish the editor's intent.
+        "exactRecordPermutationObserved": same_count and old != new and Counter(old) == Counter(new),
+        "nonPositionFieldsOrOrderChanged": same_count and old_nonposition != new_nonposition,
+        "positionFieldsChanged": any(_json_identity(a["init"]["position"]) != _json_identity(b["init"]["position"])
+                                     for a, b in zip(before, after)),
+        "targetFieldsChanged": any(a["init"]["target"] != b["init"]["target"] for a, b in zip(before, after)),
+        "baseLevelChanged": original["baseLevel"] != candidate["baseLevel"],
+        "mapNumberChanged": original["mapNumber"] != candidate["mapNumber"],
+        "waypointPathsChanged": _json_identity(original["waypointPaths"]) != _json_identity(candidate["waypointPaths"]),
+        "limit": "Ordinal comparisons do not prove record identity or runtime slots; simultaneous moves and reorderings "
+                 "can be indistinguishable. Physics, base-world and career state are not loaded.",
+    }
+
+
 def preview_bytes(baseline: bytes, model_json: bytes, *, baseline_sha256=None, model_sha256=None) -> dict:
     """Pure preview of two immutable snapshots. Returned hashes identify exactly what was inspected."""
     if type(baseline) is not bytes or type(model_json) is not bytes:
@@ -241,7 +277,7 @@ def preview_bytes(baseline: bytes, model_json: bytes, *, baseline_sha256=None, m
     if first is None and not same_length:
         first = min(len(baseline), len(candidate_body))
     opaque_changed = [key for key in old_opaque if old_opaque[key] != new_opaque[key]]
-    things_changed = _json_identity(original["things"]) != _json_identity(candidate["things"])
+    slot_review = _slot_review(original, candidate)
     script_review = new_scripts["truncated"] or any(row["status"] != "complete" or row.get("findingCount", 0)
                                                      for row in new_scripts["records"])
     review = []
@@ -253,6 +289,20 @@ def preview_bytes(baseline: bytes, model_json: bytes, *, baseline_sha256=None, m
         review.append("opaque-or-compiled-data-changed")
     if script_review:
         review.append("script-inspection-findings-or-limits")
+    for flag, reason in (
+        ("thingCountChanged", "thing-count-changed"),
+        ("exactRecordPermutationObserved", "thing-record-permutation-observed"),
+        ("nonPositionFieldsOrOrderChanged", "thing-nonposition-fields-or-order-changed"),
+        ("positionFieldsChanged", "placement-not-validated"),
+        ("targetFieldsChanged", "thing-target-fields-changed"),
+        ("baseLevelChanged", "base-level-changed"),
+        ("mapNumberChanged", "map-number-changed"),
+        ("waypointPathsChanged", "waypoint-paths-changed"),
+    ):
+        if slot_review[flag]:
+            review.append(reason)
+    if candidate_body != baseline:
+        review.append("world-changes-not-fully-validated")
     return {
         "schema": SCHEMA,
         "baseline": {"bytes": len(baseline), "sha256": baseline_digest},
@@ -264,10 +314,7 @@ def preview_bytes(baseline: bytes, model_json: bytes, *, baseline_sha256=None, m
         "modelRoundTrip": {"representable": not ignored["entries"] and not ignored["truncated"], "differences": ignored},
         "changes": changes,
         "opaqueFields": {"changedGroups": opaque_changed, "baselineSha256": old_opaque, "candidateSha256": new_opaque},
-        "slotReview": {"thingsChanged": things_changed,
-                       "thingCountChanged": len(original["things"]) != len(candidate["things"]),
-                       "baseLevelChanged": original["baseLevel"] != candidate["baseLevel"],
-                       "waypointPathsChanged": _json_identity(original["waypointPaths"]) != _json_identity(candidate["waypointPaths"])},
+        "slotReview": slot_review,
         "scripts": {"baseline": old_scripts, "candidate": new_scripts, "structuralReviewRequired": script_review},
         "structuralReviewReasons": review,
         "limits": {"bodyBytes": MAX_BODY_BYTES, "modelBytes": MAX_MODEL_BYTES, "reportedChanges": MAX_CHANGES,
@@ -281,6 +328,9 @@ def _read_snapshot(path: Path, limit: int) -> bytes:
     """Read a regular file once, without following any path symlink; detect changes and replacement while reading."""
     if not all(hasattr(os, name) for name in ("O_NOFOLLOW", "O_DIRECTORY", "O_CLOEXEC", "O_NONBLOCK")):
         raise PreviewError("descriptor-safe-file-reading-unavailable; use preview_bytes")
+    # abspath would erase a symlink/.. pair before the descriptor walk sees the symlink.
+    if ".." in path.parts:
+        raise PreviewError("input-path-parent-component-not-allowed")
     path = Path(os.path.abspath(path))
     stamp = lambda s: (s.st_dev, s.st_ino, s.st_mode, s.st_size, s.st_mtime_ns, s.st_ctime_ns, s.st_nlink)
     fd = mission._open_nofollow(path)

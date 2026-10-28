@@ -113,8 +113,14 @@ publish, sign, or install anything by themselves.
   hashes, byte and field changes, changes to opaque groups and slot-sensitive structures, and bounded compiled-script
   inspection findings. It also identifies model fields the encoder would silently omit. An omitted field, truncated
   change list, changed opaque/compiled data, incomplete script inspection or structural script finding makes the command
-  exit 1, including a pre-existing finding in an unchanged script. Optional `--baseline-sha256` and `--model-sha256`
-  pin the selected snapshots. It writes no files; later
+  exit 1, including a pre-existing finding in an unchanged script. Thing count, an exact record-value permutation, per-ordinal
+  non-position fields, target fields, waypoints, base level, map number and placement changes also require review;
+  placement is reported separately as unvalidated, not as a detected invalid position. Ordinal comparisons cannot
+  prove identity or detect every mixed move/reorder. Every changed encoded body also receives a general unvalidated
+  change reason, and a zero exit is not a safety or playability certification.
+  Field paths can include user-supplied JSON keys verbatim: inspect reports before sharing them. Optional
+  `--baseline-sha256` and `--model-sha256` pin the selected snapshots. The CLI rejects `..` path components and
+  symlinks. It writes no files; later
   encoding or staging is a separate command and is not automatically bound to this preview. Inspect the reported
   hashes before using its inputs. It does not check terrain placement, runtime slots, save compatibility or mission
   behavior, and does not execute a game or script. The CLI requires descriptor-relative no-follow file support;
