@@ -138,6 +138,23 @@ publish, sign, or install anything by themselves.
   behavior, and does not execute a game or script. The CLI requires descriptor-relative no-follow file support;
   `preview_bytes` accepts immutable snapshots for integrations on other platforms. Windows CLI and physical play have
   not been validated.
+  `world_edit_move.py` adds a narrow, two-step editing workflow for **one existing thing's position**. First run
+  `python tools/world_edit_move.py WORLD.wrd --thing ORDINAL --position X Y Z`; this reads one selected body and prints
+  a structural preview without creating files. The `extract` command above provides a model whose `things` array can
+  be inspected privately to choose `ORDINAL`. That is a zero-based serialized record index, not a proven runtime slot
+  or stable identity. Review the coordinates, input/model hashes and all preview findings. A zero exit means the
+  operation completed, not that the edit is safe; every move is marked `reviewRequired`. The tool
+  accepts finite float32 positions; a decimal that needs rounding is refused unless `--allow-rounding` is given, in
+  which case the report shows the requested decimal, stored value and float32 bits. The existing position must also
+  be finite. To create a fresh edited JSON model, repeat the same command with `--out edits/NAME.json`, `--game DIR`,
+  `--baseline-sha256 SHA`, `--model-sha256 SHA` and `--acknowledge-unvalidated`, using the hashes from the preview. The output
+  path is relative to this checkout's ignored `local-data/`; the game folder is protected, an existing output is not
+  replaced, and unsafe paths are refused. These JSON models can contain retail data: keep them private and out of Git.
+  The move checks that byte differences are confined to the selected twelve serialized position bytes and that other
+  model fields, opaque groups and inspected scripts are unchanged; it does not stage or run anything. It cannot determine ground height,
+  collision, runtime slots, script consequences, career compatibility or playability. Later encoding and staging
+  remain separate, and must use the same reviewed identities. This CLI has only authored-fixture tests, requires the
+  same descriptor-safe input support as the preview, and has no validated Windows workflow.
 - `export_game_assets.py`, `export_asset_catalog.py`,
   `export_language_corpus.py`, and `export_video_manifest.py` operate on
   user-supplied local inputs and write to a separate local output root. The
