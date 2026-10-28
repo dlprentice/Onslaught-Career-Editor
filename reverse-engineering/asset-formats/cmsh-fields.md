@@ -2,6 +2,7 @@
 
 Status: active format contract — the PC loader's complete chunk grammar and every stored record layout
 Date: 2026-10-16
+Last updated: 2026-10-28 (corrected the number of files containing chained meshes)
 Verdict: all 213 installed PC mesh files (228 meshes, counting 15 chained meshes) parse to their exact
 final byte under the grammar below, with exactly one tag in every grammar slot. Every stored record is the
 loader's in-memory object image: 372, 316, 296 and 184 bytes for the mesh, part, vertex-buffer and
@@ -29,7 +30,7 @@ The grammar walk settles several tags that [cmsh-mesh.md](cmsh-mesh.md) left ope
 
 | Tag | Earlier reading | What the loader reads there |
 | --- | --- | --- |
-| `PMS2` | bone/skeletal lane | the header that opens a chained mesh: the mesh after it belongs to the same file (15 files) |
+| `PMS2` | bone/skeletal lane | the header that opens a chained mesh: 15 serialized chained meshes across seven files |
 | `CAMD` | camera metadata | the mesh's animation-mode table (36-byte records) |
 | `CEMT` | end metadata | the mesh's emitter table |
 | `NMIC` | chain metadata | a part's next-part-in-chain index |
@@ -38,7 +39,10 @@ The grammar walk settles several tags that [cmsh-mesh.md](cmsh-mesh.md) left ope
 | 48-byte vertex | position, normal, colour, UV, then three palette offsets | position, then the three palette offsets, then normal, colour and UV |
 
 The census in [cmsh-mesh.md](cmsh-mesh.md) counts each file's first mesh only. The counts below include the
-15 chained meshes, which is why they are larger (for example 4,009 parts rather than 3,774).
+15 chained meshes, which is why they are larger (for example 4,009 parts rather than 3,774). A 2026-10-28
+read-only recheck matched all 213 loose files to the pinned mirror index in that document and counted the
+15 chained meshes in seven files with the grammar walker. This describes stored structure, not which meshes
+a resource record loads or the renderer selects at runtime.
 
 ## How the stream is read
 
