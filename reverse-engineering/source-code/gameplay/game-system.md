@@ -3,6 +3,10 @@
 Status: source reference with bounded retail corrections
 Last updated: 2026-10-28
 Summary: internal game-system overview; keyboard bindings below are distinguished from the selected retail PC table.
+Evidence: SOURCE — historical internal overview and the cited retail-matching controller/game source; the remaining
+historical claims were not individually rechecked in this correction.
+Specimen: pristine `BEA.exe.original.backup`, SHA-256
+`74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 > Analysis from game.cpp/h, DXGame.cpp/h, PCGame.cpp/h, EndLevelData.cpp/h, Music.cpp/h, and SoundManager.cpp/h - December 2025
 
