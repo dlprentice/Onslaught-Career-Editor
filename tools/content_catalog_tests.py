@@ -172,6 +172,48 @@ class StoredPartBoundsTests(unittest.TestCase):
 
 
 class MeshChainCatalogTests(unittest.TestCase):
+    def test_animation_offsets_point_to_each_camd_record_even_if_contents_repeat(self) -> None:
+        clip = mesh_fixtures._catalog_animation("Walk")
+        stream = mesh_fixtures._catalog_stream(animations=clip + clip, animation_count=2)
+        [camd] = [c for c in catalog.aai.parse_top_level_chunks_bounded(stream) if c.tag == "CAMD"]
+        _, animations, _ = catalog.catalog_mesh(stream, asset_id="mesh:authored", name="authored",
+                                                container="authored.aya", container_sha="a" * 64,
+                                                envelope="aya-zlib-members(cmsh)", offset=512, chunk_path=[])
+        self.assertEqual([512 + camd.offset + 8, 512 + camd.offset + 8 + 36],
+                         [a["source"]["offset"] for a in animations])
+        self.assertEqual([36, 36], [a["source"]["length"] for a in animations])
+        self.assertEqual([hashlib.sha256(clip).hexdigest()] * 2, [a["sha256"] for a in animations])
+
+    def test_unparsed_root_counts_are_unknown_not_zero(self) -> None:
+        record, _, _ = catalog.catalog_mesh(b"not a mesh", asset_id="mesh:authored", name="authored",
+                                             container="authored.aya", container_sha="a" * 64,
+                                             envelope="aya-zlib-members(cmsh)", offset=0, chunk_path=[])
+        mesh = record["mesh"]
+        self.assertEqual("unparsed", mesh["status"])
+        for key in ("parts", "vertices", "stripPrimitives", "triangles", "skinnedParts", "boneParts",
+                    "referenceParts", "partTypes", "lodChildren", "emitters"):
+            with self.subTest(key=key):
+                self.assertIsNone(mesh[key])
+        self.assertTrue(mesh["reason"]["falsifier"])
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        schema = json.loads((catalog.TOOLS / "content_catalog.schema.json").read_text(encoding="utf-8"))
+        self.assertTrue(jsonschema.Draft202012Validator(schema).is_valid({**record, catalog.GENERATED_MARKER: True}))
+
+    def test_partial_mesh_keeps_unread_emitter_and_missing_chain_counts_unknown(self) -> None:
+        broken_emitter = mesh_fixtures._catalog_stream(emitters=struct.pack("<I", 335), emitter_count=1)
+        missing_child = mesh_fixtures._catalog_stream(next_marker=True)
+        for stream, unknown_key in ((broken_emitter, "emitters"), (missing_child, "lodChildren")):
+            with self.subTest(unknown_key=unknown_key):
+                record, _, _ = catalog.catalog_mesh(stream, asset_id="mesh:authored", name="authored",
+                                                     container="authored.aya", container_sha="a" * 64,
+                                                     envelope="aya-zlib-members(cmsh)", offset=0, chunk_path=[])
+                self.assertEqual("partial", record["mesh"]["status"])
+                self.assertIsNone(record["mesh"][unknown_key])
+                self.assertEqual(1, record["mesh"]["parts"])
+
     def test_loose_and_embedded_envelopes_select_their_own_chain_shape(self) -> None:
         child = mesh_fixtures._catalog_stream(name="Child")
         loose = mesh_fixtures._catalog_stream(lod=child, next_marker=True)
@@ -367,6 +409,39 @@ class AuthoredInstallTests(unittest.TestCase):
         self.assertEqual(counts["dds-texture-dxtn"], 5)
         self.assertEqual(counts["mission-script-msl"], 2)
         self.assertEqual(counts["executable-code"], 1)
+
+    def test_embedded_mesh_offset_comes_from_wrappers_not_a_duplicate_header(self) -> None:
+        # The first 380 bytes also occur across the 309-byte resource header
+        # and real CMSH. A byte search returns the decoy, not the framed body.
+        leaf = mesh_fixtures._catalog_stream(name="Child")
+        root = bytearray(mesh_fixtures._catalog_stream(
+            name="", lod=chunk(b"PMS2", bytes(309) + leaf), lod_tag=b"PMSH", next_marker=True))
+        root[48] = 1
+        root[308:380] = root[:72]
+        stream = bytes(root)
+        prefix = b"\0" + stream[:308]
+        payload = chunk(b"PMSH", chunk(b"PMS2", prefix + stream))
+        self.assertEqual(17, payload.find(stream[:380]))
+        self.assertEqual((stream, 325), catalog.meshcensus._direct_embedded_cmsh_with_offset(payload))
+        intro = (chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1))
+                 + chunk(b"AYAD", bytes(24)))
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            archive = game / "data/resources/100_res_PC.aya"
+            source = aya(intro + chunk(b"MESH", payload))
+            archive.write_bytes(source)
+            data = catalog.build_catalog(game)
+            self.assertEqual(source, archive.read_bytes())
+        [record] = [a for a in data["assets"] if a["id"] == "mesh:embedded:data/resources/100_res_pc.aya#3"]
+        expected_offset = len(intro) + 8 + 325
+        self.assertEqual(expected_offset, record["source"]["offset"])
+        self.assertEqual(hashlib.sha256(stream).hexdigest(), record["sha256"])
+        row, _ = catalog.meshcensus.mesh_record_from_stream(
+            stream, source_path="data/resources/100_res_pc.aya", archive_sha256=hashlib.sha256(source).hexdigest(),
+            payload_offset=expected_offset, chunk_path=(3,), source_context="embedded-mesh")
+        edge = row["modelMetadata"]["lodChildren"][0]
+        self.assertEqual(expected_offset + len(stream) - len(leaf), edge["model"]["identity"]["payloadOffset"])
 
     def test_text_record_resolves_to_its_loose_dds_by_the_loader_path_rule(self) -> None:
         [desc] = [a for a in self.catalog["assets"] if a["type"] == "texture-descriptor"
