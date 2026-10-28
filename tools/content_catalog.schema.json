@@ -396,6 +396,34 @@
             "unparsed"
           ]
         },
+        "hierarchy": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "partRecordSha256": {
+                "$ref": "#/$defs/sha256",
+                "description": "SHA-256 of the 316-byte CMSP record payload."
+              },
+              "partPayloadSha256": {
+                "$ref": "#/$defs/sha256",
+                "description": "SHA-256 of the MESP part payload, without its outer chunk header."
+              },
+              "storedBounds": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["center", "halfExtents", "validFlag", "radius"],
+                "description": "Part's stored BBOX before hierarchy or animation transforms; not a world-space or animated bound. The flag is the stored i32, not a validation. Non-finite floats are null.",
+                "properties": {
+                  "center": {"$ref": "#/$defs/nullableFloat3"},
+                  "halfExtents": {"$ref": "#/$defs/nullableFloat3"},
+                  "validFlag": {"type": "integer", "minimum": -2147483648, "maximum": 2147483647},
+                  "radius": {"type": ["number", "null"]}
+                }
+              }
+            }
+          }
+        },
         "textures": {
           "type": "array",
           "items": {
@@ -621,6 +649,12 @@
     }
   },
   "$defs": {
+    "nullableFloat3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {"type": ["number", "null"]}
+    },
     "sha256": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"

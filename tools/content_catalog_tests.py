@@ -89,6 +89,88 @@ def mesh_stream() -> bytes:
     return stream.replace(old, b"meshtex\\Skin.tga".ljust(128, b"\0"))
 
 
+def part_with_box(part: bytes, center: tuple[float, ...], axes: tuple[float, ...], flag: int, radius: float) -> bytes:
+    # Non-coordinate vector words deliberately differ, so confusing padding
+    # with the second vector or flag is caught by the assertions.
+    box = chunk(b"BBOX", chunk(b"BBOX", struct.pack(
+        "<3fI3fIif", *center, 0x11223344, *axes, 0x55667788, flag, radius)))
+    original = mesh_fixtures.mesh_fixtures._bbox()
+    assert part.count(original) == 1
+    return part.replace(original, box, 1)
+
+
+def catalog_authored_mesh(stream: bytes) -> dict:
+    record, _, _ = catalog.catalog_mesh(
+        stream, asset_id="mesh:authored", name="authored", container="resources/authored.aya",
+        container_sha="a" * 64, envelope="authored", offset=0, chunk_path=[])
+    return record
+
+
+class StoredPartBoundsTests(unittest.TestCase):
+    def test_catalog_keeps_each_part_box_and_hashes_without_exporting_payload(self) -> None:
+        own = part_with_box(mesh_fixtures._catalog_part(0, name="Root", children=(1,), geometry=True),
+                            (1.25, -2.5, 3.75), (0.5, 4.0, 8.0), -1, 9.0)
+        # A referenced part still has its own stored box: do not use the box
+        # of its resolved geometry owner or apply a hierarchy transform.
+        ref = part_with_box(mesh_fixtures._catalog_part(1, name="Ref", parent=0, reference=0),
+                            (-3.0, 4.5, 6.0), (2.0, 3.0, 4.0), 0, 5.0)
+        stream = mesh_fixtures._catalog_stream(parts=[own, ref])
+        before = hashlib.sha256(stream).hexdigest()
+        record = catalog_authored_mesh(stream)
+        self.assertEqual(record["mesh"]["status"], "parsed")
+        first, second = record["mesh"]["hierarchy"]
+        self.assertEqual(first["storedBounds"], {"center": [1.25, -2.5, 3.75],
+                         "halfExtents": [0.5, 4.0, 8.0], "validFlag": -1, "radius": 9.0})
+        self.assertEqual(second["storedBounds"], {"center": [-3.0, 4.5, 6.0],
+                         "halfExtents": [2.0, 3.0, 4.0], "validFlag": 0, "radius": 5.0})
+        for row, part in ((first, own), (second, ref)):
+            self.assertEqual(row["partRecordSha256"], hashlib.sha256(part[16:332]).hexdigest())
+            self.assertEqual(row["partPayloadSha256"], hashlib.sha256(part[8:]).hexdigest())
+        self.assertEqual(record["sha256"], before)
+        encoded = json.dumps(record, allow_nan=False)
+        self.assertNotIn("authored opaque bytes", encoded)
+        self.assertNotIn(str(0x11223344), encoded)
+        self.assertNotIn(str(0x55667788), encoded)
+
+    def test_nonfinite_bounds_are_null_and_do_not_break_strict_json(self) -> None:
+        part = part_with_box(mesh_fixtures._catalog_part(0, geometry=True),
+                             (float("nan"), float("inf"), -float("inf")),
+                             (-1.25, 0.0, 2.0), 1, float("nan"))
+        record = catalog_authored_mesh(mesh_fixtures._catalog_stream(parts=[part]))
+        [row] = record["mesh"]["hierarchy"]
+        self.assertEqual(row["storedBounds"], {"center": [None, None, None],
+                         "halfExtents": [-1.25, 0.0, 2.0], "validFlag": 1, "radius": None})
+        json.dumps(record, allow_nan=False)
+
+    def test_malformed_part_box_is_not_reported_as_valid_bounds(self) -> None:
+        part = mesh_fixtures._catalog_part(0, geometry=True)
+        original = mesh_fixtures.mesh_fixtures._bbox()
+        malformed = bytearray(original)
+        struct.pack_into("<I", malformed, 12, 39)  # inner BBOX size must be 40
+        self.assertEqual(part.count(original), 1)
+        part = part.replace(original, bytes(malformed), 1)
+        record = catalog_authored_mesh(mesh_fixtures._catalog_stream(parts=[part]))
+        self.assertEqual(record["mesh"]["status"], "unparsed")
+        self.assertEqual(record["mesh"]["hierarchy"], [])
+
+    def test_schema_checks_bounds_and_hashes_without_invalidating_older_rows(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        schema = json.loads((catalog.TOOLS / "content_catalog.schema.json").read_text(encoding="utf-8"))
+        item_schema = {"$defs": schema["$defs"], **schema["properties"]["mesh"]["properties"]["hierarchy"]["items"]}
+        validator = jsonschema.Draft202012Validator(item_schema)
+        self.assertTrue(validator.is_valid({"ordinal": 0}))  # earlier v1 catalog
+        good = {"partRecordSha256": "a" * 64, "partPayloadSha256": "b" * 64,
+                "storedBounds": {"center": [0, None, 1], "halfExtents": [2, 3, 4],
+                                 "validFlag": 1, "radius": 2}}
+        self.assertTrue(validator.is_valid(good))
+        self.assertFalse(validator.is_valid({**good, "partRecordSha256": "bad"}))
+        self.assertFalse(validator.is_valid({**good, "storedBounds": {**good["storedBounds"], "center": [0, 1]}}))
+        self.assertFalse(validator.is_valid({**good, "storedBounds": {**good["storedBounds"], "validFlag": 2**31}}))
+
+
 def ogg_file() -> bytes:
     ident = b"\x01vorbis" + struct.pack("<IBIiii", 0, 1, 44100, 0, 64000, 0) + b"\xb8\x01"
     page1 = b"OggS\x00\x02" + struct.pack("<qIII", 0, 9, 0, 0) + bytes([1, len(ident)]) + ident
