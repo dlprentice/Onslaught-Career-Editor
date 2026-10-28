@@ -186,6 +186,7 @@ internal static class CeSettingsTests
             check.That(!CeSettings.Read(linkedFile).Ok, "A symbolic ce.ini alias cannot be edited.");
         }
         CeSettingsBackupTests.Run(outputDirectory, check);
+        CeSettingsWriteLockTests.Run(outputDirectory, check);
         await CePackageSafetyTests.RunAsync(outputDirectory, check);
     }
 }

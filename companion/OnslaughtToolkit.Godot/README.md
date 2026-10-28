@@ -64,10 +64,14 @@ outside CE's user folder, holds and checks the copy through publication, prepare
 replaces it in one step and checks the saved bytes. These settings backups are named `onslaught-ce-settings-*` and are kept
 separately from career backup sets; automatic backups and the Backups page manage careers, not
 these settings copies. Backup binding and its race controls have run on Linux's native and portable writer paths;
-the new settings-backup binding has not been exercised on Windows. Close CE and the original game before saving and
-wait for the save to finish before starting either. The process checks do not lock out a start immediately after the
-last check; CE's own settings writer can
-replace a successful companion change with an older snapshot. A shared cross-process writer protocol remains open.
+the new settings-backup binding has not been exercised on Windows. When saving settings, the companion also takes a
+nonblocking lock on the persistent `ce.ini.lock` sidecar before rechecking the snapshot, and holds it through backup,
+publication and verification. If a cooperating CE writer holds the same sidecar, the companion refuses promptly and
+the player can retry. The sidecar is retained so writers continue to use the same lock. This only coordinates builds
+that implement the same protocol and resolve the same user folder; existing CE versions and other editors may not
+participate. CE's Windows path handling and this new cross-program lock have not been accepted on native Windows,
+including Unicode user-folder names. Close CE and the original game before saving and wait for the save to finish
+before starting either; process detection still cannot rule out a game starting immediately after its last check.
 
 **Updates** on Home contacts nothing. CE 0.1.8 and later check CE's signed update feed when they start and
 install a new version only when the player chooses Update; 0.1.7 has no update code, so players on 0.1.7 or

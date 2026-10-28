@@ -102,8 +102,9 @@ public sealed class CeSettings
     }
 
     /// <summary>
-    /// Holds a verified external backup through the same staged, checked exchange as career writes. A source race
-    /// detected during the exchange is refused or rolled back. A first file gets an absence receipt, not a fake original.
+    /// Holds the cooperative settings lock and a verified external backup through the staged, checked exchange.
+    /// A source race detected during the exchange is refused or rolled back. A first file gets an absence receipt,
+    /// not a fake original. The lock cannot serialize older or otherwise uncooperative writers.
     /// </summary>
     public InstallReceipt Save(bool updateCheck, bool recordSessions, string backupRoot, Func<bool> gameRunning, DateTime now,
         Action? beforeCheck = null, Action? beforeSwap = null, string? packageRoot = null, string? originalRoot = null,
@@ -134,6 +135,9 @@ public sealed class CeSettings
             FileMutationSafety.RejectOutputInGameTree(System.IO.Path.Combine(backupRoot, "ce.ini"));
             string realBackup = System.IO.Path.TrimEndingDirectorySeparator(System.IO.Path.GetFullPath(backupRoot));
             if (Backups.IsInside(realBackup, userFolder)) return Refuse("Choose a backup folder outside CE's user folder.");
+            using CeSettingsWriteLock? settingsLock = CeSettingsWriteLock.TryAcquire(userFolder);
+            if (settingsLock is null) return Refuse("CE settings are being changed by another program. Wait and try again.");
+            settingsLock.Verify();
             if (Read(userFolder).Value is not CeSettings current || !SameSnapshot(current))
                 return Refuse("ce.ini changed since you opened it. Read the latest settings before saving.");
             Outcome<byte[]> plan = Prepare(updateCheck, recordSessions);
@@ -147,22 +151,28 @@ public sealed class CeSettings
             if (!backup.Ok) return Refuse("No verified settings backup could be made. " + backup.Message, backupFolder);
             heldBackup.HoldCopy(backupName, preserved, ReadBounded);
             // The UI snapshot and the backup must still describe this exact file, not a newer save.
+            settingsLock.Verify();
             if (Read(userFolder).Value is not CeSettings again || !SameSnapshot(again))
                 return Refuse("ce.ini changed while it was being backed up. Nothing was written to it.", backupFolder);
+            Action beforeCheckChecked = () => { settingsLock.Verify(); beforeCheck?.Invoke(); settingsLock.Verify(); };
             Action beforeSwapChecked = () =>
             {
+                settingsLock.Verify();
                 beforeSwap?.Invoke();
+                settingsLock.Verify();
                 CheckPackageFolders();
                 if (gameRunning()) throw new IOException(GameInstaller.RunningMessage);
                 VerifyBackup(heldBackup);
+                settingsLock.Verify();
             };
-            Action afterPublishChecked = () => { afterPublish?.Invoke(); VerifyBackup(heldBackup); };
-            InstallReceipt result = Write(Path, bytes, Exists ? Sha256 : null, backupFolder, beforeCheck, beforeSwapChecked,
+            Action afterPublishChecked = () => { settingsLock.Verify(); afterPublish?.Invoke(); settingsLock.Verify(); VerifyBackup(heldBackup); };
+            InstallReceipt result = Write(Path, bytes, Exists ? Sha256 : null, backupFolder, beforeCheckChecked, beforeSwapChecked,
                 afterPublishChecked);
             // The caller presents the structured BackupFolder; keep the status free of a second recovery path.
             if (result.Ok)
                 return GameInstaller.AfterPublication(Path, backupFolder, Exists, () =>
                 {
+                    settingsLock.Verify();
                     VerifyBackup(heldBackup);
                     return result with { Message = "CE launcher settings saved and verified." };
                 });
