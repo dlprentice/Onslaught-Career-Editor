@@ -7,6 +7,7 @@ import contextlib
 import hashlib
 import io
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -141,97 +142,127 @@ class MoveTests(unittest.TestCase):
                     move.prepare_move(self.body, 0, ["1", "2", "3"])
 
 
+class ByteStdout:
+    """Capture both the textual preview and the exact model byte stream."""
+    def __init__(self):
+        self.buffer = io.BytesIO()
+
+    def write(self, value):
+        return self.buffer.write(value.encode("utf-8"))
+
+    def flush(self):
+        self.buffer.flush()
+
+
 class MoveCliTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix="authored-world-move-")
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
-        self.game = self.root / "authored-game"
-        self.game.mkdir()
-        self.local = self.root / "private-local-data"
         self.body = fixtures.world_body()
         self.world = self.root / "authored.wrd"
         self.world.write_bytes(self.body)
+        self.sentinel = self.root / "existing.json"
+        self.sentinel.write_bytes(b"existing user file")
         self.args = [str(self.world), "--thing", "0", "--position", "12.5", "-40", "3"]
 
-    def run_main(self, args):
-        stdout, stderr = io.StringIO(), io.StringIO()
-        with patch.object(move, "LOCAL_DATA", self.local), contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+    def run_main(self, args, stdout=None):
+        stdout = stdout or ByteStdout()
+        stderr = io.StringIO()
+        real_open = os.open
+        forbidden = os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND
+
+        def only_read_open(path, flags, *args, **kwargs):
+            if flags & forbidden:
+                raise AssertionError("the CLI tried to open a filesystem path for writing")
+            return real_open(path, flags, *args, **kwargs)
+
+        with patch.object(os, "open", side_effect=only_read_open), contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
             code = move.main(args)
-        return code, stdout.getvalue(), stderr.getvalue()
+        return code, stdout.buffer.getvalue(), stderr.getvalue()
 
     def preview(self):
         code, output, errors = self.run_main(self.args)
         self.assertEqual(code, 0, errors)
         return json.loads(output)
 
-    def save_args(self, report, out="edits/candidate.json"):
-        return self.args + ["--out", out, "--game", str(self.game), "--acknowledge-unvalidated",
+    def emit_args(self, report):
+        return self.args + ["--emit-model", "--acknowledge-unvalidated",
                             "--baseline-sha256", report["preview"]["baseline"]["sha256"],
                             "--model-sha256", report["preview"]["model"]["sha256"]]
 
-    def test_two_step_hash_pinned_save_is_fresh_private_and_input_unchanged(self):
+    def test_hash_pinned_model_stream_and_preview_are_read_only(self):
         report = self.preview()
-        self.assertEqual(report["publication"]["status"], "preview-only")
-        self.assertFalse(self.local.exists())
-        code, output, errors = self.run_main(self.save_args(report))
+        self.assertEqual(report["output"]["status"], "preview-only")
+        self.assertNotIn("Tank 1", json.dumps(report))
+        code, data, errors = self.run_main(self.emit_args(report))
         self.assertEqual(code, 0, errors)
-        published = json.loads(output)
-        candidate = self.local / "edits" / "candidate.json"
-        self.assertEqual(published["publication"]["status"], "new-private-model-not-staged")
-        self.assertEqual(digest(candidate.read_bytes()), report["preview"]["model"]["sha256"])
+        self.assertEqual(digest(data), report["preview"]["model"]["sha256"])
+        self.assertEqual(json.loads(data)["things"][0]["init"]["position"], [12.5, -40.0, 3.0])
         self.assertEqual(self.world.read_bytes(), self.body)
-        self.assertEqual(list(self.game.iterdir()), [])
-        code, _, _ = self.run_main(self.save_args(report))
-        self.assertEqual(code, 2)  # Never overwrite an existing result.
-        self.assertEqual(digest(candidate.read_bytes()), report["preview"]["model"]["sha256"])
+        self.assertEqual(self.sentinel.read_bytes(), b"existing user file")
+        self.assertEqual({p.name for p in self.root.iterdir()}, {"authored.wrd", "existing.json"})
 
-    def test_missing_review_consent_or_wrong_hashes_do_not_write(self):
+    def test_missing_consent_or_wrong_hashes_emit_no_model(self):
         report = self.preview()
-        cases = [self.args + ["--out", "candidate.json"],
-                 self.save_args(report) + ["--baseline-sha256", "0" * 64],
-                 self.save_args(report) + ["--model-sha256", "f" * 64],
-                 self.save_args(report)[:-2]]
+        cases = [self.args + ["--emit-model"],
+                 self.emit_args(report) + ["--baseline-sha256", "0" * 64],
+                 self.emit_args(report) + ["--model-sha256", "f" * 64],
+                 self.emit_args(report)[:-2],
+                 self.args + ["--acknowledge-unvalidated"]]
         for args in cases:
             with self.subTest(args=args):
-                self.assertEqual(self.run_main(args)[0], 2)
-                self.assertFalse(self.local.exists())
+                code, data, _ = self.run_main(args)
+                self.assertEqual(code, 2)
+                self.assertEqual(data, b"")
         self.assertEqual(self.world.read_bytes(), self.body)
+        self.assertEqual(self.sentinel.read_bytes(), b"existing user file")
 
-    def test_changed_body_and_changed_requested_position_are_refused_after_preview(self):
+    def test_changed_body_and_changed_requested_position_emit_no_model(self):
         report = self.preview()
         model = encoder.read_world_model(self.body)
         model["mapNumber"] += 1
         self.world.write_bytes(encoder.write_world_body(model))
-        self.assertEqual(self.run_main(self.save_args(report))[0], 2)
+        code, data, _ = self.run_main(self.emit_args(report))
+        self.assertEqual((code, data), (2, b""))
         self.world.write_bytes(self.body)
-        args = self.save_args(report)
+        args = self.emit_args(report)
         args[args.index("12.5")] = "13.5"
-        self.assertEqual(self.run_main(args)[0], 2)
-        self.assertFalse(self.local.exists())
+        code, data, _ = self.run_main(args)
+        self.assertEqual((code, data), (2, b""))
+        self.assertEqual(self.sentinel.read_bytes(), b"existing user file")
 
-    def test_outside_and_game_overlapping_destinations_are_refused(self):
-        report = self.preview()
-        for name in ("../escape.json", "/tmp/escape.json", "not-a-json.txt"):
-            with self.subTest(name=name):
-                self.assertEqual(self.run_main(self.save_args(report, name))[0], 2)
-        with patch.object(move, "LOCAL_DATA", self.game):
-            stdout, stderr = io.StringIO(), io.StringIO()
-            with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
-                code = move.main(self.save_args(report, "candidate.json"))
-            self.assertEqual(code, 2)
-        self.assertEqual(list(self.game.iterdir()), [])
+    def test_output_path_option_does_not_exist(self):
+        # No output-path API means the CLI cannot overwrite a file or publish into an install.
+        # Shell redirection is external to the CLI and receives no such guarantee.
+        for option in ("--out", "--game"):
+            with self.subTest(option=option), contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as error:
+                    self.run_main(self.args + [option, str(self.sentinel)])
+                self.assertEqual(error.exception.code, 2)
+        self.assertEqual(self.sentinel.read_bytes(), b"existing user file")
 
-    def test_symlink_input_and_output_are_refused(self):
-        report = self.preview()
+    def test_symlink_input_is_refused(self):
         alias = self.root / "alias.wrd"
         alias.symlink_to(self.world)
         args = [str(alias)] + self.args[1:]
-        self.assertEqual(self.run_main(args)[0], 2)
-        self.local.mkdir()
-        (self.local / "redirect").symlink_to(self.game, target_is_directory=True)
-        self.assertEqual(self.run_main(self.save_args(report, "redirect/candidate.json"))[0], 2)
-        self.assertEqual(list(self.game.iterdir()), [])
+        code, data, _ = self.run_main(args)
+        self.assertEqual((code, data), (2, b""))
+        self.assertEqual(self.world.read_bytes(), self.body)
+
+    def test_incomplete_stdout_stream_is_an_error(self):
+        class ShortStream(io.BytesIO):
+            def write(self, value):
+                super().write(value[:1])
+                return 1
+
+        stdout = ByteStdout()
+        stdout.buffer = ShortStream()
+        code, data, error = self.run_main(self.emit_args(self.preview()), stdout=stdout)
+        self.assertEqual(code, 2)
+        self.assertEqual(len(data), 1)  # External consumers may receive partial bytes on stream failure.
+        self.assertIn("model-stream-incomplete", error)
+        self.assertEqual(self.sentinel.read_bytes(), b"existing user file")
 
 
 if __name__ == "__main__":

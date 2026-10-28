@@ -146,14 +146,17 @@ publish, sign, or install anything by themselves.
   operation completed, not that the edit is safe; every move is marked `reviewRequired`. The tool
   accepts finite float32 positions; a decimal that needs rounding is refused unless `--allow-rounding` is given, in
   which case the report shows the requested decimal, stored value and float32 bits. The existing position must also
-  be finite. To create a fresh edited JSON model, repeat the same command with `--out edits/NAME.json`, `--game DIR`,
-  `--baseline-sha256 SHA`, `--model-sha256 SHA` and `--acknowledge-unvalidated`, using the hashes from the preview. The output
-  path is relative to this checkout's ignored `local-data/`; the game folder is protected, an existing output is not
-  replaced, and unsafe paths are refused. These JSON models can contain retail data: keep them private and out of Git.
+  be finite. To emit the edited JSON model, repeat the same command with `--baseline-sha256 SHA`, `--model-sha256 SHA`,
+  `--emit-model` and `--acknowledge-unvalidated`, using the hashes from the preview. This emits the model to stdout;
+  the tool has no output-file option and does not create files. **Redirection and subsequent file handling are outside
+  its protections:** a shell can overwrite files, and no redirection may target the game installation. Check any saved
+  model against the preview's model hash before further use. These models can contain retail data: keep them private
+  and out of Git, and do not emit them into a shared terminal or transcript.
   The move checks that byte differences are confined to the selected twelve serialized position bytes and that other
   model fields, opaque groups and inspected scripts are unchanged; it does not stage or run anything. It cannot determine ground height,
   collision, runtime slots, script consequences, career compatibility or playability. Later encoding and staging
-  remain separate, and must use the same reviewed identities. This CLI has only authored-fixture tests, requires the
+  remain separate, and must use the same reviewed identities. No no-overwrite or atomic-write guarantee applies to a
+  redirected stream. This CLI has only authored-fixture tests, requires the
   same descriptor-safe input support as the preview, and has no validated Windows workflow.
 - `export_game_assets.py`, `export_asset_catalog.py`,
   `export_language_corpus.py`, and `export_video_manifest.py` operate on

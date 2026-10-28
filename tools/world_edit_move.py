@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""Preview one thing-position edit, then optionally save its reviewed model under local-data/.
+"""Preview one thing-position edit and optionally emit its reviewed model to stdout.
 
     python tools/world_edit_move.py world100.wrd --thing 0 --position 12.5 -40 3
     python tools/world_edit_move.py world100.wrd --thing 0 --position 12.5 -40 3 \\
-        --baseline-sha256 BASELINE --model-sha256 MODEL --game DIR \\
-        --out edits/world100.json --acknowledge-unvalidated
+        --baseline-sha256 BASELINE --model-sha256 MODEL --emit-model --acknowledge-unvalidated
 
 The first command is read-only. The second re-creates the same candidate, requires both hashes from the
-preview, and publishes a new JSON model only below this checkout's ignored local-data/. It never writes a
-world body, stages a mod, or launches a game. Output models can contain game data and must remain private.
+preview, and sends the JSON model to stdout. This tool never opens an output file, stages a mod, or launches
+a game. Redirection, file creation and no-overwrite protection are the caller's responsibility; never redirect
+into a game installation. Output models can contain game data and must remain private.
 Coordinates are float32: pass --allow-rounding only after accepting the displayed float32 value. A preview
 checks serialized changes, not terrain, runtime slots, scripts, saves, physics, or playability.
 """
@@ -26,17 +26,13 @@ from decimal import Decimal, InvalidOperation
 import hashlib
 import json
 import math
-import os
 from pathlib import Path
 import struct
 
 import world_edit_preview as preview
 import world_resources_decode as decoder
 import world_resources_encode as encoder
-from safe_generated_output import UnsafeGeneratedOutputError
 
-ROOT = Path(__file__).resolve().parent.parent
-LOCAL_DATA = ROOT / "local-data"
 SCHEMA = "onslaught.world-edit-move.v1"
 
 
@@ -158,47 +154,39 @@ def prepare_move(baseline: bytes, thing: int, coordinates: list[str], *, allow_r
         raise MoveError(f"world-model-cannot-be-edited: {type(error).__name__}") from error
 
 
-def _output_path(relative: Path) -> Path:
-    if (relative.is_absolute() or not relative.parts or ".." in relative.parts or
-            relative.suffix.lower() != ".json"):
-        raise MoveError("output-must-be-a-relative-json-path-below-local-data")
-    return LOCAL_DATA / relative
-
-
 def main(argv=None):
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
+                                 allow_abbrev=False)
     ap.add_argument("baseline", type=Path, help="selected loose world body; read once, with no symlink traversal")
     ap.add_argument("--thing", type=int, required=True, help="zero-based ordinal in this exact body")
     ap.add_argument("--position", nargs=3, required=True, metavar=("X", "Y", "Z"))
     ap.add_argument("--allow-rounding", action="store_true", help="accept displayed float32 rounding")
     ap.add_argument("--baseline-sha256", help="pin the body used in the preceding preview")
     ap.add_argument("--model-sha256", help="pin the candidate model from the preceding preview")
-    ap.add_argument("--game", type=Path, help="selected game folder, protected from output")
-    ap.add_argument("--out", type=Path, help="fresh JSON path relative to this checkout's local-data/")
+    ap.add_argument("--emit-model", action="store_true", help="emit the reviewed JSON model to stdout; keep it private")
     ap.add_argument("--acknowledge-unvalidated", action="store_true", help="acknowledge placement and gameplay remain unvalidated")
     args = ap.parse_args(argv)
     try:
-        if args.out is not None and (args.game is None or not args.baseline_sha256 or not args.model_sha256 or
-                                     not args.acknowledge_unvalidated):
-            raise MoveError("saving-requires-game-both-preview-hashes-and-acknowledgement")
-        if args.out is None and (args.game is not None or args.acknowledge_unvalidated):
-            raise MoveError("game-and-acknowledgement-require-output")
+        if args.emit_model and (not args.baseline_sha256 or not args.model_sha256 or not args.acknowledge_unvalidated):
+            raise MoveError("model-emission-requires-both-preview-hashes-and-acknowledgement")
+        if not args.emit_model and args.acknowledge_unvalidated:
+            raise MoveError("acknowledgement-requires-model-emission")
         body = preview._read_snapshot(args.baseline, preview.MAX_BODY_BYTES)
         raw, report = prepare_move(body, args.thing, args.position, allow_rounding=args.allow_rounding)
         preview._expect_sha(hashlib.sha256(body).hexdigest(), args.baseline_sha256, "baseline")
         preview._expect_sha(hashlib.sha256(raw).hexdigest(), args.model_sha256, "model")
-        if args.out is not None:
-            if not args.game.is_dir():
-                raise MoveError("selected-game-folder-must-exist")
-            out = _output_path(args.out)
-            encoder.publish_fresh(out.parent, args.game, [(out, raw)])
-            report["publication"] = {"path": str(out), "sha256": hashlib.sha256(raw).hexdigest(),
-                                     "status": "new-private-model-not-staged"}
+        if args.emit_model:
+            stream = getattr(sys.stdout, "buffer", None)
+            if stream is None:
+                raise MoveError("stdout-byte-stream-unavailable")
+            if stream.write(raw) != len(raw):
+                raise MoveError("model-stream-incomplete")
+            stream.flush()
         else:
-            report["publication"] = {"status": "preview-only"}
-        print(json.dumps(report, indent=2, sort_keys=True))
+            report["output"] = {"status": "preview-only"}
+            print(json.dumps(report, indent=2, sort_keys=True))
         return 0
-    except (MoveError, preview.PreviewError, UnsafeGeneratedOutputError, OSError) as error:
+    except (MoveError, preview.PreviewError, OSError) as error:
         print(f"world move refused: {error}", file=sys.stderr)
         return 2
 
