@@ -40,9 +40,17 @@ internal static class CeTargetTests
             check.That(app.Game.Target == GameTarget.OnslaughtCe && app.Game.Folder?.Root == user &&
                 app.Game.Folder?.AssetRoot == retail.Game && app.Workspace.Session?.Path == career,
                 "CE selection opens its own career while assets stay in the original installation");
-            check.That(!app.Home.Play.Visible && app.Home.CePanel.Root.Visible, "Missing CE launcher cannot start the original game by mistake");
+            check.That(!app.Home.Play.Visible && app.Home.CePanel.Root.Visible &&
+                app.Home.CePanel.FolderGuidanceText.Contains("bind mount") && app.Home.CePanel.FolderGuidanceText.Contains("not every folder alias can be detected"),
+                "CE Home warns about custom folder aliases and cannot start the original game by mistake");
             app.Navigate("edit");
             app.EditCareer.Rows[0].Target.Value = 123456;
+            app.EditCareer.AskToSave();
+            check.That(app.EditCareer.SaveChoice.NoteText.Contains("supported careers") &&
+                app.EditCareer.SaveChoice.NoteText.Contains("CE settings are backed up separately when edited") &&
+                !app.EditCareer.SaveChoice.NoteText.Contains("original-game settings"),
+                "CE career save guidance separates career backups from CE settings backups");
+            app.EditCareer.SaveChoice.Dialog.Hide();
             await app.SelectTargetAsync(GameTarget.Original);
             check.That(app.Game.Target == GameTarget.OnslaughtCe, "Unsaved career edits refuse a target switch");
             running = true;
@@ -58,6 +66,16 @@ internal static class CeTargetTests
             byte[] changed = File.ReadAllBytes(career);
             check.That(app.Workspace.Session?.Matches(changed) == true && app.Workspace.Session.Path == career,
                 "CE career save reopens the verified result as the current career");
+            app.Navigate("cheats");
+            app.Cheats.BaseName.Text = "CE Review";
+            app.Cheats.BaseName.EmitSignal(LineEdit.SignalName.TextChanged, "CE Review");
+            app.Cheats.Choices[0].ButtonPressed = true;
+            app.Cheats.AskToAdd();
+            check.That(app.Cheats.Confirm.Visible && app.Cheats.Confirm.DialogText.Contains("supported careers") &&
+                app.Cheats.Confirm.DialogText.Contains("CE settings are backed up separately when edited") &&
+                !app.Cheats.Confirm.DialogText.Contains("original-game settings"),
+                "CE cheat-copy confirmation describes the separate settings backup accurately");
+            app.Cheats.Confirm.Hide();
             check.That(changed.Length == original.Length && changed.Where((value, index) => index < CareerSave.KillsOffset || index >= CareerSave.KillsOffset + 3).SequenceEqual(
                     original.Where((value, index) => index < CareerSave.KillsOffset || index >= CareerSave.KillsOffset + 3)),
                 "Unselected CE career bytes are preserved");

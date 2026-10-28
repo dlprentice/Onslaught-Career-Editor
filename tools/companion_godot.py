@@ -460,7 +460,9 @@ def export_platform(engine: Path, project: Path, templates: Path, pins: dict[str
         "onslaught-ce on Linux or onslaught-ce.exe on Windows. Play starts that launcher; it owns CE updates.\n"
         "CE careers and ce.ini use CE's separate user folder. Original-install careers shown under CE are read-only;\n"
         "save changes as a new named CE copy. CE settings edits cover update_check and record_sessions only.\n\n"
-        "Before changing a career, the companion backs up supported careers and original-game settings. CE settings\n"
+        "Use separate, ordinary CE user and backup folders outside the original game and CE package. Do not use a link,\n"
+        "junction or bind mount into either: not every folder alias can be detected.\n\n"
+        "Before changing a career, the companion backs up supported careers and, for the original game, supported settings. CE settings\n"
         "changes get a separate backup or an absence note. It checks whether the game or Onslaught CE is running before the backup and\n"
         "again before putting the changed file in place. Close both games before saving or restoring, and wait for\n"
         "the operation to finish before starting either. Backups can put an earlier career back.\n" +

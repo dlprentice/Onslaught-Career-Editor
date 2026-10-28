@@ -51,7 +51,9 @@ CE's writable user folder is chosen in this order: `BEA_USER_DIR`, then Linux
 The launcher creates its user folder; the companion does not invent an installation. CE career
 writes go to that user folder.
 Both the user folder and backups must be outside CE's package folder, which updates can replace,
-and its selected original game-data folder, including data-only installs without `BEA.exe`.
+and its selected original game-data folder, including data-only installs without `BEA.exe`. For custom folders,
+use separate, ordinary directories; do not use a link, junction or bind mount into either game folder. The current
+checks do not detect every folder alias, so the player must make sure these locations are separate.
 
 The companion reads and writes CE's `.bes` careers with the same verified backups and saved-file
 checks used for original-game careers. It refuses a write if it detects the game running, if a file has

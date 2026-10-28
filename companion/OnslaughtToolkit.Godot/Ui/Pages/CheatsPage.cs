@@ -118,8 +118,9 @@ internal sealed class CheatsPage : Page
         if (_app.Workspace.Session is not SaveSession session || _app.Game.Folder is null || Problem(checkGame: true) is not null) return;
         string switches = string.Join(", ", CheatSaveNameComposer.ActiveCheatsIn(Composed.Name).Select(cheat => cheat.DisplayName));
         Confirm.DialogText = $"Add {Composed.Name} to your game?\n\nIt is a copy of {System.IO.Path.GetFileNameWithoutExtension(session.Path)} " +
-            $"whose name switches on: {switches}.\n\nFirst, your careers and settings are backed up to {_app.Backups.Folder} " +
-            "(a file the companion cannot read is left as it is).\n\n" + AppServices.GameWriteGuidance + " " + AppServices.GameWriteChecks;
+            $"whose name switches on: {switches}.\n\nFirst, {AppServices.CareerBackupContents(_app.Game.Target)} are backed up to {_app.Backups.Folder}. " +
+            "Unsupported files are left as they are." + AppServices.CareerBackupNote(_app.Game.Target) + "\n\n" +
+            AppServices.GameWriteGuidance + " " + AppServices.GameWriteChecks;
         Confirm.PopupCentered();
     }
 

@@ -84,8 +84,8 @@ internal sealed class SaveChoice
             _choices.First(choice => choice.Panel.Visible)).Target;
         Select(first);
         _note.Text = running ? "Battle Engine Aquila or Onslaught CE is detected. Close both to save into your game; a copy can still be saved elsewhere."
-            : game ? $"Before anything in your game changes, your careers and settings are backed up to {_app.Backups.Folder} " +
-              "(a file the companion cannot read is left as it is). You can put them back from Backups at any time. " +
+            : game ? $"Before anything in your game changes, {AppServices.CareerBackupContents(_app.Game.Target)} are backed up to {_app.Backups.Folder}. " +
+              "Unsupported files are left as they are." + AppServices.CareerBackupNote(_app.Game.Target) + " " +
               AppServices.GameWriteGuidance + " " + AppServices.GameWriteChecks
             : "Choose your game folder on Home to save into your game.";
         Validate();

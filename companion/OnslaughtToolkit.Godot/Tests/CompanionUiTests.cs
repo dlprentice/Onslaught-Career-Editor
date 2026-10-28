@@ -183,7 +183,8 @@ internal static class CompanionUiTests
             $"the save dialog fits its content, well inside the window ({edit.SaveChoice.Dialog.Size.Y} px tall), with its action in amber");
         check.That(edit.SaveChoice.Dialog.Visible && edit.SaveChoice.Offers(SaveTarget.NewCareer) && edit.SaveChoice.Offers(SaveTarget.Replace) &&
             edit.SaveChoice.Offers(SaveTarget.Elsewhere) && edit.SaveChoice.Name.Text == "Career One (edited)" && edit.SaveChoice.InGameAvailable &&
-            edit.SaveChoice.NoteText.Contains("before starting either") && edit.SaveChoice.NoteText.Contains("before putting the changed file in place"),
+            edit.SaveChoice.NoteText.Contains("supported original-game settings") && edit.SaveChoice.NoteText.Contains("before starting either") &&
+            edit.SaveChoice.NoteText.Contains("before putting the changed file in place"),
             "saving offers the choices, a sensible new name and process-check guidance");
         edit.SaveChoice.Dialog.Hide();
 
@@ -386,7 +387,8 @@ internal static class CompanionUiTests
             "the cheat copy is byte-identical to the open career");
         cheats.AskToAdd();
         check.That(cheats.Confirm.Visible && cheats.Confirm.DialogText.Contains("PilotMALLOY") &&
-            cheats.Confirm.DialogText.Contains("before starting either") && cheats.Confirm.DialogText.Contains("again before putting the changed file in place"),
+            cheats.Confirm.DialogText.Contains("supported original-game settings") && cheats.Confirm.DialogText.Contains("before starting either") &&
+            cheats.Confirm.DialogText.Contains("again before putting the changed file in place"),
             "adding to the game asks first, naming the career and explaining the process checks and safe timing");
         InstallReceipt cheatInstall = await cheats.ConfirmAddAsync();
         check.That(cheatInstall.Ok && File.ReadAllBytes(Path.Combine(install.Game, "savegames", "PilotMALLOY.bes")).AsSpan().SequenceEqual(sourceBytes),
