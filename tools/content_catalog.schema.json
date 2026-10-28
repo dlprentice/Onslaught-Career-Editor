@@ -424,6 +424,24 @@
             }
           }
         },
+        "nestedMeshDetails": {
+          "type": "array",
+          "description": "Immediate nested meshes, including unresolved or unparsed children; this is not a runtime-loading claim.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["relationship", "status", "partCount", "framingPrefixBytes", "payloadSha256", "reason", "scope"],
+            "properties": {
+              "relationship": {"enum": ["mesh-lod", "unresolved-nested-mesh"]},
+              "status": {"enum": ["parsed", "partial", "unparsed"]},
+              "partCount": {"type": ["integer", "null"], "minimum": 0},
+              "framingPrefixBytes": {"type": ["integer", "null"], "minimum": 0},
+              "payloadSha256": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+              "reason": {"type": ["string", "null"]},
+              "scope": {"type": "string"}
+            }
+          }
+        },
         "textures": {
           "type": "array",
           "items": {

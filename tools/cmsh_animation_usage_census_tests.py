@@ -244,8 +244,9 @@ class ModelMetadataTests(unittest.TestCase):
 
     def test_lod_relationship_has_its_own_exact_occurrence_coordinates(self) -> None:
         child = _catalog_stream(name="LowDetail")
-        stream = _catalog_stream(lod=bytes(309) + child, next_marker=True)
-        row, _ = self.row(stream, payload_offset=512, chunk_path=(8,))
+        wrapped = _chunk(b"PMS2", bytes(309) + child)
+        stream = _catalog_stream(lod=wrapped, lod_tag=b"PMSH", next_marker=True)
+        row, _ = self.row(stream, payload_offset=512, chunk_path=(8,), source_context="embedded-mesh")
         metadata = row["modelMetadata"]
         edge = metadata["lodChildren"][0]
         self.assertEqual("mesh-lod", edge["relationship"])
@@ -259,8 +260,10 @@ class ModelMetadataTests(unittest.TestCase):
     def test_pmsh_wrapper_and_unproven_chain_are_not_silently_dropped(self) -> None:
         child = _catalog_stream(name="LowDetail")
         wrapped = _chunk(b"PMS2", bytes(309) + child)
-        row, _ = self.row(_catalog_stream(lod=wrapped, lod_tag=b"PMSH", next_marker=True))
+        row, _ = self.row(_catalog_stream(lod=wrapped, lod_tag=b"PMSH", next_marker=True),
+                          source_context="embedded-mesh")
         self.assertEqual("parsed", row["modelMetadata"]["lodChildren"][0]["model"]["status"])
+        self.assertEqual("mesh-lod", row["modelMetadata"]["lodChildren"][0]["relationship"])
         for payload in (_chunk(b"ZZZZ", b"unknown"), b"malformed"):
             with self.subTest(payload=payload):
                 row, _ = self.row(_catalog_stream(lod=payload, lod_tag=b"PMSH", next_marker=True))
@@ -270,6 +273,66 @@ class ModelMetadataTests(unittest.TestCase):
                 self.assertEqual(hashlib.sha256(payload).hexdigest(), edge["model"]["identity"]["payloadSha256"])
         row, _ = self.row(_catalog_stream(lod=bytes(309) + child, next_marker=False))
         self.assertEqual("unresolved-nested-mesh", row["modelMetadata"]["lodChildren"][0]["relationship"])
+
+    def test_loose_direct_nested_lods_keep_identity_and_reader_context(self) -> None:
+        grandchild = _catalog_stream(name="Third")
+        child = _catalog_stream(name="Second", lod=grandchild, next_marker=True)
+        stream = _catalog_stream(lod=child, next_marker=True)
+        row, _ = self.row(stream, source_context="loose-mesh", payload_offset=512, chunk_path=(3,))
+        root = row["modelMetadata"]
+        self.assertEqual("parsed", root["status"])
+        self.assertIn("runtime loading", root["sourceContextProvenance"])
+        first = root["lodChildren"][0]
+        second = first["model"]["lodChildren"][0]
+        for edge, expected in ((first, child), (second, grandchild)):
+            self.assertEqual(("mesh-lod", 0), (edge["relationship"], edge["framingPrefixBytes"]))
+            self.assertIn("runtime loading not established", edge["relationshipScope"])
+            self.assertEqual(hashlib.sha256(expected).hexdigest(), edge["model"]["identity"]["payloadSha256"])
+            self.assertEqual(512 + len(stream) - len(expected), edge["model"]["identity"]["payloadOffset"])
+        self.assertNotEqual(first["model"]["identity"]["occurrenceId"],
+                            second["model"]["identity"]["occurrenceId"])
+
+    def test_lod_shape_needs_its_declared_reader_context_and_marker(self) -> None:
+        child = _catalog_stream(name="Child")
+        bare = _catalog_stream(lod=child, next_marker=True)
+        resource = _catalog_stream(lod=_chunk(b"PMS2", bytes(309) + child),
+                                   lod_tag=b"PMSH", next_marker=True)
+        for stream, accepted in ((bare, "loose-mesh"), (resource, "embedded-mesh")):
+            for context in (None, "loose-mesh", "embedded-mesh"):
+                with self.subTest(accepted=accepted, context=context):
+                    row, _ = self.row(stream, source_context=context)
+                    meta = row["modelMetadata"]
+                    edge = meta["lodChildren"][0]
+                    self.assertEqual("mesh-lod" if context == accepted else "unresolved-nested-mesh",
+                                     edge["relationship"])
+                    self.assertEqual("parsed" if context == accepted else "partial", meta["status"])
+                    expected_reason = (None if context == accepted else "reader context is unknown" if context is None
+                                       else "reader context does not match nested framing")
+                    self.assertEqual(expected_reason, edge["relationshipReason"])
+        no_marker = _catalog_stream(lod=child, next_marker=False)
+        row, _ = self.row(no_marker, source_context="loose-mesh")
+        self.assertEqual("unresolved-nested-mesh", row["modelMetadata"]["lodChildren"][0]["relationship"])
+        self.assertEqual("next-in-chain marker is zero", row["modelMetadata"]["lodChildren"][0]["relationshipReason"])
+        self.assertIn("LOD presence marker and decoded child disagree", row["modelMetadata"]["unknowns"])
+        with self.assertRaisesRegex(ValueError, "unsupported source context"):
+            self.row(bare, source_context="invented")
+
+    def test_lod_invalid_or_ambiguous_child_is_not_promoted(self) -> None:
+        child = _catalog_stream(name="Child")
+        # Both the bare and 309-byte candidates appear to start with CMSH:
+        # even a parseable first header must not choose a boundary by guess.
+        ambiguous = bytearray(child)
+        ambiguous[309:317] = b"CMSH" + struct.pack("<I", 372)
+        for payload in (child[:-1], bytes(ambiguous)):
+            with self.subTest(ambiguous=payload == bytes(ambiguous)):
+                row, _ = self.row(_catalog_stream(lod=payload, next_marker=True), source_context="loose-mesh")
+                meta = row["modelMetadata"]
+                edge = meta["lodChildren"][0]
+                self.assertEqual("partial", meta["status"])
+                self.assertEqual("unresolved-nested-mesh", edge["relationship"])
+                self.assertEqual("unparsed", edge["model"]["status"])
+        self.assertIsNone(edge["framingPrefixBytes"])
+        self.assertEqual("no unique CMSH boundary", edge["relationshipReason"])
 
     def test_unknown_input_and_malformed_subsections_remain_explicit_rows(self) -> None:
         for stream in (b"not CMSH", _catalog_stream()[:-1]):

@@ -171,6 +171,45 @@ class StoredPartBoundsTests(unittest.TestCase):
         self.assertFalse(validator.is_valid({**good, "storedBounds": {**good["storedBounds"], "validFlag": 2**31}}))
 
 
+class MeshChainCatalogTests(unittest.TestCase):
+    def test_loose_and_embedded_envelopes_select_their_own_chain_shape(self) -> None:
+        child = mesh_fixtures._catalog_stream(name="Child")
+        loose = mesh_fixtures._catalog_stream(lod=child, next_marker=True)
+        embedded = mesh_fixtures._catalog_stream(
+            lod=chunk(b"PMS2", bytes(309) + child), lod_tag=b"PMSH", next_marker=True)
+        for stream, envelope, expected in ((loose, "aya-zlib-members(cmsh)", "parsed"),
+                                            (embedded, "lvlr-chunk(MESH/PMSH/PMS2)", "parsed"),
+                                            (loose, "lvlr-chunk(MESH/PMSH/PMS2)", "partial"),
+                                            (embedded, "aya-zlib-members(cmsh)", "partial"),
+                                            (loose, "unspecified", "partial")):
+            with self.subTest(envelope=envelope, expected=expected):
+                record, _, _ = catalog.catalog_mesh(stream, asset_id="mesh:authored", name="authored",
+                                                     container="authored.aya", container_sha="a" * 64,
+                                                     envelope=envelope, offset=0, chunk_path=[])
+                self.assertEqual(expected, record["mesh"]["status"])
+                self.assertEqual(1, record["mesh"]["lodChildren"])
+                self.assertEqual([1], record["mesh"]["lodChildParts"])
+                [detail] = record["mesh"]["nestedMeshDetails"]
+                self.assertEqual("mesh-lod" if expected == "parsed" else "unresolved-nested-mesh",
+                                 detail["relationship"])
+                self.assertEqual(("parsed", 1, hashlib.sha256(child).hexdigest()),
+                                 (detail["status"], detail["partCount"], detail["payloadSha256"]))
+                self.assertIn("runtime loading not established", detail["scope"])
+                self.assertEqual(expected != "parsed", detail["reason"] is not None)
+
+    def test_catalog_retains_an_unparsed_nested_mesh_as_unknown(self) -> None:
+        child = mesh_fixtures._catalog_stream(name="Child")[:-1]
+        stream = mesh_fixtures._catalog_stream(lod=child, next_marker=True)
+        record, _, _ = catalog.catalog_mesh(stream, asset_id="mesh:authored", name="authored",
+                                             container="authored.aya", container_sha="a" * 64,
+                                             envelope="aya-zlib-members(cmsh)", offset=0, chunk_path=[])
+        [detail] = record["mesh"]["nestedMeshDetails"]
+        self.assertEqual(("partial", "unresolved-nested-mesh", "unparsed", None),
+                         (record["mesh"]["status"], detail["relationship"], detail["status"], detail["partCount"]))
+        self.assertEqual(hashlib.sha256(child).hexdigest(), detail["payloadSha256"])
+        self.assertEqual("nested CMSH did not parse", detail["reason"])
+
+
 def ogg_file() -> bytes:
     ident = b"\x01vorbis" + struct.pack("<IBIiii", 0, 1, 44100, 0, 64000, 0) + b"\xb8\x01"
     page1 = b"OggS\x00\x02" + struct.pack("<qIII", 0, 9, 0, 0) + bytes([1, len(ident)]) + ident

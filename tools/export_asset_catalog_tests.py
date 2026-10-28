@@ -458,6 +458,17 @@ class CatalogSourceInspectionTests(unittest.TestCase):
         self.assertEqual(2, rows[0]["occurrence_count"])
         self.assertEqual([], rows[0]["export_fbx_paths"])
 
+    def test_selected_variant_does_not_infer_reader_context_from_its_manifest_kind(self):
+        from cmsh_animation_usage_census_tests import _catalog_stream
+        stream = _catalog_stream(lod=_catalog_stream(name="Child"), next_marker=True)
+        loose, variant = catalog._source_metadata("loose_mesh", envelope(stream),
+                                                  Path("authored.aya"), "authored.aya")
+        self.assertEqual("partial", loose["status"])
+        self.assertIsNone(variant["measured"]["sourceContext"])
+        edge = variant["measured"]["lodChildren"][0]
+        self.assertEqual(("unresolved-nested-mesh", "reader context is unknown"),
+                         (edge["relationship"], edge["relationshipReason"]))
+
     def test_default_cli_does_not_inspect_and_explicit_root_enables_join(self):
         path = self.source("textures/foo.tga.aya", envelope(dds(4, 4)))
         inputs = {"packed": dict(self.packed, gdie_families=[]), "texture": [self.row(path)],
