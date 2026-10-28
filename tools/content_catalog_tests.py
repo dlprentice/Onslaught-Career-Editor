@@ -487,6 +487,8 @@ class TextureMipIdentityTests(unittest.TestCase):
             original = [path.read_bytes() for path in paths]
             files = [{"path": path.relative_to(game).as_posix(), "family": "dds-texture-dxtn"} for path in paths]
             records, _ = catalog.catalog_textures(game, files)
+            repeated, _ = catalog.catalog_textures(game, files)
+            self.assertEqual(records, repeated)
             mip0, mip1 = records[0]["texture"]["mips"]
             self.assertEqual(mip0, {"index": 0, "width": 8, "height": 8, "ddsOffset": 128, "length": 32,
                                     "sha256": hashlib.sha256(first[128:160]).hexdigest()})
