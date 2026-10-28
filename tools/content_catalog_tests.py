@@ -15,6 +15,8 @@ from pathlib import Path
 
 import cmsh_animation_usage_census_tests as mesh_fixtures
 import content_catalog as catalog
+from dds_census_tests import dds as authored_dds
+from dds_metadata_tests import rgb_dds as authored_rgb_dds
 import mission_script_inspect as inspector
 import public_allowlist_safety_check as safety
 import world_resources_decode as worlddec
@@ -707,6 +709,69 @@ class TextureMipIdentityTests(unittest.TestCase):
             self.assertEqual(record["texture"]["status"], "malformed")
             self.assertEqual(record["texture"]["mips"], [])
 
+    def test_raw_dds_header_fields_are_retained_without_guessing_original_art(self) -> None:
+        rgba = bytearray(dds_dxt1_4x4()[:128])
+        struct.pack_into("<7I", rgba, 4, 124, 0x100F, 1, 1, 4, 0, 0)
+        struct.pack_into("<2I", rgba, 76, 32, 0x41)
+        rgba[84:88] = b"\x13\x37\x00\xfe"  # raw bytes, unused when the fourCC flag is absent
+        struct.pack_into("<5I", rgba, 88, 32, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000)
+        struct.pack_into("<2I", rgba, 108, 0x1000, 0)
+        rgba = bytes(rgba) + b"\x01\x02\x03\xff"
+        dxt = self.dds(b"LOWER-1!")
+        unsupported = dxt[:84] + b"DX10" + dxt[88:]
+        with tempfile.TemporaryDirectory() as tmp:
+            game = Path(tmp)
+            shelf = game / "data/resources/dxtntextures"
+            shelf.mkdir(parents=True)
+            inputs = [("a.tga(0)A1R5G5B5.aya", dxt), ("b.tga(0)A8R8G8B8.aya", rgba),
+                      ("short.aya", dxt[:-1]), ("unsupported.aya", unsupported), ("bad.aya", b"not a DDS")]
+            for name, data in inputs:
+                (shelf / name).write_bytes(aya(data))
+            files = [{"path": (shelf / name).relative_to(game).as_posix(), "family": "dds-texture-dxtn"}
+                     for name, _ in inputs]
+            records, _ = catalog.catalog_textures(game, files)
+            repeated, _ = catalog.catalog_textures(game, files)
+        self.assertEqual(records, repeated)
+        dxt_record, rgba_record, short, unsupported_record, bad = [r["texture"] for r in records]
+        self.assertEqual(dxt_record["sourceFormatFromName"], "A1R5G5B5")
+        self.assertEqual(dxt_record["storedFormat"], "DXT1")
+        self.assertEqual(dxt_record["ddsHeader"], {
+            "flags": 0xA1007, "pitchOrLinearSize": 32, "depth": 0, "declaredMipCount": 2,
+            "caps1": 0x401008, "caps2": 0,
+            "pixelFormat": {"flags": 4, "fourCCBytesHex": "44585431", "rgbBitCount": 0,
+                            "rgbaMasks": [0, 0, 0, 0]},
+        })
+        self.assertEqual(rgba_record["status"], "valid")
+        self.assertEqual(rgba_record["ddsHeader"]["pixelFormat"], {
+            "flags": 0x41, "fourCCBytesHex": "133700fe", "rgbBitCount": 32,
+            "rgbaMasks": [0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000],
+        })
+        self.assertEqual(short["status"], "malformed")
+        self.assertEqual(short["ddsHeader"], dxt_record["ddsHeader"])
+        self.assertEqual(short["mips"], [])
+        self.assertEqual(unsupported_record["status"], "unsupported")
+        self.assertEqual(unsupported_record["ddsHeader"]["pixelFormat"]["fourCCBytesHex"], "44583130")
+        self.assertEqual(unsupported_record["mips"], [])
+        self.assertIsNone(bad["ddsHeader"])
+        self.assertFalse(any("authored for" in item for item in records[0]["upscale"]["suggestedTreatment"]))
+
+    def test_header_schema_rejects_invalid_raw_fourcc_or_masks(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        schema = json.loads((catalog.TOOLS / "content_catalog.schema.json").read_text(encoding="utf-8"))
+        header = schema["properties"]["texture"]["properties"]["ddsHeader"]
+        valid = {"flags": 1, "pitchOrLinearSize": 0, "depth": 0, "declaredMipCount": 0, "caps1": 0, "caps2": 0,
+                 "pixelFormat": {"flags": 0, "fourCCBytesHex": "00000000", "rgbBitCount": 0,
+                                 "rgbaMasks": [0, 0, 0, 0]}}
+        validator = jsonschema.Draft202012Validator({"$defs": schema["$defs"], **header})
+        self.assertTrue(validator.is_valid(valid))
+        self.assertTrue(validator.is_valid(None))
+        self.assertFalse(validator.is_valid({**valid, "pixelFormat": {**valid["pixelFormat"], "fourCCBytesHex": "bad"}}))
+        self.assertFalse(validator.is_valid({**valid, "pixelFormat": {**valid["pixelFormat"], "fourCCBytesHex": "00000000\n"}}))
+        self.assertFalse(validator.is_valid({**valid, "pixelFormat": {**valid["pixelFormat"], "rgbaMasks": [0, 0, -1, 0]}}))
+
     def test_schema_rejects_an_invalid_mip_hash(self) -> None:
         try:
             import jsonschema
@@ -718,6 +783,75 @@ class TextureMipIdentityTests(unittest.TestCase):
         test_schema = {"$defs": schema["$defs"], **mip_schema}
         mip = {"index": 0, "width": 4, "height": 4, "ddsOffset": 128, "length": 8, "sha256": "bad"}
         self.assertFalse(jsonschema.Draft202012Validator(test_schema).is_valid(mip))
+
+
+class TextureTreatmentSemanticsTests(unittest.TestCase):
+    def test_alpha_association_is_the_admitted_format_convention_not_a_pixel_claim(self) -> None:
+        for layout, expected in (("DXT1", None), ("DXT2", True), ("DXT3", False), ("DXT4", True), ("DXT5", False)):
+            with self.subTest(layout=layout):
+                meta = catalog.dds_census.texture_metadata(authored_dds(4, 4, fourcc=layout))
+                self.assertEqual(meta["status"], "valid")
+                upscale = catalog.texture_upscale(meta, None)
+                self.assertIs(upscale["premultipliedAlpha"], expected)
+                self.assertIs(upscale["compressed"], True)
+                self.assertFalse(any("un-premultiply" in item for item in upscale["suggestedTreatment"]))
+                if expected is True:
+                    self.assertTrue(any("declares premultiplied alpha" in item for item in upscale["suggestedTreatment"]))
+        for layout, payload in (("A1R5G5B5", bytes(2)), ("A8R8G8B8", bytes(4))):
+            with self.subTest(layout=layout):
+                meta = catalog.dds_census.texture_metadata(authored_rgb_dds(layout, 1, 1, payload))
+                self.assertEqual(meta["status"], "valid")
+                upscale = catalog.texture_upscale(meta, None)
+                self.assertIsNone(upscale["premultipliedAlpha"])
+                self.assertIs(upscale["compressed"], False)
+
+    def test_rejected_formats_and_truncated_payloads_have_no_processing_recommendations(self) -> None:
+        dxt1 = authored_dds(4, 4)
+        cases = (("truncated DXT1", dxt1[:-1], "malformed"),
+                 ("truncated DXT2", authored_dds(4, 4, fourcc="DXT2")[:-1], "malformed"),
+                 ("DX10", dxt1[:84] + b"DX10" + dxt1[88:], "unsupported"),
+                 ("unknown FourCC", dxt1[:84] + b"ZZZZ" + dxt1[88:], "unsupported"),
+                 ("unsupported cube DXT4", authored_dds(4, 4, fourcc="DXT4")[:112]
+                  + struct.pack("<I", 0x200) + authored_dds(4, 4, fourcc="DXT4")[116:], "unsupported"))
+        for name, raw, status in cases:
+            with self.subTest(case=name):
+                meta = catalog.dds_census.texture_metadata(raw)
+                self.assertEqual(meta["status"], status)
+                upscale = catalog.texture_upscale(meta, "A1R5G5B5")
+                self.assertIsNone(upscale["compressed"])
+                self.assertIsNone(upscale["premultipliedAlpha"])
+                self.assertEqual(upscale["alpha"], "unknown")
+                self.assertEqual(upscale["mipLevels"], 0)
+                self.assertEqual(upscale["suggestedTreatment"], [])
+
+    def test_out_of_range_uv_does_not_recommend_processing_rejected_texture(self) -> None:
+        meta = catalog.dds_census.texture_metadata(authored_dds(4, 4)[:-1])
+        texture = {"id": "texture:test", "texture": {"status": meta["status"]},
+                   "upscale": catalog.texture_upscale(meta, None)}
+        desc = {"id": "desc:test", "relationships": [{"type": "pixels-from", "target": "texture:test"}]}
+        mesh = {"id": "mesh:test", "relationships": [{"type": "uses-texture", "target": "desc:test", "slot": 0}],
+                "mesh": {"textures": [{"slot": 0, "uvRange": [0., 0., 2., 2.]}]}}
+        catalog.apply_tiling([mesh], [desc], [texture])
+        self.assertEqual(texture["upscale"]["suggestedTreatment"], [])
+        self.assertEqual(texture["upscale"]["tiling"]["uvRange"], [0., 0., 2., 2.])
+        valid = catalog.dds_census.texture_metadata(authored_dds(4, 4))
+        texture["texture"]["status"] = valid["status"]
+        texture["upscale"] = catalog.texture_upscale(valid, None)
+        catalog.apply_tiling([mesh], [desc], [texture])
+        self.assertTrue(any("sampler address modes" in item for item in texture["upscale"]["suggestedTreatment"]))
+        self.assertFalse(any("(wrap)" in item for item in texture["upscale"]["suggestedTreatment"]))
+
+    def test_upscale_schema_admits_explicit_unknowns(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        schema = json.loads((catalog.TOOLS / "content_catalog.schema.json").read_text(encoding="utf-8"))
+        validator = jsonschema.Draft202012Validator({"$defs": schema["$defs"], **schema["properties"]["upscale"]})
+        for raw in (authored_dds(4, 4)[:-1], authored_dds(4, 4, fourcc="DXT4"),
+                    authored_rgb_dds("A8R8G8B8", 1, 1, bytes(4))):
+            upscale = catalog.texture_upscale(catalog.dds_census.texture_metadata(raw), None)
+            self.assertTrue(validator.is_valid(upscale), list(validator.iter_errors(upscale)))
 
 
 if __name__ == "__main__":

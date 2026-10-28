@@ -273,31 +273,48 @@ def texture_upscale(meta: dict, source_format: str | None) -> dict:
     stored = meta.get("stored_format")
     header = meta.get("header") or {}
     width, height = header.get("width"), header.get("height")
-    alpha = (meta.get("alpha") or {}).get("classification", "unknown")
-    mips = len(meta.get("mips") or [])
-    compressed = bool(stored and stored.startswith("DXT"))
+    valid = meta.get("status") == "valid"
+    alpha = (meta.get("alpha") or {}).get("classification", "unknown") if valid else "unknown"
+    mips = len(meta.get("mips") or []) if valid else 0
+    compressed = stored.startswith("DXT") if valid else None
+    # DXT2/4 declare premultiplied alpha; DXT3/5 declare non-premultiplied alpha. DXT1 and admitted RGB
+    # layouts do not establish an association, and an unadmitted header does not establish a valid format.
+    association = {"DXT2": True, "DXT3": False, "DXT4": True, "DXT5": False}.get(stored) if valid else None
     treatment = []
     if compressed:
-        treatment.append("decode the top mip; source carries DXT block compression, so remove block artefacts "
-                         "before upscaling; re-encode to BC1/BC3/BC7 or keep lossless for the HD set")
-    if stored == "DXT2":
-        treatment.append("DXT2 stores premultiplied colour: un-premultiply before upscaling, re-premultiply after")
+        treatment.append("the admitted format uses DXT block compression; inspect decoded pixels and validate "
+                         "replacement compression against the intended renderer")
+    if association is True:
+        treatment.append("the DXT format declares premultiplied alpha; validate association and zero-alpha handling "
+                         "before choosing a replacement conversion")
     if alpha == "binary":
-        treatment.append("alpha is a hard on/off mask: upscale the mask separately and re-threshold (no soft edges)")
+        treatment.append("top-mip alpha contains only fully opaque or transparent texels; check mask coverage "
+                         "when evaluating a replacement")
     elif alpha == "graded":
-        treatment.append("alpha is graded: upscale alpha as its own channel")
-    if source_format in ("A1R5G5B5", "A4R4G4B4", "R5G6B5"):
-        treatment.append(f"authored for {source_format} (16-bit colour): expect banding; deband before upscaling")
-    if width and height and max(width, height) <= 32:
+        treatment.append("top-mip alpha contains intermediate values; check alpha handling when evaluating a replacement")
+    if valid and width and height and max(width, height) <= 32:
         treatment.append("very small source: consider redrawing rather than upscaling")
     if mips > 1:
-        treatment.append("regenerate the mip chain from the upscaled top level (lower levels track a 2x2 reduction)")
+        treatment.append("validate the replacement mip chain and its transitions against the intended renderer")
     return {"sourceResolution": [width, height], "storedFormat": stored, "sourceFormat": source_format,
             "mipLevels": mips, "alpha": alpha, "compressed": compressed, "palette": None,
-            "premultipliedAlpha": True if stored == "DXT2" else (False if stored else None),
+            "premultipliedAlpha": association,
             "tiling": {"status": "no-mesh-evidence", "uvRange": None, "meshes": 0},
             "suggestedTreatment": treatment,
-            "treatmentBasis": "rule-derived from stored format, alpha census and mesh UV ranges; no visual review"}
+            "treatmentBasis": ("admitted format convention and top-mip alpha; mesh UV evidence is separate; "
+                               "no visual review or renderer validation" if valid else
+                               "texture not admitted; no processing treatment is inferred")}
+
+
+def catalog_dds_header(header: dict | None) -> dict | None:
+    """Selected raw DDS header values, not a claim that the payload is valid or the image is visually correct."""
+    if header is None:
+        return None
+    pixel = header["pixel_format"]
+    return {"flags": header["flags"], "pitchOrLinearSize": header["pitch"], "depth": header["depth"],
+            "declaredMipCount": header["mips"], "caps1": header["caps1"], "caps2": header["caps2"],
+            "pixelFormat": {"flags": pixel["flags"], "fourCCBytesHex": pixel["fourcc_hex"],
+                            "rgbBitCount": pixel["bits"], "rgbaMasks": list(pixel["masks"])}}
 
 
 def catalog_textures(game: Path, files: list[dict]) -> tuple[list[dict], dict[str, dict]]:
@@ -332,6 +349,7 @@ def catalog_textures(game: Path, files: list[dict]) -> tuple[list[dict], dict[st
             "mustbe": bool(match and match.group("mustbe")), "frame": frame,
             "sourceFormatFromName": source_format, "fileNameTruncated": truncated,
             "width": header.get("width"), "height": header.get("height"), "storedFormat": meta.get("stored_format"),
+            "ddsHeader": catalog_dds_header(meta.get("header")),
             # Offsets and hashes describe stored mip bytes inside the inflated
             # DDS, not offsets in the compressed AYA or decoded image pixels.
             "mips": [{"index": m["index"], "width": m["width"], "height": m["height"],
@@ -739,9 +757,9 @@ def apply_tiling(meshes: list[dict], descriptors: list[dict], textures: list[dic
         tiling["status"] = "repeats-beyond-0-1" if repeats else "within-0-1"
         tiling["evidence"] = ("vertex UV ranges (the single stored UV set) of the mesh strips that bind this texture "
                               "in any layer, before the texture's stored offset/scale lanes (data)")
-        if repeats:
-            tex["upscale"]["suggestedTreatment"].append("meshes sample it beyond 0..1 (wrap): upscale tile-aware "
-                                                        "with wrapped borders to keep seams invisible")
+        if repeats and tex["texture"]["status"] == "valid":
+            tex["upscale"]["suggestedTreatment"].append("stored mesh UVs extend beyond 0..1; check transforms and "
+                                                        "sampler address modes before choosing tile-aware processing")
     for desc in descriptors:
         for prel in desc["relationships"]:
             if prel["type"] == "pixels-from" and prel["target"]:

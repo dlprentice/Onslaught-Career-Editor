@@ -184,7 +184,8 @@ def texture_metadata(source: bytes, *, envelope: str = "dds", limits: TextureMet
         result["header"] = dict(h)
         pf_flags, = struct.unpack_from("<I", dds, 80)
         bits, rmask, gmask, bmask, amask = struct.unpack_from("<5I", dds, 88)
-        result["header"]["pixel_format"] = {"flags": pf_flags, "bits": bits, "masks": [rmask, gmask, bmask, amask]}
+        result["header"]["pixel_format"] = {"flags": pf_flags, "fourcc_hex": dds[84:88].hex(), "bits": bits,
+                                             "masks": [rmask, gmask, bmask, amask]}
         result["stored_format"] = h["layout"]
         if not h["width"] or not h["height"]:
             raise TextureError("zero DDS dimension")
