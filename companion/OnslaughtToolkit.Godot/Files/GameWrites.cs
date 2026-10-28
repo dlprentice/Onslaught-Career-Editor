@@ -24,14 +24,13 @@ public sealed record BackupReceipt(bool Ok, string Message, BackupSet? Set = nul
 
 /// <summary>
 /// The outcome of a write into the game folder. <see cref="MayHaveChanged"/> means the game folder may
-/// differ from before and must be inspected; the named backup holds the verified earlier bytes.
+/// differ from before and must be inspected along with the named backup, whose verification may also have failed.
 /// </summary>
 public sealed record InstallReceipt(bool Ok, string Message, string Target, string? BackupFolder = null,
     bool Replaced = false, bool MayHaveChanged = false, string? Sha256 = null, bool Exchanged = false);
 
 /// <summary>
-/// Whether the game is running: the original game, or Onslaught CE, which reads the same install's careers. The
-/// companion never writes into the game folder while either runs.
+/// Detects the original game or Onslaught CE, which reads the same install's careers. A check cannot prevent a later start.
 /// </summary>
 public static class GameProcess
 {
@@ -343,9 +342,9 @@ public static class Backups
 
 /// <summary>
 /// Writes into the game folder, the one place the companion changes the player's install. Only a
-/// career in <c>savegames/</c> or <c>defaultoptions.bea</c> can be written, never while the game runs
-/// (checked before the backup and again just before the swap), and only after a verified backup of every
-/// career and the options file. Replacing a file checks it
+/// career in <c>savegames/</c> or <c>defaultoptions.bea</c> can be written, after a verified backup of supported
+/// careers and options. It checks for a running game before the backup and before publication; these checks do not
+/// prevent a concurrent start. Replacing a file checks it
 /// still matches its backup, then swaps atomically and verifies both sides of the swap.
 /// </summary>
 public static partial class GameInstaller
