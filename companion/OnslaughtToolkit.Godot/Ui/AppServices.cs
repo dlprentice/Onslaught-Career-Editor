@@ -11,7 +11,7 @@ internal sealed class AppServices
 {
     internal const string GameWriteGuidance = "Close Battle Engine Aquila and Onslaught CE before continuing. " +
         "Wait until the operation finishes before starting either.";
-    internal const string GameWriteChecks = "The companion checks for either game before backup and just before writing.";
+    internal const string GameWriteChecks = "The companion checks for either game before backup and again before putting the changed file in place.";
 
     internal required CareerWorkspace Workspace { get; init; }
     internal required GameLibrary Game { get; init; }

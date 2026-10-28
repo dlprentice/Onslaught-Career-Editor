@@ -182,8 +182,9 @@ internal static class CompanionUiTests
         check.That(edit.SaveChoice.Dialog.Size.Y is > 200 and < 640 && edit.SaveChoice.Dialog.GetOkButton().ThemeTypeVariation == "Primary",
             $"the save dialog fits its content, well inside the window ({edit.SaveChoice.Dialog.Size.Y} px tall), with its action in amber");
         check.That(edit.SaveChoice.Dialog.Visible && edit.SaveChoice.Offers(SaveTarget.NewCareer) && edit.SaveChoice.Offers(SaveTarget.Replace) &&
-            edit.SaveChoice.Offers(SaveTarget.Elsewhere) && edit.SaveChoice.Name.Text == "Career One (edited)" && edit.SaveChoice.InGameAvailable,
-            "saving offers a new career, replacing this one, or a copy elsewhere, with a sensible new name");
+            edit.SaveChoice.Offers(SaveTarget.Elsewhere) && edit.SaveChoice.Name.Text == "Career One (edited)" && edit.SaveChoice.InGameAvailable &&
+            edit.SaveChoice.NoteText.Contains("before starting either") && edit.SaveChoice.NoteText.Contains("before putting the changed file in place"),
+            "saving offers the choices, a sensible new name and process-check guidance");
         edit.SaveChoice.Dialog.Hide();
 
         string edited = Path.Combine(outputDirectory, "edited.bes");
@@ -241,9 +242,10 @@ internal static class CompanionUiTests
         edit.Rows[3].Target.Value = 999;
         edit.AskToSave();
         bool offered = edit.SaveChoice.InGameAvailable;
+        bool namesBoth = edit.SaveChoice.NoteText.Contains("Battle Engine Aquila or Onslaught CE");
         edit.SaveChoice.Dialog.Hide();
         InstallReceipt blocked = await edit.SaveIntoGameAsync(SaveTarget.NewCareer, "Blocked");
-        check.That(!offered && !blocked.Ok && blocked.Message.Contains("running") && app.RunningBadge.Visible &&
+        check.That(!offered && namesBoth && !blocked.Ok && blocked.Message.Contains("running") && app.RunningBadge.Visible &&
             !File.Exists(Path.Combine(install.Game, "savegames", "Blocked.bes")), "nothing is written into the game while it runs");
         running.On = false;
         app.CheckRunning();
@@ -384,7 +386,7 @@ internal static class CompanionUiTests
             "the cheat copy is byte-identical to the open career");
         cheats.AskToAdd();
         check.That(cheats.Confirm.Visible && cheats.Confirm.DialogText.Contains("PilotMALLOY") &&
-            cheats.Confirm.DialogText.Contains("before starting either") && cheats.Confirm.DialogText.Contains("before backup and just before writing"),
+            cheats.Confirm.DialogText.Contains("before starting either") && cheats.Confirm.DialogText.Contains("again before putting the changed file in place"),
             "adding to the game asks first, naming the career and explaining the process checks and safe timing");
         InstallReceipt cheatInstall = await cheats.ConfirmAddAsync();
         check.That(cheatInstall.Ok && File.ReadAllBytes(Path.Combine(install.Game, "savegames", "PilotMALLOY.bes")).AsSpan().SequenceEqual(sourceBytes),
@@ -511,7 +513,7 @@ internal static class CompanionUiTests
         BackupFile first = oldest.Files.Single(file => file.Name == "Career One.bes");
         backups.AskToRestore(oldest, first);
         check.That(backups.Confirm.Visible && backups.Confirm.DialogText.Contains("Career One") &&
-            backups.Confirm.DialogText.Contains("before starting either") && backups.Confirm.DialogText.Contains("before backup and just before writing"),
+            backups.Confirm.DialogText.Contains("before starting either") && backups.Confirm.DialogText.Contains("again before putting the changed file in place"),
             "putting a file back asks first and explains the process checks and safe timing");
         InstallReceipt restored = await backups.ConfirmAsync();
         check.That(restored.Ok && File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(original) &&

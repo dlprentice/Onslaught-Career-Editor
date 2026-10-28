@@ -460,10 +460,10 @@ def export_platform(engine: Path, project: Path, templates: Path, pins: dict[str
         "onslaught-ce on Linux or onslaught-ce.exe on Windows. Play starts that launcher; it owns CE updates.\n"
         "CE careers and ce.ini use CE's separate user folder. Original-install careers shown under CE are read-only;\n"
         "save changes as a new named CE copy. CE settings edits cover update_check and record_sessions only.\n\n"
-        "Before the companion changes anything in the selected game's folder it backs up every\n"
-        "career and the settings file. It checks whether the game or Onslaught CE is running before the backup and\n"
-        "just before writing. Close both games before saving or restoring, and wait for the operation to finish\n"
-        "before starting either. Backups can put an earlier career back.\n" +
+        "Before changing a career, the companion backs up supported careers and original-game settings. CE settings\n"
+        "changes get a separate backup or an absence note. It checks whether the game or Onslaught CE is running before the backup and\n"
+        "again before putting the changed file in place. Close both games before saving or restoring, and wait for\n"
+        "the operation to finish before starting either. Backups can put an earlier career back.\n" +
         ("Native Windows checks exercised CE process detection and protected career/settings writes. The Godot UI\n"
          "workflow and this exported package still require native Windows acceptance. See the source validation record.\n"
          if platform == "windows" else "") +

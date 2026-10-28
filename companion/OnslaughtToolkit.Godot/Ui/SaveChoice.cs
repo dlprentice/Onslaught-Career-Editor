@@ -7,8 +7,8 @@ internal enum SaveTarget { NewCareer, Replace, Elsewhere }
 
 /// <summary>
 /// How a change is saved, asked in one dialog: as a new career in the game, in place of the file it came
-/// from, or as a copy somewhere else. Game writes always back up first and never happen while the game
-/// runs; the dialog says so before anything is chosen.
+/// from, or as a copy somewhere else. Game writes back up first and check for running games; the dialog explains
+/// how to keep both games closed until the operation finishes.
 /// </summary>
 internal sealed class SaveChoice
 {
@@ -55,6 +55,7 @@ internal sealed class SaveChoice
 
     internal ConfirmationDialog Dialog { get; }
     internal LineEdit Name { get; }
+    internal string NoteText => _note.Text;
     internal SaveTarget Target => _choices.FirstOrDefault(choice => choice.Radio.ButtonPressed).Target;
 
     /// <summary>Whether a choice that writes into the game is on offer and usable right now.</summary>
@@ -82,9 +83,10 @@ internal sealed class SaveChoice
         SaveTarget first = _choices.FirstOrDefault(choice => choice.Panel.Visible && !choice.Radio.Disabled,
             _choices.First(choice => choice.Panel.Visible)).Target;
         Select(first);
-        _note.Text = running ? "Battle Engine Aquila is running. Close it to save into your game; a copy can still be saved elsewhere."
+        _note.Text = running ? "Battle Engine Aquila or Onslaught CE is detected. Close both to save into your game; a copy can still be saved elsewhere."
             : game ? $"Before anything in your game changes, your careers and settings are backed up to {_app.Backups.Folder} " +
-              "(a file the companion cannot read is left as it is). You can put them back from Backups at any time."
+              "(a file the companion cannot read is left as it is). You can put them back from Backups at any time. " +
+              AppServices.GameWriteGuidance + " " + AppServices.GameWriteChecks
             : "Choose your game folder on Home to save into your game.";
         Validate();
         Dialog.PopupCentered();
