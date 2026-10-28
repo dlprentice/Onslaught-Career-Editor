@@ -2,7 +2,7 @@
 
 Status: active format contract — key convention, frame selection, interpolation and mode timing for PC meshes
 Date: 2026-10-16
-Last updated: 2026-10-16 (the skeletal path reads `last`; the companion's glTF export checked pose by pose)
+Last updated: 2026-10-28 (selected-mesh reflection catalogue; earlier: skeletal `last` and pose-by-pose glTF checks)
 Verdict: a part's keys (`HORI`, `HPOS`, chosen through `VHFM`) are relative to its parent. Composing them from the
 root with column vectors (`position = Pp + Op·p`, `orientation = Op·O`) reproduces every cached model-space frame
 in the installed corpus: 143,871 `CPOS` positions and 141,044 `CORI` orientations, all within single-precision
@@ -53,6 +53,30 @@ the static flag. The cache-length rule holds for all 4,009 installed parts.
 
 Every stored key orientation is orthonormal, but **920 of the 59,327 keys are reflections** (determinant −1).
 A format that wants a rotation and a scale needs a negative scale on one axis for those keys.
+
+For selected loose PC meshes, [`model_transform_catalog.py`](../../tools/model_transform_catalog.py) produces a
+private per-part report identifying reflected local keys and the virtual-frame ranges whose `VHFM` entries refer to
+them. It reports stored keys, distinct referenced keys and frame references separately, and classifies bases that are
+not orthonormal within its stated tolerance separately. The report is metadata and hashes, with no matrix or geometry
+payload; its [schema](../../tools/model_transform_catalog.schema.json) marks it as retail-derived. For example:
+
+```sh
+python tools/model_transform_catalog.py --mesh /path/to/selected.msh.aya --stdout
+```
+
+Repeat `--mesh` to select additional files. The CLI emits the private report to stdout and does not open a report
+file. The `report_bytes` API returns deterministic UTF-8 JSON bytes; callers are responsible for privacy and any
+persistence. If you redirect output, your shell opens the destination before the tool runs: the tool cannot protect
+the destination or prevent overwriting source data. Keep retail-derived reports private and out of Git.
+
+The selected-file reader requires Linux descriptor-relative `O_PATH` and `/proc/self/fd`, refuses `..`, symlinks in
+any source path component and files with multiple hard links, and performs a bounded read of each. It rechecks file
+identities before returning or emitting the report. Metadata checks detect many changes but are not an atomic
+filesystem snapshot or a lock; compare the recorded archive hash when using the result. `analyse_stream` accepts
+already-owned bytes on other platforms, with the caller responsible for source identity. The JSON schema checks
+structure and basic field limits, not semantic consistency among counts, parent/key ordinals or frame ranges.
+The report covers only the root stream's parent-relative keys: it counts nested mesh siblings without analysing them,
+and does not establish that a game animation selects a frame, a reflected world transform or an export's fidelity.
 
 The older mesh format stored keys in model space. Its loader converted them to parent-relative form
 (`CMeshPart::HierarchyAdjust`, `0x004b0800`). The chunked PC files store the converted, parent-relative
