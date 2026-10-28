@@ -123,7 +123,10 @@ publish, sign, or install anything by themselves.
   or gameplay safety validator.
 - `export_game_assets.py`, `export_asset_catalog.py`,
   `export_language_corpus.py`, and `export_video_manifest.py` operate on
-  user-supplied local inputs and write to a separate local output root.
+  user-supplied local inputs and write to a separate local output root. The
+  asset catalogue's exact-content mesh variants contain payload-relative
+  metadata; selected source paths and occurrence identities stay on occurrence
+  rows rather than changing the shared variant.
 - `rebuild/tools/materialize_retail_assets.py` verifies one supported retail
   installation and reproduces the exact current rebuild inputs at ignored
   runtime paths. Existing rebuild build/run/smoke commands invoke it directly.

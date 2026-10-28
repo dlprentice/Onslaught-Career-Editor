@@ -185,6 +185,31 @@ def _texture_inspection_declaration(value: object) -> dict[str, object] | None:
     return result
 
 
+def _mesh_variant_metadata(model: dict[str, object], *, root: bool = True) -> dict[str, object]:
+    """Remove source-occurrence identities from a shared CMSH payload variant.
+
+    Offsets produced for this inspection start at zero in the held CMSH
+    stream, regardless of whether its envelope was compressed or raw.
+    """
+    identity = model.pop("identity", None)
+    if identity is not None and not root:
+        model["contentIdentity"] = {"contentId": identity["contentId"],
+                                    "payloadSha256": identity["payloadSha256"],
+                                    "payloadBytes": identity["payloadBytes"],
+                                    "payloadOffset": identity["payloadOffset"],
+                                    "coordinateSpace": "cmsh-stream"}
+    for part in model.get("parts") or []:
+        part.pop("occurrenceId", None)
+    for lane in ("animations", "emitters"):
+        for row in (model.get(lane) or {}).get("rows") or []:
+            row.pop("occurrenceId", None)
+            if "coordinateSpace" in row:
+                row["coordinateSpace"] = "cmsh-stream"
+    for edge in model.get("lodChildren") or []:
+        _mesh_variant_metadata(edge["model"], root=False)
+    return model
+
+
 def _source_metadata(
     kind: str, source: bytes, path: Path, logical: str, *,
     inspection: dict[str, object] | None = None,
@@ -254,8 +279,7 @@ def _source_metadata(
             "falsifier": "provide an independently located complete CMSH stream"}}, None
     row, _mesh = models.mesh_record_from_stream(
         payload_bytes, source_path=logical, archive_sha256=hashlib.sha256(source).hexdigest())
-    metadata = dict(row["modelMetadata"])
-    metadata.pop("identity", None)  # Its archive coordinates do not describe a standalone raw file.
+    metadata = _mesh_variant_metadata(row["modelMetadata"])
     metadata["summary"] = {key: value for key, value in row.items() if key not in ("file", "modelMetadata")}
     return {"status": metadata["status"], "envelope": envelope}, {
         "payload_domain": "cmsh-stream", "payload_identity": {
