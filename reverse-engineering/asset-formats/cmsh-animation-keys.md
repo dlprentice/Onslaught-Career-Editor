@@ -58,7 +58,20 @@ For selected loose PC meshes, [`model_transform_catalog.py`](../../tools/model_t
 private per-part report identifying reflected local keys and the virtual-frame ranges whose `VHFM` entries refer to
 them. It reports stored keys, distinct referenced keys and frame references separately, and classifies bases that are
 not orthonormal within its stated tolerance separately. The report is metadata and hashes, with no matrix or geometry
-payload; its [schema](../../tools/model_transform_catalog.schema.json) marks it as retail-derived. For example:
+payload; its [v2 schema](../../tools/model_transform_catalog.v2.schema.json) marks it as retail-derived. The older
+[v1 schema](../../tools/model_transform_catalog.schema.json) remains available for existing reports.
+
+Names are read from their bounded stored fields: the 300-byte `CMesh::mName` at CMSH payload `+0x24` and
+the 32-byte `CMeshPart::mName` at CMSP payload `+0xdc` (the declarations in onslaught-decomp
+`src/mesh.h`). An empty part name stays empty; it is not replaced by the preview parser's generated `part-N`
+label. For a terminated name the report hashes the bytes before NUL, and emits a text value only when those
+bytes decode as UTF-8. That decoding is a lossless interpretation of the bytes, not proof of the game's display
+encoding. An invalid-UTF-8 or unterminated mesh name has a null text value and an explicit status; an
+unterminated field has no name-byte hash. The underlying parser can refuse invalid part names before a report
+is produced. Older v1 reports may contain a generated empty-part label or replacement-decoded mesh name and
+should be regenerated before using names as identifiers.
+
+For example:
 
 ```sh
 python tools/model_transform_catalog.py --mesh /path/to/selected.msh.aya --stdout
@@ -73,8 +86,9 @@ The selected-file reader requires Linux descriptor-relative `O_PATH` and `/proc/
 any source path component and files with multiple hard links, and performs a bounded read of each. It rechecks file
 identities before returning or emitting the report. Metadata checks detect many changes but are not an atomic
 filesystem snapshot or a lock; compare the recorded archive hash when using the result. `analyse_stream` accepts
-already-owned bytes on other platforms, with the caller responsible for source identity. The JSON schema checks
-structure and basic field limits, not semantic consistency among counts, parent/key ordinals or frame ranges.
+already-owned bytes on other platforms, with the caller responsible for source identity. The v2 JSON schema checks
+the name/status/hash combinations but cannot verify a digest without the original bytes. It checks structure and
+basic field limits, not semantic consistency among counts, parent/key ordinals or frame ranges.
 The report covers only the root stream's parent-relative keys: it counts nested mesh siblings without analysing them,
 and does not establish that a game animation selects a frame, a reflected world transform or an export's fidelity.
 

@@ -12,6 +12,12 @@ Only the root CMSH is analysed. A frame-map reference is not proof that a game
 mode selects that frame, and a parent-relative reflection is not necessarily a
 model/world-space reflection. Interpolation, animation scheduling, appearance,
 non-root chained meshes, and exporter correctness are outside this report.
+Names come from bounded on-disk fields; an empty part name stays empty rather
+than inheriting the preview parser's generated label. A terminated UTF-8 name
+is a lossless byte decoding, not proof of the game's display encoding. Invalid
+or unterminated mesh names remain unknown; the name-byte hash identifies
+terminated bytes, not a runtime mesh. Invalid part names may be refused by the
+underlying CMSH decoder before a report is available.
 Generated reports contain private retail-derived names and hashes: do not publish
 them or add them to Git. The CLI emits the report only to stdout and does not
 open a report file. If a caller redirects or saves the output, the caller is
@@ -33,6 +39,11 @@ Repeat --mesh for up to 512 explicitly selected files.
 """
 from __future__ import annotations
 
+import sys
+
+if __name__ == "__main__":
+    sys.dont_write_bytecode = True
+
 import argparse
 import collections
 import hashlib
@@ -41,7 +52,6 @@ import math
 import os
 from pathlib import Path
 import stat
-import sys
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -49,13 +59,32 @@ sys.path.insert(0, str(ROOT / "rebuild" / "tools"))
 from aya_archive_inventory import MAX_COMPRESSED_BYTES, inflate_aya_bytes  # noqa: E402
 from cmsh_static_preview import parse_cmsh_stream  # noqa: E402
 
-SCHEMA = "onslaught.model-transform-catalog.v1"
+SCHEMA = "onslaught.model-transform-catalog.v2"
 MAX_INPUTS = 512
 MAX_TOTAL_PARTS = 12000
 MAX_TOTAL_VIRTUAL_FRAMES = 1000000
 ORTHOGONAL_TOLERANCE = 0.0001
 KINDS = ("proper", "reflected", "nonOrthogonal")
 HAS_OPEN_DIR_FD = os.open in os.supports_dir_fd
+# onslaught-decomp src/mesh.h: CMesh::mName[300] +0x24;
+# CMeshPart::mName[32] +0xdc. Never include the following stored pointer.
+MESH_NAME_OFFSET, MESH_NAME_BYTES = 0x24, 300
+PART_NAME_OFFSET, PART_NAME_BYTES = 0xdc, 32
+
+
+def stored_name(field: bytes) -> tuple[str | None, str, str | None]:
+    """Bound a stored NUL-terminated field without fabricating or replacing a name."""
+    end = field.find(b"\0")
+    if end < 0:
+        return None, "unterminated", None
+    data = field[:end]
+    digest = hashlib.sha256(data).hexdigest()
+    if not data:
+        return "", "empty", digest
+    try:
+        return data.decode("utf-8"), "utf8-decoded", digest
+    except UnicodeDecodeError:
+        return None, "invalid-utf8", digest
 
 
 def classify_orientation(rows: tuple[tuple[float, ...], ...]) -> tuple[str, float]:
@@ -103,8 +132,16 @@ def reflected_ranges(frame_types: list[str]) -> list[list[int]]:
 
 def analyse_stream(stream: bytes, *, source_name: str, source_sha256: str) -> dict[str, Any]:
     mesh = parse_cmsh_stream(stream)
+    if len(mesh.raw_header) < MESH_NAME_OFFSET + MESH_NAME_BYTES:
+        raise ValueError("CMSH header does not contain the bounded mesh name")
+    mesh_name, mesh_name_status, mesh_name_sha = stored_name(
+        mesh.raw_header[MESH_NAME_OFFSET:MESH_NAME_OFFSET + MESH_NAME_BYTES])
     parts = []
     for ordinal, part in enumerate(mesh.file_parts()):
+        if len(part.raw_cmsp) < PART_NAME_OFFSET + PART_NAME_BYTES:
+            raise ValueError(f"part {ordinal} does not contain the bounded name field")
+        part_name, part_name_status, part_name_sha = stored_name(
+            part.raw_cmsp[PART_NAME_OFFSET:PART_NAME_OFFSET + PART_NAME_BYTES])
         track = part.track
         if track is None or not track.hierarchy or not track.frame_map:
             raise ValueError(f"part {ordinal} has no complete orientation track")
@@ -116,7 +153,9 @@ def analyse_stream(stream: bytes, *, source_name: str, source_sha256: str) -> di
         frame_types = [types[index] for index in track.frame_map]
         parts.append({
             "ordinal": ordinal,
-            "name": part.name,
+            "name": part_name,
+            "nameStatus": part_name_status,
+            "nameBytesSha256": part_name_sha,
             "parentOrdinal": part.parent,
             "hierarchyPoseCount": len(types),
             "virtualFrameCount": len(track.frame_map),
@@ -132,7 +171,9 @@ def analyse_stream(stream: bytes, *, source_name: str, source_sha256: str) -> di
     return {
         "source": {"name": source_name, "archiveSha256": source_sha256,
                    "inflatedCmshStreamSha256": hashlib.sha256(stream).hexdigest()},
-        "meshName": mesh.name,
+        "meshName": mesh_name,
+        "meshNameStatus": mesh_name_status,
+        "meshNameBytesSha256": mesh_name_sha,
         "parts": parts,
         "summary": {
             "parts": len(parts),
@@ -266,6 +307,8 @@ def _report_for(paths: list[Path]) -> tuple[dict[str, Any], list[tuple[Path, tup
             "tolerance": ORTHOGONAL_TOLERANCE,
             "selection": "VHFM frame-map references only; reflected ranges are inclusive; no animation mode, playback or rendering asserted",
             "coverage": "root CMSH only; nested mesh siblings are counted as candidates, not parsed",
+            "nameInterpretation": "UTF-8 decoding only when bounded bytes are valid; empty and invalid names are not "
+                                  "invented or replacement-decoded; the game's display encoding is not established",
             "evidence": "reverse-engineering/asset-formats/cmsh-animation-keys.md; "
                         "onslaught-decomp CMeshPart::BuildCache @004b1a40 and "
                         "CMeshPart::EvaluateAnimatedTransform @004b5330",

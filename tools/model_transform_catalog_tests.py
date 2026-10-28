@@ -87,6 +87,55 @@ class MatrixClassificationTests(unittest.TestCase):
 
 
 class MeshProjectionTests(unittest.TestCase):
+    def test_empty_part_name_is_not_the_preview_generated_label(self) -> None:
+        part = fixtures._catalog_part(0, name="", geometry=True)
+        stream = fixtures._catalog_stream(parts=[part])
+        self.assertEqual(catalog.parse_cmsh_stream(stream).file_parts()[0].name, "part-0")
+        [row] = catalog.analyse_stream(stream, source_name="authored", source_sha256="a" * 64)["parts"]
+        self.assertEqual((row["name"], row["nameStatus"], row["nameBytesSha256"]),
+                         ("", "empty", hashlib.sha256(b"").hexdigest()))
+
+    def test_bounded_mesh_name_refuses_to_consume_following_pointer(self) -> None:
+        stream = bytearray(fixtures._catalog_stream())
+        start = 8 + catalog.MESH_NAME_OFFSET
+        stream[start:start + catalog.MESH_NAME_BYTES] = b"A" * catalog.MESH_NAME_BYTES
+        # The following bounding-box pointer begins with NUL. A 304-byte
+        # search would misidentify that byte as the 300-byte name's terminator.
+        stream[start + catalog.MESH_NAME_BYTES:start + catalog.MESH_NAME_BYTES + 4] = b"\0ABC"
+        self.assertEqual(catalog.parse_cmsh_stream(bytes(stream)).name, "A" * 300)
+        report = catalog.analyse_stream(bytes(stream), source_name="authored", source_sha256="a" * 64)
+        self.assertEqual((report["meshName"], report["meshNameStatus"], report["meshNameBytesSha256"]),
+                         (None, "unterminated", None))
+
+    def test_non_utf8_mesh_name_is_unknown_not_replacement_text(self) -> None:
+        hashes = []
+        for raw_name in (b"\xffThing", b"\xfeThing"):
+            stream = bytearray(fixtures._catalog_stream())
+            start = 8 + catalog.MESH_NAME_OFFSET
+            stream[start:start + catalog.MESH_NAME_BYTES] = (raw_name + b"\0").ljust(catalog.MESH_NAME_BYTES, b"\0")
+            self.assertIn("\ufffd", catalog.parse_cmsh_stream(bytes(stream)).name)
+            report = catalog.analyse_stream(bytes(stream), source_name="authored", source_sha256="a" * 64)
+            self.assertIsNone(report["meshName"])
+            self.assertEqual(report["meshNameStatus"], "invalid-utf8")
+            self.assertEqual(report["meshNameBytesSha256"], hashlib.sha256(raw_name).hexdigest())
+            self.assertNotIn("\ufffd", json.dumps(report, ensure_ascii=False))
+            hashes.append(report["meshNameBytesSha256"])
+        self.assertNotEqual(*hashes)
+
+    def test_utf8_part_name_has_exact_byte_hash_and_unknown_encoding_context(self) -> None:
+        part = bytearray(fixtures._catalog_part(0, name="", geometry=True))
+        start = 16 + catalog.PART_NAME_OFFSET  # MESP and CMSP chunk headers
+        raw_name = b"Caf\xc3\xa9"
+        part[start:start + catalog.PART_NAME_BYTES] = (raw_name + b"\0").ljust(catalog.PART_NAME_BYTES, b"\0")
+        stream = fixtures._catalog_stream(parts=[bytes(part)])
+        [row] = catalog.analyse_stream(stream, source_name="authored", source_sha256="a" * 64)["parts"]
+        self.assertEqual((row["name"], row["nameStatus"], row["nameBytesSha256"]),
+                         ("Café", "utf8-decoded", hashlib.sha256(raw_name).hexdigest()))
+        part[start:start + catalog.PART_NAME_BYTES] = (b"bad\xff\0").ljust(catalog.PART_NAME_BYTES, b"\0")
+        with self.assertRaises(ValueError):
+            catalog.analyse_stream(fixtures._catalog_stream(parts=[bytes(part)]),
+                                   source_name="authored", source_sha256="a" * 64)
+
     def test_stored_keys_distinct_references_and_frame_multiplicity_are_separate(self) -> None:
         stream = make_stream([IDENTITY, REFLECTION, SCALE], b"\0\1\1\0")
         model = catalog.analyse_stream(stream, source_name="authored.aya", source_sha256="a" * 64)
@@ -221,7 +270,8 @@ runpy.run_path(sys.argv[0], run_name="__main__")
 """
         script = catalog.ROOT / "tools/model_transform_catalog.py"
         before = {path.relative_to(self.root) for path in self.root.rglob("*")}
-        env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
+        env = dict(os.environ)
+        env.pop("PYTHONDONTWRITEBYTECODE", None)  # CLI itself must suppress import bytecode writes.
         env.pop("MODEL_CATALOG_AUDIT_NEGATIVE", None)
         result = subprocess.run([sys.executable, "-c", wrapper, str(script), str(self.source)],
                                 env=env, capture_output=True, text=True, timeout=10)
@@ -521,12 +571,90 @@ runpy.run_path(sys.argv[0], run_name="__main__")
             import jsonschema
         except ImportError:
             self.skipTest("jsonschema is not installed")
-        schema = json.loads((catalog.ROOT / "tools/model_transform_catalog.schema.json").read_text())
+        schema = json.loads((catalog.ROOT / "tools/model_transform_catalog.v2.schema.json").read_text())
         report = catalog.report_for([self.source])
         validator = jsonschema.Draft202012Validator(schema)
         self.assertTrue(validator.is_valid(report), list(validator.iter_errors(report)))
+        legacy = json.loads(json.dumps(report))
+        legacy["schema"] = "onslaught.model-transform-catalog.v1"
+        legacy["basis"].pop("nameInterpretation")
+        for mesh in legacy["meshes"]:
+            mesh.pop("meshNameStatus")
+            mesh.pop("meshNameBytesSha256")
+            for part in mesh["parts"]:
+                part.pop("nameStatus")
+                part.pop("nameBytesSha256")
+        legacy_schema = json.loads((catalog.ROOT / "tools/model_transform_catalog.schema.json").read_text())
+        legacy_validator = jsonschema.Draft202012Validator(legacy_schema)
+        self.assertTrue(legacy_validator.is_valid(legacy), list(legacy_validator.iter_errors(legacy)))
+        self.assertFalse(validator.is_valid(legacy))
+        broken = json.loads(json.dumps(report))
+        broken["meshes"][0]["meshNameStatus"] = "invented"
+        self.assertFalse(validator.is_valid(broken))
+        broken = json.loads(json.dumps(report))
+        broken["meshes"][0]["parts"][0]["nameBytesSha256"] = "bad"
+        self.assertFalse(validator.is_valid(broken))
         report["meshes"][0]["parts"][0]["storedKeys"]["reflected"] = -1
         self.assertFalse(validator.is_valid(report))
+
+    def test_v2_schema_accepts_explicit_unknown_mesh_names(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        schema = json.loads((catalog.ROOT / "tools/model_transform_catalog.v2.schema.json").read_text())
+        validator = jsonschema.Draft202012Validator(schema)
+        for raw, status in ((b"\xffThing\0", "invalid-utf8"), (b"A" * 300, "unterminated")):
+            with self.subTest(status=status):
+                stream = bytearray(make_stream())
+                start = 8 + catalog.MESH_NAME_OFFSET
+                stream[start:start + 300] = raw.ljust(300, b"\0")
+                self.source.write_bytes(aya(bytes(stream)))
+                report = catalog.report_for([self.source])
+                self.assertEqual(report["meshes"][0]["meshNameStatus"], status)
+                self.assertTrue(validator.is_valid(report), list(validator.iter_errors(report)))
+
+    def test_v2_schema_enforces_each_name_status_hash_combination(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        schema = json.loads((catalog.ROOT / "tools/model_transform_catalog.v2.schema.json").read_text())
+        validator = jsonschema.Draft202012Validator(schema)
+        baseline = catalog.report_for([self.source])
+        empty_sha = hashlib.sha256(b"").hexdigest()
+        valid = [
+            ("empty", "", empty_sha),
+            ("utf8-decoded", "Name", "a" * 64),
+            ("invalid-utf8", None, "b" * 64),
+            ("unterminated", None, None),
+        ]
+        invalid = [
+            ("empty", "Name", empty_sha),
+            ("empty", "", "a" * 64),
+            ("utf8-decoded", "", "a" * 64),
+            ("utf8-decoded", None, "a" * 64),
+            ("utf8-decoded", "Name", None),
+            ("invalid-utf8", "Name", "a" * 64),
+            ("invalid-utf8", None, None),
+            ("unterminated", "Name", None),
+            ("unterminated", None, "a" * 64),
+        ]
+        for role in ("mesh", "part"):
+            for expected, rows in ((True, valid), (False, invalid)):
+                for status, value, digest in rows:
+                    with self.subTest(role=role, status=status, value=value, digest=digest, expected=expected):
+                        report = json.loads(json.dumps(baseline))
+                        mesh = report["meshes"][0]
+                        target = mesh if role == "mesh" else mesh["parts"][0]
+                        prefix = "meshName" if role == "mesh" else "name"
+                        target[prefix] = value
+                        target[prefix + "Status"] = status
+                        target[prefix + "BytesSha256"] = digest
+                        self.assertEqual(validator.is_valid(report), expected)
+        # Shape validation cannot establish that a syntactically valid digest
+        # matches the unavailable original bytes: "a"*64 is not SHA-256("Name").
+        self.assertNotEqual(hashlib.sha256(b"Name").hexdigest(), "a" * 64)
 
 
 if __name__ == "__main__":
