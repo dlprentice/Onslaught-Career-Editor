@@ -1,5 +1,9 @@
 # Game System
 
+Status: source reference with bounded retail corrections
+Last updated: 2026-10-28
+Summary: internal game-system overview; keyboard bindings below are distinguished from the selected retail PC table.
+
 > Analysis from game.cpp/h, DXGame.cpp/h, PCGame.cpp/h, EndLevelData.cpp/h, Music.cpp/h, and SoundManager.cpp/h - December 2025
 
 ## Overview
@@ -171,6 +175,14 @@ This explains why goodies 200-232 appear as "empty placeholders" in `FEPGoodies.
 
 ## Debug Keys
 
+This historical internal-source table includes controller mappings such as the two camera bindings in
+[PCController.cpp](../../../references/Onslaught/PCController.cpp) and game-level shortcuts; the other rows have
+not been individually rechecked here.
+The [retail-matching PC defaults](https://github.com/dlprentice/onslaught-decomp/blob/6c434449dcc595a3ab7a99c4154d666e49ba8695/src/PCController.cpp#L20-L68)
+instead map `F` to free-camera toggle and `A` to free-camera strafe left; default `Space` transforms the Battle
+Engine when gameplay permits. The retail [free-camera action](https://github.com/dlprentice/onslaught-decomp/blob/6c434449dcc595a3ab7a99c4154d666e49ba8695/src/game.cpp#L2671-L2697)
+checks cheat 4, normally enabled by `Aurore` in the career name. The internal rows below are not a general retail key list.
+
 | Key | Function | Notes |
 |-----|----------|-------|
 | `~` (tilde) | Toggle console | Debug console overlay |
@@ -189,7 +201,7 @@ This explains why goodies 200-232 appear as "empty placeholders" in `FEPGoodies.
 | `Space` | Skip cutscene | During cinematics |
 | `O` | Pause | Keyboard alternative |
 
-**Note:** These debug keys only function in development builds with `-devmode` enabled.
+**Scope:** The remaining rows are historical source mappings; do not infer their retail availability from this table.
 
 ---
 
