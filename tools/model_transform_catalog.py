@@ -12,24 +12,23 @@ Only the root CMSH is analysed. A frame-map reference is not proof that a game
 mode selects that frame, and a parent-relative reflection is not necessarily a
 model/world-space reflection. Interpolation, animation scheduling, appearance,
 non-root chained meshes, and exporter correctness are outside this report.
-Generated reports contain private retail-derived names and must stay in this
-worktree's ignored local-data/. The Linux CLI uses new-file-only, source-protected
-publication; it refuses on other hosts or when atomic no-replace is unavailable.
+Generated reports contain private retail-derived names and hashes: do not publish
+them or add them to Git. The CLI emits the report only to stdout and does not
+open a report file. If a caller redirects or saves the output, the caller is
+responsible for the destination and privacy; a shell opens its redirection before
+the CLI runs, outside the CLI's control. The report_bytes API returns UTF-8 JSON.
 The selected-file API and CLI require Linux O_PATH, descriptor-relative no-follow
 opens and /proc/self/fd. They reject parent path components, symlinks in any
-input component and multi-link files, and perform bounded reads. The CLI also
-requires output and selected source directories to be disjoint and rechecks
-the source identities immediately before publication. Identity and timestamps
+input component and multi-link files, and perform bounded reads. They recheck
+the source identities before returning or emitting a report. Identity and timestamps
 detect many changes, but this is not an atomic filesystem snapshot or a lock;
-compare the recorded source hash before using the report. The disjoint-root
-check compares paths and resolved paths, not every possible bind-mount alias.
+compare the recorded source hash before using the report.
 analyse_stream accepts already-owned bytes on other platforms, with the caller
 responsible for their identity and source name. The report schema validates
 structure, not consistency among all counts, ordinals and ranges.
 
 Example:
-  python tools/model_transform_catalog.py --mesh /path/to/m_thing.msh.aya \\
-      --out local-data/model-transforms/selected.json
+  python tools/model_transform_catalog.py --mesh /path/to/m_thing.msh.aya --stdout
 Repeat --mesh for up to 512 explicitly selected files.
 """
 from __future__ import annotations
@@ -42,7 +41,6 @@ import math
 import os
 from pathlib import Path
 import stat
-import subprocess
 import sys
 from typing import Any
 
@@ -50,7 +48,6 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "rebuild" / "tools"))
 from aya_archive_inventory import MAX_COMPRESSED_BYTES, inflate_aya_bytes  # noqa: E402
 from cmsh_static_preview import parse_cmsh_stream  # noqa: E402
-from safe_generated_output import SecuredOutputRoot, validate_disjoint_output_root  # noqa: E402
 
 SCHEMA = "onslaught.model-transform-catalog.v1"
 MAX_INPUTS = 512
@@ -227,12 +224,12 @@ def _read_selected_mesh(path: Path) -> tuple[bytes, tuple[int, ...]]:
 
 
 def _check_input_bindings(bindings: list[tuple[Path, tuple[int, ...]]]) -> None:
-    """Recheck the selected input snapshots immediately before publishing a CLI report."""
+    """Recheck the selected input metadata before returning or emitting a report."""
     for path, stamp in bindings:
         fd = _open_selected_path(path)
         try:
             if _input_stamp(os.fstat(fd)) != stamp:
-                raise ValueError("selected input changed before report publication")
+                raise ValueError("selected input changed before report emission")
         finally:
             os.close(fd)
 
@@ -280,50 +277,31 @@ def _report_for(paths: list[Path]) -> tuple[dict[str, Any], list[tuple[Path, tup
 
 def report_for(paths: list[Path]) -> dict[str, Any]:
     """Return metadata for bounded Linux file reads; callers must check hashes for later file changes."""
-    return _report_for(paths)[0]
+    report, bindings = _report_for(paths)
+    _check_input_bindings(bindings)
+    return report
 
 
-def output_allowed(path: Path) -> bool:
-    if ".." in path.parts:
-        return False
-    target = Path(os.path.abspath(path))
-    allowed = Path(os.path.abspath(ROOT / "local-data"))
-    try:
-        if os.path.commonpath((str(target), str(allowed))) != str(allowed):
-            return False
-    except ValueError:
-        return False
-    checked = subprocess.run(["git", "-C", str(ROOT), "check-ignore", "-q", str(target)],
-                             capture_output=True, check=False)
-    return checked.returncode == 0
+def report_bytes(paths: list[Path]) -> bytes:
+    """Return deterministic UTF-8 JSON; the caller controls any persistence or disclosure."""
+    report, bindings = _report_for(paths)
+    payload = (json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n").encode("utf-8")
+    _check_input_bindings(bindings)
+    return payload
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mesh", type=Path, action="append", required=True, help="selected loose PC mesh AYA; repeatable")
-    parser.add_argument("--out", type=Path, required=True, help="new report below this checkout's ignored local-data")
+    parser.add_argument("--stdout", action="store_true", required=True,
+                        help="emit private retail-derived metadata to stdout; caller controls any redirection")
     args = parser.parse_args(argv)
-    if not sys.platform.startswith("linux"):
-        parser.error("this CLI requires Linux and atomic no-replace publication")
-    if not output_allowed(args.out):
-        parser.error("--out must be below this checkout's ignored local-data and cannot contain '..'")
-    output = Path(os.path.abspath(args.out))
     try:
-        report, bindings = _report_for(args.mesh)
-        payload = json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n"
-        # Check disjointness against the selected source directories, but never pass race-replaceable paths to the
-        # shared helper's protected-file opener. The model's own no-follow binding checks bracket publication.
-        source_directories = [path.parent for path, _ in bindings]
-        validate_disjoint_output_root(output.parent, source_directories)
-        with SecuredOutputRoot(output.parent) as secured:
-            _check_input_bindings(bindings)
-            with secured.atomic_text_writer(output, replace_existing=False) as writer:
-                writer.write(payload)
-                _check_input_bindings(bindings)
+        payload = report_bytes(args.mesh)
+        sys.stdout.write(payload.decode("utf-8"))
     except (ValueError, OSError, RuntimeError) as error:
         print(f"model transform catalog failed: {error}", file=sys.stderr)
         return 2
-    print(f"Wrote metadata for {len(report['meshes'])} selected mesh(es): {output}")
     return 0
 
 

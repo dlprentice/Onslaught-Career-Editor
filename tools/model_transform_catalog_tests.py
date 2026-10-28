@@ -169,35 +169,63 @@ class BoundaryTests(unittest.TestCase):
                 rc = error.code
         return rc, out.getvalue(), err.getvalue()
 
-    def test_selected_source_private_new_output_and_repeat_refusal(self) -> None:
+    def test_selected_source_metadata_is_deterministic_and_emitted_only(self) -> None:
         before = self.source.read_bytes()
-        args = ["--mesh", str(self.source), "--out", str(self.output)]
-        rc, _, _ = self.run_cli(args)
+        args = ["--mesh", str(self.source), "--stdout"]
+        rc, output, _ = self.run_cli(args)
         self.assertEqual(0, rc)
-        report = json.loads(self.output.read_text())
+        report = json.loads(output)
         self.assertTrue(report["generatedRetailDerived"])
         self.assertEqual(catalog.SCHEMA, report["schema"])
         [mesh] = report["meshes"]
         self.assertEqual(hashlib.sha256(before).hexdigest(), mesh["source"]["archiveSha256"])
         self.assertEqual(1, mesh["parts"][0]["storedKeys"]["reflected"])
-        original_report = self.output.read_bytes()
-        self.assertNotEqual(0, self.run_cli(args)[0])
-        self.assertEqual(original_report, self.output.read_bytes())
+        self.assertEqual(output.encode("utf-8"), catalog.report_bytes([self.source]))
+        self.assertEqual(report, catalog.report_for([self.source]))
+        self.assertEqual((0, output), self.run_cli(args)[:2])
+        self.assertFalse(self.output.exists())
         self.assertEqual(before, self.source.read_bytes())
 
     def test_process_cli_reads_authored_input_and_refuses_parent_traversal(self) -> None:
         script = catalog.ROOT / "tools/model_transform_catalog.py"
-        good = subprocess.run([sys.executable, str(script), "--mesh", str(self.source), "--out", str(self.output)],
+        good = subprocess.run([sys.executable, str(script), "--mesh", str(self.source), "--stdout"],
                               capture_output=True, text=True, timeout=10)
         self.assertEqual(good.returncode, 0, good.stderr)
-        self.assertEqual(json.loads(self.output.read_text())["meshes"][0]["source"]["archiveSha256"],
+        self.assertEqual(json.loads(good.stdout)["meshes"][0]["source"]["archiveSha256"],
                          hashlib.sha256(self.source.read_bytes()).hexdigest())
-        bad_output = self.root / "reports" / "parent.json"
         bad = self.source.parent / ".." / "input" / self.source.name
-        refused = subprocess.run([sys.executable, str(script), "--mesh", str(bad), "--out", str(bad_output)],
+        refused = subprocess.run([sys.executable, str(script), "--mesh", str(bad), "--stdout"],
                                  capture_output=True, text=True, timeout=10)
         self.assertNotEqual(refused.returncode, 0)
-        self.assertFalse(bad_output.exists())
+        self.assertEqual("", refused.stdout)
+        self.assertFalse(self.output.exists())
+
+    def test_process_cli_opens_no_output_file(self) -> None:
+        # The real CLI runs under an audit hook that refuses Python write-open calls. stdout is
+        # the pipe inherited from this parent, not a file selected or opened by the tool.
+        wrapper = """
+import os, runpy, sys
+def audit(event, args):
+    if event == "open":
+        path, mode, flags = args
+        if ((isinstance(mode, str) and any(c in mode for c in "wax+")) or
+            (isinstance(flags, int) and
+             ((flags & os.O_ACCMODE) != os.O_RDONLY or flags & (os.O_CREAT | os.O_TRUNC | os.O_APPEND)))):
+            raise RuntimeError("unexpected write-open by model CLI")
+sys.addaudithook(audit)
+sys.argv = [sys.argv[1], "--mesh", sys.argv[2], "--stdout"]
+sys.path.insert(0, os.path.dirname(sys.argv[0]))
+runpy.run_path(sys.argv[0], run_name="__main__")
+"""
+        script = catalog.ROOT / "tools/model_transform_catalog.py"
+        before = {path.relative_to(self.root) for path in self.root.rglob("*")}
+        env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
+        result = subprocess.run([sys.executable, "-c", wrapper, str(script), str(self.source)],
+                                env=env, capture_output=True, text=True, timeout=10)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["meshes"][0]["source"]["archiveSha256"],
+                         hashlib.sha256(self.source.read_bytes()).hexdigest())
+        self.assertEqual(before, {path.relative_to(self.root) for path in self.root.rglob("*")})
 
     def test_invalid_and_unsafe_inputs_publish_no_output(self) -> None:
         for kind in ("truncated", "link", "hardlink", "missing"):
@@ -206,10 +234,10 @@ class BoundaryTests(unittest.TestCase):
                 if kind == "truncated": source.write_bytes(aya(make_stream()[:-10]))
                 elif kind == "link": source.symlink_to(self.source.name)
                 elif kind == "hardlink": os.link(self.source, source)
-                target = self.root / "reports" / (kind + ".json")
-                rc, _, _ = self.run_cli(["--mesh", str(source), "--out", str(target)])
+                rc, output, _ = self.run_cli(["--mesh", str(source), "--stdout"])
                 self.assertNotEqual(0, rc)
-                self.assertFalse(target.exists())
+                self.assertEqual("", output)
+                self.assertFalse(self.output.exists())
                 if kind == "hardlink":
                     with self.assertRaisesRegex(ValueError, "hard link"):
                         catalog.report_for([source])
@@ -218,8 +246,8 @@ class BoundaryTests(unittest.TestCase):
     def test_duplicate_selection_and_paths_with_parent_component_refuse(self) -> None:
         with self.assertRaisesRegex(ValueError, "more than once"):
             catalog.report_for([self.source, self.source])
-        self.assertFalse(catalog.output_allowed(catalog.ROOT / "local-data" / "x" / ".." / "report.json"))
-        self.assertFalse(catalog.output_allowed(catalog.ROOT / "report.json"))
+        with self.assertRaisesRegex(ValueError, "parent path component"):
+            catalog.report_for([self.source.parent / ".." / "input" / self.source.name])
 
     def test_symlink_then_parent_refuses_instead_of_normalizing_to_another_file(self) -> None:
         other = self.root / "other"
@@ -232,7 +260,7 @@ class BoundaryTests(unittest.TestCase):
         self.assertNotEqual(self.source.read_bytes(), other_source.read_bytes())
         with self.assertRaises(ValueError):
             catalog.report_for([ambiguous])
-        rc, _, _ = self.run_cli(["--mesh", str(ambiguous), "--out", str(self.output)])
+        rc, _, _ = self.run_cli(["--mesh", str(ambiguous), "--stdout"])
         self.assertNotEqual(0, rc)
         self.assertFalse(self.output.exists())
 
@@ -242,7 +270,7 @@ class BoundaryTests(unittest.TestCase):
         selected = link / self.source.name
         with self.assertRaises((ValueError, OSError)):
             catalog.report_for([selected])
-        rc, _, _ = self.run_cli(["--mesh", str(selected), "--out", str(self.output)])
+        rc, _, _ = self.run_cli(["--mesh", str(selected), "--stdout"])
         self.assertNotEqual(0, rc)
         self.assertFalse(self.output.exists())
 
@@ -284,7 +312,7 @@ class BoundaryTests(unittest.TestCase):
             return real_open(path, flags, *args, **kwargs)
 
         with mock.patch.object(catalog.os, "open", side_effect=swap_before_final_open):
-            rc, _, _ = self.run_cli(["--mesh", str(self.source), "--out", str(self.output)])
+            rc, _, _ = self.run_cli(["--mesh", str(self.source), "--stdout"])
         self.assertTrue(swapped)
         self.assertNotEqual(0, rc)
         self.assertFalse(self.output.exists())
@@ -339,12 +367,12 @@ class BoundaryTests(unittest.TestCase):
         with mock.patch.object(catalog, "HAS_OPEN_DIR_FD", False):
             with self.assertRaisesRegex(ValueError, "descriptor-relative"):
                 catalog.report_for([self.source])
-            rc, _, _ = self.run_cli(["--mesh", str(self.source), "--out", str(self.output)])
+            rc, _, _ = self.run_cli(["--mesh", str(self.source), "--stdout"])
         self.assertNotEqual(0, rc)
         self.assertFalse(self.output.exists())
 
     @unittest.skipUnless(hasattr(os, "O_PATH") and hasattr(os, "mkfifo"), "Linux O_PATH and FIFO required")
-    def test_source_replaced_after_analysis_refuses_cli_publication(self) -> None:
+    def test_source_replaced_after_analysis_refuses_cli_emission(self) -> None:
         original = catalog._report_for
         old = self.source.with_name("before-publication.aya")
 
@@ -355,37 +383,58 @@ class BoundaryTests(unittest.TestCase):
             return report
 
         with mock.patch.object(catalog, "_report_for", side_effect=replace_after_read):
-            rc, _, _ = self.run_cli(["--mesh", str(self.source), "--out", str(self.output)])
+            rc, output, _ = self.run_cli(["--mesh", str(self.source), "--stdout"])
         self.assertNotEqual(0, rc)
+        self.assertEqual("", output)
         self.assertFalse(self.output.exists())
 
-    def test_source_replaced_during_staging_refuses_cli_publication(self) -> None:
+    def test_source_replaced_during_final_check_refuses_cli_emission(self) -> None:
         original = catalog._check_input_bindings
-        old = self.source.with_name("before-staging.aya")
+        old = self.source.with_name("before-final-check.aya")
         calls = 0
 
         def replace_on_final_check(bindings):
             nonlocal calls
             calls += 1
-            if calls == 2:
-                self.source.rename(old)
-                self.source.write_bytes(aya(make_stream([REFLECTION])))
+            self.source.rename(old)
+            self.source.write_bytes(aya(make_stream([REFLECTION])))
             return original(bindings)
 
         with mock.patch.object(catalog, "_check_input_bindings", side_effect=replace_on_final_check):
-            rc, _, _ = self.run_cli(["--mesh", str(self.source), "--out", str(self.output)])
-        self.assertEqual(calls, 2)
+            rc, output, _ = self.run_cli(["--mesh", str(self.source), "--stdout"])
+        self.assertEqual(calls, 1)
         self.assertNotEqual(0, rc)
+        self.assertEqual("", output)
         self.assertFalse(self.output.exists())
+
+    def test_callable_rechecks_each_selected_file_before_return(self) -> None:
+        original = catalog._report_for
+        old = self.source.with_name("before-api-return.aya")
+
+        def replace_after_analysis(paths):
+            result = original(paths)
+            self.source.rename(old)
+            self.source.write_bytes(aya(make_stream([REFLECTION])))
+            return result
+
+        with mock.patch.object(catalog, "_report_for", side_effect=replace_after_analysis):
+            with self.assertRaisesRegex(ValueError, "changed before report emission"):
+                catalog.report_bytes([self.source])
+        self.source.unlink()
+        old.rename(self.source)
+        with mock.patch.object(catalog, "_report_for", side_effect=replace_after_analysis):
+            with self.assertRaisesRegex(ValueError, "changed before report emission"):
+                catalog.report_for([self.source])
 
     def test_cli_never_uses_shared_blocking_protected_file_opener(self) -> None:
         with mock.patch.object(safe_generated_output, "_HeldFile", side_effect=AssertionError("unexpected source open")):
-            rc, _, error = self.run_cli(["--mesh", str(self.source), "--out", str(self.output)])
+            rc, output, error = self.run_cli(["--mesh", str(self.source), "--stdout"])
         self.assertEqual(0, rc, error)
-        self.assertTrue(self.output.exists())
+        self.assertEqual(catalog.SCHEMA, json.loads(output)["schema"])
+        self.assertFalse(self.output.exists())
 
     @unittest.skipUnless(hasattr(os, "O_PATH") and hasattr(os, "mkfifo"), "Linux O_PATH and FIFO required")
-    def test_source_directory_replaced_with_fifo_before_publication_refuses(self) -> None:
+    def test_source_directory_replaced_with_fifo_before_emission_refuses(self) -> None:
         original = catalog._report_for
         source_dir = self.source.parent
         old = self.root / "before-directory-swap"
@@ -398,45 +447,62 @@ class BoundaryTests(unittest.TestCase):
 
         with mock.patch.object(catalog, "_report_for", side_effect=replace_after_read), \
                 mock.patch.object(safe_generated_output, "_HeldFile", side_effect=AssertionError("unexpected source open")):
-            rc, _, _ = self.run_cli(["--mesh", str(self.source), "--out", str(self.output)])
+            rc, output, _ = self.run_cli(["--mesh", str(self.source), "--stdout"])
         self.assertNotEqual(0, rc)
+        self.assertEqual("", output)
         self.assertFalse(self.output.exists())
 
-    def test_report_output_cannot_share_a_selected_source_directory(self) -> None:
-        output = self.source.parent / "report.json"
-        rc, _, _ = self.run_cli(["--mesh", str(self.source), "--out", str(output)])
+    def test_cli_requires_explicit_stdout_and_rejects_legacy_output_paths(self) -> None:
+        rc, output, _ = self.run_cli(["--mesh", str(self.source)])
         self.assertNotEqual(0, rc)
-        self.assertFalse(output.exists())
+        self.assertEqual("", output)
+        for target in (self.source.parent / "report.json", self.output):
+            with self.subTest(target=target):
+                rc, output, _ = self.run_cli(["--mesh", str(self.source), "--stdout", "--out", str(target)])
+                self.assertNotEqual(0, rc)
+                self.assertEqual("", output)
+                self.assertFalse(target.exists())
+        script = catalog.ROOT / "tools/model_transform_catalog.py"
+        rejected = subprocess.run([sys.executable, str(script), "--mesh", str(self.source),
+                                   "--stdout", "--out", str(self.source.parent / "report.json")],
+                                  capture_output=True, text=True, timeout=10)
+        self.assertNotEqual(0, rejected.returncode)
+        self.assertEqual("", rejected.stdout)
+        self.assertFalse((self.source.parent / "report.json").exists())
 
     def test_total_frame_and_part_limits_refuse_without_output(self) -> None:
         for field, limit in (("MAX_TOTAL_VIRTUAL_FRAMES", 1), ("MAX_TOTAL_PARTS", 0)):
             with self.subTest(field=field), mock.patch.object(catalog, field, limit):
-                rc, _, _ = self.run_cli(["--mesh", str(self.source), "--out", str(self.output)])
+                rc, output, _ = self.run_cli(["--mesh", str(self.source), "--stdout"])
                 self.assertNotEqual(0, rc)
+                self.assertEqual("", output)
                 self.assertFalse(self.output.exists())
 
-    def test_source_byte_limit_refuses_before_reading_or_publication(self) -> None:
+    def test_source_byte_limit_refuses_before_reading_or_emission(self) -> None:
         with mock.patch.object(catalog, "MAX_COMPRESSED_BYTES", 1):
             with mock.patch.object(catalog.os, "read", side_effect=AssertionError("must reject before reading")):
                 with self.assertRaisesRegex(ValueError, "compressed-byte limit"):
                     catalog.report_for([self.source])
-            rc, _, _ = self.run_cli(["--mesh", str(self.source), "--out", str(self.output)])
+            rc, output, _ = self.run_cli(["--mesh", str(self.source), "--stdout"])
         self.assertNotEqual(0, rc)
+        self.assertEqual("", output)
         self.assertFalse(self.output.exists())
 
-    def test_symlinked_output_parent_is_refused(self) -> None:
+    def test_legacy_output_path_with_symlinked_parent_is_refused(self) -> None:
         elsewhere = self.root / "elsewhere"
         elsewhere.mkdir()
         (self.root / "link").symlink_to(elsewhere, target_is_directory=True)
         target = self.root / "link" / "report.json"
-        rc, _, _ = self.run_cli(["--mesh", str(self.source), "--out", str(target)])
+        rc, output, _ = self.run_cli(["--mesh", str(self.source), "--stdout", "--out", str(target)])
         self.assertNotEqual(0, rc)
+        self.assertEqual("", output)
         self.assertFalse((elsewhere / "report.json").exists())
 
-    def test_other_platforms_refuse_before_publication(self) -> None:
+    def test_other_platforms_refuse_before_emission(self) -> None:
         with mock.patch.object(catalog.sys, "platform", "win32"):
-            rc, _, _ = self.run_cli(["--mesh", str(self.source), "--out", str(self.output)])
+            rc, output, _ = self.run_cli(["--mesh", str(self.source), "--stdout"])
         self.assertEqual(2, rc)
+        self.assertEqual("", output)
         self.assertFalse(self.output.exists())
 
     def test_schema_matches_authored_report_when_validator_available(self) -> None:
