@@ -156,6 +156,36 @@ class SelectedArchiveTests(unittest.TestCase):
                 self.assertIsNone(slot["sameArchiveTextCandidates"])
                 self.assertEqual(slot["candidateStatus"], "unknown")
 
+    def test_selected_internal_name_is_bounded_and_never_invented(self) -> None:
+        original = fixtures.mesh_stream()
+        start = 8 + 0x24  # CMSH header plus the source-backed name offset.
+        end = start + 300
+        cases = (
+            (b"A" * 299 + b"\0", "A" * 299),
+            (b"A" * 300, None),  # The next pointer's NUL is not a name terminator.
+            (bytes(300), None),
+            (b"bad\xff\0".ljust(300, b"\0"), None),
+            (b"control\x7f\0".ljust(300, b"\0"), None),
+            ("é".encode().ljust(300, b"\0"), None),  # The xref only reports ASCII names.
+        )
+        for field, expected in cases:
+            with self.subTest(field=field[:12]):
+                changed = bytearray(original)
+                changed[start:end] = field
+                changed[end:end + 4] = b"\0PTR"  # Non-name bytes immediately after the field.
+                packed = fixtures.aya(bytes(changed))
+                self.mesh.write_bytes(packed)
+                row = xref.report_for(self.archive, [self.mesh])["selectedMeshes"][0]
+                self.assertEqual(row["status"], "parsed")
+                self.assertEqual(row["internalName"], expected)
+                self.assertEqual(row["archiveMeshFilenameCandidates"], [1])
+                self.assertEqual(row["textures"][0]["name"], "meshtex\\Skin.tga")
+                self.assertEqual(self.mesh.read_bytes(), packed)
+                if field == b"A" * 300:
+                    rc, output, _ = self.run_cli(["--archive", str(self.archive), "--mesh", str(self.mesh), "--stdout"])
+                    self.assertEqual(rc, 0)
+                    self.assertIsNone(json.loads(output)["selectedMeshes"][0]["internalName"])
+
     def test_unknown_mesh_record_and_wdat_limits_are_explicit(self) -> None:
         self.archive.write_bytes(fixtures.aya(fixtures.chunk(b"MESH", b"bad")
                                  + fixtures.chunk(b"WRES", fixtures.chunk(b"WRLD", fixtures.chunk(b"WDAT", b"x")))))
