@@ -66,7 +66,14 @@ python tools/model_transform_catalog.py --mesh /path/to/selected.msh.aya \
 ```
 
 Repeat `--mesh` to select additional files. The CLI requires Linux and atomic no-replace publication; output must be a
-new file in this checkout's ignored `local-data/`.
+new file in this checkout's ignored `local-data/`, in a directory disjoint from every selected source directory.
+The selected-file reader requires Linux descriptor-relative `O_PATH` and `/proc/self/fd`, refuses `..`, symlinks in
+any source path component and files with multiple hard links, and performs a bounded read of each. The CLI rechecks
+file identities before publishing. Metadata checks detect many changes but are not an atomic filesystem snapshot or
+a lock; compare the recorded archive hash when using the result. The disjoint-directory check compares lexical and
+resolved paths and does not detect every bind-mount alias. `analyse_stream` accepts already-owned bytes on other
+platforms, with the caller responsible for source identity. The JSON schema checks structure and basic field limits, not semantic
+consistency among counts, parent/key ordinals or frame ranges.
 The report covers only the root stream's parent-relative keys: it counts nested mesh siblings without analysing them,
 and does not establish that a game animation selects a frame, a reflected world transform or an export's fidelity.
 

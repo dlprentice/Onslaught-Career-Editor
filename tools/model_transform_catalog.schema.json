@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "onslaught.model-transform-catalog.v1",
   "title": "Selected CMSH parent-relative orientation summary",
+  "description": "Structural JSON validation only: cross-field counts, parent/key ordinals and frame-range ordering or bounds are not certified by this schema.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "generatedRetailDerived", "basis", "meshes"],

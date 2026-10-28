@@ -15,6 +15,17 @@ non-root chained meshes, and exporter correctness are outside this report.
 Generated reports contain private retail-derived names and must stay in this
 worktree's ignored local-data/. The Linux CLI uses new-file-only, source-protected
 publication; it refuses on other hosts or when atomic no-replace is unavailable.
+The selected-file API and CLI require Linux O_PATH, descriptor-relative no-follow
+opens and /proc/self/fd. They reject parent path components, symlinks in any
+input component and multi-link files, and perform bounded reads. The CLI also
+requires output and selected source directories to be disjoint and rechecks
+the source identities immediately before publication. Identity and timestamps
+detect many changes, but this is not an atomic filesystem snapshot or a lock;
+compare the recorded source hash before using the report. The disjoint-root
+check compares paths and resolved paths, not every possible bind-mount alias.
+analyse_stream accepts already-owned bytes on other platforms, with the caller
+responsible for their identity and source name. The report schema validates
+structure, not consistency among all counts, ordinals and ranges.
 
 Example:
   python tools/model_transform_catalog.py --mesh /path/to/m_thing.msh.aya \\
@@ -30,15 +41,16 @@ import json
 import math
 import os
 from pathlib import Path
+import stat
 import subprocess
 import sys
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "rebuild" / "tools"))
-from aya_archive_inventory import inflate_aya_bytes, read_held_archive  # noqa: E402
+from aya_archive_inventory import MAX_COMPRESSED_BYTES, inflate_aya_bytes  # noqa: E402
 from cmsh_static_preview import parse_cmsh_stream  # noqa: E402
-from safe_generated_output import SecuredOutputRoot  # noqa: E402
+from safe_generated_output import SecuredOutputRoot, validate_disjoint_output_root  # noqa: E402
 
 SCHEMA = "onslaught.model-transform-catalog.v1"
 MAX_INPUTS = 512
@@ -46,6 +58,7 @@ MAX_TOTAL_PARTS = 12000
 MAX_TOTAL_VIRTUAL_FRAMES = 1000000
 ORTHOGONAL_TOLERANCE = 0.0001
 KINDS = ("proper", "reflected", "nonOrthogonal")
+HAS_OPEN_DIR_FD = os.open in os.supports_dir_fd
 
 
 def classify_orientation(rows: tuple[tuple[float, ...], ...]) -> tuple[str, float]:
@@ -134,17 +147,112 @@ def analyse_stream(stream: bytes, *, source_name: str, source_sha256: str) -> di
     }
 
 
-def report_for(paths: list[Path]) -> dict[str, Any]:
+def _selected_path(path: Path) -> Path:
+    """Reject parent traversal before normalization can erase a symlink/.. pair."""
+    path = Path(path)
+    if ".." in path.parts:
+        raise ValueError("selected input may not contain a parent path component")
+    if (not sys.platform.startswith("linux") or not all(hasattr(os, flag) for flag in
+            ("O_PATH", "O_NOFOLLOW", "O_DIRECTORY", "O_CLOEXEC", "O_NONBLOCK")) or not HAS_OPEN_DIR_FD):
+        raise ValueError("safe selected-file reading requires Linux descriptor-relative O_PATH support")
+    return Path(os.path.abspath(path))
+
+
+def _open_selected_path(path: Path) -> int:
+    """Hold the named object without following any symlink or opening a special file for reading."""
+    current = os.open(path.anchor, os.O_PATH | os.O_DIRECTORY | os.O_CLOEXEC)
+    try:
+        for index, name in enumerate(path.parts[1:]):
+            flags = os.O_PATH | os.O_NOFOLLOW | os.O_CLOEXEC
+            if index < len(path.parts) - 2:
+                flags |= os.O_DIRECTORY
+            child = os.open(name, flags, dir_fd=current)
+            os.close(current)
+            current = child
+        return current
+    except BaseException:
+        os.close(current)
+        raise
+
+
+def _input_stamp(metadata: os.stat_result) -> tuple[int, ...]:
+    return (metadata.st_dev, metadata.st_ino, metadata.st_mode, metadata.st_size,
+            metadata.st_mtime_ns, metadata.st_ctime_ns, metadata.st_nlink)
+
+
+def _require_regular_source(metadata: os.stat_result) -> None:
+    if not stat.S_ISREG(metadata.st_mode):
+        raise ValueError("selected input is not a regular file or has a symlink component")
+    if metadata.st_nlink != 1:
+        raise ValueError("selected input must have exactly one hard link")
+    if metadata.st_size < 0 or metadata.st_size > MAX_COMPRESSED_BYTES:
+        raise ValueError("selected input exceeds the compressed-byte limit")
+
+
+def _read_selected_mesh(path: Path) -> tuple[bytes, tuple[int, ...]]:
+    """Read one held regular inode and detect metadata-visible changes or replacement during the bounded read."""
+    held = _open_selected_path(path)
+    try:
+        before = os.fstat(held)
+        _require_regular_source(before)
+        stamp = _input_stamp(before)
+        # /proc reopens the already-held O_PATH inode, not the user-controlled pathname. A FIFO or device
+        # substituted at that pathname cannot be opened for reading; absent procfs fails closed.
+        fd = os.open(f"/proc/self/fd/{held}", os.O_RDONLY | os.O_NONBLOCK | os.O_CLOEXEC)
+        try:
+            if _input_stamp(os.fstat(fd)) != stamp:
+                raise ValueError("selected input changed while opening")
+            chunks, size = [], 0
+            while True:
+                chunk = os.read(fd, min(1024 * 1024, MAX_COMPRESSED_BYTES - size + 1))
+                if not chunk:
+                    break
+                size += len(chunk)
+                if size > MAX_COMPRESSED_BYTES:
+                    raise ValueError("selected input exceeds the compressed-byte limit")
+                chunks.append(chunk)
+            if size != before.st_size or _input_stamp(os.fstat(fd)) != stamp or _input_stamp(os.fstat(held)) != stamp:
+                raise ValueError("selected input changed during reading")
+        finally:
+            os.close(fd)
+        named = _open_selected_path(path)
+        try:
+            if _input_stamp(os.fstat(named)) != stamp:
+                raise ValueError("selected input path changed during reading")
+        finally:
+            os.close(named)
+        return b"".join(chunks), stamp
+    finally:
+        os.close(held)
+
+
+def _check_input_bindings(bindings: list[tuple[Path, tuple[int, ...]]]) -> None:
+    """Recheck the selected input snapshots immediately before publishing a CLI report."""
+    for path, stamp in bindings:
+        fd = _open_selected_path(path)
+        try:
+            if _input_stamp(os.fstat(fd)) != stamp:
+                raise ValueError("selected input changed before report publication")
+        finally:
+            os.close(fd)
+
+
+def _report_for(paths: list[Path]) -> tuple[dict[str, Any], list[tuple[Path, tuple[int, ...]]]]:
     if not 1 <= len(paths) <= MAX_INPUTS:
         raise ValueError(f"select between 1 and {MAX_INPUTS} mesh files")
-    # Reject duplicate names in the selection; it makes the ordinal an unambiguous occurrence coordinate.
-    normalized = [os.path.normcase(os.path.abspath(path)) for path in paths]
+    selected = [_selected_path(path) for path in paths]
+    # A selection ordinal distinguishes different files with the same basename; duplicate paths or inodes are refused.
+    normalized = [os.path.normcase(os.fspath(path)) for path in selected]
     if len(set(normalized)) != len(normalized):
         raise ValueError("the same input path was selected more than once")
-    rows = []
+    rows, bindings, seen_inodes = [], [], set()
     total_parts = total_frames = 0
-    for ordinal, path in enumerate(paths):
-        source = read_held_archive(path)
+    for ordinal, path in enumerate(selected):
+        source, stamp = _read_selected_mesh(path)
+        if stamp[:2] in seen_inodes:
+            raise ValueError("the same input file was selected more than once")
+        seen_inodes.add(stamp[:2])
+        bindings.append((path, stamp))
         stream = inflate_aya_bytes(source)
         row = analyse_stream(stream, source_name=path.name, source_sha256=hashlib.sha256(source).hexdigest())
         total_parts += len(row["parts"])
@@ -152,7 +260,7 @@ def report_for(paths: list[Path]) -> dict[str, Any]:
         if total_parts > MAX_TOTAL_PARTS or total_frames > MAX_TOTAL_VIRTUAL_FRAMES:
             raise ValueError("selected meshes exceed the model-report part or virtual-frame limit")
         rows.append({"selectionOrdinal": ordinal, **row})
-    return {
+    report = {
         "schema": SCHEMA,
         "generatedRetailDerived": True,
         "basis": {
@@ -167,6 +275,12 @@ def report_for(paths: list[Path]) -> dict[str, Any]:
         },
         "meshes": rows,
     }
+    return report, bindings
+
+
+def report_for(paths: list[Path]) -> dict[str, Any]:
+    """Return metadata for bounded Linux file reads; callers must check hashes for later file changes."""
+    return _report_for(paths)[0]
 
 
 def output_allowed(path: Path) -> bool:
@@ -195,11 +309,17 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--out must be below this checkout's ignored local-data and cannot contain '..'")
     output = Path(os.path.abspath(args.out))
     try:
-        report = report_for(args.mesh)
+        report, bindings = _report_for(args.mesh)
         payload = json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n"
-        with SecuredOutputRoot(output.parent, protected_sources=args.mesh) as secured:
+        # Check disjointness against the selected source directories, but never pass race-replaceable paths to the
+        # shared helper's protected-file opener. The model's own no-follow binding checks bracket publication.
+        source_directories = [path.parent for path, _ in bindings]
+        validate_disjoint_output_root(output.parent, source_directories)
+        with SecuredOutputRoot(output.parent) as secured:
+            _check_input_bindings(bindings)
             with secured.atomic_text_writer(output, replace_existing=False) as writer:
                 writer.write(payload)
+                _check_input_bindings(bindings)
     except (ValueError, OSError, RuntimeError) as error:
         print(f"model transform catalog failed: {error}", file=sys.stderr)
         return 2
