@@ -8,9 +8,8 @@ Output is streamed as it happens - a summary
 is a navigation aid, not a replacement for the failing suite's own report - and
 the exit code is non-zero when any suite failed, exactly as the chain was.
 
-Order is the chain's original order and is not a dependency: the suites are
-independent, and running them in one process would be wrong, because several
-of them compile executables or spawn engines.
+Order is not a dependency: the suites are independent, and running them in one
+process would be wrong, because several compile executables or spawn engines.
 """
 
 from __future__ import annotations
@@ -29,7 +28,7 @@ from unittest import mock
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
-# One entry per command the gate used to chain.  Paths are repository-relative
+# One entry per registered command. Paths are repository-relative
 # and are resolved against ROOT so the gate behaves the same from any cwd.
 SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/check_installed_game_claims.py", "--self-test"),
@@ -39,7 +38,9 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/aya_archive_inventory_tests.py",),
     ("tools/cmsh_animation_usage_census_tests.py",),
     ("tools/cmsh_grammar_walk_tests.py",),
+    ("tools/dds_metadata_tests.py",),
     ("tools/content_catalog_tests.py",),
+    ("tools/export_asset_catalog_tests.py",),
     ("tools/world_resources_encode_tests.py",),
     ("tools/world_edit_preview_tests.py",),
     ("tools/aya_texture_fidelity_census_tests.py",),

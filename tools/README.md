@@ -91,6 +91,13 @@ publish, sign, or install anything by themselves.
   values describe stored bytes and do not establish original art properties or rendered appearance. The loader builds
   expected filename suffixes from requested formats; a matching filename alone does not prove loading or the original
   art's bit depth, and its suffix need not match the stored format.
+  `upscale.premultipliedAlpha` records the admitted DXT format's specified convention: DXT2/4 true, DXT3/5 false,
+  DXT1 and RGB null; unsupported and malformed records also use null and get no treatment suggestions. This does not
+  establish pixel association or render behavior, and no automatic un-premultiplication is prescribed. The format
+  conventions are documented by [Microsoft](https://learn.microsoft.com/en-us/windows/win32/direct3d9/using-compressed-textures).
+  Existing v1 catalogs may contain the older false values or treatment text; regenerate them to get these corrections.
+  The legacy `repeats-beyond-0-1` label reports raw mesh UVs outside a 0.01 tolerance before transforms; it does not
+  establish the sampler mode or visible repetition.
   Mesh hierarchy rows also retain each part's CMSP and MESP payload hashes and its stored BBOX center, half-extents,
   flag and radius, without exporting geometry. The flag is the stored value, not a validity check; non-finite numbers
   are `null`. These are part records before transforms, not world-space or animated bounds. The source is
