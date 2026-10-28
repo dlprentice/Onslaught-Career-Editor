@@ -96,7 +96,7 @@
           "items": {
             "type": "integer"
           },
-          "description": "Top-level chunk index (or sample ordinal) in the container."
+          "description": "Owning top-level archive chunk index (or sample ordinal). For an embedded mesh this is an anchor, not a complete PMSH/PMS2 wrapper path; offset locates the record in the inflated container."
         },
         "length": {
           "type": "integer",
@@ -396,6 +396,13 @@
             "unparsed"
           ]
         },
+        "reason": {
+          "type": ["object", "null"],
+          "description": "Bounded parser refusal for an unparsed root, when present."
+        },
+        "parts": {"type": ["integer", "null"], "minimum": 0},
+        "vertices": {"type": ["integer", "null"], "minimum": 0},
+        "triangles": {"type": ["integer", "null"], "minimum": 0},
         "lodChildParts": {
           "type": "array",
           "items": {"type": ["integer", "null"], "minimum": 0},

@@ -321,6 +321,7 @@ def _model_metadata(stream: bytes, mesh: Any, identity: dict[str, object], depth
     chunks = parse_top_level_chunks_bounded(stream)
     parts = mesh.file_parts()
     part_chunks = chunks[2 + len(mesh.textures):2 + len(mesh.textures) + len(parts)]
+    siblings = chunks[2 + len(mesh.textures) + len(parts):]
     result = {
         "schema": MODEL_METADATA_SCHEMA, "status": "parsed", "identity": identity,
         "evidenceClass": "static structure and source-derived field meanings; not full semantic or runtime acceptance",
@@ -357,7 +358,10 @@ def _model_metadata(stream: bytes, mesh: Any, identity: dict[str, object], depth
     for lane, identifier in (("animations", "animation"), ("emitters", "emitter")):
         for row in result[lane]["rows"]:
             row["occurrenceId"] = identity["occurrenceId"] + "/" + identifier + ":" + str(row["ordinal"])
-    siblings = chunks[2 + len(mesh.textures) + len(parts):]
+            if lane == "animations":
+                [camd] = [chunk for chunk in siblings if chunk.tag == "CAMD"]
+                row["payloadOffset"] = identity["payloadOffset"] + camd.offset + 8 + row["ordinal"] * 36
+                row["coordinateSpace"] = "inflated-archive"
     bbox = [c for c in siblings if c.tag == "BBOX"]
     result["boundingBoxWords"] = None
     if bbox:
@@ -818,8 +822,8 @@ def _scan_wres_definition_instances(
     }
 
 
-def _structural_chunks(data: bytes) -> list[tuple[bytes, bytes]] | None:
-    rows: list[tuple[bytes, bytes]] = []
+def _structural_chunks(data: bytes) -> list[tuple[bytes, int, bytes]] | None:
+    rows: list[tuple[bytes, int, bytes]] = []
     offset = 0
     while offset < len(data):
         if offset + 8 > len(data):
@@ -831,35 +835,40 @@ def _structural_chunks(data: bytes) -> list[tuple[bytes, bytes]] | None:
         end = offset + 8 + size
         if end > len(data):
             return None
-        rows.append((tag, data[offset + 8:end]))
+        rows.append((tag, offset, data[offset + 8:end]))
         offset = end
     return rows or None
 
 
-def _direct_embedded_cmsh(payload: bytes) -> bytes:
-    found: list[bytes] = []
+def _direct_embedded_cmsh_with_offset(payload: bytes) -> tuple[bytes, int]:
+    """Find the unique framed CMSH and its offset within the held payload."""
+    found: list[tuple[bytes, int]] = []
 
-    def descend(data: bytes, depth: int) -> None:
+    def descend(data: bytes, depth: int, base: int) -> None:
         if depth > 10:
             raise ValueError("embedded CMSH container depth exceeds ten")
         rows = _structural_chunks(data)
         if rows is None:
             return
-        for tag, child in rows:
+        for tag, offset, child in rows:
             if tag == b"PMS2":
                 if (
                     len(child) >= PMS2_HEADER_BYTES + 380
                     and child[PMS2_HEADER_BYTES:PMS2_HEADER_BYTES + 4] == b"CMSH"
                     and struct.unpack_from("<I", child, PMS2_HEADER_BYTES + 4)[0] == 372
                 ):
-                    found.append(child[PMS2_HEADER_BYTES:])
+                    found.append((child[PMS2_HEADER_BYTES:], base + offset + 8 + PMS2_HEADER_BYTES))
             elif tag in EMBEDDED_CONTAINERS:
-                descend(child, depth + 1)
+                descend(child, depth + 1, base + offset + 8)
 
-    descend(payload, 0)
+    descend(payload, 0, 0)
     if len(found) != 1:
         raise ValueError(f"expected exactly one direct embedded CMSH, found {len(found)}")
     return found[0]
+
+
+def _direct_embedded_cmsh(payload: bytes) -> bytes:
+    return _direct_embedded_cmsh_with_offset(payload)[0]
 
 
 def _cmsh_core(stream: bytes) -> bytes:

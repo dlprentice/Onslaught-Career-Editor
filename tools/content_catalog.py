@@ -435,13 +435,13 @@ def catalog_archives(game: Path, files: list[dict], texture_index: dict[str, dic
                     stats["namedMeshResolved" if target else "namedMeshUnresolved"] += 1
                 else:
                     try:
-                        stream = meshcensus._direct_embedded_cmsh(payload)
+                        stream, stream_offset = meshcensus._direct_embedded_cmsh_with_offset(payload)
                     except ValueError as error:
                         mesh_rows.append({"chunk": chunk.index, "name": "", "status": "unparsed",
                                           "reason": str(error)})
                         stats["embeddedMeshUnparsed"] += 1
                         continue
-                    offset = chunk.offset + 8 + payload.find(stream[:380])
+                    offset = chunk.offset + 8 + stream_offset
                     embedded.append((rel, stream, {"archive": rec, "chunk": chunk.index, "offset": offset,
                                                    "archiveSha": source_sha}))
                     mesh_rows.append({"chunk": chunk.index, "name": "", "runtimeId": runtime_id,
@@ -562,17 +562,21 @@ def words_to_floats(words: list[int]) -> list[float | None]:
 
 
 def mesh_summary(meta: dict) -> dict:
+    known = meta.get("status") in ("parsed", "partial")
     parts = meta.get("parts") or []
     vertices = sum(p["geometry"]["originalVertexCount"] for p in parts)
     strip = sum(g["stripPrimitiveCount"] for p in parts for g in p["geometry"]["pieces"])
     tris = sum(g["distinctIndexTriangleCount"] for p in parts for g in p["geometry"]["pieces"])
     bones = sorted({b for p in parts for b in p["skinning"]["bonePartOrdinals"]})
     lods = meta.get("lodChildren") or []
-    return {"status": meta.get("status"), "parts": len(parts), "vertices": vertices, "stripPrimitives": strip,
-            "triangles": tris, "skinnedParts": sum(1 for p in parts if p["skinning"]["bonePartOrdinals"]),
-            "boneParts": len(bones), "referenceParts": sum(1 for p in parts if p["geometry"]["ownership"] == "reference"),
-            "partTypes": dict(sorted(collections.Counter(str(p["partType"]) for p in parts).items())),
-            "lodChildren": len(lods),
+    return {"status": meta.get("status"), "reason": meta.get("reason"),
+            "parts": len(parts) if known else None, "vertices": vertices if known else None,
+            "stripPrimitives": strip if known else None, "triangles": tris if known else None,
+            "skinnedParts": sum(1 for p in parts if p["skinning"]["bonePartOrdinals"]) if known else None,
+            "boneParts": len(bones) if known else None,
+            "referenceParts": sum(1 for p in parts if p["geometry"]["ownership"] == "reference") if known else None,
+            "partTypes": dict(sorted(collections.Counter(str(p["partType"]) for p in parts).items())) if known else None,
+            "lodChildren": len(lods) if known and "LOD presence marker and decoded child disagree" not in meta.get("unknowns", []) else None,
             "lodChildParts": [None if c["model"]["status"] == "unparsed"
                               else len(c["model"].get("parts") or []) for c in lods],
             "nestedMeshDetails": [{"relationship": c["relationship"], "status": c["model"]["status"],
@@ -602,8 +606,10 @@ def catalog_mesh(stream: bytes, *, asset_id: str, name: str, container: str, con
                       sha_scope="CMSH stream (inflated)", chunk_path=chunk_path,
                       parser="rebuild/tools/cmsh_static_preview.py:parse_cmsh_stream + "
                              "tools/cmsh_animation_usage_census.py:mesh_record_from_stream")
+    emitters = meta.get("emitters") or {}
+    emitter_count = len(emitters.get("rows") or []) if emitters.get("status") in ("decoded", "absent") else None
     rec["mesh"] = {"internalName": record.get("internalName"), **mesh_summary(meta),
-                   "textures": [], "emitters": len((meta.get("emitters") or {}).get("rows") or [])}
+                   "textures": [], "emitters": emitter_count}
     slot_uv = uv_ranges(mesh) if mesh is not None else {}
     for slot in meta.get("textures") or []:
         fmt = mesh_texture_format(slot["name"])
@@ -617,7 +623,7 @@ def catalog_mesh(stream: bytes, *, asset_id: str, name: str, container: str, con
     for row in anim_rows:
         rate = words_to_floats([row["rateBits"]])[0]
         anim = base_record(f"animation:{asset_id}/{row['ordinal']}", "animation", row["name"], container,
-                           container_sha, envelope=envelope, offset=offset, length=36, raw_sha=row["recordSha256"],
+                           container_sha, envelope=envelope, offset=row["payloadOffset"], length=36, raw_sha=row["recordSha256"],
                            sha_scope="36-byte CAMD record", chunk_path=chunk_path,
                            parser="tools/cmsh_animation_usage_census.py:_animation_metadata")
         anim["animation"] = {"mode": row["mode"], "startFrame": row["start"], "lastFrame": row["last"],

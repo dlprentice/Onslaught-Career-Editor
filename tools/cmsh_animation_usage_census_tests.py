@@ -292,6 +292,19 @@ class ModelMetadataTests(unittest.TestCase):
         self.assertNotEqual(first["model"]["identity"]["occurrenceId"],
                             second["model"]["identity"]["occurrenceId"])
 
+    def test_nested_animation_record_coordinates_include_the_parent_offset(self) -> None:
+        clip = _catalog_animation("Walk")
+        child = _catalog_stream(name="Child", animations=clip + clip, animation_count=2)
+        stream = _catalog_stream(lod=child, next_marker=True)
+        row, _ = self.row(stream, payload_offset=512, source_context="loose-mesh")
+        child_meta = row["modelMetadata"]["lodChildren"][0]["model"]
+        child_offset = 512 + len(stream) - len(child)
+        [camd] = [c for c in census.parse_top_level_chunks_bounded(child) if c.tag == "CAMD"]
+        clips = child_meta["animations"]["rows"]
+        self.assertEqual([child_offset + camd.offset + 8, child_offset + camd.offset + 8 + 36],
+                         [clip["payloadOffset"] for clip in clips])
+        self.assertEqual(["inflated-archive"] * 2, [clip["coordinateSpace"] for clip in clips])
+
     def test_lod_shape_needs_its_declared_reader_context_and_marker(self) -> None:
         child = _catalog_stream(name="Child")
         bare = _catalog_stream(lod=child, next_marker=True)
@@ -596,6 +609,7 @@ class WorldInstanceParsingTests(unittest.TestCase):
         payload = _chunk(b"PMSH", _chunk(b"PMS2", (b"\0" * 309) + cmsh))
 
         self.assertEqual(cmsh, census._direct_embedded_cmsh(payload))
+        self.assertEqual((cmsh, 8 + 8 + 309), census._direct_embedded_cmsh_with_offset(payload))
         with self.assertRaisesRegex(ValueError, "exactly one direct embedded CMSH"):
             census._direct_embedded_cmsh(
                 payload + _chunk(b"PMSH", _chunk(b"PMS2", (b"\0" * 309) + cmsh))

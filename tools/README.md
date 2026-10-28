@@ -87,7 +87,10 @@ publish, sign, or install anything by themselves.
   can be compared without exporting their pixels; unsupported or malformed textures have no admitted mip entries.
   `nestedMeshDetails` reports each immediate child's relationship, parse status, count and hash; an unknown count is
   `null` there and in `lodChildParts`, and nested descendants are available in the CMSH census. No relationship
-  asserts runtime loading.
+  asserts runtime loading. If a root mesh is unparsed, its counts are `null` and its bounded refusal is reported;
+  an unparsed emitter section likewise has an unknown emitter count. Animation source offsets identify their own
+  36-byte `CAMD` records in the inflated container. An embedded mesh's `chunkPath` anchors the owning top-level
+  `MESH` chunk rather than listing every wrapper; its offset comes from walking those wrappers, not searching bytes.
   `world_resources_decode.py` decodes the level payloads in their loaders' read order and refuses unread bytes: the
   `WRES` world bodies (`CWorld::LoadWorld`: header, compiled scripts, things, trees, influence map, waypoint paths,
   timings, occupancy), `ERES` (mixer mips, heightfield settings and samples, mixer map), `SURF` and `SSHD`; `LNDS`
