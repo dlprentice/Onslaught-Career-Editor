@@ -131,7 +131,8 @@ publish, sign, or install anything by themselves.
   (`--game DIR`, or `BEA_GAME`) and a separate output location. The selected game path is resolved before both the
   archive read and output protection; an alias naming the selected root is supported. Before writing, the resolved
   game tree is scanned without following links and publication is refused if it contains any internal symlink or
-  reparse point, is unreadable, exceeds 200,000 entries, or is deeper than 64 directories. This conservative rule
+  reparse point, an entry or directory cannot be inspected, it exceeds 200,000 entries, or it is deeper than 64
+  directories. This conservative rule
   includes links unrelated to the selected level; use a plain game view for writing commands. Read-only `verify` does
   not impose this rule. Output paths containing `..` are refused. Fresh publication refuses existing files and output
   symlinks in ordinary operation. Keep the game and output directories exclusively controlled and

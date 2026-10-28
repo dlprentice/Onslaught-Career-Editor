@@ -29,7 +29,7 @@ Command line (select retail data as a read-only input; choose an output outside 
                                                                  WDAT names no level, so CWorld::Load takes the loose path
 
 The game path is resolved before both reading and protection. Before any publication, the selected game tree is
-scanned without following links; internal symlinks or reparse points, unreadable trees and scan-limit excesses
+scanned without following links; internal symlinks or reparse points, uninspectable entries and scan-limit excesses
 refuse the write. A symlink naming the selected game root is still resolved and allowed. Output paths cannot contain
 `..` components. Outputs use fresh names and reject existing files and output symlinks in ordinary operation. Run only while no
 other process can change the game or output directories: the shared publisher does not establish an isolation
