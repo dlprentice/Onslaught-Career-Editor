@@ -112,8 +112,8 @@ internal sealed class BackupsPage : Page
             $"From: {set.GameName}\nTo: {game.DisplayName}\n\n" + (here ? "" :
             $"This backup was made from another game folder:\n{set.Game}\nIt will be put into the game folder you use now:\n{game.Root}\n\n") +
             "Your current careers" + (game.Target == GameTarget.Original ? " and original-game settings" : "") +
-            " are backed up first, so you can undo this too. Nothing is written while the game or Onslaught CE " +
-            "is running, and the backup copy must still match the fingerprint recorded when it was made.";
+            " are backed up first, so you can undo this too. The backup copy must still match the fingerprint recorded when it was made.\n\n" +
+            AppServices.GameWriteGuidance + " " + AppServices.GameWriteChecks;
         Confirm.PopupCentered();
     }
 

@@ -119,8 +119,7 @@ internal sealed class CheatsPage : Page
         string switches = string.Join(", ", CheatSaveNameComposer.ActiveCheatsIn(Composed.Name).Select(cheat => cheat.DisplayName));
         Confirm.DialogText = $"Add {Composed.Name} to your game?\n\nIt is a copy of {System.IO.Path.GetFileNameWithoutExtension(session.Path)} " +
             $"whose name switches on: {switches}.\n\nFirst, your careers and settings are backed up to {_app.Backups.Folder} " +
-            "(a file the companion cannot read is left as it is). " +
-            "Nothing is written while the game is running.";
+            "(a file the companion cannot read is left as it is).\n\n" + AppServices.GameWriteGuidance + " " + AppServices.GameWriteChecks;
         Confirm.PopupCentered();
     }
 

@@ -171,7 +171,7 @@ public partial class CompanionApp : Control
         PageTitle = titles.Add(Build.Heading("", "Title"));
         PageSubtitle = titles.Add(Build.Text("", "Muted", wrap: false, clip: true));
         RunningBadge = header.Add(Build.Text("Game running", "Warn", wrap: false));
-        RunningBadge.TooltipText = "The original game or Onslaught CE is running. The companion won't write into the game folder until it closes.";
+        RunningBadge.TooltipText = "The original game or Onslaught CE is detected. Close both games before saving and wait for the save to finish before starting either.";
         RunningBadge.SizeFlagsVertical = SizeFlags.ShrinkCenter;
         RunningBadge.Visible = false;
         VBoxContainer career = header.Add(Build.Column(2));

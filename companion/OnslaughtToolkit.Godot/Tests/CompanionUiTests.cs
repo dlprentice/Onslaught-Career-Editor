@@ -72,8 +72,10 @@ internal static class CompanionUiTests
         check.That(app.Status.Game.Text.Contains("differs from the Steam release") && app.Home.HeroStatus.StartsWith("Original game", StringComparison.Ordinal),
             "the status bar and Home say the test executable is the original game but not the Steam release");
         check.That(app.Sidebar.Root.FindChildren("*", nameof(Label), true, false).OfType<Label>().Any(label => label.Text == "COMPANION") &&
-            app.Home.Promises.Count == 3 && app.Home.Promises[0].Text.Contains("Career changes") && app.Home.Promises[1].Text.Contains("Onslaught CE"),
-            "the sidebar names Onslaught Companion and Home's promises cover backed-up career changes and refuse while CE runs");
+            app.Home.Promises.Count == 3 && app.Home.Promises[0].Text.Contains("Career changes") &&
+            app.Home.Promises[1].Text.Contains("Onslaught CE") && app.Home.Promises[1].Text.Contains("closed until saving finishes") &&
+            app.Home.Promises[1].Text.Contains("checks for both"),
+            "Home describes backups, running checks and keeping both games closed through the save");
         check.That(app.Home.AskingAboutBackups, "Home asks once whether to keep automatic backups");
         check.That(app.Home.ShowsGameArt && app.Home.Manual.Visible, "Home shows the game's own art and offers its manual when the install has them");
         check.That(!app.Sidebar.IsOpen("Advanced") && app.Sidebar.Items.Count == app.Pages.Count,
@@ -381,7 +383,9 @@ internal static class CompanionUiTests
         check.That(cheatCopy.Ok && File.ReadAllBytes(Path.Combine(cheatFolder, "PilotMALLOY.bes")).AsSpan().SequenceEqual(sourceBytes),
             "the cheat copy is byte-identical to the open career");
         cheats.AskToAdd();
-        check.That(cheats.Confirm.Visible && cheats.Confirm.DialogText.Contains("PilotMALLOY"), "adding to the game asks first, naming the career");
+        check.That(cheats.Confirm.Visible && cheats.Confirm.DialogText.Contains("PilotMALLOY") &&
+            cheats.Confirm.DialogText.Contains("before starting either") && cheats.Confirm.DialogText.Contains("before backup and just before writing"),
+            "adding to the game asks first, naming the career and explaining the process checks and safe timing");
         InstallReceipt cheatInstall = await cheats.ConfirmAddAsync();
         check.That(cheatInstall.Ok && File.ReadAllBytes(Path.Combine(install.Game, "savegames", "PilotMALLOY.bes")).AsSpan().SequenceEqual(sourceBytes),
             "the cheat career is added to the game after a backup");
@@ -506,7 +510,9 @@ internal static class CompanionUiTests
         BackupSet oldest = Backups.List(defaultBackups)[^1];
         BackupFile first = oldest.Files.Single(file => file.Name == "Career One.bes");
         backups.AskToRestore(oldest, first);
-        check.That(backups.Confirm.Visible && backups.Confirm.DialogText.Contains("Career One"), "putting a file back asks first");
+        check.That(backups.Confirm.Visible && backups.Confirm.DialogText.Contains("Career One") &&
+            backups.Confirm.DialogText.Contains("before starting either") && backups.Confirm.DialogText.Contains("before backup and just before writing"),
+            "putting a file back asks first and explains the process checks and safe timing");
         InstallReceipt restored = await backups.ConfirmAsync();
         check.That(restored.Ok && File.ReadAllBytes(install.Career).AsSpan().SequenceEqual(original) &&
             Backups.List(defaultBackups)[0].Reason!.StartsWith("Before putting back", StringComparison.Ordinal),
