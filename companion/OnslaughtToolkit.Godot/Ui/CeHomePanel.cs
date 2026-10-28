@@ -9,7 +9,7 @@ namespace OnslaughtToolkit.Companion.Ui;
 internal sealed class CeHomePanel
 {
     private readonly AppServices _app;
-    private readonly Label _launcher, _version, _userFolder, _update;
+    private readonly Label _launcher, _version, _userFolder, _folderGuidance, _update;
     private readonly Func<string?, CancellationToken, Task<CeUpdateState>> _check;
     private readonly CancellationTokenSource _lifetime = new();
     private bool _checking;
@@ -23,6 +23,8 @@ internal sealed class CeHomePanel
         _version = body.Add(Build.Text("", "Strong"));
         _launcher = body.Add(Build.Text("", "Muted"));
         _userFolder = body.Add(Build.Text("", "Muted"));
+        _folderGuidance = body.Add(Build.Text("Use separate, ordinary CE user and backup folders outside the original game and CE package. " +
+            "Do not use a link, junction or bind mount into either; not every folder alias can be detected.", "Muted"));
         HBoxContainer actions = body.Add(Build.Row(12));
         ChooseLauncher = actions.Add(Build.Button("Choose CE launcher…", "", "Choose onslaught-ce on Linux, or onslaught-ce.exe on Windows."));
         CheckUpdates = actions.Add(Build.Button("Updates", "", "Show how CE updates and how to install a newer CE by hand; the companion contacts, downloads and installs nothing."));
@@ -45,6 +47,7 @@ internal sealed class CeHomePanel
     internal FileDialog LauncherDialog { get; }
     internal string UpdateText => _update.Text;
     internal string VersionText => _version.Text;
+    internal string FolderGuidanceText => _folderGuidance.Text;
 
     internal void Refresh()
     {
