@@ -317,6 +317,23 @@ class ModelMetadataTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unsupported source context"):
             self.row(bare, source_context="invented")
 
+    def test_more_than_two_chain_links_do_not_claim_renderer_lod_selection(self) -> None:
+        last = _catalog_stream(name="Fourth")
+        third = _catalog_stream(name="Third", lod=last, next_marker=True)
+        second = _catalog_stream(name="Second", lod=third, next_marker=True)
+        first = _catalog_stream(lod=second, next_marker=True)
+        row, _ = self.row(first, source_context="loose-mesh")
+        model = row["modelMetadata"]
+        self.assertEqual("parsed", model["status"])
+        edges = []
+        while model["lodChildren"]:
+            [edge] = model["lodChildren"]
+            edges.append(edge)
+            model = edge["model"]
+        self.assertEqual(["mesh-lod", "mesh-lod", "mesh-chain"], [e["relationship"] for e in edges])
+        self.assertIn("selection beyond two links", edges[2]["relationshipScope"])
+        self.assertEqual(hashlib.sha256(last).hexdigest(), edges[2]["model"]["identity"]["payloadSha256"])
+
     def test_lod_invalid_or_ambiguous_child_is_not_promoted(self) -> None:
         child = _catalog_stream(name="Child")
         # Both the bare and 309-byte candidates appear to start with CMSH:

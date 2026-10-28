@@ -422,6 +422,9 @@ def _model_metadata(stream: bytes, mesh: Any, identity: dict[str, object], depth
         embedded_shape = source_context == "embedded-mesh" and c.tag == "PMSH" and prefix == PMS2_HEADER_BYTES
         declared_chain = (next_marker and not ambiguous and child["status"] != "unparsed"
                           and (loose_shape or embedded_shape))
+        # CRTMesh::Render follows at most two links from its root. Deeper
+        # serialized links are a chain, but their render selection is unknown.
+        relationship = ("mesh-lod" if depth < 2 else "mesh-chain") if declared_chain else "unresolved-nested-mesh"
         if declared_chain:
             reason = None
         elif not next_marker:
@@ -434,17 +437,18 @@ def _model_metadata(stream: bytes, mesh: Any, identity: dict[str, object], depth
             reason = "reader context is unknown"
         else:
             reason = "reader context does not match nested framing"
-        result["lodChildren"].append({"relationship": "mesh-lod" if declared_chain else "unresolved-nested-mesh",
-                                      "relationshipScope": ("serialized next-in-chain; runtime loading not established"
-                                                            if declared_chain else
-                                                            "unresolved nested structure; runtime loading not established"),
+        scope = ("serialized next-in-chain; renderer selection beyond two links and runtime loading not established"
+                 if relationship == "mesh-chain" else
+                 "serialized next-in-chain; runtime loading not established" if declared_chain else
+                 "unresolved nested structure; runtime loading not established")
+        result["lodChildren"].append({"relationship": relationship, "relationshipScope": scope,
                                       "relationshipReason": reason,
                                       "framingPrefixBytes": None if ambiguous else prefix, "model": child})
     if next_marker != bool(result["lodChildren"]):
         result["unknowns"].append("LOD presence marker and decoded child disagree")
     if (any(result[lane]["status"] == "unparsed" for lane in ("animations", "emitters"))
             or any(child["model"]["status"] != "parsed" for child in result["lodChildren"])
-            or any(child["relationship"] != "mesh-lod" for child in result["lodChildren"])
+            or any(child["relationship"] not in ("mesh-lod", "mesh-chain") for child in result["lodChildren"])
             or any(texture["laneStatus"] != "decoded-single-frame" for texture in result["textures"])
             or result["unknowns"]):
         result["status"] = "partial"
