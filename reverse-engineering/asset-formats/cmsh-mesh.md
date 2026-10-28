@@ -5,7 +5,7 @@ complete released PS2 material-binding population, and a bounded PC/Xbox/PS2
 material-identity join; position and linked-shader normal skinning laws are
 closed while animation/general scene import remain partial
 Date: 2026-08-28
-Last updated: 2026-10-16 (PC tag meanings and field layouts settled by the complete loader grammar in cmsh-fields.md)
+Last updated: 2026-10-28 (corrected the number of files containing chained meshes; earlier: PC tag meanings and field layouts settled by the complete loader grammar in cmsh-fields.md)
 Verdict: all 213 PC mesh streams frame and their complete tag population is
 counted; the PS2 shelf closes 3,547 meshes and 14,028 material bindings across
 307 unique AYA identities; a three-platform join closes the portable material
@@ -51,9 +51,12 @@ as a dated decoder result, not as a claim that 19 current inputs remain blocked.
 ## Measured tag census
 
 The complete PC grammar and every record layout are now in [cmsh-fields.md](cmsh-fields.md), proven by a
-walk of all 213 files to their exact final byte (`tools/cmsh_grammar_walk.py`). Its counts include the 15
-chained meshes that follow a `PMS2` header inside 15 files (228 meshes, 4,009 parts). The aggregate below
-counts tags differently, so its numbers are smaller. The interpretations in this table follow that grammar.
+walk of all 213 files to their exact final byte (`tools/cmsh_grammar_walk.py`). Its counts include 15
+serialized chained meshes following `PMS2` headers across seven files (228 meshes, 4,009 parts). A
+2026-10-28 read-only recheck matched the 213 files to the pinned mirror index identified above and reproduced
+the seven-file, 15-chain count. This establishes stored structure, not runtime loading or selection. The
+aggregate below counts tags differently, so its numbers are smaller. The interpretations in this table follow
+that grammar.
 
 The 2026-08-22 aggregate counts nested observed tags, so its large PB-family
 numbers are not comparable to the older 5,494-chunk shallow summary:
@@ -75,7 +78,7 @@ numbers are not comparable to the older 5,494-chunk shallow summary:
 | `CPOS` | 3,736 | 213 | derived model-space position cache, indexed by virtual frame |
 | `CORI` | 2,514 | 213 | derived model-space orientation cache, indexed by virtual frame |
 | `HFOV` | 17 | 17 | camera (type 4) field-of-view frames |
-| `BONE` / `PMS2` | 7 each | 7 | `BONE`: a skeletal part's bone part indices; `PMS2`: the header before a chained mesh in the same file |
+| `BONE` / `PMS2` | 7 each | 7 | `BONE`: a skeletal part's bone part indices; `PMS2`: a shallow count of files with a chained mesh; the recursive walk finds 15 headers across those seven files |
 | `CAMD` / `CEMT` | 61 / 126 | 61 / 126 | the mesh's animation-mode table / emitter table |
 | `NMIC` | 2 | 1 | a part's next-part-in-chain index |
 | `PBPP` | 515,988 | 213 | collision-grid vertex (three packed i16) |
