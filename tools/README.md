@@ -85,6 +85,12 @@ publish, sign, or install anything by themselves.
   section, provenance and, for meshes and textures, a usage summary ([schema](content_catalog.schema.json)). Each
   admitted loose texture mip records the encoded bytes' SHA-256 and offset in the inflated DDS, so individual levels
   can be compared without exporting their pixels; unsupported or malformed textures have no admitted mip entries.
+  `texture.ddsHeader` also retains the raw DDS flags, pitch or linear size, depth, declared mip count, caps, pixel-format
+  flags, four stored FourCC bytes, bit count and RGBA masks. A non-null header on a malformed or unsupported record is
+  only a readable declaration, not an admitted payload; `status` and `problems` remain the validation outcome. These
+  values describe stored bytes and do not establish original art properties or rendered appearance. The loader builds
+  expected filename suffixes from requested formats; a matching filename alone does not prove loading or the original
+  art's bit depth, and its suffix need not match the stored format.
   Mesh hierarchy rows also retain each part's CMSP and MESP payload hashes and its stored BBOX center, half-extents,
   flag and radius, without exporting geometry. The flag is the stored value, not a validity check; non-finite numbers
   are `null`. These are part records before transforms, not world-space or animated bounds. The source is

@@ -180,7 +180,7 @@
             "string",
             "null"
           ],
-          "description": "The format the runtime asked for (texture file name)."
+          "description": "The parsed format suffix in the texture filename. The loader constructs such a suffix from a request, but the filename alone does not establish actual loading, stored DDS format or original art's bit depth."
         },
         "mipLevels": {
           "type": "integer"
@@ -326,7 +326,33 @@
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "description": "Parsed format suffix in the filename. The loader constructs such a suffix from a request, but a matching name alone does not establish loading, stored format or original art's bit depth."
+        },
+        "ddsHeader": {
+          "type": ["object", "null"],
+          "description": "Selected raw fields from the inflated DDS header. A non-null header can also occur in a malformed or unsupported texture; only status valid admits its mip byte ranges. FourCC is the four stored bytes in hex, even if its pixel-format flag is clear. Fields do not establish rendered appearance or source-art format. Older v1 records may omit this field.",
+          "additionalProperties": false,
+          "required": ["flags", "pitchOrLinearSize", "depth", "declaredMipCount", "caps1", "caps2", "pixelFormat"],
+          "properties": {
+            "flags": {"$ref": "#/$defs/uint32"},
+            "pitchOrLinearSize": {"$ref": "#/$defs/uint32"},
+            "depth": {"$ref": "#/$defs/uint32"},
+            "declaredMipCount": {"$ref": "#/$defs/uint32"},
+            "caps1": {"$ref": "#/$defs/uint32"},
+            "caps2": {"$ref": "#/$defs/uint32"},
+            "pixelFormat": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["flags", "fourCCBytesHex", "rgbBitCount", "rgbaMasks"],
+              "properties": {
+                "flags": {"$ref": "#/$defs/uint32"},
+                "fourCCBytesHex": {"type": "string", "pattern": "^[0-9a-f]{8}$"},
+                "rgbBitCount": {"$ref": "#/$defs/uint32"},
+                "rgbaMasks": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"$ref": "#/$defs/uint32"}}
+              }
+            }
+          }
         },
         "fileNameTruncated": {
           "type": "boolean"
@@ -679,6 +705,7 @@
     }
   },
   "$defs": {
+    "uint32": {"type": "integer", "minimum": 0, "maximum": 4294967295},
     "nullableFloat3": {
       "type": "array",
       "minItems": 3,

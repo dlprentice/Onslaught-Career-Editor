@@ -707,6 +707,68 @@ class TextureMipIdentityTests(unittest.TestCase):
             self.assertEqual(record["texture"]["status"], "malformed")
             self.assertEqual(record["texture"]["mips"], [])
 
+    def test_raw_dds_header_fields_are_retained_without_guessing_original_art(self) -> None:
+        rgba = bytearray(dds_dxt1_4x4()[:128])
+        struct.pack_into("<7I", rgba, 4, 124, 0x100F, 1, 1, 4, 0, 0)
+        struct.pack_into("<2I", rgba, 76, 32, 0x41)
+        rgba[84:88] = b"\x13\x37\x00\xfe"  # raw bytes, unused when the fourCC flag is absent
+        struct.pack_into("<5I", rgba, 88, 32, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000)
+        struct.pack_into("<2I", rgba, 108, 0x1000, 0)
+        rgba = bytes(rgba) + b"\x01\x02\x03\xff"
+        dxt = self.dds(b"LOWER-1!")
+        unsupported = dxt[:84] + b"DX10" + dxt[88:]
+        with tempfile.TemporaryDirectory() as tmp:
+            game = Path(tmp)
+            shelf = game / "data/resources/dxtntextures"
+            shelf.mkdir(parents=True)
+            inputs = [("a.tga(0)A1R5G5B5.aya", dxt), ("b.tga(0)A8R8G8B8.aya", rgba),
+                      ("short.aya", dxt[:-1]), ("unsupported.aya", unsupported), ("bad.aya", b"not a DDS")]
+            for name, data in inputs:
+                (shelf / name).write_bytes(aya(data))
+            files = [{"path": (shelf / name).relative_to(game).as_posix(), "family": "dds-texture-dxtn"}
+                     for name, _ in inputs]
+            records, _ = catalog.catalog_textures(game, files)
+            repeated, _ = catalog.catalog_textures(game, files)
+        self.assertEqual(records, repeated)
+        dxt_record, rgba_record, short, unsupported_record, bad = [r["texture"] for r in records]
+        self.assertEqual(dxt_record["sourceFormatFromName"], "A1R5G5B5")
+        self.assertEqual(dxt_record["storedFormat"], "DXT1")
+        self.assertEqual(dxt_record["ddsHeader"], {
+            "flags": 0xA1007, "pitchOrLinearSize": 32, "depth": 0, "declaredMipCount": 2,
+            "caps1": 0x401008, "caps2": 0,
+            "pixelFormat": {"flags": 4, "fourCCBytesHex": "44585431", "rgbBitCount": 0,
+                            "rgbaMasks": [0, 0, 0, 0]},
+        })
+        self.assertEqual(rgba_record["status"], "valid")
+        self.assertEqual(rgba_record["ddsHeader"]["pixelFormat"], {
+            "flags": 0x41, "fourCCBytesHex": "133700fe", "rgbBitCount": 32,
+            "rgbaMasks": [0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000],
+        })
+        self.assertEqual(short["status"], "malformed")
+        self.assertEqual(short["ddsHeader"], dxt_record["ddsHeader"])
+        self.assertEqual(short["mips"], [])
+        self.assertEqual(unsupported_record["status"], "unsupported")
+        self.assertEqual(unsupported_record["ddsHeader"]["pixelFormat"]["fourCCBytesHex"], "44583130")
+        self.assertEqual(unsupported_record["mips"], [])
+        self.assertIsNone(bad["ddsHeader"])
+        self.assertFalse(any("authored for" in item for item in records[0]["upscale"]["suggestedTreatment"]))
+
+    def test_header_schema_rejects_invalid_raw_fourcc_or_masks(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        schema = json.loads((catalog.TOOLS / "content_catalog.schema.json").read_text(encoding="utf-8"))
+        header = schema["properties"]["texture"]["properties"]["ddsHeader"]
+        valid = {"flags": 1, "pitchOrLinearSize": 0, "depth": 0, "declaredMipCount": 0, "caps1": 0, "caps2": 0,
+                 "pixelFormat": {"flags": 0, "fourCCBytesHex": "00000000", "rgbBitCount": 0,
+                                 "rgbaMasks": [0, 0, 0, 0]}}
+        validator = jsonschema.Draft202012Validator({"$defs": schema["$defs"], **header})
+        self.assertTrue(validator.is_valid(valid))
+        self.assertTrue(validator.is_valid(None))
+        self.assertFalse(validator.is_valid({**valid, "pixelFormat": {**valid["pixelFormat"], "fourCCBytesHex": "bad"}}))
+        self.assertFalse(validator.is_valid({**valid, "pixelFormat": {**valid["pixelFormat"], "rgbaMasks": [0, 0, -1, 0]}}))
+
     def test_schema_rejects_an_invalid_mip_hash(self) -> None:
         try:
             import jsonschema

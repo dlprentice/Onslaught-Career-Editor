@@ -35,6 +35,7 @@ class TextureMetadataTests(unittest.TestCase):
         self.assertEqual(result["source"], {"envelope": "dds", "size": len(raw), "sha256": hashlib.sha256(raw).hexdigest()})
         self.assertEqual(result["dds"], {"size": len(raw), "sha256": hashlib.sha256(raw).hexdigest()})
         self.assertEqual(result["stored_format"], "DXT1")
+        self.assertEqual(result["header"]["pixel_format"]["fourcc_hex"], "44585431")
         expected = [(8, 4, 128, 16), (4, 2, 144, 8), (2, 1, 152, 8), (1, 1, 160, 8)]
         self.assertEqual([(m["width"], m["height"], m["offset"], m["length"]) for m in result["mips"]], expected)
         for index, mip in enumerate(result["mips"]):

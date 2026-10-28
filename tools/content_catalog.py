@@ -286,8 +286,6 @@ def texture_upscale(meta: dict, source_format: str | None) -> dict:
         treatment.append("alpha is a hard on/off mask: upscale the mask separately and re-threshold (no soft edges)")
     elif alpha == "graded":
         treatment.append("alpha is graded: upscale alpha as its own channel")
-    if source_format in ("A1R5G5B5", "A4R4G4B4", "R5G6B5"):
-        treatment.append(f"authored for {source_format} (16-bit colour): expect banding; deband before upscaling")
     if width and height and max(width, height) <= 32:
         treatment.append("very small source: consider redrawing rather than upscaling")
     if mips > 1:
@@ -298,6 +296,17 @@ def texture_upscale(meta: dict, source_format: str | None) -> dict:
             "tiling": {"status": "no-mesh-evidence", "uvRange": None, "meshes": 0},
             "suggestedTreatment": treatment,
             "treatmentBasis": "rule-derived from stored format, alpha census and mesh UV ranges; no visual review"}
+
+
+def catalog_dds_header(header: dict | None) -> dict | None:
+    """Selected raw DDS header values, not a claim that the payload is valid or the image is visually correct."""
+    if header is None:
+        return None
+    pixel = header["pixel_format"]
+    return {"flags": header["flags"], "pitchOrLinearSize": header["pitch"], "depth": header["depth"],
+            "declaredMipCount": header["mips"], "caps1": header["caps1"], "caps2": header["caps2"],
+            "pixelFormat": {"flags": pixel["flags"], "fourCCBytesHex": pixel["fourcc_hex"],
+                            "rgbBitCount": pixel["bits"], "rgbaMasks": list(pixel["masks"])}}
 
 
 def catalog_textures(game: Path, files: list[dict]) -> tuple[list[dict], dict[str, dict]]:
@@ -332,6 +341,7 @@ def catalog_textures(game: Path, files: list[dict]) -> tuple[list[dict], dict[st
             "mustbe": bool(match and match.group("mustbe")), "frame": frame,
             "sourceFormatFromName": source_format, "fileNameTruncated": truncated,
             "width": header.get("width"), "height": header.get("height"), "storedFormat": meta.get("stored_format"),
+            "ddsHeader": catalog_dds_header(meta.get("header")),
             # Offsets and hashes describe stored mip bytes inside the inflated
             # DDS, not offsets in the compressed AYA or decoded image pixels.
             "mips": [{"index": m["index"], "width": m["width"], "height": m["height"],
