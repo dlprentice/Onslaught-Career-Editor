@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import collections
+from dataclasses import replace
 import hashlib
 import json
 import os
@@ -51,6 +52,12 @@ class MotionClassificationTests(unittest.TestCase):
     def test_frame_map_index_must_fit_the_hierarchy_pose_table(self) -> None:
         with self.assertRaisesRegex(ValueError, "outside HORI/HPOS"):
             census._motion_class((self.part("bad", (0, 2), 2),))
+
+    def test_missing_raw_part_name_is_unknown_not_a_display_label(self) -> None:
+        _, moving = census._motion_class((self.part("synthetic-label", (0, 1), 2),))
+        self.assertIsNone(moving[0]["partName"])
+        self.assertEqual(moving[0]["partNameStatus"], "unavailable")
+        self.assertIsNone(moving[0]["partNameBytesSha256"])
 
 
 class MissionAnimationCallTests(unittest.TestCase):
@@ -154,6 +161,96 @@ class ModelMetadataTests(unittest.TestCase):
                          source_universe_id="authored-fixture-v1", platform="pc")
         arguments.update(kwargs)
         return census.mesh_record_from_stream(stream, **arguments)
+
+    def test_mesh_name_uses_only_its_terminated_300_byte_field(self) -> None:
+        original = _catalog_stream()
+        start = 8 + 0x24
+        end = start + 300
+        cases = (
+            (b"A" * 299 + b"\0", "A" * 299, "utf8-decoded", b"A" * 299),
+            (b"A" * 300, None, "unterminated", None),
+            (bytes(300), "", "empty", b""),
+            (b"broken\xff\0".ljust(300, b"\0"), None, "invalid-utf8", b"broken\xff"),
+            ("é".encode("utf-8").ljust(300, b"\0"), "é", "utf8-decoded", "é".encode("utf-8")),
+        )
+        for field, expected, status, name_bytes in cases:
+            with self.subTest(status=status):
+                stream = bytearray(original)
+                stream[start:end] = field
+                stream[end:end + 4] = b"\0PTR"
+                row, mesh = self.row(bytes(stream))
+                self.assertIsNotNone(mesh)
+                self.assertEqual(row["internalName"], expected)
+                self.assertEqual(row["internalNameStatus"], status)
+                self.assertEqual(row["internalNameBytesSha256"],
+                                 hashlib.sha256(name_bytes).hexdigest() if name_bytes is not None else None)
+                self.assertEqual(row["modelMetadata"]["schema"], "onslaught.cmsh-model-metadata.v1")
+                json.dumps(row, allow_nan=False)
+
+    def test_summary_uses_stored_empty_part_names_not_preview_labels(self) -> None:
+        parts = [_catalog_part(0, name="root", children=(1,)),
+                 _catalog_part(1, name="", parent=0, hfov_bits=0x3f800000)]
+        row, mesh = self.row(_catalog_stream(parts=parts))
+        self.assertIsNotNone(mesh)
+        self.assertEqual(row["modelMetadata"]["parts"][1]["name"], "")
+        self.assertEqual(row["hfov"][0]["partName"], "")
+        self.assertEqual(row["hfov"][0]["partNameStatus"], "empty")
+        self.assertEqual(row["hfov"][0]["partNameBytesSha256"], hashlib.sha256(b"").hexdigest())
+
+        # Exercise moving/bone summaries from the same actual parsed parts, with
+        # only the authored motion and bone links supplied in this fixture.
+        parsed = list(mesh.file_parts())
+        part = parsed[1]
+        track = replace(part.track, hierarchy=(part.track.hierarchy[0], part.track.hierarchy[0]),
+                        frame_map=(0, 1))
+        parsed[1] = replace(part, bones=(0, 1), track=track)
+        summary = census._parsed_mesh_record(replace(mesh, source_parts=tuple(parsed), parts=tuple(parsed)))
+        self.assertEqual(summary["movingParts"][0]["partName"], "")
+        self.assertEqual(summary["movingParts"][0]["partNameStatus"], "empty")
+        carrier = summary["boneCarriers"][0]
+        self.assertEqual(carrier["partName"], "")
+        self.assertEqual(carrier["bonePartNames"], ["root", ""])
+        self.assertEqual(carrier["bonePartNameStatuses"], ["utf8-decoded", "empty"])
+        self.assertEqual(carrier["bonePartNameBytesSha256"],
+                         [hashlib.sha256(b"root").hexdigest(), hashlib.sha256(b"").hexdigest()])
+
+    def test_invalid_part_names_still_refuse_the_mesh(self) -> None:
+        stream = bytearray(_catalog_stream())
+        offset = stream.index(b"CMSP") + 8 + 0xdc
+        stream[offset:offset + 32] = b"bad\xff\0".ljust(32, b"\0")
+        row, mesh = self.row(bytes(stream))
+        self.assertIsNone(mesh)
+        self.assertEqual(row["modelMetadata"]["status"], "unparsed")
+
+    def test_part_name_terminator_must_fit_its_32_byte_field(self) -> None:
+        for length in (31, 32):
+            with self.subTest(length=length):
+                parts = [_catalog_part(0, name="root", children=(1,)),
+                         _catalog_part(1, name="B" * length, parent=0, hfov_bits=0x3f800000)]
+                row, mesh = self.row(_catalog_stream(parts=parts))
+                if length == 32:
+                    self.assertIsNone(mesh)
+                    self.assertEqual(row["modelMetadata"]["status"], "unparsed")
+                else:
+                    self.assertIsNotNone(mesh)
+                    self.assertEqual(row["hfov"][0]["partName"], "B" * 31)
+                    self.assertEqual(row["hfov"][0]["partNameStatus"], "utf8-decoded")
+                    self.assertEqual(row["hfov"][0]["partNameBytesSha256"],
+                                     hashlib.sha256(b"B" * 31).hexdigest())
+
+    def test_unknown_internal_name_is_not_counted_as_a_literal_string(self) -> None:
+        rows = [{"internalName": ""}, {"internalName": "None"},
+                {"internalName": "known"}, {"internalName": None}]
+        self.assertEqual(census._internal_name_summary(rows),
+                         {"internalNameCounts": {"": 1, "None": 1, "known": 1},
+                          "unknownInternalNames": 1})
+
+    def test_v4_census_and_v1_model_metadata_identifiers_are_distinct(self) -> None:
+        row, _ = self.row(_catalog_stream())
+        self.assertEqual(census.SCHEMA, "onslaught.cmsh-animation-usage-census.v4")
+        self.assertEqual(row["modelMetadata"]["schema"], "onslaught.cmsh-model-metadata.v1")
+        self.assertEqual(row["internalName"], "AuthoredMesh")
+        self.assertEqual(row["modelMetadata"]["parts"][0]["name"], "Hull")
 
     def test_exact_content_and_occurrence_are_separate_and_do_not_use_names(self) -> None:
         stream = _catalog_stream()
@@ -526,6 +623,39 @@ def _world_instance(
 
 
 class WorldInstanceParsingTests(unittest.TestCase):
+    def test_anonymous_mesh_name_unknown_reaches_the_actual_join_summary(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="authored-census-") as directory:
+            root = Path(directory)
+            resources = root / "resources"
+            (resources / "meshes").mkdir(parents=True)
+            (root / "MissionScripts").mkdir()
+            loose = zlib.compress(_catalog_stream(name="Loose"))
+            saved: dict[Path, bytes] = {
+                root / "default physics.dat": _physics_fixture(),
+                resources / "meshes" / "m_authored.msh.aya": struct.pack("<I", len(loose)) + loose,
+            }
+            for level, unterminated in ((100, False), (101, True)):
+                stream = bytearray(_catalog_stream(name=""))
+                if unterminated:
+                    start = 8 + 0x24
+                    stream[start:start + 300] = b"X" * 300
+                    stream[start + 300:start + 304] = b"\0PTR"
+                mesh = _chunk(b"MESH", _chunk(b"PMSH", _chunk(b"PMS2", bytes(309) + bytes(stream))))
+                archive = (_chunk(b"LVLR", bytes(4)) + _chunk(b"WRES", _chunk(b"WRLD", b"")) + mesh)
+                compressed = zlib.compress(archive)
+                saved[resources / f"{level}_res_PC.aya"] = struct.pack("<I", len(compressed)) + compressed
+            for path, data in saved.items():
+                path.write_bytes(data)
+            report = census.build_census(root)
+            self.assertEqual(report["schema"], "onslaught.cmsh-animation-usage-census.v4")
+            self.assertEqual([row["internalName"] for row in report["meshes"]], ["Loose"])
+            result = report["worldInstanceJoin"]["anonymousEmbedded"]
+            self.assertEqual([(row["internalName"], row["internalNameStatus"]) for row in result["rows"]],
+                             [("", "empty"), (None, "unterminated")])
+            self.assertEqual(result["summary"]["internalNameCounts"], {"": 1})
+            self.assertEqual(result["summary"]["unknownInternalNames"], 1)
+            self.assertTrue(all(path.read_bytes() == data for path, data in saved.items()))
+
     def test_physics_unit_and_feature_mesh_fields_keep_their_owners_distinct(self) -> None:
         data = _physics_fixture(
             (1, "Building", {8: struct.pack("<I", 8), 9: b"tower.msh\0"}),
@@ -850,7 +980,7 @@ class ShippedAnimationUsageCensusTests(unittest.TestCase):
         self.assertEqual({"BSWD": 33, "RLWD": 5}, collections.Counter(row["worldKind"] for row in level100))
 
     def test_unit_wres_instances_retain_ordinal_behavior_and_factory_identity(self) -> None:
-        self.assertEqual("onslaught.cmsh-animation-usage-census.v3", self.report["schema"])
+        self.assertEqual("onslaught.cmsh-animation-usage-census.v4", self.report["schema"])
         joined = self.report["worldInstanceJoin"]["unitBehaviorJoin"]
         self.assertEqual(
             {
@@ -932,6 +1062,7 @@ class ShippedAnimationUsageCensusTests(unittest.TestCase):
                 "archives": 53,
                 "boneCarrierRows": 41,
                 "internalNameCounts": {"": 53},
+                "unknownInternalNames": 0,
                 "looseCoreMatches": 0,
                 "motionClassCounts": {
                     "mixed-moving-map-closure": 41,

@@ -109,6 +109,25 @@ def catalog_authored_mesh(stream: bytes) -> dict:
 
 
 class StoredPartBoundsTests(unittest.TestCase):
+    def test_mesh_internal_name_unknown_preserves_asset_schema(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        schema = json.loads((catalog.TOOLS / "content_catalog.schema.json").read_text(encoding="utf-8"))
+        original = mesh_fixtures._catalog_stream()
+        for malformed in (False, True):
+            with self.subTest(malformed=malformed):
+                stream = bytearray(original)
+                if malformed:
+                    start = 8 + 0x24
+                    stream[start:start + 300] = b"A" * 300
+                    stream[start + 300:start + 304] = b"\0PTR"
+                record = catalog_authored_mesh(bytes(stream))
+                self.assertEqual(record["mesh"]["internalName"], None if malformed else "AuthoredMesh")
+                self.assertEqual(record["mesh"]["status"], "parsed")
+                jsonschema.Draft202012Validator(schema).validate({**record, catalog.GENERATED_MARKER: True})
+
     def test_catalog_keeps_each_part_box_and_hashes_without_exporting_payload(self) -> None:
         own = part_with_box(mesh_fixtures._catalog_part(0, name="Root", children=(1,), geometry=True),
                             (1.25, -2.5, 3.75), (0.5, 4.0, 8.0), -1, 9.0)

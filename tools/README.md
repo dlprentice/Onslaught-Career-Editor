@@ -68,7 +68,15 @@ publish, sign, or install anything by themselves.
   structure and unknowns; it does not execute scripts or edit missions.
 - `cmsh_animation_usage_census.py` performs a read-only, optionally
   mirror-hash-verified join across loose CMSH pose/skeleton lanes, numeric-LVLR
-  `MESH` membership, and authored MSL animation calls. Its JSON output is
+  `MESH` membership, and authored MSL animation calls. Census v4 reads mesh and
+  part names from their bounded fields: an empty stored name stays empty, and
+  an invalid or unterminated mesh name is null with a status. The shared parser
+  instead refuses the whole mesh if a part name is invalid or unterminated.
+  Name byte hashes describe terminated field contents; UTF-8 decoding does not
+  establish the game's original display encoding. The model-metadata v1 record
+  remains available with its existing fields. Census v4 is an output format
+  identifier; there is no separate machine-readable schema for the census.
+  Its JSON output is
   restricted to ignored `local-lab` or `.artifacts` paths. It distinguishes
   the loose mesh's direct `PMS2` child from the embedded resource's
   `PMSH`/`PMS2` plus 309-byte header, and keeps a mismatched or unknown reader

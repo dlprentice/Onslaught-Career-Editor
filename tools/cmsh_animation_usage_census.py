@@ -32,9 +32,12 @@ from aya_archive_inventory import (  # noqa: E402
     read_held_archive,
 )
 from aya_cross_platform_compare import logical_key  # noqa: E402
+from model_transform_catalog import (  # noqa: E402
+    MESH_NAME_BYTES, MESH_NAME_OFFSET, PART_NAME_BYTES, PART_NAME_OFFSET, stored_name,
+)
 from safe_generated_output import SecuredOutputRoot  # noqa: E402
 
-SCHEMA = "onslaught.cmsh-animation-usage-census.v3"
+SCHEMA = "onslaught.cmsh-animation-usage-census.v4"
 MODEL_METADATA_SCHEMA = "onslaught.cmsh-model-metadata.v1"
 MAX_LOD_DEPTH = 32
 INDEX_SCHEMA = "onslaught.asset-mirror-index.v1"
@@ -96,6 +99,34 @@ def _source_mesh_name(path: Path) -> str:
     return name[:-4]
 
 
+def _name_identity(raw: object, offset: int, width: int) -> tuple[str | None, str, str | None]:
+    """Read only a complete stored field; absent raw data is not a display name."""
+    if not isinstance(raw, bytes) or len(raw) < offset + width:
+        return None, "unavailable", None
+    return stored_name(raw[offset:offset + width])
+
+
+def _name_columns(prefix: str, identity: tuple[str | None, str, str | None]) -> dict[str, object]:
+    value, status, digest = identity
+    return {prefix: value, prefix + "Status": status, prefix + "BytesSha256": digest}
+
+
+def _part_name(part: Any) -> tuple[str | None, str, str | None]:
+    return _name_identity(getattr(part, "raw_cmsp", None), PART_NAME_OFFSET, PART_NAME_BYTES)
+
+
+def _mesh_name(mesh: Any) -> tuple[str | None, str, str | None]:
+    return _name_identity(getattr(mesh, "raw_header", None), MESH_NAME_OFFSET, MESH_NAME_BYTES)
+
+
+def _internal_name_summary(rows: list[dict[str, object]]) -> dict[str, object]:
+    names = [row["internalName"] for row in rows]
+    if any(value is not None and not isinstance(value, str) for value in names):
+        raise ValueError("internal name must be text or unknown")
+    return {"internalNameCounts": dict(collections.Counter(value for value in names if value is not None)),
+            "unknownInternalNames": sum(value is None for value in names)}
+
+
 def _motion_class(parts: tuple[Any, ...]) -> tuple[str, list[dict[str, object]]]:
     moving: list[dict[str, object]] = []
     for part_index, part in enumerate(parts):
@@ -108,7 +139,7 @@ def _motion_class(parts: tuple[Any, ...]) -> tuple[str, list[dict[str, object]]]
             moving.append(
                 {
                     "partIndex": part_index,
-                    "partName": part.name,
+                    **_name_columns("partName", _part_name(part)),
                     "virtualFrames": len(track.frame_map),
                     "hierarchyFrames": len(track.hierarchy),
                     "closesOnStart": track.frame_map[0] == track.frame_map[-1],
@@ -521,6 +552,7 @@ def _parsed_mesh_record(mesh: Any) -> dict[str, object]:
     for part_index, part in enumerate(parts):
         if not part.bones:
             continue
+        bone_names = [_part_name(parts[index]) for index in part.bones]
         slot_use = collections.Counter(
             slot
             for vertex in part.vertices
@@ -530,9 +562,11 @@ def _parsed_mesh_record(mesh: Any) -> dict[str, object]:
         carriers.append(
             {
                 "partIndex": part_index,
-                "partName": part.name,
+                **_name_columns("partName", _part_name(part)),
                 "bonePartIndices": list(part.bones),
-                "bonePartNames": [parts[index].name for index in part.bones],
+                "bonePartNames": [name[0] for name in bone_names],
+                "bonePartNameStatuses": [name[1] for name in bone_names],
+                "bonePartNameBytesSha256": [name[2] for name in bone_names],
                 "vertexCount": len(part.vertices),
                 "boneSlotUse": {str(index): slot_use[index] for index in sorted(slot_use)},
             }
@@ -540,7 +574,7 @@ def _parsed_mesh_record(mesh: Any) -> dict[str, object]:
     hfov = [
         {
             "partIndex": part_index,
-            "partName": part.name,
+            **_name_columns("partName", _part_name(part)),
             "values": (list(part.hfov) if part.hfov is not None
                        and all(math.isfinite(value) for value in part.hfov) else None),
             "rawWords": _words(part.raw_hfov),
@@ -550,7 +584,7 @@ def _parsed_mesh_record(mesh: Any) -> dict[str, object]:
     ]
     a_frames = collections.Counter(part.anim_frames for part in parts)
     return {
-        "internalName": mesh.name,
+        **_name_columns("internalName", _mesh_name(mesh)),
         "partCount": len(parts),
         "aFrameValueCounts": {str(value): a_frames[value] for value in sorted(a_frames)},
         "maxVirtualFrames": max(len(part.track.frame_map) for part in parts),
@@ -1077,7 +1111,7 @@ def _world_instance_join(
                     "coreBytes": len(core),
                     "coreSha256": hashlib.sha256(core).hexdigest(),
                     "displayName": display_name,
-                    "internalName": parsed.name,
+                    **_name_columns("internalName", _mesh_name(parsed)),
                     "level": level,
                     "logicalMethod": method,
                     "looseCoreMatches": sorted(loose_core_lookup.get(normalized, [])),
@@ -1213,9 +1247,7 @@ def _world_instance_join(
     anonymous_summary = {
         "archives": len({str(row["level"]) for row in anonymous_rows}),
         "boneCarrierRows": sum(bool(row["boneCarriers"]) for row in anonymous_rows),
-        "internalNameCounts": dict(
-            collections.Counter(str(row["internalName"]) for row in anonymous_rows)
-        ),
+        **_internal_name_summary(anonymous_rows),
         "looseCoreMatches": sum(len(row["looseCoreMatches"]) for row in anonymous_rows),
         "motionClassCounts": dict(
             collections.Counter(str(row["motionClass"]) for row in anonymous_rows)
