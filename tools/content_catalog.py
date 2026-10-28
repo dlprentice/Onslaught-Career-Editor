@@ -332,7 +332,11 @@ def catalog_textures(game: Path, files: list[dict]) -> tuple[list[dict], dict[st
             "mustbe": bool(match and match.group("mustbe")), "frame": frame,
             "sourceFormatFromName": source_format, "fileNameTruncated": truncated,
             "width": header.get("width"), "height": header.get("height"), "storedFormat": meta.get("stored_format"),
-            "mips": [{"width": m["width"], "height": m["height"], "length": m["length"]} for m in meta["mips"]],
+            # Offsets and hashes describe stored mip bytes inside the inflated
+            # DDS, not offsets in the compressed AYA or decoded image pixels.
+            "mips": [{"index": m["index"], "width": m["width"], "height": m["height"],
+                      "ddsOffset": m["offset"], "length": m["length"], "sha256": m["sha256"]}
+                     for m in meta["mips"]],
             "alpha": meta.get("alpha"), "problems": meta.get("problems") or []}
         rec["upscale"] = texture_upscale(meta, source_format)
         records.append(rec)

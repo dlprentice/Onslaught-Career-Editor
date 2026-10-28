@@ -333,6 +333,22 @@
         },
         "mustbe": {
           "type": "boolean"
+        },
+        "mips": {
+          "type": "array",
+          "description": "Stored levels in order; ddsOffset and sha256 refer to the encoded level bytes within the inflated DDS, not the compressed AYA or decoded pixels. Older v1 catalogs may omit index, ddsOffset and sha256.",
+          "items": {
+            "type": "object",
+            "required": ["width", "height", "length"],
+            "properties": {
+              "index": {"type": "integer", "minimum": 0},
+              "width": {"type": "integer", "minimum": 1},
+              "height": {"type": "integer", "minimum": 1},
+              "ddsOffset": {"type": "integer", "minimum": 128},
+              "length": {"type": "integer", "minimum": 1},
+              "sha256": {"$ref": "#/$defs/sha256"}
+            }
+          }
         }
       }
     },

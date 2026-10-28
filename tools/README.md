@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-29 (world body encoder and loose-world staging; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-28 (per-mip DDS identities; world body encoder and loose-world staging; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -76,7 +76,9 @@ publish, sign, or install anything by themselves.
   (placements of units, squads and features; markers for waypoints, spawners, triggers, starts, spawn points and the
   other kinds), waypoint path, compiled mission script, definition, goodie, particle effect, sample, music and voice
   file, film, resource archive and script/text file, with container coordinates, SHA-256, format metadata, an upscale
-  section, provenance and, for meshes and textures, a usage summary ([schema](content_catalog.schema.json)).
+  section, provenance and, for meshes and textures, a usage summary ([schema](content_catalog.schema.json)). Each
+  admitted loose texture mip records the encoded bytes' SHA-256 and offset in the inflated DDS, so individual levels
+  can be compared without exporting their pixels; unsupported or malformed textures have no admitted mip entries.
   `world_resources_decode.py` decodes the level payloads in their loaders' read order and refuses unread bytes: the
   `WRES` world bodies (`CWorld::LoadWorld`: header, compiled scripts, things, trees, influence map, waypoint paths,
   timings, occupancy), `ERES` (mixer mips, heightfield settings and samples, mixer map), `SURF` and `SSHD`; `LNDS`

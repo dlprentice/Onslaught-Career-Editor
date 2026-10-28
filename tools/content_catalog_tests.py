@@ -464,5 +464,62 @@ class BoundaryTests(unittest.TestCase):
         self.assertIn("deny-root", labels)
 
 
+class TextureMipIdentityTests(unittest.TestCase):
+    @staticmethod
+    def dds(lower: bytes) -> bytes:
+        # An authored two-level DXT1 texture: the top level has four blocks;
+        # the 4x4 lower level has one. This fixture carries no game data.
+        header = bytearray(dds_dxt1_4x4()[:128])
+        struct.pack_into("<7I", header, 4, 124, 0xA1007, 8, 8, 32, 0, 2)
+        struct.pack_into("<I", header, 108, 0x401008)
+        return bytes(header) + b"TOP-MIP!" * 4 + lower
+
+    def test_catalog_preserves_each_encoded_mip_identity_and_offset(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            game = Path(tmp)
+            shelf = game / "data/resources/dxtntextures"
+            shelf.mkdir(parents=True)
+            first = self.dds(b"LOWER-1!")
+            second = self.dds(b"LOWER-2!")
+            paths = [shelf / "a.tga(0)A1R5G5B5.aya", shelf / "b.tga(0)A1R5G5B5.aya"]
+            for path, data in zip(paths, (first, second)):
+                path.write_bytes(aya(data))
+            original = [path.read_bytes() for path in paths]
+            files = [{"path": path.relative_to(game).as_posix(), "family": "dds-texture-dxtn"} for path in paths]
+            records, _ = catalog.catalog_textures(game, files)
+            mip0, mip1 = records[0]["texture"]["mips"]
+            self.assertEqual(mip0, {"index": 0, "width": 8, "height": 8, "ddsOffset": 128, "length": 32,
+                                    "sha256": hashlib.sha256(first[128:160]).hexdigest()})
+            self.assertEqual(mip1, {"index": 1, "width": 4, "height": 4, "ddsOffset": 160, "length": 8,
+                                    "sha256": hashlib.sha256(first[160:168]).hexdigest()})
+            self.assertEqual(mip0["sha256"], records[1]["texture"]["mips"][0]["sha256"])
+            self.assertNotEqual(mip1["sha256"], records[1]["texture"]["mips"][1]["sha256"])
+            self.assertNotEqual(records[0]["sha256"], records[1]["sha256"])
+            self.assertEqual([path.read_bytes() for path in paths], original)
+
+    def test_malformed_dds_does_not_publish_partial_mip_identities(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            game = Path(tmp)
+            path = game / "data/resources/dxtntextures/short.aya"
+            path.parent.mkdir(parents=True)
+            path.write_bytes(aya(self.dds(b"LOWER-1!")[:-1]))
+            files = [{"path": path.relative_to(game).as_posix(), "family": "dds-texture-dxtn"}]
+            [record], _ = catalog.catalog_textures(game, files)
+            self.assertEqual(record["texture"]["status"], "malformed")
+            self.assertEqual(record["texture"]["mips"], [])
+
+    def test_schema_rejects_an_invalid_mip_hash(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        schema = json.loads((catalog.TOOLS / "content_catalog.schema.json").read_text(encoding="utf-8"))
+        mip_schema = schema["properties"]["texture"]["properties"]["mips"]["items"]
+        # Resolve the same $defs used by the full asset schema.
+        test_schema = {"$defs": schema["$defs"], **mip_schema}
+        mip = {"index": 0, "width": 4, "height": 4, "ddsOffset": 128, "length": 8, "sha256": "bad"}
+        self.assertFalse(jsonschema.Draft202012Validator(test_schema).is_valid(mip))
+
+
 if __name__ == "__main__":
     unittest.main()
