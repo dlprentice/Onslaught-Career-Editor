@@ -73,7 +73,9 @@ publish, sign, or install anything by themselves.
   the loose mesh's direct `PMS2` child from the embedded resource's
   `PMSH`/`PMS2` plus 309-byte header, and keeps a mismatched or unknown reader
   context unresolved. A recognized child is a serialized next-in-chain; it is
-  not proof that a particular resource record loads it at runtime.
+  not proof that a particular resource record loads it at runtime. The renderer
+  can follow at most two links from a root; deeper links are labelled a chain,
+  without a claim that the renderer selects them.
 - `content_catalog.py` surveys every file of a selected retail install (family, count, size, the game function that
   reads it, and whether a repository parser already reads it) and writes the content catalogue: one JSON record per
   texture file, texture record (level, imposter, font and goodie), mesh, animation mode, level, world thing

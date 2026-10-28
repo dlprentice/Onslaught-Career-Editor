@@ -404,7 +404,7 @@
             "additionalProperties": false,
             "required": ["relationship", "status", "partCount", "framingPrefixBytes", "payloadSha256", "reason", "scope"],
             "properties": {
-              "relationship": {"enum": ["mesh-lod", "unresolved-nested-mesh"]},
+              "relationship": {"enum": ["mesh-lod", "mesh-chain", "unresolved-nested-mesh"]},
               "status": {"enum": ["parsed", "partial", "unparsed"]},
               "partCount": {"type": ["integer", "null"], "minimum": 0},
               "framingPrefixBytes": {"type": ["integer", "null"], "minimum": 0},
