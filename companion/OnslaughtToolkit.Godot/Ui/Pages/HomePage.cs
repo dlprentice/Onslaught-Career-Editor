@@ -136,7 +136,7 @@ internal sealed class HomePage : Page
         foreach (string promise in new[]
         {
             "Career changes are backed up before they replace a file.",
-            "Nothing is written to game files while Battle Engine Aquila or Onslaught CE is running.",
+            "Keep Battle Engine Aquila and Onslaught CE closed until saving finishes. The companion checks for both.",
             "Verified career backups can be put back from Backups.",
         })
         {
@@ -368,7 +368,7 @@ internal sealed class HomePage : Page
             };
             string backups = sets.Count == 0 ? "not backed up yet" : $"last backed up {Build.When(sets[0].Created)}";
             _heroStatus.Text = $"{version}  ·  {Build.Count(folder.Careers.Count, "career")}  ·  {backups}" +
-                (_app.GameRunning() ? "\nThe game or Onslaught CE is running. The companion won't write into the game folder until it closes." : "");
+                (_app.GameRunning() ? "\nThe game or Onslaught CE is detected. Close it before saving and wait for the save to finish before starting either." : "");
         }
 
         bool? auto = _app.Game.Settings.Load().AutoBackup;

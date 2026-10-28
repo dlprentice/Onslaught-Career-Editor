@@ -9,12 +9,16 @@ namespace OnslaughtToolkit.Companion.Ui;
 /// <summary>What every page may use: the open career, the game, backups, the status line and navigation.</summary>
 internal sealed class AppServices
 {
+    internal const string GameWriteGuidance = "Close Battle Engine Aquila and Onslaught CE before continuing. " +
+        "Wait until the operation finishes before starting either.";
+    internal const string GameWriteChecks = "The companion checks for either game before backup and just before writing.";
+
     internal required CareerWorkspace Workspace { get; init; }
     internal required GameLibrary Game { get; init; }
     internal required StatusLine Status { get; init; }
     internal required BackupLocation Backups { get; init; }
 
-    /// <summary>Whether Battle Engine Aquila is running now; the companion never writes into its folder while it is.</summary>
+    /// <summary>Whether either game is detected now; this check cannot prevent a later start.</summary>
     internal required Func<bool> GameRunning { get; init; }
 
     internal required Action<string> OpenUrl { get; init; }

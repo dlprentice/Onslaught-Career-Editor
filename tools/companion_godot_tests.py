@@ -228,6 +228,9 @@ class CompanionLauncherTests(unittest.TestCase):
             self.assertIn("Choose Original Battle Engine Aquila or Onslaught CE on Home",readme)
             self.assertIn("Original-install careers shown under CE are read-only",readme)
             self.assertIn("update_check and record_sessions only",readme)
+            self.assertIn("checks whether the game or Onslaught CE is running before the backup",readme)
+            self.assertIn("before starting either",readme)
+            self.assertNotIn("writes nothing while the game",readme)
             self.assertNotIn("does not yet read or launch Onslaught CE",readme)
             if package.name == "windows":
                 self.assertIn("Native Windows checks exercised CE process detection",readme)

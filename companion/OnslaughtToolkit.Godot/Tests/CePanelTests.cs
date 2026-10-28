@@ -91,8 +91,9 @@ public partial class CePanelTests : SceneTree
             running = false;
             panel.Refresh();
             panel.AskToSave();
-            check.That(panel.Confirm.Visible && panel.Confirm.DialogText.Contains(ini) && panel.Confirm.DialogText.Contains("backed up"),
-                "CE settings confirmation identifies the target and recovery step");
+            check.That(panel.Confirm.Visible && panel.Confirm.DialogText.Contains(ini) && panel.Confirm.DialogText.Contains("backed up") &&
+                panel.Confirm.DialogText.Contains("before starting either") && panel.Confirm.DialogText.Contains("before backup and just before writing"),
+                "CE settings confirmation identifies the target and recovery, checks and safe timing");
             panel.Confirm.Hide();
             InstallReceipt saved = await panel.SaveAsync();
             string changed = File.ReadAllText(ini);
