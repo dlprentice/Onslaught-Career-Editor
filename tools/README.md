@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-27 (content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-29 (world body encoder and loose-world staging; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -89,6 +89,13 @@ publish, sign, or install anything by themselves.
   single-record `mission_script_inspect.py` is the independent check of the compiled-script reader. Output is accepted
   only below the ignored `local-data/`, and every generated file carries a marker that
   `public_allowlist_safety_check.py` refuses, as it refuses any tracked `local-data/` path.
+  `world_resources_encode.py` is the decoder's inverse for world bodies: `read_world_model` keeps every field
+  `CWorld::LoadWorld` reads (the regions it only skips as base64 blobs) and `write_world_body` writes them back, byte
+  for byte on every retail body (`verify --game DIR`). `extract` writes a level's bodies as `worldNNN.wrd` plus an
+  editable JSON model, `encode` turns an edited model back into a body, and `stage` builds an Onslaught CE user folder
+  that loads a level's worlds from loose `data\worlds\worldNNN.wrd` files (`CWorld::Load`'s fallback) through a
+  shadow copy of the level archive whose `WDAT` names no level. It reads the install only and refuses to write
+  inside it.
 - `export_game_assets.py`, `export_asset_catalog.py`,
   `export_language_corpus.py`, and `export_video_manifest.py` operate on
   user-supplied local inputs and write to a separate local output root.
