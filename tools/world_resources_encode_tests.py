@@ -5,11 +5,14 @@ for every version branch LoadWorld has; edits land where the catalogue decoder r
 only WDAT's real level; and nothing is written inside a game folder."""
 from __future__ import annotations
 
+import base64
 import contextlib
+import hashlib
 import io
 import json
 import math
 import os
+import shutil
 import struct
 import subprocess
 import sys
@@ -21,7 +24,6 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import content_catalog_tests as fixtures
-import safe_generated_output as safe
 import world_resources_decode as worlddec
 import world_resources_encode as enc
 
@@ -265,23 +267,11 @@ class ArchiveTests(unittest.TestCase):
         patched = enc.shadow_archive(packed)
         self.assertEqual(enc.NO_LEVEL, enc.level_worlds(b"".join(enc.inflate(enc.read_members(patched))))["realLevel"])
 
-    @unittest.skipIf(os.name == "nt", "fresh-only output needs native Windows support")
-    def test_stage_writes_loose_worlds_and_a_shadow_archive_but_never_into_the_game(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            game, user = Path(tmp, "game"), Path(tmp, "user")
-            (game / "data" / "resources").mkdir(parents=True)
-            (game / "data" / "resources" / "200_res_PC.aya").write_bytes(game_sized_world_archive())
-            enc.main(["stage", "--game", str(game), "--level", "200", "--user", str(user)])
-            self.assertEqual((user / "data" / "worlds" / "world200.wrd").read_bytes(), fixtures.world_body())
-            shadow = (user / "data" / "resources" / "200_res_PC.aya").read_bytes()
-            self.assertEqual(enc.level_worlds(b"".join(enc.inflate(enc.read_members(shadow))))["realLevel"],
-                             enc.NO_LEVEL)
-            with self.assertRaises(safe.UnsafeGeneratedOutputError):
-                enc.main(["stage", "--game", str(game), "--level", "200", "--user", str(game / "data")])
-            self.assertEqual(sorted(p.name for p in (game / "data" / "resources").iterdir()), ["200_res_PC.aya"])
 
 
-class PublicationTests(unittest.TestCase):
+class StreamOutputTests(unittest.TestCase):
+    """Actual CLI controls use only authored game data and captured stdout."""
+
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
@@ -296,276 +286,283 @@ class PublicationTests(unittest.TestCase):
         self.model = self.root / "model.json"
         self.model.write_text(json.dumps(enc.read_world_model(fixtures.world_body())), encoding="utf-8")
 
-    def stage(self) -> int:
-        return enc.main(["stage", "--game", str(self.game), "--level", "200", "--user", str(self.user)])
+    def cli(self, *args: str):
+        return subprocess.run([sys.executable, str(Path(enc.__file__)), *args], capture_output=True, timeout=30,
+                              env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
 
-    def test_game_alias_is_resolved_before_archive_selection_and_publication(self) -> None:
-        alias = self.root / "game-alias"
-        try:
-            alias.symlink_to(self.game, target_is_directory=True)
-        except (NotImplementedError, OSError) as error:
-            self.skipTest(f"directory symlinks unavailable: {error}")
-        with patch.object(enc, "level_archives", wraps=enc.level_archives) as lookup, \
-                patch.object(enc, "publish_fresh", wraps=enc.publish_fresh) as publish, \
-                contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(0, enc.main(["extract", "--game", str(alias), "--level", "200", "--out", str(self.user)]))
-        self.assertEqual(lookup.call_args.args[0], self.game)
-        self.assertEqual(publish.call_args.args[1], self.game)
-        self.assertEqual((self.user / "world200.wrd").read_bytes(), fixtures.world_body())
-        self.assertEqual(self.archive.read_bytes(), self.original)
-
-    def test_selected_game_resolves_parent_after_a_link(self) -> None:
-        child = self.game / "child"
-        child.mkdir()
-        alias = self.root / "child-alias"
-        try:
-            alias.symlink_to(child, target_is_directory=True)
-        except (NotImplementedError, OSError) as error:
-            self.skipTest(f"directory symlinks unavailable: {error}")
-        self.assertEqual(enc.selected_game_root(alias / ".."), self.game)
-
-    def test_writing_commands_refuse_links_in_the_selected_game_tree(self) -> None:
-        for location in ("resources", "nested"):
-            with self.subTest(location=location):
-                game = self.root / f"game-{location}"
-                data = game / "data"
-                data.mkdir(parents=True)
-                (game / "BEA.exe").write_bytes(b"authored game marker")
-                external = self.root / f"external-{location}"
-                external.mkdir()
-                if location == "resources":
-                    link, resources = data / "resources", external
-                else:
-                    resources = data / "resources"
-                    resources.mkdir()
-                    (data / "other").mkdir()
-                    link = data / "other" / "linked"
-                try:
-                    link.symlink_to(external, target_is_directory=True)
-                except (NotImplementedError, OSError) as error:
-                    self.skipTest(f"directory symlinks unavailable: {error}")
-                archive = resources / "200_res_PC.aya"
-                archive.write_bytes(self.original)
-                # Verification remains read-only and can inspect a linked selected input.
-                with contextlib.redirect_stdout(io.StringIO()):
-                    self.assertEqual(0, enc.main(["verify", "--game", str(game)]))
-                before = sorted(path.name for path in external.iterdir())
-                cases = (
-                    ["extract", "--game", str(game), "--level", "200", "--out", str(external)],
-                    ["stage", "--game", str(game), "--level", "200", "--user", str(external)],
-                    ["encode", "--game", str(game), str(self.model), str(external / "world.wrd")],
-                )
-                for args in cases:
-                    with self.subTest(command=args[0]):
-                        with self.assertRaisesRegex(safe.UnsafeGeneratedOutputError, "link or reparse point"):
-                            enc.main(args)
-                        self.assertEqual(before, sorted(path.name for path in external.iterdir()))
-                        self.assertEqual(self.original, archive.read_bytes())
-                self.assertEqual(before, sorted(path.name for path in link.iterdir()))
-
-    def test_dangling_game_link_is_refused_even_for_a_separate_output(self) -> None:
-        link = self.game / "data" / "dangling"
-        try:
-            link.symlink_to(self.root / "missing")
-        except (NotImplementedError, OSError) as error:
-            self.skipTest(f"symlinks unavailable: {error}")
-        destination = self.root / "safe-output" / "world.wrd"
-        with self.assertRaisesRegex(safe.UnsafeGeneratedOutputError, "link or reparse point"):
-            enc.main(["encode", "--game", str(self.game), str(self.model), str(destination)])
-        self.assertFalse(destination.parent.exists())
+    def assert_game_unchanged(self):
         self.assertEqual(self.original, self.archive.read_bytes())
+        self.assertEqual(["200_res_PC.aya"], sorted(p.name for p in self.resources.iterdir()))
 
-    def test_cli_extract_refuses_a_linked_game_resources_directory(self) -> None:
-        game = self.root / "cli-game"
-        (game / "data").mkdir(parents=True)
-        external = self.root / "cli-resources"
+    def assert_bundle_entry(self, bundle, name, expected):
+        entry = bundle["files"][name]
+        self.assertEqual(expected, base64.b64decode(entry["dataBase64"], validate=True))
+        self.assertEqual(len(expected), entry["bytes"])
+        self.assertEqual(hashlib.sha256(expected).hexdigest(), entry["sha256"])
+
+    def test_extract_stdout_contains_exact_model_and_body(self) -> None:
+        result = self.cli("extract", "--game", str(self.game), "--level", "200", "--stdout")
+        self.assertEqual(0, result.returncode, result.stderr)
+        bundle = json.loads(result.stdout)
+        self.assertEqual(("onslaught.world-bundle.v1", "extract", 200),
+                         (bundle["format"], bundle["purpose"], bundle["level"]))
+        body = fixtures.world_body()
+        self.assert_bundle_entry(bundle, "world200.wrd", body)
+        model_bytes = base64.b64decode(bundle["files"]["world200.json"]["dataBase64"], validate=True)
+        self.assert_bundle_entry(bundle, "world200.json", model_bytes)
+        self.assertEqual(enc.read_world_model(body), json.loads(model_bytes))
+        self.assertFalse(self.user.exists())
+        self.assert_game_unchanged()
+
+    def test_encode_stdout_is_exact_raw_bytes_without_messages(self) -> None:
+        result = self.cli("encode", "--game", str(self.game), str(self.model), "--stdout")
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual(fixtures.world_body(), result.stdout)
+        self.assertEqual(b"", result.stderr)
+        self.assertFalse(self.user.exists())
+        self.assert_game_unchanged()
+
+    def test_short_binary_stream_is_reported_as_incomplete(self) -> None:
+        class ShortStream(io.BytesIO):
+            def write(self, data):
+                super().write(data[:7])
+                return 7
+
+        stream = ShortStream()
+        with patch.object(enc.sys, "stdout", SimpleNamespace(buffer=stream)):
+            with self.assertRaisesRegex(enc.EncodeError, "only part"):
+                enc.main(["encode", "--game", str(self.game), str(self.model), "--stdout"])
+        self.assertEqual(fixtures.world_body()[:7], stream.getvalue())
+        self.assert_game_unchanged()
+
+    def test_stage_stdout_is_a_bundle_and_stages_nothing(self) -> None:
+        result = self.cli("stage", "--game", str(self.game), "--level", "200", "--stdout")
+        self.assertEqual(0, result.returncode, result.stderr)
+        bundle = json.loads(result.stdout)
+        self.assertEqual(("onslaught.world-bundle.v1", "stage", 200),
+                         (bundle["format"], bundle["purpose"], bundle["level"]))
+        self.assertEqual(hashlib.sha256(self.original).hexdigest(), bundle["archiveSha256"])
+        self.assert_bundle_entry(bundle, "data/worlds/world200.wrd", fixtures.world_body())
+        shadow = base64.b64decode(bundle["files"]["data/resources/200_res_PC.aya"]["dataBase64"], validate=True)
+        self.assert_bundle_entry(bundle, "data/resources/200_res_PC.aya", shadow)
+        self.assertEqual(enc.NO_LEVEL, enc.level_worlds(b"".join(enc.inflate(enc.read_members(shadow))))["realLevel"])
+        self.assertFalse(self.user.exists())
+        self.assert_game_unchanged()
+
+    def test_stage_stdout_includes_requested_edited_world(self) -> None:
+        model = json.loads(self.model.read_text(encoding="utf-8"))
+        model["things"][0]["init"]["position"][0] = 12.5
+        self.model.write_text(json.dumps(model), encoding="utf-8")
+        result = self.cli("stage", "--game", str(self.game), "--level", "200", "--stdout", "--world", str(self.model))
+        self.assertEqual(0, result.returncode, result.stderr)
+        bundle = json.loads(result.stdout)
+        self.assert_bundle_entry(bundle, "data/worlds/world200.wrd", enc.write_world_body(model))
+        self.assertFalse(bundle["files"]["data/worlds/world200.wrd"]["identicalToArchive"])
+        self.assertFalse(self.user.exists())
+        self.assert_game_unchanged()
+
+    def test_legacy_paths_refuse_before_any_input_read(self) -> None:
+        cases = (
+            ["extract", "--game", str(self.game), "--level", "200", "--out", str(self.user)],
+            ["stage", "--game", str(self.game), "--level", "200", "--user", str(self.user)],
+            ["encode", "--game", str(self.game), str(self.model), str(self.user / "world.wrd")],
+        )
+        with patch.object(enc, "selected_game_root", side_effect=AssertionError("unexpected input access")):
+            for args in cases:
+                with self.subTest(args=args), self.assertRaisesRegex(enc.EncodeError, "publication is disabled"):
+                    enc.main(args)
+        for args in cases:
+            with self.subTest(command=args[0]):
+                result = self.cli(*args)
+                self.assertEqual(2, result.returncode, result.stderr)
+                self.assertIn(b"publication is disabled", result.stderr)
+                self.assertEqual(b"", result.stdout)
+        self.assertFalse(self.user.exists())
+        self.assert_game_unchanged()
+
+    def test_legacy_paths_refuse_even_when_stdout_is_also_requested(self) -> None:
+        cases = (
+            ["extract", "--game", str(self.game), "--level", "200", "--out", str(self.user), "--stdout"],
+            ["stage", "--game", str(self.game), "--level", "200", "--user", str(self.user), "--stdout"],
+            ["encode", "--game", str(self.game), str(self.model), str(self.user / "world.wrd"), "--stdout"],
+        )
+        for args in cases:
+            with self.subTest(command=args[0]):
+                result = self.cli(*args)
+                self.assertEqual(2, result.returncode, result.stderr)
+                self.assertIn(b"publication is disabled", result.stderr)
+                self.assertEqual(b"", result.stdout)
+        self.assertFalse(self.user.exists())
+        self.assert_game_unchanged()
+
+    def test_output_mode_must_be_explicit(self) -> None:
+        cases = (
+            ["extract", "--game", str(self.game), "--level", "200"],
+            ["stage", "--game", str(self.game), "--level", "200"],
+            ["encode", "--game", str(self.game), str(self.model)],
+        )
+        for args in cases:
+            with self.subTest(command=args[0]):
+                result = self.cli(*args)
+                self.assertEqual(2, result.returncode, result.stderr)
+                self.assertIn(b"choose --stdout explicitly", result.stderr)
+                self.assertEqual(b"", result.stdout)
+        self.assert_game_unchanged()
+
+    def test_existing_and_game_paths_are_not_touched_by_legacy_commands(self) -> None:
+        self.user.mkdir()
+        existing = self.user / "world.wrd"
+        existing.write_bytes(b"pre-existing user data")
+        cases = (
+            ["extract", "--game", str(self.game), "--level", "200", "--out", str(self.resources)],
+            ["stage", "--game", str(self.game), "--level", "200", "--user", str(self.game)],
+            ["encode", "--game", str(self.game), str(self.model), str(existing)],
+            ["encode", "--game", str(self.game), str(self.model), str(self.archive)],
+        )
+        for args in cases:
+            with self.subTest(command=args[0]):
+                result = self.cli(*args)
+                self.assertEqual(2, result.returncode, result.stderr)
+                self.assertEqual(b"", result.stdout)
+        self.assertEqual(b"pre-existing user data", existing.read_bytes())
+        self.assert_game_unchanged()
+
+    def test_linked_input_and_selected_root_alias_can_be_read_without_writes(self) -> None:
+        alias = self.root / "game-alias"
+        external = self.root / "external"
         external.mkdir()
-        link = game / "data" / "resources"
-        try:
-            link.symlink_to(external, target_is_directory=True)
-        except (NotImplementedError, OSError) as error:
-            self.skipTest(f"directory symlinks unavailable: {error}")
+        linked_game = self.root / "linked-game"
+        (linked_game / "data").mkdir(parents=True)
         archive = external / "200_res_PC.aya"
         archive.write_bytes(self.original)
-        result = subprocess.run(
-            [sys.executable, str(Path(enc.__file__)), "extract", "--game", str(game), "--level", "200", "--out", str(external)],
-            capture_output=True, text=True, timeout=20, env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
-        )
-        self.assertEqual(result.returncode, 2, result.stderr)
-        self.assertIn("link or reparse point", result.stderr)
-        self.assertEqual(["200_res_PC.aya"], sorted(path.name for path in external.iterdir()))
-        self.assertEqual(self.original, archive.read_bytes())
-
-    def test_uninspectable_or_over_limit_game_tree_refuses_publication(self) -> None:
-        destination = self.root / "safe-output" / "world.wrd"
-        command = ["encode", "--game", str(self.game), str(self.model), str(destination)]
-        with patch.object(enc, "MAX_GAME_TREE_ENTRIES", 1):
-            with self.assertRaisesRegex(safe.UnsafeGeneratedOutputError, "entry limit"):
-                enc.main(command)
-        with patch.object(enc, "MAX_GAME_TREE_DEPTH", 0):
-            with self.assertRaisesRegex(safe.UnsafeGeneratedOutputError, "depth limit"):
-                enc.main(command)
-        with patch.object(enc.os, "scandir", side_effect=PermissionError("authored denial")):
-            with self.assertRaisesRegex(safe.UnsafeGeneratedOutputError, "cannot be inspected"):
-                enc.main(command)
-        self.assertFalse(destination.parent.exists())
-        self.assertEqual(self.original, self.archive.read_bytes())
-
-    def test_reparse_metadata_is_refused_without_following_it(self) -> None:
-        class FakeEntry:
-            path = "authored-reparse-point"
-
-            def stat(self, *, follow_symlinks):
-                self_assert.assertFalse(follow_symlinks)
-                return SimpleNamespace(st_mode=enc.stat.S_IFDIR, st_file_attributes=0x400)
-
-        self_assert = self
-        with patch.object(enc.os, "scandir", return_value=contextlib.nullcontext([FakeEntry()])):
-            with self.assertRaisesRegex(safe.UnsafeGeneratedOutputError, "link or reparse point"):
-                enc.refuse_internal_game_links(self.game)
-
-    def test_outputs_with_parent_components_are_refused_before_read_or_write(self) -> None:
-        output = self.user / ".." / "candidate"
-        cases = (
-            ["extract", "--game", str(self.game), "--level", "200", "--out", str(output)],
-            ["encode", "--game", str(self.game), str(self.model), str(output / "world.wrd")],
-            ["stage", "--game", str(self.game), "--level", "200", "--user", str(output)],
-        )
-        for args in cases:
-            with self.subTest(command=args[0]), \
-                    patch.object(enc, "level_archives", wraps=enc.level_archives) as lookup:
-                with self.assertRaisesRegex(safe.UnsafeGeneratedOutputError, "parent components"):
-                    enc.main(args)
-                lookup.assert_not_called()
-        self.assertFalse(self.user.exists())
-        self.assertFalse((self.root / "candidate").exists())
-        self.assertEqual(self.archive.read_bytes(), self.original)
-
-    def test_missing_game_and_empty_paths_are_refused_without_output(self) -> None:
-        with self.assertRaisesRegex(enc.EncodeError, "cannot be resolved"):
-            enc.main(["encode", "--game", str(self.root / "missing"), str(self.model), str(self.user / "world.wrd")])
-        cases = (
-            ["encode", "--game", "", str(self.model), str(self.user / "world.wrd")],
-            ["extract", "--game", str(self.game), "--level", "200", "--out", ""],
-            ["stage", "--game", str(self.game), "--level", "200", "--user", ""],
-        )
-        for args in cases:
-            with self.subTest(command=args[0]), contextlib.redirect_stderr(io.StringIO()):
-                with self.assertRaises(SystemExit) as error:
-                    enc.main(args)
-                self.assertEqual(error.exception.code, 2)
-        with patch.dict(os.environ, {"BEA_GAME": ""}), contextlib.redirect_stderr(io.StringIO()):
-            with self.assertRaises(SystemExit) as error:
-                enc.main(["encode", str(self.model), str(self.user / "world.wrd")])
-            self.assertEqual(error.exception.code, 2)
-        self.assertFalse(self.user.exists())
-        self.assertEqual(self.archive.read_bytes(), self.original)
-
-    def test_stage_rejects_resources_directory_symlink_into_game(self) -> None:
-        (self.user / "data").mkdir(parents=True)
         try:
-            (self.user / "data" / "resources").symlink_to(self.resources, target_is_directory=True)
+            alias.symlink_to(self.game, target_is_directory=True)
+            (linked_game / "data" / "resources").symlink_to(external, target_is_directory=True)
         except (NotImplementedError, OSError) as error:
             self.skipTest(f"directory symlinks unavailable: {error}")
-        with self.assertRaises(safe.UnsafeGeneratedOutputError):
-            self.stage()
-        self.assertEqual(self.original, self.archive.read_bytes())
-        self.assertFalse((self.user / "data" / "worlds" / "world200.wrd").exists())
+        for game in (alias, linked_game):
+            with self.subTest(game=game):
+                result = self.cli("extract", "--game", str(game), "--level", "200", "--stdout")
+                self.assertEqual(0, result.returncode, result.stderr)
+                self.assert_bundle_entry(json.loads(result.stdout), "world200.wrd", fixtures.world_body())
+        self.assertEqual(self.original, archive.read_bytes())
+        self.assertEqual(["200_res_PC.aya"], sorted(p.name for p in external.iterdir()))
+        self.assert_game_unchanged()
 
-    def test_stage_wont_replace_an_existing_world(self) -> None:
-        world = self.user / "data" / "worlds" / "world200.wrd"
-        world.parent.mkdir(parents=True)
-        world.write_bytes(b"a pre-existing user world")
-        with self.assertRaises(safe.UnsafeGeneratedOutputError):
-            self.stage()
-        self.assertEqual(b"a pre-existing user world", world.read_bytes())
-        self.assertEqual(self.original, self.archive.read_bytes())
-        self.assertFalse((self.user / "data" / "resources" / "200_res_PC.aya").exists())
+    def test_verify_remains_a_read_only_command(self) -> None:
+        result = self.cli("verify", "--game", str(self.game))
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertIn(b"byte-identical round trips: 1; failures: 0", result.stdout)
+        self.assertFalse(self.user.exists())
+        self.assert_game_unchanged()
 
-    def test_encode_rejects_game_destination_and_existing_output(self) -> None:
-        with self.assertRaises(safe.UnsafeGeneratedOutputError):
-            enc.main(["encode", "--game", str(self.game), str(self.model), str(self.archive)])
-        self.assertEqual(self.original, self.archive.read_bytes())
-        self.user.mkdir()
-        target = self.user / "world.wrd"
-        target.write_bytes(b"a prior user world")
-        with self.assertRaises(safe.UnsafeGeneratedOutputError):
-            enc.main(["encode", "--game", str(self.game), str(self.model), str(target)])
-        self.assertEqual(b"a prior user world", target.read_bytes())
+    def test_cli_does_not_create_import_bytecode_without_environment_overrides(self) -> None:
+        tools_copy = self.root / "fresh-tools"
+        tools_copy.mkdir()
+        names = ("world_resources_encode.py", "world_resources_decode.py", "aya_archive_inventory.py",
+                 "safe_generated_output.py")
+        for name in names:
+            shutil.copyfile(Path(enc.__file__).parent / name, tools_copy / name)
+        env = os.environ.copy()
+        env.pop("PYTHONDONTWRITEBYTECODE", None)
+        env.pop("PYTHONPYCACHEPREFIX", None)
+        result = subprocess.run([sys.executable, str(tools_copy / "world_resources_encode.py"),
+                                 "extract", "--game", str(self.game), "--level", "200", "--stdout"],
+                                capture_output=True, timeout=30, env=env)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assert_bundle_entry(json.loads(result.stdout), "world200.wrd", fixtures.world_body())
+        self.assertEqual(sorted(names), sorted(p.name for p in tools_copy.iterdir()))
+        self.assert_game_unchanged()
 
-    def test_extract_refuses_symlinked_destination_without_creating_other_output(self) -> None:
-        out = self.root / "output"
-        out.mkdir()
-        try:
-            (out / "world200.wrd").symlink_to(self.archive)
-        except (NotImplementedError, OSError) as error:
-            self.skipTest(f"file symlinks unavailable: {error}")
-        with self.assertRaises(safe.UnsafeGeneratedOutputError):
-            enc.main(["extract", "--game", str(self.game), "--level", "200", "--out", str(out)])
-        self.assertEqual(self.original, self.archive.read_bytes())
-        self.assertFalse((out / "world200.json").exists())
+    @unittest.skipUnless(sys.platform.startswith("linux") and shutil.which("bwrap"),
+                         "static bind-mount control requires Linux bubblewrap")
+    def test_bind_aliased_legacy_paths_refuse_and_stdout_stays_read_only(self) -> None:
+        probe = subprocess.run(["bwrap", "--die-with-parent", "--unshare-net", "--ro-bind", "/", "/",
+                                "--dev-bind", "/dev", "/dev", "--", "true"],
+                               capture_output=True, timeout=20)
+        if probe.returncode:
+            self.skipTest("bubblewrap mount namespace is unavailable")
+        external = self.root / "external"
+        external.mkdir()
+        archive = external / "200_res_PC.aya"
+        archive.write_bytes(self.original)
+        prefix = ["bwrap", "--die-with-parent", "--unshare-net", "--ro-bind", "/", "/",
+                  "--dev-bind", "/dev", "/dev", "--bind", str(self.root), str(self.root),
+                  "--bind", str(external), str(self.resources), "--setenv", "PYTHONDONTWRITEBYTECODE", "1",
+                  "--", sys.executable, str(Path(enc.__file__))]
+        commands = (["extract", "--game", str(self.game), "--level", "200", "--out", str(external)],
+                    ["stage", "--game", str(self.game), "--level", "200", "--user", str(external)],
+                    ["encode", "--game", str(self.game), str(self.model), str(external / "world.wrd")])
+        for args in commands:
+            with self.subTest(command=args[0]):
+                result = subprocess.run([*prefix, *args], capture_output=True, timeout=30)
+                self.assertEqual(2, result.returncode, result.stderr)
+                self.assertIn(b"publication is disabled", result.stderr)
+                self.assertEqual(b"", result.stdout)
+                self.assertEqual(["200_res_PC.aya"], sorted(p.name for p in external.iterdir()))
+        result = subprocess.run([*prefix, "extract", "--game", str(self.game), "--level", "200", "--stdout"],
+                                capture_output=True, timeout=30)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assert_bundle_entry(json.loads(result.stdout), "world200.wrd", fixtures.world_body())
+        self.assertEqual(self.original, archive.read_bytes())
+        self.assertEqual(["200_res_PC.aya"], sorted(p.name for p in external.iterdir()))
+        self.assert_game_unchanged()
 
-    def test_stage_rejects_hardlinked_destination(self) -> None:
-        dest = self.user / "data" / "resources" / self.archive.name
-        dest.parent.mkdir(parents=True)
-        try:
-            os.link(self.archive, dest)
-        except (NotImplementedError, OSError) as error:
-            self.skipTest(f"hardlinks unavailable: {error}")
-        with self.assertRaises(safe.UnsafeGeneratedOutputError):
-            self.stage()
-        self.assertEqual(self.original, self.archive.read_bytes())
-        self.assertEqual(self.original, dest.read_bytes())
-        self.assertFalse((self.user / "data" / "worlds" / "world200.wrd").exists())
-
-    @unittest.skipIf(os.name == "nt", "fresh-only output needs native Windows support")
-    def test_extract_is_exact_and_refuses_a_second_write(self) -> None:
-        out = self.root / "output"
-        args = ["extract", "--game", str(self.game), "--level", "200", "--out", str(out)]
-        self.assertEqual(0, enc.main(args))
-        body = (out / "world200.wrd").read_bytes()
-        model = (out / "world200.json").read_bytes()
-        self.assertEqual(fixtures.world_body(), body)
-        with self.assertRaises(safe.UnsafeGeneratedOutputError):
-            enc.main(args)
-        self.assertEqual(body, (out / "world200.wrd").read_bytes())
-        self.assertEqual(model, (out / "world200.json").read_bytes())
-        self.assertEqual(self.original, self.archive.read_bytes())
-
-    def test_invalid_model_cannot_publish(self) -> None:
+    def test_invalid_model_produces_no_output(self) -> None:
         model = json.loads(self.model.read_text(encoding="utf-8"))
         model["things"][0]["init"]["position"][0] = {"f32bits": "00"}
         self.model.write_text(json.dumps(model), encoding="utf-8")
-        dest = self.user / "world.wrd"
-        with self.assertRaises(enc.EncodeError):
-            enc.main(["encode", "--game", str(self.game), str(self.model), str(dest)])
-        self.assertFalse(dest.exists())
-        self.assertEqual(self.original, self.archive.read_bytes())
+        for args in (["encode", "--game", str(self.game), str(self.model), "--stdout"],
+                     ["stage", "--game", str(self.game), "--level", "200", "--stdout", "--world", str(self.model)]):
+            with self.subTest(command=args[0]):
+                result = self.cli(*args)
+                self.assertEqual(2, result.returncode, result.stderr)
+                self.assertIn(b"f32bits", result.stderr)
+                self.assertEqual(b"", result.stdout)
+        self.assert_game_unchanged()
 
-    @unittest.skipIf(os.name == "nt", "POSIX descriptor-relative race control")
-    def test_output_created_after_preflight_is_not_replaced(self) -> None:
-        dest = self.user / "world.wrd"
-        rename_no_replace = safe._posix_rename_no_replace
+    def test_stream_commands_use_no_tool_owned_write_operations(self) -> None:
+        original_open = enc.os.open
+        original_io_open = io.open
+        write_flags = os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND
+        opened = []
 
-        def race(fd, source, target):
-            descriptor = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600, dir_fd=fd)
-            with os.fdopen(descriptor, "wb") as stream:
-                stream.write(b"concurrent user file")
-            return rename_no_replace(fd, source, target)
+        def read_only_open(path, flags, *args, **kwargs):
+            self.assertFalse(flags & write_flags, f"unexpected write flags for {path}")
+            opened.append(str(path))
+            return original_open(path, flags, *args, **kwargs)
 
-        with patch.object(safe, "_posix_rename_no_replace", side_effect=race):
-            with self.assertRaises(safe.UnsafeGeneratedOutputError):
-                enc.main(["encode", "--game", str(self.game), str(self.model), str(dest)])
-        self.assertEqual(b"concurrent user file", dest.read_bytes())
-        self.assertEqual(self.original, self.archive.read_bytes())
+        def read_only_io_open(path, mode="r", *args, **kwargs):
+            self.assertFalse(any(flag in mode for flag in "wax+"), f"unexpected write mode for {path}")
+            return original_io_open(path, mode, *args, **kwargs)
 
-    @unittest.skipUnless(os.name == "nt", "native Windows fail-closed control")
-    def test_windows_fresh_publication_is_refused_until_supported(self) -> None:
-        dest = self.user / "world.wrd"
-        with self.assertRaises(safe.UnsafeGeneratedOutputError):
-            enc.main(["encode", "--game", str(self.game), str(self.model), str(dest)])
-        self.assertFalse(dest.exists())
-        self.assertEqual(self.original, self.archive.read_bytes())
+        commands = (["extract", "--game", str(self.game), "--level", "200", "--stdout"],
+                    ["stage", "--game", str(self.game), "--level", "200", "--stdout"])
+        with patch.object(enc.os, "open", side_effect=read_only_open), \
+                patch.object(io, "open", side_effect=read_only_io_open), \
+                patch.object(enc.os, "mkdir", side_effect=AssertionError("unexpected mkdir")), \
+                patch.object(enc.os, "rename", side_effect=AssertionError("unexpected rename")), \
+                patch.object(enc.os, "replace", side_effect=AssertionError("unexpected replace")), \
+                patch.object(enc.os, "link", side_effect=AssertionError("unexpected link")), \
+                patch.object(enc.os, "symlink", side_effect=AssertionError("unexpected symlink")), \
+                patch.object(enc.os, "unlink", side_effect=AssertionError("unexpected unlink")):
+            for args in commands:
+                with self.subTest(command=args[0]), contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(0, enc.main(args))
+            stream = io.BytesIO()
+            with patch.object(enc.sys, "stdout", SimpleNamespace(buffer=stream)):
+                self.assertEqual(0, enc.main(["encode", "--game", str(self.game), str(self.model), "--stdout"]))
+            self.assertEqual(fixtures.world_body(), stream.getvalue())
+        self.assertEqual(2, len(opened))
+        self.assertFalse(self.user.exists())
+        self.assert_game_unchanged()
+
+    def test_duplicate_bundle_names_are_refused(self) -> None:
+        files = {}
+        enc.add_bundle_file(files, "world.wrd", b"one")
+        with self.assertRaisesRegex(enc.EncodeError, "same file name"):
+            enc.add_bundle_file(files, "world.wrd", b"two")
+        self.assertEqual(b"one", base64.b64decode(files["world.wrd"]["dataBase64"]))
 
 
 if __name__ == "__main__":

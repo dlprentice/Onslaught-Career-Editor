@@ -15,30 +15,27 @@ The model is the editing surface: change a thing's init.position, append a thing
 order matters: CWaypointPath::Load indexes LoadWorld's things[] slots, so a new thing goes after the existing ones
 (see slot_note in the model) or the waypoint paths must be renumbered.
 
-Command line (select retail data as a read-only input; choose an output outside the selected game folder):
+Command line (select retail data as a read-only input; outputs are explicit stdout streams):
 
     world_resources_encode.py verify --game DIR                 every level archive: decode -> encode == original
-    world_resources_encode.py extract --game DIR --level N --out DIR
-                                                                 the level's world bodies as worldNNN.wrd + .json
-    world_resources_encode.py encode --game DIR MODEL.json OUT.wrd
-                                                                 a (possibly edited) model back to a world body
-    world_resources_encode.py stage --game DIR --level N --user DIR [--world MODEL.json]
-                                                                 a port user folder that loads the level's world from
-                                                                 loose files: data\\worlds\\worldNNN.wrd (and its base
-                                                                 world), plus a shadow copy of the level archive whose
-                                                                 WDAT names no level, so CWorld::Load takes the loose path
+    world_resources_encode.py extract --game DIR --level N --stdout
+                                                                 a JSON bundle of world bodies and editable models
+    world_resources_encode.py encode --game DIR MODEL.json --stdout
+                                                                 raw world-body bytes, with no text on stdout
+    world_resources_encode.py stage --game DIR --level N --stdout [--world MODEL.json]
+                                                                 a JSON bundle of the intended loose-world files and
+                                                                 shadow archive; this does not stage files
 
-The game path is resolved before both reading and protection. Before any publication, the selected game tree is
-scanned without following links; internal symlinks or reparse points, uninspectable entries and scan-limit excesses
-refuse the write. A symlink naming the selected game root is still resolved and allowed. Output paths cannot contain
-`..` components. Outputs use fresh names and reject existing files and output symlinks in ordinary operation. Run only while no
-other process can change the game or output directories: the shared publisher does not establish an isolation
-guarantee against concurrent changes, and a later failure does not prove nothing was written. A multi-file
-command can also leave earlier new outputs if a later write fails. Reported hashes describe prepared bytes,
-not an independently verified post-write readback. Fresh-only publication currently fails closed on Windows
-until native no-replace support is verified.
+Tool-managed publication is disabled: legacy --out, positional OUT.wrd and --user arguments are refused before
+reading inputs. Explicit stdout exports contain data derived from the selected game. The caller controls stdout,
+including any redirection; never redirect these streams into a game installation or a live user folder.
 """
 from __future__ import annotations
+
+import sys
+
+if __name__ == "__main__":
+    sys.dont_write_bytecode = True
 
 import argparse
 import base64
@@ -49,7 +46,6 @@ import os
 import re
 import stat
 import struct
-import sys
 import zlib
 from pathlib import Path
 
@@ -59,7 +55,6 @@ sys.path.insert(0, str(TOOLS))
 
 import world_resources_decode as wrd  # noqa: E402
 import aya_archive_inventory as archive_limits  # noqa: E402
-from safe_generated_output import SecuredOutputRoot, UnsafeGeneratedOutputError  # noqa: E402
 
 MODEL_FORMAT = "onslaught.world-body.v1"
 LEVEL_ARCHIVE_RE = re.compile(r"^(\d{3})_res_pc\.aya$", re.IGNORECASE)
@@ -605,7 +600,7 @@ def level_archives(game: Path) -> dict[int, Path]:
 
 
 def selected_game_root(path: Path) -> Path:
-    """Resolve the selected game once before reading archives or protecting the same tree."""
+    """Resolve the selected game before reading its archives."""
     try:
         game = Path(path).resolve(strict=True)
     except (OSError, RuntimeError) as error:
@@ -615,61 +610,17 @@ def selected_game_root(path: Path) -> Path:
     return game
 
 
-def output_path(path: Path) -> Path:
-    """Reject parent components before abspath can change their meaning around symlinks."""
-    path = Path(path)
-    if ".." in path.parts:
-        raise UnsafeGeneratedOutputError("output paths cannot contain parent components; use a direct path")
-    return Path(os.path.abspath(path))
+def require_stdout(stdout: bool, legacy_output: Path | None) -> None:
+    if legacy_output is not None:
+        raise EncodeError("tool-managed file publication is disabled; omit the output path and use --stdout")
+    if not stdout:
+        raise EncodeError("choose --stdout explicitly; tool-managed file publication is disabled")
 
 
-MAX_GAME_TREE_ENTRIES = 200_000
-MAX_GAME_TREE_DEPTH = 64
-
-
-def refuse_internal_game_links(game: Path) -> None:
-    """Bound the no-follow check for paths that could alias a selected game's namespace.
-
-    The selected root has already been resolved, so an alias naming that root remains supported.
-    A stable tree is required: this check does not establish protection from concurrent mutation.
-    """
-    pending = [(game, 0)]
-    count = 0
-    while pending:
-        folder, depth = pending.pop()
-        try:
-            with os.scandir(folder) as entries:
-                for entry in entries:
-                    count += 1
-                    if count > MAX_GAME_TREE_ENTRIES:
-                        raise UnsafeGeneratedOutputError("selected game tree exceeds the entry limit")
-                    info = entry.stat(follow_symlinks=False)
-                    reparse = getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
-                    if stat.S_ISLNK(info.st_mode) or reparse:
-                        raise UnsafeGeneratedOutputError(f"selected game tree contains a link or reparse point: {entry.path}")
-                    if stat.S_ISDIR(info.st_mode):
-                        if depth >= MAX_GAME_TREE_DEPTH:
-                            raise UnsafeGeneratedOutputError("selected game tree exceeds the depth limit")
-                        pending.append((Path(entry.path), depth + 1))
-        except OSError as error:
-            raise UnsafeGeneratedOutputError(f"selected game tree cannot be inspected: {folder}") from error
-
-
-def publish_fresh(output_root: Path, game: Path, files: list[tuple[Path, bytes]]) -> None:
-    """Publish fresh names in a separate directory under a non-concurrent-use assumption."""
-    output_root = output_path(output_root)
-    game = selected_game_root(game)
-    destinations = [(output_path(path), data) for path, data in files]
-    if len({os.path.normcase(os.fspath(path)) for path, _ in destinations}) != len(destinations):
-        raise UnsafeGeneratedOutputError("two world outputs would use the same file name")
-    refuse_internal_game_links(game)
-    with SecuredOutputRoot(output_root, protected_sources=(game,)) as output:
-        for path, _ in destinations:
-            output.destination(path)
-            if os.path.lexists(path):
-                raise UnsafeGeneratedOutputError(f"fresh generated-output destination already exists: {path}")
-        for path, data in destinations:
-            output.atomic_write_new_bytes(path, data)
+def add_bundle_file(files: dict, name: str, data: bytes, **metadata) -> None:
+    if name in files:
+        raise EncodeError(f"two world outputs would use the same file name: {name}")
+    files[name] = {**metadata, "bytes": len(data), "sha256": sha256(data), "dataBase64": blob(data)}
 
 
 def world_names(worlds: dict) -> dict[str, int]:
@@ -704,43 +655,41 @@ def cmd_verify(args) -> int:
 
 
 def cmd_extract(args) -> int:
+    require_stdout(args.stdout, args.out)
     game = selected_game_root(args.game)
-    out = output_path(args.out)
     archives = level_archives(game)
     worlds = level_worlds(b"".join(inflate(read_members(read_retail(archives[args.level])))))
-    files = []
-    messages = []
+    files = {}
     for tag, level in world_names(worlds).items():
         body = worlds["bodies"][tag]
         model = read_world_model(body)
-        files.append((out / f"world{level:03d}.json", (json.dumps(model, indent=1) + "\n").encode("utf-8")))
-        files.append((out / f"world{level:03d}.wrd", write_world_body(model)))
-        messages.append(f"{tag} -> world{level:03d}.wrd ({len(body)} bytes, sha256 {sha256(body)}) and .json")
-    publish_fresh(out, game, files)
-    for message in messages:
-        print(message)
+        add_bundle_file(files, f"world{level:03d}.json", (json.dumps(model, indent=1) + "\n").encode("utf-8"), fromTag=tag)
+        add_bundle_file(files, f"world{level:03d}.wrd", write_world_body(model), fromTag=tag)
+    print(json.dumps({"format": "onslaught.world-bundle.v1", "purpose": "extract", "level": args.level,
+                      "files": files}, indent=1))
     return 0
 
 
 def cmd_encode(args) -> int:
-    game = selected_game_root(args.game)
-    out = output_path(args.out)
+    require_stdout(args.stdout, args.out)
+    selected_game_root(args.game)
     body = write_world_body(json.loads(args.model.read_text()))
-    publish_fresh(out.parent, game, [(out, body)])
-    print(f"{args.out}: {len(body)} bytes, sha256 {sha256(body)}")
+    if sys.stdout.buffer.write(body) != len(body):
+        raise EncodeError("world-body stdout stream accepted only part of the output")
+    sys.stdout.buffer.flush()
     return 0
 
 
 def cmd_stage(args) -> int:
+    require_stdout(args.stdout, args.user)
     game = selected_game_root(args.game)
-    user = output_path(args.user)
     archives = level_archives(game)
     source_path = archives[args.level]
     source = read_retail(source_path)
     worlds = level_worlds(b"".join(inflate(read_members(source))))
-    worlds_dir = user / "data" / "worlds"
-    files = []
-    report = {"level": args.level, "archive": source_path.name, "archiveSha256": sha256(source), "files": {}}
+    files = {}
+    report = {"format": "onslaught.world-bundle.v1", "purpose": "stage", "level": args.level,
+              "archive": source_path.name, "archiveSha256": sha256(source), "files": files}
     for tag, level in world_names(worlds).items():
         body = worlds["bodies"][tag]
         if tag == "RLWD" and args.world:
@@ -749,16 +698,10 @@ def cmd_stage(args) -> int:
             data = write_world_body(read_world_model(body))
             if data != body:
                 raise SystemExit(f"{tag}: the encoder did not reproduce the archive's body")
-        dest = worlds_dir / f"world{level:03d}.wrd"
-        files.append((dest, data))
-        report["files"][f"data/worlds/{dest.name}"] = {"from": tag, "bytes": len(data), "sha256": sha256(data),
-                                                       "identicalToArchive": data == body}
+        add_bundle_file(files, f"data/worlds/world{level:03d}.wrd", data, fromTag=tag,
+                        identicalToArchive=data == body)
     shadow = shadow_archive(source)
-    res_dir = user / "data" / "resources"
-    files.append((res_dir / source_path.name, shadow))
-    report["files"][f"data/resources/{source_path.name}"] = {"wdatRealLevel": NO_LEVEL, "bytes": len(shadow),
-                                                             "sha256": sha256(shadow)}
-    publish_fresh(user, game, files)
+    add_bundle_file(files, f"data/resources/{source_path.name}", shadow, wdatRealLevel=NO_LEVEL)
     print(json.dumps(report, indent=1))
     return 0
 
@@ -778,15 +721,18 @@ def main(argv: list[str] | None = None) -> int:
     e = sub.add_parser("extract")
     e.add_argument("--game", type=nonempty_path, default=os.environ.get("BEA_GAME"), required="BEA_GAME" not in os.environ)
     e.add_argument("--level", type=int, required=True)
-    e.add_argument("--out", type=nonempty_path, required=True)
+    e.add_argument("--out", type=nonempty_path, help="legacy: refused; use --stdout")
+    e.add_argument("--stdout", action="store_true", help="emit a JSON bundle; choose where stdout goes")
     c = sub.add_parser("encode")
     c.add_argument("--game", type=nonempty_path, default=os.environ.get("BEA_GAME"), required="BEA_GAME" not in os.environ)
     c.add_argument("model", type=nonempty_path)
-    c.add_argument("out", type=nonempty_path)
+    c.add_argument("out", type=nonempty_path, nargs="?", help="legacy: refused; use --stdout")
+    c.add_argument("--stdout", action="store_true", help="emit raw world-body bytes")
     s = sub.add_parser("stage")
     s.add_argument("--game", type=nonempty_path, default=os.environ.get("BEA_GAME"), required="BEA_GAME" not in os.environ)
     s.add_argument("--level", type=int, required=True)
-    s.add_argument("--user", type=nonempty_path, required=True, help="the port's user folder (BEA_USER_DIR) for the run")
+    s.add_argument("--user", type=nonempty_path, help="legacy: refused; use --stdout")
+    s.add_argument("--stdout", action="store_true", help="emit a JSON bundle; no files are staged")
     s.add_argument("--world", type=nonempty_path, help="an edited model for the level's own (RLWD) world")
     args = ap.parse_args(argv)
     return {"verify": cmd_verify, "extract": cmd_extract, "encode": cmd_encode, "stage": cmd_stage}[args.command](args)
@@ -795,6 +741,6 @@ def main(argv: list[str] | None = None) -> int:
 if __name__ == "__main__":
     try:
         sys.exit(main())
-    except (EncodeError, UnsafeGeneratedOutputError) as error:
+    except EncodeError as error:
         print(f"world encoder: {error}", file=sys.stderr)
         sys.exit(2)

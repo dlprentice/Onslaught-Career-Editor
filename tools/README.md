@@ -124,24 +124,19 @@ publish, sign, or install anything by themselves.
   `world_resources_encode.py` is the decoder's inverse for world bodies: `read_world_model` keeps every field
   `CWorld::LoadWorld` reads (the regions it only skips as base64 blobs). The tested PC installation's bodies round-trip
   byte for byte; `verify --game DIR` checks the level archives in the selected installation. This does not establish
-  coverage of other builds or a playable editor. `extract` writes a level's bodies as `worldNNN.wrd` plus an
-  editable JSON model, `encode` turns an edited model back into a body, and `stage` builds an Onslaught CE user folder
-  that loads a level's worlds from loose `data\worlds\worldNNN.wrd` files (`CWorld::Load`'s fallback) through a
-  shadow copy of the level archive whose `WDAT` names no level. All writing commands require the selected game folder
-  (`--game DIR`, or `BEA_GAME`) and a separate output location. The selected game path is resolved before both the
-  archive read and output protection; an alias naming the selected root is supported. Before writing, the resolved
-  game tree is scanned without following links and publication is refused if it contains any internal symlink or
-  reparse point, an entry or directory cannot be inspected, it exceeds 200,000 entries, or it is deeper than 64
-  directories. This conservative rule
-  includes links unrelated to the selected level; use a plain game view for writing commands. Read-only `verify` does
-  not impose this rule. Output paths containing `..` are refused. Fresh publication refuses existing files and output
-  symlinks in ordinary operation. Keep the game and output directories exclusively controlled and
-  unmodified by other processes while these commands run: the publisher does not establish a guarantee against
-  concurrent changes, and a failure does not prove no output was written. Multi-file operations can also leave earlier
-  new outputs when a later write fails: inspect those and choose a fresh output folder. Reported output hashes describe
-  prepared bytes, not an independently verified post-write readback. Atomic no-replace publication currently fails
-  closed on Windows; native Windows support needs
-  validation. Each input archive is limited to 64 MiB compressed, 128 MiB inflated and 4096 members; each inflated
+  coverage of other builds or a playable editor. `extract --stdout` emits a JSON bundle containing a level's world
+  bodies and editable models; `encode MODEL.json --stdout` emits raw world-body bytes; `stage --stdout` emits a JSON
+  bundle containing the loose-world files and shadow archive that would be needed for a separate CE user folder.
+  The bundle's `onslaught.world-bundle.v1` format maps relative names to byte counts, SHA-256 values and base64 data;
+  those hashes describe the bundled bytes and do not verify any downstream file write.
+  The name `stage` describes the bundle's purpose: this command does not create or stage those files.
+  All three commands require the selected game folder (`--game DIR`, or `BEA_GAME`) and an explicit `--stdout`.
+  Legacy `--out`, positional output and `--user` paths are now refused before input reads: tool-managed publication
+  cannot yet guarantee that a concurrently moved destination stays outside the selected game. This is a compatibility
+  change. The caller controls stdout and any redirection; do not redirect it into a game installation or live user
+  folder. The streams can contain material derived from the selected game and should be kept private. Windows stdout
+  and archive-reading behavior have not been validated. Each input archive is limited to 64 MiB compressed, 128 MiB
+  inflated and 4096 members; each inflated
   member is limited to 1 MiB, matching the PC writer and default read buffer. These total limits are tool resource
   ceilings, not established maxima for the game format. Encoding checks binary layout but is not a mission, placement
   or gameplay safety validator.
