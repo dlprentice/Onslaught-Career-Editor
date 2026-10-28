@@ -156,11 +156,89 @@ def multi_member_archive(raw: bytes, block: int) -> bytes:
     return out
 
 
+def game_sized_world_archive() -> bytes:
+    # The catalogue's generic fixture packs its whole 1.08 MiB archive into one member. Reframe its authored bytes
+    # as the PC writer does: at most one MiB inflated per member, without changing the underlying archive stream.
+    generic = fixtures.world_archive()
+    raw = b"".join(zlib.decompress(m) for m in enc.read_members(generic))
+    return multi_member_archive(raw, enc.MAX_INFLATED_MEMBER_BYTES)
+
+
 class ArchiveTests(unittest.TestCase):
+    def test_valid_zlib_member_at_exact_inflated_limits(self) -> None:
+        original = b"x" * 1024
+        with patch.object(enc, "MAX_INFLATED_MEMBER_BYTES", 1024), \
+                patch.object(enc, "MAX_ARCHIVE_INFLATED_BYTES", 1024):
+            self.assertEqual([original], enc.inflate([zlib.compress(original)]))
+
+    def test_compressed_bomb_is_bounded_per_member(self) -> None:
+        member = zlib.compress(b"x" * 1025)
+        with patch.object(enc, "MAX_INFLATED_MEMBER_BYTES", 1024):
+            with self.assertRaisesRegex(enc.EncodeError, "inflated archive/member limit"):
+                enc.inflate([member])
+        actual_cap_bomb = zlib.compress(b"x" * (enc.MAX_INFLATED_MEMBER_BYTES + 1))
+        self.assertLess(len(actual_cap_bomb), enc.PACK_BUFFER_SIZE)
+        with self.assertRaisesRegex(enc.EncodeError, "inflated archive/member limit"):
+            enc.inflate([actual_cap_bomb])
+
+    def test_total_inflated_budget_is_bounded_across_members(self) -> None:
+        member = zlib.compress(b"x" * 600)
+        with patch.object(enc, "MAX_ARCHIVE_INFLATED_BYTES", 1024):
+            with self.assertRaisesRegex(enc.EncodeError, "inflated archive/member limit"):
+                enc.inflate([member, member])
+
+    def test_malformed_truncated_and_trailing_zlib_data_are_refused(self) -> None:
+        member = zlib.compress(b"example content")
+        for invalid in (b"not a zlib stream", member[:-1], member + b"trailing", member + member):
+            with self.subTest(invalid=invalid), self.assertRaises(enc.EncodeError):
+                enc.inflate([invalid])
+
+    def test_compressed_archive_and_member_count_limits(self) -> None:
+        member = zlib.compress(b"example")
+        framed = struct.pack("<I", len(member)) + member
+        with patch.object(enc, "MAX_ARCHIVE_BYTES", len(framed) - 1):
+            with self.assertRaisesRegex(enc.EncodeError, "compressed-byte limit"):
+                enc.read_members(framed)
+        with patch.object(enc, "MAX_ARCHIVE_MEMBERS", 1):
+            with self.assertRaisesRegex(enc.EncodeError, "member-count limit"):
+                enc.read_members(framed * 2)
+            with self.assertRaisesRegex(enc.EncodeError, "member-count limit"):
+                enc.inflate([member, member])
+        with patch.object(enc, "PACK_BUFFER_SIZE", len(member) - 1):
+            with self.assertRaises(enc.EncodeError):
+                enc.read_members(framed)
+
+    def test_file_read_cap_is_enforced_before_parsing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            archive = Path(tmp) / "synthetic.aya"
+            archive.write_bytes(b"four")
+            with patch.object(enc, "MAX_ARCHIVE_BYTES", 3):
+                with self.assertRaisesRegex(enc.EncodeError, "compressed-byte limit"):
+                    enc.read_retail(archive)
+            self.assertEqual(b"four", archive.read_bytes())
+
+    def test_truncated_chunk_headers_and_short_wdat_are_refused(self) -> None:
+        with self.assertRaisesRegex(enc.EncodeError, "truncated chunk header"):
+            list(enc.chunks(b"WRES"))
+
+        def chunk(tag: bytes, payload: bytes) -> bytes:
+            return tag + struct.pack("<I", len(payload)) + payload
+
+        short_wdat = chunk(b"WDAT", struct.pack("<i", 1))
+        fake_following_chunk = chunk(b"RLWD", fixtures.world_body())
+        raw = chunk(b"WRES", chunk(b"WRLD", short_wdat + fake_following_chunk))
+        with self.assertRaisesRegex(enc.EncodeError, "WDAT is shorter"):
+            enc.level_worlds(raw)
+
     def test_shadow_archive_changes_only_the_real_world_level(self) -> None:
-        source = fixtures.world_archive()
+        source = game_sized_world_archive()
         raw = b"".join(enc.inflate(enc.read_members(source)))
-        for block in (len(raw), 97, 1 << 20):  # one member, many small members (the patch may straddle two)
+        patch_at = enc.level_worlds(raw)["wdatOffset"] + 4
+        # Choose a block length that forces the patched 4-byte value across two members while staying below
+        # the member-count ceiling.
+        straddling = next(n for n in range(512, 65536) if patch_at % n >= n - 3)
+        self.assertGreater(patch_at % straddling + 4, straddling)
+        for block in (straddling, 65536, 1 << 20):
             with self.subTest(block=block):
                 packed = multi_member_archive(raw, block)
                 shadow = enc.shadow_archive(packed)
@@ -173,12 +251,21 @@ class ArchiveTests(unittest.TestCase):
                 changed = [i for i, (a, b) in enumerate(zip(before, after)) if a != b]
                 self.assertLessEqual(len(changed), 2)
 
+    def test_shadow_archive_accepts_a_single_small_member(self) -> None:
+        wdat = fixtures.chunk(b"WDAT", struct.pack("<ii", -1, 200))
+        world = fixtures.chunk(b"RLWD", fixtures.world_body())
+        raw = fixtures.chunk(b"WRES", fixtures.chunk(b"WRLD", wdat + world))
+        packed = multi_member_archive(raw, len(raw))
+        self.assertEqual(1, len(enc.read_members(packed)))
+        patched = enc.shadow_archive(packed)
+        self.assertEqual(enc.NO_LEVEL, enc.level_worlds(b"".join(enc.inflate(enc.read_members(patched))))["realLevel"])
+
     @unittest.skipIf(os.name == "nt", "fresh-only output needs native Windows support")
     def test_stage_writes_loose_worlds_and_a_shadow_archive_but_never_into_the_game(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             game, user = Path(tmp, "game"), Path(tmp, "user")
             (game / "data" / "resources").mkdir(parents=True)
-            (game / "data" / "resources" / "200_res_PC.aya").write_bytes(fixtures.world_archive())
+            (game / "data" / "resources" / "200_res_PC.aya").write_bytes(game_sized_world_archive())
             enc.main(["stage", "--game", str(game), "--level", "200", "--user", str(user)])
             self.assertEqual((user / "data" / "worlds" / "world200.wrd").read_bytes(), fixtures.world_body())
             shadow = (user / "data" / "resources" / "200_res_PC.aya").read_bytes()
@@ -198,7 +285,7 @@ class PublicationTests(unittest.TestCase):
         self.resources = self.game / "data" / "resources"
         self.resources.mkdir(parents=True)
         self.archive = self.resources / "200_res_PC.aya"
-        self.original = fixtures.world_archive()
+        self.original = game_sized_world_archive()
         self.archive.write_bytes(self.original)
         self.user = self.root / "user"
         self.model = self.root / "model.json"

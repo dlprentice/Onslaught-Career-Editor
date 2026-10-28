@@ -98,7 +98,10 @@ publish, sign, or install anything by themselves.
   (`--game DIR`, or `BEA_GAME`) and a separate output location, and will not replace existing files or follow output
   symlinks. Multi-file operations can leave earlier new outputs when a later write fails: inspect those and choose a
   fresh output folder. Atomic no-replace publication currently fails closed on Windows; native Windows support needs
-  validation. Encoding checks binary layout but is not a mission, placement or gameplay safety validator.
+  validation. Each input archive is limited to 64 MiB compressed, 128 MiB inflated and 4096 members; each inflated
+  member is limited to 1 MiB, matching the PC writer and default read buffer. These total limits are tool resource
+  ceilings, not established maxima for the game format. Encoding checks binary layout but is not a mission, placement
+  or gameplay safety validator.
 - `export_game_assets.py`, `export_asset_catalog.py`,
   `export_language_corpus.py`, and `export_video_manifest.py` operate on
   user-supplied local inputs and write to a separate local output root.

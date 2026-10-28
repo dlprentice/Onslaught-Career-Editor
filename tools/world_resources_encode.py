@@ -43,6 +43,7 @@ import json
 import math
 import os
 import re
+import stat
 import struct
 import sys
 import zlib
@@ -53,11 +54,19 @@ ROOT = TOOLS.parent
 sys.path.insert(0, str(TOOLS))
 
 import world_resources_decode as wrd  # noqa: E402
+import aya_archive_inventory as archive_limits  # noqa: E402
 from safe_generated_output import SecuredOutputRoot, UnsafeGeneratedOutputError  # noqa: E402
 
 MODEL_FORMAT = "onslaught.world-body.v1"
 LEVEL_ARCHIVE_RE = re.compile(r"^(\d{3})_res_pc\.aya$", re.IGNORECASE)
 PACK_BUFFER_SIZE = 0x102927  # CDXMemBuffer's gPackBuffer (onslaught-decomp src/DXMemBuffer.cpp, retail 005481a4)
+# The PC writer and default read allocation use 1 MiB. This tool refuses larger inflated members even though the
+# reader passes PACK_BUFFER_SIZE as zlib's limit; the complete retained PC world corpus fits the 1 MiB bound.
+MAX_INFLATED_MEMBER_BYTES = 1024 * 1024
+# These are tooling resource ceilings shared with the archive inventory, not claims about the game's format maximum.
+MAX_ARCHIVE_BYTES = archive_limits.MAX_COMPRESSED_BYTES
+MAX_ARCHIVE_INFLATED_BYTES = archive_limits.MAX_INFLATED_BYTES
+MAX_ARCHIVE_MEMBERS = archive_limits.MAX_MEMBERS
 NO_LEVEL = 9999  # a WDAT level number no level uses: CWorld::Load then resets both resource positions
 
 
@@ -458,8 +467,12 @@ def write_world_body(model: dict) -> bytes:
 # ---------------------------------------------------------------------------------------------- level archives
 def read_members(source: bytes) -> list[bytes]:
     """The packed members of a .aya: [u32 length][zlib stream] (CDXMemBuffer::ReadBlock), compressed bytes kept."""
+    if not source or len(source) > MAX_ARCHIVE_BYTES:
+        raise EncodeError("archive is empty or exceeds the compressed-byte limit")
     members, at = [], 0
     while at < len(source):
+        if len(members) >= MAX_ARCHIVE_MEMBERS:
+            raise EncodeError("archive exceeds the member-count limit")
         if at + 4 > len(source):
             raise EncodeError("truncated .aya member header")
         size = struct.unpack_from("<I", source, at)[0]
@@ -473,8 +486,12 @@ def read_members(source: bytes) -> list[bytes]:
 def chunks(data: bytes, start: int = 0, end: int | None = None):
     """(tag, payload offset, size) for each chunk of a tag stream (CChunkReader::GetNext)."""
     end = len(data) if end is None else end
+    if not 0 <= start <= end <= len(data):
+        raise EncodeError("invalid chunk-stream boundaries")
     at = start
     while at < end:
+        if at + 8 > end:
+            raise EncodeError(f"truncated chunk header at {at}")
         tag, size = struct.unpack_from("<4sI", data, at)
         if at + 8 + size > end:
             raise EncodeError(f"chunk {tag!r} at {at} overruns its parent")
@@ -493,6 +510,8 @@ def level_worlds(raw: bytes) -> dict:
             out = {"bodies": {}}
             for ktag, kat, ksize in chunks(raw, wat, wat + wsize):
                 if ktag == "WDAT":
+                    if ksize < 8:
+                        raise EncodeError("WDAT is shorter than its two level numbers")
                     out["wdatOffset"] = kat
                     out["baseLevel"], out["realLevel"] = struct.unpack_from("<ii", raw, kat)
                 elif ktag in ("BSWD", "RLWD"):
@@ -502,7 +521,31 @@ def level_worlds(raw: bytes) -> dict:
 
 
 def inflate(members: list[bytes]) -> list[bytes]:
-    return [zlib.decompress(m) for m in members]
+    """Bound every member and the total before materializing a complete archive."""
+    if not members or len(members) > MAX_ARCHIVE_MEMBERS:
+        raise EncodeError("archive is empty or exceeds the member-count limit")
+    blocks = []
+    packed_total = inflated_total = 0
+    for index, member in enumerate(members):
+        packed_total += len(member) + 4
+        if not 0 < len(member) <= PACK_BUFFER_SIZE or packed_total > MAX_ARCHIVE_BYTES:
+            raise EncodeError(f"compressed archive/member limit at member {index}")
+        remaining = MAX_ARCHIVE_INFLATED_BYTES - inflated_total
+        limit = min(MAX_INFLATED_MEMBER_BYTES, remaining)
+        decoder = zlib.decompressobj()
+        try:
+            block = decoder.decompress(member, limit + 1)
+        except zlib.error as error:
+            raise EncodeError(f"invalid zlib data in member {index}") from error
+        if len(block) > limit or decoder.unconsumed_tail:
+            raise EncodeError(f"inflated archive/member limit at member {index}")
+        if not decoder.eof:
+            raise EncodeError(f"truncated zlib stream in member {index}")
+        if decoder.unused_data:
+            raise EncodeError(f"trailing data after zlib stream in member {index}")
+        inflated_total += len(block)
+        blocks.append(block)
+    return blocks
 
 
 def shadow_archive(source: bytes, wdat_level: int = NO_LEVEL) -> bytes:
@@ -536,10 +579,15 @@ def sha256(data: bytes) -> str:
 
 
 def read_retail(path: Path) -> bytes:
-    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_NONBLOCK", 0))
     try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise EncodeError(f"archive is not a regular file: {path}")
         with os.fdopen(fd, "rb", closefd=False) as f:
-            return f.read()
+            data = f.read(MAX_ARCHIVE_BYTES + 1)
+        if len(data) > MAX_ARCHIVE_BYTES:
+            raise EncodeError(f"archive exceeds the compressed-byte limit: {path}")
+        return data
     finally:
         os.close(fd)
 
