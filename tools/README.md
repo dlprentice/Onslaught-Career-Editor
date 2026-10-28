@@ -157,10 +157,19 @@ publish, sign, or install anything by themselves.
   behavior, and does not execute a game or script. The CLI requires descriptor-relative no-follow file support;
   `preview_bytes` accepts immutable snapshots for integrations on other platforms. Windows CLI and physical play have
   not been validated.
+  `world_thing_index.py WORLD.wrd --stdout` lists a page of serialized thing ordinals, stored names, definitions,
+  positions and the exact baseline SHA-256, without exposing the world or script bodies. Use `--start` and `--limit`
+  for later pages (at most 128 rows each). A position shows its float32 bytes and finite value; a non-finite value is
+  null with its bits retained. The source must decode and round-trip exactly. A row's ordinal is local to that
+  selected body, not a runtime slot, a stable identity or proof the thing will spawn. The selected-file CLI needs
+  Linux `O_PATH` and `/proc/self/fd`, while `report_bytes` accepts already-owned bytes on other platforms. The
+  report is private game/user-derived metadata. The tool opens no output files; shell redirection and its destination
+  are the caller's responsibility. It does not identify the level, validate placement or check gameplay.
   `world_edit_move.py` adds a narrow, two-step editing workflow for **one existing thing's position**. First run
   `python tools/world_edit_move.py WORLD.wrd --thing ORDINAL --position X Y Z`; this reads one selected body and prints
-  a structural preview without creating files. The `extract` command above provides a model whose `things` array can
-  be inspected privately to choose `ORDINAL`. That is a zero-based serialized record index, not a proven runtime slot
+  a structural preview without creating files. Use the index above to choose `ORDINAL` and pass its baseline hash as
+  `--baseline-sha256` to pin this exact body. The `extract` command also provides a model whose `things` array can
+  be inspected privately. That ordinal is a zero-based serialized record index, not a proven runtime slot
   or stable identity. Review the coordinates, input/model hashes and all preview findings. A zero exit means the
   operation completed, not that the edit is safe; every move is marked `reviewRequired`. The tool
   accepts finite float32 positions; a decimal that needs rounding is refused unless `--allow-rounding` is given, in
