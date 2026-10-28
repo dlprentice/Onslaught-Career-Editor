@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-28 (per-part mesh bounds and identities; per-mip DDS identities; world body encoder and loose-world staging; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-28 (read-only world-edit preview; per-part mesh bounds and identities; per-mip DDS identities; world body encoder and loose-world staging; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -109,6 +109,17 @@ publish, sign, or install anything by themselves.
   member is limited to 1 MiB, matching the PC writer and default read buffer. These total limits are tool resource
   ceilings, not established maxima for the game format. Encoding checks binary layout but is not a mission, placement
   or gameplay safety validator.
+  `world_edit_preview.py BASELINE.wrd EDITED.json` is a read-only step before encoding or staging. It reports input
+  hashes, byte and field changes, changes to opaque groups and slot-sensitive structures, and bounded compiled-script
+  inspection findings. It also identifies model fields the encoder would silently omit. An omitted field, truncated
+  change list, changed opaque/compiled data, incomplete script inspection or structural script finding makes the command
+  exit 1, including a pre-existing finding in an unchanged script. Optional `--baseline-sha256` and `--model-sha256`
+  pin the selected snapshots. It writes no files; later
+  encoding or staging is a separate command and is not automatically bound to this preview. Inspect the reported
+  hashes before using its inputs. It does not check terrain placement, runtime slots, save compatibility or mission
+  behavior, and does not execute a game or script. The CLI requires descriptor-relative no-follow file support;
+  `preview_bytes` accepts immutable snapshots for integrations on other platforms. Windows CLI and physical play have
+  not been validated.
 - `export_game_assets.py`, `export_asset_catalog.py`,
   `export_language_corpus.py`, and `export_video_manifest.py` operate on
   user-supplied local inputs and write to a separate local output root.
