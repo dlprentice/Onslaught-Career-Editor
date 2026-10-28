@@ -5,6 +5,8 @@ for every version branch LoadWorld has; edits land where the catalogue decoder r
 only WDAT's real level; and nothing is written inside a game folder."""
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import math
 import os
@@ -293,6 +295,68 @@ class PublicationTests(unittest.TestCase):
 
     def stage(self) -> int:
         return enc.main(["stage", "--game", str(self.game), "--level", "200", "--user", str(self.user)])
+
+    def test_game_alias_is_resolved_before_archive_selection_and_publication(self) -> None:
+        alias = self.root / "game-alias"
+        try:
+            alias.symlink_to(self.game, target_is_directory=True)
+        except (NotImplementedError, OSError) as error:
+            self.skipTest(f"directory symlinks unavailable: {error}")
+        with patch.object(enc, "level_archives", wraps=enc.level_archives) as lookup, \
+                patch.object(enc, "publish_fresh", wraps=enc.publish_fresh) as publish, \
+                contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0, enc.main(["extract", "--game", str(alias), "--level", "200", "--out", str(self.user)]))
+        self.assertEqual(lookup.call_args.args[0], self.game)
+        self.assertEqual(publish.call_args.args[1], self.game)
+        self.assertEqual((self.user / "world200.wrd").read_bytes(), fixtures.world_body())
+        self.assertEqual(self.archive.read_bytes(), self.original)
+
+    def test_selected_game_resolves_parent_after_a_link(self) -> None:
+        child = self.game / "child"
+        child.mkdir()
+        alias = self.root / "child-alias"
+        try:
+            alias.symlink_to(child, target_is_directory=True)
+        except (NotImplementedError, OSError) as error:
+            self.skipTest(f"directory symlinks unavailable: {error}")
+        self.assertEqual(enc.selected_game_root(alias / ".."), self.game)
+
+    def test_outputs_with_parent_components_are_refused_before_read_or_write(self) -> None:
+        output = self.user / ".." / "candidate"
+        cases = (
+            ["extract", "--game", str(self.game), "--level", "200", "--out", str(output)],
+            ["encode", "--game", str(self.game), str(self.model), str(output / "world.wrd")],
+            ["stage", "--game", str(self.game), "--level", "200", "--user", str(output)],
+        )
+        for args in cases:
+            with self.subTest(command=args[0]), \
+                    patch.object(enc, "level_archives", wraps=enc.level_archives) as lookup:
+                with self.assertRaisesRegex(safe.UnsafeGeneratedOutputError, "parent components"):
+                    enc.main(args)
+                lookup.assert_not_called()
+        self.assertFalse(self.user.exists())
+        self.assertFalse((self.root / "candidate").exists())
+        self.assertEqual(self.archive.read_bytes(), self.original)
+
+    def test_missing_game_and_empty_paths_are_refused_without_output(self) -> None:
+        with self.assertRaisesRegex(enc.EncodeError, "cannot be resolved"):
+            enc.main(["encode", "--game", str(self.root / "missing"), str(self.model), str(self.user / "world.wrd")])
+        cases = (
+            ["encode", "--game", "", str(self.model), str(self.user / "world.wrd")],
+            ["extract", "--game", str(self.game), "--level", "200", "--out", ""],
+            ["stage", "--game", str(self.game), "--level", "200", "--user", ""],
+        )
+        for args in cases:
+            with self.subTest(command=args[0]), contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as error:
+                    enc.main(args)
+                self.assertEqual(error.exception.code, 2)
+        with patch.dict(os.environ, {"BEA_GAME": ""}), contextlib.redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit) as error:
+                enc.main(["encode", str(self.model), str(self.user / "world.wrd")])
+            self.assertEqual(error.exception.code, 2)
+        self.assertFalse(self.user.exists())
+        self.assertEqual(self.archive.read_bytes(), self.original)
 
     def test_stage_rejects_resources_directory_symlink_into_game(self) -> None:
         (self.user / "data").mkdir(parents=True)

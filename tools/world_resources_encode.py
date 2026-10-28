@@ -15,8 +15,7 @@ The model is the editing surface: change a thing's init.position, append a thing
 order matters: CWaypointPath::Load indexes LoadWorld's things[] slots, so a new thing goes after the existing ones
 (see slot_note in the model) or the waypoint paths must be renumbered.
 
-Command line (retail data is read only; output goes under this checkout's ignored local-data/ or a port user folder,
-never the selected game folder):
+Command line (select retail data as a read-only input; choose an output outside the selected game folder):
 
     world_resources_encode.py verify --game DIR                 every level archive: decode -> encode == original
     world_resources_encode.py extract --game DIR --level N --out DIR
@@ -29,10 +28,13 @@ never the selected game folder):
                                                                  world), plus a shadow copy of the level archive whose
                                                                  WDAT names no level, so CWorld::Load takes the loose path
 
-Output files must have fresh names: nothing existing is replaced. Every file is published atomically without
-replacement, with symlinks and overlapping game paths refused. A multi-file command may leave earlier new files
-if a later publication fails; inspect them and choose a fresh output folder for another attempt. Fresh-only
-publication currently fails closed on Windows until native no-replace support is verified.
+The game path is resolved before both reading and protection. Output paths cannot contain `..` components.
+Outputs use fresh names and reject existing files and output symlinks in ordinary operation. Run only while no
+other process can change the game or output directories: the shared publisher does not establish an isolation
+guarantee against concurrent changes, and a later failure does not prove nothing was written. A multi-file
+command can also leave earlier new outputs if a later write fails. Reported hashes describe prepared bytes,
+not an independently verified post-write readback. Fresh-only publication currently fails closed on Windows
+until native no-replace support is verified.
 """
 from __future__ import annotations
 
@@ -600,15 +602,30 @@ def level_archives(game: Path) -> dict[int, Path]:
     return {int(m.group(1)): p for p in sorted(folder.iterdir()) if (m := LEVEL_ARCHIVE_RE.match(p.name))}
 
 
-def publish_fresh(output_root: Path, game: Path, files: list[tuple[Path, bytes]]) -> None:
-    """Publish only fresh output names while holding the directory chain and protecting the game.
+def selected_game_root(path: Path) -> Path:
+    """Resolve the selected game once before reading archives or protecting the same tree."""
+    try:
+        game = Path(path).resolve(strict=True)
+    except (OSError, RuntimeError) as error:
+        raise EncodeError("selected game folder cannot be resolved") from error
+    if not game.is_dir():
+        raise EncodeError("selected game folder is not a directory")
+    return game
 
-    The preflight avoids ordinary partial sets on an existing-name collision; the held-directory,
-    no-replace publication remains the authority if a path changes after preflight.
-    """
-    output_root = Path(os.path.abspath(output_root))
-    game = Path(os.path.abspath(game))
-    destinations = [(Path(os.path.abspath(path)), data) for path, data in files]
+
+def output_path(path: Path) -> Path:
+    """Reject parent components before abspath can change their meaning around symlinks."""
+    path = Path(path)
+    if ".." in path.parts:
+        raise UnsafeGeneratedOutputError("output paths cannot contain parent components; use a direct path")
+    return Path(os.path.abspath(path))
+
+
+def publish_fresh(output_root: Path, game: Path, files: list[tuple[Path, bytes]]) -> None:
+    """Publish fresh names in a separate directory under a non-concurrent-use assumption."""
+    output_root = output_path(output_root)
+    game = selected_game_root(game)
+    destinations = [(output_path(path), data) for path, data in files]
     if len({os.path.normcase(os.fspath(path)) for path, _ in destinations}) != len(destinations):
         raise UnsafeGeneratedOutputError("two world outputs would use the same file name")
     with SecuredOutputRoot(output_root, protected_sources=(game,)) as output:
@@ -629,7 +646,7 @@ def world_names(worlds: dict) -> dict[str, int]:
 
 
 def cmd_verify(args) -> int:
-    archives = level_archives(args.game)
+    archives = level_archives(selected_game_root(args.game))
     bodies = failures = 0
     for level, path in archives.items():
         worlds = level_worlds(b"".join(inflate(read_members(read_retail(path)))))
@@ -652,8 +669,9 @@ def cmd_verify(args) -> int:
 
 
 def cmd_extract(args) -> int:
-    archives = level_archives(args.game)
-    out = Path(os.path.abspath(args.out))
+    game = selected_game_root(args.game)
+    out = output_path(args.out)
+    archives = level_archives(game)
     worlds = level_worlds(b"".join(inflate(read_members(read_retail(archives[args.level])))))
     files = []
     messages = []
@@ -663,23 +681,25 @@ def cmd_extract(args) -> int:
         files.append((out / f"world{level:03d}.json", (json.dumps(model, indent=1) + "\n").encode("utf-8")))
         files.append((out / f"world{level:03d}.wrd", write_world_body(model)))
         messages.append(f"{tag} -> world{level:03d}.wrd ({len(body)} bytes, sha256 {sha256(body)}) and .json")
-    publish_fresh(out, args.game, files)
+    publish_fresh(out, game, files)
     for message in messages:
         print(message)
     return 0
 
 
 def cmd_encode(args) -> int:
+    game = selected_game_root(args.game)
+    out = output_path(args.out)
     body = write_world_body(json.loads(args.model.read_text()))
-    out = Path(os.path.abspath(args.out))
-    publish_fresh(out.parent, args.game, [(out, body)])
+    publish_fresh(out.parent, game, [(out, body)])
     print(f"{args.out}: {len(body)} bytes, sha256 {sha256(body)}")
     return 0
 
 
 def cmd_stage(args) -> int:
-    archives = level_archives(args.game)
-    user = Path(os.path.abspath(args.user))
+    game = selected_game_root(args.game)
+    user = output_path(args.user)
+    archives = level_archives(game)
     source_path = archives[args.level]
     source = read_retail(source_path)
     worlds = level_worlds(b"".join(inflate(read_members(source))))
@@ -703,30 +723,36 @@ def cmd_stage(args) -> int:
     files.append((res_dir / source_path.name, shadow))
     report["files"][f"data/resources/{source_path.name}"] = {"wdatRealLevel": NO_LEVEL, "bytes": len(shadow),
                                                              "sha256": sha256(shadow)}
-    publish_fresh(user, args.game, files)
+    publish_fresh(user, game, files)
     print(json.dumps(report, indent=1))
     return 0
+
+
+def nonempty_path(value: str) -> Path:
+    if not value:
+        raise argparse.ArgumentTypeError("a non-empty path is required")
+    return Path(value)
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="command", required=True)
     v = sub.add_parser("verify")
-    v.add_argument("--game", type=Path, default=os.environ.get("BEA_GAME"), required="BEA_GAME" not in os.environ)
+    v.add_argument("--game", type=nonempty_path, default=os.environ.get("BEA_GAME"), required="BEA_GAME" not in os.environ)
     v.add_argument("--verbose", action="store_true")
     e = sub.add_parser("extract")
-    e.add_argument("--game", type=Path, default=os.environ.get("BEA_GAME"), required="BEA_GAME" not in os.environ)
+    e.add_argument("--game", type=nonempty_path, default=os.environ.get("BEA_GAME"), required="BEA_GAME" not in os.environ)
     e.add_argument("--level", type=int, required=True)
-    e.add_argument("--out", type=Path, required=True)
+    e.add_argument("--out", type=nonempty_path, required=True)
     c = sub.add_parser("encode")
-    c.add_argument("--game", type=Path, default=os.environ.get("BEA_GAME"), required="BEA_GAME" not in os.environ)
-    c.add_argument("model", type=Path)
-    c.add_argument("out", type=Path)
+    c.add_argument("--game", type=nonempty_path, default=os.environ.get("BEA_GAME"), required="BEA_GAME" not in os.environ)
+    c.add_argument("model", type=nonempty_path)
+    c.add_argument("out", type=nonempty_path)
     s = sub.add_parser("stage")
-    s.add_argument("--game", type=Path, default=os.environ.get("BEA_GAME"), required="BEA_GAME" not in os.environ)
+    s.add_argument("--game", type=nonempty_path, default=os.environ.get("BEA_GAME"), required="BEA_GAME" not in os.environ)
     s.add_argument("--level", type=int, required=True)
-    s.add_argument("--user", type=Path, required=True, help="the port's user folder (BEA_USER_DIR) for the run")
-    s.add_argument("--world", type=Path, help="an edited model for the level's own (RLWD) world")
+    s.add_argument("--user", type=nonempty_path, required=True, help="the port's user folder (BEA_USER_DIR) for the run")
+    s.add_argument("--world", type=nonempty_path, help="an edited model for the level's own (RLWD) world")
     args = ap.parse_args(argv)
     return {"verify": cmd_verify, "extract": cmd_extract, "encode": cmd_encode, "stage": cmd_stage}[args.command](args)
 
