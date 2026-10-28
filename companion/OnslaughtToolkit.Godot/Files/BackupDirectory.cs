@@ -28,7 +28,7 @@ internal sealed class BackupDirectory : IDisposable
 
     internal string Folder { get; }
 
-    internal static BackupDirectory Create(string root, DateTime now)
+    internal static BackupDirectory Create(string root, DateTime now, string prefix = "onslaught-backup")
     {
         LinuxSaveDirectory? linuxRoot = null, linuxSet = null;
         FileMutationSafety.DirectoryLockSet? windowsRoot = null, windowsSet = null;
@@ -38,7 +38,7 @@ internal sealed class BackupDirectory : IDisposable
             else if (OperatingSystem.IsWindows()) windowsRoot = FileMutationSafety.LockDirectoryTree(root, "Backup root");
             else throw new PlatformNotSupportedException("Verified backups require supported Linux or Windows file protections.");
             string parent = windowsRoot?.PhysicalPath ?? root;
-            string stem = $"onslaught-backup-{now:yyyyMMdd-HHmmss}";
+            string stem = $"{prefix}-{now:yyyyMMdd-HHmmss}";
             for (int suffix = 1; suffix <= 1000; suffix++)
             {
                 string name = suffix == 1 ? stem : $"{stem}-{suffix}";
@@ -71,10 +71,10 @@ internal sealed class BackupDirectory : IDisposable
         }
     }
 
-    internal void HoldCopy(string name, byte[] expected)
+    internal void HoldCopy(string name, byte[] expected, Func<FileStream, byte[]>? readBytes = null)
     {
         Verify();
-        SaveLabSource source = SaveLabSource.Open(Path.Combine(Folder, name));
+        SaveLabSource source = SaveLabSource.Open(Path.Combine(Folder, name), readBytes);
         try
         {
             source.Verify(expected, source.Identity);

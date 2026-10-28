@@ -110,7 +110,7 @@ internal sealed class CeSettingsPanel
         Confirm.DialogText = $"Save {ChangeCount} launcher setting{(ChangeCount == 1 ? "" : "s")} to:\n{_snapshot.Path}\n\n" +
             $"The current ce.ini is backed up and verified in {_app.Backups.Folder} before it is replaced. " +
             "If it does not exist yet, a recovery note records that. Other keys are kept. " +
-            "Saving is refused while the original game or CE runs.";
+            "Close the original game and CE before saving; wait for the save to finish before starting either.";
         Confirm.PopupCentered();
     }
 

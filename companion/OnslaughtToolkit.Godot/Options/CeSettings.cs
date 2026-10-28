@@ -102,11 +102,12 @@ public sealed class CeSettings
     }
 
     /// <summary>
-    /// Makes a verified external backup, then uses the same staged, checked exchange as career writes. A source race
-    /// is refused or rolled back by that publisher. A first file gets an explicit absence receipt, not a fake original.
+    /// Holds a verified external backup through the same staged, checked exchange as career writes. A source race
+    /// detected during the exchange is refused or rolled back. A first file gets an absence receipt, not a fake original.
     /// </summary>
     public InstallReceipt Save(bool updateCheck, bool recordSessions, string backupRoot, Func<bool> gameRunning, DateTime now,
-        Action? beforeCheck = null, Action? beforeSwap = null, string? packageRoot = null, string? originalRoot = null)
+        Action? beforeCheck = null, Action? beforeSwap = null, string? packageRoot = null, string? originalRoot = null,
+        Action? afterPublish = null)
     {
         string? backupFolder = null;
         try
@@ -138,12 +139,13 @@ public sealed class CeSettings
             Outcome<byte[]> plan = Prepare(updateCheck, recordSessions);
             if (plan.Value is not byte[] bytes) return Refuse(plan.Message);
             if (_bytes.AsSpan().SequenceEqual(bytes)) return Refuse("The CE settings already have those values.");
-            backupFolder = System.IO.Path.Combine(realBackup, $"onslaught-ce-settings-{now:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}");
-            Directory.CreateDirectory(backupFolder);
+            using BackupDirectory heldBackup = BackupDirectory.Create(realBackup, now, "onslaught-ce-settings");
+            backupFolder = heldBackup.Folder;
             string backupName = Exists ? "ce.ini" : "ce.ini.did-not-exist.txt";
             byte[] preserved = Exists ? _bytes : Utf8.GetBytes("ce.ini did not exist before this change. No earlier settings file was replaced.\n");
             InstallReceipt backup = Write(System.IO.Path.Combine(backupFolder, backupName), preserved, null, backupFolder, null, null);
             if (!backup.Ok) return Refuse("No verified settings backup could be made. " + backup.Message, backupFolder);
+            heldBackup.HoldCopy(backupName, preserved, ReadBounded);
             // The UI snapshot and the backup must still describe this exact file, not a newer save.
             if (Read(userFolder).Value is not CeSettings again || !SameSnapshot(again))
                 return Refuse("ce.ini changed while it was being backed up. Nothing was written to it.", backupFolder);
@@ -152,10 +154,28 @@ public sealed class CeSettings
                 beforeSwap?.Invoke();
                 CheckPackageFolders();
                 if (gameRunning()) throw new IOException(GameInstaller.RunningMessage);
+                VerifyBackup(heldBackup);
             };
-            InstallReceipt result = Write(Path, bytes, Exists ? Sha256 : null, backupFolder, beforeCheck, beforeSwapChecked);
+            Action afterPublishChecked = () => { afterPublish?.Invoke(); VerifyBackup(heldBackup); };
+            InstallReceipt result = Write(Path, bytes, Exists ? Sha256 : null, backupFolder, beforeCheck, beforeSwapChecked,
+                afterPublishChecked);
             // The caller presents the structured BackupFolder; keep the status free of a second recovery path.
-            return result.Ok ? result with { Message = "CE launcher settings saved and verified." } : result;
+            if (result.Ok)
+                return GameInstaller.AfterPublication(Path, backupFolder, Exists, () =>
+                {
+                    VerifyBackup(heldBackup);
+                    return result with { Message = "CE launcher settings saved and verified." };
+                });
+            if (result.MayHaveChanged)
+            {
+                try { VerifyBackup(heldBackup); }
+                catch (IOException)
+                {
+                    return result with { Message = "CE settings may have changed and the recovery backup could not be verified. " +
+                        "Inspect both before using or attempting recovery. Earlier failure: " + result.Message };
+                }
+            }
+            return result;
         }
         catch (Exception error) when (IsFileError(error))
         {
@@ -165,13 +185,20 @@ public sealed class CeSettings
 
     private InstallReceipt Refuse(string message, string? backup = null) => new(false, message, Path, backup);
 
+    private static void VerifyBackup(BackupDirectory backup)
+    {
+        try { backup.Verify(); }
+        catch (Exception error) when (IsFileError(error))
+        { throw new IOException("The recovery backup could not be verified. Its folder or file changed; inspect it before relying on it.", error); }
+    }
+
     private bool SameSnapshot(CeSettings other) => other.Exists == Exists && other._identity == _identity &&
         other._bytes.AsSpan().SequenceEqual(_bytes);
 
     private static InstallReceipt Write(string path, byte[] bytes, string? earlier, string backup,
-        Action? beforeCheck, Action? beforeSwap) => OperatingSystem.IsLinux() && !GameInstaller.UsePortableInstall
-        ? LinuxInstall.Write(path, bytes, earlier, backup, beforeCheck, beforeSwap, null, ReadBounded)
-        : PortableInstall.Write(path, bytes, earlier, backup, beforeCheck, beforeSwap, null, ReadBounded);
+        Action? beforeCheck, Action? beforeSwap, Action? afterPublish = null) => OperatingSystem.IsLinux() && !GameInstaller.UsePortableInstall
+        ? LinuxInstall.Write(path, bytes, earlier, backup, beforeCheck, beforeSwap, afterPublish, ReadBounded)
+        : PortableInstall.Write(path, bytes, earlier, backup, beforeCheck, beforeSwap, afterPublish, ReadBounded);
 
     internal static byte[] ReadBounded(FileStream stream)
     {
