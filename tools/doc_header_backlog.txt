@@ -344,7 +344,6 @@ reverse-engineering/source-code/full-source-parse-2026-02-11.md
 reverse-engineering/source-code/gameplay/_index.md
 reverse-engineering/source-code/gameplay/battle-system.md
 reverse-engineering/source-code/gameplay/career-system.md
-reverse-engineering/source-code/gameplay/game-system.md
 reverse-engineering/source-code/io/_index.md
 reverse-engineering/source-code/io/storage-system.md
 reverse-engineering/source-code/original-system-internal-tooling-vocabulary-map.md
