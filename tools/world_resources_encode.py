@@ -30,8 +30,9 @@ Command line (select retail data as a read-only input; choose an output outside 
 
 The game path is resolved before both reading and protection. Before any publication, the selected game tree is
 scanned without following links; internal symlinks or reparse points, uninspectable entries and scan-limit excesses
-refuse the write. A symlink naming the selected game root is still resolved and allowed. Output paths cannot contain
-`..` components. Outputs use fresh names and reject existing files and output symlinks in ordinary operation. Run only while no
+refuse the write. Directory identities are compared against every existing destination ancestor to reject static
+mount aliases of that tree. A symlink naming the selected game root is still resolved and allowed. Output paths cannot
+contain `..` components. Outputs use fresh names and reject existing files and output symlinks in ordinary operation. Run only while no
 other process can change the game or output directories: the shared publisher does not establish an isolation
 guarantee against concurrent changes, and a later failure does not prove nothing was written. A multi-file
 command can also leave earlier new outputs if a later write fails. Reported hashes describe prepared bytes,
@@ -627,32 +628,85 @@ MAX_GAME_TREE_ENTRIES = 200_000
 MAX_GAME_TREE_DEPTH = 64
 
 
-def refuse_internal_game_links(game: Path) -> None:
+def refuse_internal_game_links(game: Path) -> set[tuple[int, int]]:
     """Bound the no-follow check for paths that could alias a selected game's namespace.
 
     The selected root has already been resolved, so an alias naming that root remains supported.
     A stable tree is required: this check does not establish protection from concurrent mutation.
     """
-    pending = [(game, 0)]
+    pending = [(game, 0, None)]
+    identities = set()
     count = 0
     while pending:
-        folder, depth = pending.pop()
+        folder, depth, expected = pending.pop()
         try:
-            with os.scandir(folder) as entries:
-                for entry in entries:
-                    count += 1
-                    if count > MAX_GAME_TREE_ENTRIES:
-                        raise UnsafeGeneratedOutputError("selected game tree exceeds the entry limit")
-                    info = entry.stat(follow_symlinks=False)
-                    reparse = getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
-                    if stat.S_ISLNK(info.st_mode) or reparse:
-                        raise UnsafeGeneratedOutputError(f"selected game tree contains a link or reparse point: {entry.path}")
-                    if stat.S_ISDIR(info.st_mode):
-                        if depth >= MAX_GAME_TREE_DEPTH:
-                            raise UnsafeGeneratedOutputError("selected game tree exceeds the depth limit")
-                        pending.append((Path(entry.path), depth + 1))
+            flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
+            fd = os.open(folder, flags)
+            try:
+                opened = os.fstat(fd)
+                named = os.stat(folder, follow_symlinks=False)
+                identity = (opened.st_dev, opened.st_ino)
+                if not stat.S_ISDIR(opened.st_mode) or identity != (named.st_dev, named.st_ino) or \
+                        (expected is not None and identity != expected):
+                    raise UnsafeGeneratedOutputError(f"selected game directory changed during inspection: {folder}")
+                identities.add(identity)
+                with os.scandir(fd) as entries:
+                    for entry in entries:
+                        count += 1
+                        if count > MAX_GAME_TREE_ENTRIES:
+                            raise UnsafeGeneratedOutputError("selected game tree exceeds the entry limit")
+                        info = entry.stat(follow_symlinks=False)
+                        reparse = getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+                        if stat.S_ISLNK(info.st_mode) or reparse:
+                            raise UnsafeGeneratedOutputError(f"selected game tree contains a link or reparse point: {folder / entry.name}")
+                        if stat.S_ISDIR(info.st_mode):
+                            if depth >= MAX_GAME_TREE_DEPTH:
+                                raise UnsafeGeneratedOutputError("selected game tree exceeds the depth limit")
+                            pending.append((folder / entry.name, depth + 1, (info.st_dev, info.st_ino)))
+            finally:
+                os.close(fd)
         except OSError as error:
             raise UnsafeGeneratedOutputError(f"selected game tree cannot be inspected: {folder}") from error
+    return identities
+
+
+def refuse_game_directory_aliases(game_ids: set[tuple[int, int]], folders: list[Path]) -> None:
+    """Reject existing output ancestors that are also directories in the selected game tree.
+
+    Device/inode identities catch static bind-mount aliases on Linux. They do not prevent an
+    output directory from being moved after this scan; publication still requires exclusive use.
+    """
+    checked = set()
+    for folder in folders:
+        while folder not in checked:
+            checked.add(folder)
+            try:
+                named = os.stat(folder, follow_symlinks=False)
+            except FileNotFoundError:
+                pass
+            except OSError as error:
+                raise UnsafeGeneratedOutputError(f"output ancestor cannot be inspected: {folder}") from error
+            else:
+                if not stat.S_ISDIR(named.st_mode):
+                    raise UnsafeGeneratedOutputError(f"output ancestor is not a plain directory: {folder}")
+                try:
+                    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0)
+                    fd = os.open(folder, flags)
+                    try:
+                        opened = os.fstat(fd)
+                    finally:
+                        os.close(fd)
+                except OSError as error:
+                    raise UnsafeGeneratedOutputError(f"output ancestor cannot be inspected: {folder}") from error
+                identity = (opened.st_dev, opened.st_ino)
+                if not stat.S_ISDIR(opened.st_mode) or identity != (named.st_dev, named.st_ino):
+                    raise UnsafeGeneratedOutputError(f"output ancestor changed during inspection: {folder}")
+                if identity in game_ids:
+                    raise UnsafeGeneratedOutputError(f"output ancestor aliases the selected game tree: {folder}")
+            parent = folder.parent
+            if parent == folder:
+                break
+            folder = parent
 
 
 def publish_fresh(output_root: Path, game: Path, files: list[tuple[Path, bytes]]) -> None:
@@ -662,7 +716,8 @@ def publish_fresh(output_root: Path, game: Path, files: list[tuple[Path, bytes]]
     destinations = [(output_path(path), data) for path, data in files]
     if len({os.path.normcase(os.fspath(path)) for path, _ in destinations}) != len(destinations):
         raise UnsafeGeneratedOutputError("two world outputs would use the same file name")
-    refuse_internal_game_links(game)
+    game_ids = refuse_internal_game_links(game)
+    refuse_game_directory_aliases(game_ids, [output_root, *(path.parent for path, _ in destinations)])
     with SecuredOutputRoot(output_root, protected_sources=(game,)) as output:
         for path, _ in destinations:
             output.destination(path)

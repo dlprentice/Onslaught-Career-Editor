@@ -10,6 +10,7 @@ import io
 import json
 import math
 import os
+import shutil
 import struct
 import subprocess
 import sys
@@ -414,6 +415,7 @@ class PublicationTests(unittest.TestCase):
     def test_reparse_metadata_is_refused_without_following_it(self) -> None:
         class FakeEntry:
             path = "authored-reparse-point"
+            name = "authored-reparse-point"
 
             def stat(self, *, follow_symlinks):
                 self_assert.assertFalse(follow_symlinks)
@@ -423,6 +425,72 @@ class PublicationTests(unittest.TestCase):
         with patch.object(enc.os, "scandir", return_value=contextlib.nullcontext([FakeEntry()])):
             with self.assertRaisesRegex(safe.UnsafeGeneratedOutputError, "link or reparse point"):
                 enc.refuse_internal_game_links(self.game)
+
+    @unittest.skipUnless(sys.platform.startswith("linux") and shutil.which("bwrap"),
+                         "static bind-mount controls require Linux bubblewrap")
+    def test_actual_commands_refuse_static_game_and_destination_bind_aliases(self) -> None:
+        probe = subprocess.run(
+            ["bwrap", "--die-with-parent", "--unshare-net", "--ro-bind", "/", "/",
+             "--dev-bind", "/dev", "/dev", "--", "true"],
+            capture_output=True, text=True, timeout=20,
+        )
+        if probe.returncode:
+            self.skipTest("bubblewrap mount namespace is unavailable")
+
+        def run(mappings, args):
+            command = ["bwrap", "--die-with-parent", "--unshare-net", "--ro-bind", "/", "/",
+                       "--dev-bind", "/dev", "/dev", "--bind", str(self.root), str(self.root)]
+            for source, target in mappings:
+                command += ["--bind", str(source), str(target)]
+            command += ["--setenv", "PYTHONDONTWRITEBYTECODE", "1", "--", sys.executable,
+                        str(Path(enc.__file__)), *args]
+            return subprocess.run(command, capture_output=True, text=True, timeout=30)
+
+        # The selected game's resources directory is a mount of an otherwise separate output tree.
+        game = self.root / "bind-game"
+        resources = game / "data" / "resources"
+        resources.mkdir(parents=True)
+        external = self.root / "bound-resources"
+        external.mkdir()
+        archive = external / "200_res_PC.aya"
+        archive.write_bytes(self.original)
+        mappings = [(external, resources)]
+        commands = (
+            ["extract", "--game", str(game), "--level", "200", "--out", str(external)],
+            ["stage", "--game", str(game), "--level", "200", "--user", str(external)],
+            ["encode", "--game", str(game), str(self.model), str(external / "world.wrd")],
+            ["encode", "--game", str(game), str(self.model), str(external / "missing" / "world.wrd")],
+        )
+        for command in commands:
+            with self.subTest(command=command):
+                result = run(mappings, command)
+                self.assertEqual(2, result.returncode, result.stderr)
+                self.assertIn("aliases the selected game tree", result.stderr)
+                self.assertEqual(["200_res_PC.aya"], sorted(p.name for p in external.iterdir()))
+                self.assertEqual(self.original, archive.read_bytes())
+
+        # A static mount deeper under the output root is caught before stage creates any other output.
+        user = self.root / "nested-user"
+        target = user / "data" / "resources"
+        target.mkdir(parents=True)
+        result = run([(self.resources, target)],
+                     ["stage", "--game", str(self.game), "--level", "200", "--user", str(user)])
+        self.assertEqual(2, result.returncode, result.stderr)
+        self.assertIn("aliases the selected game tree", result.stderr)
+        self.assertFalse((user / "data" / "worlds").exists())
+        self.assertEqual(self.original, self.archive.read_bytes())
+
+        # A separate destination remains usable when the game tree contains a static mount.
+        separate = self.root / "separate"
+        result = run(mappings, ["extract", "--game", str(game), "--level", "200", "--out", str(separate)])
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual(fixtures.world_body(), (separate / "world200.wrd").read_bytes())
+        self.assertEqual(self.original, archive.read_bytes())
+
+    def test_uninspectable_output_ancestor_refuses_publication(self) -> None:
+        with patch.object(enc.os, "open", side_effect=PermissionError("authored denial")):
+            with self.assertRaisesRegex(safe.UnsafeGeneratedOutputError, "output ancestor cannot be inspected"):
+                enc.refuse_game_directory_aliases(set(), [self.root])
 
     def test_outputs_with_parent_components_are_refused_before_read_or_write(self) -> None:
         output = self.user / ".." / "candidate"
