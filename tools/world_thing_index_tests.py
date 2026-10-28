@@ -65,6 +65,15 @@ class IndexTests(unittest.TestCase):
         self.assertIn(b'"value": -0.0', index.report_bytes(body))
         self.assertNotIn(b"NaN", index.report_bytes(body))
 
+    def test_non_ascii_name_bytes_use_a_bounded_mapping_not_a_display_claim(self) -> None:
+        model = encoder.read_world_model(self.body)
+        model["things"][0]["init"]["name"] = "authored-\x80"
+        body = encoder.write_world_body(model)
+        report = index.report_for(body, start=0, limit=1)
+        self.assertEqual(report["things"][0]["name"], "authored-\x80")
+        self.assertIn("non-ASCII game display encoding is not established", report["nameEncoding"])
+        self.assertIn(b"authored-\\u0080", index.report_bytes(body))
+
     def test_opaque_world_and_script_payloads_are_not_reported(self) -> None:
         model = encoder.read_world_model(self.body)
         model["scripts"][0]["code"]["symbols"][0]["value"] = "private-script-marker"

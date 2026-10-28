@@ -161,7 +161,8 @@ publish, sign, or install anything by themselves.
   positions and the exact baseline SHA-256, without exposing the world or script bodies. Use `--start` and `--limit`
   for later pages (at most 128 rows each). A position shows its float32 bytes and finite value; a non-finite value is
   null with its bits retained. The source must decode and round-trip exactly. A row's ordinal is local to that
-  selected body, not a runtime slot, a stable identity or proof the thing will spawn. The selected-file CLI needs
+  selected body, not a runtime slot, a stable identity or proof the thing will spawn. Names use a byte-preserving
+  Latin-1 mapping; the game's display encoding for non-ASCII bytes is not established. The selected-file CLI needs
   Linux `O_PATH` and `/proc/self/fd`, while `report_bytes` accepts already-owned bytes on other platforms. The
   report is private game/user-derived metadata. The tool opens no output files; shell redirection and its destination
   are the caller's responsibility. It does not identify the level, validate placement or check gameplay.

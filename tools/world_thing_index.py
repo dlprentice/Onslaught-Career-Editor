@@ -11,6 +11,8 @@ The thing ordinal identifies the serialized row in this exact body; it is not
 a runtime slot, stable identity or proof that a thing spawns. Position values
 are serialized fields, not validated terrain placement. The report cannot
 identify the source level, determine gameplay or prove a move is safe.
+Names use a byte-preserving Latin-1 mapping; the game's display encoding
+for non-ASCII bytes has not been established here.
 
 The CLI writes no report file. Shell redirection and all later file handling
 are outside its control; never redirect into a game or user folder. Reports
@@ -88,6 +90,7 @@ def report_for(body: bytes, *, start: int = 0, limit: int = 100) -> dict[str, An
             "pagination": {"thingCount": len(things), "startOrdinal": start, "limit": limit,
                            "nextOrdinal": end if end < len(things) else None},
             "things": rows,
+            "nameEncoding": "Latin-1 byte-preserving mapping; non-ASCII game display encoding is not established.",
             "scope": "Stored rows in one selected world body. Ordinals are not runtime slots or stable identities; "
                      "level ownership, script effects, terrain placement and gameplay are not established.",
             "evidence": ["onslaught-decomp src/world.cpp CWorld::LoadWorld @0x0050b9c0",
