@@ -131,18 +131,23 @@ def archive_rows(raw: bytes, chunks: list[Any]) -> tuple[list[dict[str, Any]], l
         if chunk.tag == "MESH":
             try:
                 _normalized, display, method = names.logical_key("MESH", payload)
-                row.update(status="named" if display else "embedded-not-inspected", name=display or None,
-                           nameField=method)
+                comparable = ascii_key(display) is not None if display else False
+                status = ("named" if comparable else "named-uncomparable") if display else "embedded-not-inspected"
+                row.update(status=status, name=display if comparable else None, nameField=method)
             except ValueError:
                 row.update(status="unparsed", name=None, nameField=None)
             row["expectedSelectedFilename"] = expected_mesh_filename(row["name"]) if row["name"] else None
-            row["selectedFilenameCandidates"] = []
+            row["selectedFilenameCandidates"] = [] if row["expectedSelectedFilename"] is not None else None
+            row["filenameCandidateStatus"] = ("evaluated-filename-only" if row["expectedSelectedFilename"] is not None
+                                               else "unknown-not-comparable")
             mesh_rows.append(row)
         else:
             try:
                 record = catalog.parse_text_record(payload)
-                row.update(status="parsed", name=record["name"], requestedFormat=record["requestedFormat"],
-                           levels=record["levels"])
+                comparable = ascii_key(record["name"]) is not None
+                row.update(status="parsed" if comparable else "parsed-name-uncomparable",
+                           name=record["name"] if comparable else None,
+                           requestedFormat=record["requestedFormat"], levels=record["levels"])
             except (ValueError, struct.error):
                 row.update(status="unparsed", name=None, requestedFormat=None, levels=None)
             text_rows.append(row)
@@ -150,10 +155,13 @@ def archive_rows(raw: bytes, chunks: list[Any]) -> tuple[list[dict[str, Any]], l
 
 
 def mesh_row(source: bytes, path: Path, ordinal: int) -> tuple[dict[str, Any], int]:
-    row: dict[str, Any] = {"ordinal": ordinal, "filename": path.name,
+    comparable_filename = ascii_key(path.name) is not None
+    row: dict[str, Any] = {"ordinal": ordinal, "filename": path.name if comparable_filename else None,
                            "archiveSha256": hashlib.sha256(source).hexdigest(),
                            "status": "unparsed", "internalName": None, "textures": None,
-                           "archiveMeshFilenameCandidates": []}
+                           "archiveMeshFilenameCandidates": [] if comparable_filename else None,
+                           "archiveMeshFilenameCandidateStatus": ("not-yet-evaluated" if comparable_filename
+                                                                  else "unknown-selected-filename")}
     try:
         stream = archive.inflate_aya_bytes(source)
     except (ValueError, struct.error):
@@ -207,8 +215,11 @@ def _report_for(archive_path: Path, mesh_paths: list[Path]) -> tuple[dict[str, A
     source = inputs[0][0]
     raw, chunks, members, _envelope = archive.decode_archive_envelope(source, "pc-chunked-zlib")
     mesh_rows, text_rows = archive_rows(raw, chunks)
+    unknown_mesh_name_count = sum(row["expectedSelectedFilename"] is None for row in mesh_rows)
     parsed_text = [row for row in text_rows if row["status"] == "parsed"]
-    unknown_text_count = len(text_rows) - len(parsed_text)
+    unparsed_text_count = sum(row["status"] == "unparsed" for row in text_rows)
+    uncomparable_text_count = sum(row["status"] == "parsed-name-uncomparable" for row in text_rows)
+    unknown_text_count = unparsed_text_count + uncomparable_text_count
     text_index: dict[tuple[str, int], list[dict[str, Any]]] = defaultdict(list)
     for row in parsed_text:
         key = texture_key(row["name"], row["requestedFormat"])
@@ -232,6 +243,11 @@ def _report_for(archive_path: Path, mesh_paths: list[Path]) -> tuple[dict[str, A
             row["selectedFilenameCandidates"] = filename_index.get(ascii_key(expected), [])
             for ordinal in row["selectedFilenameCandidates"]:
                 selected_meshes[ordinal]["archiveMeshFilenameCandidates"].append(row["chunk"])
+    for mesh in selected_meshes:
+        if mesh["archiveMeshFilenameCandidates"] is not None:
+            mesh["archiveMeshFilenameCandidateStatus"] = (
+                "partial-uncomparable-archive-meshes" if unknown_mesh_name_count else
+                "evaluated-comparable-named-meshes")
     total_links = 0
     for mesh in selected_meshes:
         for slot in mesh["textures"] or []:
@@ -261,8 +277,10 @@ def _report_for(archive_path: Path, mesh_paths: list[Path]) -> tuple[dict[str, A
         "archiveMeshOccurrences": mesh_rows,
         "archiveTopLevelTextOccurrences": text_rows,
         "selectedMeshes": selected_meshes,
-        "coverage": {"unparsedTopLevelTextOccurrences": unknown_text_count,
+        "coverage": {"unparsedTopLevelTextOccurrences": unparsed_text_count,
+                     "uncomparableTopLevelTextOccurrences": uncomparable_text_count,
                      "unparsedMeshOccurrences": sum(row["status"] == "unparsed" for row in mesh_rows),
+                     "uncomparableMeshFilenameOccurrences": unknown_mesh_name_count,
                      "scope": "one selected archive, top-level MESH and TEXT, selected root CMSH inputs only",
                      "limits": "Filename associations are candidates only, not verified source paths or runtime use. "
                                "No runtime selection, complete dependencies, shared/base archives, optional-mesh "

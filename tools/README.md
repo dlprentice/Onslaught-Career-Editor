@@ -190,7 +190,10 @@ publish, sign, or install anything by themselves.
   names, qualified by the stored requested format and mip-level fields. The
   archive-to-selected-mesh association is by ASCII case-insensitive filename
   only: it is a candidate, not proof of the file's ownership or runtime use.
-  Duplicate, absent and unparsed candidates remain separate or unknown. WDAT
+  Duplicate, absent, unparsed and unsupported-name candidates remain separate
+  or unknown. Unsupported `TEXT` names make comparison coverage partial;
+  uncomparable or embedded `MESH` names likewise make reverse filename
+  comparisons partial. WDAT
   values and a filename-derived level hint are reported separately.
   Embedded meshes, chained meshes, non-`TEXT` descriptors, other/base archives,
   optional-mesh conditions and script spawns are outside its coverage; it is

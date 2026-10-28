@@ -68,8 +68,10 @@ class SelectedArchiveTests(unittest.TestCase):
         [mesh_occurrence] = report["archiveMeshOccurrences"]
         self.assertEqual((mesh_occurrence["name"], mesh_occurrence["selectedFilenameCandidates"]),
                          ("authored.msh", [0]))
+        self.assertEqual(mesh_occurrence["filenameCandidateStatus"], "evaluated-filename-only")
         [mesh] = report["selectedMeshes"]
         self.assertEqual(mesh["archiveMeshFilenameCandidates"], [mesh_occurrence["chunk"]])
+        self.assertEqual(mesh["archiveMeshFilenameCandidateStatus"], "evaluated-comparable-named-meshes")
         [slot] = mesh["textures"]
         self.assertEqual(slot["name"], "meshtex\\Skin.tga")
         self.assertEqual(slot["requestedFormat"], 1)
@@ -103,6 +105,22 @@ class SelectedArchiveTests(unittest.TestCase):
                 slot = xref.report_for(self.archive, [self.mesh])["selectedMeshes"][0]["textures"][0]
                 self.assertEqual(slot["sameArchiveTextCandidates"], [])
                 self.assertEqual(slot["candidateStatus"], expected)
+
+    def test_parsed_uncomparable_text_marks_coverage_partial(self) -> None:
+        mesh = fixtures.named_mesh_record("authored.msh")
+        # This record is structurally valid, but DEL is outside the supported
+        # printable-ASCII comparison profile.
+        unsupported = fixtures.text_record("meshtex\\Skin.tg\x7f", requested=1, levels=-1)
+        self.archive.write_bytes(fixtures.aya(mesh + unsupported))
+        report = xref.report_for(self.archive, [self.mesh])
+        self.assertEqual(report["coverage"]["unparsedTopLevelTextOccurrences"], 0)
+        self.assertEqual(report["coverage"]["uncomparableTopLevelTextOccurrences"], 1)
+        [text] = report["archiveTopLevelTextOccurrences"]
+        self.assertEqual(text["status"], "parsed-name-uncomparable")
+        self.assertIsNone(text["name"])
+        [slot] = report["selectedMeshes"][0]["textures"]
+        self.assertEqual(slot["sameArchiveTextCandidates"], [])
+        self.assertEqual(slot["candidateStatus"], "no-known-candidate-partial-text-coverage")
 
     def test_duplicate_mesh_and_filename_candidates_stay_distinct(self) -> None:
         self.archive.write_bytes(sample_archive(duplicate_mesh=True))
@@ -145,8 +163,34 @@ class SelectedArchiveTests(unittest.TestCase):
         self.assertEqual(report["coverage"]["unparsedMeshOccurrences"], 1)
         self.assertEqual(report["archiveMeshOccurrences"][0]["status"], "unparsed")
         self.assertIsNone(report["archiveMeshOccurrences"][0]["name"])
+        self.assertIsNone(report["archiveMeshOccurrences"][0]["selectedFilenameCandidates"])
         self.assertEqual(report["archive"]["worldHeader"]["status"], "unparsed")
         self.assertIsNone(report["archive"]["worldHeader"]["realLevel"])
+
+    def test_uncomparable_and_embedded_mesh_names_have_unknown_candidates(self) -> None:
+        unknown = [fixtures.named_mesh_record("dir/authored.msh"),
+                   fixtures.named_mesh_record("authored\x7f.msh"),
+                   fixtures.named_mesh_record("")]
+        self.archive.write_bytes(fixtures.aya(fixtures.named_mesh_record("authored.msh") + b"".join(unknown)))
+        report = xref.report_for(self.archive, [self.mesh])
+        rows = report["archiveMeshOccurrences"]
+        self.assertEqual(report["coverage"]["uncomparableMeshFilenameOccurrences"], 3)
+        self.assertEqual([r["filenameCandidateStatus"] for r in rows[1:]], ["unknown-not-comparable"] * 3)
+        self.assertEqual([r["selectedFilenameCandidates"] for r in rows[1:]], [None] * 3)
+        self.assertEqual(rows[2]["status"], "named-uncomparable")
+        self.assertIsNone(rows[2]["name"])
+        self.assertEqual(rows[3]["status"], "embedded-not-inspected")
+        self.assertEqual(report["selectedMeshes"][0]["archiveMeshFilenameCandidates"], [0])
+        self.assertEqual(report["selectedMeshes"][0]["archiveMeshFilenameCandidateStatus"],
+                         "partial-uncomparable-archive-meshes")
+
+    def test_uncomparable_selected_filename_has_unknown_reverse_candidates(self) -> None:
+        unsupported = self.root / "m_é.msh.aya"
+        unsupported.write_bytes(self.mesh.read_bytes())
+        [row] = xref.report_for(self.archive, [unsupported])["selectedMeshes"]
+        self.assertIsNone(row["filename"])
+        self.assertIsNone(row["archiveMeshFilenameCandidates"])
+        self.assertEqual(row["archiveMeshFilenameCandidateStatus"], "unknown-selected-filename")
 
     def test_ambiguous_wdat_is_not_silently_overwritten(self) -> None:
         wdat = fixtures.chunk(b"WDAT", bytes(8))
