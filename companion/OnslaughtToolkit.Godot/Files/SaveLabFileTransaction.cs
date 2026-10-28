@@ -19,14 +19,17 @@ internal sealed class SaveLabSource : IDisposable
 {
     private readonly IDisposable _directory;
     private readonly FileStream _stream;
-    private SaveLabSource(string path, IDisposable directory, FileStream stream, string identity)
-        => (Path, _directory, _stream, Identity) = (path, directory, stream, identity);
+    private readonly Func<FileStream, byte[]> _readBytes;
+    private SaveLabSource(string path, IDisposable directory, FileStream stream, string identity,
+        Func<FileStream, byte[]> readBytes)
+        => (Path, _directory, _stream, Identity, _readBytes) = (path, directory, stream, identity, readBytes);
 
     internal string Path { get; }
     internal string Identity { get; }
 
-    internal static SaveLabSource Open(string path)
+    internal static SaveLabSource Open(string path, Func<FileStream, byte[]>? readBytes = null)
     {
+        readBytes ??= ReadSaveBytes;
         if (OperatingSystem.IsLinux())
         {
             LinuxSaveDirectory directory = LinuxSaveDirectory.Open(System.IO.Path.GetDirectoryName(path)!);
@@ -38,7 +41,7 @@ internal sealed class SaveLabSource : IDisposable
                     LinuxSaveNative.Stat stat = LinuxSaveNative.Inspect(stream.SafeFileHandle);
                     LinuxSaveNative.RequireRegular(stat, links: 1);
                     directory.Verify();
-                    return new(path, directory, stream, stat.Identity);
+                    return new(path, directory, stream, stat.Identity, readBytes);
                 }
                 catch { stream.Dispose(); throw; }
             }
@@ -58,14 +61,14 @@ internal sealed class SaveLabSource : IDisposable
                 if (identity.IsReparsePoint || identity.NumberOfLinks != 1)
                     throw new IOException("The source save must be a regular file without links.");
                 FileStream stream = new(handle, FileAccess.Read);
-                return new(path, locks, stream, $"{identity.VolumeSerialNumber}:{identity.FileIndex}");
+                return new(path, locks, stream, $"{identity.VolumeSerialNumber}:{identity.FileIndex}", readBytes);
             }
             catch { handle.Dispose(); throw; }
         }
         catch { locks.Dispose(); throw; }
     }
 
-    internal byte[] ReadBytes() => ReadSaveBytes(_stream);
+    internal byte[] ReadBytes() => _readBytes(_stream);
 
     internal static byte[] ReadSaveBytes(FileStream stream)
     {
@@ -89,7 +92,7 @@ internal sealed class SaveLabSource : IDisposable
             using FileStream named = linux.OpenRead(System.IO.Path.GetFileName(Path));
             LinuxSaveNative.Stat stat = LinuxSaveNative.Inspect(named.SafeFileHandle);
             LinuxSaveNative.RequireRegular(stat, links: 1);
-            if (stat.Identity != identity || !ReadSaveBytes(named).AsSpan().SequenceEqual(baseline))
+            if (stat.Identity != identity || !_readBytes(named).AsSpan().SequenceEqual(baseline))
                 throw new IOException("The original save changed after it was opened. Open it again before editing.");
         }
         // Windows holds the source and ancestor handles without write/delete sharing.

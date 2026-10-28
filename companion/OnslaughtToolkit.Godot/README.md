@@ -54,14 +54,18 @@ Both the user folder and backups must be outside CE's package folder, which upda
 and its selected original game-data folder, including data-only installs without `BEA.exe`.
 
 The companion reads and writes CE's `.bes` careers with the same verified backups and saved-file
-checks used for original-game careers. It refuses a write while the game runs, if a file has
+checks used for original-game careers. It refuses a write if it detects the game running, if a file has
 changed since it was opened, or if the path uses a symbolic link. CE settings edits are limited to
 **Check for updates** (`update_check`) and **Record sessions** (`record_sessions`) in `ce.ini`.
 Unknown lines stay intact; invalid text encoding is refused. Saving makes a verified settings copy
-outside CE's user folder, prepares the new file beside the existing one, replaces it in one step
-and checks the saved bytes. These settings backups are named `onslaught-ce-settings-*` and are kept
+outside CE's user folder, holds and checks the copy through publication, prepares the new file beside the existing one,
+replaces it in one step and checks the saved bytes. These settings backups are named `onslaught-ce-settings-*` and are kept
 separately from career backup sets; automatic backups and the Backups page manage careers, not
-these settings copies.
+these settings copies. Backup binding and its race controls have run on Linux's native and portable writer paths;
+the new settings-backup binding has not been exercised on Windows. Close CE and the original game before saving and
+wait for the save to finish before starting either. The process checks do not lock out a start immediately after the
+last check; CE's own settings writer can
+replace a successful companion change with an older snapshot. A shared cross-process writer protocol remains open.
 
 **Updates** on Home contacts nothing. CE 0.1.8 and later check CE's signed update feed when they start and
 install a new version only when the player chooses Update; 0.1.7 has no update code, so players on 0.1.7 or
@@ -330,8 +334,7 @@ are never thrown away for this; the companion says so instead.
 
 ## How files stay safe
 
-Home makes three promises about your original game (its Steam or retail install), and the
-code keeps them:
+Home describes three safeguards for your original game (its Steam or retail install); their limits are below:
 
 - **Nothing in your game changes without a backup first.** Only a career in `savegames/`
   or `defaultoptions.bea` is ever written. First, every career and settings file the companion
@@ -354,9 +357,10 @@ code keeps them:
   in place fails (saving to disk, checking the saved file or removing temporary files), the
   companion says the file may have changed and leaves it as it is, with the backup named; it never reports that as
   nothing written, and never deletes or retries it.
-- **Nothing is written while the game is running.** A write is refused while the original
-  game or Onslaught CE runs (CE reads the same install's careers). The check is made before
-  the backup and again just before the new file is swapped in. On Linux a process counts as
+- **Check whether the game is running.** The companion refuses a write when it detects the original
+  game or Onslaught CE (CE reads the same install's careers). It checks before the backup and again just before the
+  new file is swapped in; these checks do not prevent a new process from starting between a check and a write.
+  Close both games and do not start either until saving finishes. On Linux a process counts as
   the original game when its name is `BEA.exe`, when the program it runs (its first argument)
   is `BEA.exe`, or when it is a Wine loader given `BEA.exe`; a tool that only names the file
   further along its command line does not count. It counts as Onslaught CE when the program
