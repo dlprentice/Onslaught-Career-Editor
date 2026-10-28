@@ -11,10 +11,13 @@ import json
 import math
 import os
 import struct
+import subprocess
+import sys
 import tempfile
 import unittest
 import zlib
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import content_catalog_tests as fixtures
@@ -320,6 +323,106 @@ class PublicationTests(unittest.TestCase):
         except (NotImplementedError, OSError) as error:
             self.skipTest(f"directory symlinks unavailable: {error}")
         self.assertEqual(enc.selected_game_root(alias / ".."), self.game)
+
+    def test_writing_commands_refuse_links_in_the_selected_game_tree(self) -> None:
+        for location in ("resources", "nested"):
+            with self.subTest(location=location):
+                game = self.root / f"game-{location}"
+                data = game / "data"
+                data.mkdir(parents=True)
+                (game / "BEA.exe").write_bytes(b"authored game marker")
+                external = self.root / f"external-{location}"
+                external.mkdir()
+                if location == "resources":
+                    link, resources = data / "resources", external
+                else:
+                    resources = data / "resources"
+                    resources.mkdir()
+                    (data / "other").mkdir()
+                    link = data / "other" / "linked"
+                try:
+                    link.symlink_to(external, target_is_directory=True)
+                except (NotImplementedError, OSError) as error:
+                    self.skipTest(f"directory symlinks unavailable: {error}")
+                archive = resources / "200_res_PC.aya"
+                archive.write_bytes(self.original)
+                # Verification remains read-only and can inspect a linked selected input.
+                with contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(0, enc.main(["verify", "--game", str(game)]))
+                before = sorted(path.name for path in external.iterdir())
+                cases = (
+                    ["extract", "--game", str(game), "--level", "200", "--out", str(external)],
+                    ["stage", "--game", str(game), "--level", "200", "--user", str(external)],
+                    ["encode", "--game", str(game), str(self.model), str(external / "world.wrd")],
+                )
+                for args in cases:
+                    with self.subTest(command=args[0]):
+                        with self.assertRaisesRegex(safe.UnsafeGeneratedOutputError, "link or reparse point"):
+                            enc.main(args)
+                        self.assertEqual(before, sorted(path.name for path in external.iterdir()))
+                        self.assertEqual(self.original, archive.read_bytes())
+                self.assertEqual(before, sorted(path.name for path in link.iterdir()))
+
+    def test_dangling_game_link_is_refused_even_for_a_separate_output(self) -> None:
+        link = self.game / "data" / "dangling"
+        try:
+            link.symlink_to(self.root / "missing")
+        except (NotImplementedError, OSError) as error:
+            self.skipTest(f"symlinks unavailable: {error}")
+        destination = self.root / "safe-output" / "world.wrd"
+        with self.assertRaisesRegex(safe.UnsafeGeneratedOutputError, "link or reparse point"):
+            enc.main(["encode", "--game", str(self.game), str(self.model), str(destination)])
+        self.assertFalse(destination.parent.exists())
+        self.assertEqual(self.original, self.archive.read_bytes())
+
+    def test_cli_extract_refuses_a_linked_game_resources_directory(self) -> None:
+        game = self.root / "cli-game"
+        (game / "data").mkdir(parents=True)
+        external = self.root / "cli-resources"
+        external.mkdir()
+        link = game / "data" / "resources"
+        try:
+            link.symlink_to(external, target_is_directory=True)
+        except (NotImplementedError, OSError) as error:
+            self.skipTest(f"directory symlinks unavailable: {error}")
+        archive = external / "200_res_PC.aya"
+        archive.write_bytes(self.original)
+        result = subprocess.run(
+            [sys.executable, str(Path(enc.__file__)), "extract", "--game", str(game), "--level", "200", "--out", str(external)],
+            capture_output=True, text=True, timeout=20, env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        )
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertIn("link or reparse point", result.stderr)
+        self.assertEqual(["200_res_PC.aya"], sorted(path.name for path in external.iterdir()))
+        self.assertEqual(self.original, archive.read_bytes())
+
+    def test_uninspectable_or_over_limit_game_tree_refuses_publication(self) -> None:
+        destination = self.root / "safe-output" / "world.wrd"
+        command = ["encode", "--game", str(self.game), str(self.model), str(destination)]
+        with patch.object(enc, "MAX_GAME_TREE_ENTRIES", 1):
+            with self.assertRaisesRegex(safe.UnsafeGeneratedOutputError, "entry limit"):
+                enc.main(command)
+        with patch.object(enc, "MAX_GAME_TREE_DEPTH", 0):
+            with self.assertRaisesRegex(safe.UnsafeGeneratedOutputError, "depth limit"):
+                enc.main(command)
+        with patch.object(enc.os, "scandir", side_effect=PermissionError("authored denial")):
+            with self.assertRaisesRegex(safe.UnsafeGeneratedOutputError, "cannot be inspected"):
+                enc.main(command)
+        self.assertFalse(destination.parent.exists())
+        self.assertEqual(self.original, self.archive.read_bytes())
+
+    def test_reparse_metadata_is_refused_without_following_it(self) -> None:
+        class FakeEntry:
+            path = "authored-reparse-point"
+
+            def stat(self, *, follow_symlinks):
+                self_assert.assertFalse(follow_symlinks)
+                return SimpleNamespace(st_mode=enc.stat.S_IFDIR, st_file_attributes=0x400)
+
+        self_assert = self
+        with patch.object(enc.os, "scandir", return_value=contextlib.nullcontext([FakeEntry()])):
+            with self.assertRaisesRegex(safe.UnsafeGeneratedOutputError, "link or reparse point"):
+                enc.refuse_internal_game_links(self.game)
 
     def test_outputs_with_parent_components_are_refused_before_read_or_write(self) -> None:
         output = self.user / ".." / "candidate"
