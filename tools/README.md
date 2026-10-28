@@ -86,7 +86,8 @@ publish, sign, or install anything by themselves.
   admitted loose texture mip records the encoded bytes' SHA-256 and offset in the inflated DDS, so individual levels
   can be compared without exporting their pixels; unsupported or malformed textures have no admitted mip entries.
   `nestedMeshDetails` reports each immediate child's relationship, parse status, count and hash; an unknown count is
-  `null`, and nested descendants are available in the CMSH census. No relationship asserts runtime loading.
+  `null` there and in `lodChildParts`, and nested descendants are available in the CMSH census. No relationship
+  asserts runtime loading.
   `world_resources_decode.py` decodes the level payloads in their loaders' read order and refuses unread bytes: the
   `WRES` world bodies (`CWorld::LoadWorld`: header, compiled scripts, things, trees, influence map, waypoint paths,
   timings, occupancy), `ERES` (mixer mips, heightfield settings and samples, mixer map), `SURF` and `SSHD`; `LNDS`
