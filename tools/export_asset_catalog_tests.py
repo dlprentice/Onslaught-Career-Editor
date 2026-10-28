@@ -458,6 +458,38 @@ class CatalogSourceInspectionTests(unittest.TestCase):
         self.assertEqual(2, rows[0]["occurrence_count"])
         self.assertEqual([], rows[0]["export_fbx_paths"])
 
+    def test_mesh_variant_metadata_is_independent_of_source_occurrences(self):
+        from cmsh_animation_usage_census_tests import _catalog_animation, _catalog_stream, mesh_fixtures
+        clip = _catalog_animation("Walk")
+        emitters = mesh_fixtures.MeshEmitterBindingTests._payload(("GunA", 7, 0))
+        child = _catalog_stream(name="Child", animations=clip, animation_count=1,
+                                emitters=emitters, emitter_count=1)
+        stream = _catalog_stream(animations=clip, animation_count=1, emitters=emitters, emitter_count=1,
+                                 lod=child, next_marker=True)
+        one = self.source("one/m_fixture.aya", envelope(stream, 0))
+        two = self.source("two/m_fixture.aya", envelope(stream, 9))
+        first_status, first = catalog._source_metadata("loose_mesh", one.read_bytes(), one, "one/m_fixture.aya")
+        second_status, second = catalog._source_metadata("loose_mesh", two.read_bytes(), two, "two/m_fixture.aya")
+        _, raw = catalog._source_metadata("embedded_mesh", stream, Path("raw.cmsbody"), "raw.cmsbody")
+        self.assertEqual(first_status, second_status)
+        self.assertEqual(first, second)
+        self.assertEqual(first, raw)
+        encoded = json.dumps(first, sort_keys=True)
+        self.assertNotIn("occurrenceId", encoded)
+        self.assertNotIn("one/m_fixture.aya", encoded)
+        self.assertNotIn("two/m_fixture.aya", encoded)
+        child_meta = first["measured"]["lodChildren"][0]["model"]
+        self.assertEqual(hashlib.sha256(child).hexdigest(), child_meta["contentIdentity"]["payloadSha256"])
+        self.assertEqual("cmsh-stream", child_meta["contentIdentity"]["coordinateSpace"])
+        self.assertEqual("cmsh-stream", child_meta["animations"]["rows"][0]["coordinateSpace"])
+        self.assertEqual(len(stream) - len(child), child_meta["contentIdentity"]["payloadOffset"])
+        declarations = [self.row(one), self.row(two)]
+        rows = catalog.build_loose_mesh_catalog(declarations, self.packed, self.repo, self.bundle)
+        self.inspect(meshes=rows, mesh_sources=declarations)
+        self.assertEqual((1, 2), (rows[0]["exact_variant_count"], rows[0]["occurrence_count"]))
+        self.assertEqual(2, len({r["occurrence_id"] for r in rows[0]["occurrences"]}))
+        self.assertEqual(2, len({r["source_identity"]["sha256"] for r in rows[0]["occurrences"]}))
+
     def test_selected_variant_does_not_infer_reader_context_from_its_manifest_kind(self):
         from cmsh_animation_usage_census_tests import _catalog_stream
         stream = _catalog_stream(lod=_catalog_stream(name="Child"), next_marker=True)
