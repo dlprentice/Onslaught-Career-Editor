@@ -183,6 +183,22 @@ publish, sign, or install anything by themselves.
   asset catalogue's exact-content mesh variants contain payload-relative
   metadata; selected source paths and occurrence identities stay on occurrence
   rows rather than changing the shared variant.
+- `level_asset_xref.py --archive LEVEL_res_PC.aya [--mesh m_NAME.msh.aya ...] --stdout`
+  reports metadata from one selected PC archive and up to 16 selected loose
+  meshes. It retains each top-level `MESH` and `TEXT` occurrence and lists
+  same-archive `TEXT` candidates for each selected root mesh's stored `TEXB`
+  names, qualified by the stored requested format and mip-level fields. The
+  archive-to-selected-mesh association is by ASCII case-insensitive filename
+  only: it is a candidate, not proof of the file's ownership or runtime use.
+  Duplicate, absent and unparsed candidates remain separate or unknown. WDAT
+  values and a filename-derived level hint are reported separately.
+  Embedded meshes, chained meshes, non-`TEXT` descriptors, other/base archives,
+  optional-mesh conditions and script spawns are outside its coverage; it is
+  not a complete dependency inventory or a visual test. The selected-file CLI
+  requires Linux `O_PATH` and `/proc/self/fd`. The CLI emits private
+  retail-derived metadata to stdout and opens no report file. If the caller
+  redirects or saves the result, the destination and overwrite safety are the
+  caller's responsibility; never redirect it into a game or user folder.
 - `rebuild/tools/materialize_retail_assets.py` verifies one supported retail
   installation and reproduces the exact current rebuild inputs at ignored
   runtime paths. Existing rebuild build/run/smoke commands invoke it directly.
