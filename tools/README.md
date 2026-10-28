@@ -94,8 +94,11 @@ publish, sign, or install anything by themselves.
   for byte on every retail body (`verify --game DIR`). `extract` writes a level's bodies as `worldNNN.wrd` plus an
   editable JSON model, `encode` turns an edited model back into a body, and `stage` builds an Onslaught CE user folder
   that loads a level's worlds from loose `data\worlds\worldNNN.wrd` files (`CWorld::Load`'s fallback) through a
-  shadow copy of the level archive whose `WDAT` names no level. It reads the install only and refuses to write
-  inside it.
+  shadow copy of the level archive whose `WDAT` names no level. All writing commands require the selected game folder
+  (`--game DIR`, or `BEA_GAME`) and a separate output location, and will not replace existing files or follow output
+  symlinks. Multi-file operations can leave earlier new outputs when a later write fails: inspect those and choose a
+  fresh output folder. Atomic no-replace publication currently fails closed on Windows; native Windows support needs
+  validation. Encoding checks binary layout but is not a mission, placement or gameplay safety validator.
 - `export_game_assets.py`, `export_asset_catalog.py`,
   `export_language_corpus.py`, and `export_video_manifest.py` operate on
   user-supplied local inputs and write to a separate local output root.

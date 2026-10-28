@@ -981,10 +981,15 @@ class SecuredOutputRoot:
             yield stream
 
     @contextlib.contextmanager
-    def atomic_binary_writer(self, path: Path) -> Iterator[IO[bytes]]:
+    def atomic_binary_writer(self, path: Path, *, replace_existing: bool = True) -> Iterator[IO[bytes]]:
         destination = self.destination(path)
         temporary = destination.parent / f".{destination.name}.tmp-{uuid.uuid4().hex}"
         if os.name == "nt":
+            # Fresh-only publication is not yet proven with the Windows handle
+            # and directory-binding implementation. Match the text writer's
+            # fail-closed behavior until it has native acceptance.
+            if not replace_existing:
+                raise UnsafeGeneratedOutputError("atomic no-replace publication unavailable on this host")
             atomic = _WindowsAtomicFile(temporary, destination)
             committed = False
             try:
@@ -1004,7 +1009,7 @@ class SecuredOutputRoot:
                             pass
             return
 
-        with self._posix_atomic_writer(destination, binary=True) as stream:
+        with self._posix_atomic_writer(destination, binary=True, replace_existing=replace_existing) as stream:
             yield stream
 
     def atomic_write_text(self, path: Path, text: str) -> None:
@@ -1013,6 +1018,11 @@ class SecuredOutputRoot:
 
     def atomic_write_bytes(self, path: Path, payload: bytes) -> None:
         with self.atomic_binary_writer(path) as stream:
+            stream.write(payload)
+
+    def atomic_write_new_bytes(self, path: Path, payload: bytes) -> None:
+        """Publish binary data only if the destination is atomically absent."""
+        with self.atomic_binary_writer(path, replace_existing=False) as stream:
             stream.write(payload)
 
     def atomic_write_json(self, path: Path, payload: object) -> None:

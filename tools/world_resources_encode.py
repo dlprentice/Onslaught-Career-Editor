@@ -16,17 +16,23 @@ order matters: CWaypointPath::Load indexes LoadWorld's things[] slots, so a new 
 (see slot_note in the model) or the waypoint paths must be renumbered.
 
 Command line (retail data is read only; output goes under this checkout's ignored local-data/ or a port user folder,
-never the game folder):
+never the selected game folder):
 
     world_resources_encode.py verify --game DIR                 every level archive: decode -> encode == original
     world_resources_encode.py extract --game DIR --level N --out DIR
                                                                  the level's world bodies as worldNNN.wrd + .json
-    world_resources_encode.py encode MODEL.json OUT.wrd         a (possibly edited) model back to a world body
+    world_resources_encode.py encode --game DIR MODEL.json OUT.wrd
+                                                                 a (possibly edited) model back to a world body
     world_resources_encode.py stage --game DIR --level N --user DIR [--world MODEL.json]
                                                                  a port user folder that loads the level's world from
                                                                  loose files: data\\worlds\\worldNNN.wrd (and its base
                                                                  world), plus a shadow copy of the level archive whose
                                                                  WDAT names no level, so CWorld::Load takes the loose path
+
+Output files must have fresh names: nothing existing is replaced. Every file is published atomically without
+replacement, with symlinks and overlapping game paths refused. A multi-file command may leave earlier new files
+if a later publication fails; inspect them and choose a fresh output folder for another attempt. Fresh-only
+publication currently fails closed on Windows until native no-replace support is verified.
 """
 from __future__ import annotations
 
@@ -47,6 +53,7 @@ ROOT = TOOLS.parent
 sys.path.insert(0, str(TOOLS))
 
 import world_resources_decode as wrd  # noqa: E402
+from safe_generated_output import SecuredOutputRoot, UnsafeGeneratedOutputError  # noqa: E402
 
 MODEL_FORMAT = "onslaught.world-body.v1"
 LEVEL_ARCHIVE_RE = re.compile(r"^(\d{3})_res_pc\.aya$", re.IGNORECASE)
@@ -68,7 +75,10 @@ def f32_in(r: wrd.Reader):
 
 def f32_out(value) -> bytes:
     if isinstance(value, dict):
-        return bytes.fromhex(value["f32bits"])
+        bits = value.get("f32bits")
+        if set(value) != {"f32bits"} or not isinstance(bits, str) or not re.fullmatch(r"[0-9a-fA-F]{8}", bits):
+            raise EncodeError("f32bits must be exactly four hex-encoded bytes")
+        return bytes.fromhex(bits)
     out = struct.pack("<f", value)
     if struct.unpack("<f", out)[0] != value and not (value == 0 and math.copysign(1, value) < 0):
         raise EncodeError(f"{value!r} is not a float32 value")
@@ -143,6 +153,8 @@ def write_value(w: Writer, dtype: int, value) -> None:
     elif dtype == 3:
         w.lstring(value, "i")
     elif dtype == 6:
+        if len(value) != 3:
+            raise EncodeError("a script vector has exactly three components")
         w.floats(value)
     else:
         raise EncodeError(f"unknown script data type {dtype}")
@@ -224,6 +236,8 @@ def read_init(r: wrd.Reader, version: int, cls: str) -> dict:
 
 
 def write_init(w: Writer, init: dict, version: int, cls: str) -> None:
+    if len(init["position"]) != 3 or len(init["orientation"]) != 3:
+        raise EncodeError("thing position and orientation each have exactly three components")
     w.floats(init["position"])
     w.floats(init["orientation"])
     w.pack("iii", init["meshNumber"], init["allegiance"], init["target"])
@@ -426,6 +440,8 @@ def write_world_body(model: dict) -> bytes:
         w.pack("iii", *lt[:3])
         w.floats(lt[3:])
     if version >= 47:
+        if len(model["occupancyGrids"]) != 3:
+            raise EncodeError("a world has exactly three occupancy grids")
         for g in model["occupancyGrids"]:
             data = unblob(g["data"])
             if len(data) != {1: 0x8000, 2: 0x2000}.get(g["version"], 0):
@@ -536,11 +552,24 @@ def level_archives(game: Path) -> dict[int, Path]:
     return {int(m.group(1)): p for p in sorted(folder.iterdir()) if (m := LEVEL_ARCHIVE_RE.match(p.name))}
 
 
-def refuse_inside(path: Path, game: Path) -> Path:
-    real, groot = Path(os.path.realpath(path)), Path(os.path.realpath(game))
-    if real == groot or groot in real.parents:
-        raise SystemExit(f"refusing to write inside the game folder: {path}")
-    return real
+def publish_fresh(output_root: Path, game: Path, files: list[tuple[Path, bytes]]) -> None:
+    """Publish only fresh output names while holding the directory chain and protecting the game.
+
+    The preflight avoids ordinary partial sets on an existing-name collision; the held-directory,
+    no-replace publication remains the authority if a path changes after preflight.
+    """
+    output_root = Path(os.path.abspath(output_root))
+    game = Path(os.path.abspath(game))
+    destinations = [(Path(os.path.abspath(path)), data) for path, data in files]
+    if len({os.path.normcase(os.fspath(path)) for path, _ in destinations}) != len(destinations):
+        raise UnsafeGeneratedOutputError("two world outputs would use the same file name")
+    with SecuredOutputRoot(output_root, protected_sources=(game,)) as output:
+        for path, _ in destinations:
+            output.destination(path)
+            if os.path.lexists(path):
+                raise UnsafeGeneratedOutputError(f"fresh generated-output destination already exists: {path}")
+        for path, data in destinations:
+            output.atomic_write_new_bytes(path, data)
 
 
 def world_names(worlds: dict) -> dict[str, int]:
@@ -576,33 +605,38 @@ def cmd_verify(args) -> int:
 
 def cmd_extract(args) -> int:
     archives = level_archives(args.game)
-    out = refuse_inside(args.out, args.game)
-    out.mkdir(parents=True, exist_ok=True)
+    out = Path(os.path.abspath(args.out))
     worlds = level_worlds(b"".join(inflate(read_members(read_retail(archives[args.level])))))
+    files = []
+    messages = []
     for tag, level in world_names(worlds).items():
         body = worlds["bodies"][tag]
         model = read_world_model(body)
-        (out / f"world{level:03d}.json").write_text(json.dumps(model, indent=1) + "\n")
-        (out / f"world{level:03d}.wrd").write_bytes(write_world_body(model))
-        print(f"{tag} -> world{level:03d}.wrd ({len(body)} bytes, sha256 {sha256(body)}) and .json")
+        files.append((out / f"world{level:03d}.json", (json.dumps(model, indent=1) + "\n").encode("utf-8")))
+        files.append((out / f"world{level:03d}.wrd", write_world_body(model)))
+        messages.append(f"{tag} -> world{level:03d}.wrd ({len(body)} bytes, sha256 {sha256(body)}) and .json")
+    publish_fresh(out, args.game, files)
+    for message in messages:
+        print(message)
     return 0
 
 
 def cmd_encode(args) -> int:
     body = write_world_body(json.loads(args.model.read_text()))
-    args.out.write_bytes(body)
+    out = Path(os.path.abspath(args.out))
+    publish_fresh(out.parent, args.game, [(out, body)])
     print(f"{args.out}: {len(body)} bytes, sha256 {sha256(body)}")
     return 0
 
 
 def cmd_stage(args) -> int:
     archives = level_archives(args.game)
-    user = refuse_inside(args.user, args.game)
+    user = Path(os.path.abspath(args.user))
     source_path = archives[args.level]
     source = read_retail(source_path)
     worlds = level_worlds(b"".join(inflate(read_members(source))))
     worlds_dir = user / "data" / "worlds"
-    worlds_dir.mkdir(parents=True, exist_ok=True)
+    files = []
     report = {"level": args.level, "archive": source_path.name, "archiveSha256": sha256(source), "files": {}}
     for tag, level in world_names(worlds).items():
         body = worlds["bodies"][tag]
@@ -613,15 +647,15 @@ def cmd_stage(args) -> int:
             if data != body:
                 raise SystemExit(f"{tag}: the encoder did not reproduce the archive's body")
         dest = worlds_dir / f"world{level:03d}.wrd"
-        dest.write_bytes(data)
+        files.append((dest, data))
         report["files"][f"data/worlds/{dest.name}"] = {"from": tag, "bytes": len(data), "sha256": sha256(data),
                                                        "identicalToArchive": data == body}
     shadow = shadow_archive(source)
     res_dir = user / "data" / "resources"
-    res_dir.mkdir(parents=True, exist_ok=True)
-    (res_dir / source_path.name).write_bytes(shadow)
+    files.append((res_dir / source_path.name, shadow))
     report["files"][f"data/resources/{source_path.name}"] = {"wdatRealLevel": NO_LEVEL, "bytes": len(shadow),
                                                              "sha256": sha256(shadow)}
+    publish_fresh(user, args.game, files)
     print(json.dumps(report, indent=1))
     return 0
 
@@ -637,6 +671,7 @@ def main(argv: list[str] | None = None) -> int:
     e.add_argument("--level", type=int, required=True)
     e.add_argument("--out", type=Path, required=True)
     c = sub.add_parser("encode")
+    c.add_argument("--game", type=Path, default=os.environ.get("BEA_GAME"), required="BEA_GAME" not in os.environ)
     c.add_argument("model", type=Path)
     c.add_argument("out", type=Path)
     s = sub.add_parser("stage")
@@ -649,4 +684,8 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except (EncodeError, UnsafeGeneratedOutputError) as error:
+        print(f"world encoder: {error}", file=sys.stderr)
+        sys.exit(2)

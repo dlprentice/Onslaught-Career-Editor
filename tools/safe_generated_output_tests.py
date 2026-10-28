@@ -48,6 +48,15 @@ class DescriptorPublicationTests(unittest.TestCase):
             self.assertEqual(first, destination.read_bytes())
             self.assertEqual([], list(self.destination_root.glob(".*.tmp-*")))
 
+    def test_new_binary_preserves_existing_destination(self):
+        with output.SecuredOutputRoot(self.destination_root) as secured:
+            destination = self.destination_root / "world.wrd"
+            secured.atomic_write_new_bytes(destination, b"first\0payload")
+            with self.assertRaisesRegex(output.UnsafeGeneratedOutputError, "already exists"):
+                secured.atomic_write_new_bytes(destination, b"replacement")
+            self.assertEqual(b"first\0payload", destination.read_bytes())
+            self.assertEqual([], list(self.destination_root.glob(".*.tmp-*")))
+
     def test_new_json_refuses_file_moved_into_destination_at_atomic_publish(self):
         destination = self.destination_root / "catalog.json"
         before = self.original.stat()

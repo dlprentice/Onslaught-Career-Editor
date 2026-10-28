@@ -7,13 +7,16 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import struct
 import tempfile
 import unittest
 import zlib
 from pathlib import Path
+from unittest.mock import patch
 
 import content_catalog_tests as fixtures
+import safe_generated_output as safe
 import world_resources_decode as worlddec
 import world_resources_encode as enc
 
@@ -120,6 +123,30 @@ class EditTests(unittest.TestCase):
             enc.write_world_body(bad)
         self.assertTrue(math.isfinite(struct.unpack("<f", enc.f32_out(-0.0))[0]))
 
+    def test_malformed_fixed_width_fields_are_refused(self) -> None:
+        model = enc.read_world_model(fixtures.world_body())
+        for bits in ("", "00", "000000", "0000000000", "00 000000", "zz000000", 1234):
+            with self.subTest(bits=bits):
+                bad = json.loads(json.dumps(model))
+                bad["things"][0]["init"]["position"][0] = {"f32bits": bits}
+                with self.assertRaises(enc.EncodeError):
+                    enc.write_world_body(bad)
+        for field in ("position", "orientation"):
+            with self.subTest(field=field):
+                bad = json.loads(json.dumps(model))
+                bad["things"][0]["init"][field].pop()
+                with self.assertRaises(enc.EncodeError):
+                    enc.write_world_body(bad)
+        bad = json.loads(json.dumps(model))
+        bad["occupancyGrids"].pop()
+        with self.assertRaises(enc.EncodeError):
+            enc.write_world_body(bad)
+        bad = json.loads(json.dumps(model))
+        bad["scripts"][0]["code"]["symbols"].append(
+            {"name": "v", "dataType": 6, "value": [1.0, 2.0], "symbolType": 0, "index": 0, "flag": 0})
+        with self.assertRaises(enc.EncodeError):
+            enc.write_world_body(bad)
+
 
 def multi_member_archive(raw: bytes, block: int) -> bytes:
     out = b""
@@ -146,6 +173,7 @@ class ArchiveTests(unittest.TestCase):
                 changed = [i for i, (a, b) in enumerate(zip(before, after)) if a != b]
                 self.assertLessEqual(len(changed), 2)
 
+    @unittest.skipIf(os.name == "nt", "fresh-only output needs native Windows support")
     def test_stage_writes_loose_worlds_and_a_shadow_archive_but_never_into_the_game(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             game, user = Path(tmp, "game"), Path(tmp, "user")
@@ -156,9 +184,134 @@ class ArchiveTests(unittest.TestCase):
             shadow = (user / "data" / "resources" / "200_res_PC.aya").read_bytes()
             self.assertEqual(enc.level_worlds(b"".join(enc.inflate(enc.read_members(shadow))))["realLevel"],
                              enc.NO_LEVEL)
-            with self.assertRaises(SystemExit):
+            with self.assertRaises(safe.UnsafeGeneratedOutputError):
                 enc.main(["stage", "--game", str(game), "--level", "200", "--user", str(game / "data")])
             self.assertEqual(sorted(p.name for p in (game / "data" / "resources").iterdir()), ["200_res_PC.aya"])
+
+
+class PublicationTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name).resolve()
+        self.game = self.root / "game"
+        self.resources = self.game / "data" / "resources"
+        self.resources.mkdir(parents=True)
+        self.archive = self.resources / "200_res_PC.aya"
+        self.original = fixtures.world_archive()
+        self.archive.write_bytes(self.original)
+        self.user = self.root / "user"
+        self.model = self.root / "model.json"
+        self.model.write_text(json.dumps(enc.read_world_model(fixtures.world_body())), encoding="utf-8")
+
+    def stage(self) -> int:
+        return enc.main(["stage", "--game", str(self.game), "--level", "200", "--user", str(self.user)])
+
+    def test_stage_rejects_resources_directory_symlink_into_game(self) -> None:
+        (self.user / "data").mkdir(parents=True)
+        try:
+            (self.user / "data" / "resources").symlink_to(self.resources, target_is_directory=True)
+        except (NotImplementedError, OSError) as error:
+            self.skipTest(f"directory symlinks unavailable: {error}")
+        with self.assertRaises(safe.UnsafeGeneratedOutputError):
+            self.stage()
+        self.assertEqual(self.original, self.archive.read_bytes())
+        self.assertFalse((self.user / "data" / "worlds" / "world200.wrd").exists())
+
+    def test_stage_wont_replace_an_existing_world(self) -> None:
+        world = self.user / "data" / "worlds" / "world200.wrd"
+        world.parent.mkdir(parents=True)
+        world.write_bytes(b"a pre-existing user world")
+        with self.assertRaises(safe.UnsafeGeneratedOutputError):
+            self.stage()
+        self.assertEqual(b"a pre-existing user world", world.read_bytes())
+        self.assertEqual(self.original, self.archive.read_bytes())
+        self.assertFalse((self.user / "data" / "resources" / "200_res_PC.aya").exists())
+
+    def test_encode_rejects_game_destination_and_existing_output(self) -> None:
+        with self.assertRaises(safe.UnsafeGeneratedOutputError):
+            enc.main(["encode", "--game", str(self.game), str(self.model), str(self.archive)])
+        self.assertEqual(self.original, self.archive.read_bytes())
+        self.user.mkdir()
+        target = self.user / "world.wrd"
+        target.write_bytes(b"a prior user world")
+        with self.assertRaises(safe.UnsafeGeneratedOutputError):
+            enc.main(["encode", "--game", str(self.game), str(self.model), str(target)])
+        self.assertEqual(b"a prior user world", target.read_bytes())
+
+    def test_extract_refuses_symlinked_destination_without_creating_other_output(self) -> None:
+        out = self.root / "output"
+        out.mkdir()
+        try:
+            (out / "world200.wrd").symlink_to(self.archive)
+        except (NotImplementedError, OSError) as error:
+            self.skipTest(f"file symlinks unavailable: {error}")
+        with self.assertRaises(safe.UnsafeGeneratedOutputError):
+            enc.main(["extract", "--game", str(self.game), "--level", "200", "--out", str(out)])
+        self.assertEqual(self.original, self.archive.read_bytes())
+        self.assertFalse((out / "world200.json").exists())
+
+    def test_stage_rejects_hardlinked_destination(self) -> None:
+        dest = self.user / "data" / "resources" / self.archive.name
+        dest.parent.mkdir(parents=True)
+        try:
+            os.link(self.archive, dest)
+        except (NotImplementedError, OSError) as error:
+            self.skipTest(f"hardlinks unavailable: {error}")
+        with self.assertRaises(safe.UnsafeGeneratedOutputError):
+            self.stage()
+        self.assertEqual(self.original, self.archive.read_bytes())
+        self.assertEqual(self.original, dest.read_bytes())
+        self.assertFalse((self.user / "data" / "worlds" / "world200.wrd").exists())
+
+    @unittest.skipIf(os.name == "nt", "fresh-only output needs native Windows support")
+    def test_extract_is_exact_and_refuses_a_second_write(self) -> None:
+        out = self.root / "output"
+        args = ["extract", "--game", str(self.game), "--level", "200", "--out", str(out)]
+        self.assertEqual(0, enc.main(args))
+        body = (out / "world200.wrd").read_bytes()
+        model = (out / "world200.json").read_bytes()
+        self.assertEqual(fixtures.world_body(), body)
+        with self.assertRaises(safe.UnsafeGeneratedOutputError):
+            enc.main(args)
+        self.assertEqual(body, (out / "world200.wrd").read_bytes())
+        self.assertEqual(model, (out / "world200.json").read_bytes())
+        self.assertEqual(self.original, self.archive.read_bytes())
+
+    def test_invalid_model_cannot_publish(self) -> None:
+        model = json.loads(self.model.read_text(encoding="utf-8"))
+        model["things"][0]["init"]["position"][0] = {"f32bits": "00"}
+        self.model.write_text(json.dumps(model), encoding="utf-8")
+        dest = self.user / "world.wrd"
+        with self.assertRaises(enc.EncodeError):
+            enc.main(["encode", "--game", str(self.game), str(self.model), str(dest)])
+        self.assertFalse(dest.exists())
+        self.assertEqual(self.original, self.archive.read_bytes())
+
+    @unittest.skipIf(os.name == "nt", "POSIX descriptor-relative race control")
+    def test_output_created_after_preflight_is_not_replaced(self) -> None:
+        dest = self.user / "world.wrd"
+        rename_no_replace = safe._posix_rename_no_replace
+
+        def race(fd, source, target):
+            descriptor = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600, dir_fd=fd)
+            with os.fdopen(descriptor, "wb") as stream:
+                stream.write(b"concurrent user file")
+            return rename_no_replace(fd, source, target)
+
+        with patch.object(safe, "_posix_rename_no_replace", side_effect=race):
+            with self.assertRaises(safe.UnsafeGeneratedOutputError):
+                enc.main(["encode", "--game", str(self.game), str(self.model), str(dest)])
+        self.assertEqual(b"concurrent user file", dest.read_bytes())
+        self.assertEqual(self.original, self.archive.read_bytes())
+
+    @unittest.skipUnless(os.name == "nt", "native Windows fail-closed control")
+    def test_windows_fresh_publication_is_refused_until_supported(self) -> None:
+        dest = self.user / "world.wrd"
+        with self.assertRaises(safe.UnsafeGeneratedOutputError):
+            enc.main(["encode", "--game", str(self.game), str(self.model), str(dest)])
+        self.assertFalse(dest.exists())
+        self.assertEqual(self.original, self.archive.read_bytes())
 
 
 if __name__ == "__main__":
