@@ -213,6 +213,8 @@ def audit(event, args):
              ((flags & os.O_ACCMODE) != os.O_RDONLY or flags & (os.O_CREAT | os.O_TRUNC | os.O_APPEND)))):
             raise RuntimeError("unexpected write-open by model CLI")
 sys.addaudithook(audit)
+if os.environ.get("MODEL_CATALOG_AUDIT_NEGATIVE"):
+    os.open(os.environ["MODEL_CATALOG_AUDIT_NEGATIVE"], os.O_WRONLY | os.O_CREAT, 0o600)
 sys.argv = [sys.argv[1], "--mesh", sys.argv[2], "--stdout"]
 sys.path.insert(0, os.path.dirname(sys.argv[0]))
 runpy.run_path(sys.argv[0], run_name="__main__")
@@ -220,12 +222,21 @@ runpy.run_path(sys.argv[0], run_name="__main__")
         script = catalog.ROOT / "tools/model_transform_catalog.py"
         before = {path.relative_to(self.root) for path in self.root.rglob("*")}
         env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
+        env.pop("MODEL_CATALOG_AUDIT_NEGATIVE", None)
         result = subprocess.run([sys.executable, "-c", wrapper, str(script), str(self.source)],
                                 env=env, capture_output=True, text=True, timeout=10)
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual(json.loads(result.stdout)["meshes"][0]["source"]["archiveSha256"],
                          hashlib.sha256(self.source.read_bytes()).hexdigest())
         self.assertEqual(before, {path.relative_to(self.root) for path in self.root.rglob("*")})
+        would_create = self.root / "unexpected-output.json"
+        env["MODEL_CATALOG_AUDIT_NEGATIVE"] = str(would_create)
+        negative = subprocess.run([sys.executable, "-c", wrapper, str(script), str(self.source)],
+                                  env=env, capture_output=True, text=True, timeout=10)
+        self.assertNotEqual(0, negative.returncode)
+        self.assertIn("unexpected write-open by model CLI", negative.stderr)
+        self.assertEqual("", negative.stdout)
+        self.assertFalse(would_create.exists())
 
     def test_invalid_and_unsafe_inputs_publish_no_output(self) -> None:
         for kind in ("truncated", "link", "hardlink", "missing"):
