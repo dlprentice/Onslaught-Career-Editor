@@ -11,6 +11,8 @@ metadata-only view, not a runtime dependency
 list: optional meshes, shared/base archives, script spawns, embedded meshes,
 non-TEXT texture records, missing loose inputs, and runtime selection remain
 unknown. A filename-derived level number is only a hint; WDAT is separate.
+The selected mesh's internal name is reported only when its 300-byte field is
+NUL-terminated and contains printable ASCII; other or empty names are null.
 
 Selected files require Linux O_PATH, descriptor-relative no-follow opens and
 /proc/self/fd. Parent traversal, symlink components, multiple hard links and
@@ -186,7 +188,9 @@ def mesh_row(source: bytes, path: Path, ordinal: int) -> tuple[dict[str, Any], i
             textures.append({"slot": slot, "name": name, "nameStatus": status,
                              "requestedFormat": slot_format(name) if name is not None else None,
                              "sameArchiveTextCandidates": None, "candidateStatus": "unknown"})
-        row.update(status="parsed", internalName=mesh.name if ascii_key(mesh.name) is not None else None,
+        start = selected.MESH_NAME_OFFSET
+        name, _, _ = selected.stored_name(mesh.raw_header[start:start + selected.MESH_NAME_BYTES])
+        row.update(status="parsed", internalName=name if name is not None and ascii_key(name) is not None else None,
                    inflatedSha256=hashlib.sha256(stream).hexdigest(), textures=textures)
         return row, len(stream)
     except (ValueError, struct.error):

@@ -190,6 +190,8 @@ publish, sign, or install anything by themselves.
   names, qualified by the stored requested format and mip-level fields. The
   archive-to-selected-mesh association is by ASCII case-insensitive filename
   only: it is a candidate, not proof of the file's ownership or runtime use.
+  A selected mesh's internal name is shown only for a NUL-terminated, nonempty
+  printable ASCII value within its 300-byte name field; other names are null.
   Duplicate, absent, unparsed and unsupported-name candidates remain separate
   or unknown. Unsupported `TEXT` names make comparison coverage partial;
   uncomparable or embedded `MESH` names likewise make reverse filename
