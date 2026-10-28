@@ -588,7 +588,8 @@ def mesh_summary(meta: dict) -> dict:
             "boneParts": len(bones), "referenceParts": sum(1 for p in parts if p["geometry"]["ownership"] == "reference"),
             "partTypes": dict(sorted(collections.Counter(str(p["partType"]) for p in parts).items())),
             "lodChildren": len(lods),
-            "lodChildParts": [len((c["model"].get("parts") or [])) for c in lods],
+            "lodChildParts": [None if c["model"]["status"] == "unparsed"
+                              else len(c["model"].get("parts") or []) for c in lods],
             "nestedMeshDetails": [{"relationship": c["relationship"], "status": c["model"]["status"],
                                    "partCount": None if c["model"]["status"] == "unparsed"
                                    else len(c["model"].get("parts") or []),

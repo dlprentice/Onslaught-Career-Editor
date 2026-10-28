@@ -204,6 +204,7 @@ class MeshChainCatalogTests(unittest.TestCase):
                                              container="authored.aya", container_sha="a" * 64,
                                              envelope="aya-zlib-members(cmsh)", offset=0, chunk_path=[])
         [detail] = record["mesh"]["nestedMeshDetails"]
+        self.assertEqual([None], record["mesh"]["lodChildParts"])
         self.assertEqual(("partial", "unresolved-nested-mesh", "unparsed", None),
                          (record["mesh"]["status"], detail["relationship"], detail["status"], detail["partCount"]))
         self.assertEqual(hashlib.sha256(child).hexdigest(), detail["payloadSha256"])

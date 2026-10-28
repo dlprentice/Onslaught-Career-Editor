@@ -424,6 +424,11 @@
             }
           }
         },
+        "lodChildParts": {
+          "type": "array",
+          "items": {"type": ["integer", "null"], "minimum": 0},
+          "description": "Immediate child part counts; null means the child could not be parsed."
+        },
         "nestedMeshDetails": {
           "type": "array",
           "description": "Immediate nested meshes, including unresolved or unparsed children; this is not a runtime-loading claim.",

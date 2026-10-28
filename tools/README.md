@@ -91,7 +91,8 @@ publish, sign, or install anything by themselves.
   `CMeshPart::ReadBoundingBox` (`0x004b3180`); the record layout is in
   [cmsh-fields.md](../reverse-engineering/asset-formats/cmsh-fields.md#bounding-box-bbox-40-bytes).
   `nestedMeshDetails` reports each immediate child's relationship, parse status, count and hash; an unknown count is
-  `null`, and nested descendants are available in the CMSH census. No relationship asserts runtime loading.
+  `null` there and in `lodChildParts`, and nested descendants are available in the CMSH census. No relationship
+  asserts runtime loading.
   `world_resources_decode.py` decodes the level payloads in their loaders' read order and refuses unread bytes: the
   `WRES` world bodies (`CWorld::LoadWorld`: header, compiled scripts, things, trees, influence map, waypoint paths,
   timings, occupancy), `ERES` (mixer mips, heightfield settings and samples, mixer map), `SURF` and `SSHD`; `LNDS`
