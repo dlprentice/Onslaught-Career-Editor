@@ -2836,7 +2836,6 @@ def write_outputs(out: Path, game: Path, catalog: dict, coverage: dict) -> list[
                "coverage.json": json.dumps(coverage, indent=2, sort_keys=True) + "\n",
                "assets.jsonl": "".join(json.dumps({**a, GENERATED_MARKER: True}, sort_keys=True) + "\n"
                                        for a in catalog["assets"])}
-    out.mkdir(parents=True, exist_ok=True)
     written = []
     with SecuredOutputRoot(out, protected_sources=[game]) as secured:
         for name, text in outputs.items():

@@ -1320,6 +1320,32 @@ class BoundaryTests(unittest.TestCase):
     def test_self_test_passes(self) -> None:
         self.assertEqual(catalog.run_self_test(), 0)
 
+    def test_redirected_output_never_creates_a_directory_in_the_selected_game(self) -> None:
+        from safe_generated_output import UnsafeGeneratedOutputError
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            game = root / "authored-game"
+            game.mkdir()
+            redirect = root / "redirect"
+            try:
+                redirect.symlink_to(game, target_is_directory=True)
+            except OSError as error:
+                self.skipTest(f"creating a directory symlink is unavailable: {error}")
+            out = redirect / "unwanted"
+            with self.assertRaises(UnsafeGeneratedOutputError):
+                catalog.write_outputs(out, game, {"files": [], "assets": [], "survey": {}}, {})
+            self.assertFalse((game / "unwanted").exists())
+
+    def test_new_disjoint_output_root_is_created_by_the_secured_writer(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            game = root / "authored-game"
+            game.mkdir()
+            out = root / "generated" / "catalogue"
+            files = catalog.write_outputs(out, game, {"files": [], "assets": [], "survey": {}}, {})
+            self.assertEqual({p.name for p in files}, {"manifest.json", "survey.json", "coverage.json", "assets.jsonl"})
+            self.assertTrue(all(p.is_file() for p in files))
+
     def test_generated_output_is_refused_by_the_public_safety_check(self) -> None:
         line = json.dumps({"id": "texture:x", catalog.GENERATED_MARKER: True})
         labels = {f.label for f in safety.content_signature_findings("notes/catalogue.jsonl", line)}
