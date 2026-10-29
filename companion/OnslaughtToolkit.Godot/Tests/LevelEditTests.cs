@@ -20,6 +20,7 @@ internal static class LevelEditTests
         Stage(check, "the refused stage vectors", () => RefusedStageVectors(Path.Combine(outputDirectory, "level-stage-refused"), check));
         Stage(check, "the destination rules", () => DestinationRules(Path.Combine(outputDirectory, "level-stage-rules"), check));
         Stage(check, "the failure rules", () => FailureRules(Path.Combine(outputDirectory, "level-stage-failures"), check));
+        Stage(check, "the world buffer snapshot", () => StageWorldSnapshot(Path.Combine(outputDirectory, "level-stage-snapshot"), check));
         Stage(check, "the session", () => SessionBasics(check));
         Stage(check, "the history rules", () => HistoryRules(check));
         Stage(check, "the move vectors", () => MoveVectors(check));
@@ -426,6 +427,23 @@ internal static class LevelEditTests
                 "a replacement of the temporary pathname survives a failed publication");
         }
 
+    }
+
+    private static void StageWorldSnapshot(string folder, Checks check)
+    {
+        byte[] original = [1, 2, 3], supplied = original.ToArray();
+        Dictionary<int, byte[]> worlds = new() { [7] = supplied };
+        bool changed = false;
+        StagedMod staged = ModStager.Stage(folder, new ModInfo("snapshot", "n"), worlds, [], beforeWrite: _ =>
+        {
+            if (!changed) { supplied[0] = 9; changed = true; }
+        });
+        string worldPath = Path.Combine(staged.Root, "data", "worlds", "world007.wrd");
+        using System.Text.Json.JsonDocument manifest = System.Text.Json.JsonDocument.Parse(File.ReadAllBytes(Path.Combine(staged.Root, "mod.json")));
+        string? manifestHash = manifest.RootElement.GetProperty("files")[0].GetProperty("sha256").GetString();
+        byte[] saved = File.ReadAllBytes(worldPath);
+        check.That(changed && saved.AsSpan().SequenceEqual(original) && manifestHash == Sha256(saved) && staged.Files[0].Sha256 == manifestHash,
+            "the saved world, manifest and receipt use a private copy when the caller changes its buffer");
     }
 
     // ---- the edit session ----------------------------------------------------------------------------------------------------

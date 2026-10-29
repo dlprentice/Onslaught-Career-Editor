@@ -153,7 +153,12 @@ public static class ModStager
         Action<string>? beforeWrite, Action<string>? beforeCommittedOpen = null, Action<string>? beforePublish = null)
     {
         Dictionary<string, byte[]> files = [];
-        foreach ((int level, byte[] body) in worlds) files[WorldPath(level)] = body;
+        foreach ((int level, byte[] body) in worlds)
+        {
+            string path = WorldPath(level);
+            if (body is null || body.Length is 0 or > MaxWorldBytes) throw new ModStageException($"{path}: a world file is 1 byte to {MaxWorldBytes} bytes.");
+            files[path] = body.ToArray();
+        }
         byte[] manifest = BuildManifest(info, files);
 
         string root = CheckDestination(parent, info.Id, protectedFolders);
