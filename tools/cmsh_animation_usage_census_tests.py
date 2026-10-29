@@ -151,6 +151,13 @@ def _catalog_stream(
     return stream
 
 
+def _with_texb_name(stream: bytes, field: bytes) -> bytes:
+    """The same stream with its first TEXB's 128-byte name field replaced by exactly ``field``."""
+    assert len(field) == 128 and stream.count(b"TEXB") == 1
+    start = stream.index(b"TEXB") + 8 + 20
+    return stream[:start] + field + stream[start + 128:]
+
+
 def _catalog_animation(name: str, *, rate_bits: int = 0x3dcccccd) -> bytes:
     return name.encode("ascii").ljust(16, b"\0") + struct.pack("<4iI", 7, 10, 20, 10, rate_bits)
 
@@ -161,6 +168,34 @@ class ModelMetadataTests(unittest.TestCase):
                          source_universe_id="authored-fixture-v1", platform="pc")
         arguments.update(kwargs)
         return census.mesh_record_from_stream(stream, **arguments)
+
+    def test_texture_slot_names_are_the_stored_field_with_a_status(self) -> None:
+        # Known-empty and unknown stay distinct, and the parser's lossy display name is never the identity.
+        name = b"meshtex\\Skin.tga"
+        cases = (
+            ("terminated", name.ljust(128, b"\0"), "meshtex\\Skin.tga", "utf8-decoded", name),
+            ("bytes after the terminator are not part of the name", name + b"\0junk after".ljust(60, b"\0") + bytes(128 - len(name) - 60),
+             "meshtex\\Skin.tga", "utf8-decoded", name),
+            ("127 characters then NUL", b"B" * 127 + b"\0", "B" * 127, "utf8-decoded", b"B" * 127),
+            ("128 non-NUL bytes", b"C" * 128, None, "unterminated", None),
+            ("invalid UTF-8", b"bad\xff\0".ljust(128, b"\0"), None, "invalid-utf8", b"bad\xff"),
+            ("empty", bytes(128), "", "empty", b""),
+            ("empty, bytes after the first NUL", b"\0leftover".ljust(128, b"\0"), "", "empty", b""),
+            ("non-ASCII UTF-8", "\u00e9.tga".encode().ljust(128, b"\0"), "\u00e9.tga", "utf8-decoded", "\u00e9.tga".encode()),
+        )
+        lanes = None
+        for label, field, expected, status, hashed in cases:
+            with self.subTest(label):
+                row, mesh = self.row(_with_texb_name(_catalog_stream(), field))
+                self.assertIsNotNone(mesh)
+                [slot] = row["modelMetadata"]["textures"]
+                self.assertEqual(expected, slot["name"])
+                self.assertEqual(status, slot["nameStatus"])
+                self.assertEqual(hashlib.sha256(hashed).hexdigest() if hashed is not None else None, slot["nameBytesSha256"])
+                self.assertEqual(1, slot["declaredFrameCount"])
+                lanes = lanes or slot["storedLaneWords"]
+                self.assertEqual(lanes, slot["storedLaneWords"])      # the name field never disturbs the lanes
+                json.dumps(slot, allow_nan=False)
 
     def test_mesh_name_uses_only_its_terminated_300_byte_field(self) -> None:
         original = _catalog_stream()

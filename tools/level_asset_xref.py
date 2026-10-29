@@ -79,12 +79,11 @@ def texture_key(name: str, requested: int) -> tuple[str, int] | None:
 
 
 def slot_format(name: str) -> int | None:
-    # CMesh::FindTexture uses the suffix beginning at byte 8 and rejects an
-    # empty suffix. Short or non-ASCII names cannot be safely classified here.
-    if ascii_key(name) is None or len(name) <= 8:
+    # CMesh::FindTexture uses the suffix beginning at byte 8 and rejects an empty suffix. Short or non-ASCII names
+    # cannot be safely classified here. The rule itself is shared with the content catalogue so the two cannot drift.
+    if ascii_key(name) is None:
         return None
-    prefix = name[8:10].lower()
-    return 4 if prefix == "a8" else 2 if prefix == "a4" else 1
+    return selected.requested_texture_format(name, "utf8-decoded")
 
 
 def world_header(raw: bytes, chunks: list[Any]) -> dict[str, Any]:
@@ -176,6 +175,9 @@ def mesh_row(source: bytes, path: Path, ordinal: int) -> tuple[dict[str, Any], i
             if b"\0" not in raw_name:
                 name = None
                 status = "unterminated"
+            elif raw_name[0] == 0:
+                name = ""                # known to be empty: not an unreadable or unsupported name
+                status = "empty"
             else:
                 prefix = raw_name.split(b"\0", 1)[0]
                 try:
@@ -187,7 +189,8 @@ def mesh_row(source: bytes, path: Path, ordinal: int) -> tuple[dict[str, Any], i
                     name = None
             textures.append({"slot": slot, "name": name, "nameStatus": status,
                              "requestedFormat": slot_format(name) if name is not None else None,
-                             "sameArchiveTextCandidates": None, "candidateStatus": "unknown"})
+                             "sameArchiveTextCandidates": None,
+                             "candidateStatus": "empty-name-not-evaluated" if status == "empty" else "unknown"})
         start = selected.MESH_NAME_OFFSET
         name, _, _ = selected.stored_name(mesh.raw_header[start:start + selected.MESH_NAME_BYTES])
         row.update(status="parsed", internalName=name if name is not None and ascii_key(name) is not None else None,

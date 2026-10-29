@@ -33,7 +33,7 @@ from aya_archive_inventory import (  # noqa: E402
 )
 from aya_cross_platform_compare import logical_key  # noqa: E402
 from model_transform_catalog import (  # noqa: E402
-    MESH_NAME_BYTES, MESH_NAME_OFFSET, PART_NAME_BYTES, PART_NAME_OFFSET, stored_name,
+    MESH_NAME_BYTES, MESH_NAME_OFFSET, PART_NAME_BYTES, PART_NAME_OFFSET, TEXB_NAME_BYTES, stored_name,
 )
 from safe_generated_output import SecuredOutputRoot  # noqa: E402
 
@@ -117,6 +117,11 @@ def _part_name(part: Any) -> tuple[str | None, str, str | None]:
 
 def _mesh_name(mesh: Any) -> tuple[str | None, str, str | None]:
     return _name_identity(getattr(mesh, "raw_header", None), MESH_NAME_OFFSET, MESH_NAME_BYTES)
+
+
+def _texture_name(texture: Any) -> tuple[str | None, str, str | None]:
+    """A TEXB slot's 128-byte name field as stored; the parser's lossy display name is never used for identity."""
+    return _name_identity(getattr(texture, "raw_name_field", None), 0, TEXB_NAME_BYTES)
 
 
 def _internal_name_summary(rows: list[dict[str, object]]) -> dict[str, object]:
@@ -364,7 +369,7 @@ def _model_metadata(stream: bytes, mesh: Any, identity: dict[str, object], depth
         "parts": [_part_metadata(part, ordinal, stream[c.offset + 8:c.offset + 8 + c.size])
                   for ordinal, (part, c) in enumerate(zip(parts, part_chunks))],
         "animations": _animation_metadata(mesh), "emitters": _emitter_metadata(mesh),
-        "textures": [{"slotOrdinal": index, "name": texture.name,
+        "textures": [{"slotOrdinal": index, **_name_columns("name", _texture_name(texture)),
                       "declaredFrameCount": struct.unpack_from("<I", texture.raw_cmst_entry, 8)[0],
                       "laneStatus": "decoded-single-frame" if struct.unpack_from("<I", texture.raw_cmst_entry, 8)[0] == 1 else "unknown-frame-layout",
                       "storedLaneWords": _words(texture.raw_texb_metadata),
