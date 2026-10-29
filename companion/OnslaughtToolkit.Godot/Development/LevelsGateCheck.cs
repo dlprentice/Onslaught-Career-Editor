@@ -93,32 +93,59 @@ internal static class LevelsGateCheck
 
     /// <summary>
     /// The terrain of one archive: it reads, and when a table is given its samples, scale, water and the heights the lookup answers
-    /// at a grid reaching past the square and at every thing of the level's own world are the reference's.
+    /// at a grid reaching past the square and at every thing of the level's own world are the reference's. A terrain the reference
+    /// refuses has a "refused" row, and this reader must refuse it too.
     /// </summary>
     private static void CheckTerrain(int level, LevelWorlds worlds, Dictionary<string, string[]>? table, HashSet<string> seen, List<string> failures, ref int terrains, ref int matched)
     {
-        string name = $"{level:D3} TERRAIN";
+        string name = $"{level:D3} TERRAIN", key = $"{level:D3}\tTERRAIN";
         terrains++;
-        Heightfield field;
-        WorldBody world;
+        string[]? row = null;
+        bool listed = table is not null && table.TryGetValue(key, out row);
+        Heightfield? field = null;
+        string refusal = "";
         try
         {
             field = Heightfield.Read(worlds.Terrain!);
+        }
+        catch (InvalidDataException error)
+        {
+            refusal = error.Message;
+        }
+        if (field is null)
+        {
+            if (table is null) failures.Add($"{name}: refused: {refusal}");
+            else if (!listed) failures.Add($"{name}: refused here ({refusal}) and the reference table has no row for it");
+            else if (row![0] == "refused")
+            {
+                seen.Add(key);
+                matched++;
+            }
+            else failures.Add($"{name}: refused here ({refusal}) but the reference reads it");
+            return;
+        }
+        WorldBody world;
+        try
+        {
             world = WorldBody.Read(worlds.RealBody!);
         }
         catch (InvalidDataException error)
         {
-            failures.Add($"{name}: refused: {error.Message}");
+            failures.Add($"{name}: the level's own world was refused: {error.Message}");
             return;
         }
         if (table is null) return;
-        string key = $"{level:D3}\tTERRAIN";
-        if (!table.TryGetValue(key, out string[]? row))
+        if (!listed)
         {
             failures.Add($"{name}: the reference table has no row for it");
             return;
         }
         seen.Add(key);
+        if (row![0] == "refused")
+        {
+            failures.Add($"{name}: the reference refuses it; here it reads");
+            return;
+        }
         List<(float X, float Y)> positions = [];
         for (int j = 0; j < 33; j++)
             for (int i = 0; i < 33; i++) positions.Add(((float)(i * 16 + 0.37), (float)(j * 16 + 0.71)));
@@ -128,6 +155,6 @@ internal static class LevelsGateCheck
         string digest = Convert.ToHexStringLower(SHA256.HashData(heights));
         string scaleAndWater = $"{BitConverter.SingleToUInt32Bits(field.Scale):x8}:{BitConverter.SingleToUInt32Bits(field.Water):x8}";
         if (row[0] == scaleAndWater && row[1] == field.SamplesSha256() && row[2] == positions.Count.ToString() && row[3] == digest) matched++;
-        else failures.Add($"{name}: the table says {row[0]}, {row[1][..12]} and {row[2]} heights hashing to {row[3][..12]}; here {scaleAndWater}, {field.SamplesSha256()[..12]} and {positions.Count} heights hashing to {digest[..12]}");
+        else failures.Add($"{name}: the table says {row[0]}, {row[1][..Math.Min(12, row[1].Length)]} and {row[2]} heights hashing to {row[3][..Math.Min(12, row[3].Length)]}; here {scaleAndWater}, {field.SamplesSha256()[..12]} and {positions.Count} heights hashing to {digest[..12]}");
     }
 }

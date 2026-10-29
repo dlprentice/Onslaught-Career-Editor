@@ -1025,7 +1025,13 @@ def cmd_gate_table(args) -> int:
         # The terrain: the heightfield's samples, scale and water, and the lookup's heights at a grid and at every thing of the level's own world.
         eres = next((stream[at:at + size] for tag, at, size in enc.chunks(stream) if tag == "ERES"), None)
         if eres is not None and "RLWD" in worlds["bodies"]:
-            field = heights.read_heightfield(eres)
+            try:
+                field = heights.read_heightfield(eres)
+            except heights.DecodeError:
+                # A chunk the loader's order does not read: the row says so, and the C# gate must refuse it too.
+                rows.append(f"{level:03d}\tTERRAIN\trefused\t-\t0\t-")
+                terrains += 1
+                continue
             positions = terrain_gate_positions(enc.read_world_model(worlds["bodies"]["RLWD"]))
             digest = hashlib.sha256(b"".join(struct.pack("<I", heights.height_bits(field, x, y)) for x, y in positions)).hexdigest()
             rows.append(f"{level:03d}\tTERRAIN\t{float_bits(field.scale):08x}:{float_bits(field.water):08x}\t{field.samples_sha256()}\t{len(positions)}\t{digest}")

@@ -53,6 +53,7 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/world_edit_preview_tests.py",),
     ("tools/world_edit_move_tests.py",),
     ("tools/world_thing_index_tests.py",),
+    ("tools/heightfield_lookup_tests.py",),
     ("tools/level_editor_vectors_tests.py",),
     ("tools/aya_texture_fidelity_census_tests.py",),
     ("tools/export_game_assets_tests.py",),

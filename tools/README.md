@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-29 (`model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-29 (`heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -252,6 +252,18 @@ publish, sign, or install anything by themselves.
   preparation remain separate, and must use the same reviewed identities. No no-overwrite or atomic-write guarantee applies to a
   redirected stream. This CLI has only authored-fixture tests, requires the
   same descriptor-safe input support as the preview, and has no validated Windows workflow.
+- `heightfield_lookup.py ARCHIVE.aya X Y` prints the height under a position of a level archive's terrain, as the game's
+  terrain lookup computes it: the archive's `ERES` chunk holds 64 x 64 tiles of 9 x 9 signed 16-bit samples (one per world
+  unit; a tile's ninth row and column repeat its neighbour's first) and a height scale, and heights are world units with Z
+  down, so the ground under the player's start in level 100 is about -10. The rule is `CHeightField::Collide` (`0x0047eb80`)
+  and the bilinear read it calls (`0x0047eb00`), cited by function as the decompilation describes them and written here
+  without copying its source: a bias and a large constant are added to each coordinate in 32-bit floats, the bits are read as
+  8.8 fixed point, a position outside 0 to 512 on either axis answers 0, and the four samples around it are blended with 8-bit
+  fractions (arithmetic shifts, so a step down rounds down) and multiplied by the scale. A position that is not finite answers
+  0 here, which is not claimed to be the game's answer. `read_heightfield` reads the chunk in the order the loader reads it
+  and refuses a payload with bytes left over or missing. `heightfield_lookup_tests.py` runs on authored terrains only (no
+  game bytes): the bias, whole and fractional positions, steps down, the order of the tiles and the ninth sample, the edge of
+  the square, and damaged payloads. It is the reference the Companion's C# port (`Levels/Heightfield.cs`) is checked against.
 - `level_editor_vectors.py` writes `companion/OnslaughtToolkit.Godot/Tests/LevelVectors.g.cs`, the authored vectors the
   Companion's level data layer (`Levels/`: `WorldBody` and `LevelArchive`, which read and write a world body and read a
   level archive; `ModStager`, which writes the mod folder `world_mod_stage.py` writes; `EditSession`, which moves things
@@ -261,13 +273,18 @@ publish, sign, or install anything by themselves.
   files the reference stager writes for a set of inputs (and the inputs it refuses), and coordinate texts with what the move tool
   (`world_edit_move.py`) stores for each, which the page's coordinate reader (`CoordinateInput`, used by the Level editor page) must
   match: the float32 as four bytes, whether it is not exactly the decimal typed, and its exact value, with the texts the tool reads
-  and the page does not (digit separators, other digits, other whitespace) marked as narrower, never wider. No game bytes enter it.
+  and the page does not (digit separators, other digits, other whitespace) marked as narrower, never wider; and, for the map,
+  an authored terrain in an archive whose `ERES` chunk is split over members, with the heights `heightfield_lookup.py` gives
+  at a large set of edge positions (the edges of the square, the bias's flooring, tile borders, the ninth sample, positions
+  that are not finite), as the float32 bits the C# lookup must equal. No game bytes enter it.
   `python tools/level_editor_vectors.py --check` fails when the committed file is not what `--write` writes; it compares
   what each compressed blob inflates to, so it does not depend on the zlib that compressed it.
   `level_editor_vectors_tests.py` adds the reference's own round trips and the refusal of every proper prefix of a body.
-  `gate-table --game GAME --stdout` lists the size, SHA-256 and dump hash of each world body of an installed game (hashes
-  only) for the Companion's local retail gate, `Development/LevelsGate.cs`, whose header gives its command; the table is
-  derived from a game, so keep it private.
+  `gate-table --game GAME --stdout` lists the size, SHA-256 and dump hash of each world body of an installed game, and for
+  each level archive with a terrain the digest of its samples, the bits of its scale and water level, and a digest of the
+  heights `heightfield_lookup.py` gives on a fixed grid and at every thing's position (hashes only) for the Companion's local
+  retail gate, `Development/LevelsGate.cs`, whose header gives its command; the table is derived from a game, so keep it
+  private.
 - `export_game_assets.py`, `export_asset_catalog.py`,
   `export_language_corpus.py`, and `export_video_manifest.py` operate on
   user-supplied local inputs and write to a separate local output root. The

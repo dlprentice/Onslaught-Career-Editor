@@ -331,15 +331,22 @@ class VectorTests(unittest.TestCase):
             resources.mkdir(parents=True)
             (resources / "100_res_PC.aya").write_bytes(archives["base-and-real"]["file"])
             (resources / "200_res_PC.aya").write_bytes(archives["real-only"]["file"])
+            (resources / "300_res_PC.aya").write_bytes(archives["level-100-terrain"]["file"])  # a terrain the reader accepts
             (resources / "goodie_03_res_PC.aya").write_bytes(b"not a level")
             out = io.StringIO()
             with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
                 self.assertEqual(gen.cmd_gate_table(SimpleNamespace(stdout=True, game=Path(tmp))), 0)
             rows = [line.split("\t") for line in out.getvalue().splitlines()]
         self.assertEqual(rows[0], ["level", "tag", "bytes", "sha256", "dumpLines", "dumpSha256"])
-        self.assertEqual([(r[0], r[1]) for r in rows[1:]], [("100", "BSWD"), ("100", "RLWD"), ("200", "RLWD")])
+        self.assertEqual([(r[0], r[1]) for r in rows[1:]], [("100", "BSWD"), ("100", "RLWD"), ("100", "TERRAIN"), ("200", "RLWD"), ("200", "TERRAIN"), ("300", "RLWD"), ("300", "TERRAIN")])
         real = self.by_name["authored-v50"]
         self.assertEqual(rows[2][2:], [str(len(real["body"])), hashlib.sha256(real["body"]).hexdigest(), str(real["lines"]), real["hash"]])
+        # The terrain rows: an ERES chunk the reader refuses says "refused" (the C# gate must refuse it too), a readable one lists its scale and water bits, samples digest and probe digest.
+        self.assertEqual([r[2] for r in (rows[3], rows[5])], ["refused", "refused"])
+        terrain = gen.authored_terrain()
+        field = gen.heights.read_heightfield(terrain.eres)
+        self.assertEqual(rows[7][2:4], [f"{gen.float_bits(field.scale):08x}:{gen.float_bits(field.water):08x}", field.samples_sha256()])
+        self.assertEqual(int(rows[7][4]), 33 * 33 + len(gen.enc.read_world_model(real["body"])["things"]))  # the grid, then every thing's position
         with self.assertRaises(SystemExit):
             gen.cmd_gate_table(SimpleNamespace(stdout=False, game=Path(".")))
 
