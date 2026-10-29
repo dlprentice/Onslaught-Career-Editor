@@ -60,7 +60,7 @@ import world_resources_decode as wrd  # noqa: E402
 import worldheaders_decode  # noqa: E402
 import xap_bank_walk  # noqa: E402
 from model_transform_catalog import requested_texture_format  # noqa: E402
-from safe_generated_output import SecuredOutputRoot  # noqa: E402
+from safe_generated_output import SecuredOutputRoot, UnsafeGeneratedOutputError, validate_disjoint_output_root  # noqa: E402
 
 SCHEMA_VERSION = 1
 # Stored-name statuses (model_transform_catalog.stored_name) for which the field is a name: readable, or known to be empty.
@@ -74,6 +74,10 @@ GENERATED_MARKER = "generatedRetailDerived"  # the safety check rejects tracked 
 MAX_FILE_BYTES = 128 * 1024 * 1024
 TOOL = "tools/content_catalog.py"
 DECOMP = "onslaught-decomp"
+
+
+class CatalogInputError(ValueError):
+    """A selected input cannot be safely admitted to the catalogue."""
 
 
 def cite(source: str, function: str, va: str) -> str:
@@ -188,14 +192,24 @@ def fold(value: str) -> str:
 
 
 def read_install_file(path: Path) -> bytes:
-    """Read a regular file without following a final symlink; refuse a short read or a size/mtime change."""
-    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    """Read a bounded regular file once, refusing a final symlink or detected path/handle identity change."""
+    def identity(info: os.stat_result) -> tuple[int, ...]:
+        return (info.st_dev, info.st_ino, info.st_mode, info.st_nlink, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+
+    try:
+        path_before = path.lstat()
+        if not stat.S_ISREG(path_before.st_mode):
+            raise CatalogInputError(f"not a regular file: {path}")
+        flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_BINARY", 0)
+        fd = os.open(path, flags)
+    except OSError as error:
+        raise CatalogInputError(f"could not safely open selected file: {path}") from error
     try:
         before = os.fstat(fd)
-        if not stat.S_ISREG(before.st_mode):
-            raise ValueError(f"not a regular file: {path}")
+        if not stat.S_ISREG(before.st_mode) or identity(before) != identity(path_before):
+            raise CatalogInputError(f"file changed while it was read: {path}")
         if before.st_size > MAX_FILE_BYTES:
-            raise ValueError(f"file exceeds the {MAX_FILE_BYTES}-byte admission limit: {path}")
+            raise CatalogInputError(f"file exceeds the {MAX_FILE_BYTES}-byte admission limit: {path}")
         chunks, total = [], 0
         while total < before.st_size:
             chunk = os.read(fd, min(1 << 20, before.st_size - total))
@@ -204,8 +218,12 @@ def read_install_file(path: Path) -> bytes:
             chunks.append(chunk)
             total += len(chunk)
         after = os.fstat(fd)
-        if total != before.st_size or (after.st_size, after.st_mtime_ns) != (before.st_size, before.st_mtime_ns):
-            raise ValueError(f"file changed while it was read: {path}")
+        try:
+            path_after = path.lstat()
+        except OSError as error:
+            raise CatalogInputError(f"file changed while it was read: {path}") from error
+        if total != before.st_size or identity(after) != identity(before) or identity(path_after) != identity(before):
+            raise CatalogInputError(f"file changed while it was read: {path}")
         return b"".join(chunks)
     finally:
         os.close(fd)
@@ -428,6 +446,8 @@ def catalog_archives(game: Path, files: list[dict], texture_index: dict[str, dic
                           raw_sha=sha256(raw), sha_scope="inflated LVLR tag stream",
                           parser="tools/aya_archive_inventory.py:decode_archive_envelope")
         tags = collections.Counter(c.tag for c in chunks)
+        if tags["WRES"] > 1:
+            raise CatalogInputError(f"resource archive {rel}: ambiguous world layout (multiple WRES chunks)")
         rec["archive"] = {"kind": kind, "members": members, "topLevelChunks": len(chunks),
                           "tagCounts": dict(sorted(tags.items()))}
         if kind == "level":
@@ -476,6 +496,15 @@ def catalog_archives(game: Path, files: list[dict], texture_index: dict[str, dic
                     mesh_rows.append({"chunk": chunk.index, "name": "", "runtimeId": runtime_id,
                                       "target": f"mesh:embedded:{rel.casefold()}#{chunk.index}"})
                     stats["embeddedMeshes"] += 1
+            elif chunk.tag == "WRES":
+                try:
+                    world_chunks = aai.parse_top_level_chunks_bounded(payload)
+                except ValueError as error:
+                    raise CatalogInputError(f"resource archive {rel}: ambiguous or invalid world layout") from error
+                if sum(c.tag == "WRLD" for c in world_chunks) != 1:
+                    raise CatalogInputError(f"resource archive {rel}: ambiguous or invalid world layout")
+                if collect is not None:
+                    collect_chunk(collect, rel, rec, source_sha, chunk, payload, descriptors, texture_index, stats)
             elif collect is not None and chunk.tag not in ("LVLR", "TARG", "AYAD"):
                 collect_chunk(collect, rel, rec, source_sha, chunk, payload, descriptors, texture_index, stats)
         rec["archive"]["meshChunks"] = mesh_rows
@@ -831,6 +860,8 @@ def link_unloaded_mesh_names(textures: list[dict], meshes: list[dict]) -> None:
 
 # ----------------------------------------------------------------------------------------------------------- audio
 VOICE_LANG_RE = re.compile(r"^data/sounds/(?P<lang>[a-z]+)/", re.IGNORECASE)
+SAMPLE_BANK_RE = re.compile(r"^data/sounds/sounds_(?P<lang>english|french|german|spanish|italian)_pc\.xap$",
+                            re.IGNORECASE)
 
 
 def ogg_metadata(data: bytes) -> dict:
@@ -890,6 +921,8 @@ def catalog_audio(game: Path, files: list[dict]) -> list[dict]:
         elif family == "xap-sample-bank":
             data = read_install_file(game / rel)
             bank_sha = sha256(data)
+            bank_path = SAMPLE_BANK_RE.fullmatch(rel)
+            language = bank_path.group("lang").casefold() if bank_path else None
             magic, samples = xap_bank_walk.read_bank(data)
             position = 8
             for ordinal, (name, pcm_bytes, adpcm) in enumerate(samples):
@@ -901,8 +934,9 @@ def catalog_audio(game: Path, files: list[dict]) -> list[dict]:
                 rec["audio"] = {"status": "parsed", "role": "sound-effect", "codec": "ima-adpcm-4bit",
                                 "channels": 1, "sampleRate": xap_bank_walk.SAMPLE_RATE,
                                 "samples": pcm_bytes // 2, "seconds": round(pcm_bytes / 2 / xap_bank_walk.SAMPLE_RATE, 3),
-                                "languageLane": PurePosixPath(rel).stem.split("_")[1].casefold()}
-                rec["provenance"]["loader"] = L_XAP
+                                "languageLane": language}
+                rec["provenance"]["loader"] = (L_XAP if bank_path else
+                                                "runtime sample-bank path not established for this file")
                 rec["upscale"] = {"sourceSampleRate": xap_bank_walk.SAMPLE_RATE, "channels": 1, "compressed": True,
                                   "suggestedTreatment": ["4-bit ADPCM source: decode, denoise, keep sample length"],
                                   "treatmentBasis": "rule-derived from codec; no listening review"}
@@ -1926,10 +1960,16 @@ def code_references(decomp: Path | None) -> dict:
     if decomp is None:
         return refs
     src = decomp / "src"
-    refs["source"] = "onslaught-decomp src/ (" + (git_head_of(decomp) or "unknown commit") + ")"
+    if not src.is_dir():
+        raise CatalogInputError("the selected source has no src directory")
+    if decomp.is_symlink() or src.is_symlink():
+        raise CatalogInputError("the selected source and its src directory must not be symlinks")
+    head = git_head_of(decomp)
+    refs["source"] = (f"selected source src/ (git HEAD {head}; working tree not verified)" if head else
+                      "selected source src/ (unknown commit)")
     for path in sorted(src.glob("*.cpp"), key=lambda p: p.name.casefold()):
         function = None
-        for number, line in enumerate(path.read_text(encoding="latin-1").splitlines(), 1):
+        for number, line in enumerate(read_install_file(path).decode("latin-1").splitlines(), 1):
             m = FUNCTION_RE.match(line)
             if m:
                 function = f"{m.group('name')} @{m.group('va').lower()}"
@@ -1943,22 +1983,26 @@ def code_references(decomp: Path | None) -> dict:
                     fmt = values[0] if len(values) > 0 else None
                     levels = values[2] if len(values) > 2 else None
                 refs["textures"].append({"name": m.group(2).replace("\\\\", "\\"), "format": fmt, "levels": levels,
-                                         "site": f"{DECOMP} src/{path.name}:{number} {function or '(file scope)'}",
+                                         "site": f"selected source src/{path.name}:{number} {function or '(file scope)'}",
                                          "call": m.group(1)})
             for m in CODE_MESH_RE.finditer(line):
                 refs["meshes"].append({"name": m.group(1).replace("\\\\", "\\"),
-                                       "site": f"{DECOMP} src/{path.name}:{number} {function or '(file scope)'}"})
+                                       "site": f"selected source src/{path.name}:{number} {function or '(file scope)'}"})
             for m in CODE_EFFECT_RE.finditer(line):
                 refs["effects"].append({"name": m.group(2).replace("\\\\", "\\"), "call": m.group(1),
-                                        "site": f"{DECOMP} src/{path.name}:{number} {function or '(file scope)'}"})
+                                        "site": f"selected source src/{path.name}:{number} {function or '(file scope)'}"})
     return refs
 
 
 def git_head_of(path: Path) -> str | None:
     try:
-        return subprocess.run(["git", "-C", str(path), "rev-parse", "--short", "HEAD"], capture_output=True,
+        root = subprocess.run(["git", "-C", str(path), "rev-parse", "--show-toplevel"], capture_output=True,
                               text=True, check=True).stdout.strip()
-    except (OSError, subprocess.CalledProcessError):
+        if Path(root).resolve(strict=True) != path.resolve(strict=True):
+            return None
+        return subprocess.run(["git", "-C", str(path), "rev-parse", "--verify", "HEAD"], capture_output=True,
+                              text=True, check=True).stdout.strip()
+    except (OSError, RuntimeError, subprocess.CalledProcessError):
         return None
 
 
@@ -1993,18 +2037,34 @@ LANGUAGE_LANES = ("english", "french", "german", "spanish", "italian")
 
 def read_text_tables(game: Path, files: list[dict]) -> dict:
     """Language tables (entries with id, text and voice name) and the text.stf symbol ids."""
-    out: dict = {"tables": {}, "symbols": {}}
+    out: dict = {"tables": {}, "symbols": {}, "_snapshots": {}}
+
+    def snapshot(rel: str, data: bytes) -> None:
+        out["_snapshots"][rel] = {"sha": sha256(data), "size": len(data), "lines": data.count(b"\n")}
+        if rel.casefold().endswith(".stf"):
+            out["_snapshots"][rel]["defines"] = len(re.findall(rb"(?m)^\s*#define\s", data))
+
     for row in files:
         if row["family"] == "language-dat":
             path = game / row["path"]
             data = read_install_file(path)
-            lang = language_dat_decode.parse_lang_dat(path)
+            lang = language_dat_decode.parse_lang_dat_bytes(data, path=path)
             entries = [language_dat_decode.entry_record(lang, data, e) for e in lang.entries]
-            out["tables"][PurePosixPath(row["path"]).stem.casefold()] = {"path": row["path"], "sha": sha256(data),
-                                                                          "entries": entries, "version": lang.ver}
-    stf = game / "data" / "MissionScripts" / "text" / "text.stf"
-    if stf.is_file():
-        out["symbols"] = {name: ident for ident, name in language_dat_decode.parse_text_stf(stf).items()}
+            lane = PurePosixPath(row["path"]).stem.casefold()
+            if lane in out["tables"]:
+                raise CatalogInputError("ambiguous language table name")
+            snapshot(row["path"], data)
+            out["tables"][lane] = {"path": row["path"], "sha": sha256(data), "entries": entries, "version": lang.ver}
+    symbols = [row for row in files if row["path"].casefold() == "data/missionscripts/text/text.stf"]
+    if len(symbols) > 1:
+        raise CatalogInputError("ambiguous text symbol table path")
+    if symbols:
+        row = symbols[0]
+        if row["family"] != "stf-text-table":
+            raise CatalogInputError(f"not a regular file: {row['path']}")
+        data = read_install_file(game / row["path"])
+        snapshot(row["path"], data)
+        out["symbols"] = {name: ident for ident, name in language_dat_decode.parse_text_stf_bytes(data).items()}
     out["english"] = out["tables"].get("english")
     return out
 
@@ -2038,18 +2098,22 @@ def catalog_text_inventory(game: Path, files: list[dict], text: dict) -> list[di
         fam, rel = row["family"], row["path"]
         if fam not in ("mission-script-msl", "mission-text-txt", "stf-text-table", "language-dat", "sfx-catalog"):
             continue
-        data = read_install_file(game / rel)
+        snapshot = text.get("_snapshots", {}).get(rel)
+        data = None if snapshot is not None else read_install_file(game / rel)
+        file_sha = snapshot["sha"] if snapshot is not None else sha256(data)
+        file_size = snapshot["size"] if snapshot is not None else len(data)
         atype = {"mission-script-msl": "script", "mission-text-txt": "mission-text", "stf-text-table": "text-symbols",
                  "language-dat": "text-table", "sfx-catalog": "sound-table"}[fam]
-        rec = base_record(f"{atype}:{rel.casefold()}", atype, PurePosixPath(rel).name, rel, sha256(data),
-                          envelope="file", offset=0, length=len(data), raw_sha=sha256(data), sha_scope="whole file",
+        rec = base_record(f"{atype}:{rel.casefold()}", atype, PurePosixPath(rel).name, rel, file_sha,
+                          envelope="file", offset=0, length=file_size, raw_sha=file_sha, sha_scope="whole file",
                           parser=TOOL + ":catalog_text_inventory")
-        info: dict = {"lines": data.count(b"\n")}
+        info: dict = {"lines": snapshot["lines"] if snapshot is not None else data.count(b"\n")}
         level = re.match(r"data/missionscripts/level(\d{3})/", rel, re.IGNORECASE)
         if level:
             info["levelFolder"] = int(level.group(1))
         if fam == "stf-text-table":
-            info["defines"] = len(re.findall(rb"(?m)^\s*#define\s", data))
+            info["defines"] = (snapshot["defines"] if snapshot is not None else
+                               len(re.findall(rb"(?m)^\s*#define\s", data)))
             rec["provenance"]["loader"] = "build-time #include (FrontEndText.cpp, MenuItem.cpp, FEPGoodies.cpp)"
         elif fam == "language-dat":
             table = text["tables"].get(PurePosixPath(rel).stem.casefold())
@@ -2057,7 +2121,7 @@ def catalog_text_inventory(game: Path, files: list[dict], text: dict) -> list[di
                 info.update(entries=len(table["entries"]), withVoice=sum(1 for e in table["entries"] if e["audio"]),
                             version=table["version"])
             rec["provenance"]["loader"] = L_TEXT_LOAD
-            rec["provenance"]["parser"] = "tools/language_dat_decode.py:parse_lang_dat"
+            rec["provenance"]["parser"] = "tools/language_dat_decode.py:parse_lang_dat_bytes"
         elif fam == "mission-script-msl":
             info["includes"] = re.findall(r'(?m)^\s*#include\s+"([^"]+)"', data.decode("latin-1"))[:32]
             rec["provenance"]["loader"] = "runtime reader not established (compiled scripts travel in the level data)"
@@ -2125,7 +2189,7 @@ def payload_use(tag: str, decoded: dict, archive: str) -> dict | None:
     return None
 
 
-def catalog_payloads(collect: dict) -> list[dict]:
+def catalog_payloads(collect: dict, registries: dict) -> list[dict]:
     records = []
     for p in collect["payloads"]:
         rec = base_record(f"level-payload:{p['archive'].casefold()}#{p['chunk']}", "level-payload",
@@ -2136,8 +2200,16 @@ def catalog_payloads(collect: dict) -> list[dict]:
         rec["provenance"]["loader"] = PAYLOAD_LOADERS.get(p["tag"], "unknown tag (traced and skipped)")
         rec["payload"] = {"tag": p["tag"], "innerTags": p["innerTags"]}
         if p["tag"] == "WRES":
-            rec["payload"]["structure"] = ("world bodies decoded in CWorld::LoadWorld's order: placement, marker, "
-                                           "waypoint-path and script-code records; level records carry the summaries")
+            level = p["archiveRec"]["archive"].get("level")
+            registry = registries.get(level)
+            if registry is None:
+                decoded = {"status": "undecoded", "reason": "no complete world analysis was available"}
+            elif registry["complete"]:
+                decoded = {"status": "decoded"}
+            else:
+                decoded = {"status": "incomplete", "parts": registry["undecodedWorlds"]}
+            rec["payload"]["structure"] = decoded["status"]
+            rec["payload"]["decoded"] = decoded
         elif p["decoded"] is not None:
             rec["payload"]["structure"] = p["decoded"]["status"]
             rec["payload"]["decoded"] = p["decoded"]
@@ -2510,16 +2582,24 @@ def link_level_configurations(levels: list[dict], worlds: dict, configs: dict | 
 
 
 def sample_index(audio: list[dict]) -> dict[bytes, list[dict]]:
-    """XAP sample records by CSoundManager::GetSample's stricmp key; one per language bank."""
+    """Sample records in standard language banks, indexed by GetSample's stricmp key."""
     out: dict[bytes, list[dict]] = collections.defaultdict(list)
     for a in audio:
-        if a["audio"].get("role") == "sound-effect":
+        if a["audio"].get("role") == "sound-effect" and a["audio"].get("languageLane") is not None:
             out[gtd.stricmp_key(a["name"])].append(a)
     return out
 
 
 def sample_relation(name: str, samples: dict, ev: list[dict], **extra) -> dict:
     found = sorted(samples.get(gtd.stricmp_key(name), []), key=lambda a: a["id"])
+    counts = collections.Counter(a["source"]["container"].casefold() for a in found)
+    if any(count > 1 for count in counts.values()):
+        ev = [*ev, evidence(
+            "loader-code", "SoundManager.cpp::CSoundManager::CreateSample (0x004e0890); " + gtd.L_SAMPLE,
+            "for an initial load, the last successful same-name creation is found first; actual creation, "
+            "failures and reload behavior are not observed, so these records are candidates")]
+        return relation("plays-sample", None, "incomplete", ev, targetName=name,
+                        candidates=[a["id"] for a in found], **extra)
     return find_relation("plays-sample", found, ev, targetName=name, **extra)
 
 
@@ -2550,10 +2630,12 @@ def catalog_sound_effects(game: Path, files: list[dict], samples: dict, stats: c
         rec["soundEffect"]["rule"] = ("the list keeps the first effect of each name (stricmp); a later one joins that "
                                       "effect's chain, and PlayEffect plays one effect of the chain at random")
         ev = [evidence("loader-code", gtd.L_SFX_PLAY + " -> " + gtd.L_SAMPLE, "the effect's sample is looked up "
-                       "(stricmp) among the samples of the language's XAP bank (" + L_SAMPLE_BANK + "); one target "
-                       "per bank")]
-        rec["relationships"].append(sample_relation(e["sample"], samples, ev, role="sample"))
-        stats["soundEffectSamples" + ("Resolved" if samples.get(gtd.stricmp_key(e["sample"])) else "Unresolved")] += 1
+                       "(stricmp) among the samples of the language's XAP bank (" + L_SAMPLE_BANK + "); "
+                       "actual loading is not observed")]
+        sample = sample_relation(e["sample"], samples, ev, role="sample")
+        rec["relationships"].append(sample)
+        stats["soundEffectSamples" + ("Incomplete" if sample["status"] == "incomplete" else
+                                      "Unresolved" if sample["status"] == "unresolved" else "Resolved")] += 1
         if e["lowpassSample"]:
             rec["relationships"].append(sample_relation(e["lowpassSample"], samples, [evidence(
                 "loader-code", gtd.L_SFX_PRECACHE + " -> " + gtd.L_SAMPLE, "the low-pass sample is looked up the same "
@@ -2577,9 +2659,10 @@ def link_script_samples(scripts: list[dict], samples: dict, stats: collections.C
                 continue
             row = sample_relation(name, samples, [evidence("loader-code", L_SCRIPT_SAMPLE + " -> " + gtd.L_SAMPLE,
                                                            "the argument is looked up (stricmp) among the samples of "
-                                                           "the language's XAP bank; one target per bank")],
+                                                           "the language's XAP bank; actual loading is not observed")],
                                   role="script")
-            stats["scriptSamples" + ("Resolved" if row["status"] != "unresolved" else "Unresolved")] += 1
+            stats["scriptSamples" + ("Incomplete" if row["status"] == "incomplete" else
+                                     "Unresolved" if row["status"] == "unresolved" else "Resolved")] += 1
             sc["relationships"].append(row)
 
 
@@ -2639,7 +2722,10 @@ def build_catalog(game: Path, decomp: Path | None = None) -> dict:
             continue
         rel = row["path"]
         source = read_install_file(game / rel)
-        stream = dds_census.inflate_aya(source)
+        try:
+            stream = aai.inflate_aya_bytes(source)
+        except aai.ArchiveObservationError as error:
+            raise CatalogInputError(f"loose mesh {rel}: {error.category}") from error
         rec, anims, _uv = catalog_mesh(stream, asset_id="mesh:" + rel.casefold(),
                                        name=PurePosixPath(rel).name[2:-4], container=rel, container_sha=sha256(source),
                                        envelope="aya-zlib-members(cmsh)", offset=0, chunk_path=[])
@@ -2682,7 +2768,7 @@ def build_catalog(game: Path, decomp: Path | None = None) -> dict:
     link_unloaded_mesh_names(textures, meshes)
     inventory = catalog_text_inventory(game, files, text)
     link_compiled_scripts(inventory, world["scripts"])
-    payloads = catalog_payloads(collect)
+    payloads = catalog_payloads(collect, world["registries"])
     levels = catalog_levels(archives, placements, video, game, files, world["worlds"], collect["payloads"],
                             world["registries"])
     link_level_configurations(levels, world["worlds"], config_meta, archive_stats)
@@ -2771,8 +2857,7 @@ def build_coverage(catalog: dict) -> dict:
         "placementsByKind": dict(sorted(collections.Counter(a["placement"]["kind"] for a in assets
                                                             if a["type"] == "placement").items())),
         "levelPayloadDecode": dict(sorted(collections.Counter(
-            f"{a['payload']['tag']}:{a['payload']['structure'] if a['payload']['tag'] != 'WRES' else 'decoded'}"
-            for a in assets if a["type"] == "level-payload").items())),
+            f"{a['payload']['tag']}:{a['payload']['structure']}" for a in assets if a["type"] == "level-payload").items())),
         "notYetCatalogued": [
             "VSDS, PMIB and DMKR are decoded to summaries and hashes (shader declarations, constants and assembly "
             "text; patch strip words; damage mip bytes), not exported",
@@ -2823,7 +2908,7 @@ def output_is_ignored_local_data(out: Path) -> bool:
     return result.returncode == 0
 
 
-def write_outputs(out: Path, game: Path, catalog: dict, coverage: dict) -> list[Path]:
+def write_outputs(out: Path, game: Path, catalog: dict, coverage: dict, *, decomp: Path | None = None) -> list[Path]:
     manifest = {"schema": MANIFEST_SCHEMA, GENERATED_MARKER: True, "schemaVersion": SCHEMA_VERSION,
                 "generatedAt": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "tool": TOOL, "toolCommit": git_head(), "assetSchema": "tools/content_catalog.schema.json",
@@ -2837,7 +2922,8 @@ def write_outputs(out: Path, game: Path, catalog: dict, coverage: dict) -> list[
                "assets.jsonl": "".join(json.dumps({**a, GENERATED_MARKER: True}, sort_keys=True) + "\n"
                                        for a in catalog["assets"])}
     written = []
-    with SecuredOutputRoot(out, protected_sources=[game]) as secured:
+    protected = [game] + ([decomp] if decomp is not None else [])
+    with SecuredOutputRoot(out, protected_sources=protected) as secured:
         for name, text in outputs.items():
             with secured.atomic_text_writer(out / name) as writer:
                 writer.write(text)
@@ -2926,17 +3012,23 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--game (or BEA_GAME) is required")
     game = Path(os.path.abspath(args.game))
     out = Path(os.path.abspath(args.out))
+    decomp = Path(os.path.abspath(args.decomp)) if args.decomp else None
     if not output_is_ignored_local_data(out):
         parser.error("--out must be a git-ignored directory below this checkout's local-data/")
-    if os.path.commonpath((game, out)) == str(game):
-        parser.error("--out must not be inside the game folder")
     try:
-        catalog = build_catalog(game, Path(os.path.abspath(args.decomp)) if args.decomp else None)
-    except named_things.RegistryLimitError as error:
+        validate_disjoint_output_root(out, [game] + ([decomp] if decomp is not None else []))
+    except UnsafeGeneratedOutputError as error:
+        parser.error(str(error))
+    try:
+        catalog = build_catalog(game, decomp)
+    except (named_things.RegistryLimitError, CatalogInputError) as error:
         parser.error(str(error))
     coverage = build_coverage(catalog)
-    for path in write_outputs(out, game, catalog, coverage):
-        print(path)
+    try:
+        for path in write_outputs(out, game, catalog, coverage, decomp=decomp):
+            print(path)
+    except UnsafeGeneratedOutputError as error:
+        parser.error(str(error))
     print(json.dumps({"assetsByType": coverage["assetsByType"], "relationshipStatus": coverage["relationshipStatus"]},
                      sort_keys=True))
     return 0

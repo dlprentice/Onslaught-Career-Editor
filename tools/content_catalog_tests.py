@@ -10,7 +10,9 @@ import contextlib
 import hashlib
 import io
 import json
+import os
 import struct
+import subprocess
 import tempfile
 import unittest
 import zlib
@@ -35,6 +37,12 @@ import world_resources_decode as worlddec
 def aya(data: bytes) -> bytes:
     member = zlib.compress(data)
     return struct.pack("<I", len(member)) + member
+
+
+def authored_language() -> bytes:
+    text = "Hello\0".encode("utf-16le")
+    return (struct.pack("<III", 0xFFFFFFBB, 3, 1) + struct.pack("<III", 123, 0, 0xFFFFFFFF)
+            + struct.pack("<I", len(text)) + text + struct.pack("<I", 0))
 
 
 def chunk(tag: bytes, payload: bytes) -> bytes:
@@ -836,6 +844,27 @@ class NamedThingsCatalogueTests(unittest.TestCase):
         [gun] = [r for r in self.assets["script-code:204:rlwd#0"]["relationships"] if r["type"] == "names-thing"]
         self.assertEqual((gun["status"], gun["target"], gun["registryIncomplete"]), ("incomplete", None, ["WRLD"]))
 
+    def test_world_payload_coverage_reports_incomplete_bodies(self) -> None:
+        payloads = {a["source"]["container"]: a["payload"] for a in self.catalog["assets"]
+                    if a["type"] == "level-payload" and a["payload"]["tag"] == "WRES"}
+        self.assertEqual(payloads["data/resources/201_res_PC.aya"]["structure"], "decoded")
+        for level in (202, 203, 204):
+            with self.subTest(level=level):
+                self.assertEqual(payloads[f"data/resources/{level}_res_PC.aya"]["structure"], "incomplete")
+        coverage = catalog.build_coverage(self.catalog)["levelPayloadDecode"]
+        self.assertEqual((coverage["WRES:decoded"], coverage["WRES:incomplete"]), (2, 3))
+
+    def test_world_payload_without_the_physics_input_is_not_counted_as_decoded(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            (game / "data/default physics.dat").unlink()
+            data = catalog.build_catalog(game)
+        [payload] = [a["payload"] for a in data["assets"]
+                     if a["type"] == "level-payload" and a["payload"]["tag"] == "WRES"]
+        self.assertEqual(payload["structure"], "undecoded")
+        self.assertEqual(catalog.build_coverage(data)["levelPayloadDecode"]["WRES:undecoded"], 1)
+
     def test_duplicate_unit_metadata_uses_the_same_first_definition_as_the_registry(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             game = Path(temp)
@@ -1320,6 +1349,148 @@ class BoundaryTests(unittest.TestCase):
     def test_self_test_passes(self) -> None:
         self.assertEqual(catalog.run_self_test(), 0)
 
+    def test_nonstandard_sample_banks_are_catalogued_without_claiming_a_language_or_runtime_lookup(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            sounds = game / "data/sounds"
+            (sounds / "nested").mkdir(parents=True)
+            bank = xap_fixtures.bank([("AuthoredSample", 4, bytes(1))])
+            (sounds / "authored.xap").write_bytes(bank)
+            (sounds / "sounds_english_pc.xap").write_bytes(bank)
+            (sounds / "sounds_authored_pc.xap").write_bytes(bank)
+            (sounds / "nested/sounds_french_pc.xap").write_bytes(bank)
+            records = catalog.catalog_audio(game, catalog.walk_install(game))
+        by_path = {r["source"]["container"]: r for r in records}
+        self.assertEqual(by_path["data/sounds/sounds_english_pc.xap"]["audio"]["languageLane"], "english")
+        for path in ("data/sounds/authored.xap", "data/sounds/sounds_authored_pc.xap",
+                     "data/sounds/nested/sounds_french_pc.xap"):
+            self.assertIsNone(by_path[path]["audio"]["languageLane"])
+            self.assertIn("not established", by_path[path]["provenance"]["loader"])
+        indexed = catalog.sample_index(records)[catalog.gtd.stricmp_key("AuthoredSample")]
+        self.assertEqual([a["source"]["container"] for a in indexed], ["data/sounds/sounds_english_pc.xap"])
+
+    def test_duplicate_samples_in_one_bank_are_candidates_not_resolved_per_archive(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            (game / "data/sounds/sounds_english_pc.xap").write_bytes(xap_fixtures.bank(
+                [("Duplicate", 4, bytes(1)), ("DUPLICATE", 4, bytes(1))]))
+            (game / "data/sounds/sounds_french_pc.xap").write_bytes(xap_fixtures.bank(
+                [("Duplicate", 4, bytes(1))]))
+            (game / "data/sounds/sounds.sfx").write_bytes(tables.sfx([
+                ("Sound", "Duplicate", 30, True, False)]))
+            files = catalog.walk_install(game)
+            samples = catalog.sample_index(catalog.catalog_audio(game, files))
+            stats = collections.Counter()
+            effects, _ = catalog.catalog_sound_effects(game, files, samples, stats)
+            script = {"scriptCode": {"samples": ["duplicate"]}, "relationships": []}
+            catalog.link_script_samples([script], samples, stats)
+        [effect_relation] = [r for r in effects[0]["relationships"] if r["type"] == "plays-sample"]
+        [script_relation] = script["relationships"]
+        for row in (effect_relation, script_relation):
+            self.assertEqual((row["status"], row["target"]), ("incomplete", None))
+            self.assertEqual(len(row["candidates"]), 3)
+            self.assertTrue(any("last successful" in e["rule"] for e in row["evidence"]))
+        self.assertEqual(stats["soundEffectSamplesIncomplete"], 1)
+        self.assertEqual(stats["scriptSamplesIncomplete"], 1)
+        self.assertEqual(stats["soundEffectSamplesResolved"], 0)
+        self.assertEqual(stats["scriptSamplesResolved"], 0)
+
+    def test_loose_mesh_respects_the_archive_expansion_limit_before_parsing(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            # Lower the bound around a normal authored mesh so this verifies the caller without a large fixture.
+            with patch.object(catalog.aai, "MAX_INFLATED_BYTES", len(mesh_stream()) - 1), \
+                    patch.object(catalog, "catalog_mesh", side_effect=RuntimeError("mesh parser reached")):
+                with self.assertRaisesRegex(ValueError, "inflate_limit"):
+                    catalog.build_catalog(game)
+
+    def test_loose_mesh_respects_source_and_member_limits(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            mesh_path = game / "data/resources/meshes/m_authored.msh.aya"
+            with patch.object(catalog.aai, "MAX_COMPRESSED_BYTES", len(mesh_path.read_bytes()) - 1), \
+                    patch.object(catalog, "catalog_mesh", side_effect=RuntimeError("mesh parser reached")):
+                with self.assertRaisesRegex(ValueError, "compressed_limit"):
+                    catalog.build_catalog(game)
+            stream = mesh_stream()
+            middle = len(stream) // 2
+            mesh_path.write_bytes(aya(stream[:middle]) + aya(stream[middle:]))
+            with patch.object(catalog.aai, "MAX_MEMBERS", 1), \
+                    patch.object(catalog, "catalog_mesh", side_effect=RuntimeError("mesh parser reached")):
+                with self.assertRaisesRegex(ValueError, "member_count_limit"):
+                    catalog.build_catalog(game)
+
+    def test_incomplete_loose_mesh_member_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            mesh_path = game / "data/resources/meshes/m_authored.msh.aya"
+            mesh_path.write_bytes(mesh_path.read_bytes()[:-1])
+            with self.assertRaisesRegex(ValueError, "member_overrun"):
+                catalog.build_catalog(game)
+
+    def test_duplicate_world_containers_are_refused_before_publication(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            game.mkdir()
+            authored_install(game)
+            archive = game / "data/resources/200_res_PC.aya"
+            original = zlib.decompress(world_archive()[4:])
+            real = named.body([named.unit("Turret", "Gun")])
+            world = chunk(b"WDAT", struct.pack("<ii", -1, 200)) + chunk(b"RLWD", real)
+            prefix = chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1)) \
+                     + chunk(b"AYAD", bytes(24))
+            cases = {
+                "duplicate WRES": original + chunk(b"WRES", chunk(b"WRLD", b"")),
+                "duplicate WRLD": prefix + chunk(b"WRES", chunk(b"WRLD", world) + chunk(b"WRLD", b"")),
+            }
+            out = Path(temp) / "out"
+            for label, raw in cases.items():
+                with self.subTest(label=label):
+                    archive.write_bytes(aya(raw))
+                    with patch.object(catalog, "output_is_ignored_local_data", return_value=True), \
+                            patch.object(catalog, "write_outputs") as write, contextlib.redirect_stderr(io.StringIO()) as err:
+                        with self.assertRaises(SystemExit) as raised:
+                            catalog.main(["--game", str(game), "--out", str(out)])
+                    self.assertEqual(raised.exception.code, 2)
+                    self.assertIn("world layout", err.getvalue())
+                    write.assert_not_called()
+                    self.assertFalse(out.exists())
+
+    def test_rejected_loose_mesh_reports_the_reason_and_publishes_nothing(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            game.mkdir()
+            authored_install(game)
+            out = Path(temp) / "out"
+            with patch.object(catalog.aai, "MAX_INFLATED_BYTES", len(mesh_stream()) - 1), \
+                    patch.object(catalog, "output_is_ignored_local_data", return_value=True), \
+                    patch.object(catalog, "write_outputs") as write, contextlib.redirect_stderr(io.StringIO()) as err:
+                with self.assertRaises(SystemExit) as raised:
+                    catalog.main(["--game", str(game), "--out", str(out)])
+            self.assertEqual(raised.exception.code, 2)
+            self.assertIn("inflate_limit", err.getvalue())
+            self.assertIn("m_authored.msh.aya", err.getvalue())
+            write.assert_not_called()
+            self.assertFalse(out.exists())
+
+    def test_loose_mesh_multiple_valid_members_keep_the_same_decoded_model(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            mesh_path = game / "data/resources/meshes/m_authored.msh.aya"
+            before = catalog.build_catalog(game)
+            stream = mesh_stream()
+            middle = len(stream) // 2
+            mesh_path.write_bytes(aya(stream[:middle]) + aya(stream[middle:]))
+            after = catalog.build_catalog(game)
+        pick = lambda data: next(row for row in data["assets"]
+                                 if row["id"] == "mesh:data/resources/meshes/m_authored.msh.aya")
+        self.assertEqual(pick(before)["mesh"], pick(after)["mesh"])
+
     def test_redirected_output_never_creates_a_directory_in_the_selected_game(self) -> None:
         from safe_generated_output import UnsafeGeneratedOutputError
         with tempfile.TemporaryDirectory() as temp:
@@ -1345,6 +1516,193 @@ class BoundaryTests(unittest.TestCase):
             files = catalog.write_outputs(out, game, {"files": [], "assets": [], "survey": {}}, {})
             self.assertEqual({p.name for p in files}, {"manifest.json", "survey.json", "coverage.json", "assets.jsonl"})
             self.assertTrue(all(p.is_file() for p in files))
+
+    def test_decomp_input_and_output_are_disjoint_even_through_an_alias(self) -> None:
+        from safe_generated_output import UnsafeGeneratedOutputError
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            game = root / "authored-game"
+            game.mkdir()
+            authored_install(game)
+            source_parent = root / "selected"
+            source = source_parent / "source"
+            (source / "src").mkdir(parents=True)
+            marker = source / "manifest.json"
+            marker.write_text("keep the selected source\n")
+            alias = root / "alias"
+            try:
+                alias.symlink_to(source, target_is_directory=True)
+            except OSError as error:
+                self.skipTest(f"creating a directory symlink is unavailable: {error}")
+            for out in (source, source / "nested", source_parent, alias):
+                with self.subTest(out=out):
+                    with patch.object(catalog, "output_is_ignored_local_data", return_value=True), \
+                            contextlib.redirect_stderr(io.StringIO()):
+                        with self.assertRaises(SystemExit) as raised:
+                            catalog.main(["--game", str(game), "--decomp", str(source), "--out", str(out)])
+                    self.assertEqual(raised.exception.code, 2)
+                    self.assertEqual(marker.read_text(), "keep the selected source\n")
+                    self.assertFalse((source / "nested").exists())
+                    self.assertFalse((source_parent / "manifest.json").exists())
+            with self.assertRaises(UnsafeGeneratedOutputError):
+                catalog.write_outputs(source / "nested", game, {"files": [], "assets": [], "survey": {}}, {},
+                                      decomp=source)
+            self.assertFalse((source / "nested").exists())
+
+    def test_optional_source_identity_never_uses_a_parent_repositories_head(self) -> None:
+        self.assertIsNone(catalog.git_head_of(catalog.ROOT / "tools"))
+        with tempfile.TemporaryDirectory() as temp:
+            source = Path(temp)
+            (source / "src").mkdir()
+            (source / "src" / "example.cpp").write_text('void f() {}\n')
+            subprocess.run(["git", "init", "-q", str(source)], check=True, stdout=subprocess.PIPE)
+            subprocess.run(["git", "-C", str(source), "add", "--", "src/example.cpp"], check=True)
+            subprocess.run(["git", "-C", str(source), "-c", "user.name=fixture", "-c",
+                            "user.email=fixture@example.invalid", "commit", "-qm", "authored fixture"], check=True)
+            head = catalog.git_head_of(source)
+            self.assertIsNotNone(head)
+            self.assertIsNone(catalog.git_head_of(source / "src"))
+            (source / "src" / "example.cpp").write_text('void changed() {}\n')
+            label = catalog.code_references(source)["source"]
+            self.assertIn(head, label)
+            self.assertIn("working tree not verified", label)
+
+    def test_optional_source_without_src_directory_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            with self.assertRaisesRegex(ValueError, "src directory"):
+                catalog.code_references(Path(temp))
+
+    def test_optional_source_files_are_bounded_and_do_not_follow_final_symlinks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "selected-source"
+            (source / "src").mkdir(parents=True)
+            cpp = source / "src" / "example.cpp"
+            cpp.write_bytes(b" " * 65)
+            with patch.object(catalog, "MAX_FILE_BYTES", 64):
+                with self.assertRaisesRegex(ValueError, "admission limit"):
+                    catalog.code_references(source)
+            cpp.unlink()
+            external = root / "external.cpp"
+            external.write_text('void external() {}\n')
+            try:
+                cpp.symlink_to(external)
+            except OSError as error:
+                self.skipTest(f"creating a symlink is unavailable: {error}")
+            with self.assertRaisesRegex(ValueError, "not a regular file"):
+                catalog.code_references(source)
+
+    def test_language_and_symbols_are_parsed_and_inventoried_from_one_admitted_read(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            language = game / "data/language/english.dat"
+            symbol = game / "data/MissionScripts/text/text.stf"
+            language.parent.mkdir(parents=True)
+            symbol.parent.mkdir(parents=True)
+            language.write_bytes(authored_language())
+            symbol.write_bytes(b"#define HELLO 123\r\n")
+            files = catalog.walk_install(game)
+            with patch.object(catalog, "read_install_file", wraps=catalog.read_install_file) as read, \
+                    patch.object(catalog.language_dat_decode, "parse_lang_dat", side_effect=RuntimeError("reopened")), \
+                    patch.object(catalog.language_dat_decode, "parse_text_stf", side_effect=RuntimeError("reopened")):
+                text = catalog.read_text_tables(game, files)
+                records = catalog.catalog_text_inventory(game, files, text)
+            self.assertEqual(text["symbols"], {"HELLO": 123})
+            self.assertEqual(text["tables"]["english"]["entries"][0]["text"], "Hello")
+            self.assertEqual(sum(call.args[0] == language for call in read.call_args_list), 1)
+            self.assertEqual(sum(call.args[0] == symbol for call in read.call_args_list), 1)
+            self.assertEqual({r["type"] for r in records}, {"text-table", "text-symbols"})
+
+    def test_text_snapshot_parsers_match_their_path_wrappers(self) -> None:
+        decoder = catalog.language_dat_decode
+        with tempfile.TemporaryDirectory() as temp:
+            language = Path(temp) / "authored.dat"
+            language.write_bytes(authored_language())
+            self.assertEqual(decoder.parse_lang_dat(language),
+                             decoder.parse_lang_dat_bytes(language.read_bytes(), path=language))
+            symbol = Path(temp) / "authored.stf"
+            symbol.write_bytes(b"#define FIRST 123\r\n#define SECOND 123\n#define OTHER 99\r")
+            self.assertEqual(decoder.parse_text_stf(symbol), decoder.parse_text_stf_bytes(symbol.read_bytes()))
+            self.assertEqual(decoder.parse_text_stf_bytes(symbol.read_bytes()), {123: "FIRST", 99: "OTHER"})
+
+    def test_symbol_input_over_the_limit_is_refused_before_parse(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            symbol = game / "data/MissionScripts/text/text.stf"
+            symbol.parent.mkdir(parents=True)
+            symbol.write_bytes(b"#" * 65)
+            files = catalog.walk_install(game)
+            with patch.object(catalog, "MAX_FILE_BYTES", 64):
+                with self.assertRaisesRegex(ValueError, "admission limit"):
+                    catalog.read_text_tables(game, files)
+
+    def test_symbol_symlink_is_not_followed(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            game = root / "game"
+            symbol = game / "data/MissionScripts/text/text.stf"
+            symbol.parent.mkdir(parents=True)
+            external = root / "authored-external"
+            external.write_bytes(b"#define OUTSIDE 42\n")
+            try:
+                symbol.symlink_to(external)
+            except OSError as error:
+                self.skipTest(f"creating a symlink is unavailable: {error}")
+            files = catalog.walk_install(game)
+            with self.assertRaisesRegex(ValueError, "not a regular file"):
+                catalog.read_text_tables(game, files)
+
+    def test_case_colliding_text_inputs_are_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            folder = game / "data/MissionScripts/text"
+            folder.mkdir(parents=True)
+            (folder / "text.stf").write_bytes(b"#define FIRST 1\n")
+            if (folder / "TEXT.STF").exists():
+                self.skipTest("filesystem does not allow case-colliding filenames")
+            (folder / "TEXT.STF").write_bytes(b"#define SECOND 2\n")
+            with self.assertRaisesRegex(ValueError, "ambiguous text symbol table"):
+                catalog.read_text_tables(game, catalog.walk_install(game))
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            folder = game / "data/language"
+            folder.mkdir(parents=True)
+            (folder / "english.dat").write_bytes(authored_language())
+            if (folder / "ENGLISH.DAT").exists():
+                self.skipTest("filesystem does not allow case-colliding filenames")
+            (folder / "ENGLISH.DAT").write_bytes(authored_language())
+            with self.assertRaisesRegex(ValueError, "ambiguous language table"):
+                catalog.read_text_tables(game, catalog.walk_install(game))
+
+    def test_admitted_read_refuses_a_path_replaced_during_the_read(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "selected"
+            path.write_bytes(b"before")
+            replacement = Path(temp) / "replacement"
+            replacement.write_bytes(b"after!")
+            actual_read = os.read
+            def swap(fd: int, n: int) -> bytes:
+                data = actual_read(fd, n)
+                os.replace(replacement, path)
+                return data
+            with patch.object(catalog.os, "read", side_effect=swap):
+                with self.assertRaisesRegex(ValueError, "changed while it was read"):
+                    catalog.read_install_file(path)
+
+    def test_admitted_read_refuses_same_size_edits_with_restored_mtime(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "selected"
+            path.write_bytes(b"before")
+            original = path.stat()
+            actual_read = os.read
+            def change(fd: int, n: int) -> bytes:
+                data = actual_read(fd, n)
+                path.write_bytes(b"after!")
+                os.utime(path, ns=(original.st_atime_ns, original.st_mtime_ns))
+                return data
+            with patch.object(catalog.os, "read", side_effect=change):
+                with self.assertRaisesRegex(ValueError, "changed while it was read"):
+                    catalog.read_install_file(path)
 
     def test_generated_output_is_refused_by_the_public_safety_check(self) -> None:
         line = json.dumps({"id": "texture:x", catalog.GENERATED_MARKER: True})

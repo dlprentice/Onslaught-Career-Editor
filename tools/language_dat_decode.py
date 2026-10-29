@@ -24,6 +24,7 @@ This tool can optionally correlate IDs to token names using:
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import re
 import struct
@@ -93,7 +94,11 @@ class LangDat:
 
 
 def parse_lang_dat(path: Path) -> LangDat:
-    data = path.read_bytes()
+    return parse_lang_dat_bytes(path.read_bytes(), path=path)
+
+
+def parse_lang_dat_bytes(data: bytes, *, path: Path = Path("<bytes>")) -> LangDat:
+    """Parse an already-admitted byte snapshot, preserving the source label for diagnostics."""
     if len(data) < 0x0C:
         raise ValueError(f"{path}: too small to be a language .dat")
 
@@ -157,8 +162,15 @@ _STF_DEFINE_RE = re.compile(r"^#define\s+(\S+)\s+(\d+)\s*$")
 
 
 def parse_text_stf(path: Path) -> dict[int, str]:
+    return parse_text_stf_bytes(path.read_bytes())
+
+
+def parse_text_stf_bytes(data: bytes) -> dict[int, str]:
+    """Parse an already-admitted byte snapshot with the same text decoding as Path.read_text."""
     id_to_name: dict[int, str] = {}
-    for line in path.read_text(errors="replace").splitlines():
+    with io.TextIOWrapper(io.BytesIO(data), errors="replace") as stream:
+        lines = stream.read().splitlines()
+    for line in lines:
         m = _STF_DEFINE_RE.match(line.strip())
         if not m:
             continue

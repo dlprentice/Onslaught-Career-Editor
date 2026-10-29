@@ -411,10 +411,65 @@ class GateTests(unittest.TestCase):
                 self.assertEqual(code, 1, out)
                 self.assertIn("world layout", out)
 
+    def test_duplicate_world_resources_or_world_containers_fail(self) -> None:
+        def chunk(tag: bytes, payload: bytes) -> bytes:
+            return tag + struct.pack("<I", len(payload)) + payload
+
+        real = body([unit("Turret", "Gun")])
+        valid = level_archive(None, real)
+        original = zlib.decompress(valid[4:])
+        prefix = chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1)) \
+                 + chunk(b"AYAD", bytes(24))
+        world = chunk(b"WDAT", struct.pack("<ii", -1, 201)) + chunk(b"RLWD", real)
+        cases = {
+            "duplicate WRES": original + chunk(b"WRES", chunk(b"WRLD", b"")),
+            "duplicate WRLD": prefix + chunk(b"WRES", chunk(b"WRLD", world) + chunk(b"WRLD", b"")),
+        }
+        for label, raw in cases.items():
+            with self.subTest(label=label):
+                compressed = zlib.compress(raw)
+                code, out = self.run_gate({201: struct.pack("<I", len(compressed)) + compressed})
+                self.assertEqual(code, 1, out)
+                self.assertIn("world layout", out)
+
     def test_a_folder_without_level_archives_fails(self) -> None:
         code, out = self.run_gate({})
         self.assertEqual(code, 1)
         self.assertIn("no level archive was checked", out)
+
+    def test_case_colliding_level_archives_are_refused_before_selection(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            resources = game / "data" / "resources"
+            resources.mkdir(parents=True)
+            (game / "data" / "default physics.dat").write_bytes(GATE_PHYSICS)
+            tables.write_tables(game)
+            (resources / "201_res_PC.aya").write_bytes(level_archive(None, b"invalid"))
+            if (resources / "201_res_pc.aya").exists():
+                self.skipTest("filesystem does not allow case-colliding filenames")
+            (resources / "201_res_pc.aya").write_bytes(level_archive(None, body([unit("Turret", "Gun")])))
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = gate.main(["--game", str(game)])
+        self.assertEqual(code, 1, out.getvalue())
+        self.assertIn("ambiguous level archive", out.getvalue())
+
+    def test_case_colliding_resource_directories_are_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            (game / "data" / "resources").mkdir(parents=True)
+            if (game / "data" / "Resources").exists():
+                self.skipTest("filesystem does not allow case-colliding directory names")
+            (game / "data" / "Resources").mkdir()
+            (game / "data" / "default physics.dat").write_bytes(GATE_PHYSICS)
+            tables.write_tables(game)
+            (game / "data" / "resources" / "201_res_PC.aya").write_bytes(
+                level_archive(None, body([unit("Turret", "Gun")])))
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = gate.main(["--game", str(game)])
+        self.assertEqual(code, 1, out.getvalue())
+        self.assertIn("ambiguous resources folder", out.getvalue())
 
 
 if __name__ == "__main__":

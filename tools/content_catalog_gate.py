@@ -73,21 +73,31 @@ def physics_of(game: Path) -> tuple[dict, dict]:
 
 def level_bodies(path: Path, level: int) -> dict:
     raw = b"".join(wre.inflate(wre.read_members(wre.read_retail(path))))
-    worlds = wre.level_worlds(raw)
     # The loader reads WDAT and then the required bodies in order. A missing body, wrong level number, duplicate or
     # misordered chunk must not count as a successfully checked level merely because the remaining bodies decode.
-    for tag, at, size in wre.chunks(raw):
-        if tag != "WRES":
-            continue
-        for subtag, start, length in wre.chunks(raw, at, at + size):
-            if subtag != "WRLD":
-                continue
-            tags = [name for name, _offset, _length in wre.chunks(raw, start, start + length)]
-            parts = cc.world_layout_parts(tags, worlds.get("baseLevel"), worlds.get("realLevel"), level)
-            if parts:
-                raise wre.EncodeError("incomplete or inconsistent world layout: " + ", ".join(parts))
-            return worlds
-    raise wre.EncodeError("no WRES/WRLD chunk")
+    def one(chunks, wanted: str) -> tuple[int, int]:
+        found = None
+        for tag, at, size in chunks:
+            if tag == wanted:
+                if found is not None:
+                    raise wre.EncodeError(f"world layout requires exactly one {wanted} chunk")
+                found = (at, size)
+        if found is None:
+            raise wre.EncodeError(f"world layout requires exactly one {wanted} chunk")
+        return found
+
+    at, size = one(wre.chunks(raw), "WRES")
+    start, length = one(wre.chunks(raw, at, at + size), "WRLD")
+    worlds = wre.level_worlds(raw)
+    tags = []
+    for name, _offset, _length in wre.chunks(raw, start, start + length):
+        if len(tags) == 3:
+            raise wre.EncodeError("incomplete or inconsistent world layout: too many world chunks")
+        tags.append(name)
+    parts = cc.world_layout_parts(tags, worlds.get("baseLevel"), worlds.get("realLevel"), level)
+    if parts:
+        raise wre.EncodeError("incomplete or inconsistent world layout: " + ", ".join(parts))
+    return worlds
 
 
 def thing_name_literals(worlds: dict) -> list[tuple[str, str, str, str]]:
@@ -179,6 +189,24 @@ def resource_archives(game: Path) -> list[Path]:
     if folder is None:
         return []
     return sorted(p for p in folder.iterdir() if p.name.casefold().endswith("_res_pc.aya") and p.is_file())
+
+
+def level_archives_checked(game: Path) -> dict[int, Path]:
+    """Keep every selected level visible; refuse case collisions instead of overwriting a dictionary entry."""
+    data = game / "data"
+    folders = [p for p in data.iterdir() if p.name.casefold() == "resources"] if data.is_dir() else []
+    if len(folders) != 1 or not folders[0].is_dir():
+        raise wre.EncodeError("missing or ambiguous resources folder")
+    found: dict[int, Path] = {}
+    for path in sorted(folders[0].iterdir()):
+        match = wre.LEVEL_ARCHIVE_RE.match(path.name)
+        if not match:
+            continue
+        level = int(match.group(1))
+        if level in found:
+            raise wre.EncodeError(f"ambiguous level archive for level {level:03d}")
+        found[level] = path
+    return found
 
 
 def check_payloads(path: Path, counts: collections.Counter, failures: list[str]) -> None:
@@ -287,12 +315,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--level", type=int, help="only the archive of this level")
     args = parser.parse_args(argv)
     game = wre.selected_game_root(args.game)
+    try:
+        archives = level_archives_checked(game)
+    except (wre.EncodeError, OSError) as error:
+        print(f"FAIL {error}")
+        print("content catalogue gate: failed (1 failures)")
+        return 1
     lookup, behaviours = physics_of(game)
     counts: collections.Counter = collections.Counter()
     failures: list[str] = []
     rows = []
     worlds_by_level = {}
-    for level, path in wre.level_archives(game).items():
+    for level, path in archives.items():
         if args.level is not None and level != args.level:
             continue
         try:

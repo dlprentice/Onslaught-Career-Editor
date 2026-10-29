@@ -172,7 +172,12 @@ publish, sign, or install anything by themselves.
   configurations it offers, configuration to its weapons, explosion, cockpit mesh and description text, sound effect to
   its bank samples and its chain, effect to texture, goodie to texture/mesh/film, voice file to its text line, code
   lookups of textures, meshes and sound effects with `--decomp`) are emitted only from a loader rule in
-  the public decompilation or from the data, and each names that evidence; unresolved links stay explicit. A script's
+  the public decompilation or from the data, and each names that evidence; unresolved links stay explicit. Sample joins
+  consider only direct `data/sounds/sounds_<language>_pc.xap` banks for the five names `CText::GetLanguageName` returns;
+  other banks are catalogued without
+  asserting they load. Duplicate sample names within a bank make the join incomplete and list candidates: the last
+  successful initial creation would be found first, but the catalogue does not observe loading or reload outcomes.
+  A script's
   literal thing name (`GetThingRef`, `Teleport`, `PlayCutscene`), and a cutscene's link-to name (`CCutscene::Start`), is
   joined using a source-modelled prediction of `CWorld::FindThingByName` just after a successful load (`named_things.py`, below): the record predicted to be found in every
   career (`resolved`, with the records of that name it hides), the base-world records of the name in the order the
@@ -182,6 +187,12 @@ publish, sign, or install anything by themselves.
   predictions, not observations of runtime names or later changes. Missing, misordered or undecodable world parts mark
   the registry and its lookups incomplete; a partial list never claims a target. A registry requiring over 10,000 entries is
   refused explicitly before the catalogue is written; the limit is the tool's, not the game's. The
+  loose-mesh reader uses the bounded archive decoder: at most 64 MiB compressed, 128 MiB expanded and 4,096 members.
+  These are tool limits, not claims about the game format. A refused mesh or ambiguous duplicate world container stops
+  the catalogue before publication. The optional `--decomp` source must contain `src/` and stay disjoint from the output;
+  a reported Git HEAD belongs to the selected repository root, while its working tree remains unverified. Language and
+  symbol tables are selected from the file inventory and parsed from a bounded, identity-checked read; final symlinks
+  and detected file changes are refused. The
   single-record `mission_script_inspect.py` is the independent check of the compiled-script reader. Output is accepted
   only below the ignored `local-data/`, and every generated file carries a marker that
   `public_allowlist_safety_check.py` refuses, as it refuses any tracked `local-data/` path. The catalogue is published with
@@ -303,8 +314,9 @@ publish, sign, or install anything by themselves.
   language's XAP bank, as a script's `PlaySample` argument does (it names a bank sample, not an effect).
   `game_tables_decode_tests.py` checks both readers on authored files.
 - `content_catalog_gate.py --game GAME [--table] [--level N]` is the content catalogue's retail gate. Over every level
-  archive of an installed game it checks that WDAT and its required world bodies are complete, in loader order, and
-  name the selected level; it checks that the world bodies decode with the loader's slots, that every registry
+  archive of an installed game it checks that exactly one WRES/WRLD is present and that WDAT and its required world bodies are complete, in loader order, and
+  name the selected level; case-colliding resource folders or level archives are refused. It checks that the world
+  bodies decode with the loader's slots, that every registry
   entry is a slotted record of a class that names itself, under its own name, with the base world's first and every
   base-world slot inside the career's bits, that no unit takes a slot with nothing made for it, and that `find` and
   `find_by_walk` agree on every literal thing name of every script, and every cutscene's link-to name, with every, no

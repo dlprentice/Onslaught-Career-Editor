@@ -711,6 +711,7 @@
             "status": {
               "enum": [
                 "decoded",
+                "incomplete",
                 "undecoded",
                 "skipped-by-pc-loader"
               ]
@@ -954,7 +955,7 @@
         "candidates": {
           "type": "array",
           "items": {"type": "string"},
-          "description": "For names-thing (career-dependent): the records of the name in the order FindThingByName meets them. For incomplete, candidates are only the matches visible in the partial model and do not establish the actual target."
+          "description": "For names-thing (career-dependent): the records of the name in the order FindThingByName meets them. For incomplete names-thing, candidates are only the matches visible in the partial model. For incomplete plays-sample, candidates contain matching records from standard language banks where a bank has duplicate names; actual load success and selection are unobserved. Neither incomplete case establishes the actual target."
         },
         "shadowed": {
           "type": "array",
