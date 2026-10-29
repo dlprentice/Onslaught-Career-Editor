@@ -71,6 +71,9 @@ internal sealed class CeLiveWorkflow(SceneTree tree)
             if (GameProcess.IsRunning()) throw new IOException("A game is already running; acceptance must have exclusive game ownership.");
             Environment.SetEnvironmentVariable("BEA_USER_DIR", user);
             Environment.SetEnvironmentVariable("BEA_GAME_DIR", game);
+            // An acceptance run starts the real CE: its "Report a problem" must not open a browser on the maintainer's desktop (the launcher and the game inherit these).
+            Environment.SetEnvironmentVariable("BEA_REPORT_NO_OPEN", "1");
+            Environment.SetEnvironmentVariable("BROWSER", "/bin/true");
             SettingsStore settings = new(Owned(Path.Combine(_owner, "settings.json")));
             settings.Save(new CompanionSettings { Target = GameTarget.OnslaughtCe, CeLauncher = launcher,
                 GameFolder = game, AutoBackup = false });
