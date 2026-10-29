@@ -168,7 +168,6 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         Terrain = null;
         TerrainProblem = null;
         Scripts = [];
-        _listedScripts = [];
         BaseWorld = null;
         LevelArchiveFile? file = Levels.FirstOrDefault(archive => archive.Level == level);
         if (file is null) return Refuse($"This game has no archive for level {level}.");
@@ -187,7 +186,6 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
             };
             Session = session;
             Scripts = ListScripts(session.Body, worlds);
-            _listedScripts = [.. session.Body.Scripts];
             BaseWorld = ReadBaseWorld(worlds);
             if (worlds.Terrain is null)
             {
@@ -213,15 +211,11 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         return true;
     }
 
-    private MissionScript[] _listedScripts = [];
-
-    /// <summary>Lists the scripts again when the world's list holds other script objects than the ones last listed (a replacement, or taking one back).</summary>
+    /// <summary>Refreshes after any command that could change scripts or their uses; a known move only changes position.</summary>
     private void RefreshScripts()
     {
         if (Session is not { } session || Worlds is not { } worlds) return;
-        MissionScript[] now = [.. session.Body.Scripts];
-        if (now.AsSpan().SequenceEqual(_listedScripts)) return;
-        _listedScripts = now;
+        if (session.NotifiedCommand is MoveObject) return;
         Scripts = ListScripts(session.Body, worlds);
     }
 

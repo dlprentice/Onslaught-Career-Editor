@@ -119,8 +119,11 @@ public sealed class EditSession
     /// <summary>Raised after every change to the working body (an edit, an undo, a redo).</summary>
     public event Action? Changed;
 
+    /// <summary>The command whose change is being announced, only during its Changed notification.</summary>
+    internal IEditCommand? NotifiedCommand { get; private set; }
+
     /// <summary>Makes a change and clears what could be redone.</summary>
-    /// <exception cref="InvalidOperationException">The change cannot be made; the body is as it was.</exception>
+    /// <exception cref="InvalidOperationException">The command can refuse without changing the body; an observer can also throw after an edit is recorded.</exception>
     public void Apply(IEditCommand command)
     {
         command.Do(Body);
@@ -141,7 +144,15 @@ public sealed class EditSession
     {
         _undo.Push(command);
         _redo.Clear();
-        Changed?.Invoke();
+        Notify(command);
+    }
+
+    private void Notify(IEditCommand command)
+    {
+        IEditCommand? previous = NotifiedCommand;
+        NotifiedCommand = command;
+        try { Changed?.Invoke(); }
+        finally { NotifiedCommand = previous; }
     }
 
     /// <summary>Takes back the last change. If the command cannot be taken back it stays where it was, and the exception comes out.</summary>
@@ -152,7 +163,7 @@ public sealed class EditSession
         command.Undo(Body);
         _undo.Pop();
         _redo.Push(command);
-        Changed?.Invoke();
+        Notify(command);
         return true;
     }
 
@@ -164,7 +175,7 @@ public sealed class EditSession
         command.Do(Body);
         _redo.Pop();
         _undo.Push(command);
-        Changed?.Invoke();
+        Notify(command);
         return true;
     }
 

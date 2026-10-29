@@ -11,6 +11,25 @@ namespace OnslaughtToolkit.Companion.Tests;
 /// </summary>
 internal static class LevelScriptEditTests
 {
+    private sealed class AppendInstructionInPlace : IEditCommand
+    {
+        private bool _made;
+        public string Description => "Append an authored instruction";
+        public void Do(WorldBody body)
+        {
+            if (_made) throw new InvalidOperationException("already made");
+            List<ScriptInstruction> instructions = body.Scripts[0].Code.Instructions;
+            instructions.Add(instructions[0]);
+            _made = true;
+        }
+        public void Undo(WorldBody body)
+        {
+            if (!_made) throw new InvalidOperationException("not made");
+            body.Scripts[0].Code.Instructions.RemoveAt(body.Scripts[0].Code.Instructions.Count - 1);
+            _made = false;
+        }
+    }
+
     internal static void Run(string output, Checks check)
     {
         check.Suite("level script edits");
@@ -522,6 +541,37 @@ internal static class LevelScriptEditTests
         check.That(model.OwnScriptIndex(new ScriptEntry(model.Scripts[0].Summary, 100, FromBaseWorld: true)) is null && model.OwnScriptIndex(new ScriptEntry(model.Scripts[0].Summary, 100, FromBaseWorld: false)) is null,
             "an entry of the base world, or one the model does not list, has no place in the world's own scripts");
 
+        MissionScript sameObject = model.Session!.Body.Scripts[0];
+        model.Session!.Apply(new AppendInstructionInPlace());
+        check.That(ReferenceEquals(sameObject, model.Session!.Body.Scripts[0]) && model.Scripts[0].Summary.Instructions == shippedInstructions + 1,
+            "a generic command that changes a script in place refreshes the script summary");
+        check.That(model.Session!.Undo() && model.Scripts[0].Summary.Instructions == shippedInstructions &&
+                   model.Session!.Redo() && model.Scripts[0].Summary.Instructions == shippedInstructions + 1,
+            "undo and redo of an in-place script edit each refresh the summary");
+        check.That(model.Session!.Undo() && !model.HasUnsavedChanges, "the in-place authored edit can be taken back");
+
+        IReadOnlyList<ScriptEntry> beforeMoveList = model.Scripts;
+        Vector3 moveFrom = model.Row(0)!.Position;
+        check.That(model.MoveTo(0, moveFrom.X + 1, moveFrom.Y).Result == MoveResult.Moved && ReferenceEquals(beforeMoveList, model.Scripts) &&
+                   model.Session!.Undo() && ReferenceEquals(beforeMoveList, model.Scripts) && model.Session!.Redo() && ReferenceEquals(beforeMoveList, model.Scripts),
+            "frequent position-only moves and their undo/redo retain the script list without rescanning it");
+        check.That(model.Session!.Undo() && !model.HasUnsavedChanges, "the move performance control leaves the model as loaded");
+
+        bool nested = false;
+        Action nestedObserver = () =>
+        {
+            if (nested) return;
+            nested = true;
+            model.Session!.Apply(new AppendInstructionInPlace());
+        };
+        model.Changed += nestedObserver;
+        try { model.MoveTo(0, moveFrom.X + 1, moveFrom.Y); }
+        finally { model.Changed -= nestedObserver; }
+        check.That(nested && model.Scripts[0].Summary.Instructions == shippedInstructions + 1 && model.Session!.NotifiedCommand is null,
+            "a nested generic edit refreshes the scripts and leaves no command notification active");
+        check.That(model.Session!.Undo() && model.Session!.Undo() && !model.HasUnsavedChanges,
+            "the nested script edit and outer move can each be taken back");
+
         // A notification happens after the edit. If an observer fails, the already-applied edit must not be called a refusal.
         Action brokenObserver = () => throw new InvalidOperationException("observer failed");
         model.Changed += brokenObserver;
@@ -529,7 +579,7 @@ internal static class LevelScriptEditTests
         try { model.ReplaceScriptFromSource(0, Source, game); }
         catch (InvalidOperationException error) when (error.Message == "observer failed") { scriptObserverThrew = true; }
         finally { model.Changed -= brokenObserver; }
-        check.That(scriptObserverThrew && model.HasUnsavedChanges && model.Session!.CanUndo && model.Session.ScriptChanges().Count == 1,
+        check.That(scriptObserverThrew && model.HasUnsavedChanges && model.Session!.CanUndo && model.Session.ScriptChanges().Count == 1 && model.Session.NotifiedCommand is null,
             "a failed observer is not reported as a refused script replacement after it was applied");
         check.That(model.Session!.Undo() && !model.HasUnsavedChanges, "the replacement remains undoable after a failed observer");
 
