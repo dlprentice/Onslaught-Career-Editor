@@ -294,7 +294,7 @@ publish, sign, or install anything by themselves.
   `data/sounds/sounds.sfx` as `CEffect::LoadSFXFile` reads its lines (`CDXMemBuffer::ReadString` and `CEffect::ReadLine`:
   `#` lines skipped, a CR in the penultimate byte replaced even without a LF, each line's last character stripped; a later effect of an earlier one's
   name, by `stricmp`, joins that effect's chain, of which `PlayEffect` plays one at random). It refuses what the loaders
-  would misread (a name past the 256-byte buffer or the 64-byte effect fields, a newer table version, bytes left over
+  would misread (a name past the 256-byte buffer or the 64-byte effect fields, an SFX version above 103, bytes left over
   in the configurations). The catalogue adds a record per configuration and per effect: a configuration's weapons
   and explosion join the physics definitions of that kind (`strcmp`, the first definition of a name), its cockpit the
   loose mesh, its description number the text `CFEPBEConfig::GetConfigDescription` shows; a level's configuration
