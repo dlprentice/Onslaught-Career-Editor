@@ -709,108 +709,203 @@ def is_link(info: os.stat_result) -> bool:
     return stat.S_ISLNK(info.st_mode) or bool(getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400))
 
 
-def entry_named(folder: str, name: str) -> tuple[str, bool] | None:
-    """The entry of `folder` called `name` in any ASCII letter case, with whether it is a link: the exact spelling if the folder has it,
-    else the smallest spelling in code order (so two entries that differ only in case are never chosen by the order the folder lists)."""
+_FILE_SUPPORTED = sys.platform.startswith("linux") and all(hasattr(os, name) for name in ("O_NOFOLLOW", "O_NONBLOCK"))
+_ANCHOR_SUPPORTED = (_FILE_SUPPORTED and hasattr(os, "O_DIRECTORY") and os.open in os.supports_dir_fd and
+                     os.stat in os.supports_dir_fd and os.stat in os.supports_follow_symlinks and os.scandir in os.supports_fd)
+
+
+def entry_named(folder: int, name: str) -> str | None:
+    """The entry of an open directory called `name` in any ASCII case: exact spelling first, else smallest in code order."""
     wanted = name.translate(ASCII_LOWER)
-    found: dict[str, bool] = {}
+    found: list[str] = []
     with os.scandir(folder) as entries:
         for entry in entries:
             if entry.name.translate(ASCII_LOWER) == wanted:
-                found[entry.name] = is_link(entry.stat(follow_symlinks=False)) if os.name == "nt" else entry.is_symlink()
+                found.append(entry.name)
     if not found:
         return None
-    chosen = name if name in found else min(found)
-    return chosen, found[chosen]
+    return name if name in found else min(found)
 
 
-def game_file(game_root: Path | str | None, path: str) -> Path:
-    """The file a game-relative path names (backslashes, any ASCII letter case: the game's files are named for Windows), kept inside the
-    game folder. Nothing on the way below the game folder, and not the file itself, may be a link: a link is not followed, so what the
-    lookup checked is what is read. The game folder itself may be reached through links. A reader that fails is a CompileError, never an
-    OSError: the message carries no system text."""
+def same_identity(a: os.stat_result, b: os.stat_result) -> bool:
+    return (a.st_dev, a.st_ino, stat.S_IFMT(a.st_mode)) == (b.st_dev, b.st_ino, stat.S_IFMT(b.st_mode))
+
+
+def same_file_snapshot(a: os.stat_result, b: os.stat_result) -> bool:
+    return (same_identity(a, b) and (a.st_mode, a.st_nlink, a.st_size, a.st_mtime_ns, a.st_ctime_ns) ==
+            (b.st_mode, b.st_nlink, b.st_size, b.st_mtime_ns, b.st_ctime_ns))
+
+
+def read_game_source(game_root: Path | str | None, path: str) -> str:
+    """Read one game-relative source through held Linux directory descriptors; the selected root may itself be a link.
+
+    No component below that root is followed as a link. The selected entry and directory identities are checked around the bounded read.
+    Unsupported systems refuse the read rather than reverting to a pathname lookup followed by a separate open.
+    """
     if game_root is None or os.fspath(game_root) in ("", b""):
         raise CompileError(NO_GAME_FOLDER)
     unreadable = CompileError(f"the included file {path} could not be read")
+    if not _ANCHOR_SUPPORTED:
+        raise unreadable
+    descriptors: list[int] = []
     try:
         root = os.fsdecode(os.fspath(game_root))
         if "\x00" in root:
             raise unreadable
-        at = os.path.abspath(root)
-        for part in path.replace("\\", "/").split("/"):
-            if not part or part == ".":
-                continue
+        root = os.path.abspath(root)
+        parts = [part for part in path.replace("\\", "/").split("/") if part and part != "."]
+        if not parts:
+            raise CompileError(f"{path} is not a file inside the game folder")
+        try:
+            root_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NONBLOCK | getattr(os, "O_CLOEXEC", 0))
+        except OSError as error:
+            if error.errno in (errno.ENOENT, errno.ENOTDIR):
+                raise MissingInclude(path) from None
+            raise unreadable from None
+        descriptors.append(root_fd)
+        root_identity = os.fstat(root_fd)
+        chain: list[tuple[int, str, os.stat_result]] = []
+
+        def verify_chain() -> None:
+            if not same_identity(root_identity, os.stat(root)):
+                raise unreadable
+            for parent, name, identity in chain:
+                current = os.stat(name, dir_fd=parent, follow_symlinks=False)
+                if is_link(current) or not same_identity(identity, current):
+                    raise unreadable
+
+        at = root_fd
+        for index, part in enumerate(parts):
             if part == "..":
                 raise CompileError(f"a path cannot climb out of the game folder: {path}")
-            found = entry_named(at, part) if os.path.isdir(at) else None
-            if found is None:
+            verify_chain()
+            name = entry_named(at, part)
+            if name is None:
                 raise MissingInclude(path)
-            if found[1]:
+            info = os.stat(name, dir_fd=at, follow_symlinks=False)
+            if is_link(info):
                 raise CompileError(link_message(path))
-            at = os.path.join(at, found[0])
-        regular = stat.S_ISREG(os.lstat(at).st_mode)
+            last = index == len(parts) - 1
+            if not last and parts[index + 1] == "..":
+                raise CompileError(f"a path cannot climb out of the game folder: {path}")
+            if not last and not stat.S_ISDIR(info.st_mode):
+                raise MissingInclude(path)
+            if last and not stat.S_ISREG(info.st_mode):
+                raise CompileError(f"{path} is not a file inside the game folder")
+            flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | getattr(os, "O_CLOEXEC", 0)
+            if not last:
+                flags |= os.O_DIRECTORY
+            try:
+                opened = os.open(name, flags, dir_fd=at)
+            except OSError as error:
+                if error.errno == errno.ELOOP:
+                    raise CompileError(link_message(path)) from None
+                if error.errno == errno.ENOTDIR:
+                    try:
+                        if is_link(os.stat(name, dir_fd=at, follow_symlinks=False)):
+                            raise CompileError(link_message(path)) from None
+                    except OSError:
+                        pass
+                raise unreadable from None
+            descriptors.append(opened)
+            opened_info = os.fstat(opened)
+            if not same_identity(info, opened_info):
+                raise unreadable
+            if not last:
+                chain.append((at, name, opened_info))
+                at = opened
+                continue
+            if not same_file_snapshot(info, opened_info):
+                raise unreadable
+            verify_chain()
+            problem, data = read_held_file(opened, MAX_SOURCE)
+            if problem is not None:
+                return decode_source(problem, data, path, name, True)
+            verify_chain()
+            final_name = os.stat(name, dir_fd=at, follow_symlinks=False)
+            if not same_file_snapshot(opened_info, final_name):
+                raise unreadable
+            return data.decode("latin-1")
     except CompileError:
         raise
     except Exception:  # noqa: BLE001 - a permission, a folder that cannot be listed, a name the system rejects: all "could not be read"
         raise unreadable from None
-    if not regular:
-        raise CompileError(f"{path} is not a file inside the game folder")
-    return Path(at)
+    finally:
+        for descriptor in reversed(descriptors):
+            try:
+                os.close(descriptor)
+            except OSError:
+                pass
+    raise unreadable
+
+
+def read_held_file(fd: int, limit: int) -> tuple[str | None, bytes]:
+    """Read an already-open regular file at most `limit` bytes, refusing observed in-place changes."""
+    info = os.fstat(fd)
+    if not stat.S_ISREG(info.st_mode):
+        return "not a file", b""
+    if info.st_size > limit:
+        return "too long", b""
+    chunks, total = [], 0
+    while total <= limit:
+        chunk = os.read(fd, min(1 << 16, limit + 1 - total))
+        if not chunk:
+            break
+        chunks.append(chunk)
+        total += len(chunk)
+    if total > limit:
+        return "too long", b""
+    if not same_file_snapshot(info, os.fstat(fd)):
+        return "unreadable", b""
+    return None, b"".join(chunks)
 
 
 def read_file(path: str, limit: int) -> tuple[str | None, bytes]:
-    """(problem, bytes) for the file at `path`, opened once and never followed: the file is opened without blocking and without following
-    a link, and its type and size are those of the open file, so nothing swapped in after a look can make the read wait (a named pipe
-    would wait for a writer for ever) or pass the size limit. The problem is None, "link", "not a file", "too long" or "unreadable"."""
-    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+    """Read an explicitly selected file through one nonblocking, final-component-no-follow descriptor on supported Linux systems.
+
+    Parent links are permitted here; use read_game_source when a root-relative path needs to reject links below that root. The descriptor's
+    regular-file type, size and before/after metadata are checked; unsupported systems refuse rather than using a pre-open link check.
+    """
+    if not _FILE_SUPPORTED:
+        return "unreadable", b""
+    flags = os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_CLOEXEC", 0) | os.O_NOFOLLOW
     try:
-        if not hasattr(os, "O_NOFOLLOW") and is_link(os.lstat(path)):  # no such flag (Windows): look first
-            return "link", b""
         fd = os.open(path, flags)
     except OSError as error:
         return ("link" if error.errno == errno.ELOOP else "unreadable"), b""
     except ValueError:  # an embedded null character
         return "unreadable", b""
     try:
-        info = os.fstat(fd)
-        if not stat.S_ISREG(info.st_mode):
-            return "not a file", b""
-        if info.st_size > limit:
-            return "too long", b""
-        chunks, total = [], 0
-        while total <= limit:  # a file that grows while it is read is cut at the limit and refused
-            chunk = os.read(fd, min(1 << 16, limit + 1 - total))
-            if not chunk:
-                break
-            chunks.append(chunk)
-            total += len(chunk)
-        return ("too long", b"") if total > limit else (None, b"".join(chunks))
+        return read_held_file(fd, limit)
     except OSError:
         return "unreadable", b""
     finally:
         os.close(fd)
 
 
-def read_source(path: Path | str, included_as: str | None = None) -> str:
-    """A script or header as text: the game's files are single-byte text. `included_as` is the include path as written, when the file is
-    a header (the messages then name it); the file must not be a link, must be a regular file and may hold a million bytes."""
-    file = os.fspath(path)
-    shown = included_as if included_as is not None else os.path.basename(file)
-    problem, data = read_file(file, MAX_SOURCE)
+def decode_source(problem: str | None, data: bytes, shown: str, filename: str, included: bool) -> str:
     if problem == "link":
         raise CompileError(link_message(shown))
     if problem == "not a file":
         raise CompileError(f"{shown} is not a file inside the game folder")
     if problem == "too long":
-        raise CompileError(f"{os.path.basename(file)} is longer than a million bytes")
+        raise CompileError(f"{filename} is longer than a million bytes")
     if problem == "unreadable":
-        raise CompileError(f"the included file {shown} could not be read" if included_as is not None else f"{shown} could not be read")
+        raise CompileError(f"the included file {shown} could not be read" if included else f"{shown} could not be read")
     return data.decode("latin-1")
+
+
+def read_source(path: Path | str, included_as: str | None = None) -> str:
+    """Read an explicitly selected standalone file without following its final component; parent links are allowed."""
+    file = os.fsdecode(os.fspath(path))
+    shown = included_as if included_as is not None else os.path.basename(file)
+    problem, data = read_file(file, MAX_SOURCE)
+    return decode_source(problem, data, shown, os.path.basename(file), included_as is not None)
 
 
 def includes_from(game_root: Path | str | None) -> Callable[[str], str]:
     """Reads an included file by the game-relative path the source names."""
-    return lambda path: read_source(game_file(game_root, path), included_as=path)
+    return lambda path: read_game_source(game_root, path)
 
 
 def counter_start(record: dict, pattern: str) -> int:

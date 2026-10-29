@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import os
 import struct
 import tempfile
 import time
@@ -323,6 +324,214 @@ class Headers(unittest.TestCase):
             with self.assertRaises(mc.CompileError):
                 mc.compile_script("t", "#include data\\inc\n", read)  # a folder is not a header
 
+    def test_header_parent_replacement_is_refused_before_content_is_read(self):
+        with tempfile.TemporaryDirectory() as folder:
+            game = Path(folder, "game")
+            inside = game / "data" / "inc"
+            outside = Path(folder, "outside")
+            inside.mkdir(parents=True)
+            outside.mkdir()
+            (inside / "defs.msl").write_text("#define X 1\n", encoding="latin-1")
+            (outside / "defs.msl").write_text("#define X 2\n", encoding="latin-1")
+            real_open, real_read = os.open, os.read
+            changed = False
+            def changing_open(path, flags, *args, **kwargs):
+                nonlocal changed
+                if not changed and os.path.basename(os.fspath(path)) == "defs.msl":
+                    changed = True
+                    inside.rename(inside.with_name("prior"))
+                    inside.symlink_to(outside, target_is_directory=True)
+                return real_open(path, flags, *args, **kwargs)
+            with mock.patch.object(mc.os, "open", side_effect=changing_open), mock.patch.object(mc.os, "read", wraps=real_read) as reading:
+                with self.assertRaises(mc.CompileError):
+                    mc.includes_from(game)("data\\inc\\defs.msl")
+            self.assertTrue(changed)
+            self.assertEqual(reading.call_count, 0)
+
+    def test_replacing_the_selected_regular_header_is_refused(self):
+        with tempfile.TemporaryDirectory() as folder:
+            game = Path(folder, "game")
+            parent = game / "data"
+            parent.mkdir(parents=True)
+            selected = parent / "defs.msl"
+            selected.write_text("#define X 1\n", encoding="latin-1")
+            replacement = parent / "replacement.msl"
+            replacement.write_text("#define X 2\n", encoding="latin-1")
+            real_open, real_read = os.open, os.read
+            changed = False
+            def changing_open(path, flags, *args, **kwargs):
+                nonlocal changed
+                if not changed and os.path.basename(os.fspath(path)) == "defs.msl":
+                    changed = True
+                    selected.rename(parent / "prior.msl")
+                    replacement.rename(selected)
+                return real_open(path, flags, *args, **kwargs)
+            with mock.patch.object(mc.os, "open", side_effect=changing_open), mock.patch.object(mc.os, "read", wraps=real_read) as reading:
+                with self.assertRaises(mc.CompileError):
+                    mc.includes_from(game)("data\\defs.msl")
+            self.assertTrue(changed)
+            self.assertEqual(reading.call_count, 0)
+
+    def test_replacing_the_parent_with_another_directory_is_refused(self):
+        with tempfile.TemporaryDirectory() as folder:
+            game = Path(folder, "game")
+            parent = game / "data" / "inc"
+            replacement = game / "data" / "alternate"
+            parent.mkdir(parents=True)
+            replacement.mkdir()
+            (parent / "defs.msl").write_text("#define X 1\n", encoding="latin-1")
+            (replacement / "defs.msl").write_text("#define X 2\n", encoding="latin-1")
+            real_open, real_read = os.open, os.read
+            changed = False
+            def changing_open(path, flags, *args, **kwargs):
+                nonlocal changed
+                if not changed and os.path.basename(os.fspath(path)) == "defs.msl":
+                    changed = True
+                    parent.rename(parent.with_name("prior"))
+                    replacement.rename(parent)
+                return real_open(path, flags, *args, **kwargs)
+            with mock.patch.object(mc.os, "open", side_effect=changing_open), mock.patch.object(mc.os, "read", wraps=real_read) as reading:
+                with self.assertRaises(mc.CompileError):
+                    mc.includes_from(game)("data\\inc\\defs.msl")
+            self.assertTrue(changed)
+            self.assertEqual(reading.call_count, 0)
+
+    def test_a_header_modified_during_the_read_is_refused(self):
+        with tempfile.TemporaryDirectory() as folder:
+            game = Path(folder, "game")
+            parent = game / "data"
+            parent.mkdir(parents=True)
+            selected = parent / "defs.msl"
+            selected.write_text("#define X 1\n", encoding="latin-1")
+            real_read = os.read
+            changed = False
+            def changing_read(fd, count):
+                nonlocal changed
+                if not changed:
+                    changed = True
+                    with selected.open("ab") as writer:
+                        writer.write(b"// changed\n")
+                return real_read(fd, count)
+            with mock.patch.object(mc.os, "read", side_effect=changing_read):
+                with self.assertRaises(mc.CompileError):
+                    mc.includes_from(game)("data\\defs.msl")
+            self.assertTrue(changed)
+
+    def test_header_parent_replacement_during_read_is_refused(self):
+        with tempfile.TemporaryDirectory() as folder:
+            game = Path(folder, "game")
+            inside = game / "data" / "inc"
+            outside = Path(folder, "outside")
+            inside.mkdir(parents=True)
+            outside.mkdir()
+            (inside / "defs.msl").write_text("#define X 1\n", encoding="latin-1")
+            (outside / "defs.msl").write_text("#define X 2\n", encoding="latin-1")
+            real_read = os.read
+            changed = False
+            def changing_read(fd, count):
+                nonlocal changed
+                data = real_read(fd, count)
+                if data and not changed:
+                    changed = True
+                    inside.rename(inside.with_name("prior"))
+                    inside.symlink_to(outside, target_is_directory=True)
+                return data
+            with mock.patch.object(mc.os, "read", side_effect=changing_read):
+                with self.assertRaises(mc.CompileError):
+                    mc.includes_from(game)("data\\inc\\defs.msl")
+            self.assertTrue(changed)
+
+    def test_platform_without_secure_descriptor_traversal_fails_closed(self):
+        with tempfile.TemporaryDirectory() as folder, mock.patch.object(mc, "_ANCHOR_SUPPORTED", False, create=True):
+            game = Path(folder, "game")
+            (game / "data").mkdir(parents=True)
+            (game / "data" / "defs.msl").write_text("#define X 1\n", encoding="latin-1")
+            with mock.patch.object(mc.os, "open") as opening:
+                with self.assertRaisesRegex(mc.CompileError, "could not be read"):
+                    mc.includes_from(game)("data\\defs.msl")
+            opening.assert_not_called()
+
+    def test_selected_root_link_can_be_used_but_a_changed_target_is_refused(self):
+        with tempfile.TemporaryDirectory() as folder:
+            original, other = Path(folder, "original"), Path(folder, "other")
+            for root, value in ((original, "1"), (other, "2")):
+                (root / "data").mkdir(parents=True)
+                (root / "data" / "defs.msl").write_text(f"#define X {value}\n", encoding="latin-1")
+            chosen = Path(folder, "chosen")
+            chosen.symlink_to(original, target_is_directory=True)
+            self.assertEqual(mc.includes_from(chosen)("data\\defs.msl"), "#define X 1\n")
+            real_open, real_read = os.open, os.read
+            changed = False
+            def changing_open(path, flags, *args, **kwargs):
+                nonlocal changed
+                if not changed and os.path.basename(os.fspath(path)) == "defs.msl":
+                    changed = True
+                    chosen.unlink()
+                    chosen.symlink_to(other, target_is_directory=True)
+                return real_open(path, flags, *args, **kwargs)
+            with mock.patch.object(mc.os, "open", side_effect=changing_open), mock.patch.object(mc.os, "read", wraps=real_read) as reading:
+                with self.assertRaises(mc.CompileError):
+                    mc.includes_from(chosen)("data\\defs.msl")
+            self.assertTrue(changed)
+            self.assertEqual(reading.call_count, 0)
+
+    def test_standalone_reader_without_nofollow_support_fails_before_open(self):
+        with tempfile.TemporaryDirectory() as folder:
+            selected = Path(folder, "source.msl")
+            selected.write_text("init() {}", encoding="latin-1")
+            with mock.patch.object(mc, "_FILE_SUPPORTED", False), mock.patch.object(mc.os, "open") as opening:
+                with self.assertRaisesRegex(mc.CompileError, "could not be read"):
+                    mc.read_source(selected)
+            opening.assert_not_called()
+
+    @unittest.skipUnless(hasattr(os, "mkfifo"), "named pipes are not available")
+    def test_nonregular_header_is_refused_without_opening_it(self):
+        with tempfile.TemporaryDirectory() as folder:
+            game = Path(folder, "game")
+            (game / "data").mkdir(parents=True)
+            os.mkfifo(game / "data" / "pipe.msl")
+            real_open = os.open
+            with mock.patch.object(mc.os, "open", wraps=real_open) as opened:
+                with self.assertRaisesRegex(mc.CompileError, "is not a file inside the game folder"):
+                    mc.includes_from(game)("data\\pipe.msl")
+            self.assertFalse(any(os.path.basename(os.fspath(call.args[0])) == "pipe.msl" for call in opened.call_args_list))
+
+    def test_selected_regular_hardlink_preserves_existing_reader_behavior(self):
+        with tempfile.TemporaryDirectory() as folder:
+            game = Path(folder, "game")
+            (game / "data").mkdir(parents=True)
+            source = game / "data" / "source.msl"
+            source.write_text("// authored\n", encoding="latin-1")
+            os.link(source, game / "data" / "defs.msl")
+            self.assertEqual(mc.includes_from(game)("data\\defs.msl"), "// authored\n")
+
+    def test_ascii_case_selection_is_exact_first_then_deterministic(self):
+        with tempfile.TemporaryDirectory() as folder:
+            game = Path(folder, "game")
+            (game / "data").mkdir(parents=True)
+            (game / "data" / "DEFs.msl").write_text("//upper\n", encoding="latin-1")
+            (game / "data" / "defs.msl").write_text("//lower\n", encoding="latin-1")
+            (game / "data" / "caf\N{LATIN SMALL LETTER E WITH ACUTE}.msl").write_text("//accent\n", encoding="latin-1")
+            read = mc.includes_from(game)
+            self.assertEqual(read("data\\defs.msl"), "//lower\n")
+            self.assertEqual(read("data\\DeFs.msl"), "//upper\n")
+            with self.assertRaises(mc.MissingInclude):
+                read("data\\CAF\N{LATIN CAPITAL LETTER E WITH ACUTE}.msl")
+
+    @unittest.skipUnless(Path("/proc/self/fd").is_dir(), "descriptor inventory requires procfs")
+    def test_success_and_refusals_do_not_leak_file_descriptors(self):
+        with tempfile.TemporaryDirectory() as folder:
+            game = Path(folder, "game")
+            (game / "data").mkdir(parents=True)
+            (game / "data" / "defs.msl").write_text("//ok\n", encoding="latin-1")
+            read = mc.includes_from(game)
+            before = len(os.listdir("/proc/self/fd"))
+            for _ in range(100):
+                self.assertEqual(read("data\\defs.msl"), "//ok\n")
+                with self.assertRaises(mc.MissingInclude):
+                    read("data\\missing.msl")
+            self.assertEqual(len(os.listdir("/proc/self/fd")), before)
+
     def test_a_define_is_replaced_by_its_tokens_and_keeps_the_line_of_its_use(self):
         record = compile_text("#define PAIR 1\ninit()\n{\n\tPause(PAIR);\n}\n")
         self.assertEqual(symbol_table(record)[-1], ("const data0", 1, 1, 3))
@@ -379,6 +588,54 @@ class Judging(unittest.TestCase):
         status, detail = gate.judge(self.game, self.read, 123, self.shipped("Other", "init()\n{\n}\n"))
         self.assertEqual(status, "no source")
         self.assertIn("Other.msl", detail)
+
+    def test_primary_source_parent_replacement_does_not_compile_another_file(self):
+        source = self.write("Thing", "init()\n{\n\tPause(5);\n}\n")
+        shipped = self.shipped("Thing", source)
+        parent = self.game / "data" / "MissionScripts" / "Level123"
+        other = self.game / "alternate"
+        other.mkdir()
+        (other / "Thing.MSL").write_text("init()\n{\n\tPause(6);\n}\n", encoding="latin-1")
+        real_open, real_read = os.open, os.read
+        changed = False
+        def changing_open(path, flags, *args, **kwargs):
+            nonlocal changed
+            if not changed and os.path.basename(os.fspath(path)) == "Thing.MSL":
+                changed = True
+                parent.rename(parent.with_name("prior"))
+                parent.symlink_to(other, target_is_directory=True)
+            return real_open(path, flags, *args, **kwargs)
+        with mock.patch.object(mc.os, "open", side_effect=changing_open), mock.patch.object(mc.os, "read", wraps=real_read) as reading:
+            status, detail = gate.judge(self.game, self.read, 123, shipped)
+        self.assertTrue(changed)
+        self.assertEqual(status, "no source")
+        self.assertIn("could not be read", detail)
+        self.assertEqual(reading.call_count, 0)
+
+    def test_oversized_primary_source_is_reported_as_no_source(self):
+        self.write("Thing", " " * (mc.MAX_SOURCE + 1))
+        shipped = self.shipped("Thing", "init()\n{\n\tPause(5);\n}\n")
+        status, detail = gate.judge(self.game, self.read, 123, shipped)
+        self.assertEqual(status, "no source")
+        self.assertEqual(detail, "Thing.MSL is longer than a million bytes")
+
+    def test_unsupported_primary_reader_is_reported_as_no_source(self):
+        source = self.write("Thing", "init()\n{\n\tPause(5);\n}\n")
+        shipped = self.shipped("Thing", source)
+        with mock.patch.object(mc, "_ANCHOR_SUPPORTED", False):
+            status, detail = gate.judge(self.game, self.read, 123, shipped)
+        self.assertEqual(status, "no source")
+        self.assertEqual(detail, "the included file data\\MissionScripts\\level123\\Thing.msl could not be read")
+
+    def test_unrepresentable_compile_session_counters_are_reported_as_refused(self):
+        source = self.write("Thing", "init()\n{\n\tPause(5);\n}\n")
+        for name in ("const data2147483648", "do-once-2147483648"):
+            shipped = self.shipped("Thing", source)
+            shipped["code"]["symbols"].insert(0, {"name": name, "dataType": 1, "value": 0, "symbolType": 0,
+                                                    "index": 0, "flag": 1})
+            status, detail = gate.judge(self.game, self.read, 123, shipped)
+            self.assertEqual(status, "refused")
+            self.assertEqual(detail, "a counter of the compile session is past 2147483647")
 
     def test_a_missing_header_is_bound_from_the_shipped_constants(self):
         self.write("Thing", "#include data\\gone\\text.stf\ninit()\n{\n\tPause(MYSTERY);\n}\n")

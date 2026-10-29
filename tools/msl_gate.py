@@ -65,10 +65,6 @@ def scripts_of(game: Path, only_level: int | None = None):
                 yield level, tag, folder_level, record
 
 
-def source_path(game: Path, folder_level: int, name: str) -> Path:
-    return mc.game_file(game, f"data\\MissionScripts\\level{folder_level:03d}\\{name}.msl")
-
-
 def assisted_resolver(record: dict):
     """Names a missing header would have defined: the shipped script's constant at the position where the compiler needs one."""
     symbols = record["code"]["symbols"]
@@ -85,13 +81,15 @@ def judge(game: Path, read_include, folder_level: int, record: dict) -> tuple[st
     """(status, detail) for one shipped script."""
     name = record["name"]
     try:
-        path = source_path(game, folder_level, name)
+        source = mc.read_game_source(game, f"data\\MissionScripts\\level{folder_level:03d}\\{name}.msl")
     except mc.MissingInclude as error:
         return "no source", f"{error.path} is not in the game folder"
     except mc.CompileError as error:
         return "no source", str(error)
-    source = mc.read_source(path)
-    starts = (mc.const_start_of(record), mc.do_once_start_of(record))
+    try:
+        starts = (mc.const_start_of(record), mc.do_once_start_of(record))
+    except mc.CompileError as error:
+        return "refused", str(error)
     status = "exact"
     try:
         compiled = mc.compile_script(name, source, read_include, *starts)
