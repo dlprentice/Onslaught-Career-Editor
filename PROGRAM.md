@@ -70,10 +70,10 @@ the mod system or an HD conversion.
 
 ### Decompilation and native port
 
-The maintainer's private byte-matching check matches all 5,482 mapped game functions with a guarded one-byte
+The maintainer's private byte-matching check matches every mapped game function with a guarded one-byte
 correction to a compiled object; without the correction, one function remains unmatched. Its public export,
-[onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), reproduces 5,449 of them with that concession
-(the other 33 are in four DirectX sample files it leaves out), and its README holds that score and its divergences.
+[onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), records its own coverage with that concession,
+explains the DirectX sample files it leaves out, and documents its divergences.
 The function matches do not by themselves establish complete behavioural equivalence or a byte-identical linked
 executable. Its native source port (Windows and Linux) is published as
 [Onslaught CE](https://github.com/dlprentice/onslaught-ce) (GPL-3.0-only source and binaries, no game files). Nothing
