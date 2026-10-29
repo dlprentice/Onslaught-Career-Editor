@@ -351,9 +351,13 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   the objects it names, and a path button, from the source or from an object that is a point of the path, highlights that path on
   the map, numbered and with an arrow on each leg, and brings it into view. A path names objects by their place in the world's
   thing list, which is the reading under which the shipped paths run from point to point (measured against shifts of one and
-  two); about one slot in five names an object that is not a waypoint, and the path is drawn through it all the same. The list,
+  two). The game keeps a slot as a point of the path only if it names a waypoint (`CWaypointPath::Load` in the decompilation), so
+  the page draws, numbers and counts only those: about one slot in five names a unit, a spawner or another kind of object and is
+  dropped, and an object that only such a slot names is on no path. The game finds a waypoint path by name ignoring letter case
+  (`CWaypointManager::FindNearest`), so a quoted text that is the first argument of `FollowWaypoint` or `FollowWaypointWait` names
+  every path of that name in any case, the button saying when the case differs; every other name is matched as written. The list,
   the links and the names are read from the compiled code, the level's objects and the sources, and
-  checked against the Toolkit's reference (`tools/level_editor_vectors.py gate-table`, its SCRIPTS and NAMES rows) on a game
+  checked against the Toolkit's reference (`tools/level_editor_vectors.py gate-table`, its SCRIPTS, NAMES and PATHS rows) on a game
   install, with the native names generated from the Toolkit's table (`tools/script_tables.py`). Nothing here writes anything.
 
   The page is laid out for a window of about 1366 by 800 or more. In a smaller one, down to the Companion's 1024 by 700
