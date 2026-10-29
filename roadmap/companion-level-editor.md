@@ -212,12 +212,13 @@ A custom `Control` like `CampaignMap`:
 - Marks are by kind (the start a diamond, units circles, waypoints triangles, sphere triggers a ring at their radius, buildings
   and features squares, the level's script and its like quiet dots); they are not coloured by allegiance and waypoint paths are
   not drawn as lines yet. A changed object is amber with a line from where the level has it; the selection is ringed and named.
-- Input: the wheel zooms about the pointer (1.2 times a click, between half the fit and 32 pixels to the unit), a drag of the
+- Input: the wheel zooms about the pointer (1.2 times a click, between half the fit and 32 pixels to the unit; a new size refits the
+  square until the player has zoomed or panned), a drag of the
   background (or a middle or right drag) pans, Home fits the square, a click selects the nearest mark within 12 pixels, and a press
   on a mark followed by more than 4 pixels of movement starts a drag. The mark follows the pointer, nothing changes until it is let
   go, Esc puts it back, and letting go moves X and Y to the pointer's world position rounded to a hundredth, keeping Z bit for bit,
   as one undo step (`LevelEditorModel.MoveTo`). A readout gives the world position and the ground's height under the pointer.
-- The table and the map sit side by side when the left column is wide and one above the other when it is not, and the Map switch
+- The table and the map sit side by side when the left column is wide and the map sits under the table when it is not, and the Map switch
   on the search row hides the map. The saved notice sits under the Save button in the right-hand column, which scrolls, so a
   save never moves the table or the map.
 

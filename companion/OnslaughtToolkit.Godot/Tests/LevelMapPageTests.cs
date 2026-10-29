@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using System.Globalization;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using Godot;
 using OnslaughtToolkit.Companion.Levels;
 using OnslaughtToolkit.Companion.Ui;
@@ -153,6 +154,15 @@ internal static class LevelMapPageTests
         Vector2 drop = map.ToScreen(150.25, 330.5) + new Vector2(0.37f, -0.21f);
         Glide(tree, map, ref pointer, drop, MouseButtonMask.Left);
         bool previewed = map.Dragging && model.Row(0)!.Position.X == 100f && model.Row(0)!.Position.Y == 400f && model.Session.UndoDescription == setup;
+        // The position a drag asks for (and the label shows) is a hundredth at every pointer position, not a float with noise in its last digits.
+        int untidy = 0;
+        for (int step = 0; step < 60; step++)
+        {
+            Glide(tree, map, ref pointer, pointer + new Vector2(0.37f, -0.53f), MouseButtonMask.Left);
+            if (map.DragPosition is not { } position || !Regex.IsMatch(CoordinateInput.Format(position.X), @"^-?\d+(\.\d{1,2})?$") || !Regex.IsMatch(CoordinateInput.Format(position.Y), @"^-?\d+(\.\d{1,2})?$")) untidy++;
+        }
+        check.That(untidy == 0, $"while a mark is dragged the position it asks for is always to a hundredth ({untidy} of 60 pointer positions were not)");
+        Glide(tree, map, ref pointer, drop, MouseButtonMask.Left);
         Mouse(tree, map, pointer, MouseButton.Left, false);
         (double ex, double ey) = World(map, drop);
         System.Numerics.Vector3 moved = model.Row(0)!.Position;

@@ -14,7 +14,8 @@ public sealed class MapView
     /// <summary>The most pixels to a world unit the map zooms in to.</summary>
     public const double MaxScale = 32;
 
-    private bool _fitted;
+    /// <summary>Whether the player has zoomed or panned since the view last fitted the square: until then a new size shows the whole square again.</summary>
+    private bool _moved;
 
     public double Width { get; private set; }
     public double Height { get; private set; }
@@ -33,20 +34,17 @@ public sealed class MapView
     /// <summary>The smallest scale: half what fits the square.</summary>
     public double MinScale => FitScale / 2;
 
-    /// <summary>A new size: the world position at the middle stays there; the first size fits the whole square.</summary>
+    /// <summary>
+    /// A new size. Until the player zooms or pans, the whole square is shown again at the new size (a control is laid out more than once on
+    /// its way to its final size, and a window can be resized); after that the world position at the middle stays there and the scale
+    /// stays within its limits for the new size.
+    /// </summary>
     public void Resize(double width, double height)
     {
         Width = Math.Max(width, 1);
         Height = Math.Max(height, 1);
-        if (!_fitted)
-        {
-            _fitted = true;
-            Fit();
-        }
-        else
-        {
-            Scale = Math.Clamp(Scale, MinScale, MaxScale);
-        }
+        if (!_moved) Fit();
+        else Scale = Math.Clamp(Scale, MinScale, MaxScale);
     }
 
     /// <summary>Shows the whole square, centred.</summary>
@@ -54,7 +52,14 @@ public sealed class MapView
     {
         Scale = FitScale;
         CenterX = CenterY = WorldSize / 2;
+        _moved = false;
     }
+
+    /// <summary>
+    /// The coordinate a pointer position means, to a hundredth of a world unit as the float32 nearest that decimal, so that the number
+    /// shown for it is the number written (a float multiplied by 0.01f, 24002f * 0.01f, is 240.01999 and not 240.02).
+    /// </summary>
+    public static float ToHundredths(double value) => (float)(Math.Round(value / 0.01) * 0.01);
 
     /// <summary>The pixel that shows a world position.</summary>
     public (double X, double Y) ToScreen(double x, double y) => ((x - CenterX) * Scale + Width / 2, (CenterY - y) * Scale + Height / 2);
@@ -71,6 +76,7 @@ public sealed class MapView
         CenterX = wx - (screenX - Width / 2) / Scale;
         CenterY = wy + (screenY - Height / 2) / Scale;
         KeepCentreInside();
+        _moved = true;
     }
 
     /// <summary>Moves the content by a number of pixels (a drag of the background to the right shows more of the left).</summary>
@@ -79,6 +85,7 @@ public sealed class MapView
         CenterX -= dx / Scale;
         CenterY += dy / Scale;
         KeepCentreInside();
+        _moved = true;
     }
 
     private void KeepCentreInside()

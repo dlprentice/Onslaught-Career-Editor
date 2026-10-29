@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using System.Buffers.Binary;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using OnslaughtToolkit.Companion.Levels;
@@ -379,7 +380,18 @@ internal static class LevelTerrainTests
         check.That(view.CenterX == 0 && view.CenterY == 512, "a pan cannot take the centre out of the square");
         view.Fit();
         view.Resize(1000, 400);
-        check.That(view.CenterX == 256 && Math.Abs(view.Scale - view.FitScale) > 0 && view.Scale >= view.MinScale, "a new size keeps the centre and a scale inside the limits");
+        check.That(view.CenterX == 256 && view.CenterY == 256 && Math.Abs(view.Scale - 400 / (512 * 1.04)) < 1e-9, "a new size shows the whole square again while the player has not zoomed or panned");
+        view.ZoomAbout(500, 200, 2);
+        (double zoomedScale, double zoomedX, double zoomedY) = (view.Scale, view.CenterX, view.CenterY);
+        view.Resize(600, 600);
+        check.That(Math.Abs(view.Scale - Math.Clamp(zoomedScale, view.MinScale, MapView.MaxScale)) < 1e-12 && view.CenterX == zoomedX && view.CenterY == zoomedY, "after a zoom a new size keeps the middle and the scale");
+        view.Fit();
+        view.Resize(300, 300);
+        check.That(Math.Abs(view.Scale - 300 / (512 * 1.04)) < 1e-9, "fitting again makes the next size fit");
+        view.Pan(10, 10);
+        (double pannedX, double pannedY) = (view.CenterX, view.CenterY);
+        view.Resize(200, 200);
+        check.That(pannedX != 256 && view.CenterX == pannedX && view.CenterY == pannedY, "a pan counts as the player's own view too");
         check.That(MapView.MaxScale == 32 && MapView.WorldSize == 512, "the largest zoom is 32 pixels to the unit, and the world is the 512 square");
 
         // Zooming out about the right-hand edge with the centre at the square's left edge would put the centre outside it: it stays at the edge.
@@ -393,6 +405,7 @@ internal static class LevelTerrainTests
         // A window that grows brings a scale that was fine for the small one up to half of what fits the big one.
         MapView growing = new();
         growing.Resize(100, 100);
+        growing.ZoomAbout(50, 50, 1);  // the player has had a hand in the view
         growing.Resize(1000, 1000);
         check.That(Math.Abs(growing.Scale - growing.MinScale) < 1e-12 && growing.Scale > 0.9, $"a window that grows lifts the scale to the new smallest: {growing.Scale} (smallest {growing.MinScale})");
         MapView empty = new();
@@ -409,5 +422,18 @@ internal static class LevelTerrainTests
         check.That(view.Nearest(marks, ax + 50, ay + 50, 12) is null && view.Nearest([], ax, ay, 12) is null, "a pixel far from every mark hits none");
         (double bx, double by) = view.ToScreen(300, 300);
         check.That(view.Nearest(marks, bx + 5, by - 5, 12) == 9 && view.Nearest(marks, bx + 9, by + 9, 12) is null, "the radius is in pixels");
+
+        // The position a drag asks for is the pointer's, to a hundredth, as the float nearest that decimal: what the map shows while dragging is what is stored.
+        int different = 0;
+        for (int hundredths = -5000; hundredths <= 70000; hundredths++)
+        {
+            foreach (double offset in new[] { -0.004, -0.001, 0, 0.001, 0.004 })
+            {
+                float stored = MapView.ToHundredths(hundredths / 100.0 + offset);
+                if (stored != (float)(hundredths / 100m) || decimal.Parse(CoordinateInput.Format(stored), CultureInfo.InvariantCulture) != hundredths / 100m) different++;
+            }
+        }
+        check.That(different == 0 && CoordinateInput.Format(MapView.ToHundredths(240.0213)) == "240.02" && CoordinateInput.Format(MapView.ToHundredths(240.0499)) == "240.05" && CoordinateInput.Format(MapView.ToHundredths(-0.001)) == "-0",
+            $"a drag's position is the pointer's to a hundredth, shown and stored as that decimal ({different} of 375,005 differ)");
     }
 }

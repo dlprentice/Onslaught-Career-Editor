@@ -19,7 +19,7 @@ internal sealed class LevelEditorPage : Page
     /// <summary>The most characters of the saved mod's folder the notice shows (its middle is left out); the full path is on the Copy button and the tooltip.</summary>
     private const int SavedPathLength = 52;
 
-    /// <summary>The width of the left column from which the table and the map sit side by side; narrower, the map is above the table.</summary>
+    /// <summary>The width of the left column from which the table and the map sit side by side; narrower, the map is below the table.</summary>
     private const float SideBySideFrom = 880;
     private readonly AppServices _services;
     private readonly Label _empty, _worldNote, _objectTitle, _objectDetail, _stock, _note, _hint, _summary, _warnings, _problemText, _savedText;
@@ -77,7 +77,7 @@ internal sealed class LevelEditorPage : Page
         MapToggle.Toggled += on => _mapPanel!.Visible = on;
         Search.TextChanged += _ => RebuildTable();
         _worldNote = left.Add(Build.Text("", "Faint"));
-        // The table and the map share the column: side by side when it is wide, one above the other (the table keeps its columns) when it is not.
+        // The table and the map share the column: side by side when it is wide, the map under the table (which keeps its columns) when it is not.
         _split = left.Add(new SplitContainer { SizeFlagsVertical = Control.SizeFlags.ExpandFill, Vertical = true });
         _split.Resized += () =>
         {
@@ -218,7 +218,7 @@ internal sealed class LevelEditorPage : Page
     internal string? SelectedName => _selected is int row ? _model?.Row(row)?.Label : null;
     internal int? SelectedRow => _selected;
 
-    /// <summary>Whether the map sits beside the table (a wide column) rather than above it.</summary>
+    /// <summary>Whether the map sits beside the table (a wide column) rather than below it.</summary>
     internal bool MapBesideTable => !_split.Vertical;
 
     /// <summary>Whether the open level holds moves that no Save as mod has written: what leaving the level, the game or the companion would drop.</summary>

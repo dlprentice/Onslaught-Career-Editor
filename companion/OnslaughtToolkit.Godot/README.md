@@ -319,12 +319,12 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   Target Tank is byte for byte the one the Toolkit's pipeline stages for the same move, whether the move was typed or made by
   dragging its mark on the map.
 
-  The page also draws a **map** of the open level, beside the table (above it in a narrow window; the Map switch beside the
+  The page also draws a **map** of the open level, beside the table (below it in a narrow window; the Map switch beside the
   search hides it). Its terrain is hill-shaded relief with the water tinted, built from the level's terrain with the game's own
   height lookup (the Toolkit's `tools/heightfield_lookup.py` is the reference the Companion's version is checked against, on
   generated vectors and, on a game install, on every level's terrain); no game texture is used. Every placed thing is a mark
   by kind: the start, units, waypoints, sphere triggers at their radius, buildings and features, and the rest as dots; X runs
-  right and Y runs up. The wheel zooms about the pointer, dragging the background pans, Home shows the whole square, a click
+  right and Y runs up. The wheel zooms about the pointer, dragging the background pans, Home shows the whole square (and so does a new window size, until you have zoomed or panned), a click
   on a mark selects it in the table and the fields, and dragging a mark moves it: the mark follows the pointer, Esc puts it
   back, and letting go moves X and Y to the place under the pointer (to a hundredth) and keeps Z as it was, a stored -0
   included, as one move that can be undone. A moved object is amber on the map with a line from where the level has it, and a

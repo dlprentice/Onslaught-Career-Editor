@@ -161,7 +161,7 @@ public partial class LevelEditorCapture : SceneTree
         await Settle();
         Report(opened && page.Model?.Session is not null, $"level {_level} opened: {page.Model?.Session?.Body.Things.Count} objects, subtitle \"{app.PageSubtitle.Text}\"");
         Report(page.Map.HasRelief && page.Map.IsVisibleInTree(), $"the map shows the level's relief: {page.Map.Size.X:0}x{page.Map.Size.Y:0} pixels, {page.Map.View.Scale:0.000} pixels to the unit, " +
-            (page.MapBesideTable ? "beside the table" : "above the table"));
+            (page.MapBesideTable ? "beside the table" : "below the table"));
         await Shot(viewport, label, "level-editor-2-level-open");
 
         string mods = Path.Combine(_output, "mods-" + label);

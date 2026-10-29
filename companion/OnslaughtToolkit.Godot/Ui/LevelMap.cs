@@ -14,7 +14,7 @@ namespace OnslaughtToolkit.Companion.Ui;
 /// </summary>
 internal sealed partial class LevelMap : Control
 {
-    private const double ClickRadius = 12, DragThreshold = 4, StepPerWheelClick = 1.2, Rounding = 0.01;
+    private const double ClickRadius = 12, DragThreshold = 4, StepPerWheelClick = 1.2;
     private readonly MapView _view = new();
     private ImageTexture? _relief;
     private Heightfield? _terrain;
@@ -56,6 +56,13 @@ internal sealed partial class LevelMap : Control
     internal MapView View => _view;
     internal int? Selected => _selected;
     internal bool Dragging => _drag is not null;
+
+    /// <summary>
+    /// Where the dragged mark would be put if the pointer were let go now: the pointer's world position to a hundredth, as the float
+    /// nearest that decimal, or null when nothing is being dragged. The label drawn beside the mark and the move asked for on release
+    /// both come from it, so what is shown is what is stored.
+    /// </summary>
+    internal (float X, float Y)? DragPosition => _drag is { } drag ? (MapView.ToHundredths(drag.X), MapView.ToHundredths(drag.Y)) : null;
     internal bool HasRelief => _relief is not null;
 
     /// <summary>The terrain to draw (null for none) and the objects to mark. The relief is built when the terrain changes.</summary>
@@ -187,8 +194,8 @@ internal sealed partial class LevelMap : Control
         if (_drag is { } drag)
         {
             _drag = null;
-            double x = Math.Round(drag.X / Rounding) * Rounding, y = Math.Round(drag.Y / Rounding) * Rounding;
-            MoveRequested?.Invoke(drag.Row, (float)x, (float)y);
+            (float x, float y) = (MapView.ToHundredths(drag.X), MapView.ToHundredths(drag.Y));
+            MoveRequested?.Invoke(drag.Row, x, y);
         }
         _pressedRow = null;
         _panning = false;
@@ -307,7 +314,7 @@ internal sealed partial class LevelMap : Control
         if (selected) DrawCircle(at, 11, Colors.White, false, 2f, true);
         if (selected || hot)
         {
-            string text = row.Label + (_drag?.Row == row.Index ? $"  {CoordinateInput.Format((float)Math.Round(x / Rounding) * (float)Rounding)}, {CoordinateInput.Format((float)Math.Round(y / Rounding) * (float)Rounding)}" : "");
+            string text = row.Label + (_drag?.Row == row.Index ? $"  {CoordinateInput.Format(DragPosition!.Value.X)}, {CoordinateInput.Format(DragPosition!.Value.Y)}" : "");
             DrawLabel(at + new Vector2(14, -10), text);
         }
     }
