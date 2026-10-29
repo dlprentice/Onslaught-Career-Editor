@@ -391,8 +391,8 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
 
     /// <summary>
     /// Compiles source text as the replacement for one of the open level's own scripts: headers come from the game folder, and the compile session's two
-    /// counters start where the shipped script's do, so that what the edit did not touch keeps its names and the result differs from the shipped script
-    /// where the source does. Nothing is replaced; see <see cref="ReplaceScriptFromSource"/>.
+    /// counters start where the shipped script's do, which helps preserve generated names. The installed source can already differ from the shipped
+    /// compiled script, so recompiling it can change behavior beyond the source edit. Nothing is replaced; see <see cref="ReplaceScriptFromSource"/>.
     /// </summary>
     public ScriptCompileOutcome CompileScript(int scriptIndex, string source, string gameRoot)
     {
