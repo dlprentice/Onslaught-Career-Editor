@@ -282,7 +282,9 @@ publish, sign, or install anything by themselves.
   `level_editor_vectors_tests.py` adds the reference's own round trips and the refusal of every proper prefix of a body.
   `gate-table --game GAME --stdout` lists the size, SHA-256 and dump hash of each world body of an installed game, for
   each level archive a SCRIPTS row (how many scripts its own world and its base world hold, a hash of the lines the Level editor's script
-  catalog reads from them, how many of their sources the finder reads and a hash of those sources' text) and for
+  catalog reads from them, how many of their sources the finder reads and a hash of those sources' text), a NAMES row (every quoted text of
+  the level's own sources, found outside comments and resolved against the level's objects and its base world's, its paths, scripts and event handlers, hashed)
+  and for
   each level archive with a terrain the digest of its samples, the bits of its scale and water level, and a digest of the
   heights `heightfield_lookup.py` gives on a fixed grid and at every thing's position (hashes only) for the Companion's local
   retail gate, `Development/LevelsGate.cs`, whose header gives its command; the table is derived from a game, so keep it
