@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Globalization;
 using OnslaughtToolkit.Companion.Levels;
 
 namespace OnslaughtToolkit.Companion.Missions;
@@ -34,6 +35,7 @@ public delegate ResolvedName? NameResolver(string name, int symbolIndex);
 public static class ScriptCompiler
 {
     public const int MaxSource = 1 << 20;  // characters of a script, bytes of a header
+    internal const string CounterPast = "a counter of the compile session is past 2147483647";
 
     /// <summary>The ten bytes after each compiled script: the text <c>end_script</c>.</summary>
     internal static readonly byte[] Trailer = "end_script"u8.ToArray();
@@ -48,7 +50,7 @@ public static class ScriptCompiler
         NameResolver? resolve = null, List<CompileNote>? notes = null, CompileLimits? limits = null)
     {
         limits ??= CompileLimits.Default;
-        if (source.Length > limits.MaxSource) throw new CompileError("the script is longer than a million characters");
+        if (PythonText.CharacterCount(source) > limits.MaxSource) throw new CompileError("the script is longer than a million characters");
         (List<Token> tokens, string text) = ScriptPreprocessor.Run(source, readInclude, limits);
         return new ScriptParser(name, tokens, text, constStart, doOnceStart, resolve, notes, limits).Script();
     }
@@ -62,12 +64,19 @@ public static class ScriptCompiler
     private static int CounterStart(MissionScript script, Regex pattern)
     {
         foreach (ScriptSymbol symbol in script.Code.Symbols)
-            if (pattern.Match(symbol.Name) is { Success: true } match && int.TryParse(match.Groups[1].Value, out int number)) return number;
+            if (pattern.Match(symbol.Name) is { Success: true } match)
+            {
+                string digits = match.Groups[1].Value.TrimStart('0');
+                if (digits.Length == 0) return 0;
+                if (digits.Length > 10 || !int.TryParse(digits, NumberStyles.None, CultureInfo.InvariantCulture, out int number))
+                    throw new CompileError(CounterPast);
+                return number;
+            }
         return 0;
     }
 
-    private static readonly Regex ConstNamePattern = new("^const data([0-9]+)$", RegexOptions.CultureInvariant);
-    private static readonly Regex DoOnceNamePattern = new("^do-once-([0-9]+)$", RegexOptions.CultureInvariant);
+    private static readonly Regex ConstNamePattern = new("\\Aconst data([0-9]+)\\z", RegexOptions.CultureInvariant);
+    private static readonly Regex DoOnceNamePattern = new("\\Ado-once-([0-9]+)\\z", RegexOptions.CultureInvariant);
 
     /// <summary>A script or header as text: the game's files are single-byte text.</summary>
     /// <exception cref="CompileError">The file is longer than a million bytes.</exception>

@@ -34,7 +34,10 @@ internal static class PythonText
         char.IsHighSurrogate(text[at]) && at + 1 < text.Length && char.IsLowSurrogate(text[at + 1]) ? text.Substring(at, 2) : text[at].ToString();
 
     /// <summary>The number of characters, counting a surrogate pair as one (what Python's <c>len</c> says of the same text).</summary>
-    public static int CharacterCount(string text)
+    public static int CharacterCount(string text) => CharacterCount(text.AsSpan());
+
+    /// <summary>The same count for a slice without copying it.</summary>
+    public static int CharacterCount(ReadOnlySpan<char> text)
     {
         int count = text.Length;
         for (int at = 0; at + 1 < text.Length; at++)

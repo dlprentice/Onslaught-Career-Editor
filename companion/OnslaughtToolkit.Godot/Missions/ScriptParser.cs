@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using System.Globalization;
+using System.Text;
 using OnslaughtToolkit.Companion.Levels;
 using static OnslaughtToolkit.Companion.Missions.PythonText;
 
@@ -38,13 +39,24 @@ internal sealed class ScriptParser
     private readonly List<CompileNote>? _notes;
     private readonly HashSet<string> _variables = new(StringComparer.Ordinal), _handlers = new(StringComparer.Ordinal);
     private readonly List<ScriptSymbol> _symbols = [];
+    private readonly Dictionary<string, int> _symbolIndex = new(StringComparer.Ordinal), _stringIndex = new(StringComparer.Ordinal);
     private readonly List<EventFunction> _eventFunctions = [];
     private readonly int[] _eventPcs = new int[ScriptCode.EventCount];
-    private readonly List<(int Flag, int Zero, int Set)> _doOnceSites = [];
-    private readonly List<HashSet<string>> _chains = [];
+    private readonly List<(int Flag, int Zero, int Set, int Line)> _doOnceSites = [];
+    private readonly List<Chain> _chains = [];
     private List<ScriptInstruction> _code = [];
-    private int _i, _depth, _constNext, _doOnceNext;
+    private int _i, _depth;
+    private long _constNext, _doOnceNext;
     private bool _hasVars;
+
+    // The grouping note needs one entry per operand, not a repeatedly copied expression string.
+    private sealed class Chain
+    {
+        internal readonly HashSet<string> Used = new(StringComparer.Ordinal);
+        internal readonly List<(int First, int Last)> Leaves = [];
+        internal readonly List<string> Ops = [];
+        internal readonly List<int> Opens = [], Closes = [];
+    }
 
     public ScriptParser(string name, List<Token> tokens, string text, int constStart, int doOnceStart, NameResolver? resolve, List<CompileNote>? notes, CompileLimits limits)
     {
@@ -98,13 +110,12 @@ internal sealed class ScriptParser
     // ---- symbols and code
     private int NameSymbol(string name, int line)
     {
-        for (int index = 0; index < _symbols.Count; index++)
-            if (_symbols[index].Name == name) return index;
-        return Add(name, 0, null, line);
+        return _symbolIndex.TryGetValue(name, out int index) ? index : Add(name, 0, null, line);
     }
 
     private int Const(int dataType, ScriptValue value, int line)
     {
+        if (_constNext > int.MaxValue) throw new CompileError(ScriptCompiler.CounterPast, line);
         string name = $"const data{_constNext}";
         _constNext++;
         return Add(name, dataType, value, line);
@@ -114,6 +125,8 @@ internal sealed class ScriptParser
     {
         int index = _symbols.Count;
         _symbols.Add(new ScriptSymbol { Name = name, DataType = dataType, Value = value, SymbolType = line, Index = index, Flag = 1 });
+        _symbolIndex.TryAdd(name, index);
+        if (dataType == DtString && value is ScriptText text) _stringIndex.TryAdd(text.Value, index);
         return index;
     }
 
@@ -142,8 +155,9 @@ internal sealed class ScriptParser
     /// <summary>Each do_once block has two boolean symbols, a flag (true) and a false constant, after every other symbol of the script.</summary>
     private void AddDoOnceSymbols()
     {
-        foreach ((int flagPc, int zeroPc, int setPc) in _doOnceSites)
+        foreach ((int flagPc, int zeroPc, int setPc, int line) in _doOnceSites)
         {
+            if (_doOnceNext + 1 > int.MaxValue) throw new CompileError(ScriptCompiler.CounterPast, line);
             int flag = Add($"do-once-{_doOnceNext}", DtBool, new ScriptInt(1), 0);
             int zero = Add($"do-once-{_doOnceNext + 1}", DtBool, new ScriptInt(0), 0);
             _doOnceNext += 2;
@@ -188,7 +202,7 @@ internal sealed class ScriptParser
             string value = StringValue(name);
             Const(DtString, new ScriptText(value), name.Line);
             // The handler's parameter is the first string constant of that value (the one just made unless the script used the text before).
-            int parameter = _symbols.FindIndex(symbol => symbol.DataType == DtString && symbol.Value is ScriptText text && text.Value == value);
+            int parameter = _stringIndex[value];
             Expect(")");
             EventFunction function = new() { EntryPc = _code.Count };
             function.Parameters.Add(parameter);
@@ -278,12 +292,12 @@ internal sealed class ScriptParser
     /// <summary>A block that runs the first time only: it clears a flag that it tests (the flag symbols are numbered when the script ends).</summary>
     private void DoOnceStatement()
     {
-        Expect("do_once");
+        Token once = Expect("do_once");
         int flagPc = Emit("OP_PUSH", -1);
         int skip = Emit("OP_JMPFALSE", 0);
         int zeroPc = Emit("OP_PUSH", -1);
         int setPc = Emit("OP_POP", -1);
-        _doOnceSites.Add((flagPc, zeroPc, setPc));
+        _doOnceSites.Add((flagPc, zeroPc, setPc, once.Line));
         Statement();
         Patch(skip);
         Emit("OP_LABEL");
@@ -396,8 +410,8 @@ internal sealed class ScriptParser
         return null;
     }
 
-    /// <summary>An assignment (its value stays on the stack) or a chain of binary operators. Returns how the chain was grouped, as text.</summary>
-    private string Expression()
+    /// <summary>An assignment (its value stays on the stack) or a chain of binary operators.</summary>
+    private void Expression()
     {
         Token? token = Peek(), next = Peek(1);
         Enter();
@@ -407,17 +421,16 @@ internal sealed class ScriptParser
             {
                 int variable = Variable(token);
                 _i += 2;
-                string value = Expression();
+                Expression();
                 Emit("OP_GETTOP", variable);
-                return $"{token.Text} = {value}";
+                return;
             }
-            _chains.Add([]);
+            Chain chain = new();
+            _chains.Add(chain);
             Token? first = Peek();
-            string grouped = Binary(null);
-            HashSet<string> used = _chains[^1];
+            Binary(null);
             _chains.RemoveAt(_chains.Count - 1);
-            if (used.Count >= 2 && first is not null) Note(first.Line, "grouping", $"{Spaced(Span(first, _t[_i - 1]))} is grouped {grouped}");
-            return grouped;
+            if (_notes is not null && chain.Used.Count >= 2 && first is not null) Note(first.Line, "grouping", GroupingNote(chain, first, _t[_i - 1]));
         }
         finally
         {
@@ -426,6 +439,24 @@ internal sealed class ScriptParser
     }
 
     private string Span(Token first, Token last) => _text.Substring(first.Start, Math.Max(0, last.End - first.Start));
+
+    /// <summary>The reference bounds the source and operands repeated by a note, then renders the group once.</summary>
+    private string GroupingNote(Chain chain, Token first, Token last)
+    {
+        const int maxNoteChars = 5000;
+        long size = PythonText.CharacterCount(_text.AsSpan(first.Start, Math.Max(0, last.End - first.Start)));
+        foreach ((int start, int end) in chain.Leaves)
+            size += PythonText.CharacterCount(_text.AsSpan(_t[start].Start, Math.Max(0, _t[end].End - _t[start].Start)));
+        if (size > maxNoteChars) return $"the grouping of this expression is not written out: its text is longer than {maxNoteChars} characters";
+        StringBuilder parts = new();
+        for (int i = 0; i < chain.Leaves.Count; i++)
+        {
+            (int start, int end) = chain.Leaves[i];
+            parts.Append('(', chain.Opens[i]).Append(Spaced(Span(_t[start], _t[end]))).Append(')', chain.Closes[i]);
+            if (i < chain.Ops.Count) parts.Append(' ').Append(chain.Ops[i]).Append(' ');
+        }
+        return $"{Spaced(Span(first, last))} is grouped {parts}";
+    }
 
     /// <summary>The text with each run of blanks and line ends one space.</summary>
     internal static string Spaced(string text) => string.Join(' ', text.Split([' ', '\t', '\n', '\r', '\f', '\v'], StringSplitOptions.RemoveEmptyEntries));
@@ -436,9 +467,9 @@ internal sealed class ScriptParser
         return NameSymbol(token.Text, token.Line);
     }
 
-    private string Binary(string? outer)
+    private (int First, int Last) Binary(string? outer)
     {
-        string left = Operand();
+        (int First, int Last) left = Operand();
         while (true)
         {
             Token? token = Peek();
@@ -452,16 +483,20 @@ internal sealed class ScriptParser
                 if (tighter == false) return left;
             }
             _i++;
-            _chains[^1].Add(token.Text);
-            string right = Binary(token.Text);
+            Chain chain = _chains[^1];
+            chain.Used.Add(token.Text);
+            chain.Ops.Add(token.Text);
+            (int First, int Last) right = Binary(token.Text);
             Emit(BinaryOps[token.Text]);
-            left = $"({left} {token.Text} {right})";
+            chain.Opens[left.First]++;
+            chain.Closes[right.Last]++;
+            left = (left.First, right.Last);
         }
     }
 
-    private string Operand()
+    private (int First, int Last) Operand()
     {
-        Token? first = Peek();
+        int first = _i;
         Token token = Next();
         if (token.Kind == TokenKind.Op && token.Text == "(")
         {
@@ -514,7 +549,12 @@ internal sealed class ScriptParser
             Emit("OP_POINTER");
             Call(member);
         }
-        return Spaced(Span(first!, _t[_i - 1]));
+        Chain chain = _chains[^1];
+        int leaf = chain.Leaves.Count;
+        chain.Leaves.Add((first, _i - 1));
+        chain.Opens.Add(0);
+        chain.Closes.Add(0);
+        return (leaf, leaf);
     }
 
     private static string StringValue(Token token)

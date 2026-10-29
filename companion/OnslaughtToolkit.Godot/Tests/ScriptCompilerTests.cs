@@ -221,6 +221,32 @@ internal static class ScriptCompilerTests
         foreach (string name in new[] { "init", "const data", "xconst data3", "const data3x", "const data7", "const data9", "xdo-once-6", "do-once-5x", "do-once-4", "do-once-x" })
             built.Code.Symbols.Add(new ScriptSymbol { Name = name });
         check.That(ScriptCompiler.ConstStartOf(built) == 7 && ScriptCompiler.DoOnceStartOf(built) == 4, "the counter is the first symbol that is exactly `const dataN` or `do-once-N`");
+
+        MissionScript edge = Compile("init() { Pause(1); }", constStart: int.MaxValue);
+        check.That(edge.Code.Symbols.Any(symbol => symbol.Name == "const data2147483647"), "the largest stored constant number is accepted");
+        try
+        {
+            Compile("init() { Pause(1); Pause(2); }", constStart: int.MaxValue);
+            check.Fail("a second constant after the largest stored number was accepted");
+        }
+        catch (CompileError error) { check.That(error.Message.Contains(ScriptCompiler.CounterPast, StringComparison.Ordinal), "constant numbering refuses overflow"); }
+        MissionScript onceEdge = Compile("init() { do_once { } }", doOnceStart: int.MaxValue - 1);
+        check.That(onceEdge.Code.Symbols.Any(symbol => symbol.Name == "do-once-2147483647"), "the final do_once pair ends at the largest stored number");
+        try
+        {
+            Compile("init() { do_once { } }", doOnceStart: int.MaxValue);
+            check.Fail("a do_once pair past the largest stored number was accepted");
+        }
+        catch (CompileError error) { check.That(error.Message.Contains(ScriptCompiler.CounterPast, StringComparison.Ordinal), "do_once numbering refuses overflow"); }
+
+        MissionScript names = new();
+        names.Code.Symbols.Add(new ScriptSymbol { Name = "const data00000000000000000007" });
+        check.That(ScriptCompiler.ConstStartOf(names) == 7, "counter names can have leading zeroes");
+        names.Code.Symbols[0].Name = "const data2147483648";
+        try { ScriptCompiler.ConstStartOf(names); check.Fail("an oversized counter name was accepted"); }
+        catch (CompileError error) { check.That(error.Message == ScriptCompiler.CounterPast, "an oversized counter name is refused instead of becoming zero"); }
+        names.Code.Symbols[0].Name = "const data7\n";
+        check.That(ScriptCompiler.ConstStartOf(names) == 0, "a trailing newline is not part of an exact counter name");
     }
 
     private static void Files(string output, Checks check)
@@ -321,6 +347,20 @@ internal static class ScriptCompilerTests
             "the depth limit is a parameter: a call statement is a statement inside the handler and an expression inside the statement, two deep");
         Compile("//" + new string('x', ScriptCompiler.MaxSource - 2));
         check.That(Refuses("//" + new string('x', ScriptCompiler.MaxSource - 1), "longer than a million characters") && Refuses("//xxx", "longer than a million characters", new CompileLimits(MaxSource: 4)), "a script of a million characters compiles and one more is refused");
+        Compile("//\U0001f600", limits: new CompileLimits(MaxSource: 3));
+        check.That(Refuses("//\U0001f600x", "longer than a million characters", new CompileLimits(MaxSource: 3)), "the source limit counts an astral character as one character, not two UTF-16 units");
+        Compile("//\ud800", limits: new CompileLimits(MaxSource: 3));
+        check.That(Refuses("//\ud800x", "longer than a million characters", new CompileLimits(MaxSource: 3)), "a lone surrogate counts as one character too");
+
+        List<CompileNote> bounded = [];
+        Stopwatch groupClock = Stopwatch.StartNew();
+        Compile(Init("\tr = " + string.Concat(Enumerable.Repeat("a + ", 12000)) + "a == a;"), notes: bounded);
+        check.That(bounded.Any(note => note.Kind == "grouping" && note.Text == "the grouping of this expression is not written out: its text is longer than 5000 characters") &&
+                   groupClock.Elapsed < TimeSpan.FromSeconds(15), $"a long mixed chain gets the bounded note and finishes in {groupClock.Elapsed.TotalSeconds:0.0}s");
+        List<CompileNote> astralNote = [];
+        Compile(Init("\tr = a + a //" + string.Concat(Enumerable.Repeat("\U0001f600", 2490)) + "\n == a;"), notes: astralNote);
+        check.That(astralNote.Any(note => note.Kind == "grouping" && note.Text.Contains(" is grouped ", StringComparison.Ordinal)),
+            "the grouping-note limit counts astral characters as one, as the reference does");
         check.That(Refuses(Init("\tr = else;"), "'else' is a keyword and cannot be used here") && Refuses("if (1) { }\n", "expected an event handler") && Refuses("vars\n\tint if;\nend_vars\n", "expected a variable name"),
             "keywords are not names");
         string shown = Refused(Init("\tRand(" + new string('9', 400) + ");")).Message;
