@@ -213,7 +213,26 @@ internal static class LevelEditTests
         RefusedFirst(check, "a mod folder inside a protected folder", Path.Combine(game, "mods"), info, worlds, game);
         RefusedFirst(check, "a mod folder that is the protected folder itself", Path.GetDirectoryName(game)!, new ModInfo("game", "Game"), worlds, game);
         check.That(Entries(game).SequenceEqual(["data"]), "nothing is made inside a protected folder: " + string.Join(", ", Entries(game)));
-        check.That(ModStager.Stage(Path.Combine(folder, "beside-game"), info, worlds, [game, null, "", Path.Combine(folder, "missing")]).Files.Count == 1, "a mod folder beside a protected folder is fine, and empty or missing guards are ignored");
+        check.That(ModStager.Stage(Path.Combine(folder, "beside-game"), info, worlds, [game, null, "", Path.Combine(folder, "missing")]).Files.Count == 1, "a mod folder beside a protected folder is fine, an empty guard is ignored, and a missing one guards only its own place");
+
+        // A protected folder that does not exist yet (the backups folder before the first backup) still guards its place, and the refusal does not make it.
+        string absent = Path.Combine(folder, "backups-not-yet");
+        RefusedFirst(check, "a mod folder inside a protected folder that does not exist yet", Path.Combine(absent, "mods"), info, worlds, absent);
+        RefusedFirst(check, "a mod folder deeper inside one", Path.Combine(absent, "a", "b"), info, worlds, absent);
+        RefusedFirst(check, "a mod folder that is the missing protected folder itself", Path.GetDirectoryName(absent)!, new ModInfo("backups-not-yet", "Backups"), worlds, absent);
+        RefusedFirst(check, "a mod folder inside a missing protected folder named with a trailing separator", Path.Combine(absent, "mods"), info, worlds, absent + Path.DirectorySeparatorChar);
+        check.That(!Directory.Exists(absent), "a missing protected folder is not made by the refusals");
+        if (!OperatingSystem.IsWindows())
+        {
+            // A protected folder named through a link guards the folder the link leads to, whether or not the end of it exists yet.
+            string protectedReal = Path.Combine(folder, "real-protected"), protectedLink = Path.Combine(folder, "link-protected");
+            Directory.CreateDirectory(protectedReal);
+            Directory.CreateSymbolicLink(protectedLink, protectedReal);
+            RefusedFirst(check, "a mod folder reached by its real path inside a protected folder named through a link", Path.Combine(protectedReal, "mods"), info, worlds, protectedLink);
+            RefusedFirst(check, "and one inside a missing folder below it", Path.Combine(protectedReal, "not-yet", "mods"), info, worlds, Path.Combine(protectedLink, "not-yet"));
+            check.That(Entries(protectedReal).Length == 0, "nothing is made inside the folder behind the link: " + string.Join(", ", Entries(protectedReal)));
+        }
+        check.That(ModStager.Stage(Path.Combine(folder, "backups-not-yet-beside"), info, worlds, [absent]).Files.Count == 1, "a mod folder whose name only starts like a missing protected folder's is fine");
 
         // Never inside an install: a folder with BEA.exe and data above it.
         string install = Path.Combine(folder, "install");

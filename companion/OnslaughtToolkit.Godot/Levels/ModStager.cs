@@ -192,8 +192,10 @@ public static class ModStager
             // No link anywhere on the way (the folder, its parents), and not inside a game folder.
             FileMutationSafety.RejectExistingReparseAncestors(root, "Mod folder");
             FileMutationSafety.RejectOutputInGameTree(Path.Combine(root, "mod.json"));
+            // A protected folder that does not exist yet (the backups folder before the first backup) still guards its place: RealPath
+            // resolves the links in the part that exists and keeps the rest as written.
             foreach (string? guarded in protectedFolders)
-                if (!string.IsNullOrEmpty(guarded) && Directory.Exists(guarded) && ExportFiles.Inside(root, ExportFiles.RealPath(guarded)))
+                if (!string.IsNullOrEmpty(guarded) && ExportFiles.Inside(root, ExportFiles.RealPath(guarded)))
                     throw new ModStageException("A mod is never saved into your game folder or the companion's backups. Choose another folder.");
             if (File.Exists(root)) throw new ModStageException($"{root} is a file, not a folder: nothing was written.");
             if (Directory.Exists(root))

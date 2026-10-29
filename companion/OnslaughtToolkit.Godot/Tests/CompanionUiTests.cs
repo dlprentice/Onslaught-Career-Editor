@@ -18,7 +18,7 @@ namespace OnslaughtToolkit.Companion.Tests;
 /// </summary>
 internal static class CompanionUiTests
 {
-    private sealed class Flag
+    internal sealed class Flag
     {
         internal bool On { get; set; }
     }
@@ -54,6 +54,7 @@ internal static class CompanionUiTests
             await DriveLore(app, tree, openedUrls, check);
             await ModelsAndTextures(app, tree, install, outputDirectory, check);
             await LevelEditorPageTests.RunAsync(app, tree, install, outputDirectory, check);
+            await LevelEditorPageTests.UnsavedAsync(app, tree, install, outputDirectory, quit, check);
         }
         finally
         {

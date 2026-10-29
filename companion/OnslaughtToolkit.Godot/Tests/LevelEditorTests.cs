@@ -21,6 +21,7 @@ internal static class LevelEditorTests
         Stage(check, "the model's moves", () => Moves(Path.Combine(outputDirectory, "level-editor-moves"), check));
         Stage(check, "the model's saves", () => Saves(Path.Combine(outputDirectory, "level-editor-saves"), check));
         Stage(check, "a mod's id and name", () => Words(check));
+        Stage(check, "paths shown shortened", () => Paths(check));
     }
 
     private static void Stage(Checks check, string name, Action stage)
@@ -250,28 +251,113 @@ internal static class LevelEditorTests
         ModInfo info = new(vector.Id, vector.ModName, vector.Version, vector.Author, vector.Description, vector.CeMin, vector.CeMax);
         LevelEditorModel model = LevelEditorModel.ForGame(game);
         model.Open(100);
+        check.That(!model.HasUnsavedChanges && model.UnsavedChangeCount == 0, "a level just opened holds nothing unsaved");
 
         SaveOutcome nothing = model.SaveAsMod(mods, info, [game]);
         check.That(!nothing.Ok && nothing.Message.Contains("Nothing has changed", StringComparison.Ordinal) && !Directory.Exists(mods), "an unchanged level is not saved: " + nothing.Message);
 
         model.Move(0, "12.5", "-40", "3");
+        check.That(model.HasUnsavedChanges && model.UnsavedChangeCount == 1, "a move is unsaved until a Save as mod has written it");
         SaveOutcome inGame = model.SaveAsMod(Path.Combine(game, "mods"), info, [game]);
         check.That(!inGame.Ok && inGame.Message.Contains("never saved into your game folder", StringComparison.Ordinal) && !Directory.Exists(Path.Combine(game, "mods")), "a mod is not saved into a protected folder: " + inGame.Message);
+        check.That(model.UnsavedChangeCount == 1, "a save that was refused leaves the move unsaved");
 
-        SaveOutcome saved = model.SaveAsMod(mods, info, [game]);
+        // A protected folder that does not exist yet (the backups folder before the first backup) still guards its place, and the refusal does not make it.
+        string absent = Path.Combine(folder, "backups-not-made-yet");
+        foreach (string destination in new[] { absent, Path.Combine(absent, "mods"), Path.Combine(absent, "a", "b") })
+        {
+            SaveOutcome intoAbsent = model.SaveAsMod(destination, info, [game, absent]);
+            check.That(!intoAbsent.Ok && intoAbsent.Message.Contains("never saved into your game folder or the companion's backups", StringComparison.Ordinal) && !Directory.Exists(absent),
+                $"a mod is not saved into a protected folder that does not exist yet ({Path.GetRelativePath(folder, destination)}), and it is not made: {intoAbsent.Message}");
+        }
+        check.That(model.UnsavedChangeCount == 1, "and those refusals leave the move unsaved");
+
+        SaveOutcome saved = model.SaveAsMod(mods, info, [game, absent]);
         check.That(saved.Ok && saved.Message == $"Saved the mod to {Path.Combine(mods, vector.Id)}." && saved.Staged!.ManifestSha256 == vector.ManifestSha256 &&
                    saved.Staged.Files.Select(f => (f.Path, f.Size, f.Sha256)).SequenceEqual(vector.Files.Select(f => (f.Path, f.Size, f.Sha256))),
             "the edit is saved as the mod the reference stager writes for that edit: " + saved.Message);
         check.That(File.ReadAllBytes(Path.Combine(saved.Staged!.Root, "mod.json")).AsSpan().SequenceEqual(LevelTests.Unpack(vector.Manifest)) &&
                    File.ReadAllBytes(Path.Combine(saved.Staged.Root, "data", "worlds", "world100.wrd")).AsSpan().SequenceEqual(LevelTests.Unpack(LevelVectors.Edits.First(e => e.Name == "move-v50").Body)),
             "its mod.json and world file are the reference's, byte for byte");
+        check.That(!model.HasUnsavedChanges && model.UnsavedChangeCount == 0, "once saved, the move is not unsaved");
+        model.Move(0, "13", "-40", "3");
+        check.That(model.UnsavedChangeCount == 1, "the saved object moved again, to another place, is unsaved though the same objects are moved");
+        model.Move(0, "13", "-40", "4");
+        model.Move(0, "12.5", "-40", "4");
+        check.That(model.UnsavedChangeCount == 1, "a change in height alone is unsaved");
+        check.That(model.Session!.Undo() && model.Session.Undo() && model.Session.Undo() && model.UnsavedChangeCount == 0, "undone back to what was saved, nothing is unsaved");
+        model.Move(1, "5", "6", "7");
+        check.That(model.UnsavedChangeCount == 2, "a move made after the save is unsaved, and the saved one counts with it: " + model.UnsavedChangeCount);
+        check.That(model.Session!.Undo() && model.UnsavedChangeCount == 0, "undone back to what was saved, nothing is unsaved");
+        check.That(model.Session.Undo() && model.UnsavedChangeCount == 0 && model.Session.Changes().Count == 0, "undone to the level's own, there is nothing to lose");
+        check.That(model.Session.Redo() && model.UnsavedChangeCount == 0 && model.Session.Redo() && model.UnsavedChangeCount == 2, "and redone past the save, the later move is unsaved again");
+        model.Session.Undo();
+        model.Open(100);
+        check.That(model.UnsavedChangeCount == 0 && !model.HasUnsavedChanges, "opening a level again starts without anything unsaved");
+        model.Move(0, "12.5", "-40", "3");
+        check.That(model.UnsavedChangeCount == 1, "a move made on a level opened again is unsaved even if it is the one saved before: a new session has no save");
         SaveOutcome again = model.SaveAsMod(mods, info, [game]);
         check.That(!again.Ok && again.Message.Contains("already holds", StringComparison.Ordinal), "saving again into the same folder is refused: " + again.Message);
+        check.That(model.UnsavedChangeCount == 1, "and that refusal leaves the move unsaved");
+
+        // A zero and a negative zero are different bytes in the file, so changing one into the other after a save is unsaved.
+        model.Open(100);
+        model.Move(0, "12.5", "-40", "-0");
+        check.That(model.SaveAsMod(Path.Combine(folder, "user", "mods-zero"), info, [game]).Ok && model.UnsavedChangeCount == 0, "a move to a height of -0 is saved");
+        model.Move(0, "12.5", "-40", "0");
+        check.That(model.UnsavedChangeCount == 1, "typing 0 over the saved -0 is unsaved: the file would differ in one bit");
+        model.Move(0, "12.5", "-40", "-0");
+        check.That(model.UnsavedChangeCount == 0, "and -0 again is what was saved");
         check.That(!model.SaveAsMod(mods, new ModInfo("Bad Id", "Name"), [game]).Ok && !model.SaveAsMod("relative/folder", info, [game]).Ok, "words CE would not accept and a folder that is not a full path are refused");
 
         // A level whose archive names another level is never saved under this one: it cannot be opened, so nothing is staged.
         model.Open(300);
         check.That(!model.SaveAsMod(Path.Combine(folder, "user", "other"), info, [game]).Ok && !Directory.Exists(Path.Combine(folder, "user", "other")), "nothing is saved for a level that is not open");
+    }
+
+    private static void Paths(Checks check)
+    {
+        check.That(PathText.Elide("/a/b", 52) == "/a/b" && PathText.Elide(new string('x', 52), 52) == new string('x', 52), "a path that fits is shown as it is, the longest one that fits included");
+        string path = "/home/someone/projects/onslaught/mods/a-folder-with-a-rather-long-name/level-100-edit";
+        string cut = PathText.Elide(path, 52);
+        check.That(cut.Length <= 52 && cut.Contains('…') && cut.StartsWith(path[..12], StringComparison.Ordinal) && cut.EndsWith("level-100-edit", StringComparison.Ordinal),
+            $"a longer path is cut in the middle: {cut.Length} characters, {cut}");
+        check.That(cut == "/home/someone/pro…-a-rather-long-name/level-100-edit", "the cut keeps a third of the room for where the path starts and two thirds for where it ends: " + cut);
+        check.That(PathText.Elide(new string('p', 53), 52).Length == 52 && PathText.Elide(new string('p', 5000), 52).Length == 52, "one character over is cut to the limit, and so is a path of thousands");
+        check.That(PathText.Elide("/abcdefgh", 5) == "/a…gh" || PathText.Elide("/abcdefgh", 5).Length == 5, "the shortest limit still cuts: " + PathText.Elide("/abcdefgh", 5));
+        // A cut never splits a surrogate pair, wherever it falls.
+        UTF8Encoding strict = new(false, true);
+        for (int offset = 0; offset < 6; offset++)
+        {
+            string emoji = new string('a', offset) + string.Concat(Enumerable.Repeat("😀", 40));
+            for (int max = 5; max < 30; max++)
+            {
+                string cutEmoji = PathText.Elide(emoji, max);
+                try
+                {
+                    strict.GetBytes(cutEmoji);
+                    check.That(cutEmoji.Length <= max, $"the elided text of {max} characters fits ({offset} before the emoji)");
+                }
+                catch (EncoderFallbackException)
+                {
+                    check.Fail($"the path was cut inside a surrogate pair at {max} characters, {offset} before the emoji");
+                }
+            }
+        }
+        Refuses(check, "a limit too short to cut", () => PathText.Elide("/long/path/here", 4));
+    }
+
+    private static void Refuses(Checks check, string what, Action action)
+    {
+        try
+        {
+            action();
+            check.Fail(what + ": nothing was thrown");
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            check.That(true, what);
+        }
     }
 
     private static void Words(Checks check)

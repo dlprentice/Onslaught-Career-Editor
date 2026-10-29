@@ -68,6 +68,29 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     /// <summary>The level asked for last, whether or not it could be opened.</summary>
     public int? Level { get; private set; }
 
+    private string? _savedSignature;
+
+    /// <summary>The moved objects and where each stands, bit for bit, as one text: two edits that put everything in the same places have the same one.</summary>
+    private static string Signature(EditSession session) => string.Join(';', session.Changes().Select(change =>
+        $"{change.Index}:{BitConverter.SingleToUInt32Bits(change.To.X):x8}:{BitConverter.SingleToUInt32Bits(change.To.Y):x8}:{BitConverter.SingleToUInt32Bits(change.To.Z):x8}"));
+
+    /// <summary>
+    /// How many objects stand somewhere their level does not have them and no Save as mod has written that yet (0 when there is nothing
+    /// to lose): what leaving the level, the game or the companion would drop. An edit that was saved and then undone, or saved and
+    /// left as it is, holds nothing unsaved.
+    /// </summary>
+    public int UnsavedChangeCount
+    {
+        get
+        {
+            if (Session is not { } session) return 0;
+            int moved = session.Changes().Count;
+            return moved > 0 && Signature(session) != _savedSignature ? moved : 0;
+        }
+    }
+
+    public bool HasUnsavedChanges => UnsavedChangeCount > 0;
+
     /// <summary>What the open level's archive holds.</summary>
     public LevelWorlds? Worlds { get; private set; }
 
@@ -89,6 +112,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         Level = level;
         Worlds = null;
         Session = null;
+        _savedSignature = null;
         Problem = null;
         LevelArchiveFile? file = Levels.FirstOrDefault(archive => archive.Level == level);
         if (file is null) return Refuse($"This game has no archive for level {level}.");
@@ -240,6 +264,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         try
         {
             StagedMod staged = ModStager.Stage(parent, info, new Dictionary<int, byte[]> { [level] = Session.ToBytes() }, protectedFolders);
+            _savedSignature = Signature(Session);
             return new SaveOutcome(staged, $"Saved the mod to {staged.Root}.");
         }
         catch (Exception error) when (error is ModStageException or InvalidDataException)

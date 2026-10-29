@@ -38,6 +38,12 @@ internal sealed class AppServices
     /// <summary>Asks for a career file anywhere on the computer and opens it read-only.</summary>
     internal required Action OpenCareerFile { get; init; }
 
+    /// <summary>Asks before unsaved work is dropped: the question, the words on the button that agrees, and what to do if the player agrees.</summary>
+    internal required Action<string, string, Action> AskToDiscard { get; init; }
+
+    /// <summary>How many moved objects on the Level editor no Save as mod has written yet (0 for none).</summary>
+    internal required Func<int> LevelMovesUnsaved { get; init; }
+
     /// <summary>Where the retired Windows toolkit kept its copied installs (<see cref="OldSafeCopies"/>), or null.</summary>
     internal string? OldCopiesFolder { get; init; }
 

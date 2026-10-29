@@ -3,6 +3,7 @@ using System.Numerics;
 using Vector3 = System.Numerics.Vector3;
 using System.Security.Cryptography;
 using Godot;
+using OnslaughtToolkit.Companion.Game;
 using OnslaughtToolkit.Companion.Levels;
 using OnslaughtToolkit.Companion.Ui;
 
@@ -51,6 +52,109 @@ internal static class LevelEditorPageTests
             page.Level.EmitSignal(OptionButton.SignalName.ItemSelected, (long)i);
             return;
         }
+    }
+
+    /// <summary>
+    /// What happens to a move no Save as mod has written when the player closes the companion, picks another level, switches games or
+    /// chooses another game folder: the page asks first, a cancelled question keeps the move, and a saved move is not asked about.
+    /// </summary>
+    internal static async Task UnsavedAsync(CompanionApp app, SceneTree tree, FakeInstall install, string outputDirectory, CompanionUiTests.Flag quit, Checks check)
+    {
+        check.Suite("level editor unsaved changes");
+        LevelEditorPage page = app.LevelEditor;
+        foreach (Window window in app.FindChildren("*", nameof(Window), true, false).OfType<Window>().Where(window => window.Visible)) window.Hide();
+        app.Navigate("levels");
+        await Frame(tree);
+        check.That(page.OpenLevel(100) && !page.HasChanges && page.ChangeCount == 0, "a level just opened holds nothing unsaved");
+        quit.On = false;
+        check.That(app.RequestClose() && quit.On && !app.DiscardDialog.Visible, "with nothing moved on the Level editor, closing does not ask");
+        quit.On = false;
+
+        // Closing asks, and a cancelled question keeps the move.
+        page.SelectRow(1);
+        Set(page.X, "7");
+        Set(page.Y, "8");
+        Set(page.Z, "9");
+        Submit(page.X);
+        check.That(page.HasChanges && page.ChangeCount == 1 && !page.Undo.Disabled, "a typed move is unsaved");
+        check.That(!app.RequestClose() && app.DiscardDialog.Visible && app.DiscardDialog.DialogText.StartsWith("Not saved yet: 1 object moved on Level editor.", StringComparison.Ordinal) && !quit.On,
+            $"closing with an unsaved move asks first and does not close: \"{app.DiscardDialog.DialogText}\"");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+        check.That(page.HasChanges && !quit.On && M(page).Session!.Changes().Count == 1, "a cancelled question keeps the move and the companion open");
+        check.That(!app.RequestClose() && app.DiscardDialog.Visible, "closing asks again");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
+        check.That(quit.On, "agreeing to discard closes the companion");
+        quit.On = false;
+        app.DiscardDialog.Hide();
+
+        // Together with the other pages' changes, and from another page (leaving and coming back kept the move already).
+        app.Navigate("home");
+        check.That(!app.RequestClose() && app.DiscardDialog.Visible && app.DiscardDialog.DialogText.Contains("1 object moved on Level editor", StringComparison.Ordinal), "closing asks about the Level editor from any page");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+        app.Navigate("levels");
+        await Frame(tree);
+
+        // The picker asks before it drops the move; the question leaves the picker on the open level, and agreeing opens the other.
+        Choose(page, 200);
+        check.That(app.DiscardDialog.Visible && app.DiscardDialog.DialogText.StartsWith("1 object moved on level 100 is not saved. Open level 200 and discard it?", StringComparison.Ordinal) && page.Model?.Level == 100 &&
+                   page.Level.GetItemId(page.Level.Selected) == 100 && page.HasChanges, $"choosing another level asks first, and the picker keeps showing the open one: \"{app.DiscardDialog.DialogText}\"");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+        check.That(page.Model?.Level == 100 && page.HasChanges && page.Level.GetItemId(page.Level.Selected) == 100 && M(page).Row(1)!.Position == new System.Numerics.Vector3(7f, 8f, 9f), "a cancelled question keeps the level and the move");
+        Choose(page, 100);
+        check.That(app.DiscardDialog.Visible && page.HasChanges, "choosing the open level again asks too, since it would be read afresh");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+        Choose(page, 200);
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
+        await Frame(tree);
+        check.That(page.Model?.Level == 200 && !page.HasChanges && page.Level.GetItemId(page.Level.Selected) == 200 && M(page).Session!.Changes().Count == 0, "after the player agrees, the other level opens and the move is dropped");
+        app.DiscardDialog.Hide();
+
+        // Switching games asks too (it is refused until the move is saved or undone, as with a career), and the move stays.
+        Choose(page, 100);
+        await Frame(tree);
+        page.SelectRow(1);
+        Set(page.X, "7");
+        Submit(page.X);
+        check.That(page.HasChanges, "a move on a level opened again is unsaved");
+        await app.SelectTargetAsync(GameTarget.OnslaughtCe);
+        check.That(app.Status.Label.Text.Contains("Save or undo your career, settings and level changes", StringComparison.Ordinal) && app.Game.Target == GameTarget.Original && page.HasChanges && page.Model?.Level == 100,
+            $"switching games is refused while a level move is unsaved, and the move stays: \"{app.Status.Label.Text}\"");
+
+        // Choosing another game folder starts the page over, so it asks first.
+        await app.Home.ChooseAsync(install.Game);
+        check.That(app.DiscardDialog.Visible && app.DiscardDialog.DialogText.StartsWith("1 object moved on the Level editor is not saved. Use ", StringComparison.Ordinal) && app.DiscardDialog.DialogText.EndsWith("as the game folder and discard it?", StringComparison.Ordinal) && page.HasChanges,
+            $"choosing a game folder asks first: \"{app.DiscardDialog.DialogText}\"");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+        check.That(page.HasChanges && page.Model?.Level == 100, "a cancelled question keeps the move");
+
+        // A move that Save as mod has written is not asked about: not on close, not on a level switch; and a move made after the save is.
+        string saveFolder = Path.Combine(outputDirectory, "ui-level-unsaved-mods");
+        app.Navigate("levels");
+        await Frame(tree);
+        page.SaveDialog.Begin(100, saveFolder);
+        check.That(page.SaveNow().Ok && !page.HasChanges && page.ChangeCount == 0 && M(page).Session!.Changes().Count == 1, "saving the move as a mod leaves nothing unsaved, and the page still holds the edit");
+        check.That(app.RequestClose() && quit.On && !app.DiscardDialog.Visible, "a saved move is not asked about on close");
+        quit.On = false;
+        page.SelectRow(2);
+        Set(page.X, "11");
+        Set(page.Y, "12");
+        Set(page.Z, "13");
+        Submit(page.X);
+        check.That(page.HasChanges && page.ChangeCount == 2 && !app.RequestClose() && app.DiscardDialog.DialogText.Contains("2 objects moved on Level editor", StringComparison.Ordinal), $"a move made after the save is unsaved, counted with the saved one: \"{app.DiscardDialog.DialogText}\"");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+        Press(page.Undo);
+        check.That(!page.HasChanges && app.RequestClose() && quit.On, "undone back to what was saved, nothing is unsaved");
+        quit.On = false;
+        Choose(page, 200);
+        check.That(!app.DiscardDialog.Visible && page.Model?.Level == 200, "and then another level opens without a question");
+        app.Navigate("home");
+        await Frame(tree);
     }
 
     internal static async Task RunAsync(CompanionApp app, SceneTree tree, FakeInstall install, string outputDirectory, Checks check)
@@ -209,13 +313,42 @@ internal static class LevelEditorPageTests
         check.That(dialog.Info == new ModInfo(vector.Id, vector.ModName, vector.Version, vector.Author, vector.Description), "the dialog holds the words the reference stager was given");
         dialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
         string root = Path.Combine(chosen, vector.Id);
-        check.That(page.SavedText.StartsWith($"Saved the mod to {root}.", StringComparison.Ordinal) && page.SavedText.Contains($"mods={vector.Id}", StringComparison.Ordinal) && page.CopyVisible &&
+        check.That(page.SavedText.StartsWith($"Saved the mod to {PathText.Elide(root, 52)}.", StringComparison.Ordinal) && page.SavedFolder == root && page.SavedTooltip.StartsWith(root + "\n", StringComparison.Ordinal) &&
+                   page.SavedText.Contains($"mods={vector.Id}", StringComparison.Ordinal) && page.CopyVisible &&
                    app.Status.Label.Text.EndsWith("Saved the mod Level 100 edit.", StringComparison.Ordinal) && app.Status.Label.Text.StartsWith("✓", StringComparison.Ordinal), $"saving says where the mod is and what to add to ce.ini: \"{page.SavedText}\"");
         check.That(File.ReadAllBytes(Path.Combine(root, "mod.json")).AsSpan().SequenceEqual(LevelTests.Unpack(vector.Manifest)) &&
                    File.ReadAllBytes(Path.Combine(root, "data", "worlds", "world100.wrd")).AsSpan().SequenceEqual(LevelTests.Unpack(LevelVectors.Edits.First(e => e.Name == "move-v50").Body)) &&
                    Directory.GetFiles(root, "*", SearchOption.AllDirectories).Length == 2, "the saved mod.json and world file are the reference stager's, byte for byte");
         dialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
         check.That(page.SavedText.Contains("already holds", StringComparison.Ordinal) && !page.CopyVisible, "saving again into the same folder is refused, and says so: " + page.SavedText);
+
+        // A very long folder does not make the notice long: it shows the path's two ends, keeps the full path for Copy and the tooltip, and the page still fits the smallest window.
+        string deep = Path.Combine(chosen, new string('d', 120), new string('e', 120));
+        dialog.Begin(100, deep);
+        dialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
+        await Frame(tree);
+        string deepRoot = Path.Combine(deep, dialog.Id.Text);
+        check.That(page.SavedFolder == deepRoot && page.SavedText.Split('\n').Length == 2 && page.SavedText.Split('\n')[0].Length <= "Saved the mod to .".Length + 52 && page.SavedText.Contains("…", StringComparison.Ordinal) &&
+                   page.SavedTooltip.StartsWith(deepRoot + "\n", StringComparison.Ordinal) && page.CopyVisible, $"a very long folder is shown by its ends only, and the full path is kept: \"{page.SavedText}\"");
+        for (int frame = 0; frame < 3; frame++) await Frame(tree);
+        check.That(app.GetCombinedMinimumSize().Y <= 700 && app.GetCombinedMinimumSize().X <= 1024, $"with the saved notice up the page still fits the smallest window: {app.GetCombinedMinimumSize()}");
+
+        // The backups folder before its first use does not exist; a mod is still not saved inside it.
+        string backups = app.Services.Backups.Folder;
+        string held = backups + ".held-by-the-test";
+        bool existed = Directory.Exists(backups);
+        if (existed) Directory.Move(backups, held);
+        try
+        {
+            dialog.Begin(100, Path.Combine(backups, "mods"));
+            dialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
+            check.That(page.SavedText.Contains("never saved into your game folder or the companion's backups", StringComparison.Ordinal) && !page.CopyVisible && !Directory.Exists(backups),
+                $"a mod is not saved into the backups folder before it exists, and the folder is not made: \"{page.SavedText}\"");
+        }
+        finally
+        {
+            if (existed) Directory.Move(held, backups);
+        }
 
         // A level that also carries a base world, and one whose archive names another level.
         Choose(page, 200);

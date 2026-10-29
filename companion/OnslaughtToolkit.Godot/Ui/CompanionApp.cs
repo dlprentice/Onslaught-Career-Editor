@@ -117,6 +117,7 @@ public partial class CompanionApp : Control
             ChooseCareer = ChooseCareerAsync, Popups = popups, SelectTarget = SelectTargetAsync,
             CatchUp = () => CatchUpAsync(force: true, backUp: false),
             OpenCareerFile = () => Home.OpenDialog.PopupCenteredRatio(0.75f),
+            AskToDiscard = AskToDiscard, LevelMovesUnsaved = () => LevelEditor.ChangeCount,
             OldCopiesFolder = environment.OldCopiesFolder ?? OldSafeCopies.DefaultRoot(),
         };
 
@@ -305,8 +306,8 @@ public partial class CompanionApp : Control
     }
 
     /// <summary>
-    /// Closes the companion, unless a file operation is still running (a close never abandons a write) or Edit career
-    /// or Game settings holds unsaved changes, which are only dropped after the player says so. Returns whether it quit.
+    /// Closes the companion, unless a file operation is still running (a close never abandons a write) or Edit career,
+    /// Game settings or the Level editor holds unsaved changes, which are only dropped after the player says so. Returns whether it quit.
     /// </summary>
     internal bool RequestClose()
     {
@@ -314,6 +315,7 @@ public partial class CompanionApp : Control
         List<string> unsaved = [];
         if (EditCareer.HasChanges) unsaved.Add($"{Build.Count(EditCareer.ChangeCount, "change")} on Edit career");
         if (Settings.HasChanges) unsaved.Add($"{Build.Count(Settings.ChangeCount, "change")} on Game settings");
+        if (LevelEditor.HasChanges) unsaved.Add($"{Build.Count(LevelEditor.ChangeCount, "object")} moved on Level editor");
         if (unsaved.Count == 0)
         {
             _quit();
@@ -330,9 +332,9 @@ public partial class CompanionApp : Control
     internal async Task SelectTargetAsync(GameTarget target)
     {
         if (Game.Busy || Workspace.Busy || target == Game.Target) return;
-        if (EditCareer.HasChanges || Settings.HasChanges)
+        if (EditCareer.HasChanges || Settings.HasChanges || LevelEditor.HasChanges)
         {
-            Status.Show("Save or undo your career and settings changes before switching games.", StatusKind.Failure);
+            Status.Show("Save or undo your career, settings and level changes before switching games.", StatusKind.Failure);
             Home.ShowGame();
             return;
         }

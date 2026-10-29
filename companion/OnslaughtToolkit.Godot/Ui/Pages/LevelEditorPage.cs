@@ -15,16 +15,19 @@ namespace OnslaughtToolkit.Companion.Ui;
 internal sealed class LevelEditorPage : Page
 {
     private const int PlaceholderId = 99999;
+
+    /// <summary>The most characters of the saved mod's folder the notice shows (its middle is left out); the full path is on the Copy button and the tooltip.</summary>
+    private const int SavedPathLength = 52;
     private readonly AppServices _services;
     private readonly Label _empty, _worldNote, _objectTitle, _objectDetail, _stock, _note, _hint, _summary, _warnings, _problemText, _savedText;
     private readonly PanelContainer _problemPanel, _savedPanel;
-    private readonly Button _copy;
+    private readonly Button _copy, _copyFolder;
     private readonly Control _body;
     private LevelEditorModel? _model;
     private string? _root;
     private int? _selected;
     private (string X, string Y, string Z) _shown = ("", "", "");
-    private string _savedId = "";
+    private string _savedId = "", _savedFolder = "";
     private bool _noteIsRefusal;
 
     internal LevelEditorPage(AppServices services) : base("levels", "Level editor", "models")
@@ -52,7 +55,7 @@ internal sealed class LevelEditorPage : Page
             TooltipText = "The game's levels. Opening one shows the things its world places.", CustomMinimumSize = new Vector2(150, 0),
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, FitToLongestItem = false, TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis, ClipText = true,
         });
-        Level.ItemSelected += index => OpenLevel((int)Level.GetItemId((int)index));
+        Level.ItemSelected += index => PickLevel((int)Level.GetItemId((int)index));
         Undo = toolbar.Add(Build.Button("Undo", tooltip: "Take back the last move.", disabled: true));
         Redo = toolbar.Add(Build.Button("Redo", tooltip: "Make the move you took back.", disabled: true));
         Undo.Pressed += () => Step(undo: true);
@@ -68,12 +71,22 @@ internal sealed class LevelEditorPage : Page
         left.Add(_savedPanel);
         _savedPanel.Visible = false;
         _savedText = savedInside.Add(Build.Text("", ""));
-        _copy = savedInside.Add(Build.Button("Copy the mods= line", tooltip: "Copies the line to put in ce.ini."));
-        _copy.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin;
+        _savedText.MouseFilter = Control.MouseFilterEnum.Pass;  // so that the tooltip, which has the full path, shows
+        // The notice never grows with its path: the text shows the path's ends, and the buttons wrap in a narrow column.
+        HFlowContainer savedActions = savedInside.Add(new HFlowContainer());
+        savedActions.AddThemeConstantOverride("h_separation", 8);
+        savedActions.AddThemeConstantOverride("v_separation", 6);
+        _copy = savedActions.Add(Build.Button("Copy mods= line", tooltip: "Copies the line to put in ce.ini."));
+        _copyFolder = savedActions.Add(Build.Button("Copy folder path", tooltip: "Copies the mod folder's full path."));
         _copy.Pressed += () =>
         {
             DisplayServer.ClipboardSet($"mods={_savedId}");
             _services.Status.Show($"Copied mods={_savedId}.", StatusKind.Info);
+        };
+        _copyFolder.Pressed += () =>
+        {
+            DisplayServer.ClipboardSet(_savedFolder);
+            _services.Status.Show("Copied the mod folder's path.", StatusKind.Info);
         };
         Table = left.Add(Build.Table("Row", "Kind", "Name", "X", "Y", "Z"));
         Table.CustomMinimumSize = new Vector2(0, 150);
@@ -159,9 +172,21 @@ internal sealed class LevelEditorPage : Page
     internal string Problem => _problemPanel.Visible ? _problemText.Text : "";
     internal string WorldNote => _worldNote.Text;
     internal string SavedText => _savedPanel.Visible ? _savedText.Text : "";
-    internal bool CopyVisible => _savedPanel.Visible && _copy.Visible;
+    internal bool CopyVisible => _savedPanel.Visible && _copy.Visible && _copyFolder.Visible;
+
+    /// <summary>The full path of the mod folder the last save made (what Copy folder path puts on the clipboard), or empty.</summary>
+    internal string SavedFolder => _savedPanel.Visible && _copyFolder.Visible ? _savedFolder : "";
+
+    /// <summary>What the notice says when the pointer rests on it: the full path and what the mod holds.</summary>
+    internal string SavedTooltip => _savedText.TooltipText;
     internal bool EmptyVisible => _empty.Visible;
     internal string? SelectedName => _selected is int row ? _model?.Row(row)?.Label : null;
+
+    /// <summary>Whether the open level holds moves that no Save as mod has written: what leaving the level, the game or the companion would drop.</summary>
+    internal bool HasChanges => _model?.HasUnsavedChanges ?? false;
+
+    /// <summary>How many objects those moves cover.</summary>
+    internal int ChangeCount => _model?.UnsavedChangeCount ?? 0;
 
     private LineEdit Axis(GridContainer grid, string label)
     {
@@ -228,7 +253,30 @@ internal sealed class LevelEditorPage : Page
             if (_model?.Level is int open && _model.Session is not null && Level.GetItemId(i) == open) Level.Select(i);
     }
 
-    /// <summary>Opens a level's own world. Returns false, with the reason shown, if it cannot be edited.</summary>
+    private void ShowInPicker(int level)
+    {
+        for (int i = 0; i < Level.ItemCount; i++)
+            if (Level.GetItemId(i) == level) Level.Select(i);
+    }
+
+    /// <summary>
+    /// The player chose a level in the picker, the open one again included (it is read afresh). It asks first when the open level holds
+    /// moves that are not saved; the picker keeps showing the open level while the question is up, and the chosen one when the player agrees.
+    /// </summary>
+    internal void PickLevel(int level)
+    {
+        if (_model?.Level is int open && HasChanges)
+        {
+            int moved = ChangeCount;
+            ShowInPicker(open);
+            _services.AskToDiscard($"{Build.Count(moved, "object")} moved on level {open} {(moved == 1 ? "is" : "are")} not saved. Open level {level} and discard {(moved == 1 ? "it" : "them")}?",
+                "Discard and open", () => OpenLevel(level));
+            return;
+        }
+        OpenLevel(level);
+    }
+
+    /// <summary>Opens a level's own world, dropping what was open (the picker asks first when that holds unsaved moves). Returns false, with the reason shown, if it cannot be edited.</summary>
     internal bool OpenLevel(int level)
     {
         if (_model is null) return false;
@@ -236,8 +284,7 @@ internal sealed class LevelEditorPage : Page
         _savedPanel.Visible = false;
         ShowNote("", refusal: false);
         bool opened = _model.Open(level);
-        for (int i = 0; i < Level.ItemCount; i++)
-            if (Level.GetItemId(i) == level) Level.Select(i);
+        ShowInPicker(level);
         RebuildTable();
         UpdateInspector(clearNote: true);
         UpdateChanges();
@@ -425,16 +472,20 @@ internal sealed class LevelEditorPage : Page
         SaveOutcome outcome = _model.SaveAsMod(SaveDialog.Destination.Text.Trim(), info, ProtectedFolders());
         _savedPanel.Visible = true;
         _savedPanel.ThemeTypeVariation = outcome.Ok ? "SuccessNotice" : "FailureNotice";
-        _copy.Visible = outcome.Ok;
+        _copy.Visible = _copyFolder.Visible = outcome.Ok;
         if (outcome.Ok)
         {
             _savedId = info.Id;
-            _savedText.Text = $"{outcome.Message} It holds {Build.Count(outcome.Staged!.Files.Count + 1, "file")}: mod.json and {string.Join(", ", outcome.Staged.Files.Select(file => file.Path))}.\n" +
+            _savedFolder = outcome.Staged!.Root;
+            _savedText.Text = $"Saved the mod to {PathText.Elide(_savedFolder, SavedPathLength)}.\n" +
                 $"To play it, close Onslaught CE and add this line to ce.ini:  mods={info.Id}";
+            _savedText.TooltipText = $"{_savedFolder}\nIt holds {Build.Count(outcome.Staged.Files.Count + 1, "file")}: mod.json and {string.Join(", ", outcome.Staged.Files.Select(file => file.Path))}.";
         }
         else
         {
+            _savedFolder = "";
             _savedText.Text = outcome.Message;
+            _savedText.TooltipText = outcome.Message;
         }
         _services.Status.Show(outcome.Ok ? $"Saved the mod {info.Name}." : outcome.Message, outcome.Ok ? StatusKind.Success : StatusKind.Failure);
         return outcome;
