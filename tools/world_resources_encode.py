@@ -25,10 +25,20 @@ Command line (select retail data as a read-only input; outputs are explicit stdo
     world_resources_encode.py stage --game DIR --level N --stdout [--world MODEL.json]
                                                                  a JSON bundle of the intended loose-world files and
                                                                  shadow archive; this does not stage files
+    world_resources_encode.py stage --game DIR --level N --as-mod --out PARENT --id ID --name TEXT
+                              [--world MODEL.json] [--base-world MODEL.json] [--version V] [--author TEXT]
+                              [--description TEXT] [--ce-min V] [--ce-max V] [--baseline-sha256 HEX]
+                              [--model-sha256 HEX] [--base-baseline-sha256 HEX] [--base-model-sha256 HEX]
+                                                                 a CE mod folder PARENT/ID (mod.json and
+                                                                 data/worlds/worldNNN.wrd) for the edited world(s)
 
-Tool-managed publication is disabled: legacy --out, positional OUT.wrd and --user arguments are refused before
-reading inputs. Explicit stdout exports contain data derived from the selected game. The caller controls stdout,
-including any redirection; never redirect these streams into a game installation or a live user folder.
+Tool-managed publication is disabled except for `stage --as-mod`: legacy --out, positional OUT.wrd and --user
+arguments are refused before reading inputs. Explicit stdout exports contain data derived from the selected game. The
+caller controls stdout, including any redirection; never redirect these streams into a game installation or a live user
+folder. `stage --as-mod` is the one command that writes: tools/world_mod_stage.py builds exactly the folder the CE mod
+loader admits and publishes it through safe_generated_output (a destination inside the game folder is refused, nothing is
+replaced, mod.json is written last). It needs a CE build whose Mods section lists world files; its pins
+(--baseline-sha256, --model-sha256 and the base-world pair) are the identities world_edit_move.py's preview prints.
 """
 from __future__ import annotations
 
@@ -680,7 +690,126 @@ def cmd_encode(args) -> int:
     return 0
 
 
+MAX_MODEL_BYTES = 64 << 20  # world_edit_move.py's model ceiling
+
+
+def read_model_file(path: Path, label: str) -> bytes:
+    """A model JSON file as bytes, bounded; its SHA-256 is the identity world_edit_move.py's preview pins."""
+    try:
+        size = path.stat().st_size
+        if not 0 < size <= MAX_MODEL_BYTES:
+            raise EncodeError(f"{label}: a model file is 1 byte to {MAX_MODEL_BYTES} bytes")
+        raw = path.read_bytes()
+    except OSError as error:
+        raise EncodeError(f"{label}: cannot read the model file ({error.strerror or error})") from error
+    if len(raw) != size:
+        raise EncodeError(f"{label}: the model file changed while it was read")
+    return raw
+
+
+def pin(label: str, actual: str, expected: str | None) -> None:
+    if expected is not None and actual != expected.lower():
+        raise EncodeError(f"{label} is {actual}, not the pinned {expected}")
+
+
+def encode_edited(raw: bytes, label: str) -> tuple[bytes, dict]:
+    """The body a model describes, refused unless it decodes and re-encodes to the same bytes (canonical form)."""
+    try:
+        model = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError) as error:
+        raise EncodeError(f"{label}: the model is not JSON ({error})") from error
+    data = write_world_body(model)
+    try:
+        again = write_world_body(json.loads(json.dumps(read_world_model(data))))
+    except (wrd.DecodeError, EncodeError, struct.error) as error:
+        raise EncodeError(f"{label}: the encoded body does not read back ({error})") from error
+    if again != data:
+        raise EncodeError(f"{label}: the encoded body does not re-encode to the same bytes")
+    return data, model
+
+
+def cmd_stage_mod(args) -> int:
+    if args.stdout or args.user is not None:
+        raise EncodeError("--as-mod writes a mod folder to --out; it does not take --stdout or --user")
+    if args.out is None or args.id is None or args.name is None:
+        raise EncodeError("--as-mod needs --out, --id and --name")
+    if args.world is None and args.base_world is None:
+        raise EncodeError("nothing to stage: pass --world and/or --base-world (an edited model)")
+    import world_mod_stage as mod_stage  # the one writer; imported here so the stream commands stay write-free
+    try:
+        author, description = args.author or "", args.description or ""
+        mod_stage.check_identity(args.id, args.name, args.version, author, description, args.ce_min, args.ce_max)
+        game = selected_game_root(args.game)
+        archives = level_archives(game)
+        if args.level not in archives:
+            raise EncodeError(f"{game}: no level archive for level {args.level}")
+        source = read_retail(archives[args.level])
+        worlds = level_worlds(b"".join(inflate(read_members(source))))
+        if worlds["realLevel"] != args.level:
+            raise EncodeError(f"the archive's WDAT names level {worlds['realLevel']}, not {args.level}")
+        bodies = worlds["bodies"]
+        archive_base = worlds["baseLevel"] if "BSWD" in bodies and worlds["baseLevel"] >= 0 else None
+        staged: dict[int, bytes] = {}
+        wanted_base = archive_base
+        if args.world is not None:
+            raw = read_model_file(args.world, "--world")
+            pin("the --world model's SHA-256", sha256(raw), args.model_sha256)
+            pin("the level's own world body's SHA-256", sha256(bodies["RLWD"]), args.baseline_sha256)
+            data, model = encode_edited(raw, "--world")
+            if data == bodies["RLWD"]:
+                raise EncodeError("the edited world is byte-identical to the level's own; there is nothing to stage")
+            staged[args.level] = data
+            wanted_base = model.get("baseLevel", archive_base)
+            if type(wanted_base) is not int:
+                raise EncodeError("the edited world's baseLevel is not a number")
+            if wanted_base >= 0 and wanted_base != archive_base and args.base_world is None:
+                raise EncodeError(f"the edited world names base world {wanted_base}, but the level archive holds "
+                                  f"{'none' if archive_base is None else archive_base}: pass --base-world for "
+                                  f"data/worlds/world{wanted_base:03d}.wrd, which the game does not have")
+        elif args.model_sha256 is not None or args.baseline_sha256 is not None:
+            raise EncodeError("--model-sha256 and --baseline-sha256 pin the --world model; pass --world")
+        if args.base_world is not None:
+            if wanted_base is None or wanted_base < 0:
+                raise EncodeError("this level has no base world, so a base-world file would never be read")
+            raw = read_model_file(args.base_world, "--base-world")
+            pin("the --base-world model's SHA-256", sha256(raw), args.base_model_sha256)
+            if wanted_base == archive_base:
+                pin("the level's base world body's SHA-256", sha256(bodies["BSWD"]), args.base_baseline_sha256)
+            elif args.base_baseline_sha256 is not None:
+                raise EncodeError("--base-baseline-sha256 pins the archive's own base world, which this edit replaces by another")
+            data, _ = encode_edited(raw, "--base-world")
+            if wanted_base == archive_base and data == bodies["BSWD"]:
+                raise EncodeError("the edited base world is byte-identical to the level's own; there is nothing to stage")
+            if wanted_base in staged:
+                raise EncodeError(f"the real world and the base world would both be data/worlds/world{wanted_base:03d}.wrd")
+            staged[wanted_base] = data
+        elif args.base_model_sha256 is not None or args.base_baseline_sha256 is not None:
+            raise EncodeError("--base-model-sha256 and --base-baseline-sha256 pin the --base-world model; pass --base-world")
+        summary = mod_stage.stage_mod(args.out, game, args.id, staged, name=args.name, version=args.version,
+                                      author=author, description=description,
+                                      ce_min=args.ce_min, ce_max=args.ce_max)
+    except mod_stage.ModStageError as error:
+        raise EncodeError(str(error)) from error
+    print(f"staged CE mod {args.id!r} in {summary['root']}")
+    for entry in summary["files"]:
+        print(f"  {entry['path']}  {entry['size']} bytes  sha256 {entry['sha256']}")
+    print(f"  mod.json  sha256 {summary['manifestSha256']}")
+    print(f"to use it: keep the folder in the CE user folder's mods folder and add mods={args.id} to ce.ini "
+          f"(a list is mods=a,b and the later one wins); the build must list world files in its Mods section.")
+    return 0
+
+
 def cmd_stage(args) -> int:
+    if args.as_mod:
+        return cmd_stage_mod(args)
+    only_as_mod = (("--out", args.out), ("--id", args.id), ("--name", args.name), ("--author", args.author),
+                   ("--description", args.description), ("--ce-min", args.ce_min), ("--ce-max", args.ce_max),
+                   ("--base-world", args.base_world), ("--baseline-sha256", args.baseline_sha256),
+                   ("--model-sha256", args.model_sha256), ("--base-baseline-sha256", args.base_baseline_sha256),
+                   ("--base-model-sha256", args.base_model_sha256))
+    for flag, value in only_as_mod:
+        if value is not None:
+            raise EncodeError(f"{flag} is only for --as-mod")
     require_stdout(args.stdout, args.user)
     game = selected_game_root(args.game)
     archives = level_archives(game)
@@ -734,6 +863,21 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--user", type=nonempty_path, help="legacy: refused; use --stdout")
     s.add_argument("--stdout", action="store_true", help="emit a JSON bundle; no files are staged")
     s.add_argument("--world", type=nonempty_path, help="an edited model for the level's own (RLWD) world")
+    s.add_argument("--as-mod", action="store_true",
+                   help="write a CE mod folder PARENT/ID for the edited world(s) instead of printing a bundle")
+    s.add_argument("--out", type=nonempty_path, help="with --as-mod: the folder that receives the mod folder ID")
+    s.add_argument("--id", help="with --as-mod: the mod id (1 to 48 of a-z 0-9 - _), also the folder's name")
+    s.add_argument("--name", help="with --as-mod: the mod's name (1 to 64 printable ASCII characters)")
+    s.add_argument("--version", default="1", help="with --as-mod: the mod's version text (1 to 32 characters)")
+    s.add_argument("--author", help="with --as-mod: optional, up to 64 characters")
+    s.add_argument("--description", help="with --as-mod: optional, up to 1024 characters")
+    s.add_argument("--ce-min", help="with --as-mod: the oldest CE version, such as 0.1.11")
+    s.add_argument("--ce-max", help="with --as-mod: the newest CE version")
+    s.add_argument("--base-world", type=nonempty_path, help="with --as-mod: an edited model for the level's base (BSWD) world")
+    s.add_argument("--baseline-sha256", help="with --as-mod: pin the level's own world body (world_edit_move.py's baseline)")
+    s.add_argument("--model-sha256", help="with --as-mod: pin the --world model (world_edit_move.py's model)")
+    s.add_argument("--base-baseline-sha256", help="with --as-mod: pin the level's base world body")
+    s.add_argument("--base-model-sha256", help="with --as-mod: pin the --base-world model")
     args = ap.parse_args(argv)
     return {"verify": cmd_verify, "extract": cmd_extract, "encode": cmd_encode, "stage": cmd_stage}[args.command](args)
 

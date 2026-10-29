@@ -179,16 +179,29 @@ publish, sign, or install anything by themselves.
   The bundle's `onslaught.world-bundle.v1` format maps relative names to byte counts, SHA-256 values and base64 data;
   those hashes describe the bundled bytes and do not verify any downstream file write.
   The name `stage` describes the bundle's purpose: this command does not create or stage those files.
-  All three commands require the selected game folder (`--game DIR`, or `BEA_GAME`) and an explicit `--stdout`.
-  Legacy `--out`, positional output and `--user` paths are now refused before input reads: tool-managed publication
-  cannot yet guarantee that a concurrently moved destination stays outside the selected game. This is a compatibility
-  change. The caller controls stdout and any redirection; do not redirect it into a game installation or live user
+  All three commands require the selected game folder (`--game DIR`, or `BEA_GAME`) and an explicit `--stdout`
+  (`stage --as-mod`, below, is the exception). Legacy `--out`, positional output and `--user` paths are now refused
+  before input reads: tool-managed publication cannot yet guarantee that a concurrently moved destination stays outside
+  the selected game. This is a compatibility change. The caller controls stdout and any redirection; do not redirect it into a game installation or live user
   folder. The streams can contain material derived from the selected game and should be kept private. Windows stdout
   and archive-reading behavior have not been validated. Each input archive is limited to 64 MiB compressed, 128 MiB
   inflated and 4096 members; each inflated
   member is limited to 1 MiB, matching the PC writer and default read buffer. These total limits are tool resource
   ceilings, not established maxima for the game format. Encoding checks binary layout but is not a mission, placement
   or gameplay safety validator.
+  `stage --as-mod --out PARENT --id ID --name TEXT [--world MODEL.json] [--base-world MODEL.json]` is the one command that
+  writes files. It packages the edited world(s) as a CE mod folder `PARENT/ID` (`mod.json` plus `data/worlds/worldNNN.wrd`,
+  the one kind of file a CE mod may add) through `world_mod_stage.py`, held to the loader's own limits (the id, the text
+  lengths, the version format, at most 4 MiB per world file), so CE loads it with no hand editing. It is the step after
+  `world_edit_move.py --emit-model`: pass that preview's `--baseline-sha256` and `--model-sha256` (and the `--base-*`
+  pair for a base world) to pin the same two identities. It refuses a no-op edit, an edited world that names a base world
+  the archive does not hold unless `--base-world` supplies it, a destination inside the selected game folder (or any game
+  tree) and a folder that already holds anything. It writes through `safe_generated_output.py`: each file is published
+  without replacing anything, the world files first and `mod.json` last, and the helper detects replacement rather than
+  locking, so a folder moved by another process during the run is not guaranteed to stay outside the game folder (the
+  limit every writer through that helper has). It does not validate placement, slots, scripts or saves, and it needs a CE
+  build whose Mods section lists world files. `world_mod_stage_tests.py` checks the staged folder against an independent
+  restatement of the loader's start-up rules on authored data only.
   `world_edit_preview.py BASELINE.wrd EDITED.json` is a read-only step before encoding or preparing a stage bundle. It reports input
   hashes, byte and field changes, changes to opaque groups and slot-sensitive structures, and bounded compiled-script
   inspection findings. It also identifies model fields the encoder would silently omit. An omitted field, truncated
