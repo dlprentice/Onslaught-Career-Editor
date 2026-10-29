@@ -52,8 +52,7 @@ OP = {name: index for index, name in enumerate(OPCODES)}
 NATIVES = {name: index for index, (name, _types) in enumerate(wrd.SCRIPT_NATIVES)}
 NATIVE_ARITY = {name: len(types) for name, types in wrd.SCRIPT_NATIVES}
 # The 13 fixed events (SCRIPT_EVENT_NAMES, ScriptObjectCode.cpp 0x0064fef8): the names a script can give a handler of its own.
-FIXED_EVENTS = ("init", "arrived", "timer", "died", "hit", "started_dying", "ready", "shutdown", "notdefined4", "notdefined5",
-                "notdefined6", "notdefined7", "notdefined8")
+FIXED_EVENTS = wrd.SCRIPT_EVENT_NAMES
 TRAILER = "656e645f736372697074"  # "end_script", as the world model shows bytes
 USED = 1 << 16  # a CALL attribute's flag: the result is used (an argument, an assignment, a condition), not dropped
 DT = {"int": 1, "float": 2, "string": 3, "bool": 4, "thing": 5, "position": 6}
@@ -96,12 +95,14 @@ class Token:
     end: int = 0
 
 
+BLANK = r"[ \t\r\f\v]"  # what separates words on a source line: ASCII only, so that the C# compiler reads the same lines
+
 TOKEN = re.compile(r"""
     (?P<ws>[ \t\r\f\v]+)
   | (?P<nl>\n)
   | (?P<comment>//[^\n]*)
-  | (?P<float>(?:\d+\.\d*|\.\d+)f?)
-  | (?P<int>\d+)
+  | (?P<float>(?:[0-9]+\.[0-9]*|\.[0-9]+)f?)
+  | (?P<int>[0-9]+)
   | (?P<id>[A-Za-z_][A-Za-z_0-9]*)
   | (?P<str>"[^"\n]*")
   | (?P<op>==|!=|<=|>=|&&|\|\||[-+*/<>=!(){};,.:])
@@ -133,17 +134,17 @@ def preprocess(source: str, read_include: Callable[[str], str]) -> tuple[list[To
 
     def define_from(text: str) -> None:
         for raw in text.split("\n"):
-            m = re.match(r"\s*#\s*define\s+([A-Za-z_][A-Za-z_0-9]*)(.*)$", raw)
+            m = re.match(rf"{BLANK}*#{BLANK}*define{BLANK}+([A-Za-z_][A-Za-z_0-9]*)(.*)$", raw)
             if m:
                 defines[m.group(1)] = lex(re.sub(r"//.*", "", m.group(2)))
 
     body: list[str] = []
     for raw in source.split("\n"):
-        m = re.match(r"\s*#\s*include\s+(\S+)", raw)
+        m = re.match(rf"{BLANK}*#{BLANK}*include{BLANK}+([^ \t\r\f\v]+)", raw)
         if m:
             define_from(read_include(m.group(1)))
             body.append("")  # the line stays, so the lines after it keep their numbers
-        elif re.match(r"\s*#\s*define\b", raw):
+        elif re.match(rf"{BLANK}*#{BLANK}*define(?![A-Za-z0-9_])", raw):
             define_from(raw)
             body.append("")
         else:
@@ -168,7 +169,8 @@ def preprocess(source: str, read_include: Callable[[str], str]) -> tuple[list[To
 
 
 def spaced(text: str) -> str:
-    return " ".join(text.split())
+    """The text with each run of blanks and line ends one space (the same ASCII set the C# compiler uses)."""
+    return " ".join(part for part in re.split(r"[ \t\n\r\f\v]+", text) if part)
 
 
 class Compiler:
@@ -659,12 +661,12 @@ def counter_start(record: dict, pattern: str) -> int:
 
 def const_start_of(record: dict) -> int:
     """The number of the first constant of a shipped script (the counter is the compile session's, the source cannot give it), or 0."""
-    return counter_start(record, r"const data(\d+)")
+    return counter_start(record, r"const data([0-9]+)")
 
 
 def do_once_start_of(record: dict) -> int:
     """The number of the first do_once symbol of a shipped script, or 0."""
-    return counter_start(record, r"do-once-(\d+)")
+    return counter_start(record, r"do-once-([0-9]+)")
 
 
 def normal(record: dict) -> dict:

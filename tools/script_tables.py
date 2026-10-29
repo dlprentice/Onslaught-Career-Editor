@@ -4,6 +4,8 @@
 mission script, taken from this Toolkit's reference tables (tools/world_resources_decode.py).
 
 - EventNames: the 13 events a script's entry points are indexed by (SCRIPT_EVENT_NAMES, ScriptObjectCode.cpp 0x0064fef8).
+- Opcodes: the VM's instruction names, in the order an instruction's opcode number indexes them (OPCODES in world_resources_decode.py), which
+  the compiler in Missions/ writes.
 - Natives: every function a script can call, with the letters of its argument types, in the order a CALL instruction's low byte
   indexes them (gScriptFunctions, IScript.cpp 0x0052ff20): i int, f float, s string, b bool, t thing, p position, * any.
 
@@ -43,6 +45,14 @@ def render() -> str:
         "    [",
     ]
     lines += [f'        "{name}",' for name in wrd.SCRIPT_EVENT_NAMES]
+    lines += [
+        "    ];",
+        "",
+        "    /// <summary>The VM's instructions, in the order an instruction's opcode number indexes them (<c>OPCODES</c> in tools/world_resources_decode.py).</summary>",
+        "    public static readonly string[] Opcodes =",
+        "    [",
+    ]
+    lines += [f'        "{name}",' for name in wrd.OPCODES]
     lines += [
         "    ];",
         "",

@@ -24,6 +24,13 @@ class ScriptTables(unittest.TestCase):
         self.assertEqual(len(wrd.SCRIPT_EVENT_NAMES), wrd.NUM_SCRIPT_EVENTS)
         self.assertEqual(wrd.SCRIPT_EVENT_NAMES[:5], ("init", "arrived", "timer", "died", "hit"))
 
+    def test_the_opcodes_in_the_file_are_the_references_in_opcode_order(self):
+        block = self.text.split("Opcodes =")[1].split("];")[0]
+        self.assertEqual(re.findall(r'"(OP_[A-Z_]+)"', block), list(wrd.OPCODES))
+        self.assertEqual((wrd.OPCODES[wrd.OP_PUSH], wrd.OPCODES[wrd.OP_POP], wrd.OPCODES[wrd.OP_GETTOP], wrd.OPCODES[wrd.OP_CALL]),
+                         ("OP_PUSH", "OP_POP", "OP_GETTOP", "OP_CALL"))
+        self.assertEqual(len(set(wrd.OPCODES)), len(wrd.OPCODES))
+
     def test_the_natives_in_the_file_are_the_references_in_call_order(self):
         block = self.text.split("Natives =")[1]
         self.assertEqual(re.findall(r'\("([A-Za-z0-9_]+)", "([a-z*]*)"\)', block), list(wrd.SCRIPT_NATIVES))
