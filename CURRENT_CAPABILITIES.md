@@ -8,7 +8,7 @@ in Git and the private RE archive; they are not current operating instructions.
 
 The companion, Onslaught Companion, lets players choose the original game or Onslaught CE. It supports finding
 CE's launcher, protected career writes, two launcher settings and the steps for updating CE (the companion
-contacts nothing; CE checks its own signed feed and installs updates).
+contacts nothing; CE checks its own signed feed and installs an update only when the player chooses Update).
 See its [README](companion/OnslaughtToolkit.Godot/README.md) for the contract and platform limits.
 The byte-matching decompilation is complete and is the reverse-engineering authority (public export:
 [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp)); its native port is published separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce), and this

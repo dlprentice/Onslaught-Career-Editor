@@ -26,7 +26,7 @@ choice made after a verified backup, never while the game runs.
 [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore) records
 what is proven. Players can choose the original game or CE, manage careers and backups, and use CE's two supported
 launcher settings and the steps for updating CE (the companion contacts nothing). The CE launcher checks its own signed
-feed and installs updates.
+feed and installs an update only when the player chooses Update.
 
 Remaining acceptance and release work:
 

@@ -35,7 +35,7 @@ licenses.
 
 `BouncyCastle.Cryptography` 2.7.0, copyright The Legion of the Bouncy Castle Inc., is a production dependency
 under the MIT licence. It verifies the CE update feed's Ed25519 signature in the signed-feed verifier (`CeUpdateFeed`), which the source keeps
-for its tests: the app does not call it and contacts nothing.
+for its tests: the app does not call the signed-feed verifier methods and contacts nothing.
 The exact version is declared in [OnslaughtToolkit.Godot.csproj](OnslaughtToolkit.Godot.csproj) and its package hash
 is pinned by `contentHash` in [packages.lock.json](packages.lock.json). The build runner restores with
 `--locked-mode`; every export copies the package's `LICENSE.md` as `BOUNCYCASTLE-LICENSE.txt`

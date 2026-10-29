@@ -76,8 +76,8 @@ The **Check for updates** setting (`update_check`) is the `ce.ini` switch CE 0.1
 (`update_check=0` turns checking off); turning it off does not make a 0.1.0–0.1.6 launcher safe to start. The
 signed-feed verifier (`CeUpdateFeed`: CE's update feed v2, `ce-update-v2.json`, with CE's pinned Ed25519 key over
 the feed's domain prefix and exact bytes, and the MIT-licensed BouncyCastle.Cryptography package, whose notice is
-included in exports) stays in the source for its tests; the companion does not call it and never reads the old
-`latest.json`.
+included in exports) stays in the source for its tests; the companion does not call the verifier's signed-feed methods and
+never reads the old `latest.json`.
 
 The source contract was read at
 [CE 0.1.4](https://github.com/dlprentice/onslaught-ce/tree/93ea9145d6d4d9f36f7cd9a800506ebf5bcbd788):
