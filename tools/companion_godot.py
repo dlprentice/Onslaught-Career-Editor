@@ -41,6 +41,17 @@ PLATFORMS = {
     "linux": ("linux-x64", "Linux", "OnslaughtCompanion.x86_64"),
     "windows": ("win-x64", "Windows", "OnslaughtCompanion.exe"),
 }
+# Where the maintainer's shared toolchain lock is differs per machine and is never assumed: --shared-lock, or this variable, which the
+# ignored local-data/rebuild-env.sh sets.
+SHARED_LOCK_ENV = "ONSLAUGHT_SHARED_LOCK"
+
+
+def shared_lock_file(argument: Path | None) -> Path | None:
+    """The shared toolchain's lock file: the --shared-lock argument, else the file the SHARED_LOCK_ENV variable names; None when neither is given."""
+    if argument is not None:
+        return argument
+    value = os.environ.get(SHARED_LOCK_ENV, "").strip()
+    return Path(value).expanduser() if value else None
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -533,7 +544,8 @@ def companion_main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=("check", "build", "test", "run", "export", "capture", "audit"))
     parser.add_argument("--engine", help="Godot .NET executable; defaults to the pinned install the shared lock names")
-    parser.add_argument("--shared-lock", type=Path, help="existing game_pipeline_shared/toolchain.linux.lock.json")
+    parser.add_argument("--shared-lock", type=Path,
+                        help=f"the shared toolchain's lock file (its toolchain.linux.lock.json); defaults to the file {SHARED_LOCK_ENV} names")
     parser.add_argument("--platform", choices=("linux", "windows", "both"), default="both", help="export target")
     parser.add_argument("--fixture", type=Path, default=FIXTURE, help="read-only input copied into this test invocation")
     parser.add_argument("--script", default="Tests/CompanionTestRunner.cs", help="project C# test entry (a SceneTree)")
@@ -552,6 +564,10 @@ def companion_main(argv: list[str] | None = None) -> int:
         parser.error("--timeout must be finite and positive")
     if args.engine_arg and args.mode != "run":
         parser.error("--engine-arg is available only for run")
+    shared_lock = shared_lock_file(args.shared_lock)
+    if shared_lock is None:
+        parser.error(f"the shared toolchain's lock file is not named: pass --shared-lock FILE or set {SHARED_LOCK_ENV} "
+                     "(on the maintainer's machine the ignored local-data/rebuild-env.sh sets it)")
     interrupted = signal.SIGINT
 
     def interrupt(signum: int, _frame: object) -> None:
@@ -566,7 +582,6 @@ def companion_main(argv: list[str] | None = None) -> int:
         print(f"Companion output: {output}", flush=True)
         pins = read_json(COMPANION / "toolchain.json")
         platforms = (["linux", "windows"] if args.platform == "both" else [args.platform]) if args.mode == "export" else []
-        shared_lock = args.shared_lock or Path.home() / "Projects/game-dev/game_pipeline_shared/toolchain.linux.lock.json"
         engine, templates = verify_toolchain(pins, shared_lock, args.engine, env, output, platforms)
         project = stage_project(output)
         if args.mode == "audit":

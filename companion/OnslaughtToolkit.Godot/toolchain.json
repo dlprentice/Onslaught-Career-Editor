@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "engineVersion": "4.8.beta1.mono.official.4d10419ca",
   "templateVersion": "4.8.beta1.mono",
-  "source": "game_pipeline_shared/toolchain.linux.lock.json",
+  "source": "toolchain.linux.lock.json of the maintainer's shared toolchain",
   "sourceRevision": "80e547e2c3ca25f0c397808596892a4ba2ee72f5",
   "engine": {
     "archiveId": "godotDev48Mono",

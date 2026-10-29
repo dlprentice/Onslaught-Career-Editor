@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-10-29 (the game documentation's home stated as onslaught-preservation, with `reverse-engineering/` a frozen copy; earlier: the companion described without a signed-update check; the maintainer's storage layout moved out of the tracked text; earlier: retained rebuild and current documentation owners clarified; platform-validation rule no longer assumes Windows is unavailable; companion CE support and public exports)
+Last updated: 2026-10-29 (the safety check also reads live text for original-game bytes and private paths; earlier: the game documentation's home stated as onslaught-preservation, with `reverse-engineering/` a frozen copy; earlier: the companion described without a signed-update check; the maintainer's storage layout moved out of the tracked text; earlier: retained rebuild and current documentation owners clarified; platform-validation rule no longer assumes Windows is unavailable; companion CE support and public exports)
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
@@ -65,7 +65,11 @@ current milestones and measured parity. The local [`rebuild/PARITY.md`](rebuild/
 - Never track retail binaries or assets, converted retail material, arbitrary saves, raw debugger logs, bulky
   captures, Ghidra databases or backups, decompiler output, decomp source, credentials or `.env*`.
   `npm run test:safety` enforces the boundary; a small registered set of the app's own screenshots is the one
-  allowance (`reverse-engineering/project-meta/attribution.md`, `tools/check_registered_screenshots.py`).
+  allowance (`reverse-engineering/project-meta/attribution.md`, `tools/check_registered_screenshots.py`). It also
+  fails live text (docs, code and comments alike) that quotes original-game bytes (a run of hex byte tokens, or a long
+  hex string that is not a SHA-1 or SHA-256) or a private machine path. The frozen copies (`reverse-engineering/`
+  and `rebuild/`) are not read by those rules; every reviewed exception is listed with its reason in
+  `tools/public_allowlist_safety_check.py`, and an exception whose text is gone fails as stale.
 - Every behaviour claim cites a capture, byte comparison, focused test, or pinned source file and line. Decompiler
   output, a plausible name or a model's opinion proves nothing; the decompilation is the naming authority, cited by
   function, never quoted. Static evidence establishes identities and structures; only controlled runtime evidence

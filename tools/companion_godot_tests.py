@@ -285,6 +285,33 @@ class CompanionLauncherTests(unittest.TestCase):
             self.assertEqual(0,host.companion_main(["check","--shared-lock",str(self.lock)]))
         self.assertTrue(any(call["tool"]==self.engine.name and "--import" in call["args"] for call in self.calls_read()))
 
+    def test_the_lock_comes_from_the_argument_or_the_environment_and_is_never_assumed(self)->None:
+        with mock.patch.dict(os.environ,{host.SHARED_LOCK_ENV:"~/elsewhere/lock.json"}):
+            self.assertEqual(Path("given.json"),host.shared_lock_file(Path("given.json")),"the argument wins")
+            self.assertEqual(Path("~/elsewhere/lock.json").expanduser(),host.shared_lock_file(None))
+        for value in ("","   "):
+            with mock.patch.dict(os.environ,{host.SHARED_LOCK_ENV:value}):self.assertIsNone(host.shared_lock_file(None),repr(value))
+        with mock.patch.dict(os.environ):
+            os.environ.pop(host.SHARED_LOCK_ENV,None);self.assertIsNone(host.shared_lock_file(None))
+        for name in ("tools/companion_godot.py","companion/OnslaughtToolkit.Godot/toolchain.json","companion/OnslaughtToolkit.Godot/README.md"):
+            source=(Path(__file__).resolve().parents[1]/name).read_text(encoding="utf-8")
+            self.assertNotIn("game_pipeline_shared",source,name);self.assertNotIn("~/Projects",source,name);self.assertNotIn("Projects/game-dev",source,name)
+
+    def test_a_run_with_no_lock_stops_before_anything_is_made_and_names_both_ways_to_give_it(self)->None:
+        stderr=io.StringIO()
+        with mock.patch.dict(os.environ):
+            os.environ.pop(host.SHARED_LOCK_ENV,None)
+            with contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(stderr),self.assertRaises(SystemExit) as stopped:
+                host.companion_main(["check","--engine",str(self.engine)])
+        self.assertEqual(2,stopped.exception.code)
+        self.assertIn("is not named: pass --shared-lock FILE or set "+host.SHARED_LOCK_ENV,stderr.getvalue(),"the message names both ways, not only the usage line")
+        self.assertEqual([],self.calls_read());self.assertFalse((self.canonical/"local-data/companion").exists(),"no output folder was made")
+
+    def test_the_environment_variable_stands_in_for_the_argument(self)->None:
+        with mock.patch.dict(os.environ,{host.SHARED_LOCK_ENV:str(self.lock)}),contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(0,host.companion_main(["check","--engine",str(self.engine)]))
+        self.assertTrue(any("--import" in call["args"] for call in self.calls_read()))
+
     def test_old_outputs_are_pruned_to_the_newest_few_of_each_mode(self)->None:
         owner=self.canonical/"local-data/companion";owner.mkdir(parents=True)
         for index in range(8):
