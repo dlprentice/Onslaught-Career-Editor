@@ -353,11 +353,12 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   thing list, which is the reading under which the shipped paths run from point to point (measured against shifts of one and
   two). The game keeps a slot as a point of the path only if it names a waypoint (`CWaypointPath::Load` in the decompilation), so
   the page draws, numbers and counts only those: about one slot in five names a unit, a spawner or another kind of object and is
-  dropped, and an object that only such a slot names is on no path. The game finds a waypoint path by name ignoring letter case
-  (`CWaypointManager::FindNearest`, which takes the first match of one list that holds the base world's paths before the level's own), so a
-  quoted text that is the first argument of `FollowWaypoint` or `FollowWaypointWait` names the one path the game would use: the level's own
-  path gets a button (the button says when the case differs), a base world's path is said with nothing to go to; every other name is
-  matched as written. The list,
+  dropped, and an object that only such a slot names is on no path. The game searches the first matching waypoint path in a list
+  with the base world's paths before the level's own (`CWaypointManager::FindNearest`). For a quoted first argument of
+  `FollowWaypoint` or `FollowWaypointWait`, the page models the C-locale byte comparison: ASCII letters match in either case,
+  other bytes match exactly, and a NUL ends the name. The level's own path gets a button (which says when the compared case differs);
+  a base world's path is named with nothing to go to. A matched path with no usable waypoints gives the game no waypoint. Other
+  process locales and native Windows comparison are not verified. Empty quoted names are not resolved by the page. Every other name is matched as written. The list,
   the links and the names are read from the compiled code, the level's objects and the sources, and
   checked against the Toolkit's reference (`tools/level_editor_vectors.py gate-table`, its SCRIPTS, NAMES and PATHS rows) on a game
   install, with the native names generated from the Toolkit's table (`tools/script_tables.py`). Nothing here writes anything.

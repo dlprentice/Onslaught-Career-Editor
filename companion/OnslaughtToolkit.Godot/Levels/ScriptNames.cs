@@ -107,9 +107,11 @@ public static partial class ScriptNames
     /// world (<paramref name="baseWorld"/>, when the level has one) by the same rule, the waypoint paths of that name, the scripts of that
     /// name and the scripts that handle an event of that name. The scripts are <paramref name="scripts"/> in its order. Paths match exactly,
     /// except where the text is the path argument of a follow-waypoint call (<paramref name="pathsIgnoreCase"/>): the game keeps one list of
-    /// paths, the base world's before the level's own, and takes the first whose name matches ignoring letter case, so exactly one path is named
-    /// (a base world's path as <see cref="NameKind.BasePath"/>), marked when its case differs. A path's label counts the points the game keeps
-    /// (see <see cref="WaypointCatalog"/>).
+    /// paths, the base world's before the level's own, and takes the first whose name matches. This page models its C-locale byte comparison:
+    /// ASCII letters match in either case, other bytes match exactly, and a NUL ends the name. A base world's path is a
+    /// <see cref="NameKind.BasePath"/>; a match is marked when the compared spelling differs in case. The game's behavior under another
+    /// process locale or native Windows has not been checked. This page does not resolve an empty quoted name. A path's label counts the
+    /// points the game keeps (see <see cref="WaypointCatalog"/>).
     /// </summary>
     public static IReadOnlyList<NameMatch> Resolve(string text, WorldBody world, IReadOnlyList<ScriptEntry> scripts, WorldBody? baseWorld = null, bool pathsIgnoreCase = false)
     {
@@ -119,7 +121,7 @@ public static partial class ScriptNames
         if (baseWorld is not null) AddObjects(matches, NameKind.BaseObject, text, baseWorld);
         if (pathsIgnoreCase)
         {
-            // The game's one list of paths: the base world's, then the level's own; the first that matches ignoring letter case is the one it uses.
+            // The game's one list of paths: the base world's, then the level's own; use the first C-locale byte match.
             if (FirstPath(text, baseWorld, NameKind.BasePath) is { } inBase) matches.Add(inBase);
             else if (FirstPath(text, world, NameKind.Path) is { } own) matches.Add(own);
         }
@@ -142,17 +144,40 @@ public static partial class ScriptNames
         return matches;
     }
 
-    /// <summary>The first path of a world whose name is this text ignoring letter case, as a match of this kind (marked when the case differs), or null.</summary>
+    /// <summary>The first path of a world matching the C-locale byte spelling, as a match of this kind, or null.</summary>
     private static NameMatch? FirstPath(string text, WorldBody? world, NameKind kind)
     {
         if (world is null) return null;
+        string comparedText = PathPrefix(text);
         for (int index = 0; index < world.WaypointPaths.Count; index++)
         {
             WaypointPath path = world.WaypointPaths[index];
-            if (string.Equals(path.Name, text, StringComparison.OrdinalIgnoreCase))
-                return new NameMatch(kind, $"path {path.Name} · {PointsText(WaypointCatalog.Rows(world, path).Count)}", index, string.Equals(path.Name, text, StringComparison.Ordinal));
+            string comparedName = PathPrefix(path.Name);
+            if (PathEquals(comparedName, comparedText))
+                return new NameMatch(kind, $"path {comparedName} · {PointsText(WaypointCatalog.Rows(world, path).Count)}", index, string.Equals(comparedName, comparedText, StringComparison.Ordinal));
         }
         return null;
+    }
+
+    /// <summary>The name seen by the game's C-string comparison; the stored path itself is not changed.</summary>
+    private static string PathPrefix(string text)
+    {
+        int nul = text.IndexOf('\0');
+        return nul < 0 ? text : text[..nul];
+    }
+
+    /// <summary>C-locale comparison of the Latin-1 decoded path bytes: fold ASCII capitals only.</summary>
+    private static bool PathEquals(string left, string right)
+    {
+        if (left.Length != right.Length) return false;
+        for (int i = 0; i < left.Length; i++)
+        {
+            char a = left[i], b = right[i];
+            if (a is >= 'A' and <= 'Z') a = (char)(a + ('a' - 'A'));
+            if (b is >= 'A' and <= 'Z') b = (char)(b + ('a' - 'A'));
+            if (a != b) return false;
+        }
+        return true;
     }
 
     /// <summary>The objects of a world that have this name exactly, or, if none has, those that have it in other letter case.</summary>

@@ -454,6 +454,13 @@ class VectorTests(unittest.TestCase):
         self.assertEqual(gen.resolve_name("Route 2", paths, [], base, True), ["path:2:case"])  # nothing of that name in the base world: the level's own
         self.assertEqual(gen.resolve_name("Route", paths, [], base), ["path:0"])  # not a path argument: exact, the level's own paths only
         self.assertEqual(gen.resolve_name("Shared", paths, [], base), [])
+        accented = {"things": [], "waypointPaths": [{"name": "à-ROUTE"}]}
+        accented_base = {"things": [], "waypointPaths": [{"name": "À-ROUTE"}]}
+        self.assertEqual(gen.resolve_name("à-route", accented, [], accented_base, True), ["path:0:case"])
+        self.assertEqual(gen.resolve_name("À-route", accented, [], accented_base, True), ["basepath:0:case"])
+        accented_base["waypointPaths"][0]["name"] = "Route\0stored suffix"
+        self.assertEqual(gen.resolve_name("route", accented, [], accented_base, True), ["basepath:0:case"])
+        self.assertEqual(gen.resolve_name("Route\0query suffix", accented, [], accented_base, True), ["basepath:0"])
 
     def test_the_source_finder_matches_the_companions(self) -> None:
         """tools/level_editor_vectors.py's source_text is the reference the C# ScriptSources is held to on a game: any case, the exact spelling

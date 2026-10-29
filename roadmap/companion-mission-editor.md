@@ -293,14 +293,16 @@ Nothing is written.
   holds the same texts as string constants with nothing to say which call reads which text as what. So a link goes by the name alone:
   it finds what has that name and does not claim the script uses it as such. Objects match by their exact name (else, if none has it,
   in another letter case, and the button says so), in the level's own world and by the same rule in its base world, each on its own;
-  scripts and event handlers match exactly, and so do paths except in one place. The game finds a waypoint path by name ignoring
-  letter case (`CWaypointManager::FindNearest`, which takes the first path of its one list that matches), and that list holds the base
+  scripts and event handlers match exactly, and so do paths except in one place. The game takes the first matching waypoint path
+  (`CWaypointManager::FindNearest`) from one list, and that list holds the base
   world's paths before the level's own (`CWorld::LoadWorld` loads the base world before the rest of the level's world, and
   `CWaypointManager::Load` appends each path to the list). So the first argument of a `FollowWaypoint` or `FollowWaypointWait` call,
   found by looking back along the line from its opening quote over blanks to a `(` and, before it, the whole word of the call's name,
-  names the one path the game would use: the first of the base world's paths then the level's own whose name matches in any letter
-  case. The level's own path gets a button (marked when its case differs); a base world's path is said, with no button, because the
-  page does not draw that world's paths, and it hides a level path of the same name, as it does in the game. A quoted text is closed by the next
+  names the first of the base world's paths then the level's own whose name matches under the modeled C-locale byte comparison:
+  ASCII letters match in either case, other bytes match exactly, and NUL ends the name. Other process locales and native Windows
+  comparison remain unverified. The level's own path gets a button (marked when the compared case differs); a base world's path is
+  said, with no button, because the page does not draw that world's paths. The game returns no waypoint if the first matching path
+  has no usable points, rather than trying a later path. The page does not resolve an empty quoted name. A quoted text is closed by the next
   quote on its line, and `//` outside a quote ends the line's code. A path lists objects by their place in the world's thing list:
   under that reading the shipped paths run from point to point (the median step between neighbours is about 88 world units; under a
   shift of one or two places it is 121 to 146). The game's loader (`CWaypointPath::Load`) keeps a slot only if it indexes a loaded

@@ -737,7 +737,7 @@ internal sealed class LevelEditorPage : Page
                 Label note = _scriptNames.Add(Build.Text($"{text} · base world", "Muted", wrap: false));
                 note.MouseFilter = Control.MouseFilterEnum.Pass;  // so that the tooltip shows
                 note.TooltipText = isPath
-                    ? $"A path of the base world (level {_model.BaseLevel}), which the game loads with this level before the level's own paths: it takes the first path of that name, so this is the one it follows. This page does not draw that world's paths."
+                    ? $"A path of the base world (level {_model.BaseLevel}), which the game loads before the level's own paths. The first path of that name is searched; if it has no usable waypoints, none is found. This page does not draw that world's paths."
                     : $"An object of the base world (level {_model.BaseLevel}), which the game loads with this level. This page does not list that world's objects.";
                 continue;
             }
