@@ -143,6 +143,11 @@ public static class LevelArchive
             {
                 throw new InvalidDataException($"invalid zlib data in member {members - 1}");
             }
+            catch (IOException error)
+            {
+                // The stream reader's own failures: a stream that asks for a preset dictionary (FDICT) is one. This is not a file problem.
+                throw new InvalidDataException($"invalid zlib data in member {members - 1}: {error.Message}", error);
+            }
             // ZLibStream accepts a stream that ends early and ignores the bytes after its end; a member is exactly one complete zlib stream.
             if (!feed.EndedWithTheStream) throw new InvalidDataException($"truncated zlib stream, or data after it, in member {members - 1}");
         }

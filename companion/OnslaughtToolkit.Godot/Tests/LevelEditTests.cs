@@ -474,6 +474,16 @@ internal static class LevelEditTests
         Refuses<InvalidOperationException>(check, "taking a move back twice", () => direct.Undo(body));
         check.That(body.Write().AsSpan().SequenceEqual(baseline), "a refused second undo leaves the body as it was");
 
+        // A move that failed to be made is not marked as made: it can be made on a body it fits, and it cannot be taken back until then.
+        WorldBody five = WorldBody.Read(baseline), many = WorldBody.Read(LevelTests.Body("kinds-v46"));
+        MoveObject retried = new(9, new Vector3(1f, 2f, 3f));
+        Refuses<InvalidOperationException>(check, "a move to a row the body does not have", () => retried.Do(five));
+        Refuses<InvalidOperationException>(check, "taking back a move that failed", () => retried.Undo(five));
+        retried.Do(many);
+        check.That(many.Things[9].Init.Position == new Vector3(1f, 2f, 3f) && five.Write().AsSpan().SequenceEqual(baseline), "a move that failed is made, once, on a body it fits, and the first body is as it was");
+        retried.Undo(many);
+        check.That(many.Write().AsSpan().SequenceEqual(LevelTests.Body("kinds-v46")), "and it can then be taken back");
+
         // A redo whose command cannot be made keeps the command; so does an undo that cannot be taken back.
         EditSession flaky = new(baseline);
         int seen = 0;

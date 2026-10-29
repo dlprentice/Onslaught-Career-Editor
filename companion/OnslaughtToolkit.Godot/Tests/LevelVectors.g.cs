@@ -1771,6 +1771,110 @@ internal static class LevelVectors
             t1/d/xNP/v06fYv7ZnP16d71NXblxRJ1GdPCmntDfx+tXbfqKu9mm/+fip9LGTMyjIJRMApGFmj4f/xBqh3fR3NW3/n9AO4+2e0=
             """,
             -1, 400, null, "be13f933b6263efeaafce4bedd50a9e55da6472013e2387c1dd5d19cf3978da4"),
+        new("member-exactly-pack-buffer", "one member of exactly the pack buffer's compressed bytes (stored blocks), the most the reader accepts",
+            """
+            eNrt089LFFEAwPEZZ1ctSaNLHToIHapb2u+bAyNelpBVko6DRZq1igp17R+I/oP6y/of6tChQJs3+5Ymd0UNIqLPF5bZfW/e+uZ9
+            1us3LyZv0uRLeuGg87jTbSVJ8rx6rebdpfA+rV75k7y4khzfYndx5UZy+taq+w+ycO0UX8O1yFcnq/HDqvfVH+x21opP1fh8kjVW
+            hZ1MLJcvy6ebvaPfGFaG+bDjV+Vmb6a6tuNcO64N17F4Dd8bnihr9T+34vjgNR7nr2b9zxNxfDKOhy8K18tx/Fwcn077ezlrU3Fv
+            e7eyuJvVsrfVfMJ6di6Le1nZKV/3nu0O3TCfxocdmrmdNY7n51xgH9xyJ22c2i+L74aZb9U+h2bujdXvFxaGZu5n8Rx3yv2N2XJo
+            /kE64pdRzzwcrAxnMDvXnM/qU6gPKdy6tN2cnGo8e7ieH/njO4yP0a4xk2Q2T5KP+ag703h3fWKDvQz+QCsMhNnTfktjc+2lje29
+            /TB46eyLf2PJtaElkf2Eda3u9vrW4RH2/r3jy0E1z+oPY8f8n6eR6aSW86J4+30m0R9uBLuwC7uwC7uwC7uwC7uwC7uwC7uwC7uw
+            C7uwCzt2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2Yccu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7NiFXdiFXdiFXdiF
+            XdiFXdiFXdiFXdiFXdiFXdixY8cu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MKOHTt2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2
+            YRd27MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MKOXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdixC7uwC7uwC7uwC7uw
+            C7uwC7uwC7uwC7uwC7uwCzt2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2Yccu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MKO
+            HTt2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd27E4Bu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALO3ZhF3ZhF3ZhF3ZhF3Zh
+            F3ZhF3ZhF3ZhF3ZhF3Zhxy7swi7swi7swi7swi7swi7swi7swi7swi7swi7s2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IUd
+            u7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALO3bs2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2LFjxy7swi7swi7swi7swi7s
+            wi7swi7swi7swi7swo5d2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2LELu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALO3Zh
+            F3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3Zhxy7swi7swi7swi7swi7swi7swi7swi7swi7swi7s2IVd2IVd2IVd2IVd2IVd2IVd
+            2IVd2IVd2IVd2LFjxy7swi7swi7swi7swi7swi7swi7swi7swi7swo7dKWAXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmHHLuzC
+            LuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzYhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhR27sAu7sAu7sAu7sAu7sAu7sAu7
+            sAu7sAu7sAu7sGMXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmHHjh27sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAs7duzYhV3Y
+            hV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YsQu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAs7dmEXdmEXdmEXdmEXdmEXdmEXdmEX
+            dmEXdmEXdmHHLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzYhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhR27sAu7sAu7
+            sAu7sAu7sAu7sAu7sAu7sAu7sAs7duzYhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YsTsF7MIu7MIu7MIu7MIu7MIu7MIu7MIu
+            7MIu7MIu7NiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFHbuwC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwYxd2YRd2YRd2
+            YRd2YRd2YRd2YRd2YRd2YRd2YRd27MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7NixYxd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2
+            YRd2YceOHbuwC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwCzt2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2Yccu7MIu7MIu7MIu
+            7MIu7MIu7MIu7MIu7MIu7MIu7NiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFHbuwC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uw
+            C7uwYxd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YceOHbuwC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwCzt2p4Bd2IVd2IVd2IVd
+            2IVd2IVd2IVd2IVd2IVd2IUdu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7BjF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3Zh
+            F3bswi7swi7swi7swi7swi7swi7swi7swi7swi7swo5d2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IUdO3bswi7swi7swi7swi7s
+            wi7swi7swi7swi7swi7s2LFjF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3Zhxy7swi7swi7swi7swi7swi7swi7swi7swi7swi7s
+            2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IUdu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7BjF3ZhF3ZhF3ZhF3ZhF3Zh
+            F3ZhF3ZhF3ZhF3ZhF3bswi7swi7swi7swi7swi7swi7swi7swi7swi7s2LFjF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3Zhx+4U
+            sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sGMXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXduzCLuzCLuzCLuzCLuzCLuzC
+            LuzCLuzCLuzCLuzCjl3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YsQu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sGPHjl3Y
+            hV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhR07duzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzYhV3YhV3YhV3YhV3YhV3YhV3Y
+            hV3YhV3YhV3YhR27sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sGMXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXduzCLuzC
+            LuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCjl3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhR07duzCLuzCLuzCLuzCLuzCLuzCLuzC
+            LuzCLuzCLuzYnQJ2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd27MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MKOXdiFXdiF
+            XdiFXdiFXdiFXdiFXdiFXdiFXdiFXdixC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwCzt2YRd2YRd2YRd2YRd2YRd2YRd2YRd2
+            YRd2YRd27NixC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwY8eOXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFHbuwC7uwC7uw
+            C7uwC7uwC7uwC7uwC7uwC7uwC7uwYxd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd27MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu
+            7MIu7MKOXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdixC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwY8eOXdiFXdiFXdiF
+            XdiFXdiFXdiFXdiFXdiFXdiFHbtTwC7swi7swi7swi7swi7swi7swi7swi7swi7swo5d2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd
+            2IVd2LELu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALO3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3Zhxy7swi7swi7swi7s
+            wi7swi7swi7swi7swi7swo4dO3ZhF3ZhF3b9g31Op7FTF3VRF3VRF3VRF3VRF3VRF3VRF3VRF3VRF3Xqoi7qoi7qoi7qoi7qoi7q
+            oi7qoi7qoi7qok5d1EVd1EVd1EVd1EVd1EVd1EVd1EVd1EVd1EWduqiLuqiLuqiLuqiLuqiLuqiLuqiLuqiLuqhTF3VRF3VRF3VR
+            F3VRF3VRF3VRF3VRF3VRF3Xq1KmLuqiLuqiLuqiLuqiLuqiLuqiLuqiLuqiLOnVRF3VRF3VRF3VRF3VRF3VRF3VRF3VRF3VRp06d
+            uqiLuqiLuqiLuqiLuqiLuqiLuqiLuqiLuqhTF3VRF3VRF3VRF3VRF3VRF3VRF3VRF3VRF3Xqoi7qoi7qoi7qoi7qoi7qoi7qoi7q
+            oi7qoi7q1EVd1EVd1EVd1EVd1EVd1EVd1EVd1EVd1EWduqiLuqiLuqiLuqiLuv5mKfX/qM6jYiVcX6x/ePcDxmwG7Q==
+            """,
+            -1, 400, null, "be13f933b6263efeaafce4bedd50a9e55da6472013e2387c1dd5d19cf3978da4"),
+        new("member-one-under-pack-buffer", "one member of one byte fewer than the pack buffer (stored blocks)",
+            """
+            eNrt00FLFFEAwPEZZ1ctSaNLHToIQdQtraxuDox4WUJWSToOFSnWKikUdOkLBH2D+kZ9g75DHToUaPNm39LkrqhBQfT7wzK7781b
+            37zfevX6+eRVmnxJz+13HnS6rSRJnlavtby7HN6n1St/mBeXkqNb6i6tXktO3np1/34Wrp3ia7gW+dpkNX5Q9a76g93OevGpGp9P
+            ssaqsJOJlfJZ+Xizd/gbw8owH3b8vNzszVTXdpxrx7XhOhav4XvDE2Wt/udWHB+8xuP85az/eSKOT8bx8EXhejGOn4nj02l/L6dt
+            Ku5t90YWd7NW9raaT1jPzmVxL6s75cvekxdDN8yn8WGHZm5mjeP5ORfYB7fcShun9svi22HmW7XPoZmFsfr94uLQzJ0snuNOubcx
+            Ww7N301H/DLqmXuDleEMZuea81l9CvUhhVuXt5uTU41nD9ezI398B/Ex2jVmkszmSfIhH3VnGu+uT2ywl8EfaIWBMHvSb2lsrr28
+            sb27FwYvnH7xbyy5MrQksh+zrtXdfrR1cIi9f+/4SlDNs/rD2BH/52lkOq6VvCjefJ9J9IcbwS7swi7swi7swi7swi7swi7swi7s
+            wi7swi7swo5d2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2LELu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALO3ZhF3ZhF3Zh
+            F3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3bs2LELu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7Bjx45d2IVd2IVd2IVd2IVd2IVd2IVd2IVd
+            2IVd2IUdu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7BjF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3bswi7swi7swi7s
+            wi7swi7swi7swi7swi7swi7swo5d2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2LELu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7AL
+            u7Bjx45d2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IUdu1PALuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCjl3YhV3YhV3YhV3Y
+            hV3YhV3YhV3YhV3YhV3YhV3YsQu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAs7dmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEX
+            dmHHLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCjh07dmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXduzYsQu7sAu7sAu7sAu7
+            sAu7sAu7sAu7sAu7sAu7sGMXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXduzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzC
+            jl3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YsQu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAs7dmEXdmEXdmEXdmEXdmEX
+            dmEXdmEXdmEXdmEXduzYsQu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sGN3CtiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdix
+            C7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwCzt2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2Yccu7MIu7MIu7MIu7MIu7MIu
+            7MIu7MIu7MIu7MIu7NiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdixY8cu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MKOHTt2
+            YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd27MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MKOXdiFXdiFXdiFXdiFXdiFXdiF
+            XdiFXdiFXdiFXdixC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwCzt2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2Yccu7MIu
+            7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MKOHTt2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd27E4Bu7ALu7ALu7ALu7ALu7ALu7AL
+            u7ALu7ALu7ALO3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3Zhxy7swi7swi7swi7swi7swi7swi7swi7swi7swi7s2IVd2IVd
+            2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IUdu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALO3bs2IVd2IVd2IVd2IVd2IVd2IVd2IVd
+            2IVd2IVd2LFjxy7swi7swi7swi7swi7swi7swi7swi7swi7swo5d2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2LELu7ALu7AL
+            u7ALu7ALu7ALu7ALu7ALu7ALu7ALO3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3Zhxy7swi7swi7swi7swi7swi7swi7swi7s
+            wi7swi7s2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2LFjxy7swi7swi7swi7swi7swi7swi7swi7swi7swo7dKWAXdmEXdmEX
+            dmEXdmEXdmEXdmEXdmEXdmEXdmHHLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzYhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3Y
+            hV3YhR27sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sGMXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmHHjh27sAu7sAu7sAu7
+            sAu7sAu7sAu7sAu7sAu7sAs7duzYhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YsQu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7
+            sAs7dmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmHHLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzYhV3YhV3YhV3YhV3Y
+            hV3YhV3YhV3YhV3YhV3YhR27sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAs7duzYhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3Y
+            sTsF7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7NiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFHbuwC7uwC7uwC7uwC7uw
+            C7uwC7uwC7uwC7uwC7uwYxd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd27MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7Nix
+            Yxd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YceOHbuwC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwCzt2YRd2YRd2YRd2YRd2YRd2
+            YRd2YRd2YRd2YRd2Yccu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7NiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFHbuw
+            C7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwYxd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YceOHbuwC7uwC7uwC7uwC7uwC7uw
+            C7uwC7uwC7uwCzt2p4Bd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IUdu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7BjF3Zh
+            F3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3bswi7swi7swi7swi7swi7swi7swi7swi7swi7swo5d2IVd2IVd2IVd2IVd2IVd2IVd
+            2IVd2IVd2IUdO3bswi7swi7swi7swi7swi7swi7swi7swi7swi7s2LFjF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3Zhxy7swi7s
+            wi7swi7swi7swi7swi7swi7swi7swi7s2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IUdu7ALu7ALu7ALu7ALu7ALu7ALu7AL
+            u7ALu7ALu7BjF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3bswi7swi7swi7swi7swi7swi7swi7swi7swi7s2LFjF3ZhF3Zh
+            F3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3Zhx+4UsAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sGMXdmEXdmEXdmEXdmEXdmEXdmEXdmEX
+            dmEXdmEXduzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCjl3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YsQu7sAu7sAu7
+            sAu7sAu7sAu7sAu7sAu7sAu7sGPHjl3YhV3Y9a/3OZ3GTl3URV3URV3URV3URV3URV3URV3URV3URV3UqYu6qIu6qIu6qIu6qIu6
+            qIu6qIu6qIu6qIs6dVEXdVEXdVEXdVEXdVEXdVEXdVEXdVEXdVEXdeqiLuqiLuqiLuqiLuqiLuqiLuqiLuqiLuqiTl3URV3URV3U
+            RV3URV3URV3URV3URV3URV3UqVOnLuqiLuqiLuqiLuqiLuqiLuqiLuqiLuqiLurURV3URV3URV3URV3URV3URV3URV3URV3URZ06
+            deqiLuqiLuqiLuqiLuqiLuqiLuqiLuqiLuqiTl3URV3URV3URV3URV3URV3URV3URV3URV3UqYu6qIu6qIu6qIu6qIu6qIu6qIu6
+            qIu6qIu6qFMXdVEXdVEXdVEXdVEXdVEXdVEXdVEXdVEXdeqiLuqiLuqiLuqiLuqirr9bSv0/qnO/WA3Xj6/fv/0BHUsHZw==
+            """,
+            -1, 400, null, "be13f933b6263efeaafce4bedd50a9e55da6472013e2387c1dd5d19cf3978da4"),
     ];
 
     internal static readonly RefusedArchive[] RefusedArchives =
@@ -1833,6 +1937,63 @@ internal static class LevelVectors
             lv14WaGNmo21gBYinAsdMZ7uOfLZqqC+ztJ9Ffka8nAQ4CryC8gv0dRL2aijt9E2QzeRjAdmh1ptMPQSDuVdfHGTS2hSbDan7DBj
             PDl1lxoD+6XsgfKpLOaUfUs/t1o55YDhCIdy3HNkTj+kBR+FVo6ySmjfaZg60wPQ84FULzHFutE24GLhdzfBNmx9j4Q4gpBnUZRJ
             MVsPK/OSvYADAeq8pxjmbK+XjMZArpQv/kfJZvkSHiRng8nUjae5lQ5cqGB6Y834uyne0F/hH7sh4Pvb08YP2EiitA==
+            """),
+        new("member-pack-buffer-plus-one", "one member of one byte more than the pack buffer's compressed bytes (stored blocks)", """
+            eNrt089OE0EAwOFdtgWUCMaLHjyQeMGb4P8bmyzhUg0pROJxo0YIWoiQ6NkX0DfQJ/Md9OBBE+rOdhpXWgKYmGj8fkmz7cxOmZ2v
+            LFy/mLxJky/phcPOo063lSTJ8+q1kXdXw/u0euWP8+JKcnwr3ZX1heT0bVb3H2bh2im+hmuRb0xX4/2q99Uf7HY2i0/V+FKSNVaF
+            nUytlS/Kp9u9o98YVob5sOOX5XZvrrq241w7rg3XiXgN3xueKGsNPrfi+PA1GeevZoPPU3F8Oo6HLwrXy3H8XByfTQd7OWszcW/7
+            N7K4m42yt9N8wnp2MYt7Wd8rX/eevRq5YSmNDzsyczNrHM/PucA+vOVW2ji1XxbfDjPfqn2OzNyZqN8vL4/M3M3iOe6VB1vz5cj8
+            vXTML6OeuT9cGc5gfrE5n9WnUB9SuHV1tzk503j2cD0/9sfXj4/RrjGTZD5Pko/5uDvTeHd9YsO9DP9AKwyE2dN+S2Nz7dWt3f2D
+            MHjp7It/Y8m1kSWR/YR1re7uk53+EfbBvZNrQTXP6g8Tx/yfp5HppNbyonj7fS7RH24Mu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7AL
+            u7ALO3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3Zhxy7swi7swi7swi7swi7swi7swi7swi7swi7swi7s2IVd2IVd2IVd2IVd
+            2IVd2IVd2IVd2IVd2IVd2LFjxy7swi7swi7swi7swi7swi7swi7swi7swi7swo4dO3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3Zh
+            F3bswi7swi7swi7swi7swi7swi7swi7swi7swi7swo5d2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2LELu7ALu7ALu7ALu7AL
+            u7ALu7ALu7ALu7ALu7ALO3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3Zhxy7swi7swi7swi7swi7swi7swi7swi7swi7swo4d
+            O3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3bsTgG7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAs7dmEXdmEXdmEXdmEXdmEX
+            dmEXdmEXdmEXdmEXdmHHLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzYhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhR27
+            sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAs7duzYhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YsWPHLuzCLuzCLuzCLuzCLuzC
+            LuzCLuzCLuzCLuzCjl3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YsQu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAs7dmEX
+            dmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmHHLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzYhV3YhV3YhV3YhV3YhV3YhV3Y
+            hV3YhV3YhV3YsWPHLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCjt0pYBd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2Yccu7MIu
+            7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7NiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFHbuwC7uwC7uwC7uwC7uwC7uwC7uw
+            C7uwC7uwC7uwYxd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YceOHbuwC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwCzt27NiFXdiF
+            XdiFXdiFXdiFXdiFXdiFXdiFXdiFXdixC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwCzt2YRd2YRd2YRd2YRd2YRd2YRd2YRd2
+            YRd2YRd2Yccu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7NiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFHbuwC7uwC7uw
+            C7uwC7uwC7uwC7uwC7uwC7uwCzt27NiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdixOwXswi7swi7swi7swi7swi7swi7swi7s
+            wi7swi7s2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IUdu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7BjF3ZhF3ZhF3Zh
+            F3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3bswi7swi7swi7swi7swi7swi7swi7swi7swi7s2LFjF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3Zh
+            F3Zhx44du7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALO3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3Zhxy7swi7swi7swi7s
+            wi7swi7swi7swi7swi7swi7s2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IUdu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7AL
+            u7BjF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3Zhx44du7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALO3angF3YhV3YhV3YhV3Y
+            hV3YhV3YhV3YhV3YhV3YhR27sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sGMXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEX
+            duzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCjl3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhR07duzCLuzCLuzCLuzCLuzC
+            LuzCLuzCLuzCLuzCLuzYsWMXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmHHLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzY
+            hV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhR27sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sGMXdmEXdmEXdmEXdmEXdmEX
+            dmEXdmEXdmEXdmEXduzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzYsWMXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmHH7hSw
+            C7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwYxd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd27MIu7MIu7MIu7MIu7MIu7MIu
+            7MIu7MIu7MIu7MKOXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdixC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwY8eOXdiF
+            XdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFHTt27MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MIu7NiFXdiFXdiFXdiFXdiFXdiFXdiF
+            XdiFXdiFXdiFHbuwC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwC7uwYxd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd2YRd27MIu7MIu
+            7MIu7MIu7MIu7MIu7MIu7MIu7MIu7MKOXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFXdiFHTt27MIu7MIu7MIu7MIu7MIu7MIu7MIu
+            7MIu7MIu7NidAnZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3bswi7swi7swi7swi7swi7swi7swi7swi7swi7swo5d2IVd2IVd
+            2IVd2IVd2IVd2IVd2IVd2IVd2IVd2LELu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALO3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3Zh
+            F3ZhF3bs2LELu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7Bjx45d2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IUdu7ALu7ALu7AL
+            u7ALu7ALu7ALu7ALu7ALu7ALu7BjF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3ZhF3bswi7swi7swi7swi7swi7swi7swi7swi7s
+            wi7swo5d2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2IVd2LELu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7ALu7Bjx45d2IVd2IVd2IVd
+            2IVd2IVd2IVd2IVd2IVd2IUdu1PALuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCLuzCjl3YhV3YhV3YhV3YhV3YhV3YhV3YhV3YhV3Y
+            hV3YsQu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAu7sAs7dmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmEXdmHHLuzCLuzCLuzCLuzC
+            LuzCLuzCLuzCLuzCLuzCjh07dmEXdmEXdmHXv9HndBY7dVEXdVEXdVEXdVEXdVEXdVEXdVEXdVEXdVGnLuqiLuqiLuqiLuqiLuqi
+            LuqiLuqiLuqiLurURV3URV3URV3URV3URV3URV3URV3URV3URV3UqYu6qIu6qIu6qIu6qIu6qIu6qIu6qIu6qIs6dVEXdVEXdVEX
+            dVEXdVEXdVEXdVEXdVEXdVGnTp26qIu6qIu6qIu6qIu6qIu6qIu6qIu6qIu6qFMXdVEXdVEXdVEXdVEXdVEXdVEXdVEXdVEXderU
+            qYu6qIu6qIu6qIu6qIu6qIu6qIu6qIu6qIs6dVEXdVEXdVEXdVEXdVEXdVEXdVEXdVEXdVGnLuqiLuqiLuqiLuqiLuqiLuqiLuqi
+            LuqiLuqiTl3URV3URV3URV3URV3URV3URV3URV3URV3UqYu6qIu6qIu6qIu6/p5S6v9RnYfFeri2H3x49wNxpAZ1
+            """),
+        new("member-needs-dictionary", "a zlib stream that asks for a preset dictionary the archive does not have", """
+            eNoBYwGc/l8BAAB4uyHJDpidUU1Lw0AQ3WSTNlpQ8FIPHgJePNr6fevCllyClCRYPC4qtlSTYgv+HX+Ov8Kf4cFD685mVpZsKsaB
+            5WXfm5m8mY1v4sQjhDzKk7Ekgm9HHnbL+D7ZHMNkmB79oldjLPNXFDDmn4CcZYHk1zLeJSbxmH9Ivk+oUQVO2iPxJO6nebUjVIIO
+            jp/FNN+V6KPmYy2giwh9YSLqlXcPeX1aqB/Q8t5GPkAeGgF2kd9CfscpvTSNDnpbHFN0k4l8Zk6o1B5FL+lcvOYPL1ZC38FhLeVE
+            N4b1WOqpXpClnIHyJS1ayrmrvgcDS7mguMK5WE5CYemXVYc/ypWuhPHDnqlTtQC1H0iNClPsGGMDbtf8oHwZogYN1D1khLyxukwH
+            s9WytBf9Aw8IUP/axTDnR5NisQRyr3nxP0oOm5d4SXE3W1devMxtjeBBGVUXt64f9tmkmRFf8xTwG/HonSFTw6ur
             """),
         new("member-over-1mib", "one member that inflates past the game's 1 MiB pack buffer", """
             eNrz4WBgqJjz9oZv/u0UhgMfl3hen+bZsGMDc7vXneXbDOL4FkQW3/Lx8hKRDlvilXArY+WvVWqsfTVTamXsWOWbmdm75h8RC7xc

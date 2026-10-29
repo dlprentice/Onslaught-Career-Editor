@@ -261,7 +261,7 @@ internal static class LevelTests
 
     private static void Archives(Checks check)
     {
-        check.That(LevelVectors.Archives.Length >= 8 && LevelVectors.RefusedArchives.Length >= 20, "the vector file holds the archives");
+        check.That(LevelVectors.Archives.Length >= 10 && LevelVectors.RefusedArchives.Length >= 22, "the vector file holds the archives");
         foreach (LevelVectors.ArchiveVector vector in LevelVectors.Archives)
         {
             try
@@ -284,7 +284,7 @@ internal static class LevelTests
                  {
                      ("member-trailing-data", "data after it"), ("member-adler-repeated", "data after it"), ("member-adler-after-gap", "data after it"),
                      ("member-adler-after-junk", "data after it"), ("member-cut-short-before-adler", "truncated zlib stream"),
-                     ("member-truncated", "truncated zlib stream"), ("member-over-1mib", "limit"), ("member-1mib-plus-one", "limit"),
+                     ("member-truncated", "truncated zlib stream"), ("member-over-1mib", "limit"), ("member-1mib-plus-one", "limit"), ("member-pack-buffer-plus-one", "implausible"), ("member-needs-dictionary", "invalid zlib data"),
                  })
         {
             LevelVectors.RefusedArchive vector = LevelVectors.RefusedArchives.First(v => v.Name == name);

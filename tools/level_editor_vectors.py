@@ -409,6 +409,17 @@ def archive_file(parts: list[bytes]) -> bytes:
     return b"".join(fixtures.aya(part) for part in parts)
 
 
+def framed_member(member: bytes) -> bytes:
+    """A packed member as the file holds it: its length, then its bytes."""
+    return struct.pack("<I", len(member)) + member
+
+
+def needs_dictionary(stream: bytes) -> bytes:
+    """A zlib stream whose header sets FDICT: it can only be inflated with the preset dictionary its checksum names."""
+    packer = zlib.compressobj(6, zlib.DEFLATED, 15, 8, zlib.Z_DEFAULT_STRATEGY, b"a dictionary the archive does not carry")
+    return packer.compress(stream) + packer.flush()
+
+
 def split(data: bytes, count: int) -> list[bytes]:
     """The stream in count pieces: one byte each, and the rest in the last."""
     return [data[i:i + 1] for i in range(count - 1)] + [data[count - 1:]]
@@ -427,6 +438,32 @@ def padded_level_stream(total: int, real: bytes) -> bytes:
     padding = total - len(stream) - 8
     assert padding >= 0, "the stream is longer than the size asked for"
     return stream[:-8] + fixtures.chunk(b"PADD", bytes(padding)) + stream[-8:]
+
+
+def stored_member(compressed_len: int, data_len: int, real: bytes) -> bytes:
+    """One member of exactly `compressed_len` bytes that inflates to the `data_len`-byte padded level stream: a zlib stream of stored
+    blocks (2 header bytes, 5 bytes of overhead per block, the data, 4 checksum bytes), the blocks of near equal size. It reaches the
+    game's pack buffer, which no zlib-compressed member of an authored level does."""
+    blocks, rest = divmod(compressed_len - 6 - data_len, 5)
+    assert rest == 0 and blocks >= 1 and data_len <= enc.MAX_INFLATED_MEMBER_BYTES, (compressed_len, data_len)
+    data = padded_level_stream(data_len, real)
+    out = bytearray(b"\x78\x01")
+    at = 0
+    for index in range(blocks):
+        size = data_len // blocks + (1 if index < data_len % blocks else 0)
+        assert 0 < size <= 0xFFFF
+        out += bytes([1 if index == blocks - 1 else 0]) + struct.pack("<HH", size, size ^ 0xFFFF) + data[at:at + size]
+        at += size
+    out += struct.pack(">I", zlib.adler32(data))
+    assert at == data_len and len(out) == compressed_len
+    return bytes(out)
+
+
+def stored_pack_buffer_member(delta: int, real: bytes) -> bytes:
+    """A stored-block member of PACK_BUFFER_SIZE + delta compressed bytes, inflating to as much as the 1 MiB bound allows."""
+    target = enc.PACK_BUFFER_SIZE + delta
+    data_len = enc.MAX_INFLATED_MEMBER_BYTES - (enc.MAX_INFLATED_MEMBER_BYTES - (target - 6)) % 5
+    return stored_member(target, data_len, real)
 
 
 def cut_short_member(stream: bytes) -> bytes:
@@ -474,6 +511,10 @@ def archive_vectors(valid: dict[str, bytes]) -> list[tuple[str, str, bytes, dict
     out.append(("members-4096", "a stream split into 4096 members, the most the reader accepts", archive_file(split(stream, 4096))))
     out.append(("member-exactly-1mib", "one member that inflates to exactly the 1 MiB a member may",
                 archive_file([padded_level_stream(enc.MAX_INFLATED_MEMBER_BYTES, real)])))
+    out.append(("member-exactly-pack-buffer", "one member of exactly the pack buffer's compressed bytes (stored blocks), the most the reader accepts",
+                framed_member(stored_pack_buffer_member(0, real))))
+    out.append(("member-one-under-pack-buffer", "one member of one byte fewer than the pack buffer (stored blocks)",
+                framed_member(stored_pack_buffer_member(-1, real))))
     results = []
     for name, note, data in out:
         worlds = enc.level_worlds(b"".join(enc.inflate(enc.read_members(data))))
@@ -508,6 +549,10 @@ def refused_archives(valid: dict[str, bytes]) -> list[tuple[str, str, bytes]]:
         ("member-adler-after-junk", "a complete zlib stream, four bytes of junk and a second copy of its own Adler-32", framed(member + b"junk" + adler)),
         ("member-cut-short-before-adler", "a stored block holding the stream, then its Adler-32 where a complete zlib stream would have ended: cut short",
          framed(cut_short_member(good))),
+        ("member-pack-buffer-plus-one", "one member of one byte more than the pack buffer's compressed bytes (stored blocks)",
+         framed_member(stored_pack_buffer_member(1, real))),
+        ("member-needs-dictionary", "a zlib stream that asks for a preset dictionary the archive does not have",
+         framed(needs_dictionary(good))),
         ("member-over-1mib", "one member that inflates past the game's 1 MiB pack buffer", fixtures.world_archive()),
         ("member-1mib-plus-one", "one member that inflates to one byte more than the 1 MiB a member may",
          archive_file([padded_level_stream(enc.MAX_INFLATED_MEMBER_BYTES + 1, real)])),

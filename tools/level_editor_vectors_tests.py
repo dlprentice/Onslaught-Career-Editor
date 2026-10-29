@@ -39,8 +39,8 @@ class VectorTests(unittest.TestCase):
         self.assertGreaterEqual(len(self.data["valids"]), 25)
         self.assertGreaterEqual(len(self.data["refused"]), 19)
         self.assertGreaterEqual(len(self.data["edits"]), 8)
-        self.assertGreaterEqual(len(self.data["archives"]), 8)
-        self.assertGreaterEqual(len(self.data["badArchives"]), 20)
+        self.assertGreaterEqual(len(self.data["archives"]), 10)
+        self.assertGreaterEqual(len(self.data["badArchives"]), 22)
         self.assertGreaterEqual(len(self.data["stages"]), 14)
         self.assertGreaterEqual(len(self.data["badStages"]), 45)
         names = [v["name"] for v in self.data["valids"]]
@@ -202,6 +202,19 @@ class VectorTests(unittest.TestCase):
         self.assertEqual(len(zlib.decompress(enc.read_members(bad["member-1mib-plus-one"])[0])), enc.MAX_INFLATED_MEMBER_BYTES + 1)
         self.assertIn("inflated archive/member limit", refusal(bad["member-1mib-plus-one"]))
         self.assertEqual(enc.MAX_INFLATED_MEMBER_BYTES, 1 << 20)
+        # The bound on a member's compressed bytes (the game's pack buffer): exactly that many are read, one byte more is not.
+        self.assertEqual([len(m) for m in enc.read_members(good["member-exactly-pack-buffer"])], [enc.PACK_BUFFER_SIZE])
+        self.assertEqual([len(m) for m in enc.read_members(good["member-one-under-pack-buffer"])], [enc.PACK_BUFFER_SIZE - 1])
+        self.assertEqual(struct.unpack_from("<I", bad["member-pack-buffer-plus-one"])[0], enc.PACK_BUFFER_SIZE + 1)
+        self.assertIn("implausible .aya member length", refusal(bad["member-pack-buffer-plus-one"]))
+        for name in ("member-exactly-pack-buffer", "member-one-under-pack-buffer"):
+            self.assertLessEqual(len(zlib.decompress(enc.read_members(good[name])[0])), enc.MAX_INFLATED_MEMBER_BYTES)
+        # A zlib stream whose header asks for a preset dictionary: the reference's decompressor cannot read it.
+        needy = enc.read_members(bad["member-needs-dictionary"])[0]
+        self.assertTrue(needy[1] & 0x20)
+        with self.assertRaises(zlib.error):
+            zlib.decompressobj().decompress(needy)
+        self.assertIn("invalid zlib data", refusal(bad["member-needs-dictionary"]))
 
     def test_the_staged_mods_are_what_the_reference_stager_wrote(self) -> None:
         bodies = {v["name"]: v["body"] for v in self.data["valids"]}
