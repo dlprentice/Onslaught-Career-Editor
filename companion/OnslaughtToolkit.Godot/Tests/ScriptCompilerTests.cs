@@ -209,8 +209,16 @@ internal static class ScriptCompilerTests
                    ScriptCompiler.ConstStartOf(constants) == 40, "the counters belong to the session: constants are numbered from the caller's counter, and a shipped script's counter is read back from its first one");
         check.That(ScriptCompiler.DoOnceStartOf(Compile("init()\n{\n\tdo_once\n\t{\n\t}\n}\n", doOnceStart: 12)) == 12 && ScriptCompiler.ConstStartOf(Compile("init()\n{\n}\n")) == 0 &&
                    ScriptCompiler.DoOnceStartOf(Compile("init()\n{\n}\n")) == 0, "a script with none has counters of 0");
+        int asked = -1;
+        MissionScript given = Compile("init()\n{\n\tPause(1);\n\tPause(MISSING);\n}\n", resolve: (name, index) =>
+        {
+            asked = index;
+            return name == "MISSING" ? new ResolvedName(1, new ScriptInt(3)) : null;
+        });
+        check.That(asked >= 0 && asked < given.Code.Symbols.Count && given.Code.Symbols[asked] is { Name: var constant, Value: ScriptInt { Value: 3 } } && constant.StartsWith("const data", StringComparison.Ordinal),
+            $"a resolver is asked for a name a missing header would have defined at the index its constant will have: {asked}");
         MissionScript built = new() { Name = "b" };
-        foreach (string name in new[] { "init", "const data", "xconst data3", "const data3x", "const data7", "const data9", "do-once-4", "do-once-x" })
+        foreach (string name in new[] { "init", "const data", "xconst data3", "const data3x", "const data7", "const data9", "xdo-once-6", "do-once-5x", "do-once-4", "do-once-x" })
             built.Code.Symbols.Add(new ScriptSymbol { Name = name });
         check.That(ScriptCompiler.ConstStartOf(built) == 7 && ScriptCompiler.DoOnceStartOf(built) == 4, "the counter is the first symbol that is exactly `const dataN` or `do-once-N`");
     }
@@ -233,6 +241,8 @@ internal static class ScriptCompilerTests
         check.That(missing is { Path: "data\\inc\\nothing.msl" }, "a header the game folder lacks is a MissingInclude naming the path as written");
         check.That(Refuses("#include ..\\outside.msl\n", read, "cannot climb out of the game folder") && Refuses("#include data\\inc\n", read, "is not a file inside the game folder"),
             "a path cannot climb out of the game folder, and a folder is not a header");
+        check.That(read("data\\.\\inc\\.\\defs.msl").StartsWith("#define LIMIT", StringComparison.Ordinal) && read(".\\data\\\\inc\\defs.msl").StartsWith("#define LIMIT", StringComparison.Ordinal),
+            "a dot in a path is the folder itself, and an empty part (a doubled separator) is skipped");
         File.WriteAllBytes(Path.Combine(game, "Data", "huge.msl"), new byte[ScriptCompiler.MaxSource + 1]);
         File.WriteAllBytes(Path.Combine(folder, "edge.msl"), Enumerable.Repeat((byte)' ', ScriptCompiler.MaxSource).ToArray());
         check.That(Refuses("#include data\\huge.msl\n", read, "longer than a million bytes") && ScriptCompiler.ReadSource(Path.Combine(folder, "edge.msl")).Length == ScriptCompiler.MaxSource,
@@ -253,6 +263,27 @@ internal static class ScriptCompilerTests
             check.That(read("data\\inc\\inside.msl").StartsWith("#define LIMIT", StringComparison.Ordinal), "a link that stays inside the game folder is a file inside it");
             check.That(Refuses("#include data\\inc\\out.msl\n", read, "is not a file inside the game folder") && Refuses("#include data\\linkdir\\secret.msl\n", read, "is not a file inside the game folder"),
                 "a link out of the game folder, or through a folder that is one, is refused");
+        }
+        if (OperatingSystem.IsLinux())
+        {
+            // A named pipe named like a header would wait for a writer for ever, so it is not opened: the lookup refuses it at once.
+            string pipe = Path.Combine(game, "Data", "Inc", "Pipe.msl");
+            using (Process make = Process.Start(new ProcessStartInfo("mkfifo", [pipe]) { UseShellExecute = false })!)
+            {
+                make.WaitForExit();
+                check.That(make.ExitCode == 0, $"mkfifo made the named pipe (exit {make.ExitCode})");
+            }
+            Task<bool> refused = Task.Run(() => Refuses("#include data\\inc\\pipe.msl\n", read, "is not a file inside the game folder"));
+            bool returned = refused.Wait(TimeSpan.FromSeconds(10));
+            if (!returned)
+            {
+                using (File.OpenHandle(pipe, FileMode.Open, FileAccess.Write))
+                {
+                    // let the reader that is stuck on the pipe go, so the run can end
+                }
+                refused.Wait(TimeSpan.FromSeconds(10));
+            }
+            check.That(returned && refused.Result, "a named pipe is not a header, and the lookup does not wait for a writer");
         }
         Directory.Delete(folder, true);
     }
