@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-only
+using System.IO.Compression;
+using System.Text;
+using OnslaughtToolkit.Companion.Development;
 using OnslaughtToolkit.Companion.Levels;
 
 namespace OnslaughtToolkit.Companion.Tests;
 
 /// <summary>
 /// The game's rules for a compiled script, as <see cref="ScriptChecker"/> applies them: what it accepts (the shapes the compiler makes), each rule
-/// with a script that breaks that one rule, and the stack followed from every place the game starts a script. Nothing here touches Godot or a file;
-/// every script is authored here, by hand, in the VM's own instructions.
+/// with a script that breaks that one rule, and the stack followed from every place the game starts a script. The gate checks use only authored
+/// temporary archives. Nothing here touches Godot or an installed game.
 /// </summary>
 internal static class LevelScriptCheckerTests
 {
@@ -27,6 +30,67 @@ internal static class LevelScriptCheckerTests
         Calls(check);
         Stack(check);
         Reported(check);
+        Gate(output, check);
+    }
+
+    /// <summary>The actual archive gate checks both world bodies, refuses a broken script, and cannot pass without checking any scripts.</summary>
+    private static void Gate(string output, Checks check)
+    {
+        string game = Path.Combine(output, "script-checker-gate");
+        string resources = Path.Combine(game, "data", "resources");
+        Directory.CreateDirectory(resources);
+        string archive = Path.Combine(resources, "100_res_PC.aya");
+        WorldBody world = WorldBody.Read(LevelTests.Body("authored-v50"));
+        world.Scripts.Clear();
+        world.Scripts.Add(WellFormed("main", [0], []));
+        byte[] valid = world.Write();
+        world.Scripts[0].Code.Instructions[0] = new ScriptInstruction(99, -1);
+        byte[] invalid = world.Write();
+        world.Scripts.Clear();
+        byte[] empty = world.Write();
+
+        (int Result, string[] Printed, string[] Errors) Run(byte[] baseBody, byte[] realBody)
+        {
+            File.WriteAllBytes(archive, GateArchive(baseBody, realBody));
+            List<string> printed = [], errors = [];
+            int result = LevelsGateCheck.Run(game, "", printed.Add, errors.Add);
+            return (result, [.. printed], [.. errors]);
+        }
+
+        var good = Run(valid, valid);
+        check.That(good.Result == 0 && good.Errors.Length == 0 && good.Printed.Single().Contains("2 compiled scripts checked", StringComparison.Ordinal),
+            "the archive gate counts and accepts a valid script in each world body");
+        var badBase = Run(invalid, valid);
+        check.That(badBase.Result == 1 && badBase.Errors.Any(error => error.Contains("100 BSWD", StringComparison.Ordinal) && error.Contains("opcode 99", StringComparison.Ordinal)),
+            "the archive gate rejects an invalid script in the base world");
+        var badReal = Run(valid, invalid);
+        check.That(badReal.Result == 1 && badReal.Errors.Any(error => error.Contains("100 RLWD", StringComparison.Ordinal) && error.Contains("opcode 99", StringComparison.Ordinal)),
+            "the archive gate rejects an invalid script in the level's own world");
+        var none = Run(empty, empty);
+        check.That(none.Result == 1 && none.Errors.Any(error => error.Contains("No compiled scripts", StringComparison.Ordinal)),
+            "the archive gate cannot pass with zero scripts checked");
+    }
+
+    private static byte[] GateArchive(byte[] baseBody, byte[] realBody)
+    {
+        static byte[] Chunk(string tag, byte[] contents)
+        {
+            using MemoryStream stream = new();
+            using BinaryWriter writer = new(stream, Encoding.ASCII, leaveOpen: true);
+            writer.Write(Encoding.ASCII.GetBytes(tag));
+            writer.Write(contents.Length);
+            writer.Write(contents);
+            return stream.ToArray();
+        }
+        using MemoryStream numbers = new();
+        using (BinaryWriter writer = new(numbers, Encoding.ASCII, leaveOpen: true)) { writer.Write(200); writer.Write(100); }
+        byte[] world = [.. Chunk("WDAT", numbers.ToArray()), .. Chunk("BSWD", baseBody), .. Chunk("RLWD", realBody)];
+        byte[] unpacked = Chunk("WRES", Chunk("WRLD", world));
+        using MemoryStream member = new();
+        using (ZLibStream compressed = new(member, CompressionLevel.Optimal, leaveOpen: true)) compressed.Write(unpacked);
+        using MemoryStream archive = new();
+        using (BinaryWriter writer = new(archive, Encoding.ASCII, leaveOpen: true)) { writer.Write((int)member.Length); writer.Write(member.ToArray()); }
+        return archive.ToArray();
     }
 
     private static int Native(string name) => Array.FindIndex(ScriptTables.Natives, native => native.Name == name);
