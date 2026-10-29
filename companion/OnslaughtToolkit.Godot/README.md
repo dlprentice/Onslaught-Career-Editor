@@ -168,8 +168,9 @@ python tools/companion_godot.py audit
 
 These need the pinned toolchain on Linux: the Godot .NET build and export templates
 that [toolchain.json](toolchain.json) names, installed by the maintainer's shared game-toolchain
-installer (which is not part of this repository), and .NET SDK 10.0.402. The runner finds that
-installation's lock file at the installer's default location, or takes it with `--shared-lock FILE`.
+installer (which is not part of this repository), and .NET SDK 10.0.402. The runner takes that
+installation's lock file with `--shared-lock FILE` or from the environment variable `ONSLAUGHT_SHARED_LOCK`
+(the maintainer's ignored `local-data/rebuild-env.sh` sets it) and stops with a message naming both when it has neither.
 The engine defaults to the pinned install; `--engine PATH` must resolve to that install's executable
 and does not bypass its checks. The runner also requires the installer's provenance markers and its
 toolchain script beside the selected lock file. Official Godot, template and SDK downloads plus
