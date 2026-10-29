@@ -2,7 +2,7 @@
 
 Status: design proposal; nothing in it is built. It extends the [Companion level editor](companion-level-editor.md), which is on main
 through its map (M3).
-Last updated: 2026-10-29 (first draft; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
+Last updated: 2026-10-29 (the lead's decisions recorded; first draft; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours that is proved against every script the game
 shipped (byte for byte), and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -91,10 +91,10 @@ recompiled, so a mod differs from the game only where the player edited.
   cited by function, with no source copied (the original compiler is not in the decompilation and is not needed). It supports
   exactly the constructs the shipped scripts use; anything else is refused with a line and a reason, never guessed.
 - **The checker** applies the game's own rules to the compiled script before anything is saved (section 7).
-- **The mod** carries the world file and, optionally, the edited sources as `data/MissionScripts/levelNNN/NAME.msl` (the
-  loader allows replacing a file the game has; the game never reads these, so they are inert copies that make the mod
-  self-describing and let a later session reopen the player's own source). This needs the stager and the Python reference stager
-  to take extra files; it is the first question in section 10.
+- **The mod** carries the world file and the edited sources, each as `data/MissionScripts/levelNNN/NAME.msl`, the path of the file
+  the game already has, so today's loader admits them as replacements of files the game has. The game never reads them; they
+  document the change and let a later session reopen the player's own source, and the mod's notes and the README say so plainly.
+  The stager and the Python reference stager take extra files for this, with the same refusals as before (decided 2026-10-29).
 
 ## 4. Milestones
 
@@ -185,9 +185,13 @@ The spawn count and the timer values are the next edits in the same mould.
 | Symbols shared between scripts (a clone) corrupt on a duplicate name | unique names are an error in the checker and a vector in the tests |
 | The mod loader changes what it serves | the acceptance in section 6 is re-run per CE version |
 
-## 10. Questions for the lead
+## 10. Decisions (2026-10-29, the lead)
 
-1. Should a mod carry the edited sources as inert `.msl` copies (needs the stager and its Python reference to take extra files)?
-2. Start with the 2-day compiler spike (the falsifier), or with MS0 (the viewer, useful whatever the spike says)? I would run
-   both: the spike first for two days, MS0 beside it.
-3. Raw source text first, or forms first (MS4 before MS3)? Raw text is the smaller step and the more honest test of the compiler.
+1. The mod carries the edited sources as inert `.msl` copies at the game's own paths (section 3), with the stager and its Python
+   reference taking extra files under the same refusals.
+2. The compiler spike on the 20 smallest scripts comes first and MS0, the read-only viewer, runs beside it. The spike's result is
+   reported before MS2 (the C# compiler): how many scripts are byte-exact, the first unexplained difference, and what the
+   trailing words and the symbol line order turn out to be, if found.
+3. Raw source text before forms (MS3 before MS4).
+4. Beside MS0: Home's "Change folder" is examined against unsaved Edit career and Settings changes, and gets the Level editor's
+   ask-first guard if it drops them.
