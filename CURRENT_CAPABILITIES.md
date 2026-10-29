@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-29 (the maintainer's storage name removed; earlier: findings are written in onslaught-preservation, with `reverse-engineering/` a frozen copy; earlier: the companion's update guidance and the published decompilation's score stated as they are; earlier: CE 0.1.5 publishes the redirected-output correction; Linux CE workflow and native Windows backend/load evidence; remaining UI/version and player limits)
+Last updated: 2026-10-29 (the decompilation's matching concession and scope stated; earlier: the maintainer's storage name removed; earlier: findings are written in onslaught-preservation, with `reverse-engineering/` a frozen copy; earlier: the companion's update guidance and the published decompilation's score stated as they are; earlier: CE 0.1.5 publishes the redirected-output correction; Linux CE workflow and native Windows backend/load evidence; remaining UI/version and player limits)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -10,9 +10,13 @@ The companion, Onslaught Companion, lets players choose the original game or Ons
 CE's launcher, protected career writes, two launcher settings and the steps for updating CE (the companion
 contacts nothing; CE checks its own signed feed and installs an update only when the player chooses Update).
 See its [README](companion/OnslaughtToolkit.Godot/README.md) for the contract and platform limits.
-The byte-matching decompilation is complete and is the reverse-engineering authority (public export:
-[onslaught-decomp](https://github.com/dlprentice/onslaught-decomp)); its native port is published separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce), and this
-document does not measure it. The Godot rebuild, a scoped proof of concept (level 100, startup to exit), is developed
+The byte-matching decompilation is the reverse-engineering authority. Its private function check matches every mapped
+game function with a guarded one-byte correction to a compiled object; without that correction, one function remains
+unmatched. Its public export, [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), records its own
+coverage and the third-party sample files it leaves out. Function matches do not by themselves establish complete
+behavioural equivalence or a byte-identical linked executable. Its native port is published separately as
+[Onslaught CE](https://github.com/dlprentice/onslaught-ce), and this document does not measure it. The Godot rebuild,
+a scoped proof of concept (level 100, startup to exit), is developed
 in [onslaught-godot](https://github.com/dlprentice/onslaught-godot), which records its measured parity; `rebuild/` here is a frozen copy. Executable patching and copied-install
 safe launch are retired and not planned; their code (the AppCore library and the `patches/` catalog) was removed on
 2026-10-22, and Git keeps it.
