@@ -136,10 +136,15 @@ class LoaderRules:
         if any(tag in (b"LVLR", b"TARG", b"AYAD") for tag in tags[3:]):
             return "LVLR, TARG or AYAD again"
         for tag, at, size in top:
-            if tag == b"TEXT" and (size < 360 or stream[at:at + 4] != b"DXTX" or word(at + 4) != size - 8 or stream[at + 8:at + 12] != b"CTEX"):
-                return "a TEXT that is not DXTX/CTEX of 360 bytes"
-            if tag == b"MESH" and (size < 9 or stream[at:at + 4] != b"PMSH" or word(at + 4) != size - 8):
-                return "a MESH that is not PMSH"
+            if tag == b"TEXT":
+                frames = word(at + 328) if size >= 332 else 0
+                if size < 372 or stream[at:at + 4] != b"DXTX" or word(at + 4) != size - 8 or stream[at + 8:at + 12] != b"CTEX":
+                    return "a TEXT that is not DXTX/CTEX of 372 bytes or more"
+                if frames > 16 or size != 360 + 12 * frames:
+                    return "a TEXT whose frame count does not give its size"
+            if tag == b"MESH" and (size < 325 or stream[at:at + 4] != b"PMSH" or word(at + 4) != size - 8
+                                   or stream[at + 8:at + 12] != b"PMS2" or word(at + 12) != size - 16):
+                return "a MESH that is not PMSH around a PMS2 that fills it, of 325 bytes or more"
         if tags.count(b"WRES") != 1 or tags[-1] != b"WRES":
             return "not exactly one WRES, last"
         _, at, size = top[-1]
@@ -332,9 +337,18 @@ def level_chunks(level: int = 888, *, base: int = -1, texts=("a.tga",), meshes=(
                (b"WRES", fixtures.chunk(b"WRLD", wrld))])
 
 
-def framed_text(size: int) -> bytes:
-    """A TEXT payload of exactly `size` bytes whose DXTX and CTEX framing is right and whose contents are not looked at."""
-    return b"DXTX" + struct.pack("<I", size - 8) + b"CTEX" + bytes(size - 12)
+def framed_text(size: int, frames: int = 1) -> bytes:
+    """A TEXT payload of exactly `size` bytes whose DXTX and CTEX framing is right, with `frames` as its frame count (the word at
+    payload offset 328); nothing else in it is looked at."""
+    payload = bytearray(b"DXTX" + struct.pack("<I", size - 8) + b"CTEX" + bytes(size - 12))
+    if size >= 332:
+        struct.pack_into("<I", payload, 328, frames)
+    return bytes(payload)
+
+
+def sized_mesh(size: int) -> bytes:
+    """A MESH payload of exactly `size` bytes: PMSH around a PMS2 that fills it."""
+    return b"PMSH" + struct.pack("<I", size - 8) + b"PMS2" + struct.pack("<I", size - 16) + bytes(size - 16)
 
 
 def level_stream(chunks) -> bytes:
@@ -771,6 +785,9 @@ def structure_cases():
 
     texts = 3  # LVLR, TARG, AYAD
     first_text, first_mesh, wres = texts, texts + 1, len(good) - 1
+    TEXT_SHORT = "a level archive TEXT chunk that is not a DXTX/CTEX texture record of 372 bytes or more"
+    TEXT_FRAMES = "a level archive TEXT chunk with more than 16 frames, or a size that is not 360 bytes and 12 for each frame"
+    MESH_WORDS = "a level archive MESH chunk that is not a PMSH record of 325 bytes or more whose PMS2 record fills it"
     word = lambda value: struct.pack("<I", value)
     wrld = lambda *kids: [(b"WRES", fixtures.chunk(b"WRLD", b"".join(fixtures.chunk(t, d) for t, d in kids)))]
     wdat = (b"WDAT", struct.pack("<ii", -1, 888))
@@ -793,12 +810,25 @@ def structure_cases():
         ("a base-archive tag", level_stream(insert(first_text, b"VSDS", b"")), "tag a level archive does not hold"),
         ("TEXT of 24 bytes", level_stream(put(first_text, bytes(24))), "DXTX/CTEX"),
         # the game reads a TEXT as DXTX, CTEX and 344 bytes whatever the headers say, so a shorter one is read into the next chunk
-        ("TEXT of 25 bytes", level_stream(put(first_text, framed_text(25))), "texture record of at least 360 bytes"),
+        ("TEXT of 25 bytes", level_stream(put(first_text, framed_text(25))), TEXT_SHORT),
         ("TEXT of 344 bytes with a PLAT chunk inside", level_stream(put(first_text, b"DXTX" + word(336) + b"CTEX" + word(0)
                                                                       + fixtures.chunk(b"PLAT", bytes(8)) + bytes(344 - 36))),
-         "texture record of at least 360 bytes"),
-        ("TEXT of 359 bytes", level_stream(put(first_text, framed_text(359))), "texture record of at least 360 bytes"),
-        ("TEXT of 360 bytes", level_stream(put(first_text, framed_text(360))), None),
+         TEXT_SHORT),
+        ("TEXT of 359 bytes", level_stream(put(first_text, framed_text(359))), TEXT_SHORT),
+        ("TEXT of 360 bytes, no frame", level_stream(put(first_text, framed_text(360, 0))), TEXT_SHORT),
+        ("TEXT of 371 bytes", level_stream(put(first_text, framed_text(371))), TEXT_SHORT),
+        ("TEXT of 372 bytes for one frame", level_stream(put(first_text, framed_text(372))), None),
+        ("TEXT of 408 bytes for four frames, as 19 shipped ones are", level_stream(put(first_text, framed_text(408, 4))), None),
+        ("TEXT of 552 bytes for 16 frames", level_stream(put(first_text, framed_text(552, 16))), None),
+        ("TEXT of 373 bytes for one frame", level_stream(put(first_text, framed_text(373))), TEXT_FRAMES),
+        ("TEXT of 372 bytes for two frames", level_stream(put(first_text, framed_text(372, 2))), TEXT_FRAMES),
+        ("TEXT of 372 bytes for no frame", level_stream(put(first_text, framed_text(372, 0))), TEXT_FRAMES),
+        ("TEXT of 384 bytes for one frame", level_stream(put(first_text, framed_text(384, 1))), TEXT_FRAMES),
+        ("TEXT of 564 bytes for 17 frames", level_stream(put(first_text, framed_text(564, 17))), TEXT_FRAMES),
+        ("TEXT of 996 bytes for 53 frames", level_stream(put(first_text, framed_text(996, 53))), TEXT_FRAMES),
+        ("TEXT with a frame count of 2^32-1", level_stream(put(first_text, framed_text(372, 0xFFFFFFFF))), TEXT_FRAMES),
+        ("TEXT with a PLAT chunk after the record", level_stream(put(first_text, b"DXTX" + word(424) + b"CTEX" + word(344)
+                                                                     + framed_text(372)[16:360] + fixtures.chunk(b"PLAT", bytes(64)))), TEXT_FRAMES),
         ("a second LVLR", level_stream(insert(3, b"LVLR", b"")), "repeats LVLR, TARG or AYAD"),
         ("a second TARG", level_stream(insert(3, b"TARG", b"")), "repeats LVLR, TARG or AYAD"),
         ("a second AYAD", level_stream(insert(3, b"AYAD", b"")), "repeats LVLR, TARG or AYAD"),
@@ -806,9 +836,21 @@ def structure_cases():
         ("TEXT without DXTX", level_stream(put(first_text, b"XXXX" + good[first_text][1][4:])), "DXTX/CTEX"),
         ("TEXT with a wrong wrapper size", level_stream(put(first_text, good[first_text][1][:4] + word(7) + good[first_text][1][8:])), "DXTX/CTEX"),
         ("TEXT without CTEX", level_stream(put(first_text, good[first_text][1][:8] + b"XXXX" + good[first_text][1][12:])), "DXTX/CTEX"),
-        ("MESH of 8 bytes", level_stream(put(first_mesh, b"PMSH" + word(0))), "PMSH"),
-        ("MESH without PMSH", level_stream(put(first_mesh, b"XXXX" + good[first_mesh][1][4:])), "PMSH"),
-        ("MESH with a wrong wrapper size", level_stream(put(first_mesh, good[first_mesh][1][:4] + word(1) + good[first_mesh][1][8:])), "PMSH"),
+        ("MESH of 8 bytes", level_stream(put(first_mesh, b"PMSH" + word(0))), MESH_WORDS),
+        ("MESH of 9 bytes", level_stream(put(first_mesh, b"PMSH" + word(1) + b"x")), MESH_WORDS),
+        ("MESH without PMSH", level_stream(put(first_mesh, b"XXXX" + good[first_mesh][1][4:])), MESH_WORDS),
+        ("MESH with a wrong wrapper size", level_stream(put(first_mesh, good[first_mesh][1][:4] + word(1) + good[first_mesh][1][8:])), MESH_WORDS),
+        # CMesh::Deserialize reads 324 bytes before any branch and 325 when it keeps the mesh; a skipped mesh is skipped by PMS2's size
+        ("MESH of 323 bytes", level_stream(put(first_mesh, sized_mesh(323))), MESH_WORDS),
+        ("MESH of 324 bytes", level_stream(put(first_mesh, sized_mesh(324))), MESH_WORDS),
+        ("MESH of 325 bytes", level_stream(put(first_mesh, sized_mesh(325))), None),
+        ("MESH of 642 bytes", level_stream(put(first_mesh, sized_mesh(642))), None),
+        ("MESH of 355373 bytes", level_stream(put(first_mesh, sized_mesh(355373))), None),
+        ("MESH whose second header is not PMS2", level_stream(put(first_mesh, sized_mesh(325)[:8] + b"PMS3" + sized_mesh(325)[12:])), MESH_WORDS),
+        ("MESH whose PMS2 is one byte short", level_stream(put(first_mesh, sized_mesh(325)[:12] + word(308) + sized_mesh(325)[16:])), MESH_WORDS),
+        ("MESH whose PMS2 is one byte long", level_stream(put(first_mesh, sized_mesh(325)[:12] + word(310) + sized_mesh(325)[16:])), MESH_WORDS),
+        ("MESH whose PMS2 is empty", level_stream(put(first_mesh, sized_mesh(325)[:12] + word(0) + sized_mesh(325)[16:])), MESH_WORDS),
+        ("a MESH of 642 bytes whose PMS2 fills only 325", level_stream(put(first_mesh, sized_mesh(642)[:12] + word(309) + sized_mesh(642)[16:])), MESH_WORDS),
         ("no WRES", level_stream(good[:-1]), "exactly one WRES"),
         ("two WRES", level_stream(good + [good[-1]]), "exactly one WRES"),
         ("a chunk after WRES", level_stream(good + [(b"SSHD", b"x")]), "after its WRES"),
@@ -890,7 +932,7 @@ class StructureTable(unittest.TestCase):
 
     def test_the_stager_and_the_oracle_agree_on_every_level_archive(self) -> None:
         cases = structure_cases()
-        self.assertGreater(len(cases), 80)
+        self.assertGreater(len(cases), 100)
         refused = admitted = 0
         for label, stream, words in cases:
             with self.subTest(label):
@@ -907,8 +949,8 @@ class StructureTable(unittest.TestCase):
                     self.assertIsNotNone(module, "the stager admitted what the loader refuses")
                     self.assertIn(words, module)
                     refused += 1
-        self.assertGreater(refused, 70)
-        self.assertGreaterEqual(admitted, 9)
+        self.assertGreater(refused, 85)
+        self.assertGreaterEqual(admitted, 14)
 
     def test_the_limits_are_the_loaders_literals(self) -> None:
         # not the module's constants: mods.cpp's kMaxFile, kMaxTotal, kMaxArchive, kMaxArchiveUnpacked, kMaxLevelChunks

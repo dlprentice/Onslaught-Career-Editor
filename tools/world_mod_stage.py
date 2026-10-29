@@ -253,15 +253,18 @@ def check_packed(data: bytes, *, texture: bool = False, unpack: bool = False) ->
 
 def check_level_archive(raw: bytes, level: int) -> str | None:
     """The loader's CheckLevelArchive on an added level archive's unpacked stream: None when it has, as its chunk headers declare
-    it, the shape of the archives the game ships, else why not. It checks the declared structure, not the readers (the game's
-    chunk reader never skips to a chunk's declared end, CWorld::Deserialize takes WRLD's sub-chunks by position and not by tag,
-    LVLR, TARG and AYAD are read at fixed sizes and a TEXT is always read for DXTX, CTEX and 344 bytes), so it requires what makes
-    the two agree on the shipped archives: LVLR 103, TARG 1 and the AYAD guards of this build first, and not again; only the
-    eleven tags a level archive holds, at most 2048 chunks, every length inside the stream; a TEXT of at least 360 bytes framed
-    DXTX and CTEX, a MESH framed PMSH; and exactly one WRES, last, holding one WRLD of WDAT (8 bytes: -1 or a base level, and
-    this level's number as the real world), a BSWD only when there is a base world, and an RLWD, in that order and nothing
-    else, each body of 2 bytes to 4 MiB and of a version CWorld::LoadWorld accepts. What a body, a texture record or the terrain
-    holds is not looked at."""
+    it, the shape of the archives the game ships, else why not. It checks the declared structure, not the readers: the game's chunk
+    reader never skips to a chunk's declared end, CWorld::Deserialize takes WRLD's sub-chunks by position and not by tag, and the
+    readers take fixed amounts whatever a header says. LVLR, TARG and AYAD are read at fixed sizes; a TEXT as the DXTX and CTEX
+    headers, the 344-byte record and 12 bytes for each of its mNumFrames (a 16-entry array: more overwrites the texture object);
+    a MESH as its PMSH and PMS2 headers, a 300-byte name, the runtime id and the optional word (324 bytes before any branch) and
+    one byte more when the mesh is kept, or skipped by the PMS2 header's size. So it requires what makes the two agree on the
+    shipped archives: LVLR 103, TARG 1 and the AYAD guards of this build first, and not again; only the eleven tags a level
+    archive holds, at most 2048 chunks, every length inside the stream; a TEXT of DXTX and CTEX around 344 bytes and 12 for each
+    of 1 to 16 frames, exactly that long; a MESH of 325 bytes or more, PMSH around a PMS2 that fills it; and exactly one WRES, last,
+    holding one WRLD of WDAT (8 bytes: -1 or a base level, and this level's number as the real world), a BSWD only when there is a
+    base world, and an RLWD, in that order and nothing else, each body of 2 bytes to 4 MiB and of a version CWorld::LoadWorld
+    accepts. What a body, a texture record, a mesh or the terrain holds is not looked at."""
     def u32(at: int) -> int:
         return struct.unpack_from("<I", raw, at)[0]
 
@@ -289,11 +292,15 @@ def check_level_archive(raw: bytes, level: int) -> str | None:
                 return "a level archive built for other structure sizes (AYAD)"
         if count > 3 and tag in (b"LVLR", b"TARG", b"AYAD"):
             return "a level archive that repeats LVLR, TARG or AYAD after its first three chunks"
-        if tag == b"TEXT" and (size < 360 or raw[payload:payload + 4] != b"DXTX" or u32(payload + 4) != size - 8
-                               or raw[payload + 8:payload + 12] != b"CTEX"):
-            return "a level archive TEXT chunk that is not a DXTX/CTEX texture record of at least 360 bytes"
-        if tag == b"MESH" and (size < 9 or raw[payload:payload + 4] != b"PMSH" or u32(payload + 4) != size - 8):
-            return "a level archive MESH chunk that is not a PMSH record"
+        if tag == b"TEXT":
+            frames = u32(payload + 328) if size >= 332 else 0   # mNumFrames, +0x138 of the texture object
+            if size < 372 or raw[payload:payload + 4] != b"DXTX" or u32(payload + 4) != size - 8 or raw[payload + 8:payload + 12] != b"CTEX":
+                return "a level archive TEXT chunk that is not a DXTX/CTEX texture record of 372 bytes or more"
+            if frames > 16 or size != 360 + 12 * frames:
+                return "a level archive TEXT chunk with more than 16 frames, or a size that is not 360 bytes and 12 for each frame"
+        if tag == b"MESH" and (size < 325 or raw[payload:payload + 4] != b"PMSH" or u32(payload + 4) != size - 8
+                               or raw[payload + 8:payload + 12] != b"PMS2" or u32(payload + 12) != size - 16):
+            return "a level archive MESH chunk that is not a PMSH record of 325 bytes or more whose PMS2 record fills it"
         if tag == b"WRES":
             wres += 1
             wres_at, wres_size = payload, size
