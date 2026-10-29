@@ -1,7 +1,7 @@
 # Companion Level Editor: Design and Prototype Plan
 
-Status: M0 (the data layer) and M1 (the mod stager and the edit session) are built and on main; M2 (the first page: a level picker, an object table, typed X, Y and Z, Save as mod) is built and in review; M3 to M6 are plan. Nothing in it has been played in a CE release yet.
-Last updated: 2026-10-29 (M0 and M1 built and integrated, M2 built; earlier: first draft; the measurements in section 3 were taken on 2026-10-29 on the read-only retail view)
+Status: M0 (the data layer), M1 (the mod stager and the edit session) and M2 (the first page: a level picker, an object table, typed X, Y and Z, Save as mod) are built and on main; M3 (the map: terrain relief, marks, select, drag, zoom, pan) is built and in review; M4 to M6 are plan. Nothing in it has been played in a CE release yet; two edits it staged were looked at in a private CE build (section 3).
+Last updated: 2026-10-29 (M2 integrated, M3 built: the map, the mirror check measured; earlier: M0 and M1 built and integrated; first draft; the measurements in section 3 were taken on 2026-10-29 on the read-only retail view)
 Summary: how the Companion can grow a visual level editor on top of the Toolkit's world tools and Onslaught CE's mod
 loader: list a level's objects, select one, move it by typing coordinates or dragging it on a top-down map, and save
 the result as a CE mod that CE loads without hand editing. It states what exists, what the measurements say, the
@@ -31,7 +31,8 @@ for the file format; the Companion is the player's interface; Onslaught CE is th
 | One position edit, emitted as a model | [`tools/world_edit_move.py`](../tools/world_edit_move.py) | on main; it prints the two hashes a later step must pin |
 | Packaging an edited world as a CE mod folder | `world_resources_encode.py stage --as-mod`, writer `tools/world_mod_stage.py` | on main, reviewed |
 | The Companion's data layer: world bodies, level archives, the mod stager, an edit session with undo | [`companion/OnslaughtToolkit.Godot/Levels/`](../companion/OnslaughtToolkit.Godot/Levels) (M0, M1) | on main, reviewed; checked against the Python reference on generated vectors and, locally, on every retail world body |
-| The Level editor page (M2) | `Ui/Pages/LevelEditorPage.cs`, `Ui/SaveAsModDialog.cs`, `Levels/LevelEditorModel.cs`, `Levels/CoordinateInput.cs` | built and in review; the mod it saves for a move of one Target Tank is byte for byte the one the Toolkit pipeline stages for the same move; not yet played |
+| The Level editor page (M2) | `Ui/Pages/LevelEditorPage.cs`, `Ui/SaveAsModDialog.cs`, `Levels/LevelEditorModel.cs`, `Levels/CoordinateInput.cs` | on main, reviewed (it asks before an unsaved move is dropped); the mod it saves for a move of one Target Tank is byte for byte the one the Toolkit pipeline stages for the same move, and a mod it saved was looked at in a private CE build, offscreen |
+| The level map (M3) | `Ui/LevelMap.cs`, `Levels/MapView.cs`, `Levels/TerrainRelief.cs`, `Levels/Heightfield.cs`, `tools/heightfield_lookup.py` | built and in review; the terrain lookup is checked against the Python port on generated vectors and on every installed level, and the drag gives the Toolkit pipeline's world file for the same coordinates |
 | CE loading a world file from a mod (a mod may add `data/worlds/worldNNN.wrd`) | Onslaught CE's mod loader and its world-file override | planned for CE 0.1.11; not released at the time of writing; Windows later |
 | A code-built Godot C# interface, a game library, verified file safety | `companion/OnslaughtToolkit.Godot/` | on main |
 
@@ -79,9 +80,15 @@ Method and limits are stated per item; none of this is a claim about every level
    the user folder plus a shadow archive, virtual clock, heights 0 and -12.1) look the same. MEASURED for this one unit. This does
    not reproduce an earlier experiment's report that a ground unit left at height 0 stays buried; the difference is
    unresolved, so the editor must not enforce a "height from the terrain" rule on ground units on that report.
-4. **The map is not mirrored if X runs right and Y runs up.** The edited tank was placed 25 units from the start, and in the
-   cockpit frames it appears straight ahead; the stock Target Tanks lie counter-clockwise of that direction and appear to
-   the left. INFERRED from positions and frames. Cheapest falsifier: stage a marker object at a known offset and look.
+4. **The map is not mirrored: X runs right and Y runs up.** Two Target Tanks were dragged on the Companion's map (the page's own
+   save, so the mod is the page's): one straight ahead of the player's start, to the place of the earlier edit (276.49, 265.07, 25
+   units from the start), and one 25 degrees counter-clockwise of that direction on the map, 22 units out. Both were given a
+   height 2.1 above the ground there. Played in a CE build with the world-file override (offscreen, level 100, real clock, retail
+   view, two runs of the same mod and a control run without one, frames 400 to 900 compared with the control), the first stands at the
+   crosshair (x about 322 of 640) and the second well to the left of it (x about 163). An earlier mod with the left tank 18 degrees
+   out stood at x about 202: the larger angle is farther left. A mirrored map would have put them on the right. MEASURED on one
+   level and one direction by looking; the frames hold game content, so they stay in `local-data`. This replaces the earlier
+   inference from the stock tanks.
 5. **An edit by the tools is the same bytes as an edit by hand.** The Toolkit's move tool plus `stage --as-mod` produced the
    body (108,502 bytes) the earlier hand edit produced, and CE's mod loader admitted and served it. MEASURED.
 
@@ -130,8 +137,11 @@ New C# in the Companion, in two layers so the data layer has no Godot types and 
 Registered beside the other pages in `CompanionApp` (Extras). Built so far (M0 to M2): `LevelArchive`, `WorldBody` and `PlacedObject`, `ObjectKinds`,
 `EditSession` with `MoveObject`, `ModStager`, and two types the first page needed that this table did not name: `CoordinateInput` (a typed coordinate read as the
 Toolkit's move tool reads one, with float32 rounding said, never a silent change of a stored -0) and `LevelEditorModel` (the page's state with no interface in it).
-`Heightfield` and `LevelMap` are M3. Tests: `Tests/LevelTests.cs` and `Tests/LevelEditTests.cs` (the data layer and the stager), `Tests/LevelEditorTests.cs` (the coordinate
-reader and the model; the Godot-free host runs these too) and `Tests/EditorPageTests.cs` (the page, in the interface suite).
+M3 added `Heightfield` (the terrain read from the archive's ERES chunk, and the game's height lookup), `TerrainRelief` (the picture), `MapView` (the one pair of
+conversions between world positions and pixels, with zoom, pan and the click test), `PathText` (the shortened path of the saved notice, from the M2 review) and
+`LevelMap` (the control). Tests: `Tests/LevelTests.cs` and `Tests/LevelEditTests.cs` (the data layer and the stager), `Tests/LevelEditorTests.cs` (the coordinate
+reader and the model; the Godot-free host runs these too), `Tests/LevelTerrainTests.cs` (the terrain, the relief and the view, also host-run), `Tests/EditorPageTests.cs`
+(the page, in the interface suite) and `Tests/LevelMapPageTests.cs` (the map driven with events pushed into the window).
 
 ## 6. The screen
 
@@ -192,6 +202,25 @@ A custom `Control` like `CampaignMap`:
 - **Feasibility.** Every piece (custom drawing, pointer events, an `ImageTexture` from a byte array, a `SubViewport`)
   is in use elsewhere in the Companion. The one new risk is the drag feel, which is judged by running it (section 9).
 
+**As built (M3).** `Ui/LevelMap.cs` is the control; `Levels/MapView.cs` is the one pair of functions between world positions
+(X right, Y up) and pixels with zoom, pan and the click test, `Levels/TerrainRelief.cs` builds the picture, and
+`Levels/Heightfield.cs` is the game's height lookup. What differs from the plan above:
+
+- The relief is one pixel to the world unit over the 0 to 512 square, lit from the north-west with the slopes exaggerated for
+  the eye, coloured by elevation, and the water (ground below the heightfield's water level) is tinted and darker with depth;
+  the picture is made from the same lookup the game uses, so a pixel shows what the game finds there.
+- Marks are by kind (the start a diamond, units circles, waypoints triangles, sphere triggers a ring at their radius, buildings
+  and features squares, the level's script and its like quiet dots); they are not coloured by allegiance and waypoint paths are
+  not drawn as lines yet. A changed object is amber with a line from where the level has it; the selection is ringed and named.
+- Input: the wheel zooms about the pointer (1.2 times a click, between half the fit and 32 pixels to the unit), a drag of the
+  background (or a middle or right drag) pans, Home fits the square, a click selects the nearest mark within 12 pixels, and a press
+  on a mark followed by more than 4 pixels of movement starts a drag. The mark follows the pointer, nothing changes until it is let
+  go, Esc puts it back, and letting go moves X and Y to the pointer's world position rounded to a hundredth, keeping Z bit for bit,
+  as one undo step (`LevelEditorModel.MoveTo`). A readout gives the world position and the ground's height under the pointer.
+- The table and the map sit side by side when the left column is wide and one above the other when it is not, and the Map switch
+  on the search row hides the map. The saved notice sits under the Save button in the right-hand column, which scrolls, so a
+  save never moves the table or the map.
+
 ## 8. Safety rules the page keeps
 
 - The game's folders and the backups are only read. The only thing the page writes is a new folder it creates.
@@ -233,7 +262,12 @@ world-file override.
 **Acceptance of the minimal prototype (milestone M2):** in the Level editor page, select Target Tank 12 of level 100, type
 the coordinates of the Toolkit's acceptance edit (276.49, 265.07, -12.1), press Save as mod, add the line to a scratch `ce.ini`, start CE on level 100, and
 see the tank near the crosshair; the saved mod's world file has the same SHA-256 as the Toolkit pipeline's for that
-edit. **Acceptance of M3:** the same result by dragging the mark, and the numbers shown afterwards match the file.
+edit. **Acceptance of M3:** the same result by dragging the mark, and the numbers shown afterwards match the file. Run on the
+retail view at 1920 x 1080, 1280 x 800 and 1024 x 700: a click on Target Tank 12's mark selects it, a drag to the pixel of
+276.49, 265.07 moves it with Z kept (its stored -0), the page shows 276.49, 265.07 and -0, and the saved world file (108,502 bytes,
+SHA-256 5f40f82f08e058a39458f9807b710318dbc00dccc0ecbd3d9a2d921ffac6d48a) is the one the Toolkit's move tool previews for the same
+coordinates, its row 12 holding the numbers the page showed. The pointer is pushed into the window as events, so they take the
+engine's own route to the control. The in-game half of M3 is the mirror check (section 3 item 4).
 
 ## 10. Prototype plan
 
@@ -244,8 +278,8 @@ piece, not part of the minimum. Effort figures are rough working days for one en
 | --- | --- | --- | --- | --- |
 | M0 data layer | `LevelArchive`, `WorldBody`, `PlacedObject` read and write, vector generator script | differential tests pass on every authored version; the local gate round-trips every retail body | 3 to 4 | done: on main, reviewed; every retail world body round-trips |
 | M1 staging | `ModStager`, `EditSession` with `MoveObject` and undo, cross-language golden | the C# stager's folder is byte-identical to the Python stager's for the same edit; every refusal tested | 2 | done: on main, reviewed |
-| M2 page v0 | `LevelEditorPage`: level picker, table, inspector with numeric X, Y, Z, Save as mod dialog; UI tests; a capture | the M2 acceptance above, looked at in game | 3 to 4 | built, in review: the page half of the acceptance passed on the retail view; the in-game half waits for a CE with the world-file override |
-| M3 map | `Heightfield`, `LevelMap` (relief, marks, select, drag, pan, zoom), coordinate tests | the M3 acceptance; a capture of the map looked at | 4 to 5 | plan |
+| M2 page v0 | `LevelEditorPage`: level picker, table, inspector with numeric X, Y, Z, Save as mod dialog; UI tests; a capture | the M2 acceptance above, looked at in game | 3 to 4 | done: on main, reviewed (it asks before an unsaved move is dropped); the page half of the acceptance passed on the retail view, and the in-game half was seen in a private CE build with the world-file override, offscreen |
+| M3 map | `Heightfield`, `LevelMap` (relief, marks, select, drag, pan, zoom), coordinate tests | the M3 acceptance; a capture of the map looked at | 4 to 5 | built, in review: the acceptance passed at three window sizes and the mirror check passed (section 3 item 4); the drag's feel has been tried only by scripted pointer events |
 | M4 safer editing | warnings panel, "show changed", reset, base-world caution, keyboard nudges | each warning has a test and a message a player can act on | 2 to 3 | plan |
 | M5 add, duplicate, delete | append-only add and duplicate with the slot rules; delete only where no path or target names the row | the stager refuses what would break a path or a career index | 4 to 5 | plan |
 | M6 play and enable | "Play this level with the mod" through the CE launcher; enabling through the settings writer with its backups | a mod is enabled, played and disabled with the game's files untouched | 3 to 4 | plan |
@@ -258,12 +292,12 @@ oracle kept in step with any format change.
 | Risk | Check |
 | --- | --- |
 | The C# port reads or writes a field differently | the differential tests and the local all-bodies gate, before any UI exists (M0) |
-| The terrain rule is ported wrongly | the same-input tests against the Python port, and the stored start-point height as a live sanity value |
+| The terrain rule is ported wrongly | the same-input tests against the Python port, and the stored start-point height as a live sanity value; done: generated edge vectors, every installed level's terrain, and an independent port by the reviewer agree |
 | What a kind does with its stored height is guessed wrong | edit one object of each kind at several heights and look (the Target Tank is done; features, buildings and air units are not) |
-| The map is mirrored | the marker test in section 3 item 4, before M3 is called done |
+| The map is mirrored | the marker test in section 3 item 4; done: it is not mirrored (one level, one heading) |
 | Moving a base-world object confuses an old career | a base-world edit against a mid-campaign save, in a scratch user folder, before M4 offers the edit without a caution |
 | A script names an object by position or count (a moved unit changes a mission) | decode the level's script calls for the object's name; replay the level's tape with and without the edit |
-| Dragging feels wrong | run it offscreen with scripted pointer events for the maths, and by hand for the feel |
+| Dragging feels wrong | run it offscreen with scripted pointer events for the maths, and by hand for the feel; the maths is done, the feel has not been judged by hand |
 | Mods are unavailable where the player is (Windows) | say so in the page; do not stage what cannot load |
 
 ## 12. Not in scope

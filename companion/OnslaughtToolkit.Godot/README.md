@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-29 (what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
+Last updated: 2026-10-29 (the Level editor's map; what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -312,13 +312,33 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   result is saved as an Onslaught CE mod, a new folder holding `mod.json` and the level's world file, never inside the game
   folder or the backups (even one that does not exist yet) and never over an existing folder. A move you have not saved as a mod
   is asked about before it is dropped when you close the Companion, open another level or choose another game folder, and
-  switching games is refused, with a message, until the move is saved or undone. The page is laid out for a window of about 1366 by 800 or more; in a smaller one, down to the Companion's 1024 by 700
-  minimum, the right-hand column scrolls and the table is narrower. Only a level's own world is changed: the base world a level also
-  loads is mentioned, not edited. Onslaught CE loads a world file from a mod on Linux only for now, and only from a version
+  switching games is refused, with a message, until the move is saved or undone. Only a level's own world is changed: the base
+  world a level also loads is mentioned, not edited. Onslaught CE loads a world file from a mod on Linux only for now, and only from a version
   whose README's Mods section lists world files. The page's reader and writer are checked against the Toolkit's Python reference
   (`tools/level_editor_vectors.py`) and, on a game install, against every world body in it; the file it saves for a move of one
-  Target Tank is byte for byte the one the Toolkit's pipeline stages for the same move, and nobody has yet played a mod it saved.
-  The design and what is still planned (a map to drag on, adding and deleting things) are in
+  Target Tank is byte for byte the one the Toolkit's pipeline stages for the same move, whether the move was typed or made by
+  dragging its mark on the map.
+
+  The page also draws a **map** of the open level, beside the table (above it in a narrow window; the Map switch beside the
+  search hides it). Its terrain is hill-shaded relief with the water tinted, built from the level's terrain with the game's own
+  height lookup (the Toolkit's `tools/heightfield_lookup.py` is the reference the Companion's version is checked against, on
+  generated vectors and, on a game install, on every level's terrain); no game texture is used. Every placed thing is a mark
+  by kind: the start, units, waypoints, sphere triggers at their radius, buildings and features, and the rest as dots; X runs
+  right and Y runs up. The wheel zooms about the pointer, dragging the background pans, Home shows the whole square, a click
+  on a mark selects it in the table and the fields, and dragging a mark moves it: the mark follows the pointer, Esc puts it
+  back, and letting go moves X and Y to the place under the pointer (to a hundredth) and keeps Z as it was, a stored -0
+  included, as one move that can be undone. A moved object is amber on the map with a line from where the level has it, and a
+  readout gives the world position and the ground's height under the pointer. The map's mouse paths are tested with events
+  pushed into the window; how a drag feels has been tried only by scripted events. The map's orientation was checked in Onslaught CE
+  on level 100: two Target Tanks were dragged on the map, one straight ahead of the player's start and one 25 degrees to the
+  map's left of that, and in a private CE build that loads world files from mods (offscreen, frames looked at) the first stands
+  at the crosshair and the second well to its left, so the map is not mirrored. That is one level and one heading, a mod this
+  page saved, not played by anyone; there has been no Windows run.
+
+  The page is laid out for a window of about 1366 by 800 or more. In a smaller one, down to the Companion's 1024 by 700
+  minimum, the map is a small overview, the table is narrower, the right-hand column scrolls and the notice a save leaves is
+  scrolled into view there; the Map switch gives the table the whole column back. The design and what is still planned
+  (adding and deleting things, keyboard nudges, playing the mod from the page) are in
   [`roadmap/companion-level-editor.md`](../../roadmap/companion-level-editor.md).
 - **Advanced**: **Career bytes** shows, read-only, either the open career's stored values
   (including both players' god flags) or, after you choose another career, every byte that
