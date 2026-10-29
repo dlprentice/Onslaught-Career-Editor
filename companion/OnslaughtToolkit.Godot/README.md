@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-29 (the Level editor's read-only Scripts view; earlier: CE 0.1.11, the first CE to take a world file from a mod, named; earlier: the Level editor's map; what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
+Last updated: 2026-10-29 (the toolchain paragraph no longer names the maintainer's private installer or paths; earlier: the Level editor's read-only Scripts view; earlier: CE 0.1.11, the first CE to take a world file from a mod, named; earlier: the Level editor's map; what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -166,14 +166,13 @@ npm run export:companion-godot -- --platform both
 python tools/companion_godot.py audit
 ```
 
-These need the pinned shared toolchain on Linux: the Godot .NET build and export templates
-that [toolchain.json](toolchain.json) names, installed by
-the shared game toolchain (`game_pipeline_shared`) under
-`~/.local/opt/game-pipeline`, its lock at `~/Projects/game-dev/game_pipeline_shared/toolchain.linux.lock.json`
-(or `--shared-lock FILE`), and .NET SDK 10.0.402. The engine defaults to the pinned install;
-`--engine PATH` must resolve to that install's executable and does not bypass its checks.
-The runner also requires the shared installer's `.game-pipeline-source.json` provenance markers and
-`scripts/linux_toolchain.py` beside the selected lock file. Official Godot, template and SDK downloads plus
+These need the pinned toolchain on Linux: the Godot .NET build and export templates
+that [toolchain.json](toolchain.json) names, installed by the maintainer's shared game-toolchain
+installer (which is not part of this repository), and .NET SDK 10.0.402. The runner finds that
+installation's lock file at the installer's default location, or takes it with `--shared-lock FILE`.
+The engine defaults to the pinned install; `--engine PATH` must resolve to that install's executable
+and does not bypass its checks. The runner also requires the installer's provenance markers and its
+toolchain script beside the selected lock file. Official Godot, template and SDK downloads plus
 a lock file with the same schema are not sufficient for these commands; this repository does not yet provide a
 standalone setup route for them. `audit` restores outside locked mode with
 NuGet's vulnerability audit over direct and transitive packages (it needs nuget.org); the
