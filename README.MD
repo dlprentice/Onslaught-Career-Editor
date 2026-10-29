@@ -14,7 +14,8 @@ repository holds it and the project's overview.
 - **The game documentation lives in [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation).**
   It is the one home of the findings on the game's file formats, saves, mechanics, levels and engine (prose and specs,
   CC BY-SA 4.0), and new findings go there. [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) here is a frozen
-  copy that gets no further edits.
+  copy; its [RE-INDEX](reverse-engineering/RE-INDEX.md#what-the-freeze-leaves-open) names the few tool-owned files
+  that still change.
 - **Onslaught CE is the native Windows and Linux port.** Its source and downloads are published separately as
   **[Onslaught CE](https://github.com/dlprentice/onslaught-ce)** (GPL-3.0-only, no game files), not from this repository.
   Its [release notes](https://github.com/dlprentice/onslaught-ce/releases/latest) identify the tested routes,
