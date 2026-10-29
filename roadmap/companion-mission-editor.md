@@ -1,11 +1,11 @@
 # Companion Mission Editor: Design Addendum
 
-Status: design; the reference compiler and its retail gate (MS1, section 11), the read-only scripts view (MS0, section 12) and its name links and map paths (MS0.1, section 13) are built, the rest is plan. It extends the
+Status: design; the reference compiler and read-only scripts view with name links and map paths are built. The C# compiler is a validation candidate; editing scripts remains planned. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-10-29 (MS0.1 follow-ups: a path's points are the waypoints the game keeps, path arguments are case-blind, PATHS rows in the gate; MS0.1, names in the source linked to the level and waypoint paths on the map, built; earlier: MS0, the read-only scripts view, built; CE 0.1.11, the first to take a world file from a mod, stated as published; earlier: the spike's result and the operator-grouping decision; the lead's earlier decisions; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
+Last updated: 2026-10-29 (MS2 compiler and include limits under review; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
-source in the game's own script language, compile it with a compiler of ours that is proved against every script the game
-shipped (byte for byte), and save the result as a CE mod, which is the world file the loader already serves. It states what
+source in the game's own script language, compile it with a compiler of ours checked against the shipped scripts with the documented
+missing-header and stale-source cases, and save the result as a CE mod, which is the world file the loader already serves. It states what
 the data says (the game never reads the `.msl` files; it runs the compiled scripts inside each level's world file), the
 milestones with their gates, the first editable thing, the safety rules and the limits.
 Evidence: MEASURED for section 2 (each item names its method and limits), SOURCE for the cited decompilation functions
@@ -106,7 +106,7 @@ recompiled, so a mod differs from the game only where the player edited.
 | --- | --- | --- | --- |
 | MS0 scripts beside the map (read-only; built, section 12) and MS0.1 names and paths (built, section 13) | the Level editor page lists the open level's compiled scripts (name, the events handled, the things that run it, the natives it calls) next to the map, shows the selected script's installed `.msl` source with line numbers, and links names in it (thing names, waypoint paths, scripts and event handlers; text ids are not linked yet) to the table and the map; selecting a thing shows its script and the other way round; waypoint paths are drawn on the map | on every installed level the list equals the world body's scripts, every one finds its source (670 of 670), the capture at three sizes looked at, nothing written | 4 to 5 days |
 | MS1 reference compiler and the byte-exact gate | `tools/msl_compile.py` (preprocess, lex, parse, generate, write the record as the world file stores it) and `tools/msl_gate.py --game GAME`, section 5 | every shipped script compiles to its shipped record, or each difference is explained (built; section 11) | built 2026-10-29 (the spike ran on every script) |
-| MS2 the C# compiler | `Missions/` with the same stages, authored vectors from the Python reference in Git, and a local retail gate (`Development/ScriptsGate.cs`) that must match the Python gate on all scripts | the vectors and the retail gate pass; the C# refuses what the Python refuses | 1 week |
+| MS2 the C# compiler (candidate, section 14) | `Missions/` with the same stages, authored vectors from the Python reference in Git, and a local retail gate (`Development/ScriptsGate.cs`) that must match the Python gate on all scripts | the vectors and the retail gate pass; the C# refuses what the Python refuses and the supported platforms are checked | validation pending |
 | MS3 first editable thing | the page edits the selected script's source (a text area with line numbers), compiles it (errors by line and column, a summary of what changed), replaces the script in the session as one undoable command, and saves through Save as mod | the acceptance in section 6 | 1 week |
 | MS4 structured helpers | forms for common edits (a count, a delay, a message id), the event graph (who posts, who handles), checks against the level (names exist), path membership and order on the map, spawner and trigger parameters (these are world-body data and need no compiler) | each helper has a test and a message a player can act on | 2 weeks |
 | MS5 texts (optional) | the text of a message is in the game's language files, a different mod file; a writer for them | a changed line shows in game | not estimated |
@@ -335,3 +335,47 @@ Nothing is written.
   shown. The page was driven by events in tests and looked at in offscreen captures at 1920 by 1080, 1280 by 800 and 1024 by 700 (the
   path numbers are drawn over the marks, above and to the left of each point so that a selected object's tag does not cover them; at
   the smallest size the path line under the map is cut short); nobody has used it by hand.
+
+## 14. MS2: the C# compiler (2026-10-29)
+
+`Missions/` is the reference compiler (`tools/msl_compile.py`) in C#: a lexer, a preprocessor for `#include` and `#define`, and a parser that
+writes the instructions as it reads, statement for statement and message for message. `ScriptCompiler.Compile(name, source, readInclude,
+constStart, doOnceStart, resolve, notes, limits)` returns the `MissionScript` a world body stores (the same type the Level editor reads).
+It writes no file and delegates header reads to its caller. `ScriptCompiler.IncludesFrom(gameFolder)` finds headers by their game-relative
+paths with ASCII case matching, only inside the game folder. A link below that folder, a pipe or another non-regular file is refused.
+A source that cannot be compiled is a `CompileError`; when its line is known, the error carries the 0-based line and starts "line N: ".
+A header the game folder lacks is a `MissingInclude` naming the path. The notes (how a mixed chain of operators was grouped, a handler the game never calls,
+a variable declared twice) come back in a list for an editor to show. The limits (a million characters or tokens, four million replacement
+steps, 100 levels of nesting) are the reference's and are a parameter, so that the tests put each exactly at its edge.
+
+- **What it is held to.** (1) Authored vectors, written by `tools/msl_vectors.py` from the Python reference: for each source (none is a game
+  script) the compiled record as lines, the notes, or the message it was refused with, which the C# must give word for word, including how a
+  quoted token reads (the messages use Python's `repr`, reproduced in `PythonText`); the reference's answer for every pair of operators; and a
+  few shapes worked out by hand from what the shipped scripts show. (2) The local retail gate, `Development/ScriptsGate.cs`: every compiled
+  script of every world body of an installed game is compared with what the C# makes of the source the game folder holds for it, with the
+  session's counters taken from the shipped script. Every script is exact, exact once an include the install lacks is bound from the shipped
+  constants, or one of the seven pinned stale sources (section 11), and the status of each equals the Python gate's, script by script
+  (`msl_gate.py --table`); and a world body whose scripts all compile, written with the compiled scripts in the place of the shipped ones,
+  writes back to the bytes it was read from. (3) A mutation sweep over the compiler files and the include lookup (about 170 one-line changes), each of which the vectors, the
+  hand-worked shapes or the file and limit tests must fail. The first pass let nine live (the counter reader's anchors, a named pipe or a dot in
+  an include path, a minus before a variable, the index a resolver is asked for, a dot followed by something that is not a word, leading zeros in a
+  long integer, blanks inside a note's operand) and six did not build; each live one got a vector or a test, the six were rewritten, and all were killed
+  on the second pass. One mutant is equivalent on Linux and was dropped: a folder is refused both by `File.Exists` and by the regular-file type
+  check, and `File.Exists` is the portable test.
+- **Made equal in the Python on the way.** The reference's lexer and directive patterns used Unicode classes (`\d`, `\s`) and `str.split()`;
+  they are ASCII blanks and digits now (a source typed in the editor may hold characters a Latin-1 game file cannot), and the compiler takes its 13
+  event names from the decoder's table instead of a second copy. The gate's result is unchanged.
+- **Limits.** No player-facing Companion page calls it yet: a page that edits a script and saves a mod is MS3. A source holds names, numbers, strings,
+  `TRUE` and `FALSE`: there is no literal for a position or a thing, and a constant of those types exists only when a caller gives one for a name a
+  missing header would have defined. A string is single-byte text (Latin-1). Messages are English and quote the reference's wording. The compile
+  is not incremental, which does not matter at a script's size. The seven stale sources differ from what the game ships, so the gate cannot say
+  whether the C# would have compiled them as the original compiler did.
+- **Review findings, work in progress (2026-10-29).** The independent review of MS2 found defects in the include lookup, the grouping
+  notes, the session counters and the quoting of characters outside the basic plane. They are fixed in the reference (`tools/msl_compile.py`)
+  first: a link anywhere below the game folder, or the file itself, is refused and never followed; a header that cannot be read, a missing
+  game folder and a counter past 2147483647 are refusals with fixed messages; names match in ASCII letter case only; symbols are looked up
+  in dictionaries; and a grouping note is made from the chain only when it is written, and says it is not written out when its text would
+  repeat more than 5,000 characters. The C# port implements these changes; its reader and header budgets have a focused independent review,
+  while native Windows behavior remains unverified. Both compilers now cap each included text at 1,048,576 characters,
+  and each script at 128 includes and 2,097,152 included characters in total. A supplied reader runs before its result can be checked;
+  the built-in file reader separately bounds the bytes it reads. These are tool limits, not claims about the original compiler.

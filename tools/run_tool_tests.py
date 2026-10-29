@@ -55,6 +55,7 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/world_thing_index_tests.py",),
     ("tools/heightfield_lookup_tests.py",),
     ("tools/msl_compile_tests.py",),
+    ("tools/msl_vectors_tests.py",),
     ("tools/script_tables_tests.py",),
     ("tools/level_editor_vectors_tests.py",),
     ("tools/aya_texture_fidelity_census_tests.py",),
