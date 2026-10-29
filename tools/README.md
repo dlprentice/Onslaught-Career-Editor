@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-29 (`script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-29 (the gate table's NAMES and PATHS rows; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -283,7 +283,9 @@ publish, sign, or install anything by themselves.
   `gate-table --game GAME --stdout` lists the size, SHA-256 and dump hash of each world body of an installed game, for
   each level archive a SCRIPTS row (how many scripts its own world and its base world hold, a hash of the lines the Level editor's script
   catalog reads from them, how many of their sources the finder reads and a hash of those sources' text), a NAMES row (every quoted text of
-  the level's own sources, found outside comments and resolved against the level's objects and its base world's, its paths, scripts and event handlers, hashed)
+  the level's own sources, found outside comments and resolved against the level's objects and its base world's, its paths, scripts and event handlers, hashed;
+  the first argument of a `FollowWaypoint` or `FollowWaypointWait` call also matches paths in other letter case, as the game finds them), a PATHS row (each waypoint
+  path of the level's own world with the rows of the points the game keeps, the slots that name a waypoint, hashed, and how many points are kept of how many slots)
   and for
   each level archive with a terrain the digest of its samples, the bits of its scale and water level, and a digest of the
   heights `heightfield_lookup.py` gives on a fixed grid and at every thing's position (hashes only) for the Companion's local
