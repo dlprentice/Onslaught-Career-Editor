@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-29 (the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-29 (`model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -382,6 +382,35 @@ writes at all, to ignored local paths. Their findings are documented under
   `cmsh_skinning_contract.py` settle position/orientation tracks, per-part tracks and the matrix-palette skinning
   and normal contracts (`cmsh_matrix_normal_contract.py` and `cmsh_skinning_contract.py` write their JSON with its moved-destination limit (see `safe_generated_output.py` above));
   `world_mesh_normal_probe.py` carries static-world OBJ bytes through both lighting chains.
+- Model transforms: `model_transform_catalog.py` produces, for selected loose PC meshes, a private per-part report that
+  identifies the reflected local keys (a stored parent-relative key whose basis has determinant -1) and the virtual-frame
+  ranges whose `VHFM` entries refer to them. It reports stored keys, distinct referenced keys and frame references
+  separately, and classifies bases that are not orthonormal within its stated tolerance separately. The report is metadata
+  and hashes, with no matrix or geometry payload; its [v2 schema](model_transform_catalog.v2.schema.json) marks it as
+  retail-derived, and the older [v1 schema](model_transform_catalog.schema.json) remains available for existing reports. The
+  format facts and the finding are in
+  [`asset-formats/cmsh-animation-keys.md`](../reverse-engineering/asset-formats/cmsh-animation-keys.md).
+  Names are read from their bounded stored fields: the 300-byte `CMesh::mName` at CMSH payload `+0x24` and the 32-byte
+  `CMeshPart::mName` at CMSP payload `+0xdc` (the declarations in onslaught-decomp `src/mesh.h`). An empty part name stays
+  empty; it is not replaced by the preview parser's generated `part-N` label. For a terminated name the report hashes the
+  bytes before the NUL and emits a text value only when those bytes decode as UTF-8, which is a lossless interpretation of the
+  bytes, not proof of the game's display encoding. An invalid-UTF-8 or unterminated mesh name has a null text value and an
+  explicit status, and an unterminated field has no name-byte hash. The underlying parser can refuse an invalid part name
+  before a report is produced. Older v1 reports may contain a generated empty-part label or a replacement-decoded mesh name
+  and should be regenerated before names are used as identifiers.
+  `python tools/model_transform_catalog.py --mesh /path/to/selected.msh.aya --stdout` prints the private report to stdout
+  and opens no report file; repeat `--mesh` to select more files. The `report_bytes` API returns deterministic UTF-8 JSON
+  bytes, and the caller is responsible for privacy and any persistence: a shell opens a redirected destination before the
+  tool runs, so the tool cannot protect the destination or prevent overwriting source data. Keep retail-derived reports
+  private and out of Git. The selected-file reader requires Linux descriptor-relative `O_PATH` and `/proc/self/fd`, refuses
+  `..`, symlinks in any source path component and files with multiple hard links, performs a bounded read of each and
+  rechecks the file identities before it returns or emits the report. Those checks detect many changes but are not an atomic
+  filesystem snapshot or a lock, so compare the recorded archive hash when using the result. `analyse_stream` accepts
+  already-owned bytes on other platforms, the caller being responsible for source identity. The v2 schema checks the
+  name/status/hash combinations but cannot verify a digest without the original bytes, and it checks structure and basic
+  field limits, not semantic consistency among counts, parent/key ordinals or frame ranges. The report covers only the root
+  stream's parent-relative keys: it counts nested mesh siblings without analysing them, and it does not establish that a game
+  animation selects a frame, a reflected world transform or an export's fidelity.
 - Executable reading: `pe_read_va.py` reads a PE virtual address; `call_xref_scan.py` finds every direct
   CALL/JMP rel32 reference to a VA (verify each hit by disassembling it).
 - Capture analysis (retail frame against a reconstruction frame): `frame_alignment_probe.py`,
