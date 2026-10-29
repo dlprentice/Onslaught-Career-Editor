@@ -185,12 +185,12 @@ class ScriptTests(unittest.TestCase):
             code = records[ship]["code"]
             self.assertEqual({"died"}, {msl.FIXED_EVENTS[i] for i, pc in enumerate(code["eventPCs"]) if pc != -1})
             self.assertEqual([], code["eventFunctions"])
-            self.assertIn(f"{ship} Died", {sym["value"] for sym in code["symbols"] if sym["dataType"] == 3})
+            self.assertIn(lvl.DESTROYED.format(ship), {sym["value"] for sym in code["symbols"] if sym["dataType"] == 3})
         world = records["world888script"]["code"]
         self.assertEqual({"init"}, {msl.FIXED_EVENTS[i] for i, pc in enumerate(world["eventPCs"]) if pc != -1})
         self.assertEqual(2, len(world["eventFunctions"]), "one handler for each of the two death events")
         strings = [sym["value"] for sym in world["symbols"] if sym["dataType"] == 3]
-        self.assertEqual({"Fenrir Died", "Venturer Died"}, set(strings))
+        self.assertEqual({"Flagship Fenrir Destroyed", "Flagship Venturer Destroyed"}, set(strings))
         ints = [sym["value"] for sym in world["symbols"] if sym["dataType"] == 1]
         self.assertEqual([1, lvl.DEFAULT_LIVES, 2, lvl.DEFAULT_LIVES, 1, 2], ints)
         natives = [lvl.wrd.SCRIPT_NATIVES[attr & 0xFF][0] for op, attr in world["instructions"] if msl.OPCODES[op] == "OP_CALL"]
@@ -225,7 +225,8 @@ class ScriptTests(unittest.TestCase):
             lvl.compile_scripts({"x": "#include \"nothing.h\"\ninit() { }\n"})
         with self.assertRaisesRegex(lvl.BuildError, "does not compile"):
             lvl.compile_scripts({"x": "init() { NoSuchNative(); }\n"})
-        self.assertEqual({"Fenrir Died", "Venturer Died", "game playing"}, lvl.authored_strings(lvl.script_sources(ai_state=0)))
+        self.assertEqual({"Flagship Fenrir Destroyed", "Flagship Venturer Destroyed", "game playing"},
+                         lvl.authored_strings(lvl.script_sources(ai_state=0)))
 
 
 # ---- default physics.dat -----------------------------------------------------------------------------------------------------

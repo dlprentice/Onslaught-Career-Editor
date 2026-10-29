@@ -137,14 +137,17 @@ class LoaderRules:
             return "LVLR, TARG or AYAD again"
         for tag, at, size in top:
             if tag == b"TEXT":
-                frames = word(at + 328) if size >= 332 else 0
                 if size < 372 or stream[at:at + 4] != b"DXTX" or word(at + 4) != size - 8 or stream[at + 8:at + 12] != b"CTEX":
                     return "a TEXT that is not DXTX/CTEX of 372 bytes or more"
+                frames = word(at + 328)
                 if frames > 16 or size != 360 + 12 * frames:
                     return "a TEXT whose frame count does not give its size"
-            if tag == b"MESH" and (size < 325 or stream[at:at + 4] != b"PMSH" or word(at + 4) != size - 8
-                                   or stream[at + 8:at + 12] != b"PMS2" or word(at + 12) != size - 16):
-                return "a MESH that is not PMSH around a PMS2 that fills it, of 325 bytes or more"
+            if tag == b"MESH":
+                if (size < 325 or stream[at:at + 4] != b"PMSH" or word(at + 4) != size - 8
+                        or stream[at + 8:at + 12] != b"PMS2" or word(at + 12) != size - 16):
+                    return "a MESH that is not PMSH around a PMS2 that fills it, of 325 bytes or more"
+                if stream[at + 16] != 0 and size not in range(325, size + 1, 317):
+                    return "a named MESH that is not 325 bytes and 317 for each chained mesh"
         if tags.count(b"WRES") != 1 or tags[-1] != b"WRES":
             return "not exactly one WRES, last"
         _, at, size = top[-1]
@@ -346,9 +349,11 @@ def framed_text(size: int, frames: int = 1) -> bytes:
     return bytes(payload)
 
 
-def sized_mesh(size: int) -> bytes:
-    """A MESH payload of exactly `size` bytes: PMSH around a PMS2 that fills it."""
-    return b"PMSH" + struct.pack("<I", size - 8) + b"PMS2" + struct.pack("<I", size - 16) + bytes(size - 16)
+def sized_mesh(size: int, name: bytes = b"") -> bytes:
+    """A MESH payload of exactly `size` bytes: PMSH around a PMS2 that fills it, whose name field starts with `name` (none: unnamed)."""
+    body = bytearray(size - 16)
+    body[:len(name)] = name
+    return b"PMSH" + struct.pack("<I", size - 8) + b"PMS2" + struct.pack("<I", size - 16) + bytes(body)
 
 
 def level_stream(chunks) -> bytes:
@@ -788,6 +793,7 @@ def structure_cases():
     TEXT_SHORT = "a level archive TEXT chunk that is not a DXTX/CTEX texture record of 372 bytes or more"
     TEXT_FRAMES = "a level archive TEXT chunk with more than 16 frames, or a size that is not 360 bytes and 12 for each frame"
     MESH_WORDS = "a level archive MESH chunk that is not a PMSH record of 325 bytes or more whose PMS2 record fills it"
+    MESH_CHAIN = "a level archive MESH chunk of a named mesh whose size is not 325 bytes and 317 for each chained mesh"
     word = lambda value: struct.pack("<I", value)
     wrld = lambda *kids: [(b"WRES", fixtures.chunk(b"WRLD", b"".join(fixtures.chunk(t, d) for t, d in kids)))]
     wdat = (b"WDAT", struct.pack("<ii", -1, 888))
@@ -851,6 +857,22 @@ def structure_cases():
         ("MESH whose PMS2 is one byte long", level_stream(put(first_mesh, sized_mesh(325)[:12] + word(310) + sized_mesh(325)[16:])), MESH_WORDS),
         ("MESH whose PMS2 is empty", level_stream(put(first_mesh, sized_mesh(325)[:12] + word(0) + sized_mesh(325)[16:])), MESH_WORDS),
         ("a MESH of 642 bytes whose PMS2 fills only 325", level_stream(put(first_mesh, sized_mesh(642)[:12] + word(309) + sized_mesh(642)[16:])), MESH_WORDS),
+        # a named mesh keeps its data in its own file: 325 bytes and 317 for each chained mesh, and nothing between; an unnamed one holds it in the chunk
+        ("a named MESH of 325 bytes", level_stream(put(first_mesh, sized_mesh(325, b"m.msh"))), None),
+        ("a named MESH of 642 bytes (a chain of 1)", level_stream(put(first_mesh, sized_mesh(642, b"m.msh"))), None),
+        ("a named MESH of 1910 bytes (a chain of 5)", level_stream(put(first_mesh, sized_mesh(1910, b"m.msh"))), None),
+        ("a named MESH of 326 bytes", level_stream(put(first_mesh, sized_mesh(326, b"m.msh"))), MESH_CHAIN),
+        ("a named MESH of 641 bytes", level_stream(put(first_mesh, sized_mesh(641, b"m.msh"))), MESH_CHAIN),
+        ("a named MESH of 643 bytes", level_stream(put(first_mesh, sized_mesh(643, b"m.msh"))), MESH_CHAIN),
+        ("a named MESH of 1909 bytes", level_stream(put(first_mesh, sized_mesh(1909, b"m.msh"))), MESH_CHAIN),
+        ("a named MESH of 1911 bytes", level_stream(put(first_mesh, sized_mesh(1911, b"m.msh"))), MESH_CHAIN),
+        ("a named MESH of 355373 bytes", level_stream(put(first_mesh, sized_mesh(355373, b"m.msh"))), MESH_CHAIN),
+        ("a MESH named by one byte of 1", level_stream(put(first_mesh, sized_mesh(326, b"\x01"))), MESH_CHAIN),
+        ("a MESH named by one byte of 255", level_stream(put(first_mesh, sized_mesh(326, b"\xff"))), MESH_CHAIN),
+        ("an unnamed MESH of 326 bytes", level_stream(put(first_mesh, sized_mesh(326))), None),
+        ("an unnamed MESH whose second name byte is set", level_stream(put(first_mesh, sized_mesh(326, b"\0x"))), None),
+        ("the second of two MESH chunks is a named one of 643 bytes",
+         level_stream(put(first_mesh + 1, sized_mesh(643, b"m.msh"), chunks=level_chunks(meshes=("a.msh", "b.msh")))), MESH_CHAIN),
         ("no WRES", level_stream(good[:-1]), "exactly one WRES"),
         ("two WRES", level_stream(good + [good[-1]]), "exactly one WRES"),
         ("a chunk after WRES", level_stream(good + [(b"SSHD", b"x")]), "after its WRES"),

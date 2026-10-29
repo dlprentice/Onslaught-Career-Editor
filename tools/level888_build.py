@@ -109,9 +109,11 @@ class BuildError(ValueError):
 
 
 # ---- the authored scripts ----------------------------------------------------------------------------------------------
-# Written for this tool. died() posts an event by name; the level script waits for it. SetAIState(4) is AI_ONF (EAIState in
-# thing.h: AI_ON, AI_OFF, AI_NORMAL, AI_DEFENSIVE, AI_ONF).
+# Written for this tool. A flagship's died() reports its destruction to the level script by an event name of this tool's own; the
+# level script waits for that name and declares the other side the winner. SetAIState(4) is AI_ONF (EAIState in thing.h: AI_ON,
+# AI_OFF, AI_NORMAL, AI_DEFENSIVE, AI_ONF).
 AI_STATES = range(0, 5)
+DESTROYED = "Flagship {} Destroyed"          # the event a flagship posts when it is destroyed; the level script handles both
 
 
 def script_sources(lives: int = DEFAULT_LIVES, ai_state: int | None = None) -> dict[str, str]:
@@ -122,15 +124,16 @@ def script_sources(lives: int = DEFAULT_LIVES, ai_state: int | None = None) -> d
         raise BuildError("ai-state is a whole number from 0 to 4 (EAIState), or unset")
     sources = {}
     for ship in ("Fenrir", "Venturer"):
-        text = f"// Level 888 ({ship}), authored for the generator.\ndied()\n{{\n\tPostEvent(\"{ship} Died\");\n}}\n"
+        text = (f"// Level 888, the {ship} flagship: once destroyed it tells the level script, by name.\n"
+                f"died()\n{{\n\tPostEvent(\"{DESTROYED.format(ship)}\");\n}}\n")
         if ai_state is not None:
             text += f"\nevent(\"game playing\")\n{{\n\tSetAIState({ai_state});\n}}\n"
         sources[ship] = text
     sources["world888script"] = (
-        "// Level 888 (level script), authored for the generator. The Venturer is player 1's flagship, the Fenrir player 2's.\n"
+        "// Level 888, the level script: the Venturer is player 1's flagship and the Fenrir is player 2's.\n"
         f"init()\n{{\n\tSetPlayerLives(1, {lives});\n\tSetPlayerLives(2, {lives});\n}}\n\n"
-        "event(\"Fenrir Died\")\n{\n\tMPDeclarePlayerWon(1);\n}\n\n"
-        "event(\"Venturer Died\")\n{\n\tMPDeclarePlayerWon(2);\n}\n")
+        f"event(\"{DESTROYED.format('Fenrir')}\")\n{{\n\tMPDeclarePlayerWon(1);\n}}\n\n"
+        f"event(\"{DESTROYED.format('Venturer')}\")\n{{\n\tMPDeclarePlayerWon(2);\n}}\n")
     return sources
 
 

@@ -209,9 +209,10 @@ publish, sign, or install anything by themselves.
   loader admits, each held to the loader's rules for it: the path rules, at most 4096 files and 1 GiB, 64 MiB a file, a packed
   `.aya` that the game's block reader can hold, a texture that is a DDS image the game can load, and, for an archive the selected
   game folder has none of (`data/resources/NNN_res_PC.aya`, NNN from 850 to 899), at most 8 MiB packed and 32 MiB unpacked and the
-  loader's chunk walk (`check_level_archive`: the standard first chunks once, a TEXT of 360 bytes and 12 for each of 1 to 16 frames,
-  a MESH of 325 bytes or more around a PMS2 that fills it, one WRES last that holds WDAT, a BSWD only with a base world, and RLWD, in
-  that order). The world-only call and its messages are unchanged.
+  loader's chunk walk (`check_level_archive`: the standard first chunks once, a TEXT of exactly 360 bytes and 12 for each of 1 to 16
+  frames, a MESH of 325 bytes or more around a PMS2 that fills it (a named one exactly 325 bytes and 317 for each chained mesh), one
+  WRES last that holds WDAT, a BSWD only with a base world, and RLWD, in that order). The world-only call and its messages are
+  unchanged.
   `level888_build.py build|gate|closure --game DIR` recreates the cut multiplayer level 888, a Fenrir against a Venturer, as a CE
   mod from the player's own PC game folder: nothing is downloaded and no game byte is kept in this repository. `build --out PARENT
   --ce-min VERSION` writes `PARENT/flagship-duel/` through `stage_mod(files=...)`: `data/resources/888_res_PC.aya` (level 857's
