@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-29 (TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-29 (the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -24,7 +24,9 @@ retain the literal Windows commands and drive letters that produced them; a
 tool can also have an explicitly documented Windows evidence dependency.
 
 `npm run test:tools` runs every registered suite; prefer an affected suite for a focused change. A suite that
-needs a Windows host would be reported as skipped on Linux, never as a pass; none is registered now.
+cannot run here (one that needs a Windows host, none registered now, or the extractor source audit when a submodule it
+compares with its pin is not initialised) is a named SKIP in the summary, never a pass and never a failure. The runner's
+self-test fails for any `*_tests.py` file that is neither registered nor listed with a reason as run elsewhere or out of scope.
 
 ## Product and release
 

@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-10-25 (selected native Windows development UI acceptance; real Linux CE integration; each dated section keeps its own date).
+Last updated: 2026-10-29 (what `npm run test:tools` covers; earlier: selected native Windows development UI acceptance; real Linux CE integration; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -41,7 +41,7 @@ companion's tests); dated entries below that name them are history.
 | Public payload/provenance boundary | `npm run test:safety` |
 | The Godot rebuild | Developed and gated in its own repository (onslaught-godot) since 2026-10-22. The frozen `rebuild/` copy here is not built or tested and is removed when this repository is split. |
 | Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` refuses GDScript, saved resources and multi-node scenes, then builds the C# companion; `export:companion-godot` produces normal Godot .NET Linux/Windows exports. Builds are headless. |
-| Tools | The affected `tools/<name>_tests.py`; `npm run test:tools` runs every registered suite (`worldheaders_decode --self-test` needs the retail `worldheaders.dat`). |
+| Tools | The affected `tools/<name>_tests.py`; `npm run test:tools` runs every registered suite (`worldheaders_decode --self-test` needs the retail `worldheaders.dat`). Its self-test fails for any `*_tests.py` that is neither registered nor excluded with a reason in `tools/run_tool_tests.py`, so a new test file cannot fall outside it. It covers, besides the earlier ones, `dds_census`, `mission_script_inspect`, `worldheaders_decode`, the skinning and matrix contracts, `battle_engine_config_decode`, `gltf_pose_check`, `goodie_resource_walk`, `xap_bank_walk`, `safe_generated_output` and the extractor source audit. A suite that cannot run (a Windows-only one on another host, or the audit when the `AYAResourceExtractor` or `Onslaught` submodule is not initialised: `git submodule update --init`) is a named SKIP in the summary, never a pass. The companion, Godot host and rebuild launcher suites run under their own npm scripts. |
 | Game documentation claim | Cite the decompiled function, capture, byte comparison or source line; never paste decompiler output (`reverse-engineering/REVIEW-PROTOCOL.md` for optional reviews). |
 
 ## Companion native Windows development UI — October 25
