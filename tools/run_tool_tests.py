@@ -77,6 +77,7 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/gltf_pose_check_tests.py",),
     ("tools/goodie_resource_walk_tests.py",),
     ("tools/xap_bank_walk_tests.py",),
+    ("tools/ps2_disc_tests.py",),
 )
 
 # Test files that are deliberately not in SUITES, each with why and where they run instead. The registry self-test fails for any
