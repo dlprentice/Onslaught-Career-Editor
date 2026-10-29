@@ -100,9 +100,16 @@ def vectors() -> list[dict]:
                "init()\n{\n\tPause(-2.5);\n\tPause(0.24);\n\tPause(1.5f);\n\tRand(-7);\n\tSetVulnerable(FALSE);\n}\n"))
     add(vector("number-spellings", "digits with and without a point on either side, leading zeros, and the f suffix",
                "init()\n{\n\tPause(3.);\n\tPause(.5);\n\tPause(1.f);\n\tPause(007.50);\n\tRand(00000000000005);\n}\n"))
+    add(vector("minus-before-a-name", "a minus is part of a number only: before a variable the expression is refused",
+               "vars\n\tint x;\nend_vars\ninit()\n{\n\tPause(-x);\n}\n"))
+    add(vector("minus-then-a-space-then-a-number", "blanks between a minus and its number do not matter", "init()\n{\n\tPause(- 5);\n\tPause(-\t2.5);\n}\n"))
     add(vector("integer-limits", "the largest and smallest 32-bit integers", "init()\n{\n\tRand(2147483647);\n\tRand(-2147483648);\n}\n"))
     add(vector("float-limits", "the largest float32 and its negative",
                "init()\n{\n\tPause(340282346638528859811704183484516925440.0);\n\tPause(-340282346638528859811704183484516925440.0);\n}\n"))
+    add(vector("integer-leading-zeros-at-the-limit", "leading zeros do not count against the ten digits a 32-bit number may have",
+               "init()\n{\n\tRand(0002147483647);\n}\n"))
+    add(vector("integer-eleven-digits-leading-zeros", "the refusal for more than ten digits shows the number as written, zeros and all",
+               "init()\n{\n\tRand(00099999999999);\n}\n"))
     add(vector("integer-too-big", "2147483648 does not fit", "init()\n{\n\tRand(2147483648);\n}\n"))
     add(vector("negative-integer-too-big", "-2147483649 does not fit", "init()\n{\n\tRand(-2147483649);\n}\n"))
     add(vector("integer-eleven-digits", "an integer of more than ten digits does not fit, whatever its value", "init()\n{\n\tRand(99999999999);\n}\n"))
@@ -133,6 +140,13 @@ def vectors() -> list[dict]:
                "vars\n\tbool a;\n\tbool b;\n\tbool c;\nend_vars\ninit()\n{\n\tif (a && b == c)\n\t{\n\t\tDie();\n\t}\n}\n"))
     add(vector("two-grouping-notes", "each chain with two operators or more gets its own note (the line and the spaced text)",
                "vars\n\tbool a;\n\tbool b;\n\tbool c;\nend_vars\ninit()\n{\n\tPause(1);\n\tif (a   &&\n\t\tb == c)\n\t{\n\t\tPause(2 + 3 - 4);\n\t}\n}\n"))
+
+    add(vector("grouping-note-with-a-spaced-operand", "a note shows its operands with each run of blanks or line ends as one space",
+               BOOLS % "r = a < Rand(\n\t\t5  ) / 2;"))
+    add(vector("member-not-a-word-paren", "a dot is followed by a word naming a function: a parenthesis is refused",
+               "vars\n\tthing t;\nend_vars\ninit()\n{\n\tt.(1);\n}\n"))
+    add(vector("member-not-a-word-string", "and a string is refused the same way",
+               "vars\n\tthing t;\nend_vars\ninit()\n{\n\tt.\"s\"();\n}\n"))
 
     # ---- refusals
     for index, (body, why) in enumerate((("Frobnicate(1);", "a function the game does not provide"), ("Pause();", "too few arguments"), ("Die(1);", "too many arguments"),
