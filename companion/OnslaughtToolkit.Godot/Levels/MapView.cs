@@ -55,6 +55,24 @@ public sealed class MapView
         _moved = false;
     }
 
+    /// <summary>The most pixels to a world unit <see cref="FitBounds"/> zooms in to, so that a path of one point or a few close ones is not blown up.</summary>
+    public const double MaxFitScale = 8;
+
+    /// <summary>
+    /// Shows a box of the world as large as will fit with a margin of pixels, centred, to bring a waypoint path into view. It counts as the
+    /// player's own view: a new window size keeps it.
+    /// </summary>
+    public void FitBounds(double minX, double minY, double maxX, double maxY, double marginPixels = 40)
+    {
+        double spanX = Math.Max(maxX - minX, 1), spanY = Math.Max(maxY - minY, 1);
+        double scale = Math.Min((Width - 2 * marginPixels) / spanX, (Height - 2 * marginPixels) / spanY);
+        Scale = Math.Clamp(double.IsFinite(scale) ? scale : FitScale, MinScale, MaxFitScale);
+        CenterX = (minX + maxX) / 2;
+        CenterY = (minY + maxY) / 2;
+        KeepCentreInside();
+        _moved = true;
+    }
+
     /// <summary>
     /// The coordinate a pointer position means, to a hundredth of a world unit as the float32 nearest that decimal, so that the number
     /// shown for it is the number written (a float multiplied by 0.01f, 24002f * 0.01f, is 240.01999 and not 240.02).

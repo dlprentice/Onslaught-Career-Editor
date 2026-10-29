@@ -342,9 +342,19 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   which objects name it (each a button that shows the object on the table and the map). Selecting an object that names a script
   offers a button for it in the same way. The game never reads these source files (it runs the compiled scripts in the level's world),
   so the page says so, says which file is missing when one is, and says when an object names a script the level does not have; a source
-  may differ from what was compiled, which the Toolkit's `tools/msl_gate.py` checks per script. The list and the objects' links are read
-  from the compiled code and the level's objects, checked against the Toolkit's reference (`tools/level_editor_vectors.py gate-table`, its SCRIPTS
-  rows) on a game install, with the native names generated from the Toolkit's table (`tools/script_tables.py`). Nothing here writes anything.
+  may differ from what was compiled, which the Toolkit's `tools/msl_gate.py` checks per script. A click in a quoted text of the
+  source says what in the level has that name, with a button for each that goes to it: an object by its own name, a waypoint
+  path, a script, or the scripts that handle an event of that name. An object of the level's base world is named too, without a
+  button, because this page does not list that world's objects. The scripts take names as quoted texts and nothing says which
+  call reads which text as what, so this goes by the name alone; about three quarters of the quoted texts in the shipped sources
+  name something in their level or its base world. The **Paths** switch under the map draws every waypoint path faintly through
+  the objects it names, and a path button, from the source or from an object that is a point of the path, highlights that path on
+  the map, numbered and with an arrow on each leg, and brings it into view. A path names objects by their place in the world's
+  thing list, which is the reading under which the shipped paths run from point to point (measured against shifts of one and
+  two); about one slot in five names an object that is not a waypoint, and the path is drawn through it all the same. The list,
+  the links and the names are read from the compiled code, the level's objects and the sources, and
+  checked against the Toolkit's reference (`tools/level_editor_vectors.py gate-table`, its SCRIPTS and NAMES rows) on a game
+  install, with the native names generated from the Toolkit's table (`tools/script_tables.py`). Nothing here writes anything.
 
   The page is laid out for a window of about 1366 by 800 or more. In a smaller one, down to the Companion's 1024 by 700
   minimum, the map is a small overview, the table is narrower, the right-hand column scrolls and the notice a save leaves is

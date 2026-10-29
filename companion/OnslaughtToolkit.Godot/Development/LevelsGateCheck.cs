@@ -20,23 +20,24 @@ internal static class LevelsGateCheck
             printError("Set BEA_GAME to a game folder with data/resources/NNN_res_PC.aya files.");
             return 2;
         }
-        Dictionary<string, string[]>? table = null, terrainTable = null, scriptsTable = null;
+        Dictionary<string, string[]>? table = null, terrainTable = null, scriptsTable = null, namesTable = null;
         if (tablePath.Length > 0)
         {
             table = [];
             terrainTable = [];
             scriptsTable = [];
+            namesTable = [];
             foreach (string line in File.ReadLines(tablePath).Skip(1))
             {
                 string[] cells = line.Split('\t');
                 if (cells.Length != 6) continue;
-                (cells[1] == "TERRAIN" ? terrainTable : cells[1] == "SCRIPTS" ? scriptsTable : table)[cells[0] + "\t" + cells[1]] = cells[2..];
+                (cells[1] == "TERRAIN" ? terrainTable : cells[1] == "SCRIPTS" ? scriptsTable : cells[1] == "NAMES" ? namesTable : table)[cells[0] + "\t" + cells[1]] = cells[2..];
             }
         }
 
         List<string> failures = [];
-        HashSet<string> seen = [], seenTerrain = [], seenScripts = [];
-        int bodies = 0, exact = 0, matched = 0, terrains = 0, terrainsMatched = 0, scriptLists = 0, scriptListsMatched = 0, scriptsListed = 0, sourcesFound = 0;
+        HashSet<string> seen = [], seenTerrain = [], seenScripts = [], seenNames = [];
+        int bodies = 0, exact = 0, matched = 0, terrains = 0, terrainsMatched = 0, scriptLists = 0, scriptListsMatched = 0, scriptsListed = 0, sourcesFound = 0, nameLists = 0, nameListsMatched = 0, quotedTexts = 0, namedTexts = 0;
         foreach (LevelArchiveFile archive in archives)
         {
             LevelWorlds worlds;
@@ -50,6 +51,7 @@ internal static class LevelsGateCheck
                 continue;
             }
             if (worlds.RealBody is not null) CheckScripts(game, archive.Level, worlds, scriptsTable, seenScripts, failures, ref scriptLists, ref scriptListsMatched, ref scriptsListed, ref sourcesFound);
+            if (worlds.RealBody is not null) CheckNames(game, archive.Level, worlds, namesTable, seenNames, failures, ref nameLists, ref nameListsMatched, ref quotedTexts, ref namedTexts);
             if (worlds.Terrain is not null && worlds.RealBody is not null) CheckTerrain(archive.Level, worlds, terrainTable, seenTerrain, failures, ref terrains, ref terrainsMatched);
             foreach ((string tag, byte[]? body) in new[] { ("BSWD", worlds.BaseBody), ("RLWD", worlds.RealBody) })
             {
@@ -88,12 +90,15 @@ internal static class LevelsGateCheck
             foreach (string key in terrainTable.Keys.Except(seenTerrain)) failures.Add($"{key.Replace('\t', ' ')}: in the reference table but not read here");
         if (scriptsTable is not null)
             foreach (string key in scriptsTable.Keys.Except(seenScripts)) failures.Add($"{key.Replace('\t', ' ')}: in the reference table but not read here");
+        if (namesTable is not null)
+            foreach (string key in namesTable.Keys.Except(seenNames)) failures.Add($"{key.Replace('\t', ' ')}: in the reference table but not read here");
         foreach (string failure in failures.Take(25)) printError("FAIL: " + failure);
         print($"LEVELS_GATE: {bodies} world bodies in {archives.Count} level archives; byte-identical round trips {exact}; " +
                  (table is null ? "no reference table given" : $"fields equal to the reference's on {matched} of {table.Count} rows") +
                  $"; {terrains} terrains" + (terrainTable is null ? "" : $", heights equal to the reference's lookup on {terrainsMatched} of {terrainTable.Count}") +
                  $"; {scriptLists} script lists" + (scriptsTable is null ? "" : $", equal to the reference's on {scriptListsMatched} of {scriptsTable.Count}") +
-                 $", {scriptsListed} scripts of which {sourcesFound} find their source; {failures.Count} failures");
+                 $", {scriptsListed} scripts of which {sourcesFound} find their source; {nameLists} name lists" + (namesTable is null ? "" : $", equal to the reference's on {nameListsMatched} of {namesTable.Count}") +
+                 $", {quotedTexts} quoted texts of which {namedTexts} name something in their level; {failures.Count} failures");
         return failures.Count == 0 && bodies > 0 ? 0 : 1;
     }
 
@@ -143,6 +148,63 @@ internal static class LevelsGateCheck
         string counts = $"{entries.Count(entry => !entry.FromBaseWorld)}:{entries.Count(entry => entry.FromBaseWorld)}", catalog = WorldDump.Hash(lines), sources = WorldDump.Hash(sourceLines);
         if (row[0] == counts && row[1] == catalog && row[2] == $"{here}/{entries.Count}" && row[3] == sources) matched++;
         else failures.Add($"{name}: the table says {row[0]} scripts, catalog {row[1][..12]} and {row[2]} sources hashing to {row[3][..12]}; here {counts}, catalog {catalog[..12]} and {here}/{entries.Count} sources hashing to {sources[..12]}");
+    }
+
+    /// <summary>
+    /// The quoted texts of the sources of an archive's own scripts, found with <see cref="ScriptNames.TokenAt"/> a column at a time and
+    /// resolved with <see cref="ScriptNames.Resolve"/> against the level and its base world, hash as the Toolkit reference's do (<c>level_editor_vectors.py</c>'s
+    /// NAMES row, which finds the texts with a regular expression and resolves them in Python).
+    /// </summary>
+    private static void CheckNames(string game, int level, LevelWorlds worlds, Dictionary<string, string[]>? table, HashSet<string> seen, List<string> failures,
+        ref int lists, ref int matched, ref int quoted, ref int named)
+    {
+        string name = $"{level:D3} NAMES", key = $"{level:D3}\tNAMES";
+        lists++;
+        WorldBody world;
+        IReadOnlyList<ScriptEntry> entries;
+        try
+        {
+            world = WorldBody.Read(worlds.RealBody!);
+            entries = LevelEditorModel.ListScripts(world, worlds);
+        }
+        catch (InvalidDataException error)
+        {
+            failures.Add($"{name}: the level's own world was refused: {error.Message}");
+            return;
+        }
+        WorldBody? baseWorld = LevelEditorModel.ReadBaseWorld(worlds);
+        List<string> lines = [];
+        int total = 0, found = 0;
+        foreach (ScriptEntry entry in entries.Where(entry => !entry.FromBaseWorld))
+        {
+            if (ScriptSources.Find(game, entry.SourceLevel, entry.Summary.Name).Source is not { } source) continue;
+            string[] sourceLines = source.Text.Split('\n');
+            for (int number = 0; number < sourceLines.Length; number++)
+            {
+                SortedDictionary<int, string> texts = [];
+                for (int column = 0; column <= sourceLines[number].Length; column++)
+                    if (ScriptNames.TokenAt(sourceLines[number], column) is { Quoted: true } token) texts[token.Start] = token.Text;
+                foreach (string text in texts.Values)
+                {
+                    IReadOnlyList<NameMatch> matches = ScriptNames.Resolve(text, world, entries, baseWorld);
+                    total++;
+                    if (matches.Count > 0) found++;
+                    lines.Add($"{entry.Summary.Name}|{number}|{text}|{string.Join(',', matches.Select(match => $"{match.Kind.ToString().ToLowerInvariant()}:{match.Index}{(match.ExactCase ? "" : ":case")}"))}");
+                }
+            }
+        }
+        quoted += total;
+        named += found;
+        if (table is null) return;
+        if (!table.TryGetValue(key, out string[]? row))
+        {
+            failures.Add($"{name}: the reference table has no row for it");
+            return;
+        }
+        seen.Add(key);
+        string digest = WorldDump.Hash(lines);
+        if (row[0] == total.ToString() && row[1] == digest && row[2] == found.ToString()) matched++;
+        else failures.Add($"{name}: the table says {row[0]} texts, {row[2]} naming something, lines hashing to {row[1][..12]}; here {total}, {found} and {digest[..12]}");
     }
 
     /// <summary>
