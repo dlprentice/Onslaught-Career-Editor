@@ -139,6 +139,9 @@ OPCODES = ("OP_NOP", "OP_PLUS", "OP_MINUS", "OP_MULTIPLY", "OP_DIVIDE", "OP_PUSH
 OP_PUSH, OP_POP, OP_GETTOP, OP_CALL = 5, 6, 21, 24
 DT_NAMES = {1: "int", 2: "float", 3: "string", 4: "bool", 5: "thing", 6: "position"}
 NUM_SCRIPT_EVENTS = 13
+# SCRIPT_EVENT_NAMES (ScriptObjectCode.cpp, 0x0064fef8): the events a compiled script's entry points (eventPCs) are indexed by.
+SCRIPT_EVENT_NAMES = ("init", "arrived", "timer", "died", "hit", "started_dying", "ready", "shutdown", "notdefined4", "notdefined5",
+                      "notdefined6", "notdefined7", "notdefined8")
 LIMIT = 1 << 20  # a count above this is framing damage, not data
 
 

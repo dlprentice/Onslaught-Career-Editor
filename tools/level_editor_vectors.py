@@ -18,7 +18,8 @@ companion/OnslaughtToolkit.Godot/Tests/LevelVectors.g.cs:
     python tools/level_editor_vectors.py --write                  rewrite the C# file
     python tools/level_editor_vectors.py gate-table --game DIR --stdout
                                                                    one line per world body of an installed game: its size, its
-                                                                   SHA-256 and the SHA-256 of its reference dump (hashes only;
+                                                                   SHA-256 and the SHA-256 of its reference dump; a TERRAIN row
+                                                                   and a SCRIPTS row per level archive (hashes and counts only;
                                                                    the local retail conformance gate reads it)
 
 The dump is one `path = value` line per leaf of the reference model: integers in decimal, floats as the four stored bytes
@@ -1027,6 +1028,8 @@ def cmd_gate_table(args) -> int:
             lines = dump_lines(enc.read_world_model(body))
             rows.append(f"{level:03d}\t{tag}\t{len(body)}\t{hashlib.sha256(body).hexdigest()}\t{len(lines)}\t{dump_hash(lines)}")
             bodies += 1
+        if "RLWD" in worlds["bodies"]:
+            rows.append(scripts_gate_row(game, level, worlds))
         # The terrain: the heightfield's samples, scale and water, and the lookup's heights at a grid and at every thing of the level's own world.
         eres = next((stream[at:at + size] for tag, at, size in enc.chunks(stream) if tag == "ERES"), None)
         if eres is not None and "RLWD" in worlds["bodies"]:
@@ -1044,6 +1047,82 @@ def cmd_gate_table(args) -> int:
     print("\n".join(rows))
     print(f"world bodies: {bodies}; terrains: {terrains}", file=sys.stderr)
     return 0 if bodies else 1
+
+
+SCRIPT_ROLES = (("script", "script"), ("spawnScript", "spawn script"))
+
+
+def script_catalog_lines(model: dict, base: bool) -> list[str]:
+    """What the Companion's script catalog reads from a world body, one line per script (the C# gate builds the same lines from
+    its own catalog): where it is (own world or base), its name, its instruction count, the events it handles (each fixed event it
+    has an entry point for, then each named handler by its event name), the natives it calls (name:count, in the order its code first
+    calls them) and the objects that name it (row:role; a base world's carry none, since its objects are not listed). A name is
+    matched exactly, as the game's lookup does."""
+    uses: dict[str, list[str]] = {}
+    if not base:
+        for row, thing in enumerate(model["things"]):
+            init = thing["init"]
+            named = [(role, init.get(field) or "") for field, role in SCRIPT_ROLES]
+            named.append(("spawner's spawn script", (init.get("spawner") or {}).get("spawnerSpawnScript") or ""))
+            for role, name in named:
+                if name:
+                    uses.setdefault(name, []).append(f"{row}:{role}")
+    lines = []
+    for script in model["scripts"]:
+        code = script["code"]
+        events = [wrd.SCRIPT_EVENT_NAMES[i] for i, pc in enumerate(code["eventPCs"]) if pc >= 0]
+        for number, function in enumerate(code["eventFunctions"], 1):
+            params = function["params"]
+            symbol = code["symbols"][params[0]] if params and 0 <= params[0] < len(code["symbols"]) else None
+            events.append(f'event "{symbol["value"]}"' if symbol is not None and symbol["dataType"] == 3 else f"event #{number}")
+        calls: dict[str, int] = {}
+        for op, attr in code["instructions"]:
+            if op == 24:
+                index = attr & 0xFF
+                name = wrd.SCRIPT_NATIVES[index][0] if index < len(wrd.SCRIPT_NATIVES) else f"function {index}"
+                calls[name] = calls.get(name, 0) + 1
+        lines.append("|".join(["base" if base else "own", script["name"], str(len(code["instructions"])), ",".join(events),
+                               ",".join(f"{name}:{count}" for name, count in calls.items()), ",".join(uses.get(script["name"], []))]))
+    return lines
+
+
+def source_text(game: Path, folder_level: int, name: str) -> str | None:
+    """A script's installed source as the C# finder reads it (data/MissionScripts/level<NNN>/<name>.msl, each part in any case with the
+    exact spelling preferred, links ignored, at most 1 MiB; Latin-1, \\n line ends), or None."""
+    def pick(folder: Path, wanted: str, want_dir: bool) -> Path | None:
+        if not folder.is_dir():
+            return None
+        found = sorted((entry.name for entry in folder.iterdir() if not entry.is_symlink() and entry.name.lower() == wanted.lower()
+                        and (entry.is_dir() if want_dir else entry.is_file())), key=lambda n: (n != wanted, n))
+        return folder / found[0] if found else None
+
+    scripts = pick(game, "data", True)
+    scripts = pick(scripts, "MissionScripts", True) if scripts else None
+    folder = pick(scripts, f"level{folder_level:03d}", True) if scripts else None
+    file = pick(folder, name + ".msl", False) if folder else None
+    if file is None or file.stat().st_size > 1 << 20:
+        return None
+    return file.read_bytes().decode("latin-1").replace("\r\n", "\n").replace("\r", "\n")
+
+
+def scripts_gate_row(game: Path, level: int, worlds: dict) -> str:
+    """The SCRIPTS row of a level archive: the own and base script counts, a hash of the catalog's lines (script_catalog_lines), how
+    many sources the finder finds of the scripts listed, and a hash of those sources' text (hashes only)."""
+    entries = [(script_catalog_lines(enc.read_world_model(worlds["bodies"]["RLWD"]), False), worlds["realLevel"], "own")]
+    if "BSWD" in worlds["bodies"] and worlds["baseLevel"] >= 0:
+        entries.append((script_catalog_lines(enc.read_world_model(worlds["bodies"]["BSWD"]), True), worlds["baseLevel"], "base"))
+    lines, found, source_lines, total = [], 0, [], 0
+    for catalog, folder_level, tag in entries:
+        lines += catalog
+        for line in catalog:
+            name = line.split("|")[1]
+            total += 1
+            text = source_text(game, folder_level, name)
+            if text is not None:
+                found += 1
+                source_lines.append(f"{tag}|{name}|{hashlib.sha256(text.encode('latin-1')).hexdigest()}")
+    counts = f"{len(entries[0][0])}:{len(entries[1][0]) if len(entries) > 1 else 0}"
+    return f"{level:03d}\tSCRIPTS\t{counts}\t{dump_hash(lines)}\t{found}/{total}\t{dump_hash(source_lines)}"
 
 
 def terrain_gate_positions(model: dict) -> list[tuple[float, float]]:

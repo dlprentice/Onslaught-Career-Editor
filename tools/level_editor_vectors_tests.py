@@ -333,22 +333,59 @@ class VectorTests(unittest.TestCase):
             (resources / "200_res_PC.aya").write_bytes(archives["real-only"]["file"])
             (resources / "300_res_PC.aya").write_bytes(archives["level-100-terrain"]["file"])  # a terrain the reader accepts
             (resources / "goodie_03_res_PC.aya").write_bytes(b"not a level")
+            # Script sources: the real world of 100's archive (and of 200's) is level 200's, 100's base world is level 100's, 300's own world is level 100's.
+            (Path(tmp) / "data" / "MissionScripts" / "Level200").mkdir(parents=True)
+            (Path(tmp) / "data" / "MissionScripts" / "Level200" / "Main.MSL").write_bytes(b"a\r\nb")
+            (Path(tmp) / "data" / "MissionScripts" / "level100").mkdir()
+            (Path(tmp) / "data" / "MissionScripts" / "level100" / "main.msl").write_bytes(b"c")
             out = io.StringIO()
             with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
                 self.assertEqual(gen.cmd_gate_table(SimpleNamespace(stdout=True, game=Path(tmp))), 0)
             rows = [line.split("\t") for line in out.getvalue().splitlines()]
         self.assertEqual(rows[0], ["level", "tag", "bytes", "sha256", "dumpLines", "dumpSha256"])
-        self.assertEqual([(r[0], r[1]) for r in rows[1:]], [("100", "BSWD"), ("100", "RLWD"), ("100", "TERRAIN"), ("200", "RLWD"), ("200", "TERRAIN"), ("300", "RLWD"), ("300", "TERRAIN")])
+        self.assertEqual([(r[0], r[1]) for r in rows[1:]], [("100", "BSWD"), ("100", "RLWD"), ("100", "SCRIPTS"), ("100", "TERRAIN"), ("200", "RLWD"), ("200", "SCRIPTS"), ("200", "TERRAIN"),
+                                                             ("300", "RLWD"), ("300", "SCRIPTS"), ("300", "TERRAIN")])
         real = self.by_name["authored-v50"]
         self.assertEqual(rows[2][2:], [str(len(real["body"])), hashlib.sha256(real["body"]).hexdigest(), str(real["lines"]), real["hash"]])
         # The terrain rows: an ERES chunk the reader refuses says "refused" (the C# gate must refuse it too), a readable one lists its scale and water bits, samples digest and probe digest.
-        self.assertEqual([r[2] for r in (rows[3], rows[5])], ["refused", "refused"])
+        self.assertEqual([r[2] for r in (rows[4], rows[7])], ["refused", "refused"])
         terrain = gen.authored_terrain()
         field = gen.heights.read_heightfield(terrain.eres)
-        self.assertEqual(rows[7][2:4], [f"{gen.float_bits(field.scale):08x}:{gen.float_bits(field.water):08x}", field.samples_sha256()])
-        self.assertEqual(int(rows[7][4]), 33 * 33 + len(gen.enc.read_world_model(real["body"])["things"]))  # the grid, then every thing's position
+        self.assertEqual(rows[10][2:4], [f"{gen.float_bits(field.scale):08x}:{gen.float_bits(field.water):08x}", field.samples_sha256()])
+        self.assertEqual(int(rows[10][4]), 33 * 33 + len(gen.enc.read_world_model(real["body"])["things"]))  # the grid, then every thing's position
+        # The SCRIPTS rows: the authored body's one script, worked out here by hand (15 instructions, one named handler "Go", five natives called once
+        # each in this order, named by the object in row 0), as the own world and as the base world (whose objects are not listed, so no users).
+        own = 'own|main|15|event "Go"|SpawnThing:1,PlayCharMessage:1,FollowWaypoint:1,SetObjective:1,GetThingRef:1|0:script'
+        base = 'base|main|15|event "Go"|SpawnThing:1,PlayCharMessage:1,FollowWaypoint:1,SetObjective:1,GetThingRef:1|'
+        sha = lambda text: hashlib.sha256(text.encode("latin-1")).hexdigest()
+        self.assertEqual(rows[3][2:], ["1:1", gen.dump_hash([own, base]), "2/2", gen.dump_hash([f"own|main|{sha('a\nb')}", f"base|main|{sha('c')}"])])
+        self.assertEqual(rows[6][2:], ["1:0", gen.dump_hash([own]), "1/1", gen.dump_hash([f"own|main|{sha('a\nb')}"])])
+        self.assertEqual(rows[9][2:], ["1:0", gen.dump_hash([own]), "1/1", gen.dump_hash([f"own|main|{sha('c')}"])])
         with self.assertRaises(SystemExit):
             gen.cmd_gate_table(SimpleNamespace(stdout=False, game=Path(".")))
+
+    def test_the_source_finder_matches_the_companions(self) -> None:
+        """tools/level_editor_vectors.py's source_text is the reference the C# ScriptSources is held to on a game: any case, the exact spelling
+        first, links and big files ignored, Latin-1 text with \\n line ends."""
+        with tempfile.TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game"
+            folder = game / "data" / "MissionScripts" / "Level007"
+            folder.mkdir(parents=True)
+            (folder / "Foo.MSL").write_bytes(b"x\r\ny\rz\n")
+            (folder / "Accent.msl").write_bytes(b"c\xe9")
+            (folder / "Dup.msl").write_bytes(b"lower")
+            (folder / "DUP.MSL").write_bytes(b"upper")
+            (folder / "Big.msl").write_bytes(bytes((1 << 20) + 1))
+            (folder / "Max.msl").write_bytes(bytes(1 << 20))
+            (folder / "Link.msl").symlink_to(folder / "Foo.MSL")
+            (game / "data" / "MissionScripts" / "level008").symlink_to(folder, target_is_directory=True)
+            find = lambda level, name: gen.source_text(game, level, name)
+            self.assertEqual(find(7, "Foo"), "x\ny\nz\n")
+            self.assertEqual(find(7, "Accent"), "c\u00e9")
+            self.assertEqual((find(7, "Dup"), find(7, "DUP")), ("lower", "upper"))
+            self.assertEqual((find(7, "Big"), len(find(7, "Max"))), (None, 1 << 20))
+            self.assertEqual((find(7, "Link"), find(8, "Foo"), find(9, "Foo"), find(7, "Missing"), find(7, "")), (None, None, None, None, None))
+            self.assertIsNone(gen.source_text(Path(tmp) / "empty", 7, "Foo"))
 
 
 if __name__ == "__main__":

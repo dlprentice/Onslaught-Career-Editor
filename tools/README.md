@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-29 (`msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-29 (`script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -280,7 +280,9 @@ publish, sign, or install anything by themselves.
   `python tools/level_editor_vectors.py --check` fails when the committed file is not what `--write` writes; it compares
   what each compressed blob inflates to, so it does not depend on the zlib that compressed it.
   `level_editor_vectors_tests.py` adds the reference's own round trips and the refusal of every proper prefix of a body.
-  `gate-table --game GAME --stdout` lists the size, SHA-256 and dump hash of each world body of an installed game, and for
+  `gate-table --game GAME --stdout` lists the size, SHA-256 and dump hash of each world body of an installed game, for
+  each level archive a SCRIPTS row (how many scripts its own world and its base world hold, a hash of the lines the Level editor's script
+  catalog reads from them, how many of their sources the finder reads and a hash of those sources' text) and for
   each level archive with a terrain the digest of its samples, the bits of its scale and water level, and a digest of the
   heights `heightfield_lookup.py` gives on a fixed grid and at every thing's position (hashes only) for the Companion's local
   retail gate, `Development/LevelsGate.cs`, whose header gives its command; the table is derived from a game, so keep it
@@ -310,6 +312,11 @@ publish, sign, or install anything by themselves.
   `msl_compile_tests.py` runs on authored sources only (the shape of every statement, the call flag, the counters, the grouping
   rules and the refusals, the header search, a record's round trip through the world encoder, and the gate's verdicts on an
   authored game folder).
+- `script_tables.py` writes `companion/OnslaughtToolkit.Godot/Levels/ScriptTables.g.cs`: the 13 event names a compiled mission
+  script's entry points are indexed by and every native a script can call (name and argument letters, in the order a CALL
+  instruction's low byte indexes them), from `world_resources_decode.py`'s tables, for the Level editor's Scripts view.
+  `--check` fails when the committed file is not what `--write` writes; `script_tables_tests.py` reads the file itself back against
+  the tables. No game bytes are in it.
 - `export_game_assets.py`, `export_asset_catalog.py`,
   `export_language_corpus.py`, and `export_video_manifest.py` operate on
   user-supplied local inputs and write to a separate local output root. The
