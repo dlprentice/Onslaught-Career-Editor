@@ -1,8 +1,8 @@
 # Companion Mission Editor: Design Addendum
 
-Status: design; the reference compiler and its retail gate (MS1, section 11) and the read-only scripts view (MS0, section 12) are built, the rest is plan. It extends the
+Status: design; the reference compiler and its retail gate (MS1, section 11), the read-only scripts view (MS0, section 12) and the C# compiler (MS2, section 14) are built, the rest is plan. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-10-29 (MS0, the read-only scripts view, built; earlier: CE 0.1.11, the first to take a world file from a mod, stated as published; earlier: the spike's result and the operator-grouping decision; the lead's earlier decisions; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
+Last updated: 2026-10-29 (MS2, the C# compiler, built; earlier: MS0, the read-only scripts view, built; earlier: CE 0.1.11, the first to take a world file from a mod, stated as published; earlier: the spike's result and the operator-grouping decision; the lead's earlier decisions; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours that is proved against every script the game
 shipped (byte for byte), and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -106,7 +106,7 @@ recompiled, so a mod differs from the game only where the player edited.
 | --- | --- | --- | --- |
 | MS0 scripts beside the map (read-only; built, section 12; names and paths: MS0.1) | the Level editor page lists the open level's compiled scripts (name, the events handled, the things that run it, the natives it calls) next to the map, shows the selected script's installed `.msl` source with line numbers, and links names in it (thing names, waypoint paths, scripts, text ids) to the table and the map; selecting a thing shows its script and the other way round; waypoint paths are drawn on the map | on every installed level the list equals the world body's scripts, every one finds its source (670 of 670), the capture at three sizes looked at, nothing written | 4 to 5 days |
 | MS1 reference compiler and the byte-exact gate | `tools/msl_compile.py` (preprocess, lex, parse, generate, write the record as the world file stores it) and `tools/msl_gate.py --game GAME`, section 5 | every shipped script compiles to its shipped record, or each difference is explained (built; section 11) | built 2026-10-29 (the spike ran on every script) |
-| MS2 the C# compiler | `Missions/` with the same stages, authored vectors from the Python reference in Git, and a local retail gate (`Development/ScriptsGate.cs`) that must match the Python gate on all scripts | the vectors and the retail gate pass; the C# refuses what the Python refuses | 1 week |
+| MS2 the C# compiler (built, section 14) | `Missions/` with the same stages, authored vectors from the Python reference in Git, and a local retail gate (`Development/ScriptsGate.cs`) that must match the Python gate on all scripts | the vectors and the retail gate pass; the C# refuses what the Python refuses | built 2026-10-29 |
 | MS3 first editable thing | the page edits the selected script's source (a text area with line numbers), compiles it (errors by line and column, a summary of what changed), replaces the script in the session as one undoable command, and saves through Save as mod | the acceptance in section 6 | 1 week |
 | MS4 structured helpers | forms for common edits (a count, a delay, a message id), the event graph (who posts, who handles), checks against the level (names exist), path membership and order on the map, spawner and trigger parameters (these are world-body data and need no compiler) | each helper has a test and a message a player can act on | 2 weeks |
 | MS5 texts (optional) | the text of a message is in the game's language files, a different mod file; a writer for them | a changed line shows in game | not estimated |
@@ -276,3 +276,34 @@ narrows the list by name, event or function. Nothing is written.
   may differ from the compiled script it sits beside (the gate says which installed ones do: section 11). Base-world scripts name
   base-world objects, which the table does not list, so they show no users. What a name in a source refers to, and the paths on the map,
   are MS0.1.
+
+## 14. MS2: the C# compiler (2026-10-29)
+
+`Missions/` is the reference compiler (`tools/msl_compile.py`) in C#: a lexer, a preprocessor for `#include` and `#define`, and a parser that
+writes the instructions as it reads, statement for statement and message for message. `ScriptCompiler.Compile(name, source, readInclude,
+constStart, doOnceStart, resolve, notes, limits)` returns the `MissionScript` a world body stores (the same type the Level editor reads), and
+nothing else: it writes no file and reads no file but the headers a source names, which `ScriptCompiler.IncludesFrom(gameFolder)` finds by the
+game-relative path in any case, only inside the game folder (a link that stays inside is a file inside; one that leaves it, or a pipe, is not).
+A source that cannot be compiled is a `CompileError` with the 0-based line it was found on and a message that starts "line N: "; a header the
+game folder lacks is a `MissingInclude` naming the path. The notes (how a mixed chain of operators was grouped, a handler the game never calls,
+a variable declared twice) come back in a list for an editor to show. The limits (a million characters or tokens, four million replacement
+steps, 100 levels of nesting) are the reference's and are a parameter, so that the tests put each exactly at its edge.
+
+- **What it is held to.** (1) Authored vectors, written by `tools/msl_vectors.py` from the Python reference: for each source (none is a game
+  script) the compiled record as lines, the notes, or the message it was refused with, which the C# must give word for word, including how a
+  quoted token reads (the messages use Python's `repr`, reproduced in `PythonText`); the reference's answer for every pair of operators; and a
+  few shapes worked out by hand from what the shipped scripts show. (2) The local retail gate, `Development/ScriptsGate.cs`: every compiled
+  script of every world body of an installed game is compared with what the C# makes of the source the game folder holds for it, with the
+  session's counters taken from the shipped script. Every script is exact, exact once an include the install lacks is bound from the shipped
+  constants, or one of the seven pinned stale sources (section 11), and the status of each equals the Python gate's, script by script
+  (`msl_gate.py --table`); and a world body whose scripts all compile, written with the compiled scripts in the place of the shipped ones,
+  writes back to the bytes it was read from. (3) A mutation sweep over the compiler files, each mutant a one-line change that the vectors, the
+  hand-worked shapes or the file and limit tests must fail.
+- **Made equal in the Python on the way.** The reference's lexer and directive patterns used Unicode classes (`\d`, `\s`) and `str.split()`;
+  they are ASCII blanks and digits now (a source typed in the editor may hold characters a Latin-1 game file cannot), and the compiler takes its 13
+  event names from the decoder's table instead of a second copy. The gate's result is unchanged.
+- **Limits.** Nothing in the Companion calls it yet: a page that edits a script and saves a mod is MS3. A source holds names, numbers, strings,
+  `TRUE` and `FALSE`: there is no literal for a position or a thing, and a constant of those types exists only when a caller gives one for a name a
+  missing header would have defined. A string is single-byte text (Latin-1). Messages are English and quote the reference's wording. The compile
+  is not incremental, which does not matter at a script's size. The seven stale sources differ from what the game ships, so the gate cannot say
+  whether the C# would have compiled them as the original compiler did.
