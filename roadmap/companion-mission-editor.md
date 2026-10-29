@@ -2,7 +2,7 @@
 
 Status: design; the reference compiler and its retail gate (MS1, section 11) are built, the rest is plan. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-10-29 (the spike's result and the operator-grouping decision; the lead's earlier decisions; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
+Last updated: 2026-10-29 (CE 0.1.11, the first to take a world file from a mod, stated as published; earlier: the spike's result and the operator-grouping decision; the lead's earlier decisions; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours that is proved against every script the game
 shipped (byte for byte), and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -42,8 +42,8 @@ over the 66 installed level archives, and the installed `data/MissionScripts` fo
    them with. That is a source and an object for every script, which is what makes a byte-exact compiler testable (section 5).
 4. **The mod loader can replace an `.msl` file and it changes nothing.** The loader replaces any file the game has under `data/`
    (a mod may add only world files), so an `.msl` copy qualifies; but a replacement is read only when the game opens the file,
-   and item 1 says it never does. The route for a mission change is the world file, which today's Linux loader serves (CE 0.1.11
-   is planned to be the first to take a world file from a mod).
+   and item 1 says it never does. The route for a mission change is the world file, which today's Linux loader serves (CE 0.1.11,
+   published 2026-10-29, is the first to take a world file from a mod).
 5. **The object format is small and regular.** The VM has 27 opcodes (23 occur in the compiled scripts of the installed levels; `OP_NOP`, `OP_CMPNEB`,
    `OP_CALLLOCAL` and `OP_PUSHPC` never do, though one source of a level the install lacks writes `!=`, which compiles to `OP_CMPNEB`); `CAsmInstruction::Spawn`
    (`0x0052d3d0`) reads each, `CInstruction*::Execute` (`0x0052e0a0` to `0x0052ec40`) defines what each does, the natives
@@ -168,7 +168,7 @@ The spawn count and the timer values are the next edits in the same mould.
 
 ## 8. Honest limits
 
-- Linux only, with a CE that loads world files from mods (planned for 0.1.11); Windows refuses mods until it can open files
+- Linux only, with a CE that loads world files from mods (0.1.11 or later); Windows refuses mods until it can open files
   path-safely. The loader is off for replays, recordings, probes, virtual clocks, pilots and network sessions.
 - Byte-exactness on the shipped scripts is evidence about the constructs they use. A construct they do not use is unverified, so
   the compiler refuses it.

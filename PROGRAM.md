@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-29 (the game documentation is written in onslaught-preservation, not in the frozen `reverse-engineering/`; earlier: the companion's update guidance and the published decompilation's score stated as they are; earlier: content catalogue phase 3: world bodies, compiled scripts, terrain payloads, sprintf texture names; content catalogue survey, schema, generator, levels, placements and usage, Linux CE workflow and native Windows backend/load checks completed)
+Last updated: 2026-10-29 (the maintainer's storage name removed; earlier: the game documentation is written in onslaught-preservation, not in the frozen `reverse-engineering/`; earlier: the companion's update guidance and the published decompilation's score stated as they are; earlier: content catalogue phase 3: world bodies, compiled scripts, terrain payloads, sprintf texture names; content catalogue survey, schema, generator, levels, placements and usage, Linux CE workflow and native Windows backend/load checks completed)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
@@ -101,4 +101,4 @@ native source port (Windows and Linux) is published as [Onslaught CE](https://gi
 | Byte-matching decompilation | Complete in the private working tree (5,482/5,482); the published [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) reproduces 5,449 of them. |
 | WinUI toolkit, its UI tests and CLI (former P11) | Removed 2026-10-15; the companion replaced them. |
 | Campaign bookkeeping relief (former P6) | Retired with the campaign. |
-| Repository preparation (former P12) | The checkout lives on Archive B behind the Projects bind; `local-lab/` and `local-data/` are real ignored children. The 2026-10-15 cleanup moved the Ghidra checkpoint and RE machinery to the private archive and removed the WinUI surfaces. |
+| Repository preparation (former P12) | The maintainer's checkout lives on a separate archive drive; `local-lab/` and `local-data/` are real ignored children. The 2026-10-15 cleanup moved the Ghidra checkpoint and RE machinery to the private archive and removed the WinUI surfaces. |

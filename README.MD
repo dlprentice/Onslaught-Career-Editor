@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-10-29 (the game documentation's home stated as onslaught-preservation, with `reverse-engineering/` here a frozen copy; earlier: the companion's update guidance described as it is; earlier: decompilation concessions and native-port validation scope clarified)
+Last updated: 2026-10-29 (the rebuild described in onslaught-godot's own words (compared Present by Present with recorded runs of the native port and of the original game; a proof of concept, not yet playable); earlier: the game documentation's home stated as onslaught-preservation, with `reverse-engineering/` here a frozen copy; earlier: the companion's update guidance described as it is; earlier: decompilation concessions and native-port validation scope clarified)
 Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
 
 Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
@@ -56,7 +56,7 @@ Its source and downloads are at [Onslaught CE](https://github.com/dlprentice/ons
 | This repository | The companion, lore, our tools, and frozen copies of the game documentation and the Godot rebuild |
 | [Onslaught CE](https://github.com/dlprentice/onslaught-ce) | The native source port's source and its Windows and Linux downloads; GPL-3.0-only |
 | [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) | The byte-matching decompilation of the retail executable, for MSVC 6; bring your own game and compiler; GPL-3.0-only |
-| [onslaught-godot](https://github.com/dlprentice/onslaught-godot) | The Godot 4 C# rebuild, checked against the original game Present by Present; GPL-3.0-only |
+| [onslaught-godot](https://github.com/dlprentice/onslaught-godot) | The Godot 4 C# rebuild, compared Present by Present with recorded runs of the native port and of the original game; a proof of concept, not yet playable; GPL-3.0-only |
 | [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation) | The one home of the game documentation: file formats, saves, mechanics, levels and engine; CC BY-SA 4.0 |
 | [`stuart73/Onslaught`](https://github.com/stuart73/Onslaught) | Stuart's partial GPL source release; this repository pins David's fork, [`dlprentice/Onslaught`](https://github.com/dlprentice/Onslaught), as [`references/Onslaught`](references/Onslaught) |
 

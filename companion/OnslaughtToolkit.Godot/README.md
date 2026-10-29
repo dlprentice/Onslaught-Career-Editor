@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-29 (the Level editor's map; what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
+Last updated: 2026-10-29 (CE 0.1.11, the first CE to take a world file from a mod, named; earlier: the Level editor's map; what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -313,7 +313,7 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   folder or the backups (even one that does not exist yet) and never over an existing folder. A move you have not saved as a mod
   is asked about before it is dropped when you close the Companion, open another level or choose another game folder, and
   switching games is refused, with a message, until the move is saved or undone. Only a level's own world is changed: the base
-  world a level also loads is mentioned, not edited. Onslaught CE loads a world file from a mod on Linux only for now, and only from a version
+  world a level also loads is mentioned, not edited. Onslaught CE loads a world file from a mod on Linux only for now, from 0.1.11 on, and only from a version
   whose README's Mods section lists world files. The page's reader and writer are checked against the Toolkit's Python reference
   (`tools/level_editor_vectors.py`) and, on a game install, against every world body in it; the file it saves for a move of one
   Target Tank is byte for byte the one the Toolkit's pipeline stages for the same move, whether the move was typed or made by

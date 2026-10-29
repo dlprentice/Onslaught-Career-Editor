@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-29 (findings are written in onslaught-preservation, with `reverse-engineering/` a frozen copy; earlier: the companion's update guidance and the published decompilation's score stated as they are; earlier: CE 0.1.5 publishes the redirected-output correction; Linux CE workflow and native Windows backend/load evidence; remaining UI/version and player limits)
+Last updated: 2026-10-29 (the maintainer's storage name removed; earlier: findings are written in onslaught-preservation, with `reverse-engineering/` a frozen copy; earlier: the companion's update guidance and the published decompilation's score stated as they are; earlier: CE 0.1.5 publishes the redirected-output correction; Linux CE workflow and native Windows backend/load evidence; remaining UI/version and player limits)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -71,7 +71,7 @@ A further 25 original caller controls resolve sample reuse, list insertion,
 name truncation and suffix selection. They distinguish a filename-route stub
 from the working buffer loader, correcting the meaning implied by inherited
 names. The four-function metadata correction (private RE archive: `reverse-engineering/ghidra/README.md`)
-is now saved, independently read back and protected by restored Archive A recovery;
+is now saved, independently read back and protected by a restored recovery copy on the maintainer's archive storage;
 all types, storage and unrelated functions are unchanged. A sample
 can be inserted after a supplied device-creation failure, so list presence alone
 does not establish playable audio. See the

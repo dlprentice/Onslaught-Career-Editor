@@ -1,7 +1,7 @@
 # Companion Level Editor: Design and Prototype Plan
 
 Status: M0 (the data layer), M1 (the mod stager and the edit session) and M2 (the first page: a level picker, an object table, typed X, Y and Z, Save as mod) are built and on main; M3 (the map: terrain relief, marks, select, drag, zoom, pan) is built and on main; M4 to M6 are plan; the mission editor that would follow is in [companion-mission-editor.md](companion-mission-editor.md). Nothing in it has been played in a CE release yet; two edits it staged were looked at in a private CE build (section 3).
-Last updated: 2026-10-29 (M2 integrated, M3 built: the map, the mirror check measured; earlier: M0 and M1 built and integrated; first draft; the measurements in section 3 were taken on 2026-10-29 on the read-only retail view)
+Last updated: 2026-10-29 (CE 0.1.11, the first to take a world file from a mod, stated as published; earlier: M2 integrated, M3 built: the map, the mirror check measured; earlier: M0 and M1 built and integrated; first draft; the measurements in section 3 were taken on 2026-10-29 on the read-only retail view)
 Summary: how the Companion can grow a visual level editor on top of the Toolkit's world tools and Onslaught CE's mod
 loader: list a level's objects, select one, move it by typing coordinates or dragging it on a top-down map, and save
 the result as a CE mod that CE loads without hand editing. It states what exists, what the measurements say, the
@@ -33,7 +33,7 @@ for the file format; the Companion is the player's interface; Onslaught CE is th
 | The Companion's data layer: world bodies, level archives, the mod stager, an edit session with undo | [`companion/OnslaughtToolkit.Godot/Levels/`](../companion/OnslaughtToolkit.Godot/Levels) (M0, M1) | on main, reviewed; checked against the Python reference on generated vectors and, locally, on every retail world body |
 | The Level editor page (M2) | `Ui/Pages/LevelEditorPage.cs`, `Ui/SaveAsModDialog.cs`, `Levels/LevelEditorModel.cs`, `Levels/CoordinateInput.cs` | on main, reviewed (it asks before an unsaved move is dropped); the mod it saves for a move of one Target Tank is byte for byte the one the Toolkit pipeline stages for the same move, and a mod it saved was looked at in a private CE build, offscreen |
 | The level map (M3) | `Ui/LevelMap.cs`, `Levels/MapView.cs`, `Levels/TerrainRelief.cs`, `Levels/Heightfield.cs`, `tools/heightfield_lookup.py` | on main, reviewed; the terrain lookup is checked against the Python port on generated vectors and on every installed level, and the drag gives the Toolkit pipeline's world file for the same coordinates |
-| CE loading a world file from a mod (a mod may add `data/worlds/worldNNN.wrd`) | Onslaught CE's mod loader and its world-file override | planned for CE 0.1.11; not released at the time of writing; Windows later |
+| CE loading a world file from a mod (a mod may add `data/worlds/worldNNN.wrd`) | Onslaught CE's mod loader and its world-file override | released: CE 0.1.11 (published 2026-10-29) is the first to take a world file from a mod; Linux only for now, Windows later |
 | A code-built Godot C# interface, a game library, verified file safety | `companion/OnslaughtToolkit.Godot/` | on main |
 
 Parts of the Companion the editor can reuse as they are:
@@ -285,7 +285,7 @@ piece, not part of the minimum. Effort figures are rough working days for one en
 | M5 add, duplicate, delete | append-only add and duplicate with the slot rules; delete only where no path or target names the row | the stager refuses what would break a path or a career index | 4 to 5 | plan |
 | M6 play and enable | "Play this level with the mod" through the CE launcher; enabling through the settings writer with its backups | a mod is enabled, played and disabled with the game's files untouched | 3 to 4 | plan |
 
-Dependencies: CE with the world-file override released (0.1.11 is planned); the stager reviewed and on main; the Python
+Dependencies: CE with the world-file override released (0.1.11 is the first, published 2026-10-29); the stager reviewed and on main; the Python
 oracle kept in step with any format change.
 
 ## 11. Risks and the cheapest check for each
