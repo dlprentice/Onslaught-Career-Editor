@@ -82,6 +82,7 @@ public partial class CompanionApp : Control
     internal LorePage Lore { get; private set; } = null!;
     internal CareerBytesPage Bytes { get; private set; } = null!;
     internal AssetsPage Assets { get; private set; } = null!;
+    internal LevelEditorPage LevelEditor { get; private set; } = null!;
 
     /// <summary>Asks before unsaved changes on Edit career or Game settings would be lost (switching careers, closing).</summary>
     internal ConfirmationDialog DiscardDialog { get; private set; } = null!;
@@ -147,12 +148,13 @@ public partial class CompanionApp : Control
         Lore = new LorePage(Game, Status, openUrl);
         Bytes = new CareerBytesPage(Workspace, Status, popups);
         Assets = new AssetsPage(Services);
+        LevelEditor = new LevelEditorPage(Services);
         NavGroup[] groups =
         [
             new("", [Home]),
             new("Your career", [Summary, Goodies, EditCareer, Cheats]),
             new("Your game", [Settings, Backups]),
-            new("Extras", [Music, Lore, Assets]),
+            new("Extras", [Music, Lore, Assets, LevelEditor]),
             new("Advanced", [Bytes], Folds: true),
         ];
 

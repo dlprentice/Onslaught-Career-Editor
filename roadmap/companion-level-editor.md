@@ -1,7 +1,7 @@
 # Companion Level Editor: Design and Prototype Plan
 
-Status: plan; nothing in it is built, and no part of it is a player feature yet.
-Last updated: 2026-10-29 (first draft; the measurements in section 3 were taken on 2026-10-29 on the read-only retail view)
+Status: M0 (the data layer) and M1 (the mod stager and the edit session) are built and on main; M2 (the first page: a level picker, an object table, typed X, Y and Z, Save as mod) is built and in review; M3 to M6 are plan. Nothing in it has been played in a CE release yet.
+Last updated: 2026-10-29 (M0 and M1 built and integrated, M2 built; earlier: first draft; the measurements in section 3 were taken on 2026-10-29 on the read-only retail view)
 Summary: how the Companion can grow a visual level editor on top of the Toolkit's world tools and Onslaught CE's mod
 loader: list a level's objects, select one, move it by typing coordinates or dragging it on a top-down map, and save
 the result as a CE mod that CE loads without hand editing. It states what exists, what the measurements say, the
@@ -29,7 +29,9 @@ for the file format; the Companion is the player's interface; Onslaught CE is th
 | Object list: ordinal, kind, name, position | [`tools/world_thing_index.py`](../tools/world_thing_index.py) | on main; ordinals are rows of one body, not runtime slots |
 | Read-only preview of an edit, with pins | [`tools/world_edit_preview.py`](../tools/world_edit_preview.py) | on main |
 | One position edit, emitted as a model | [`tools/world_edit_move.py`](../tools/world_edit_move.py) | on main; it prints the two hashes a later step must pin |
-| Packaging an edited world as a CE mod folder | `world_resources_encode.py stage --as-mod`, writer `tools/world_mod_stage.py` | on a Toolkit branch awaiting independent review at the time of writing |
+| Packaging an edited world as a CE mod folder | `world_resources_encode.py stage --as-mod`, writer `tools/world_mod_stage.py` | on main, reviewed |
+| The Companion's data layer: world bodies, level archives, the mod stager, an edit session with undo | [`companion/OnslaughtToolkit.Godot/Levels/`](../companion/OnslaughtToolkit.Godot/Levels) (M0, M1) | on main, reviewed; checked against the Python reference on generated vectors and, locally, on every retail world body |
+| The Level editor page (M2) | `Ui/Pages/LevelEditorPage.cs`, `Ui/SaveAsModDialog.cs`, `Levels/LevelEditorModel.cs`, `Levels/CoordinateInput.cs` | built and in review; the mod it saves for a move of one Target Tank is byte for byte the one the Toolkit pipeline stages for the same move; not yet played |
 | CE loading a world file from a mod (a mod may add `data/worlds/worldNNN.wrd`) | Onslaught CE's mod loader and its world-file override | planned for CE 0.1.11; not released at the time of writing; Windows later |
 | A code-built Godot C# interface, a game library, verified file safety | `companion/OnslaughtToolkit.Godot/` | on main |
 
@@ -125,7 +127,11 @@ New C# in the Companion, in two layers so the data layer has no Godot types and 
 | `LevelMap` | The top-down control (section 7): terrain, objects, selection, drag, pan, zoom. |
 | `SaveAsModDialog` | Name, id, version, author, description, destination, and the line to add to `ce.ini`. |
 
-Registered beside the other pages in `CompanionApp`; tests in `Tests/LevelEditorTests.cs` added to the runner.
+Registered beside the other pages in `CompanionApp` (Extras). Built so far (M0 to M2): `LevelArchive`, `WorldBody` and `PlacedObject`, `ObjectKinds`,
+`EditSession` with `MoveObject`, `ModStager`, and two types the first page needed that this table did not name: `CoordinateInput` (a typed coordinate read as the
+Toolkit's move tool reads one, with float32 rounding said, never a silent change of a stored -0) and `LevelEditorModel` (the page's state with no interface in it).
+`Heightfield` and `LevelMap` are M3. Tests: `Tests/LevelTests.cs` and `Tests/LevelEditTests.cs` (the data layer and the stager), `Tests/LevelEditorTests.cs` (the coordinate
+reader and the model; the Godot-free host runs these too) and `Tests/EditorPageTests.cs` (the page, in the interface suite).
 
 ## 6. The screen
 
@@ -193,6 +199,9 @@ A custom `Control` like `CampaignMap`:
   Companion's own file-safety primitives.
 - Writing a mod folder does not need the game closed, but enabling one in `ce.ini` does; until the Companion does that
   itself it only shows the line.
+- The stager detects replacement; it does not lock, as the Toolkit's Python stager does not. A directory swapped for a link, or moved into a game folder, by
+  another process after the early checks and before the folders are created is not caught by them, and a folder moved during the run is not guaranteed to stay
+  outside the game folder (the limit every writer through the Companion's guarded publication has). The page says where the mod was written.
 - The page only ever creates a new folder, so it never changes a mod that CE may already have open. A mod's world file that
   does change while CE is running is checked again when the level loads and, if it no longer matches what CE checked at
   start-up, the level's own world is read instead and the log says so (the loader's behaviour from the world-file override
@@ -231,15 +240,15 @@ edit. **Acceptance of M3:** the same result by dragging the mark, and the number
 The minimal prototype is M0 to M2: typing a coordinate, saving a mod, seeing it in game. The map (M3) is the next
 piece, not part of the minimum. Effort figures are rough working days for one engineer and are an estimate.
 
-| Milestone | Scope | Done when | Estimate |
-| --- | --- | --- | --- |
-| M0 data layer | `LevelArchive`, `WorldBody`, `PlacedObject` read and write, vector generator script | differential tests pass on every authored version; the local gate round-trips every retail body | 3 to 4 |
-| M1 staging | `ModStager`, `EditSession` with `MoveObject` and undo, cross-language golden | the C# stager's folder is byte-identical to the Python stager's for the same edit; every refusal tested | 2 |
-| M2 page v0 | `LevelEditorPage`: level picker, table, inspector with numeric X, Y, Z, Save as mod dialog; UI tests; a capture | the M2 acceptance above, looked at in game | 3 to 4 |
-| M3 map | `Heightfield`, `LevelMap` (relief, marks, select, drag, pan, zoom), coordinate tests | the M3 acceptance; a capture of the map looked at | 4 to 5 |
-| M4 safer editing | warnings panel, "show changed", reset, base-world caution, keyboard nudges | each warning has a test and a message a player can act on | 2 to 3 |
-| M5 add, duplicate, delete | append-only add and duplicate with the slot rules; delete only where no path or target names the row | the stager refuses what would break a path or a career index | 4 to 5 |
-| M6 play and enable | "Play this level with the mod" through the CE launcher; enabling through the settings writer with its backups | a mod is enabled, played and disabled with the game's files untouched | 3 to 4 |
+| Milestone | Scope | Done when | Estimate | State |
+| --- | --- | --- | --- | --- |
+| M0 data layer | `LevelArchive`, `WorldBody`, `PlacedObject` read and write, vector generator script | differential tests pass on every authored version; the local gate round-trips every retail body | 3 to 4 | done: on main, reviewed; every retail world body round-trips |
+| M1 staging | `ModStager`, `EditSession` with `MoveObject` and undo, cross-language golden | the C# stager's folder is byte-identical to the Python stager's for the same edit; every refusal tested | 2 | done: on main, reviewed |
+| M2 page v0 | `LevelEditorPage`: level picker, table, inspector with numeric X, Y, Z, Save as mod dialog; UI tests; a capture | the M2 acceptance above, looked at in game | 3 to 4 | built, in review: the page half of the acceptance passed on the retail view; the in-game half waits for a CE with the world-file override |
+| M3 map | `Heightfield`, `LevelMap` (relief, marks, select, drag, pan, zoom), coordinate tests | the M3 acceptance; a capture of the map looked at | 4 to 5 | plan |
+| M4 safer editing | warnings panel, "show changed", reset, base-world caution, keyboard nudges | each warning has a test and a message a player can act on | 2 to 3 | plan |
+| M5 add, duplicate, delete | append-only add and duplicate with the slot rules; delete only where no path or target names the row | the stager refuses what would break a path or a career index | 4 to 5 | plan |
+| M6 play and enable | "Play this level with the mod" through the CE launcher; enabling through the settings writer with its backups | a mod is enabled, played and disabled with the game's files untouched | 3 to 4 | plan |
 
 Dependencies: CE with the world-file override released (0.1.11 is planned); the stager reviewed and on main; the Python
 oracle kept in step with any format change.

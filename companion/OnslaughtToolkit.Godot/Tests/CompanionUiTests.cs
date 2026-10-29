@@ -53,6 +53,7 @@ internal static class CompanionUiTests
             await BackupsAndHome(app, tree, install, outputDirectory, original, defaultBackups, openedUrls, running, check);
             await DriveLore(app, tree, openedUrls, check);
             await ModelsAndTextures(app, tree, install, outputDirectory, check);
+            await LevelEditorPageTests.RunAsync(app, tree, install, outputDirectory, check);
         }
         finally
         {

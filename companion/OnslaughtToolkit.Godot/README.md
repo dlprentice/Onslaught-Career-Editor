@@ -219,7 +219,7 @@ never overlaps another job on the Intel GPU (David allowed this on 2026-09-26).
 
 The sidebar groups the pages the way a player thinks about them: **Home**; **Your
 career** (Summary, Goodies, Edit career, Cheats); **Your game** (Game settings, Backups);
-**Extras** (Music & voices, Lore, Art & sound); and **Advanced**, folded away
+**Extras** (Music & voices, Lore, Art & sound, Level editor); and **Advanced**, folded away
 (Career bytes). The header names the page, shows **Game running** while the original game
 or Onslaught CE is open, and switches careers (or opens a career file, Ctrl+O). While Edit career or Game
 settings has unsaved changes, a bar under the page counts them and offers Save (Ctrl+S)
@@ -303,6 +303,20 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   does not bend normals with the bones, while glTF viewers do, so lighting on a moving limb
   can differ slightly from the game. Between frames, glTF turns keys smoothly where the game
   blends them as matrices, so the two agree exactly only at each frame.
+- **Level editor** opens one of the game's levels from its `data/resources` folder and lists what the level's own
+  world places (the player's start, units, waypoints, triggers and the rest) with each row's kind, name (or the definition
+  it names) and X, Y and Z. Choose an object, type new coordinates and press Enter: they are read as the Toolkit's
+  move tool reads a coordinate and stored as the 32-bit float the world stores, and the page says when that is a slightly
+  different number than you typed. A stored -0, which ground units have, is shown as -0 and kept unless you type another value.
+  A move can be undone, redone and reset; a position outside the 0 to 512 square the terrain covers is warned about; and the
+  result is saved as an Onslaught CE mod, a new folder holding `mod.json` and the level's world file, never inside the game
+  folder or the backups and never over an existing folder. Only a level's own world is changed: the base world a level also
+  loads is mentioned, not edited. Onslaught CE loads a world file from a mod on Linux only for now, and only from a version
+  whose README's Mods section lists world files. The page's reader and writer are checked against the Toolkit's Python reference
+  (`tools/level_editor_vectors.py`) and, on a game install, against every world body in it; the file it saves for a move of one
+  Target Tank is byte for byte the one the Toolkit's pipeline stages for the same move, and nobody has yet played a mod it saved.
+  The design and what is still planned (a map to drag on, adding and deleting things) are in
+  [`roadmap/companion-level-editor.md`](../../roadmap/companion-level-editor.md).
 - **Advanced**: **Career bytes** shows, read-only, either the open career's stored values
   (including both players' god flags) or, after you choose another career, every byte that
   differs between the two, named by region.
