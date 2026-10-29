@@ -346,6 +346,27 @@ internal static class ScriptCompilerTests
         }
         if (OperatingSystem.IsLinux())
         {
+            if (!Environment.IsPrivilegedProcess)
+            {
+                string denied = Path.Combine(game, "Data", "Inc", "Denied.msl"), locked = Path.Combine(game, "Data", "Locked");
+                File.WriteAllText(denied, "#define X 1\n");
+                Directory.CreateDirectory(locked);
+                File.WriteAllText(Path.Combine(locked, "Header.msl"), "#define X 1\n");
+                UnixFileMode fileMode = File.GetUnixFileMode(denied), dirMode = File.GetUnixFileMode(locked);
+                try
+                {
+                    File.SetUnixFileMode(denied, UnixFileMode.None);
+                    File.SetUnixFileMode(locked, UnixFileMode.None);
+                    check.That(Refuses("#include data\\inc\\denied.msl\n", read, "the included file data\\inc\\denied.msl could not be read") &&
+                               Refuses("#include data\\locked\\header.msl\n", read, "the included file data\\locked\\header.msl could not be read"),
+                        "unreadable files and unlistable folders produce stable refusals without system details");
+                }
+                finally
+                {
+                    File.SetUnixFileMode(denied, fileMode);
+                    File.SetUnixFileMode(locked, dirMode);
+                }
+            }
             // A named pipe named like a header would wait for a writer for ever, so it is not opened: the lookup refuses it at once.
             string pipe = Path.Combine(game, "Data", "Inc", "Pipe.msl");
             using (Process make = Process.Start(new ProcessStartInfo("mkfifo", [pipe]) { UseShellExecute = false })!)
