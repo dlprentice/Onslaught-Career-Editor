@@ -311,6 +311,8 @@ internal static class ScriptCompilerTests
             "a missing selected game folder has a stable refusal");
         try { ScriptCompiler.ReadSource(Path.Combine(folder, "missing.msl")); check.Fail("a missing direct source was read"); }
         catch (CompileError error) { check.That(error.Message == "missing.msl could not be read", "a missing direct source has no raw system error"); }
+        try { ScriptCompiler.ReadSource(Path.Combine(game, "Data", "Inc")); check.Fail("a directory was read as a source"); }
+        catch (CompileError error) { check.That(error.Message == "Inc is not a file inside the game folder", "a direct directory is refused as a non-file"); }
         check.That(read("data\\.\\inc\\.\\defs.msl").StartsWith("#define LIMIT", StringComparison.Ordinal) && read(".\\data\\\\inc\\defs.msl").StartsWith("#define LIMIT", StringComparison.Ordinal),
             "a dot in a path is the folder itself, and an empty part (a doubled separator) is skipped");
         File.WriteAllBytes(Path.Combine(game, "Data", "huge.msl"), new byte[ScriptCompiler.MaxSource + 1]);

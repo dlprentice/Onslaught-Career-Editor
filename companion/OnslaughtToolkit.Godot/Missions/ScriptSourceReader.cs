@@ -30,6 +30,9 @@ internal static class ScriptSourceReader
             }
             if (OperatingSystem.IsWindows())
             {
+                FileAttributes attributes = File.GetAttributes(path);
+                if ((attributes & FileAttributes.ReparsePoint) != 0) throw Link(shown);
+                if ((attributes & FileAttributes.Directory) != 0) throw NotFile(shown);
                 using SafeFileHandle handle = FileMutationSafety.OpenNoFollowReadHandle(path, "Script source");
                 return ReadWindows(handle, shown, shown);
             }
@@ -189,6 +192,7 @@ internal static class ScriptSourceReader
                 if (IsLink(entry)) throw Link(shown);
                 if (i == parts.Length - 1)
                 {
+                    if ((entry.Attributes & FileAttributes.Directory) != 0) throw NotFile(shown);
                     using SafeFileHandle handle = FileMutationSafety.OpenNoFollowReadHandle(entry.FullName, "Script source");
                     return ReadWindows(handle, shown, entry.Name);
                 }
