@@ -34,8 +34,11 @@ What the shipped scripts show about the dialect, each verified against every shi
 """
 from __future__ import annotations
 
+import errno
 import math
+import os
 import re
+import stat
 import struct
 import sys
 from dataclasses import dataclass
@@ -61,6 +64,9 @@ MAX_SOURCE = 1 << 20  # characters of a script, bytes of a header
 MAX_TOKENS = 1 << 20  # tokens of a script after #define names are replaced
 MAX_EXPANSION_STEPS = 4 << 20  # names looked at while replacing them (a define can expand to nothing, so tokens alone do not bound the work)
 MAX_DEPTH = 100  # statements and expressions inside one another (the parser calls itself for each)
+MAX_NOTE_CHARS = 5000  # characters of source text a grouping note may repeat (the expression once, each operand once more)
+MAX_COUNTER = (1 << 31) - 1  # a compile-session counter (constants, do_once symbols) is numbered up to here, as the game stores an int
+COUNTER_PAST = f"a counter of the compile session is past {MAX_COUNTER}"
 KEYWORDS = frozenset({"if", "else", "while", "for", "switch", "case", "do_once", "vars", "end_vars", "attributes", "end_attributes"})
 
 
@@ -138,11 +144,19 @@ def preprocess(source: str, read_include: Callable[[str], str]) -> tuple[list[To
             if m:
                 defines[m.group(1)] = lex(re.sub(r"//.*", "", m.group(2)))
 
+    def read_included(path: str) -> str:
+        try:
+            return read_include(path)
+        except CompileError:
+            raise
+        except Exception:  # noqa: BLE001 - a reader that fails any other way is a header that cannot be read; no system text, so both compilers say the same
+            raise CompileError(f"the included file {path} could not be read") from None
+
     body: list[str] = []
     for raw in source.split("\n"):
         m = re.match(rf"{BLANK}*#{BLANK}*include{BLANK}+([^ \t\r\f\v]+)", raw)
         if m:
-            define_from(read_include(m.group(1)))
+            define_from(read_included(m.group(1)))
             body.append("")  # the line stays, so the lines after it keep their numbers
         elif re.match(rf"{BLANK}*#{BLANK}*define(?![A-Za-z0-9_])", raw):
             define_from(raw)
@@ -173,6 +187,20 @@ def spaced(text: str) -> str:
     return " ".join(part for part in re.split(r"[ \t\n\r\f\v]+", text) if part)
 
 
+class Chain:
+    """What a chain of binary operators needs to write its grouping note: the operators it used, its operands (each the first and last
+    token index of the operand) and the operators between them, and for each operand how many groups open before it and close after it.
+    The grouping text is made from this only when a note is written, so reading a long chain costs the same per operator as a short one."""
+    __slots__ = ("used", "leaves", "ops", "opens", "closes")
+
+    def __init__(self) -> None:
+        self.used: set[str] = set()
+        self.leaves: list[tuple[int, int]] = []
+        self.ops: list[str] = []
+        self.opens: list[int] = []
+        self.closes: list[int] = []
+
+
 class Compiler:
     def __init__(self, name: str, tokens: list[Token], text: str, const_start: int, do_once_start: int = 0,
                  resolve: Callable | None = None, notes: list[Note] | None = None):
@@ -181,12 +209,14 @@ class Compiler:
         self.variables: set[str] = set()
         self.handlers: set[str] = set()
         self.symbols: list[dict] = []
+        self.symbol_index: dict[str, int] = {}  # the first symbol of each name (a name is entered once)
+        self.string_index: dict[str, int] = {}  # the first string constant of each value (an event handler's parameter)
         self.code: list[tuple[int, int]] = []
         self.event_pcs = [-1] * 13
         self.event_functions: list[dict] = []
         self.const_next = const_start
         self.has_vars = False
-        self.chains: list[set[str]] = []
+        self.chains: list[Chain] = []
         self.depth = 0
 
     # ---- token helpers
@@ -226,12 +256,12 @@ class Compiler:
 
     # ---- symbols and code
     def name_symbol(self, name: str, line: int) -> int:
-        for index, symbol in enumerate(self.symbols):
-            if symbol["name"] == name:
-                return index
-        return self.add(name, 0, None, line)
+        index = self.symbol_index.get(name)
+        return index if index is not None else self.add(name, 0, None, line)
 
     def const(self, dtype: str, value, line: int) -> int:
+        if self.const_next > MAX_COUNTER:
+            raise CompileError(COUNTER_PAST, line)
         name = f"const data{self.const_next}"
         self.const_next += 1
         return self.add(name, DT[dtype], value, line)
@@ -239,6 +269,9 @@ class Compiler:
     def add(self, name: str, dtype: int, value, line: int) -> int:
         index = len(self.symbols)
         self.symbols.append({"name": name, "dataType": dtype, "value": value, "symbolType": line, "index": index, "flag": 1})
+        self.symbol_index.setdefault(name, index)
+        if dtype == DT["string"] and isinstance(value, str):
+            self.string_index.setdefault(value, index)
         return index
 
     def emit(self, op: str, attr: int = -1) -> int:
@@ -262,7 +295,9 @@ class Compiler:
 
     def add_do_once_symbols(self) -> None:
         """Each do_once block has two boolean symbols, a flag (true) and a false constant, after every other symbol of the script."""
-        for flag_pc, zero_pc, set_pc in self.do_once_sites:
+        for flag_pc, zero_pc, set_pc, line in self.do_once_sites:
+            if self.do_once_next + 1 > MAX_COUNTER:  # the block's two symbols are numbered N and N + 1
+                raise CompileError(COUNTER_PAST, line)
             flag = self.add(f"do-once-{self.do_once_next}", DT["bool"], 1, 0)
             zero = self.add(f"do-once-{self.do_once_next + 1}", DT["bool"], 0, 0)
             self.do_once_next += 2
@@ -302,7 +337,7 @@ class Compiler:
             value = self.string_value(name)
             self.const("string", value, name.line)
             # The handler's parameter is the first string constant of that value (the one just made unless the script used the text before).
-            parameter = next(i for i, symbol in enumerate(self.symbols) if symbol["dataType"] == DT["string"] and symbol["value"] == value)
+            parameter = self.string_index[value]
             self.expect(")")
             self.event_functions.append({"entryPC": len(self.code), "params": [parameter]})
             end = self.emit("OP_JMPFALSE", 0)
@@ -369,12 +404,12 @@ class Compiler:
 
     def do_once_statement(self) -> None:
         """A block that runs the first time only: it clears a flag that it tests (the flag symbols are numbered when the script ends)."""
-        self.expect("do_once")
+        do_once = self.expect("do_once")
         flag_pc = self.emit("OP_PUSH", -1)
         skip = self.emit("OP_JMPFALSE", 0)
         zero_pc = self.emit("OP_PUSH", -1)
         set_pc = self.emit("OP_POP", -1)
-        self.do_once_sites.append((flag_pc, zero_pc, set_pc))
+        self.do_once_sites.append((flag_pc, zero_pc, set_pc, do_once.line))
         self.statement()
         self.patch(skip)
         self.emit("OP_LABEL")
@@ -478,26 +513,40 @@ class Compiler:
             return False
         return None
 
-    def expression(self) -> str:
-        """An assignment (its value stays on the stack) or a chain of binary operators. Returns how the chain was grouped, as text."""
+    def expression(self) -> None:
+        """An assignment (its value stays on the stack) or a chain of binary operators. A chain that mixes operators gets a note."""
         token, nxt = self.peek(), self.peek(1)
         self.enter()
         try:
             if token is not None and token.kind == "id" and nxt is not None and nxt.kind == "op" and nxt.text == "=":
                 variable = self.variable(token)
                 self.i += 2
-                value = self.expression()
+                self.expression()
                 self.emit("OP_GETTOP", variable)
-                return f"{token.text} = {value}"
-            self.chains.append(set())
-            first = self.peek()
-            grouped = self.binary(None)
-            used = self.chains.pop()
-            if len(used) >= 2 and first is not None:
-                self.note(first.line, "grouping", f"{spaced(self.span(first, self.t[self.i - 1]))} is grouped {grouped}")
-            return grouped
+                return
+            chain = Chain()
+            self.chains.append(chain)
+            first = self.i
+            self.binary(None)
+            self.chains.pop()
+            if len(chain.used) >= 2:
+                self.note(self.t[first].line, "grouping", self.grouping_note(chain, self.t[first], self.t[self.i - 1]))
         finally:
             self.depth -= 1
+
+    def grouping_note(self, chain: Chain, first: Token, last: Token) -> str:
+        """How a mixed chain was grouped: its text as written (blanks as one space) and the same text with each group in parentheses.
+        The note repeats the chain's text once whole and once for each operand, so a chain whose text adds up to more than MAX_NOTE_CHARS
+        characters (counted as written, before blanks are folded) gets a fixed sentence in its place."""
+        size = max(0, last.end - first.start) + sum(max(0, self.t[b].end - self.t[a].start) for a, b in chain.leaves)
+        if size > MAX_NOTE_CHARS:
+            return f"the grouping of this expression is not written out: its text is longer than {MAX_NOTE_CHARS} characters"
+        parts = []
+        for k, (a, b) in enumerate(chain.leaves):
+            parts.append("(" * chain.opens[k] + spaced(self.span(self.t[a], self.t[b])) + ")" * chain.closes[k])
+            if k < len(chain.ops):
+                parts.append(f" {chain.ops[k]} ")
+        return f"{spaced(self.span(first, last))} is grouped {''.join(parts)}"
 
     def span(self, first: Token, last: Token) -> str:
         return self.text[first.start:last.end]
@@ -507,7 +556,8 @@ class Compiler:
             raise CompileError(f"{token.text!r} is not a variable of this script", token.line)
         return self.name_symbol(token.text, token.line)
 
-    def binary(self, outer: str | None) -> str:
+    def binary(self, outer: str | None) -> tuple[int, int]:
+        """A chain of binary operators read left to right; returns the first and last operand (by number in the chain) of the group read."""
         left = self.operand()
         while True:
             token = self.peek()
@@ -522,13 +572,17 @@ class Compiler:
                 if not tighter:
                     return left
             self.i += 1
-            self.chains[-1].add(token.text)
+            chain = self.chains[-1]
+            chain.used.add(token.text)
+            chain.ops.append(token.text)
             right = self.binary(token.text)
             self.emit(self.BINARY_OPS[token.text])
-            left = f"({left} {token.text} {right})"
+            chain.opens[left[0]] += 1  # (left op right) is one more group, round everything from left's first operand to right's last
+            chain.closes[right[1]] += 1
+            left = (left[0], right[1])
 
-    def operand(self) -> str:
-        first = self.peek()
+    def operand(self) -> tuple[int, int]:
+        first = self.i
         token = self.next()
         if token.kind == "op" and token.text == "(":
             self.expression()
@@ -561,7 +615,11 @@ class Compiler:
                 raise CompileError("a member is named by a word", member.line)
             self.emit("OP_POINTER")
             self.call(member)
-        return spaced(self.span(first, self.t[self.i - 1]))
+        chain = self.chains[-1]
+        chain.leaves.append((first, self.i - 1))
+        chain.opens.append(0)
+        chain.closes.append(0)
+        return len(chain.leaves) - 1, len(chain.leaves) - 1
 
     def string_value(self, token: Token) -> str:
         value = token.text[1:-1]
@@ -621,41 +679,131 @@ def compile_script(name: str, source: str, read_include: Callable[[str], str], c
     return Compiler(name, tokens, text, const_start, do_once_start, resolve, notes).script()
 
 
-def game_file(game_root: Path, path: str) -> Path:
-    """The file a game-relative path names (backslashes, any case: the game's files are named for Windows), kept inside the game folder."""
-    root = game_root.resolve()
-    at = root
-    for part in path.replace("\\", "/").split("/"):
-        if not part or part == ".":
-            continue
-        if part == "..":
-            raise CompileError(f"a path cannot climb out of the game folder: {path}")
-        match = next((entry for entry in at.iterdir() if entry.name.lower() == part.lower()), None) if at.is_dir() else None
-        if match is None:
-            raise MissingInclude(path)
-        at = match
-    if not at.resolve().is_relative_to(root) or not at.is_file():
+NO_GAME_FOLDER = "no game folder is given"
+ASCII_LOWER = {code: code + 32 for code in range(ord("A"), ord("Z") + 1)}  # names match in any ASCII letter case, and in no other (the C# compiler does the same)
+
+
+def link_message(shown: str) -> str:
+    return f"{shown} is a link or goes through one, which is not followed"
+
+
+def is_link(info: os.stat_result) -> bool:
+    """A symbolic link or, on Windows, any other reparse point (a junction, ...)."""
+    return stat.S_ISLNK(info.st_mode) or bool(getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400))
+
+
+def entry_named(folder: str, name: str) -> tuple[str, bool] | None:
+    """The entry of `folder` called `name` in any ASCII letter case, with whether it is a link: the exact spelling if the folder has it,
+    else the smallest spelling in code order (so two entries that differ only in case are never chosen by the order the folder lists)."""
+    wanted = name.translate(ASCII_LOWER)
+    found: dict[str, bool] = {}
+    with os.scandir(folder) as entries:
+        for entry in entries:
+            if entry.name.translate(ASCII_LOWER) == wanted:
+                found[entry.name] = is_link(entry.stat(follow_symlinks=False)) if os.name == "nt" else entry.is_symlink()
+    if not found:
+        return None
+    chosen = name if name in found else min(found)
+    return chosen, found[chosen]
+
+
+def game_file(game_root: Path | str | None, path: str) -> Path:
+    """The file a game-relative path names (backslashes, any ASCII letter case: the game's files are named for Windows), kept inside the
+    game folder. Nothing on the way below the game folder, and not the file itself, may be a link: a link is not followed, so what the
+    lookup checked is what is read. The game folder itself may be reached through links. A reader that fails is a CompileError, never an
+    OSError: the message carries no system text."""
+    if game_root is None or os.fspath(game_root) in ("", b""):
+        raise CompileError(NO_GAME_FOLDER)
+    unreadable = CompileError(f"the included file {path} could not be read")
+    try:
+        root = os.fsdecode(os.fspath(game_root))
+        if "\x00" in root:
+            raise unreadable
+        at = os.path.abspath(root)
+        for part in path.replace("\\", "/").split("/"):
+            if not part or part == ".":
+                continue
+            if part == "..":
+                raise CompileError(f"a path cannot climb out of the game folder: {path}")
+            found = entry_named(at, part) if os.path.isdir(at) else None
+            if found is None:
+                raise MissingInclude(path)
+            if found[1]:
+                raise CompileError(link_message(path))
+            at = os.path.join(at, found[0])
+        regular = stat.S_ISREG(os.lstat(at).st_mode)
+    except CompileError:
+        raise
+    except Exception:  # noqa: BLE001 - a permission, a folder that cannot be listed, a name the system rejects: all "could not be read"
+        raise unreadable from None
+    if not regular:
         raise CompileError(f"{path} is not a file inside the game folder")
-    return at
+    return Path(at)
 
 
-def read_source(path: Path) -> str:
-    """A script or header as text: the game's files are single-byte text."""
-    if path.stat().st_size > MAX_SOURCE:
-        raise CompileError(f"{path.name} is longer than a million bytes")
-    return path.read_bytes().decode("latin-1")
+def read_file(path: str, limit: int) -> tuple[str | None, bytes]:
+    """(problem, bytes) for the file at `path`, opened once and never followed: the file is opened without blocking and without following
+    a link, and its type and size are those of the open file, so nothing swapped in after a look can make the read wait (a named pipe
+    would wait for a writer for ever) or pass the size limit. The problem is None, "link", "not a file", "too long" or "unreadable"."""
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        if not hasattr(os, "O_NOFOLLOW") and is_link(os.lstat(path)):  # no such flag (Windows): look first
+            return "link", b""
+        fd = os.open(path, flags)
+    except OSError as error:
+        return ("link" if error.errno == errno.ELOOP else "unreadable"), b""
+    except ValueError:  # an embedded null character
+        return "unreadable", b""
+    try:
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode):
+            return "not a file", b""
+        if info.st_size > limit:
+            return "too long", b""
+        chunks, total = [], 0
+        while total <= limit:  # a file that grows while it is read is cut at the limit and refused
+            chunk = os.read(fd, min(1 << 16, limit + 1 - total))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            total += len(chunk)
+        return ("too long", b"") if total > limit else (None, b"".join(chunks))
+    except OSError:
+        return "unreadable", b""
+    finally:
+        os.close(fd)
 
 
-def includes_from(game_root: Path) -> Callable[[str], str]:
+def read_source(path: Path | str, included_as: str | None = None) -> str:
+    """A script or header as text: the game's files are single-byte text. `included_as` is the include path as written, when the file is
+    a header (the messages then name it); the file must not be a link, must be a regular file and may hold a million bytes."""
+    file = os.fspath(path)
+    shown = included_as if included_as is not None else os.path.basename(file)
+    problem, data = read_file(file, MAX_SOURCE)
+    if problem == "link":
+        raise CompileError(link_message(shown))
+    if problem == "not a file":
+        raise CompileError(f"{shown} is not a file inside the game folder")
+    if problem == "too long":
+        raise CompileError(f"{os.path.basename(file)} is longer than a million bytes")
+    if problem == "unreadable":
+        raise CompileError(f"the included file {shown} could not be read" if included_as is not None else f"{shown} could not be read")
+    return data.decode("latin-1")
+
+
+def includes_from(game_root: Path | str | None) -> Callable[[str], str]:
     """Reads an included file by the game-relative path the source names."""
-    return lambda path: read_source(game_file(game_root, path))
+    return lambda path: read_source(game_file(game_root, path), included_as=path)
 
 
 def counter_start(record: dict, pattern: str) -> int:
     for symbol in record["code"]["symbols"]:
         m = re.fullmatch(pattern, symbol["name"])
         if m:
-            return int(m.group(1))
+            digits = m.group(1).lstrip("0")  # a long run of digits is refused before it is made a number
+            if len(digits) > 10 or int(digits or "0") > MAX_COUNTER:
+                raise CompileError(COUNTER_PAST)
+            return int(digits or "0")
     return 0
 
 

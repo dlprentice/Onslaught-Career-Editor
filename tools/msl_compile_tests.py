@@ -491,22 +491,61 @@ class Limits(unittest.TestCase):
             with self.assertRaisesRegex(mc.CompileError, "longer than a million bytes"):
                 mc.includes_from(game)("data\\huge.msl")
 
-    def test_an_include_that_is_a_link_out_of_the_game_folder_is_refused(self):
+    def test_an_include_that_is_or_goes_through_a_link_is_refused(self):
+        """Links are not followed at all: a link to a file or a folder, inside or outside the game folder, a loop, and x/../y through a link."""
         with tempfile.TemporaryDirectory() as folder:
             game = Path(folder, "game")
             (game / "data" / "inc").mkdir(parents=True)
             outside = Path(folder, "outside")
-            outside.mkdir()
+            (outside / "deep").mkdir(parents=True)
             (outside / "secret.msl").write_text("#define X 1\n", encoding="latin-1")
+            (outside / "y.msl").write_text("#define Z 1\n", encoding="latin-1")
             (game / "data" / "inc" / "real.msl").write_text("#define Y 2\n", encoding="latin-1")
             (game / "data" / "inc" / "inside.msl").symlink_to(game / "data" / "inc" / "real.msl")
             (game / "data" / "inc" / "out.msl").symlink_to(outside / "secret.msl")
             (game / "data" / "linkdir").symlink_to(outside, target_is_directory=True)
+            (game / "x").symlink_to(outside / "deep", target_is_directory=True)
+            (game / "inc.msl").symlink_to("x/../y.msl")
+            (game / "loopa").symlink_to("loopb")
+            (game / "loopb").symlink_to("loopa")
             read = mc.includes_from(game)
-            self.assertEqual(read("data\\inc\\inside.msl"), "#define Y 2\n")  # a link that stays inside is a file inside
-            for path in ("data\\inc\\out.msl", "data\\linkdir\\secret.msl"):
-                with self.assertRaisesRegex(mc.CompileError, "is not a file inside the game folder"):
+            self.assertEqual(read("data\\inc\\real.msl"), "#define Y 2\n")
+            for path in ("data\\inc\\inside.msl", "data\\inc\\out.msl", "data\\linkdir\\secret.msl", "inc.msl", "x\\..\\y.msl", "loopa", "data\\linkdir"):
+                with self.subTest(path), self.assertRaises(mc.CompileError) as caught:
                     read(path)
+                self.assertEqual(str(caught.exception), f"{path} is a link or goes through one, which is not followed")
+            # the game folder itself may be reached through a link
+            (Path(folder) / "gamelink").symlink_to(game, target_is_directory=True)
+            self.assertEqual(mc.includes_from(Path(folder, "gamelink"))("data\\inc\\real.msl"), "#define Y 2\n")
+
+    def test_no_game_folder_is_a_refusal_not_the_current_folder(self):
+        for root in ("", None):
+            with self.subTest(root), self.assertRaises(mc.CompileError) as caught:
+                mc.includes_from(root)("data\\x.msl")
+            self.assertEqual(str(caught.exception), "no game folder is given")
+
+    def test_a_counter_of_the_session_stops_at_the_largest_int(self):
+        top = mc.MAX_COUNTER
+        self.assertEqual(symbol_table(compile_text("init()\n{\n\tPause(1);\n}\n", const_start=top))[-1][0], f"const data{top}")
+        with self.assertRaisesRegex(mc.CompileError, r"^line 4: a counter of the compile session is past 2147483647$"):
+            compile_text("init()\n{\n\tPause(1);\n\tPause(2);\n}\n", const_start=top)
+        compile_text("init()\n{\n\tdo_once\n\t{\n\t}\n}\n", do_once_start=top - 1)
+        with self.assertRaisesRegex(mc.CompileError, r"^line 3: a counter of the compile session is past 2147483647$"):
+            compile_text("init()\n{\n\tdo_once\n\t{\n\t}\n}\n", do_once_start=top)
+        record = compile_text("init()\n{\n}\n")
+        record["code"]["symbols"].append({"name": "const data2147483648", "dataType": 1, "value": 0, "symbolType": 0, "index": 0, "flag": 1})
+        with self.assertRaisesRegex(mc.CompileError, "past 2147483647"):
+            mc.const_start_of(record)
+
+    def test_a_long_mixed_chain_is_linear_and_its_note_says_it_is_not_written_out(self):
+        levels = "".join(f"#define X{i} X{i + 1} + X{i + 1}\n" for i in range(14)) + "#define X14 a\n"  # 2 to the 14th operands
+        notes: list[mc.Note] = []
+        started = time.perf_counter()
+        record = compile_text(levels + "vars\n\tint a;\n\tint r;\nend_vars\ninit()\n{\n\tr = a < X0;\n}\n", notes=notes)
+        self.assertLess(time.perf_counter() - started, 5)
+        self.assertGreater(len(record["code"]["instructions"]), 1 << 15)
+        self.assertEqual([(n.kind, n.text) for n in notes],
+                         [("grouping", f"the grouping of this expression is not written out: its text is longer than {mc.MAX_NOTE_CHARS} characters")])
 
 
 class GateMain(unittest.TestCase):
