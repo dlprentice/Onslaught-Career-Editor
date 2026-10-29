@@ -23,7 +23,7 @@ internal static class LevelEditorPageTests
     private static uint Bits(float value) => BitConverter.SingleToUInt32Bits(value);
 
     /// <summary>Every file under a folder with its SHA-256, to see that nothing changed.</summary>
-    private static string[] Snapshot(string root) => [.. Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal)
+    internal static string[] Snapshot(string root) => [.. Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal)
         .Select(path => Path.GetRelativePath(root, path) + " " + Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(path))))];
 
     private static TreeItem? Row(LevelEditorPage page, int index)
