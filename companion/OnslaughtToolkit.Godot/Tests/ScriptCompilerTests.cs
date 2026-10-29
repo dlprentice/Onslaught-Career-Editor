@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using System.Diagnostics;
 using System.Globalization;
+using OnslaughtToolkit.Companion.Development;
 using OnslaughtToolkit.Companion.Levels;
 using OnslaughtToolkit.Companion.Missions;
 
@@ -22,7 +23,9 @@ internal static class ScriptCompilerTests
         Tables(check);
         Lexing(check);
         Counters(check);
+        ReaderFailures(check);
         Files(output, check);
+        GatePrivacy(output, check);
         Limits(check);
         Records(check);
     }
@@ -57,6 +60,37 @@ internal static class ScriptCompilerTests
         {
             return error.Message.Contains(fragment, StringComparison.Ordinal);
         }
+    }
+
+    private static void ReaderFailures(Checks check)
+    {
+        const string input = "#include data\\missing.msl\n";
+        Func<string, string> failing = _ => throw new InvalidOperationException("private system detail");
+        CompileError error = Refused(input, failing);
+        check.That(error.Message == "the included file data\\missing.msl could not be read" && !error.Message.Contains("private system detail", StringComparison.Ordinal),
+            "an include-reader failure becomes a stable compiler refusal without system details");
+        CompileError expected = new("specific refusal");
+        Func<string, string> stated = _ => throw expected;
+        check.That(ReferenceEquals(Refused(input, stated), expected), "an existing compiler refusal keeps its original type and message");
+    }
+
+    private static void GatePrivacy(string output, Checks check)
+    {
+        string game = Path.Combine(output, "compiler-gate-privacy"), resources = Path.Combine(game, "data", "resources");
+        Directory.CreateDirectory(resources);
+        byte[] archive = LevelTests.Unpack(LevelVectors.Archives.First(item => item.Name == "level-100").File);
+        File.WriteAllBytes(Path.Combine(resources, "100_res_PC.aya"), archive);
+        LevelWorlds worlds = LevelArchive.Read(archive);
+        MissionScript script = WorldBody.Read(worlds.RealBody!).Scripts[0];
+        string sourceFolder = Path.Combine(game, "data", "MissionScripts", "level100");
+        Directory.CreateDirectory(sourceFolder);
+        const string marker = "PrivateDiagnosticMarker";
+        File.WriteAllText(Path.Combine(sourceFolder, script.Name + ".msl"), $"init() {{ {marker}(); }}\n");
+        List<string> printed = [], errors = [];
+        int result = ScriptsGateCheck.Run(game, "", printed.Add, errors.Add);
+        check.That(result == 1 && errors.Any(line => line.Contains(": refused", StringComparison.Ordinal)) &&
+                   !printed.Concat(errors).Any(line => line.Contains(marker, StringComparison.Ordinal)),
+            "the actual gate reports a refused authored script without printing its source or record detail");
     }
 
     // ---- the reference's own answers

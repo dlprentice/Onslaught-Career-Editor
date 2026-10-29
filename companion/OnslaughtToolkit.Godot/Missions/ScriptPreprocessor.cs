@@ -26,7 +26,15 @@ internal static class ScriptPreprocessor
         {
             if (ScriptLexer.IncludeOf(raw) is { } path)
             {
-                DefineFrom(readInclude(path));
+                string included;
+                try { included = readInclude(path); }
+                catch (CompileError) { throw; }
+                catch (Exception error) when (error is not OutOfMemoryException)
+                {
+                    // A caller-supplied reader may fail for many reasons; do not expose system text in a compiler diagnostic.
+                    throw new CompileError($"the included file {path} could not be read");
+                }
+                DefineFrom(included);
                 body.Add("");  // the line stays, so the lines after it keep their numbers
             }
             else if (ScriptLexer.IsDefine(raw))

@@ -86,12 +86,11 @@ internal static class ScriptsGateCheck
                 for (int index = 0; index < body.Scripts.Count; index++)
                 {
                     MissionScript shipped = body.Scripts[index];
-                    (string status, string detail, MissionScript? compiled) = Judge(game, readInclude, folderLevel, shipped);
+                    var (status, _, compiled) = Judge(game, readInclude, folderLevel, shipped);
                     (int, string) staleKey = (folderLevel, shipped.Name);
-                    if (status == "different" && StaleSources.TryGetValue(staleKey, out string? how))
+                    if (status == "different" && StaleSources.ContainsKey(staleKey))
                     {
                         status = "stale source";
-                        detail = how;
                         seenStale.Add(staleKey);
                     }
                     else if (StaleSources.ContainsKey(staleKey))
@@ -101,7 +100,7 @@ internal static class ScriptsGateCheck
                     }
                     scripts++;
                     counts[status] = counts.GetValueOrDefault(status) + 1;
-                    if (status is not ("exact" or "exact, assisted" or "stale source")) failures.Add($"{archive.Level:D3} {tag} {shipped.Name}: {status}: {detail}");
+                    if (status is not ("exact" or "exact, assisted" or "stale source")) failures.Add($"{archive.Level:D3} {tag} {shipped.Name}: {status}");
                     if (table is not null)
                     {
                         string key = $"{archive.Level}\t{tag}\t{shipped.Name}";
@@ -154,7 +153,16 @@ internal static class ScriptsGateCheck
         {
             return ("no source", error.Message, null);
         }
-        int constStart = ScriptCompiler.ConstStartOf(shipped), doOnceStart = ScriptCompiler.DoOnceStartOf(shipped);
+        int constStart, doOnceStart;
+        try
+        {
+            constStart = ScriptCompiler.ConstStartOf(shipped);
+            doOnceStart = ScriptCompiler.DoOnceStartOf(shipped);
+        }
+        catch (CompileError error)
+        {
+            return ("refused", error.Message, null);
+        }
         string status = "exact";
         MissionScript compiled;
         try
