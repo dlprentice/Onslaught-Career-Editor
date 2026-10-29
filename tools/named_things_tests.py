@@ -15,6 +15,7 @@ from pathlib import Path
 
 import cmsh_animation_usage_census_tests as mesh_fixtures
 import content_catalog_gate as gate
+import game_tables_decode_tests as tables
 import named_things as nt
 import world_resources_decode as wrd
 import world_resources_encode as wre
@@ -325,6 +326,7 @@ class GateTests(unittest.TestCase):
             game = Path(temp)
             (game / "data" / "resources").mkdir(parents=True)
             (game / "data" / "default physics.dat").write_bytes(GATE_PHYSICS)
+            tables.write_tables(game)
             for level, data in archives.items():
                 (game / "data" / "resources" / f"{level:03d}_res_PC.aya").write_bytes(data)
             out = io.StringIO()

@@ -48,6 +48,7 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/dds_metadata_tests.py",),
     ("tools/content_catalog_tests.py",),
     ("tools/named_things_tests.py",),
+    ("tools/game_tables_decode_tests.py",),
     ("tools/export_asset_catalog_tests.py",),
     ("tools/world_resources_encode_tests.py",),
     ("tools/world_mod_stage_tests.py",),

@@ -21,8 +21,12 @@ import content_catalog as catalog
 import content_catalog_gate as gate
 from dds_census_tests import dds as authored_dds
 from dds_metadata_tests import rgb_dds as authored_rgb_dds
+import game_tables_decode_tests as tables
 import mission_script_inspect as inspector
 import named_things_tests as named
+import world_resources_encode as worldenc
+import worldheaders_decode_tests as worldheader_fixtures
+import xap_bank_walk_tests as xap_fixtures
 import public_allowlist_safety_check as safety
 import world_resources_decode as worlddec
 
@@ -1015,11 +1019,15 @@ class PayloadCatalogueTests(unittest.TestCase):
 
 
 class PayloadGateTests(unittest.TestCase):
-    def run_gate(self, base: bytes) -> tuple[int, str]:
+    def run_gate(self, base: bytes, *, sfx_data: bytes | None = None, headers: bytes | None = None,
+                 config_data: bytes | None = None) -> tuple[int, str]:
         with tempfile.TemporaryDirectory() as temp:
             game = Path(temp)
             (game / "data" / "resources").mkdir(parents=True)
             (game / "data" / "default physics.dat").write_bytes(named.GATE_PHYSICS)
+            tables.write_tables(game, sfx_data=sfx_data, config_data=config_data)
+            if headers is not None:
+                (game / "data" / "worldheaders.dat").write_bytes(headers)
             (game / "data" / "resources" / "201_res_PC.aya").write_bytes(
                 named.level_archive(None, named.body([named.unit("Turret", "Gun")])))
             (game / "data" / "resources" / "base_res_PC.aya").write_bytes(base)
@@ -1044,12 +1052,169 @@ class PayloadGateTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("base_res_PC.aya DMKR at", out)
 
+    def test_the_tables_are_decoded_and_what_they_name_is_counted(self) -> None:
+        code, out = self.run_gate(resource_archive(), headers=worldheader_fixtures.fixture(
+            (201, ["Racer"], (0, 0, 0, 0))))
+        self.assertEqual(code, 0, out)
+        for line in ("configurations: 1", "configuration weapon names with no weapon: 4", "sound effects: 1",
+                     "sound effects whose sample sounds_english_pc.xap lacks: 0", "sample banks: 1",
+                     "configuration explosions with no explosion: 1",
+                     "configuration cockpits with no loose mesh: 1", "levels whose two configuration lists differ: 1"):
+            self.assertIn(line, out)
+
+    def test_an_effect_table_the_loader_would_misread_fails(self) -> None:
+        code, out = self.run_gate(resource_archive(), sfx_data=b"104\n0\n")
+        self.assertEqual(code, 1)
+        self.assertIn("sounds.sfx does not decode", out)
+        code, out = self.run_gate(resource_archive(), config_data=tables.configs(tables.config()) + b"\0")
+        self.assertEqual(code, 1)
+        self.assertIn("the battle engine configurations do not decode", out)
+
+    def test_an_effect_whose_sample_a_bank_lacks_is_counted(self) -> None:
+        code, out = self.run_gate(resource_archive(), sfx_data=tables.sfx([("Engine", "Units\\engine", 30, 1, 0),
+                                                                             ("Gone", "Units\\gone", 30, 0, 0)]))
+        self.assertEqual(code, 0, out)
+        self.assertIn("sound effects whose sample sounds_english_pc.xap lacks: 1", out)
+
     def test_a_patch_strip_outside_its_patch_fails(self) -> None:
         strips = valid_strips()
         strips[47] = [0, 1, 81]
         code, out = self.run_gate(resource_archive(chunk(b"PMIB", pmib_payload(strips))))
         self.assertEqual(code, 1)
         self.assertIn("indexes vertex 81 of a 81-vertex patch", out)
+
+
+# ------------------------------------------------------------------- battle engine configurations and sound effects
+def tables_level_archive() -> bytes:
+    """Level 300: its world header offers Standard and a name no record has; Sounds plays two samples by name."""
+    model = named.world_model([named.marker(27, script="Sounds")], scripts=(named.script(
+        "Sounds", [("PlaySample", ["hud\\BEEP"]), ("PlaySample", ["Nope"])]),))
+    model["header"]["battleEngineConfigurations"] = ["Standard", "Paladin"]
+    wrld = chunk(b"WDAT", struct.pack("<ii", -1, 300)) + chunk(b"RLWD", worldenc.write_world_body(model))
+    return resource_archive(chunk(b"WRES", chunk(b"WRLD", wrld)))
+
+
+TABLES_PHYSICS = mesh_fixtures._physics_fixture(
+    (1, "Tank", {8: struct.pack("<I", 3), 9: b"authored.msh\0"}), (8, "Rock", {2: b"authored.msh\0"}),
+    (2, "Gun A", {1: b"\0"}), (2, "Gun B", {1: b"\0"}), (6, "Boom", {1: b"\0"}))
+
+
+class TablesCatalogueTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as decomp_temp:
+            game = Path(temp)
+            authored_install(game)
+            (game / "data/default physics.dat").write_bytes(TABLES_PHYSICS)
+            (game / "data/battle engine configurations.dat").write_bytes(tables.configs(
+                tables.config(name="Racer", walker=("Gun A",), jet=(), primary="Gun A", aug="", explosion="Boom",
+                              cockpit="authored.msh", language=10),
+                tables.config(name="Standard", walker=("Gun A", "Missing Gun", "Tank"), jet=("Gun B",), primary="Gun A",
+                              aug="Gun B", explosion="Boom", cockpit="nothing.msh", language=2)))
+            (game / "data/sounds/sounds.sfx").write_bytes(tables.sfx([
+                ("Engine", "Units\\engine", 30, True, False), ("Shot", "Units\\shot", 50, False, False),
+                ("shot", "Units\\shot", 60, False, False), ("Hello", "Speech\\hello", 80, False, True),
+                ("Lost", "Units\\missing", 10, False, False)]))
+            for lang, extra in (("english", [("Speech\\hello", 4, bytes(1))]), ("french", [])):
+                (game / f"data/sounds/sounds_{lang}_pc.xap").write_bytes(xap_fixtures.bank(
+                    [("Units\\engine", 4, bytes(1)), ("units\\SHOT", 4, bytes(1)), ("Hud\\beep", 4, bytes(1))] + extra))
+            (game / "data/resources/300_res_PC.aya").write_bytes(tables_level_archive())
+            (game / "data/worldheaders.dat").write_bytes(worldheader_fixtures.fixture(
+                (300, ["Standard", "Racer", "Ghost"], (0, 0, 0, 0))))
+            decomp = Path(decomp_temp)
+            (decomp / "src").mkdir()
+            (decomp / "src" / "Engine.cpp").write_text(
+                'void CEngine::Sound()\t// FUNCTION: 0x00401000\n{\n\tSOUND.GetEffectByName("Engine");\n'
+                '\tSOUND.PlayNamedEffect("Gone");\n\tSOUND.GetEffectByName("SHOT");\n}\n', encoding="latin-1")
+            cls.catalog = catalog.build_catalog(game, decomp)
+        cls.assets = {a["id"]: a for a in cls.catalog["assets"]}
+        cls.configs = {a["name"]: a for a in cls.catalog["assets"] if a["type"] == "configuration"}
+        cls.effects = [a for a in cls.catalog["assets"] if a["type"] == "sound-effect"]
+
+    def rel(self, asset: dict, rtype: str) -> list[dict]:
+        return [r for r in asset["relationships"] if r["type"] == rtype]
+
+    def test_each_configuration_names_its_weapons_explosion_cockpit_and_description(self) -> None:
+        standard = self.configs["Standard"]
+        self.assertEqual((standard["configuration"]["listPosition"], standard["configuration"]["fallback"]), (0, True))
+        weapons = {(r["role"], r["targetName"]): (r["status"], r["target"]) for r in self.rel(standard, "uses-weapon")}
+        self.assertEqual(weapons, {("walker", "Gun A"): ("resolved", "definition:gun a"),
+                                   ("walker", "Missing Gun"): ("unresolved", None),
+                                   ("walker", "Tank"): ("unresolved", None),  # a unit, not a weapon
+                                   ("jet", "Gun B"): ("resolved", "definition:gun b"),
+                                   ("primary", "Gun A"): ("resolved", "definition:gun a"),
+                                   ("aug", "Gun B"): ("resolved", "definition:gun b")})
+        [boom] = self.rel(standard, "uses-explosion")
+        self.assertEqual((boom["status"], boom["target"]), ("resolved", "definition:boom"))
+        self.assertEqual(self.assets["definition:boom"]["definition"]["kinds"], ["explosion"])
+        [cockpit] = self.rel(standard, "uses-mesh")
+        self.assertEqual((cockpit["status"], cockpit["targetName"]), ("unresolved", "nothing.msh"))
+        [racer_cockpit] = self.rel(self.configs["Racer"], "uses-mesh")
+        self.assertEqual(racer_cockpit["target"], "mesh:data/resources/meshes/m_authored.msh.aya")
+        [description] = self.rel(standard, "uses-text")
+        self.assertEqual((description["textId"], description["status"]), (0xE3FCBF7C, "unresolved"))  # no english.dat
+        [racer_text] = self.rel(self.configs["Racer"], "uses-text")
+        self.assertIn("no case 10", racer_text["evidence"][0]["rule"])
+        self.assertEqual([r["role"] for r in self.rel(self.configs["Racer"], "uses-weapon")], ["walker", "primary"])
+
+    def test_a_level_offers_configurations_by_page_and_by_world_header(self) -> None:
+        offers = {(r["role"], r["slot"]): r for r in self.rel(self.assets["level:300"], "offers-configuration")}
+        self.assertEqual({k: (r["targetName"], r["status"], r["target"]) for k, r in offers.items()}, {
+            ("page", 0): ("Standard", "resolved", self.configs["Standard"]["id"]),
+            ("page", 1): ("Racer", "resolved", self.configs["Racer"]["id"]),
+            ("page", 2): ("Ghost", "unresolved", None),  # the page asks by name: no fallback
+            ("world-header", 0): ("Standard", "resolved", self.configs["Standard"]["id"]),
+            ("world-header", 1): ("Paladin", "unresolved", None)})
+        self.assertEqual(offers[("world-header", 1)]["fallback"], self.configs["Standard"]["id"])  # the last record
+        self.assertFalse(self.assets["level:300"]["level"]["configurationListsAgree"])
+        self.assertNotIn("configurationListsAgree", self.assets["level:200"]["level"])  # no worldheaders.dat record
+
+    def test_effects_play_their_bank_samples_and_chain_by_name(self) -> None:
+        by_index = {e["soundEffect"]["index"]: e for e in self.effects}
+        [engine] = self.rel(by_index[0], "plays-sample")
+        self.assertEqual((engine["status"], len(engine["targets"])), ("resolved-per-archive", 2))  # one per bank
+        [hello] = self.rel(by_index[3], "plays-sample")
+        self.assertEqual((hello["status"], hello["target"]), ("resolved", "audio:data/sounds/sounds_english_pc.xap#3"))
+        [lost] = self.rel(by_index[4], "plays-sample")
+        self.assertEqual(lost["status"], "unresolved")
+        [shot] = self.rel(by_index[1], "plays-sample")
+        self.assertEqual(shot["status"], "resolved-per-archive")  # stricmp: Units\\shot finds units\\SHOT
+        [variant] = self.rel(by_index[2], "variant-of")
+        self.assertEqual((variant["target"], by_index[2]["soundEffect"]["variants"]), (by_index[1]["id"], 2))
+        self.assertEqual(by_index[3]["soundEffect"]["languageDependent"], True)
+
+    def test_scripts_play_bank_samples_not_effects(self) -> None:
+        [script] = [a for a in self.catalog["assets"] if a["type"] == "script-code" and a["scriptCode"]["level"] == 300]
+        plays = {r["targetName"]: r for r in self.rel(script, "plays-sample")}
+        self.assertEqual((plays["hud\\BEEP"]["status"], len(plays["hud\\BEEP"]["targets"])), ("resolved-per-archive", 2))
+        self.assertEqual(plays["Nope"]["status"], "unresolved")
+
+    def test_code_looks_effects_up_by_name(self) -> None:
+        engine = next(e for e in self.effects if e["name"] == "Engine")
+        [site] = self.rel(engine, "named-by-code")
+        self.assertIn("src/Engine.cpp:3", site["evidence"][0]["source"])
+        refs = self.catalog["codeReferences"]
+        self.assertEqual((refs["effectSites"], refs["unresolvedEffectNames"]), (3, ["Gone"]))
+        heads = {e["soundEffect"]["index"]: len(self.rel(e, "named-by-code")) for e in self.effects}
+        self.assertEqual((heads[1], heads[2]), (1, 0))  # the chain's head is on the list, its variant is not
+
+    def test_the_new_records_match_the_schema_and_name_no_absent_id(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        self.assertEqual(catalog.dangling_targets(self.catalog["assets"]), [])
+        schema = json.loads((catalog.TOOLS / "content_catalog.schema.json").read_text(encoding="utf-8"))
+        validator = jsonschema.Draft202012Validator(schema)
+        for asset in self.catalog["assets"]:
+            self.assertEqual(sorted(validator.iter_errors({**asset, catalog.GENERATED_MARKER: True}), key=str), [],
+                             asset["id"])
+        coverage = catalog.build_coverage(self.catalog)
+        self.assertEqual(coverage["tables"]["soundEffects"]["chained"], 1)
+        survey = {f["family"]: f for f in self.catalog["survey"]["families"]}
+        self.assertEqual((survey["battle-engine-config-dat"]["status"], survey["sfx-catalog"]["status"]),
+                         ("catalogued", "catalogued"))
+        self.assertIn("CBattleEngineData::Load", survey["battle-engine-config-dat"]["loader"])
 
 
 class BoundaryTests(unittest.TestCase):

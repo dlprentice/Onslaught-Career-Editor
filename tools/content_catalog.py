@@ -9,7 +9,8 @@ meshes with their animation modes; levels with their decoded world bodies (WRES:
 features, markers for every other thing, waypoint paths, the compiled mission scripts and what their literal call
 arguments name, with the thing names joined on the level's registry of named things, tools/named_things.py) and terrain
 payloads (ERES heightfield and mixers, SURF, SSHD; tools/world_resources_decode.py), the base archive's vertex shaders
-(VSDS), landscape patch strips (PMIB) and damage texture (DMKR), the physics definitions they instantiate; goodies; particle effects; XAP samples, Ogg Vorbis music and voice (with the
+(VSDS), landscape patch strips (PMIB) and damage texture (DMKR), the physics definitions they instantiate; the battle engine configurations and the sounds.sfx effects
+(tools/game_tables_decode.py); goodies; particle effects; XAP samples, Ogg Vorbis music and voice (with the
 transcript line that names each voice file), Bink films; and an inventory of mission scripts, text and symbol
 tables. It joins the texture names code builds with sprintf from the map's numbers (sky cube, water, detail mixer)
 and the HUD's, and with --decomp also the texture and mesh names game code looks up literally. Each mesh and texture
@@ -52,6 +53,7 @@ import aya_cross_platform_compare as cross  # noqa: E402
 import aya_texture_fidelity_census as packed  # noqa: E402
 import cmsh_animation_usage_census as meshcensus  # noqa: E402
 import dds_census  # noqa: E402
+import game_tables_decode as gtd  # noqa: E402
 import language_dat_decode  # noqa: E402
 import named_things  # noqa: E402
 import world_resources_decode as wrd  # noqa: E402
@@ -101,7 +103,9 @@ L_TEXT = cite("text.cpp", "CText::Init", "0x004f2150")
 L_PARTICLES = cite("ParticleSet.cpp", "CParticleSet::LoadAllFromDisk", "0x004cda60")
 L_HEADERS = cite("world.cpp", "CWorld::LoadHeader", "0x0050d4c0")
 L_PHYSICS = cite("WorldPhysicsManager.cpp", "UPhysicsManager::Reload", "0x00510800")
-L_BECONFIG = cite("BattleEngineConfigurations.cpp", "UBattleEngineConfigurations::Load", "0x0040f180")
+# UBattleEngineConfigurations::Load (0x0040f180) reads a world header's configuration names; the .dat file is read by
+# UPhysicsManager::Reload -> UBattleEngineDataManager::Load -> CBattleEngineData::Load (tools/game_tables_decode.py).
+L_BECONFIG = gtd.L_BE_RELOAD + " -> " + gtd.L_BE_LOAD
 L_BYTESPRITE = cite("bytesprite.cpp", "CByteSprite::Load", "0x004184c0")
 L_GOODIES = cite("FEPGoodies.cpp", "CFEPGoodies::Deserialise", "0x0045c870")
 
@@ -130,8 +134,8 @@ FAMILIES = (
      "film", L_FMV + "; " + L_FEVIDEO + "; " + L_BRIEFING, "tools/export_video_manifest.py (hashes); "
      "tools/content_catalog.py (Bink header)", "catalogued"),
     ("sfx-catalog", lambda p: p.startswith("data/sounds/") and p.endswith(".sfx"),
-     "sound-event table", L_SFX, "none in tools/ (text; documented in onslaught-preservation formats/ogg-audio.md)",
-     "inventoried"),
+     "sound-event table", gtd.L_SFX_INIT + " -> " + L_SFX + " (the PC reads data\\sounds\\sounds.sfx only)",
+     "tools/game_tables_decode.py:parse_sfx", "catalogued"),
     ("language-dat", lambda p: p.startswith("data/language/") and p.endswith(".dat"),
      "localized text", L_TEXT, "tools/language_dat_decode.py (entries, voice names, goodie titles)", "catalogued"),
     ("mission-script-msl", lambda p: p.startswith("data/missionscripts/") and (p.endswith(".msl") or p.endswith(".h")),
@@ -150,7 +154,8 @@ FAMILIES = (
     ("default-physics-dat", lambda p: p == "data/default physics.dat", "physics/unit definitions", L_PHYSICS,
      "tools/cmsh_animation_usage_census.py (definition names, mesh and behaviour fields only)", "catalogued"),
     ("battle-engine-config-dat", lambda p: p == "data/battle engine configurations.dat", "battle engine loadouts",
-     L_BECONFIG, "none in tools/", "unparsed"),
+     L_BECONFIG, "tools/game_tables_decode.py:parse_battle_engine_configurations; tools/battle_engine_config_decode.py "
+     "(byte spans)", "catalogued"),
     ("dial-raw", lambda p: p == "data/dial.raw", "HUD sprite (raw bytes)", L_BYTESPRITE + " (data\\%s.raw)", "none",
      "unparsed"),
     ("splash-tga", lambda p: p.startswith("data/textures/") and p.endswith(".tga"), "image",
@@ -1195,7 +1200,8 @@ def link_imposters(collect: dict, descriptors_by_id: dict) -> None:
                     archive=row["archive"].casefold(), meshResourceId=imp["meshResourceId"]))
 
 
-PHYSICS_STATEMENTS = {1: "unit", 8: "feature", 9: "hazard"}  # EPhysicsStatement (CPhysicsScriptStatements.h)
+# EPhysicsStatement (CPhysicsScriptStatements.h): PST_UNIT, PST_WEAPON, PST_EXPLOSION, PST_FEATURE, PST_HAZARD
+PHYSICS_STATEMENTS = {1: "unit", 2: "weapon", 6: "explosion", 8: "feature", 9: "hazard"}
 # Which behaviours have a squad (UPhysicsManager::SpawnSquad, 0050f4b0) is tools/named_things.py:squad_class; LoadWorld
 # asks it of the first unit definition of a name.
 L_SPAWNSQUAD = cite("WorldPhysicsManager.cpp", "UPhysicsManager::SpawnSquad", "0x0050f4b0")
@@ -1204,10 +1210,11 @@ TEXT_TABLE_ID = "text-table:data/language/english.dat"
 
 
 def physics_names(data: bytes) -> dict:
-    """The Unit, Feature and Hazard statement names in load order (UPhysicsManager::Reload; strcmp lookups)."""
+    """The Unit, Weapon, Explosion, Feature and Hazard statement names in load order (UPhysicsManager::Reload; each
+    kind's list is appended to, and its lookups take the first strcmp match)."""
     if len(data) < 6 or struct.unpack_from("<H", data, 0)[0] != 0x12:
         raise ValueError("unsupported physics-definition framing")
-    out: dict[str, list[str]] = {"unit": [], "feature": [], "hazard": []}
+    out: dict[str, list[str]] = {kind: [] for kind in PHYSICS_STATEMENTS.values()}
     offset = 2
     while struct.unpack_from("<i", data, offset)[0] != -1:
         rtype, _size = struct.unpack_from("<II", data, offset)
@@ -1870,7 +1877,7 @@ def code_int(token: str) -> int | None:
 
 def code_references(decomp: Path | None) -> dict:
     """Literal texture and mesh names passed to the lookups in the decompilation's sources (optional input)."""
-    refs = {"textures": [], "meshes": [], "source": None}
+    refs = {"textures": [], "meshes": [], "effects": [], "source": None}
     if decomp is None:
         return refs
     src = decomp / "src"
@@ -1896,6 +1903,9 @@ def code_references(decomp: Path | None) -> dict:
             for m in CODE_MESH_RE.finditer(line):
                 refs["meshes"].append({"name": m.group(1).replace("\\\\", "\\"),
                                        "site": f"{DECOMP} src/{path.name}:{number} {function or '(file scope)'}"})
+            for m in CODE_EFFECT_RE.finditer(line):
+                refs["effects"].append({"name": m.group(2).replace("\\\\", "\\"), "call": m.group(1),
+                                        "site": f"{DECOMP} src/{path.name}:{number} {function or '(file scope)'}"})
     return refs
 
 
@@ -2316,10 +2326,243 @@ def usage_sentence(u: dict, kind: str) -> str:
     return "; ".join(parts) or "no use established"
 
 
+# --------------------------------------------------------------- battle engine configurations and sound effects
+CODE_EFFECT_RE = re.compile(r'\b(GetEffectByName|PlayNamedEffect)\(\s*"((?:[^"\\]|\\.)+)"')
+L_SCRIPT_SAMPLE = cite("MissionScript/IScript.cpp", "IScript::PlaySample -> CSoundManager::PlayNamedSample", "0x005381f0")
+L_SAMPLE_BANK = cite("pcsoundmanager.cpp", "CPCSoundManager::LoadSampleBank (the current language's XAP bank)",
+                     "0x00517d00")
+L_FE_CONFIG = cite("FEPBEConfig.cpp", "CFEPBEConfig::Load (worldheaders.dat: a level's configuration names, appended) and "
+                   "GetConfigName, then UBattleEngineDataManager::GetConfiguration(name)", "0x0044fe70")
+
+
+def install_path(files: list[dict], family: str, wanted: str | None = None) -> str | None:
+    """The install-relative path of a family's file (the one whose lower-cased path is wanted, when given)."""
+    rows = [r["path"] for r in files if r["family"] == family and r["size"] is not None]
+    if wanted is not None:
+        rows = [r for r in rows if r.casefold() == wanted]
+    return rows[0] if len(rows) == 1 else None
+
+
+def float_field(value: dict | None) -> float | None:
+    return None if value is None else value["value"]
+
+
+def catalog_configurations(game: Path, files: list[dict], defs_by_name: dict, loose: dict, text: dict,
+                           stats: collections.Counter) -> tuple[list[dict], dict | None]:
+    """The battle engine configurations as CBattleEngineData::Load reads them, with what each names."""
+    rel = install_path(files, "battle-engine-config-dat")
+    if rel is None:
+        return [], None
+    data = read_install_file(game / rel)
+    try:
+        parsed = gtd.parse_battle_engine_configurations(data)
+    except gtd.DecodeError as error:
+        stats["configurationFileUndecoded"] += 1
+        return [], {"status": "undecoded", "reason": str(error), "container": rel}
+    english = text.get("english")
+    text_ids = {e["id"] for e in english["entries"]} if english else set()
+    symbol_of = {ident: name for name, ident in text.get("symbols", {}).items()}
+    records = []
+    for c in parsed["records"]:
+        rid = f"configuration:{rel.casefold()}#{c['index']}"
+        rec = base_record(rid, "configuration", c["name"], rel, sha256(data), envelope="battle-engine-configurations",
+                          offset=c["offset"], length=c["length"], raw_sha=c["sha256"], sha_scope="the record's bytes",
+                          parser="tools/game_tables_decode.py:parse_battle_engine_configurations")
+        rec["provenance"]["loader"] = gtd.L_BE_RELOAD + "; " + gtd.L_BE_LOAD + "; " + gtd.L_BE_MANAGER
+        shown = gtd.find_configuration(parsed["records"], c["name"])
+        values = {k: float_field(c[k]) for k in (*gtd.BE_LEADING, "shieldEfficiency", "stealth", "minAirVelocity",
+                                                 "maxWalkVelocity", "walkFriction", "minAirEnergyCost",
+                                                 "rollEnergyCost", "loopEnergyCost")}
+        rec["configuration"] = {
+            "index": c["index"], "listPosition": c["listPosition"], "version": c["version"], "values": values,
+            "walkerWeapons": c["walkerWeapons"], "jetWeapons": c["jetWeapons"], "primaryWeapon": c["primaryWeapon"],
+            "augWeapon": c["augWeapon"], "explosion": c["explosion"], "cockpit": c["cockpit"],
+            "stores": None if c["stores"] is None else [{"heat": st["heat"], "value": float_field(st["value"])}
+                                                        for st in c["stores"]],
+            "languageName": c["languageName"], "defaulted": c["defaulted"],
+            "foundByName": shown is c, "fallback": c["listPosition"] == 0,
+            "rule": "each record joins the front of the list: its name finds the last record of that name, and a world "
+                    "header's name that matches nothing gets the front (the last record)"}
+
+        def definition(rtype: str, kind: str, name: str, rule: str, source: str, **extra) -> dict:
+            d = defs_by_name.get(name)
+            ok = d is not None and kind in d["definition"]["kinds"]
+            stats[f"configuration{kind.title()}s{'Resolved' if ok else 'Unresolved'}"] += 1
+            return relation(rtype, d["id"] if ok else None, "resolved" if ok else "unresolved",
+                            [evidence("loader-code", source, rule + (" (strcmp; the first definition of the name)"
+                                                                      if ok else "; no " + kind + " has that name"))],
+                            targetName=name, **extra)
+
+        for role, names in (("walker", c["walkerWeapons"]), ("jet", c["jetWeapons"]),
+                            ("primary", [c["primaryWeapon"]] if c["primaryWeapon"] else []),
+                            ("aug", [c["augWeapon"]] if c["augWeapon"] else [])):
+            for order, name in enumerate(names):
+                rec["relationships"].append(definition(
+                    "uses-weapon", "weapon", name, "UPhysicsManager::SpawnWeapon gives the battle engine the weapon "
+                    "of that name", gtd.L_BE_WEAPONS, role=role, order=order))
+        rec["relationships"].append(definition("uses-explosion", "explosion", c["explosion"], "the battle engine's "
+                                               "death spawns the explosion of that name", gtd.L_BE_EXPLOSION))
+        target = loose.get("data/resources/meshes/" + meshcensus._loose_mesh_key(c["cockpit"]))
+        stats["configurationCockpits" + ("Resolved" if target else "Unresolved")] += 1
+        rec["relationships"].append(relation(
+            "uses-mesh", target["id"] if target else None, "resolved" if target else "unresolved", [evidence(
+                "loader-code", gtd.L_BE_COCKPIT, "the cockpit is a CRTMesh whose name CMesh::GetMesh looks up (a loose "
+                "mesh m_<name>.aya)")], targetName=c["cockpit"], role="cockpit"))
+        text_id = gtd.BE_DESCRIPTION_TEXT.get(c["languageName"])
+        if text_id is None:
+            rec["relationships"].append(relation("uses-text", None, "unresolved", [evidence(
+                "loader-code", gtd.L_BE_DESCRIPTION, f"the description switch has no case {c['languageName']}, so the "
+                "configuration page shows its fixed text for an unknown configuration")], role="description"))
+        else:
+            ok = text_id in text_ids
+            rec["relationships"].append(relation(
+                "uses-text", TEXT_TABLE_ID if ok else None, "resolved" if ok else "unresolved", [evidence(
+                    "loader-code", gtd.L_BE_DESCRIPTION, f"case {c['languageName']} shows text id {text_id:#010x}; "
+                    "english.dat " + ("has" if ok else "has no") + " entry with that id")],
+                textId=text_id, textSymbol=symbol_of.get(text_id), role="description"))
+        records.append(rec)
+    stats["configurations"] += len(records)
+    return records, {"status": "decoded", "container": rel, "records": parsed["records"]}
+
+
+def link_level_configurations(levels: list[dict], worlds: dict, configs: dict | None, stats: collections.Counter
+                              ) -> None:
+    """Each level's configuration names, from worldheaders.dat (the configuration page, by name) and from its world
+    body's header (in game, by the index chosen on that page, with the fallback), joined to the records."""
+    if not configs or configs["status"] != "decoded":
+        return
+    records = configs["records"]
+    rid = lambda c: f"configuration:{configs['container'].casefold()}#{c['index']}"
+    for lvl in levels:
+        n = lvl["level"]["number"]
+        listed = lvl["level"].get("worldHeaderConfigurations")
+        page = listed or []
+        rl = (worlds or {}).get(n, {}).get("RLWD", {})
+        header = rl.get("header", {}).get("battleEngineConfigurations") if "error" not in rl else None
+        for slot, name in enumerate(page):
+            found = gtd.find_configuration(records, name)
+            stats["levelPageConfigurations" + ("Resolved" if found else "Unresolved")] += 1
+            lvl["relationships"].append(relation(
+                "offers-configuration", rid(found) if found else None, "resolved" if found else "unresolved",
+                [evidence("loader-code", L_FE_CONFIG, "the configuration page lists the name and looks it up by "
+                          "strcmp from the front of the list (no fallback)")], targetName=name, role="page", slot=slot))
+        for slot, name in enumerate(header or []):
+            found, matched = gtd.world_configuration(records, name)
+            stats["levelWorldConfigurations" + ("Resolved" if matched else "Fallback")] += 1
+            lvl["relationships"].append(relation(
+                "offers-configuration", rid(found) if matched else None, "resolved" if matched else "unresolved",
+                [evidence("loader-code", gtd.L_BE_WORLD, "in game the page's chosen slot indexes the world header's "
+                          "names; " + ("the name finds this record" if matched else
+                                       "the name matches nothing, so GetConfiguration(0) gives the last record"))],
+                targetName=name, role="world-header", slot=slot,
+                fallback=None if matched or found is None else rid(found)))
+        if header is not None and listed is not None:
+            lvl["level"]["configurationListsAgree"] = list(header) == list(page)
+            stats["levelConfigurationListsAgree" if list(header) == list(page) else
+                  "levelConfigurationListsDiffer"] += 1
+
+
+def sample_index(audio: list[dict]) -> dict[bytes, list[dict]]:
+    """XAP sample records by CSoundManager::GetSample's stricmp key; one per language bank."""
+    out: dict[bytes, list[dict]] = collections.defaultdict(list)
+    for a in audio:
+        if a["audio"].get("role") == "sound-effect":
+            out[gtd.stricmp_key(a["name"])].append(a)
+    return out
+
+
+def sample_relation(name: str, samples: dict, ev: list[dict], **extra) -> dict:
+    found = sorted(samples.get(gtd.stricmp_key(name), []), key=lambda a: a["id"])
+    return find_relation("plays-sample", found, ev, targetName=name, **extra)
+
+
+def catalog_sound_effects(game: Path, files: list[dict], samples: dict, stats: collections.Counter
+                          ) -> tuple[list[dict], dict | None]:
+    """The sound effects as CEffect::LoadSFXFile reads data\\sounds\\sounds.sfx, each joined to its bank samples."""
+    rel = install_path(files, "sfx-catalog", "data/sounds/sounds.sfx")
+    if rel is None:
+        return [], None
+    data = read_install_file(game / rel)
+    try:
+        parsed = gtd.parse_sfx(data)
+    except gtd.DecodeError as error:
+        stats["soundEffectFileUndecoded"] += 1
+        return [], {"status": "undecoded", "reason": str(error), "container": rel}
+    rid = lambda e: f"sound-effect:{rel.casefold()}#{e['index']}"
+    records = []
+    for e in parsed["effects"]:
+        rec = base_record(rid(e), "sound-effect", e["name"], rel, sha256(data), envelope="sfx-text-lines",
+                          offset=e["offset"], length=e["length"], raw_sha=e["sha256"],
+                          sha_scope="the effect's lines (name to comment line)",
+                          parser="tools/game_tables_decode.py:parse_sfx")
+        rec["provenance"]["loader"] = gtd.L_SFX_INIT + "; " + gtd.L_SFX_LOAD + "; " + gtd.L_SFX_LINE
+        rec["soundEffect"] = {k: e[k] for k in ("index", "line", "sample", "lowpassSample", "volume", "falloff",
+                                                 "pitchVariance", "looping", "languageDependent", "variant",
+                                                 "variants")}
+        rec["soundEffect"]["chainHead"] = rid(parsed["effects"][e["head"]])
+        rec["soundEffect"]["rule"] = ("the list keeps the first effect of each name (stricmp); a later one joins that "
+                                      "effect's chain, and PlayEffect plays one effect of the chain at random")
+        ev = [evidence("loader-code", gtd.L_SFX_PLAY + " -> " + gtd.L_SAMPLE, "the effect's sample is looked up "
+                       "(stricmp) among the samples of the language's XAP bank (" + L_SAMPLE_BANK + "); one target "
+                       "per bank")]
+        rec["relationships"].append(sample_relation(e["sample"], samples, ev, role="sample"))
+        stats["soundEffectSamples" + ("Resolved" if samples.get(gtd.stricmp_key(e["sample"])) else "Unresolved")] += 1
+        if e["lowpassSample"]:
+            rec["relationships"].append(sample_relation(e["lowpassSample"], samples, [evidence(
+                "loader-code", gtd.L_SFX_PRECACHE + " -> " + gtd.L_SAMPLE, "the low-pass sample is looked up the same "
+                "way")], role="lowpass"))
+        if e["variant"]:
+            rec["relationships"].append(relation("variant-of", rid(parsed["effects"][e["head"]]), "resolved", [evidence(
+                "loader-code", gtd.L_SFX_LOAD + "; " + gtd.L_SFX_PLAY, "an effect whose name equals one already on "
+                "the list joins that effect's chain; the chain plays one of its effects at random")],
+                variant=e["variant"]))
+        records.append(rec)
+    stats["soundEffects"] += len(records)
+    return records, {"status": "decoded", "container": rel, "version": parsed["version"], "names": parsed["names"],
+                     "chained": parsed["chained"], "trailingBytes": parsed["trailingBytes"]}
+
+
+def link_script_samples(scripts: list[dict], samples: dict, stats: collections.Counter) -> None:
+    """A script's literal PlaySample argument names a bank sample, not a sounds.sfx effect (PlayNamedSample)."""
+    for sc in scripts:
+        for name in sc["scriptCode"].get("samples", []):
+            if not isinstance(name, str):
+                continue
+            row = sample_relation(name, samples, [evidence("loader-code", L_SCRIPT_SAMPLE + " -> " + gtd.L_SAMPLE,
+                                                           "the argument is looked up (stricmp) among the samples of "
+                                                           "the language's XAP bank; one target per bank")],
+                                  role="script")
+            stats["scriptSamples" + ("Resolved" if row["status"] != "unresolved" else "Unresolved")] += 1
+            sc["relationships"].append(row)
+
+
+def link_code_effects(refs: dict, effects: list[dict], stats: collections.Counter) -> list[str]:
+    """Literal effect names game code asks CEffect::GetEffectByName for (with --decomp)."""
+    heads: dict[bytes, dict] = {}
+    for e in effects:
+        if e["soundEffect"]["variant"] == 0:
+            heads.setdefault(gtd.stricmp_key(e["name"]), e)
+    unresolved = []
+    for ref in refs.get("effects", []):
+        stats["codeEffectSites"] += 1
+        target = heads.get(gtd.effect_lookup_key(ref["name"]))
+        if target is None:
+            stats["codeEffectSitesUnresolved"] += 1
+            unresolved.append(ref["name"])
+            continue
+        target["relationships"].append(relation("named-by-code", None, "code-site", [evidence(
+            "loader-code", ref["site"], f"{ref['call']}(\"{ref['name']}\") finds this effect ("
+            + gtd.L_SFX_FIND + ")")]))
+    return sorted(set(unresolved))
+
+
 # -------------------------------------------------------------------------------------------------------- pipeline
 def relationship_ids(r: dict) -> list[str]:
-    """Every record id a relationship names: its target, targets, candidates, shadowed records and setting scripts."""
+    """Every record id a relationship names: its target, targets, candidates, shadowed records, setting scripts and a
+    configuration fallback."""
     out = [r["target"]] if r.get("target") else []
+    if r.get("fallback"):
+        out.append(r["fallback"])
     for key in ("targets", "candidates", "shadowed"):
         out += list(r.get(key) or [])
     out += [s["script"] for s in r.get("setBy") or []]
@@ -2381,20 +2624,28 @@ def build_catalog(game: Path, decomp: Path | None = None) -> dict:
     world = catalog_world(collect, game, loose, archives, script_ids, text, archive_stats)
     definitions, placements = world["definitions"], world["placements"]
     effects = catalog_particles(game, files, dindex)
+    configurations, config_meta = catalog_configurations(game, files, {d["name"]: d for d in definitions}, loose, text,
+                                                         archive_stats)
+    samples = sample_index(audio)
+    sound_effects, sfx_meta = catalog_sound_effects(game, files, samples, archive_stats)
+    link_script_samples(world["scripts"], samples, archive_stats)
     refs = code_references(decomp)
     unresolved_code = link_code_references(refs, dindex, descriptors_by_id, loose, archive_stats)
+    unresolved_effects = link_code_effects(refs, sound_effects, archive_stats)
     link_unloaded_mesh_names(textures, meshes)
     inventory = catalog_text_inventory(game, files, text)
     link_compiled_scripts(inventory, world["scripts"])
     payloads = catalog_payloads(collect)
     levels = catalog_levels(archives, placements, video, game, files, world["worlds"], collect["payloads"],
                             world["registries"])
+    link_level_configurations(levels, world["worlds"], config_meta, archive_stats)
     terrain = {lvl["level"]["number"]: d for lvl in levels for d in [next(
         (p["decoded"] for p in collect["payloads"] if p["tag"] == "ERES" and p["decoded"]["status"] == "decoded"
          and lvl["level"]["resourceArchive"] == "archive:" + p["archive"].casefold()), None)] if d}
     rule_names = link_rule_textures(levels, terrain, dindex, descriptors_by_id, archive_stats)
     assets = (levels + archives + payloads + descriptors + textures + meshes + animations + definitions + placements
-              + world["markers"] + world["paths"] + world["scripts"] + goodies + effects + audio + video + inventory)
+              + world["markers"] + world["paths"] + world["scripts"] + goodies + effects + audio + video + inventory
+              + configurations + sound_effects)
     compute_usage(assets)
     dangling = dangling_targets(assets)
     if dangling:
@@ -2404,8 +2655,12 @@ def build_catalog(game: Path, decomp: Path | None = None) -> dict:
     if duplicates:
         raise ValueError(f"duplicate asset ids: {duplicates[:5]}")
     return {"files": files, "survey": survey, "assets": assets, "archiveStats": dict(archive_stats),
+            "tables": {"configurations": None if config_meta is None else
+                       {k: v for k, v in config_meta.items() if k != "records"},
+                       "soundEffects": sfx_meta},
             "codeReferences": {"source": refs["source"], "textureSites": len(refs["textures"]),
-                               "meshSites": len(refs["meshes"]),
+                               "meshSites": len(refs["meshes"]), "effectSites": len(refs["effects"]),
+                               "unresolvedEffectNames": unresolved_effects,
                                "unresolvedTextureNames": sorted({r["name"] for r in unresolved_code}),
                                "ruleBuiltTextureNames": len(rule_names),
                                "ruleBuiltTextureNamesUnresolved": sorted({(r["level"] or "all") + " " + r["name"]
@@ -2456,6 +2711,7 @@ def build_coverage(catalog: dict) -> dict:
             slot["nameStatus"] for a in assets if a["type"] == "mesh" for slot in a["mesh"]["textures"]).items())),
         "families": file_coverage,
         "unparsedFamilies": [f["family"] for f in survey["families"] if f["status"] in ("unparsed", "inventoried")],
+        "tables": catalog["tables"],
         "namedThings": {
             "entries": sum(len(a["level"].get("namedThings", {}).get("entries", [])) for a in assets
                            if a["type"] == "level"),
@@ -2481,8 +2737,9 @@ def build_coverage(catalog: dict) -> dict:
             "things that leave the list (Shutdown) are listed or noted, not followed",
             "names built with sprintf from data not decoded here: weapon HUD icons (hud\\%s.tga from physics weapon "
             "icon names), screenshot and texture-dump paths (written, not read)",
-            "the .msl source text itself is not parsed (its compiled form is the evidence); mission text .txt, "
-            "sounds.sfx event table, battle engine configurations.dat",
+            "the .msl source text itself is not parsed (its compiled form is the evidence); mission text .txt",
+            "physics definitions are catalogued by name and kind (unit, weapon, explosion, feature, hazard); their "
+            "other fields (the sound effects, particles and icons they name) are not decoded, so those joins are open",
             "Dial.raw and the splash TGA",
         ],
         "notes": {"loaderCitations": families["cmsh-mesh"]["loader"]},

@@ -21,6 +21,14 @@ payloads (tools/world_resources_decode.py), for every resource archive (data/res
     exactly its chunk, so ReadResources' next GetNext lands on the next chunk
   - every PMIB set is a range of the word table whose indices stay inside its level's patch of vertices
 
+tables (tools/game_tables_decode.py):
+  - data/battle engine configurations.dat decodes in CBattleEngineData::Load's order and data/sounds/sounds.sfx in
+    CEffect::LoadSFXFile's, each consumed as the loader consumes it
+  - counted, not failed: the weapon and explosion names the configurations give that no physics definition of that
+    kind has, cockpits with no loose mesh, effects whose sample a language bank lacks, and the levels whose world body
+    header names other configurations than worldheaders.dat lists for them (the page shows one list, the game indexes
+    the other)
+
 The gate reads the game folder and writes nothing. It prints counts (and, with --table, one row per level, derived
 from the game: keep it private); the exit code is 0 only when every check passes.
 
@@ -40,6 +48,9 @@ sys.path.insert(0, str(TOOLS.parent / "rebuild" / "tools"))
 
 import cmsh_animation_usage_census as meshcensus  # noqa: E402
 import content_catalog as cc  # noqa: E402
+import game_tables_decode as gtd  # noqa: E402
+import worldheaders_decode  # noqa: E402
+import xap_bank_walk  # noqa: E402
 import named_things as nt  # noqa: E402
 import world_resources_decode as wrd  # noqa: E402
 import world_resources_encode as wre  # noqa: E402
@@ -183,6 +194,77 @@ def check_payloads(path: Path, counts: collections.Counter, failures: list[str])
             counts[f"DMKR with {decoded['levels'] + 1} mip levels"] += 1
 
 
+def find_file(game: Path, rel: str) -> Path | None:
+    """A file of the game folder by its path, in any letter case (a Windows install's names)."""
+    here = game
+    for part in rel.split("/"):
+        if not here.is_dir():
+            return None
+        here = next((p for p in here.iterdir() if p.name.casefold() == part.casefold()), None)
+        if here is None:
+            return None
+    return here if here.is_file() else None
+
+
+def check_tables(game: Path, worlds_by_level: dict, counts: collections.Counter, failures: list[str]) -> None:
+    """The configurations and the sound effect table: decoded, and what they name counted."""
+    physics = cc.physics_names(cc.read_install_file(game / "data" / "default physics.dat"))
+    path = find_file(game, "data/battle engine configurations.dat")
+    records = []
+    if path is None:
+        failures.append("no data/battle engine configurations.dat")
+    else:
+        try:
+            records = gtd.parse_battle_engine_configurations(cc.read_install_file(path))["records"]
+        except gtd.DecodeError as error:
+            failures.append(f"the battle engine configurations do not decode: {error}")
+    counts["configurations"] += len(records)
+    for c in records:
+        for name in [*c["walkerWeapons"], *c["jetWeapons"], c["primaryWeapon"] or "", c["augWeapon"] or ""]:
+            if name:
+                counts["configuration weapon names" + ("" if name in physics["weapon"] else " with no weapon")] += 1
+        counts["configuration explosions" + ("" if c["explosion"] in physics["explosion"] else " with no explosion")] += 1
+        if find_file(game, "data/resources/meshes/" + meshcensus._loose_mesh_key(c["cockpit"])) is None:
+            counts["configuration cockpits with no loose mesh"] += 1
+        if c["languageName"] not in gtd.BE_DESCRIPTION_TEXT:
+            counts["configurations the description switch has no case for"] += 1
+    headers_path = find_file(game, "data/worldheaders.dat")
+    pages = {}
+    if headers_path is not None:
+        pages = {r.world_id: r.configs for r in
+                 worldheaders_decode.parse_worldheaders(cc.read_install_file(headers_path)).records}
+    for level, worlds in sorted(worlds_by_level.items()):
+        header = worlds.get("RLWD", {}).get("header", {}).get("battleEngineConfigurations")
+        if header is None or level not in pages:
+            continue
+        counts["levels whose two configuration lists agree" if list(header) == list(pages[level])
+               else "levels whose two configuration lists differ"] += 1
+        for name in header:
+            counts["world header configuration names" + ("" if gtd.find_configuration(records, name)
+                                                         else " that fall back")] += 1
+    path = find_file(game, "data/sounds/sounds.sfx")
+    if path is None:
+        failures.append("no data/sounds/sounds.sfx")
+        return
+    try:
+        table = gtd.parse_sfx(cc.read_install_file(path))
+    except gtd.DecodeError as error:
+        failures.append(f"sounds.sfx does not decode: {error}")
+        return
+    counts["sound effects"] += table["count"]
+    counts["sound effect names (stricmp)"] += table["names"]
+    counts["sound effects chained to an earlier one"] += table["chained"]
+    if table["trailingBytes"]:
+        counts["sounds.sfx bytes after the last effect"] += table["trailingBytes"]
+    banks = sorted(p for p in path.parent.iterdir() if p.name.casefold().endswith("_pc.xap") and p.is_file())
+    for bank in banks:
+        _magic, samples = xap_bank_walk.read_bank(cc.read_install_file(bank))
+        names = {gtd.stricmp_key(name) for name, _size, _data in samples}
+        missing = sum(1 for e in table["effects"] if gtd.stricmp_key(e["sample"]) not in names)
+        counts[f"sound effects whose sample {bank.name} lacks"] += missing
+        counts["sample banks"] += 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--game", required=True, type=Path, help="an installed game folder (read only)")
@@ -194,6 +276,7 @@ def main(argv: list[str] | None = None) -> int:
     counts: collections.Counter = collections.Counter()
     failures: list[str] = []
     rows = []
+    worlds_by_level = {}
     for level, path in wre.level_archives(game).items():
         if args.level is not None and level != args.level:
             continue
@@ -204,12 +287,15 @@ def main(argv: list[str] | None = None) -> int:
         except (wre.EncodeError, wrd.DecodeError, struct.error, ValueError) as error:
             failures.append(f"{level:03d}: the world bodies do not decode: {error}")
             continue
+        worlds_by_level[level] = worlds
         try:
             rows.append(check_named_things(level, worlds, behaviours, counts, failures))
         except ValueError as error:
             failures.append(f"{level:03d}: the registry does not build: {error}")
     if not rows:
         failures.append("no level archive was checked: choose a game folder whose data/resources holds level archives")
+    if args.level is None:
+        check_tables(game, worlds_by_level, counts, failures)
     for path in resource_archives(game):
         if args.level is not None and not path.name.startswith(f"{args.level:03d}_"):
             continue

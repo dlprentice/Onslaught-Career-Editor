@@ -29,8 +29,8 @@
     },
     "id": {
       "type": "string",
-      "pattern": "^(archive|texture|texture-descriptor|mesh|animation|audio|video|level|level-payload|definition|placement|marker|waypoint-path|script-code|goodie|effect|script|mission-text|text-symbols|text-table|sound-table):.+",
-      "description": "Stable id. Files: <type>:<lower-cased install-relative path>; archive members: the container plus #chunk or #ordinal; texture records: name plus a payload-hash prefix; animations: <mesh id>/<ordinal>. Levels: level:NNN; placements: placement:<level>:<world>@<record offset>; definitions: definition:<lower-cased name>; goodies: goodie:NNN; effects: effect:<file>#<ordinal>. Markers: marker:<level>:<world>@<record offset>; waypoint paths: waypoint-path:<level>:<world>#<ordinal>; compiled scripts: script-code:<level>:<world>#<ordinal>."
+      "pattern": "^(archive|texture|texture-descriptor|mesh|animation|audio|video|level|level-payload|definition|placement|marker|waypoint-path|script-code|goodie|effect|script|mission-text|text-symbols|text-table|sound-table|configuration|sound-effect):.+",
+      "description": "Stable id. Files: <type>:<lower-cased install-relative path>; archive members: the container plus #chunk or #ordinal; texture records: name plus a payload-hash prefix; animations: <mesh id>/<ordinal>. Levels: level:NNN; placements: placement:<level>:<world>@<record offset>; definitions: definition:<lower-cased name>; goodies: goodie:NNN; effects: effect:<file>#<ordinal>. Markers: marker:<level>:<world>@<record offset>; waypoint paths: waypoint-path:<level>:<world>#<ordinal>; compiled scripts: script-code:<level>:<world>#<ordinal>; battle engine configurations: configuration:<file>#<record>; sound effects: sound-effect:<file>#<effect>."
     },
     "type": {
       "enum": [
@@ -54,7 +54,9 @@
         "mission-text",
         "text-symbols",
         "text-table",
-        "sound-table"
+        "sound-table",
+        "configuration",
+        "sound-effect"
       ]
     },
     "name": {
@@ -615,6 +617,10 @@
           "type": "object",
           "description": "Decoded ERES (heightfield settings and sample summary, mixer mips, mixer map), SURF and SSHD summaries, and the mixer texture file names the map's set implies."
         },
+        "configurationListsAgree": {
+          "type": "boolean",
+          "description": "Whether worldheaders.dat's configuration names for the level (the configuration page's list) equal its world body's header names (which the chosen slot indexes in game)."
+        },
         "namedThings": {
           "type": "object",
           "description": "WORLD.mNamedThings right after the level loads (tools/named_things.py): entries in joining order (the base world's slots, then the real world's; CWorld::FindThingByName walks them from the last). A conditional entry is a base-world one, on the list only if the career keeps its slot (keep.careerBit) and its dies-on world (keep.diesOn, -1 for none) is not before the level. runtimeNames lists the literal names this level's scripts give their own thing with SetName at run time (an empty name takes it off the list).",
@@ -755,6 +761,16 @@
         }
       }
     },
+    "configuration": {
+      "type": "object",
+      "description": "A battle engine configuration as CBattleEngineData::Load reads it (tools/game_tables_decode.py): its values (float32, null when not finite), weapon lists, stores, explosion, cockpit and description number. listPosition is its place in UBattleEngineDataManager's list (each record joins the front); foundByName says whether its name finds it (a later record of the same name hides it); fallback marks the front of the list, the configuration a world header's unknown name gets. defaulted names the fields the loader sets because the record's version leaves them out.",
+      "required": ["index", "listPosition", "version", "values", "walkerWeapons", "jetWeapons", "explosion", "cockpit", "languageName", "foundByName", "fallback"]
+    },
+    "soundEffect": {
+      "type": "object",
+      "description": "A sound effect as CEffect::LoadSFXFile reads data/sounds/sounds.sfx (tools/game_tables_decode.py): its line, sample and low-pass sample names, volume, falloff, pitch variance and flags. chainHead is the effect the list keeps for its name (stricmp); variant is its place in that chain (0 for the head) and variants the chain's length: PlayEffect plays one of them at random.",
+      "required": ["index", "line", "sample", "lowpassSample", "volume", "falloff", "pitchVariance", "looping", "languageDependent", "chainHead", "variant", "variants"]
+    },
     "waypointPath": {
       "type": "object",
       "required": [
@@ -883,7 +899,12 @@
             "follows-path",
             "names-thing",
             "path-member",
-            "texture-by-rule"
+            "texture-by-rule",
+            "uses-weapon",
+            "uses-explosion",
+            "plays-sample",
+            "variant-of",
+            "offers-configuration"
           ]
         },
         "target": {
@@ -941,6 +962,10 @@
         "via": {
           "enum": ["cutscene-link"],
           "description": "For names-thing on a cutscene marker: the name is its link-to name, which CCutscene::Start looks up when the cutscene starts (a script's names-thing has natives instead)."
+        },
+        "fallback": {
+          "type": ["string", "null"],
+          "description": "For offers-configuration from a world header: the configuration GetConfiguration(0) gives when the name matches nothing."
         },
         "registryIncomplete": {
           "type": "array",
