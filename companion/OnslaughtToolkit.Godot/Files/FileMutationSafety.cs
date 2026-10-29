@@ -730,8 +730,8 @@ namespace OnslaughtToolkit.Companion.Files
         /// <summary>
         /// True once this transaction has moved its file into place, whether or not the checks after the move passed: the file at the
         /// output path is then this transaction's, and a caller whose commit failed removes it with whatever else it made. It is set right
-        /// after <c>File.Move</c> succeeds; no test hook reaches the few microseconds between the last destination check and the move, so
-        /// nothing here would notice it being set earlier.
+        /// after <c>File.Move</c> succeeds; no test hook reaches the moment between the last destination check and the move (the staged
+        /// file's quarantine release and its stream's disposal run inside it), so nothing here would notice it being set earlier.
         /// </summary>
         internal bool Published { get; private set; }
 

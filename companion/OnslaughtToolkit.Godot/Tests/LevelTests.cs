@@ -298,6 +298,17 @@ internal static class LevelTests
                 check.That(error.Message.Contains(reason, StringComparison.Ordinal), $"{name}: refused for \"{error.Message}\", not for \"{reason}\"");
             }
         }
+        // A stream that asks for a preset dictionary is refused with what the stream's reader said and the exception behind it (ZLibException is internal to the BCL).
+        try
+        {
+            LevelArchive.Read(Unpack(LevelVectors.RefusedArchives.First(v => v.Name == "member-needs-dictionary").File));
+            check.Fail("member-needs-dictionary: accepted");
+        }
+        catch (InvalidDataException error)
+        {
+            check.That(error.InnerException?.GetType().Name == "ZLibException" && error.Message.Contains("unexpected error code", StringComparison.Ordinal),
+                $"member-needs-dictionary: refused with the zlib reader's own exception and message kept: {error.InnerException?.GetType().Name}, \"{error.Message}\"");
+        }
         check.That(LevelWorlds.WorldFileName(7) == "data/worlds/world007.wrd" && LevelWorlds.WorldFileName(100) == "data/worlds/world100.wrd", "a level's loose world file is world%03d.wrd");
         ArchiveLimits(check);
     }
