@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-29 (`script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-29 (`named_things.py`, the registry of named things, the catalogue's thing-name joins on it and the catalogue's retail gate `content_catalog_gate.py`; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -165,7 +165,13 @@ publish, sign, or install anything by themselves.
   its waypoints, script to the units, paths, scripts, text ids and thing names its literal call arguments name, level
   to the sky-cube, water and detail textures its map numbers build with `sprintf`, effect to texture, goodie to
   texture/mesh/film, voice file to its text line, code lookups with `--decomp`) are emitted only from a loader rule in
-  the public decompilation or from the data, and each names that evidence; unresolved links stay explicit. The
+  the public decompilation or from the data, and each names that evidence; unresolved links stay explicit. A script's
+  literal thing name (`GetThingRef`, `Teleport`, `PlayCutscene`), and a cutscene's link-to name (`CCutscene::Start`), is
+  joined as `CWorld::FindThingByName` finds it right after the level loads, on the level's registry of named things (`named_things.py`, below): the record found in every
+  career (`resolved`, with the records of that name it hides), the base-world records of the name in the order the
+  career's keeping decides (`career-dependent`), a name a script of the level gives its own thing with `SetName`
+  (`runtime-name`), or nothing (`unresolved`). Each named placement and marker says whether and how it joins the list
+  and whether its own name finds it, and each level record lists its registry in joining order. The
   single-record `mission_script_inspect.py` is the independent check of the compiled-script reader. Output is accepted
   only below the ignored `local-data/`, and every generated file carries a marker that
   `public_allowlist_safety_check.py` refuses, as it refuses any tracked `local-data/` path. The catalogue is published with
@@ -252,6 +258,26 @@ publish, sign, or install anything by themselves.
   preparation remain separate, and must use the same reviewed identities. No no-overwrite or atomic-write guarantee applies to a
   redirected stream. This CLI has only authored-fixture tests, requires the
   same descriptor-safe input support as the preview, and has no validated Windows workflow.
+- `named_things.py` builds the registry of named things a level loads (`WORLD.mNamedThings`) from its decoded world
+  bodies by the loader's rules, each cited by function in the module: a thing joins when `CWorld::LoadWorld`
+  initialises its slot (the base world's slots before the real world's, and a base-world one only if the career keeps
+  it) and its class's `Init` reaches `CComplexThing::Init` with a name. Trees and waypoints never do (their classes
+  derive from `CThing`); a unit whose behaviour has a squad, and a squad, hand the name to their member units or keep
+  it as `CSquad::Init` decides. Each thing joins at the front, and `CWorld::FindThingByName` returns the first exact
+  (`strcmp`) match from there: the thing named most recently. `find` gives a name's answer right after loading
+  (`resolved`, `career-dependent` when only base-world things have it, or `unresolved`) with every candidate in lookup
+  order; `find_by_walk` computes the same answer the loader's way, as a cross-check. Names given at run time
+  (`SetName`), things spawned in play and things that leave the list are listed, not followed, and which base-world
+  things a career keeps is the career's (each base-world entry carries its career bit and dies-on world).
+  `named_things_tests.py` checks each rule on authored world bodies, and the gate below on authored game folders; no
+  game bytes.
+- `content_catalog_gate.py --game GAME [--table] [--level N]` is the content catalogue's retail gate. Over every level
+  archive of an installed game it checks that the world bodies decode with the loader's slots, that every registry
+  entry is a slotted record of a class that names itself, under its own name, with the base world's first and every
+  base-world slot inside the career's bits, that no unit takes a slot with nothing made for it, and that `find` and
+  `find_by_walk` agree on every literal thing name of every script, and every cutscene's link-to name, with every, no
+  and every other base-world thing kept. It reads the game folder, writes nothing and prints counts; `--table` adds a row per level (derived from a
+  game: keep it private).
 - `heightfield_lookup.py ARCHIVE.aya X Y` prints the height under a position of a level archive's terrain, as the game's
   terrain lookup computes it: the archive's `ERES` chunk holds 64 x 64 tiles of 9 x 9 signed 16-bit samples (one per world
   unit; a tile's ninth row and column repeat its neighbour's first) and a height scale, and heights are world units with Z

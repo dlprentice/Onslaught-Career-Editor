@@ -19,6 +19,7 @@ import content_catalog as catalog
 from dds_census_tests import dds as authored_dds
 from dds_metadata_tests import rgb_dds as authored_rgb_dds
 import mission_script_inspect as inspector
+import named_things_tests as named
 import public_allowlist_safety_check as safety
 import world_resources_decode as worlddec
 
@@ -598,8 +599,12 @@ class AuthoredInstallTests(unittest.TestCase):
                          ("resolved", "script-code:200:rlwd#0"))
         self.assertEqual((rel["follows-path"]["status"], rel["follows-path"]["target"]),
                          ("resolved", "waypoint-path:200:rlwd#0"))  # _stricmp: "path a" finds "Path A"
-        self.assertEqual(rel["names-thing"]["status"], "name-match")
+        self.assertEqual(rel["names-thing"]["status"], "resolved")  # on WORLD.mNamedThings: tools/named_things.py
         self.assertEqual(self.assets[rel["names-thing"]["target"]]["name"], "Tank 1")
+        self.assertEqual(rel["names-thing"]["natives"], ["GetThingRef"])
+        tank = self.assets[rel["names-thing"]["target"]]["placement"]["namedThing"]
+        # Tank's behaviour (UB_GROUND_UNIT) has a squad: LoadWorld makes a squad of one and the member takes the name
+        self.assertEqual((tank["object"], tank["joins"], tank["foundByName"]), ("squad-member", 1, "found"))
         self.assertEqual((rel["compiled-from"]["status"], rel["compiled-from"]["target"]),
                          ("name-match", "script:data/missionscripts/level200/main.msl"))
         texts = [r for r in sc["relationships"] if r["type"] == "uses-text"]
@@ -669,6 +674,139 @@ class AuthoredInstallTests(unittest.TestCase):
         self.assertEqual(report["declaredInstructionCount"], len(code["instructions"]))
         self.assertEqual(len(report["symbols"]), len(code["symbols"]))
         self.assertEqual(len(report["eventFunctions"]), len(code["eventFunctions"]))
+
+
+# ------------------------------------------------------------------------------------- the named-things registry
+def registry_archive() -> bytes:
+    """Level 201 on base world 10. The base world names a depot twice (the second dies on world 400) and a gun; the
+    real world a gun, a film, a waypoint and a cutscene that follows the gun. Finder looks each up by name; Namer
+    names its own thing at run time."""
+    base = named.body([named.unit("Gun Turret", "Depot"), named.unit("Gun Turret", "Gun"),
+                       named.unit("Gun Turret", "Depot", dies_on=400)])
+    finder = named.script("Finder", [("GetThingRef", ["Depot"]), ("GetThingRef", ["Gun"]), ("PlayCutscene", ["Film"]),
+                                     ("PlayCutscene", ["Gun"]), ("GetThingRef", ["Way"]), ("GetThingRef", ["Later"]),
+                                     ("Teleport", ["Nobody"]), ("GetThingRef", [None]), ("Teleport", [[1.0, 2.0, 3.0]])])
+    namer = named.script("Namer", [("SetName", ["Later"])])
+    chase = {"oid": 26, "init": named.init("Chase", cutscene={"file": "chase", "linkTo": "Gun"})}
+    real = named.body([named.unit("Gun Turret", "Gun"), named.marker(26, "Film"), named.marker(18, "Way"),
+                       named.marker(27, script="Finder"), named.marker(27, script="Namer"), chase],
+                      scripts=(finder, namer), base_level=10)
+    wrld = chunk(b"WDAT", struct.pack("<ii", 10, 201)) + chunk(b"BSWD", base) + chunk(b"RLWD", real)
+    return aya(chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1))
+               + chunk(b"AYAD", bytes(24)) + chunk(b"WRES", chunk(b"WRLD", wrld)))
+
+
+def broken_base_archive() -> bytes:
+    """Level 202 on base world 10 whose base world has a byte too many: the real world's lookup is marked incomplete."""
+    base = named.body([named.unit("Gun Turret", "Depot")]) + b"\0"
+    real = named.body([named.marker(27, script="Finder")],
+                      scripts=(named.script("Finder", [("GetThingRef", ["Depot"])]),), base_level=10)
+    wrld = chunk(b"WDAT", struct.pack("<ii", 10, 202)) + chunk(b"BSWD", base) + chunk(b"RLWD", real)
+    return aya(chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1))
+               + chunk(b"AYAD", bytes(24)) + chunk(b"WRES", chunk(b"WRLD", wrld)))
+
+
+class NamedThingsCatalogueTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            (game / "data/resources/201_res_PC.aya").write_bytes(registry_archive())
+            (game / "data/resources/202_res_PC.aya").write_bytes(broken_base_archive())
+            (game / "data/default physics.dat").write_bytes(mesh_fixtures._physics_fixture(
+                (1, "Tank", {8: struct.pack("<I", 3), 9: b"authored.msh\0"}),
+                (1, "Gun Turret", {8: struct.pack("<I", 5), 9: b"authored.msh\0"}),  # UB_TURRET: no squad
+                (8, "Rock", {2: b"authored.msh\0"})))
+            cls.catalog = catalog.build_catalog(game)
+        cls.assets = {asset["id"]: asset for asset in cls.catalog["assets"]}
+        cls.things = {(a[a["type"]]["world"], a[a["type"]]["ordinal"]): a for a in cls.catalog["assets"]
+                      if a["type"] in ("placement", "marker") and a[a["type"]]["level"] == 201}
+
+    def lookups(self) -> dict:
+        return {r["targetName"]: r for r in self.assets["script-code:201:rlwd#0"]["relationships"]
+                if r["type"] == "names-thing"}
+
+    def test_a_name_finds_the_most_recent_real_world_thing_and_shadows_the_base_ones(self) -> None:
+        gun = self.lookups()["Gun"]
+        self.assertEqual((gun["status"], gun["target"]), ("resolved", self.things[("RLWD", 0)]["id"]))
+        self.assertEqual(gun["shadowed"], [self.things[("BSWD", 1)]["id"]])
+        self.assertEqual((gun["natives"], gun["isCutscene"]), (["GetThingRef", "PlayCutscene"], False))
+        self.assertIn("FindThingByName", gun["evidence"][0]["source"])
+
+    def test_a_name_only_the_base_world_has_depends_on_the_career(self) -> None:
+        depot = self.lookups()["Depot"]
+        latest, earlier = self.things[("BSWD", 2)]["id"], self.things[("BSWD", 0)]["id"]
+        self.assertEqual((depot["status"], depot["target"], depot["candidates"]),
+                         ("career-dependent", latest, [latest, earlier]))
+        self.assertIn("DoesBaseThingExist", depot["evidence"][-1]["source"])
+
+    def test_a_waypoint_name_finds_nothing_and_a_set_name_is_a_runtime_name(self) -> None:
+        rows = self.lookups()
+        self.assertEqual((rows["Way"]["status"], rows["Way"]["target"]), ("unresolved", None))
+        self.assertEqual((rows["Nobody"]["status"], rows["Nobody"]["natives"]), ("unresolved", ["Teleport"]))
+        later = rows["Later"]
+        self.assertEqual((later["status"], later["target"]), ("runtime-name", None))
+        self.assertEqual(later["setBy"], [{"script": "script-code:201:rlwd#1", "pc": 1}])
+        self.assertEqual((rows["Film"]["status"], rows["Film"]["isCutscene"]), ("resolved", True))
+        # neither the variable nor the position Teleport also takes is a name
+        self.assertEqual(sorted(rows), ["Depot", "Film", "Gun", "Later", "Nobody", "Way"])
+
+    def test_each_named_record_says_whether_its_name_finds_it(self) -> None:
+        found = {key: (a.get("placement") or a.get("marker"))["namedThing"] for key, a in self.things.items()
+                 if "namedThing" in (a.get("placement") or a.get("marker"))}
+        self.assertEqual({key: row["foundByName"] for key, row in found.items()},
+                         {("BSWD", 0): "found-if-later-not-kept", ("BSWD", 1): "shadowed", ("BSWD", 2): "found-if-kept",
+                          ("RLWD", 0): "found", ("RLWD", 1): "found", ("RLWD", 2): "not-joined", ("RLWD", 5): "found"})
+        self.assertEqual(found[("BSWD", 2)]["keep"], {"careerBit": 2, "careerBitInRange": True, "diesOn": 400})
+        self.assertEqual(found[("RLWD", 2)]["reason"], "not-a-complex-thing")
+        self.assertNotIn("keep", found[("RLWD", 0)])
+
+    def test_the_level_lists_the_registry_in_joining_order(self) -> None:
+        reg = self.assets["level:201"]["level"]["namedThings"]
+        self.assertEqual([(e["name"], e["thing"]) for e in reg["entries"]],
+                         [("Depot", self.things[("BSWD", 0)]["id"]), ("Gun", self.things[("BSWD", 1)]["id"]),
+                          ("Depot", self.things[("BSWD", 2)]["id"]), ("Gun", self.things[("RLWD", 0)]["id"]),
+                          ("Film", self.things[("RLWD", 1)]["id"]), ("Chase", self.things[("RLWD", 5)]["id"])])
+        self.assertEqual((reg["baseEntries"], reg["realEntries"], reg["names"], reg["namesOnSeveralEntries"]),
+                         (3, 3, 4, ["Depot", "Gun"]))
+        self.assertEqual(reg["runtimeNames"], [{"name": "Later", "script": "script-code:201:rlwd#1", "pc": 1}])
+        self.assertEqual(reg["namedRecordsNotJoined"], {"not-a-complex-thing": 1})
+
+    def test_a_cutscene_follows_the_thing_its_link_to_name_finds(self) -> None:
+        [link] = [r for r in self.things[("RLWD", 5)]["relationships"] if r["type"] == "names-thing"]
+        self.assertEqual((link["status"], link["target"], link["via"], link["shadowed"]),
+                         ("resolved", self.things[("RLWD", 0)]["id"], "cutscene-link", [self.things[("BSWD", 1)]["id"]]))
+        self.assertNotIn("natives", link)
+        self.assertIn("CCutscene::Start", link["evidence"][0]["source"])
+        self.assertFalse([r for r in self.things[("RLWD", 1)]["relationships"] if r["type"] == "names-thing"])
+
+    def test_a_world_body_that_does_not_decode_leaves_the_lookup_incomplete(self) -> None:
+        reg = self.assets["level:202"]["level"]["namedThings"]
+        self.assertEqual((reg["complete"], reg["undecodedWorlds"], reg["entries"]), (False, ["BSWD"], []))
+        [depot] = [r for r in self.assets["script-code:202:rlwd#0"]["relationships"] if r["type"] == "names-thing"]
+        self.assertEqual((depot["status"], depot["registryIncomplete"]), ("unresolved", ["BSWD"]))
+        self.assertTrue(self.assets["level:201"]["level"]["namedThings"]["complete"])
+        self.assertNotIn("registryIncomplete", self.lookups()["Depot"])
+
+    def test_the_new_fields_match_the_schema_and_name_no_absent_id(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        self.assertEqual(catalog.dangling_targets(self.catalog["assets"]), [])
+        schema = json.loads((catalog.TOOLS / "content_catalog.schema.json").read_text(encoding="utf-8"))
+        validator = jsonschema.Draft202012Validator(schema)
+        for asset in self.catalog["assets"]:
+            errors = sorted(validator.iter_errors({**asset, catalog.GENERATED_MARKER: True}), key=str)
+            self.assertEqual(errors, [], asset["id"])
+        broken = [{"id": "s", "relationships": [{"target": None, "shadowed": ["x"], "candidates": ["y"],
+                                                  "setBy": [{"script": "z", "pc": 0}]}]}]
+        self.assertEqual(catalog.dangling_targets(broken), ["x", "y", "z"])
+        level = [{"id": "level:1", "type": "level", "relationships": [],
+                  "level": {"namedThings": {"entries": [{"thing": "marker:gone"}],
+                                            "runtimeNames": [{"name": "n", "script": "script-code:gone", "pc": 0}]}}}]
+        self.assertEqual(catalog.dangling_targets(level), ["marker:gone", "script-code:gone"])
 
 
 class BoundaryTests(unittest.TestCase):

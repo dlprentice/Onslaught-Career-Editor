@@ -614,6 +614,36 @@
         "terrain": {
           "type": "object",
           "description": "Decoded ERES (heightfield settings and sample summary, mixer mips, mixer map), SURF and SSHD summaries, and the mixer texture file names the map's set implies."
+        },
+        "namedThings": {
+          "type": "object",
+          "description": "WORLD.mNamedThings right after the level loads (tools/named_things.py): entries in joining order (the base world's slots, then the real world's; CWorld::FindThingByName walks them from the last). A conditional entry is a base-world one, on the list only if the career keeps its slot (keep.careerBit) and its dies-on world (keep.diesOn, -1 for none) is not before the level. runtimeNames lists the literal names this level's scripts give their own thing with SetName at run time (an empty name takes it off the list).",
+          "required": ["entries", "baseEntries", "realEntries", "names", "runtimeNames", "complete", "loader"],
+          "properties": {
+            "entries": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["order", "name", "thing", "world", "slot", "object", "member", "conditional"],
+                "properties": {
+                  "order": {"type": "integer", "minimum": 0},
+                  "thing": {"type": "string", "description": "The placement or marker record whose init carries the name."},
+                  "world": {"enum": ["BSWD", "RLWD"]},
+                  "object": {"enum": ["thing", "squad", "squad-member", "squad-members"], "description": "What joins: the record's own thing, its squad, or the member unit(s) CSquad::Init spawns (member says which, from 0)."},
+                  "conditional": {"type": "boolean"}
+                }
+              }
+            },
+            "runtimeNames": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "script", "pc"],
+                "properties": {"name": {"type": ["string", "null"], "description": "null when the argument is not a literal."}}
+              }
+            },
+            "complete": {"type": "boolean", "description": "false when a world body of the level did not decode (undecodedWorlds names it): its things are missing from the list."}
+          }
         }
       }
     },
@@ -636,7 +666,12 @@
         "thingType",
         "slot"
       ],
-      "description": "A WRES thing that names a physics definition (unit, building, squad, feature), decoded in CWorld::LoadWorld's order. slot: its index in LoadWorld's things[] (null when the physics lookup fails and the record takes none)."
+      "description": "A WRES thing that names a physics definition (unit, building, squad, feature), decoded in CWorld::LoadWorld's order. slot: its index in LoadWorld's things[] (null when the physics lookup fails and the record takes none).",
+      "properties": {
+        "namedThing": {
+          "$ref": "#/$defs/namedThing"
+        }
+      }
     },
     "goodie": {
       "type": "object",
@@ -714,6 +749,9 @@
           },
           "minItems": 3,
           "maxItems": 3
+        },
+        "namedThing": {
+          "$ref": "#/$defs/namedThing"
         }
       }
     },
@@ -747,6 +785,27 @@
     }
   },
   "$defs": {
+    "namedThing": {
+      "type": "object",
+      "description": "A named placement or marker and WORLD.mNamedThings (tools/named_things.py): how many objects join under its name (joins, 0 when none), which (object), their entries (orders, indexes into the level's namedThings.entries), whether its own name finds it right after loading (foundByName) and, for a base-world record, the career's condition (keep).",
+      "required": ["joins", "object", "orders", "foundByName", "rule", "loader"],
+      "properties": {
+        "joins": {"type": "integer", "minimum": 0},
+        "object": {"enum": ["thing", "squad", "squad-member", "squad-members", null]},
+        "orders": {"type": "array", "items": {"type": "integer", "minimum": 0}},
+        "foundByName": {"enum": ["found", "found-if-kept", "found-if-later-not-kept", "shadowed", "not-joined"]},
+        "reason": {"enum": ["no-slot", "not-a-complex-thing", "no-object"], "description": "Why nothing joins: the record took no slot, it is a tree or waypoint (CThing), or its unit is UB_JEEP (SpawnThing makes nothing)."},
+        "keep": {
+          "type": "object",
+          "required": ["careerBit", "careerBitInRange", "diesOn"],
+          "properties": {
+            "careerBit": {"type": "integer", "minimum": 0},
+            "careerBitInRange": {"type": "boolean", "description": "The career holds 288 base-thing bits (BASE_THINGS_EXISTS_SIZE)."},
+            "diesOn": {"type": "integer", "description": "The dies_on[] value at the slot when the start loop reads it: the record's own dies-on world, or what the last record that failed to take the slot wrote (-1 for none)."}
+          }
+        }
+      }
+    },
     "uint32": {"type": "integer", "minimum": 0, "maximum": 4294967295},
     "nullableFloat3": {
       "type": "array",
@@ -854,9 +913,11 @@
             "code-site",
             "code-rule",
             "unknown-name",
-            "empty-name"
+            "empty-name",
+            "career-dependent",
+            "runtime-name"
           ],
-          "description": "unknown-name: the mesh slot's stored name field is unreadable (unterminated or not UTF-8), so nothing was looked up or joined; empty-name: the slot's stored name is known to be empty and nothing was joined; both differ from unresolved, where a readable name matched nothing: it was looked up and found nothing or, for a name shorter than 9 bytes that has no suffix from byte 8 to classify, nothing was looked up or joined (the evidence says which). name-match: a stored string equals a file name but no loader joins them; name-match-unloaded: a data observation about content no retail loader reads; code-site: a literal lookup in game code (the evidence names the site); code-rule: a name game code builds with sprintf from a format rule and data (the evidence names the function and the rule). name-match also covers a script argument that equals a thing's name."
+          "description": "unknown-name: the mesh slot's stored name field is unreadable (unterminated or not UTF-8), so nothing was looked up or joined; empty-name: the slot's stored name is known to be empty and nothing was joined; both differ from unresolved, where a readable name matched nothing: it was looked up and found nothing or, for a name shorter than 9 bytes that has no suffix from byte 8 to classify, nothing was looked up or joined (the evidence says which). name-match: a stored string equals a file name but no loader joins them; name-match-unloaded: a data observation about content no retail loader reads; code-site: a literal lookup in game code (the evidence names the site); code-rule: a name game code builds with sprintf from a format rule and data (the evidence names the function and the rule). name-match also covers a script argument that equals a thing's name. For names-thing (a script's literal thing name, joined as CWorld::FindThingByName finds it right after loading): resolved, the target is the record found in every career (shadowed lists records of the same name it hides); career-dependent, every record of the name is in the base world, so the first one the career keeps is found (candidates lists them in that order, target is the first); runtime-name, nothing has the name when the level has loaded but a script of the level gives it with SetName (setBy names the scripts); unresolved, nothing has it."
         },
         "targetNameStatus": {
           "enum": [
@@ -866,6 +927,30 @@
             "invalid-utf8"
           ],
           "description": "For uses-texture: the stored-name status of the mesh slot, as in mesh.textures[].nameStatus."
+        },
+        "candidates": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "For names-thing (career-dependent): the records of the name in the order FindThingByName meets them."
+        },
+        "shadowed": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "For names-thing (resolved): records of the same name that joined earlier, found only after the target leaves the list."
+        },
+        "via": {
+          "enum": ["cutscene-link"],
+          "description": "For names-thing on a cutscene marker: the name is its link-to name, which CCutscene::Start looks up when the cutscene starts (a script's names-thing has natives instead)."
+        },
+        "registryIncomplete": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "For names-thing: the level's world bodies that did not decode, so their things are missing from the list the answer was taken from."
+        },
+        "setBy": {
+          "type": "array",
+          "items": {"type": "object", "required": ["script", "pc"], "properties": {"script": {"type": "string"}, "pc": {"type": "integer"}}},
+          "description": "For names-thing (runtime-name): the script-code records whose SetName call gives the name, and the call's instruction index."
         },
         "evidence": {
           "type": "array",

@@ -7,7 +7,8 @@ and whether a repository parser already reads it) and catalogues: loose DDS text
 resource archives (TEXT, and those inside imposter IMPS, font PLAT and goodie GDIE chunks); loose and embedded CMSH
 meshes with their animation modes; levels with their decoded world bodies (WRES: placements of units, squads and
 features, markers for every other thing, waypoint paths, the compiled mission scripts and what their literal call
-arguments name) and terrain payloads (ERES heightfield and mixers, SURF, SSHD; tools/world_resources_decode.py), the
+arguments name, with the thing names joined on the level's registry of named things, tools/named_things.py) and terrain
+payloads (ERES heightfield and mixers, SURF, SSHD; tools/world_resources_decode.py), the
 physics definitions they instantiate; goodies; particle effects; XAP samples, Ogg Vorbis music and voice (with the
 transcript line that names each voice file), Bink films; and an inventory of mission scripts, text and symbol
 tables. It joins the texture names code builds with sprintf from the map's numbers (sky cube, water, detail mixer)
@@ -52,6 +53,7 @@ import aya_texture_fidelity_census as packed  # noqa: E402
 import cmsh_animation_usage_census as meshcensus  # noqa: E402
 import dds_census  # noqa: E402
 import language_dat_decode  # noqa: E402
+import named_things  # noqa: E402
 import world_resources_decode as wrd  # noqa: E402
 import worldheaders_decode  # noqa: E402
 import xap_bank_walk  # noqa: E402
@@ -1194,9 +1196,8 @@ def link_imposters(collect: dict, descriptors_by_id: dict) -> None:
 
 
 PHYSICS_STATEMENTS = {1: "unit", 8: "feature", 9: "hazard"}  # EPhysicsStatement (CPhysicsScriptStatements.h)
-# UPhysicsManager::SpawnSquad (0050f4b0): a squad exists for UB_MECH, UB_AIRCRAFT, UB_GROUND_UNIT, UB_INFANTRY and
-# UB_WARSPITE (the default arm); every other behaviour returns NULL (EUnitBehaviour, WorldPhysicsManager.h).
-SQUAD_BEHAVIOURS = frozenset({0, 1, 2, 3, 21})
+# Which behaviours have a squad (UPhysicsManager::SpawnSquad, 0050f4b0) is tools/named_things.py:squad_class; LoadWorld
+# asks it of the first unit definition of a name.
 L_SPAWNSQUAD = cite("WorldPhysicsManager.cpp", "UPhysicsManager::SpawnSquad", "0x0050f4b0")
 PLACEMENT_OIDS = (8, 25, 28, 35)  # unit, building, squad, feature: the LoadWorld arms that name a physics definition
 TEXT_TABLE_ID = "text-table:data/language/english.dat"
@@ -1238,11 +1239,133 @@ def world_paths_order(worlds: dict) -> list[tuple[str, dict]]:
     return [(tag, p) for tag in ("BSWD", "RLWD") for p in worlds.get(tag, {}).get("waypointPaths", [])]
 
 
+# The named-things registry (tools/named_things.py) as catalogue fields and joins.
+NAMED_EVIDENCE = [evidence("loader-code", named_things.L_LOADWORLD + " -> " + named_things.L_SETNAME + " -> "
+                           + named_things.L_ADD, "a thing joins WORLD.mNamedThings when CWorld::LoadWorld initialises "
+                           "its slot (the base world's slots before the real world's) and its Init reaches "
+                           "CComplexThing::Init with a name; each joins at the front")]
+L_CUTSCENE_START = cite("Cutscene.cpp", "CCutscene::Start (looks its link-to name up when it starts)", "0x0043f340")
+FOUND_TEXT = {
+    "found": "the name finds this record in every career right after loading",
+    "found-if-kept": "the name finds this record if the career keeps it (no real-world thing has the name and no later "
+                     "base-world one does)",
+    "found-if-later-not-kept": "a base-world record behind later base-world records of the same name: found only if "
+                               "the career drops every later one",
+    "shadowed": "a real-world thing of the same name joined later, so the name finds that one while it stays on the "
+                "list",
+    "not-joined": "never on the list, so its name finds something else or nothing",
+}
+
+
+def named_thing_summary(outcome: dict, entries: list[dict], name: str) -> dict:
+    """A named placement or marker: whether and how it joins WORLD.mNamedThings, and whether its name finds it."""
+    found = "not-joined"
+    if outcome["joins"]:
+        result = named_things.find(entries, name)
+        mine = [k for k, e in enumerate(result["candidates"])
+                if (e["world"], e["ordinal"]) == (outcome["world"], outcome["ordinal"])]
+        if mine and mine[0] == 0:
+            found = "found" if result["status"] == "resolved" else "found-if-kept"
+        else:
+            found = "shadowed" if result["status"] == "resolved" else "found-if-later-not-kept"
+    row = {"joins": outcome["joins"], "object": outcome["object"], "orders": outcome["orders"], "foundByName": found,
+           "foundRule": FOUND_TEXT[found], "rule": outcome["rule"],
+           "loader": named_things.L_LOADWORLD + "; " + named_things.L_SETNAME}
+    for key in ("reason", "squad", "members", "keep"):
+        if key in outcome:
+            row[key] = outcome[key]
+    if "keep" in outcome:
+        row["keepRule"] = ("a base-world slot is initialised only if the career keeps it (careerBit) and its dies-on "
+                           "world (diesOn, -1 for none) is not before the level (" + named_things.L_BASE_KEEP + ")")
+    if outcome["object"] in ("squad-member", "squad-members"):
+        row["loader"] += "; " + named_things.L_SQUAD_INIT
+    return row
+
+
+def level_registry(registry: dict, thing_rid: dict, runtime: list[dict], undecoded: list[str]) -> dict:
+    """The level's WORLD.mNamedThings right after loading, in joining order, with each entry's record id. undecoded
+    names the world bodies that did not decode: their things are missing, so the list is incomplete."""
+    entries = []
+    for e in registry["entries"]:
+        row = {"order": e["order"], "name": e["name"], "thing": thing_rid[(e["world"], e["ordinal"])],
+               "world": e["world"], "slot": e["slot"], "object": e["object"], "member": e["member"],
+               "conditional": e["conditional"]}
+        if "keep" in e:
+            row["keep"] = e["keep"]
+        entries.append(row)
+    counts = collections.Counter(e["name"] for e in registry["entries"])
+    not_joined = collections.Counter(o.get("reason") for o in registry["outcomes"].values() if not o["joins"])
+    return {"entries": entries, "baseEntries": sum(1 for e in entries if e["conditional"]),
+            "realEntries": sum(1 for e in entries if not e["conditional"]), "names": len(counts),
+            "namesOnSeveralEntries": sorted(n for n, c in counts.items() if c > 1),
+            "namedRecordsNotJoined": dict(sorted(not_joined.items())),
+            "runtimeNames": runtime, "complete": not undecoded, "undecodedWorlds": undecoded,
+            "rule": "FindThingByName walks this list from the most recent entry and returns the first exact (strcmp) "
+                    "name; a base-world entry joins only if the career keeps its slot",
+            "loader": named_things.L_LOADWORLD + "; " + named_things.L_SETNAME + "; " + named_things.L_ADD + "; "
+                      + named_things.L_FIND}
+
+
+def names_thing_relation(name: str, natives: list[str], entries: list[dict], thing_rid: dict,
+                         runtime: list[dict], undecoded: list[str], *, link: bool = False) -> dict:
+    """A script's literal thing name (or, with link, a cutscene's link-to name) joined the way CWorld::FindThingByName
+    finds it right after loading. When a world body of the level did not decode, its things are not on the list: the
+    answer is marked registryIncomplete."""
+    result = named_things.find(entries, name)
+    ids: list[str] = []
+    for e in result["candidates"]:
+        rid = thing_rid[(e["world"], e["ordinal"])]
+        if rid not in ids:
+            ids.append(rid)  # a squad's members are one record
+    if link:
+        first = evidence("loader-code", L_CUTSCENE_START + " -> " + named_things.L_FIND, "the cutscene's link-to "
+                         "name is compared (strcmp) with the names on WORLD.mNamedThings from the most recent entry "
+                         "when the cutscene starts, and the cutscene follows the thing found")
+    else:
+        first = evidence("loader-code", named_things.L_NATIVES + " -> " + named_things.L_FIND,
+                         "the argument is compared (strcmp) with the names on WORLD.mNamedThings from the most recent "
+                         "entry")
+    ev = [first, *(dict(e) for e in NAMED_EVIDENCE)]
+    extra: dict = {"targetName": name}
+    if link:
+        extra["via"] = "cutscene-link"
+    else:
+        extra["natives"] = natives
+    if undecoded:
+        extra["registryIncomplete"] = undecoded
+    status = result["status"]
+    target = ids[0] if ids else None
+    if status == "resolved":
+        extra["registryOrder"] = result["entry"]["order"]
+        if len(ids) > 1:
+            extra["shadowed"] = ids[1:]
+    elif status == "career-dependent":
+        extra["registryOrder"] = result["entry"]["order"]
+        extra["candidates"] = ids
+        ev.append(evidence("loader-code", named_things.L_BASE_KEEP, "every entry of the name is a base-world one: the "
+                           "name finds the first candidate the career keeps, or nothing"))
+    else:
+        setters = [r for r in runtime if r["name"] is not None and named_things.strcmp_key(r["name"])
+                   == named_things.strcmp_key(name) and named_things.strcmp_key(name)]
+        if setters:
+            status = "runtime-name"
+            extra["setBy"] = [{"script": r["script"], "pc": r["pc"]} for r in setters]
+            ev.append(evidence("loader-code", named_things.L_SCRIPT_SETNAME, "no thing has the name when the level has "
+                               "loaded; a script of this level gives it to the thing that runs it"))
+    if "PlayCutscene" in natives and target is not None:
+        kinds = {e["kind"] for e in result["candidates"][:1]}
+        extra["isCutscene"] = kinds == {"cutscene"}
+        ev.append(evidence("loader-code", cite("MissionScript/IScript.cpp", "IScript::PlayCutscene", "0x00535890"),
+                           "starts the thing found only if it is a cutscene"))
+    return relation("names-thing", target, status, ev, **extra)
+
+
 def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], script_ids: set[str],
                   text: dict, stats: collections.Counter) -> dict:
     """WRES world bodies decoded in CWorld::LoadWorld's order: definitions, placements (things naming a physics
     definition), markers (every other thing), waypoint paths and the compiled mission scripts, with their joins."""
-    out = {"definitions": [], "placements": [], "markers": [], "paths": [], "scripts": [], "worlds": {}}
+    out = {"definitions": [], "placements": [], "markers": [], "paths": [], "scripts": [], "worlds": {},
+           "registries": {}}
     physics_path = game / "data" / "default physics.dat"
     if not physics_path.is_file():
         return out
@@ -1251,9 +1374,11 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
     names = physics_names(physics_bytes)
     physics_sha = sha256(physics_bytes)
     unit_shell = {u["definition"]: u for u in physics["unitDefinitions"]}
+    # GetUnitData returns the first unit definition of a name (UPhysicsManager::Reload appends them in file order)
+    behaviours = named_things.first_behaviours(physics["unitDefinitions"])
     lookup = {"units": set(names["unit"]), "features": set(names["feature"]), "hazards": set(names["hazard"]),
-              "squadless": {u["definition"] for u in physics["unitDefinitions"]
-                            if u["factorySelector"] not in SQUAD_BEHAVIOURS}}
+              "squadless": {name for name, behaviour in behaviours.items()
+                            if named_things.squad_class(behaviour) is None}}
     kinds_of: dict[str, set] = collections.defaultdict(set)
     for kind, rows in names.items():
         for name in rows:
@@ -1324,7 +1449,10 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
             script_ids_here.append((tag, f"script-code:{level:03d}:{tag.lower()}#{s['ordinal']}", s))
         path_ids_here = [(tag, f"waypoint-path:{level:03d}:{tag.lower()}#{p['ordinal']}", p)
                          for tag, p in world_paths_order(decoded)]
-        thing_ids: dict[str, list[str]] = collections.defaultdict(list)  # exact thing name -> placement/marker ids
+        # WORLD.mNamedThings as LoadWorld leaves it: which named records join, in which order (tools/named_things.py)
+        registry = named_things.build_registry(decoded, behaviours)
+        thing_rid: dict[tuple[str, int], str] = {}  # (world, ordinal) -> placement/marker id
+        cutscene_links: list[tuple[dict, str]] = []  # (cutscene marker, its link-to name)
 
         def script_relation(rtype: str, name: str, source_rule: str) -> dict:
             hit = next((sid for _t, sid, s in script_ids_here if s["name"] == name), None)
@@ -1351,8 +1479,6 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
                         "runtime loader reads .msl files, the compiled script travels in WRES)" if found else
                         "has no .msl file of that stem in the world's MissionScripts folder"))],
                     targetName=msl))
-            if init["name"]:
-                thing_ids[init["name"]].append(rec["id"])
 
         for tag, w in sorted(decoded.items()):
             world_ev = "lvlr-chunk(WRES/WRLD/" + tag + ")"
@@ -1405,6 +1531,8 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
                     for key in ("spawner", "start", "sphereTrigger", "cutscene", "tree", "wall"):
                         if key in init:
                             rec["marker"][key] = init[key]
+                    if init.get("cutscene", {}).get("linkTo"):
+                        cutscene_links.append((rec, init["cutscene"]["linkTo"]))
                     if oid == 39:
                         rec["marker"]["definition"] = t["definition"]
                         rec["marker"]["diesOn"] = t["diesOn"]
@@ -1423,6 +1551,12 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
                                 "script its spawned units run"))
                     stats["markers"] += 1
                 thing_common(rec, init, tag)
+                thing_rid[(tag, t["ordinal"])] = rid
+                if init["name"]:
+                    outcome = registry["outcomes"][(tag, t["ordinal"])]
+                    (rec["placement"] if is_placement else rec["marker"])["namedThing"] = named_thing_summary(
+                        outcome, registry["entries"], init["name"])
+                    stats["namedRecordsJoined" if outcome["joins"] else "namedRecordsNotJoined"] += 1
                 (out["placements"] if is_placement else out["markers"]).append(rec)
         # waypoint paths: CWaypointPath::Load indexes LoadWorld's things[] (the record's slot), keeping waypoints only
         for tag, pid, p in path_ids_here:
@@ -1458,7 +1592,9 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
                               parser="tools/world_resources_decode.py:read_object_code + analyse_script")
             rec["provenance"]["loader"] = wrd.L_LOADSCRIPTS + "; " + wrd.L_OBJECTCODE + "; " + wrd.L_SYMTAB
             roles = {role: wrd.literal_args(calls, role) for role in sorted({r for r in wrd.ARG_ROLES.values()})}
-            values = lambda role: sorted({a["value"] for a in roles[role] if a["value"] is not None}, key=str)
+            # a literal's value, but not a position (Teleport takes a thing's name or a position in its argument)
+            values = lambda role: sorted({a["value"] for a in roles[role] if a["value"] is not None
+                                          and not isinstance(a["value"], list)}, key=str)
             objectives = [{"native": c["native"], "pc": c["pc"],
                            "args": [None if a is None else a["value"] for a in c["args"]]}
                           for c in calls if c["native"] in wrd.OBJECTIVE_NATIVES]
@@ -1524,21 +1660,32 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
             for name in values("script"):
                 rec["relationships"].append(script_relation("sets-script", name, "SpawnThing's fourth argument, "
                                                             "SetScript's and SetSpawnScript's names a script"))
-            rec["_thingNames"] = values("thing-name")
+            # string literals only: Teleport also takes a position, which names nothing
+            name_natives: dict[str, set] = collections.defaultdict(set)
+            for c in calls:
+                for k, arg in enumerate(c["args"]):
+                    if (wrd.ARG_ROLES.get((c["native"], k)) == "thing-name" and arg is not None
+                            and isinstance(arg["value"], str)):
+                        name_natives[arg["value"]].add(c["native"])
+            rec["_thingNames"] = sorted((n, sorted(v)) for n, v in name_natives.items())
             out["scripts"].append(rec)
+        # names a script of this level gives its own thing at run time (IScript::SetName)
+        runtime = [{"name": n["name"], "script": sid, "pc": n["pc"]} for _tag, sid, s in script_ids_here
+                   for n in named_things.runtime_names(wrd.analyse_script(s["code"])["calls"])]
+        undecoded = sorted(t for t, w in worlds.items() if "error" in w)
+        out["registries"][level] = level_registry(registry, thing_rid, runtime, undecoded)
+        stats["namedThingEntries"] += len(registry["entries"])
+        for rec, link in cutscene_links:
+            rel_row = names_thing_relation(link, [], registry["entries"], thing_rid, runtime, undecoded, link=True)
+            stats["cutsceneLinks:" + rel_row["status"]] += 1
+            rec["relationships"].append(rel_row)
         for rec in out["scripts"]:
             if rec["scriptCode"]["level"] != level or "_thingNames" not in rec:
                 continue
-            for name in rec.pop("_thingNames"):
-                hits = sorted(thing_ids.get(name, []))
-                stats["scriptThingNamesMatched" if hits else "scriptThingNamesUnmatched"] += 1
-                rec["relationships"].append(relation(
-                    "names-thing", hits[0] if len(hits) == 1 else None, "name-match" if hits else "unresolved",
-                    [evidence("loader-code", wrd.L_NATIVES + " GetThingRef/Teleport/PlayCutscene -> " + wrd.L_FINDTHING,
-                              "the argument is compared (strcmp) with the names of the world's named things; which "
-                              "things join WORLD.mNamedThings is not traced, so this is a name match with the level's "
-                              "placement and marker names")],
-                    targets=hits if len(hits) > 1 else None, targetName=name))
+            for name, natives in rec.pop("_thingNames"):
+                rel_row = names_thing_relation(name, natives, registry["entries"], thing_rid, runtime, undecoded)
+                stats["scriptThingNames:" + rel_row["status"]] += 1
+                rec["relationships"].append(rel_row)
     return out
 
 
@@ -1922,7 +2069,8 @@ BRIEFING_LEVEL = {**{n: n for n in (100, 110, 200, 211, 221, 231, 300, 311, 321,
 
 
 def catalog_levels(archives: list[dict], placements: list[dict], videos: list[dict], game: Path, files: list[dict],
-                   worlds: dict | None = None, payloads: list[dict] | None = None) -> list[dict]:
+                   worlds: dict | None = None, payloads: list[dict] | None = None,
+                   registries: dict | None = None) -> list[dict]:
     headers = {}
     wh_path = game / "data" / "worldheaders.dat"
     if wh_path.is_file():
@@ -1960,6 +2108,8 @@ def catalog_levels(archives: list[dict], placements: list[dict], videos: list[di
                         "briefingVideos": briefings.get(n, []),
                         "worlds": {tag: world_summary(w) for tag, w in sorted((worlds or {}).get(n, {}).items())},
                         "terrain": level_terrain(arc, payloads or [])}
+        if registries and n in registries:
+            rec["level"]["namedThings"] = registries[n]
         if arc:
             rec["relationships"].append(relation("resources", arc["id"], "resolved", [evidence(
                 "loader-code", L_RESOURCE_NAME, "level N reads data\\Resources\\%03d_res_%s.aya")]))
@@ -2132,11 +2282,25 @@ def usage_sentence(u: dict, kind: str) -> str:
 
 
 # -------------------------------------------------------------------------------------------------------- pipeline
+def relationship_ids(r: dict) -> list[str]:
+    """Every record id a relationship names: its target, targets, candidates, shadowed records and setting scripts."""
+    out = [r["target"]] if r.get("target") else []
+    for key in ("targets", "candidates", "shadowed"):
+        out += list(r.get(key) or [])
+    out += [s["script"] for s in r.get("setBy") or []]
+    return out
+
+
 def dangling_targets(assets: list[dict]) -> list[str]:
-    """Relationship targets that name no catalogued asset (every target must be an asset id or null)."""
+    """Relationship targets that name no catalogued asset (every target must be an asset id or null), and registry
+    entries that name no record."""
     ids = {a["id"] for a in assets}
-    return sorted({t for a in assets for r in a["relationships"]
-                   for t in ([r["target"]] if r.get("target") else []) + list(r.get("targets") or []) if t not in ids})
+    named = [t for a in assets for r in a["relationships"] for t in relationship_ids(r)]
+    named += [e["thing"] for a in assets if a.get("type") == "level"
+              for e in a.get("level", {}).get("namedThings", {}).get("entries", [])]
+    named += [n["script"] for a in assets if a.get("type") == "level"
+              for n in a.get("level", {}).get("namedThings", {}).get("runtimeNames", [])]
+    return sorted({t for t in named if t not in ids})
 
 
 def build_catalog(game: Path, decomp: Path | None = None) -> dict:
@@ -2188,7 +2352,8 @@ def build_catalog(game: Path, decomp: Path | None = None) -> dict:
     inventory = catalog_text_inventory(game, files, text)
     link_compiled_scripts(inventory, world["scripts"])
     payloads = catalog_payloads(collect)
-    levels = catalog_levels(archives, placements, video, game, files, world["worlds"], collect["payloads"])
+    levels = catalog_levels(archives, placements, video, game, files, world["worlds"], collect["payloads"],
+                            world["registries"])
     terrain = {lvl["level"]["number"]: d for lvl in levels for d in [next(
         (p["decoded"] for p in collect["payloads"] if p["tag"] == "ERES" and p["decoded"]["status"] == "decoded"
          and lvl["level"]["resourceArchive"] == "archive:" + p["archive"].casefold()), None)] if d}
@@ -2256,6 +2421,13 @@ def build_coverage(catalog: dict) -> dict:
             slot["nameStatus"] for a in assets if a["type"] == "mesh" for slot in a["mesh"]["textures"]).items())),
         "families": file_coverage,
         "unparsedFamilies": [f["family"] for f in survey["families"] if f["status"] in ("unparsed", "inventoried")],
+        "namedThings": {
+            "entries": sum(len(a["level"].get("namedThings", {}).get("entries", [])) for a in assets
+                           if a["type"] == "level"),
+            "recordsByFoundByName": dict(sorted(collections.Counter(
+                (a.get("placement") or a.get("marker"))["namedThing"]["foundByName"] for a in assets
+                if a["type"] in ("placement", "marker") and "namedThing" in (a.get("placement") or a.get("marker"))
+            ).items()))},
         "markersByKind": dict(sorted(collections.Counter(a["marker"]["kind"] for a in assets
                                                          if a["type"] == "marker").items())),
         "placementsByKind": dict(sorted(collections.Counter(a["placement"]["kind"] for a in assets
@@ -2269,7 +2441,9 @@ def build_coverage(catalog: dict) -> dict:
             "the mixer-map slot entries, heightfield samples and static-shadow cells are summarised (counts, ranges, "
             "hashes), not itemised per cell",
             "script arguments that are not literal pushes (computed values, variables) stay unresolved and are counted "
-            "per role; which things join WORLD.mNamedThings is not traced (names-thing is a name match)",
+            "per role; names-thing joins use WORLD.mNamedThings as it stands right after loading: which base-world "
+            "things a career keeps is the career's, and names given at run time (SetName), things spawned in play and "
+            "things that leave the list (Shutdown) are listed or noted, not followed",
             "names built with sprintf from data not decoded here: weapon HUD icons (hud\\%s.tga from physics weapon "
             "icon names), screenshot and texture-dump paths (written, not read)",
             "the .msl source text itself is not parsed (its compiled form is the evidence); mission text .txt, "
