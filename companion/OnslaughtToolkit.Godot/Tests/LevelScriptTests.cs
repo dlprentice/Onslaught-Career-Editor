@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using OnslaughtToolkit.Companion.Levels;
 
@@ -176,11 +176,7 @@ internal static class LevelScriptTests
         if (OperatingSystem.IsLinux())
         {
             string pipe = Path.Combine(folder, "Pipe.msl");
-            using (Process make = Process.Start(new ProcessStartInfo("mkfifo", [pipe]) { UseShellExecute = false })!)
-            {
-                make.WaitForExit();
-                check.That(make.ExitCode == 0, $"mkfifo made the named pipe (exit {make.ExitCode})");
-            }
+            check.That(MakeNode(pipe, 0x1000 | 0x180) == 0, $"a named pipe was made (mknod: {Marshal.GetLastPInvokeErrorMessage()})");
             Task<ScriptSourceResult> lookup = Task.Run(() => ScriptSources.Find(game, 123, "Pipe"));
             bool returned = lookup.Wait(TimeSpan.FromSeconds(10));
             check.That(returned && lookup.Result is { Source: null, Problem: "Pipe.msl is not a regular file, so it is not read." },
@@ -196,17 +192,34 @@ internal static class LevelScriptTests
             check.That(ScriptSources.Find(game, 123, "Foo").Source?.Text == "// fine\n", "a regular file beside the pipe is still read");
             check.That(ScriptSources.IsRegularFile(Path.Combine(folder, "Foo.msl")) && !ScriptSources.IsRegularFile(pipe) && !ScriptSources.IsRegularFile(folder),
                 "a regular file is one; a named pipe and a folder are not");
-            bool examined = true;
+            File.Delete(pipe);
+
+            // The other kinds of entry that are not files: a socket, a device and a link (which is asked about itself, not its target).
+            string socket = Path.Combine(folder, "Sock.msl");
+            check.That(MakeNode(socket, 0xC000 | 0x180) == 0, $"a socket node was made (mknod: {Marshal.GetLastPInvokeErrorMessage()})");
+            check.That(ScriptSources.Find(game, 123, "Sock") is { Source: null, Problem: "Sock.msl is not a regular file, so it is not read." } && !ScriptSources.IsRegularFile(socket),
+                "a socket named like a script is refused too");
+            File.Delete(socket);
+            string link = Path.Combine(folder, "Link.msl");
+            File.CreateSymbolicLink(link, Path.Combine(folder, "Foo.msl"));
+            check.That(!ScriptSources.IsRegularFile(link) && !ScriptSources.IsRegularFile("/dev/null") && ScriptSources.IsRegularFile(Path.Combine(folder, "Foo.msl")),
+                "a link and a device are not regular files, though a link's target is");
+            File.Delete(link);
+
+            // A path relative to the working folder is asked about as it is, and an entry that cannot be asked about says why (the system's own words).
+            string relative = Path.GetRelativePath(Environment.CurrentDirectory, game);
+            check.That(!Path.IsPathRooted(relative) && ScriptSources.Find(relative, 123, "Foo").Source?.Text == "// fine\n" && ScriptSources.IsRegularFile(Path.Combine(relative, "data", "MissionScripts", "level123", "Foo.msl")),
+                $"a game folder given relative to the working folder is read as it is: {relative}");
+            string examineFailure = "";
             try
             {
                 ScriptSources.IsRegularFile(Path.Combine(folder, "Gone.msl"));
             }
-            catch (IOException)
+            catch (IOException error)
             {
-                examined = false;
+                examineFailure = error.Message;
             }
-            check.That(!examined, "an entry that cannot be examined is an IOException, which the lookup turns into a reason");
-            File.Delete(pipe);
+            check.That(examineFailure == "No such file or directory", $"an entry that cannot be examined is an IOException that says why: \"{examineFailure}\"");
         }
 
         // A folder that cannot be listed is a reason, not an exception for the page's signal handler to meet (a root user can list anything).
@@ -267,6 +280,12 @@ internal static class LevelScriptTests
         }
         Directory.Delete(game, true);
     }
+
+    // mknod makes a named pipe (0x1000) or a socket node (0xC000), which anyone may make; the mode carries the permission bits.
+    private static int MakeNode(string path, uint mode) => MakeNodeNative(path, mode, 0);
+
+    [DllImport("libc", EntryPoint = "mknod", SetLastError = true)]
+    private static extern int MakeNodeNative([MarshalAs(UnmanagedType.LPUTF8Str)] string path, uint mode, ulong device);
 
     private static ScriptSourceResult Throws(Func<ScriptSourceResult> find, out bool threw)
     {
