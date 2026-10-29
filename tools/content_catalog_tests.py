@@ -6,7 +6,9 @@ headers, the schema, and the generated-output boundary."""
 from __future__ import annotations
 
 import collections
+import contextlib
 import hashlib
+import io
 import json
 import struct
 import tempfile
@@ -16,6 +18,7 @@ from pathlib import Path
 
 import cmsh_animation_usage_census_tests as mesh_fixtures
 import content_catalog as catalog
+import content_catalog_gate as gate
 from dds_census_tests import dds as authored_dds
 from dds_metadata_tests import rgb_dds as authored_rgb_dds
 import mission_script_inspect as inspector
@@ -807,6 +810,246 @@ class NamedThingsCatalogueTests(unittest.TestCase):
                   "level": {"namedThings": {"entries": [{"thing": "marker:gone"}],
                                             "runtimeNames": [{"name": "n", "script": "script-code:gone", "pc": 0}]}}}]
         self.assertEqual(catalog.dangling_targets(level), ["marker:gone", "script-code:gone"])
+
+
+# ------------------------------------------------------------------------------------------- VSDS, PMIB and DMKR
+def vs_shader(*, name: bytes = b"RenderInfo shader", vtype: int = 0, fromdecl: bool = True, decl: bytes | None = None,
+              counts: list[int] | None = None, constants: bytes | None = None, function: bytes | None = None,
+              source: bytes | None = None) -> bytes:
+    """One shader as CVertexShader::Load reads it: two chunk headers, the 0x5c-byte object, then each part whose stored
+    pointer is set, each behind its own chunk header. The pointer values are any nonzero word."""
+    hdr = lambda tag: tag + struct.pack("<I", 0)
+    obj = bytearray(0x5C)
+    obj[0x08:0x08 + len(name)] = name
+    struct.pack_into("<i", obj, 0x2C, vtype)
+    obj[0x34] = int(fromdecl)
+    struct.pack_into("<IIIIIiIi", obj, 0x38, 0x100 if decl is not None else 0, len(decl or b""),
+                     0x200 if constants is not None else 0, 0x300 if counts is not None else 0,
+                     0x400 if source is not None else 0, len(source or b""),
+                     0x500 if function is not None else 0, len(function or b""))
+    out = hdr(b"VSDR") + hdr(b"CVSD") + bytes(obj)
+    if decl is not None:
+        out += hdr(b"DECL") + decl
+    if counts is not None:
+        out += hdr(b"CNTS") + struct.pack(f"<{len(counts)}i", *counts)
+    if constants is not None:
+        out += hdr(b"CNST") + constants
+    if function is not None:
+        out += hdr(b"FUNC") + function
+    if source is not None:
+        out += hdr(b"SRC ") + source
+    return out
+
+
+def vsds_payload(*shaders: bytes, numdecls: int = 2) -> bytes:
+    rows = b"".join(struct.pack("<iIi", int(i % 3 == 0), 0xABC0 + i, i) for i in range(104))
+    return struct.pack("<ii", numdecls, len(shaders)) + rows + b"".join(shaders)
+
+
+def pmib_payload(strips: list[list[int]], offsets: list[int] | None = None) -> bytes:
+    """48 strips in [level * 16 + edges] order; offsets default to where each strip starts."""
+    if offsets is None:
+        offsets, at = [], 0
+        for strip in strips:
+            offsets.append(at)
+            at += len(strip)
+    words = [w for strip in strips for w in strip]
+    return struct.pack("<48i", *offsets) + struct.pack("<i", len(words)) + struct.pack(f"<{len(words)}H", *words)
+
+
+def valid_strips() -> list[list[int]]:
+    """A strip per set whose largest index is its patch's last vertex: (2 << level) + 1 squared, minus one."""
+    return [[0, 1, 2, ((2 << level) + 1) ** 2 - 1] for level in range(3) for _edges in range(16)]
+
+
+def dmkr_payload(levels: int, size: int | None = None) -> bytes:
+    size = (0, 1, 5, 21, 85, 341, 1365, 5461)[levels + 1] if size is None else size
+    return struct.pack("<i", levels) + bytes((20 + n % 13) for n in range(size))
+
+
+class PayloadDecoderTests(unittest.TestCase):
+    def test_vsds_reads_each_part_only_when_its_pointer_is_set(self) -> None:
+        a = vs_shader(decl=bytes(8), counts=[1, 2], constants=bytes(12), source=b"vs.1.1")
+        b = vs_shader(name=b"RenderInfo shader (custom declar", vtype=1, fromdecl=False, function=bytes(6))
+        d = worlddec.parse_vsds(vsds_payload(a, b))
+        self.assertEqual((d["declNames"], d["shaders"], d["fromDeclaration"], d["declNameTable"]["shownRows"]),
+                         (2, 2, 1, 69))  # the rows whose flag is 0 (every third row has flag 1)
+        first, second = d["shaderList"]
+        self.assertEqual((first["name"], first["type"], first["declaration"]["bytes"], first["source"]["bytes"]),
+                         ("RenderInfo shader", 0, 8, 6))
+        self.assertEqual((first["constants"]["words"], first["constants"]["declNamesWithConstants"]), (3, 2))
+        self.assertNotIn("function", first)
+        self.assertEqual(first["declaration"]["sha256"], hashlib.sha256(bytes(8)).hexdigest())
+        # a 32-byte name field with no terminator is no name (strcpy of a longer name fills the field)
+        self.assertEqual((second["name"], second["nameTerminated"], second["function"]["bytes"]), (None, False, 6))
+        self.assertEqual([k for k in ("declaration", "constants", "source") if k in second], [])
+        self.assertEqual((first["length"], second["offset"]), (len(a), 8 + 104 * 12 + len(a)))
+        self.assertEqual(first["chunkTags"], ["VSDR", "CVSD"])
+
+    def test_vsds_counts_declaration_shaders_create_cannot_tell_apart(self) -> None:
+        same = vs_shader(decl=b"abcd")
+        other = vs_shader(decl=b"abcd", vtype=1)
+        self.assertEqual(worlddec.parse_vsds(vsds_payload(same, same, other))["declarationKeysShared"], 1)
+        # Create matches a declaration only among declaration shaders: a function shader's stored declaration is no key
+        plain = vs_shader(decl=b"abcd", fromdecl=False)
+        self.assertEqual(worlddec.parse_vsds(vsds_payload(plain, plain, same))["declarationKeysShared"], 0)
+
+    def test_vsds_refuses_what_load_would_misread(self) -> None:
+        good = vsds_payload(vs_shader(decl=bytes(4)))
+        for broken, why in ((good + b"\0", "a byte left over"), (good[:-1], "truncated"),
+                            (vsds_payload(vs_shader(constants=bytes(4))), "constants without counts"),
+                            (vsds_payload(vs_shader(counts=[-1, 1], constants=b"")), "a negative count"),
+                            (vsds_payload(numdecls=-1), "a negative declaration-name count")):
+            with self.assertRaises(worlddec.DecodeError, msg=why):
+                worlddec.parse_vsds(broken)
+        negative = bytearray(vsds_payload(vs_shader(function=bytes(4))))
+        struct.pack_into("<i", negative, 8 + 104 * 12 + 16 + 0x54, -4)
+        with self.assertRaises(worlddec.DecodeError):
+            worlddec.parse_vsds(bytes(negative))
+
+    def test_pmib_sets_are_the_ranges_between_offsets(self) -> None:
+        d = worlddec.parse_pmib(pmib_payload(valid_strips()))
+        self.assertEqual((d["sets"], d["words"], d["problems"]), (48, 192, []))
+        rows = {(r["level"], r["edges"]): r for r in d["setList"]}
+        self.assertEqual((rows[(0, 0)]["first"], rows[(0, 0)]["words"], rows[(0, 0)]["triangles"]), (0, 4, 2))
+        self.assertEqual((rows[(2, 15)]["first"], rows[(2, 15)]["maxIndex"], rows[(2, 15)]["patchVertices"]),
+                         (188, 80, 81))
+        self.assertEqual(rows[(1, 3)]["patchVertices"], 25)
+
+    def test_pmib_reports_ranges_and_indices_the_index_buffers_would_misread(self) -> None:
+        strips = valid_strips()
+        strips[5] = [0, 1, 9]  # a level-0 patch has 9 vertices: index 9 is past it
+        strips[20] = [0, 1]    # fewer than one triangle
+        problems = worlddec.parse_pmib(pmib_payload(strips))["problems"]
+        self.assertEqual(len(problems), 2)
+        self.assertTrue(any("indexes vertex 9 of a 9-vertex patch" in p for p in problems))
+        offsets = [4 * i for i in range(48)]
+        offsets[10], offsets[11] = offsets[11], offsets[10]
+        problems = worlddec.parse_pmib(pmib_payload(valid_strips(), offsets))["problems"]
+        self.assertIn("set 10 spans 44..40 of 192 words", problems)
+
+    def test_pmib_refuses_unread_bytes_and_a_negative_count(self) -> None:
+        good = pmib_payload(valid_strips())
+        with self.assertRaises(worlddec.DecodeError):
+            worlddec.parse_pmib(good + b"\0\0")
+        with self.assertRaises(worlddec.DecodeError):
+            worlddec.parse_pmib(good[:48 * 4] + struct.pack("<i", -1))
+
+    def test_dmkr_holds_its_mips_smallest_first(self) -> None:
+        d = worlddec.parse_dmkr(dmkr_payload(2))
+        self.assertEqual((d["levels"], d["bytes"]), (2, 21))
+        self.assertEqual([(m["side"], m["offset"], m["bytes"]) for m in d["mips"]], [(1, 0, 1), (2, 1, 4), (4, 5, 16)])
+        self.assertEqual(worlddec.parse_dmkr(dmkr_payload(6))["bytes"], 5461)
+        self.assertEqual((worlddec.parse_dmkr(dmkr_payload(-1))["mips"]), [])
+
+    def test_dmkr_refuses_a_level_count_outside_the_table_and_unread_bytes(self) -> None:
+        for broken in (dmkr_payload(7, size=0), dmkr_payload(-2, size=0), dmkr_payload(2) + b"\0", dmkr_payload(2)[:-1]):
+            with self.assertRaises(worlddec.DecodeError):
+                worlddec.parse_dmkr(broken)
+
+
+def resource_archive(*chunks_: bytes) -> bytes:
+    return aya(chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1)) + chunk(b"AYAD", bytes(24))
+               + b"".join(chunks_))
+
+
+class PayloadCatalogueTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            (game / "data/resources/base_res_PC.aya").write_bytes(resource_archive(
+                chunk(b"VSDS", vsds_payload(vs_shader(decl=bytes(8), counts=[1, 0], constants=bytes(4), source=b"x"))),
+                chunk(b"PMIB", pmib_payload(valid_strips())), chunk(b"DMKR", dmkr_payload(6))))
+            (game / "data/resources/300_res_PC.aya").write_bytes(resource_archive(
+                chunk(b"DMKR", dmkr_payload(1)), chunk(b"PMIB", pmib_payload([[0, 1]] * 48))))
+            cls.catalog = catalog.build_catalog(game)
+        cls.payloads = {(Path(a["source"]["container"]).name, a["payload"]["tag"]): a for a in cls.catalog["assets"]
+                        if a["type"] == "level-payload"}
+        cls.assets = {a["id"]: a for a in cls.catalog["assets"]}
+
+    def test_base_payloads_decode_in_their_loaders_order(self) -> None:
+        vsds = self.payloads[("base_res_PC.aya", "VSDS")]["payload"]
+        self.assertEqual((vsds["structure"], vsds["decoded"]["shaders"]), ("decoded", 1))
+        self.assertIn("CVertexShader::Create", vsds["use"]["loader"])
+        pmib = self.payloads[("base_res_PC.aya", "PMIB")]["payload"]
+        self.assertEqual((pmib["decoded"]["words"], pmib["decoded"]["problems"]), (192, []))
+        self.assertIn("CLandscapeIB::CreateIndexBuffer", pmib["use"]["loader"])
+        self.assertIn("CDXPatchManager::DeserializeAll", self.payloads[("base_res_PC.aya", "PMIB")]["provenance"]["loader"])
+
+    def test_the_base_damage_texture_means_damage0_is_never_read(self) -> None:
+        base = self.payloads[("base_res_PC.aya", "DMKR")]["payload"]
+        self.assertEqual((base["decoded"]["levels"], base["use"]["replacesFile"], base["use"]["fileReadFromDisk"]),
+                         (6, "data\\textures\\mixers\\damage0.tga", False))
+        self.assertIn("CSystem::Init", base["use"]["rule"])
+        level = self.payloads[("300_res_PC.aya", "DMKR")]["payload"]
+        self.assertIsNone(level["use"]["fileReadFromDisk"])  # read with a level, after start-up
+
+    def test_a_level_archive_lists_its_payloads_and_their_problems(self) -> None:
+        terrain = self.assets["level:300"]["level"]["terrain"]
+        self.assertEqual(sorted(terrain["payloads"]), ["damageTexture", "patchStrips"])
+        self.assertEqual(len(self.payloads[("300_res_PC.aya", "PMIB")]["payload"]["decoded"]["problems"]), 48)
+
+    def test_an_undecodable_payload_says_why(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            (game / "data/resources/base_res_PC.aya").write_bytes(resource_archive(chunk(b"DMKR", dmkr_payload(9, 0))))
+            data = catalog.build_catalog(game)
+        [dmkr] = [a for a in data["assets"] if a["type"] == "level-payload" and a["payload"]["tag"] == "DMKR"]
+        self.assertEqual(dmkr["payload"]["decoded"]["status"], "undecoded")
+        self.assertIn("MIP_OFFSETS", dmkr["payload"]["decoded"]["reason"])
+        self.assertNotIn("use", dmkr["payload"])
+
+    def test_the_payload_records_match_the_schema(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        schema = json.loads((catalog.TOOLS / "content_catalog.schema.json").read_text(encoding="utf-8"))
+        validator = jsonschema.Draft202012Validator(schema)
+        for asset in self.catalog["assets"]:
+            self.assertEqual(sorted(validator.iter_errors({**asset, catalog.GENERATED_MARKER: True}), key=str), [],
+                             asset["id"])
+
+
+class PayloadGateTests(unittest.TestCase):
+    def run_gate(self, base: bytes) -> tuple[int, str]:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            (game / "data" / "resources").mkdir(parents=True)
+            (game / "data" / "default physics.dat").write_bytes(named.GATE_PHYSICS)
+            (game / "data" / "resources" / "201_res_PC.aya").write_bytes(
+                named.level_archive(None, named.body([named.unit("Turret", "Gun")])))
+            (game / "data" / "resources" / "base_res_PC.aya").write_bytes(base)
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = gate.main(["--game", str(game)])
+        return code, out.getvalue()
+
+    def test_every_payload_a_loader_reads_is_decoded(self) -> None:
+        code, out = self.run_gate(resource_archive(
+            chunk(b"VSDS", vsds_payload(vs_shader(decl=bytes(8)), vs_shader(name=b"x" * 32, decl=bytes(8)),
+                                        vs_shader(decl=bytes(8), vtype=1))),
+            chunk(b"PMIB", pmib_payload(valid_strips())), chunk(b"DMKR", dmkr_payload(6))))
+        self.assertEqual(code, 0, out)
+        for line in ("archives read: 2", "payload VSDS decoded: 1", "VSDS shaders: 3", "PMIB sets: 48",
+                     "VSDS shaders whose name field has no terminator: 1", "DMKR with 7 mip levels: 1",
+                     "VSDS declaration keys held by more than one shader: 1"):
+            self.assertIn(line, out)
+
+    def test_a_payload_that_does_not_decode_fails(self) -> None:
+        code, out = self.run_gate(resource_archive(chunk(b"DMKR", dmkr_payload(2) + b"\0")))
+        self.assertEqual(code, 1)
+        self.assertIn("base_res_PC.aya DMKR at", out)
+
+    def test_a_patch_strip_outside_its_patch_fails(self) -> None:
+        strips = valid_strips()
+        strips[47] = [0, 1, 81]
+        code, out = self.run_gate(resource_archive(chunk(b"PMIB", pmib_payload(strips))))
+        self.assertEqual(code, 1)
+        self.assertIn("indexes vertex 81 of a 81-vertex patch", out)
 
 
 class BoundaryTests(unittest.TestCase):

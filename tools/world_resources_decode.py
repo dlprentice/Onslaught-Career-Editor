@@ -11,12 +11,17 @@ src/) and refuses input that does not consume exactly:
   CWaypointManager::Load, the timings and the occupancy grids;
 - ERES: CEngine::Deserialize (CMapTex::Deserialize x N_MAPMIPS, CMap::Deserialize, CHeightField::Load,
   CMixerMap::Init);
-- SURF: CDXSurf::Deserialize; SSHD: CStaticShadows::DeserializeAll; LNDS is skipped by the PC loader.
+- SURF: CDXSurf::Deserialize; SSHD: CStaticShadows::DeserializeAll; LNDS is skipped by the PC loader;
+- VSDS: CVertexShader::DeserializeAll and CVertexShader::Load (the declaration-name table, then each vertex shader:
+  its object, declaration, constant counts and constants, compiled code and assembly text, each read only when the
+  stored object's pointer to it is set); PMIB: CDXPatchManager::DeserializeAll (the landscape patches' index strips);
+  DMKR: CDamage::DeserializeAll (the landscape damage texture's mip levels).
 
 Pure functions over bytes; tools/content_catalog.py joins their results to the rest of the catalogue.
 """
 from __future__ import annotations
 
+import collections
 import hashlib
 import math
 import struct
@@ -573,3 +578,138 @@ def parse_sshd(payload: bytes) -> dict:
     if r.pos != len(payload):
         raise DecodeError(f"SSHD has {len(payload) - r.pos} unread bytes")
     return {"shadows": count, "partMaps": maps, "shadowedMaps": shadowed, "cells": cells}
+
+
+# ------------------------------------------------------------------------------------------------ VSDS, PMIB, DMKR
+L_VSDS = cite("VertexShader.cpp", "CVertexShader::DeserializeAll -> CVertexShader::Load", "0x005042f0, 0x00503f90")
+L_VS_CREATE = cite("VertexShader.cpp", "CVertexShader::Create (reuses a listed shader: a declaration shader by type and "
+                   "declaration bytes, any other by name and the caller's own function pointer)", "0x00502060")
+L_PMIB = cite("DXPatchManager.cpp", "CDXPatchManager::DeserializeAll", "0x00550750")
+L_PATCH_IB = cite("landscapeib.cpp", "CLandscapeIB::CreateIndexBuffer (copies one set's range; Init: 2 << level cells)",
+                  "0x0048df20")
+L_PATCH_VB = cite("LandscapeVB.cpp", "CLandscapeVB::Create ((cells + 1)^2 vertices)", "0x0048f1e0")
+L_DMKR = cite("damage.cpp", "CDamage::DeserializeAll -> CDamageTexture::Deserialize", "0x00441000")
+L_DAMAGE_INIT = cite("damage.cpp", "CDamage::Init (builds the texture from damage0.tga only when nothing was "
+                     "deserialized)", "0x00440b90")
+VS_DECL_NAMES, VS_DECL_NAME_SIZE = 104, 12  # CVertexShader::mDeclNames[104]: SVSDeclName {mFlag, mName, mToken}
+VS_OBJECT_SIZE = 0x5C                        # sizeof(CVertexShader) (VertexShader.h)
+PATCH_LEVELS, PATCH_EDGE_MASKS = 3, 16       # CDXPatchManager::mOffsets[3 * 16 + 1]
+DAMAGE_MIP_OFFSETS = (0, 1, 5, 21, 85, 341, 1365, 5461)  # damage.cpp MIP_OFFSETS (00628298): the smallest level first
+
+
+def sha(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def parse_vsds(payload: bytes) -> dict:
+    """CVertexShader::DeserializeAll: the declaration-name count and shader count, the 104-row declaration-name table
+    (its stored name pointers are cleared after the read), then each shader as CVertexShader::Load reads it."""
+    r = Reader(payload)
+    numdecls, numshaders = r.unpack("ii")
+    if not 0 <= numdecls <= LIMIT or not 0 <= numshaders <= LIMIT:
+        raise DecodeError(f"implausible VSDS counts {numdecls}, {numshaders}")
+    table = r.take(VS_DECL_NAMES * VS_DECL_NAME_SIZE)
+    rows = [struct.unpack_from("<iIi", table, VS_DECL_NAME_SIZE * i) for i in range(VS_DECL_NAMES)]
+    shaders = []
+    for index in range(numshaders):
+        at = r.pos
+        tags = [r.chunk_header()[0], r.chunk_header()[0]]
+        obj = r.take(VS_OBJECT_SIZE)
+        raw_name = obj[0x08:0x28]
+        name, terminated = raw_name.split(b"\0", 1)[0], b"\0" in raw_name
+        vtype, = struct.unpack_from("<i", obj, 0x2C)
+        decl_ptr, decl_size, consts_ptr, counts_ptr, src_ptr, src_size, func_ptr, func_size = \
+            struct.unpack_from("<IIIIIiIi", obj, 0x38)
+        row = {"index": index, "offset": at, "chunkTags": tags,
+               "name": name.decode("latin-1") if terminated else None, "nameTerminated": terminated,
+               "type": vtype, "fromDeclaration": obj[0x34] != 0}
+        if decl_ptr:
+            r.chunk_header()
+            data = r.take(decl_size)
+            row["declaration"] = {"bytes": len(data), "sha256": sha(data)}
+        counts = None
+        if counts_ptr:
+            r.chunk_header()
+            counts = list(r.unpack(f"{numdecls}i"))
+            if any(c < 0 for c in counts):
+                raise DecodeError(f"shader {index} has a negative constant count")
+        if consts_ptr:
+            if counts is None:
+                raise DecodeError(f"shader {index} has constants but no counts (Load would read through a null table)")
+            r.chunk_header()
+            data = r.take(4 * sum(counts))
+            row["constants"] = {"words": sum(counts), "declNamesWithConstants": sum(1 for c in counts if c),
+                                "sha256": sha(data)}
+        if func_ptr:  # a negative size is refused by take()
+            r.chunk_header()
+            data = r.take(func_size)
+            row["function"] = {"bytes": len(data), "sha256": sha(data)}
+        if src_ptr:
+            r.chunk_header()
+            data = r.take(src_size)
+            row["source"] = {"bytes": len(data), "sha256": sha(data)}
+        row["length"] = r.pos - at
+        shaders.append(row)
+    if r.pos != len(payload):
+        raise DecodeError(f"VSDS has {len(payload) - r.pos} unread bytes")
+    keys = collections.Counter((s["type"], s["declaration"]["sha256"]) for s in shaders
+                               if s["fromDeclaration"] and "declaration" in s)
+    return {"declNames": numdecls, "shaders": len(shaders),
+            "declNameTable": {"rows": VS_DECL_NAMES, "shownRows": sum(1 for f, _p, _t in rows if f == 0),
+                              "sha256": sha(table)},
+            "fromDeclaration": sum(1 for s in shaders if s["fromDeclaration"]),
+            "declarationKeysShared": sum(1 for n in keys.values() if n > 1),
+            "shaderList": shaders}
+
+
+def parse_pmib(payload: bytes) -> dict:
+    """CDXPatchManager::DeserializeAll: 48 first-word offsets ([level * 16 + edges]), the word count, the words.
+    CLandscapeIB::CreateIndexBuffer copies the words from one set's offset to the next (the last to the count) as a
+    strip of 16-bit indices into a patch of (2 << level) + 1 squared vertices."""
+    r = Reader(payload)
+    sets = PATCH_LEVELS * PATCH_EDGE_MASKS
+    offsets = list(r.unpack(f"{sets}i"))
+    count = r.i32()
+    if not 0 <= count <= LIMIT:
+        raise DecodeError(f"implausible PMIB word count {count}")
+    data = r.take(2 * count)
+    if r.pos != len(payload):
+        raise DecodeError(f"PMIB has {len(payload) - r.pos} unread bytes")
+    words = struct.unpack(f"<{count}H", data)
+    bounds = offsets + [count]
+    rows, problems = [], []
+    for i in range(sets):
+        level, edges = divmod(i, PATCH_EDGE_MASKS)
+        first, end = bounds[i], bounds[i + 1]
+        vertices = ((2 << level) + 1) ** 2
+        row = {"level": level, "edges": edges, "first": first, "words": end - first, "triangles": end - first - 2,
+               "patchVertices": vertices}
+        if not 0 <= first <= end <= count:
+            problems.append(f"set {i} spans {first}..{end} of {count} words")
+        else:
+            strip = words[first:end]
+            row["maxIndex"] = max(strip) if strip else None
+            if strip and max(strip) >= vertices:
+                problems.append(f"set {i} indexes vertex {max(strip)} of a {vertices}-vertex patch")
+            if end - first < 3:
+                problems.append(f"set {i} has {end - first} words, fewer than one triangle")
+        rows.append(row)
+    return {"sets": sets, "words": count, "wordsSha256": sha(data), "setList": rows, "problems": problems}
+
+
+def parse_dmkr(payload: bytes) -> dict:
+    """CDamage::DeserializeAll -> CDamageTexture::Deserialize: the number of mip levels, then MIP_OFFSETS[levels + 1]
+    bytes of mip data, the smallest level first."""
+    r = Reader(payload)
+    levels = r.i32()
+    if not -1 <= levels < len(DAMAGE_MIP_OFFSETS) - 1:
+        raise DecodeError(f"{levels} damage mip levels: MIP_OFFSETS has no entry {levels + 1}")
+    size = DAMAGE_MIP_OFFSETS[levels + 1]
+    data = r.take(size)
+    if r.pos != len(payload):
+        raise DecodeError(f"DMKR has {len(payload) - r.pos} unread bytes")
+    mips = [{"level": n, "side": 1 << n, "offset": DAMAGE_MIP_OFFSETS[n],
+             "bytes": DAMAGE_MIP_OFFSETS[n + 1] - DAMAGE_MIP_OFFSETS[n],
+             "sha256": sha(data[DAMAGE_MIP_OFFSETS[n]:DAMAGE_MIP_OFFSETS[n + 1]])} for n in range(levels + 1)]
+    return {"levels": levels, "bytes": size, "sha256": sha(data), "mips": mips,
+            "valueRange": [min(data), max(data)] if data else None}

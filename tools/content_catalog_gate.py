@@ -16,6 +16,11 @@ named things (tools/named_things.py), for every level archive:
     cutscene's link-to name, the lookup (named_things.find) agrees with the loader's walk (named_things.find_by_walk)
     with every base-world thing kept, with none kept and with only every other one kept
 
+payloads (tools/world_resources_decode.py), for every resource archive (data/resources/*_res_PC.aya):
+  - every payload a PC loader decodes (ERES, SURF, SSHD, VSDS, PMIB, DMKR) is read in its loader's order and consumes
+    exactly its chunk, so ReadResources' next GetNext lands on the next chunk
+  - every PMIB set is a range of the word table whose indices stay inside its level's patch of vertices
+
 The gate reads the game folder and writes nothing. It prints counts (and, with --table, one row per level, derived
 from the game: keep it private); the exit code is 0 only when every check passes.
 
@@ -39,6 +44,8 @@ import named_things as nt  # noqa: E402
 import world_resources_decode as wrd  # noqa: E402
 import world_resources_encode as wre  # noqa: E402
 
+PAYLOAD_DECODERS = {"ERES": wrd.parse_eres, "SURF": wrd.parse_surf, "SSHD": wrd.parse_sshd, "VSDS": wrd.parse_vsds,
+                    "PMIB": wrd.parse_pmib, "DMKR": wrd.parse_dmkr}
 KEEPS = {"all base things kept": lambda e: True, "no base thing kept": lambda e: not e["conditional"],
          "every other base slot kept": lambda e: not e["conditional"] or e["slot"] % 2 == 0}
 
@@ -140,6 +147,42 @@ def check_named_things(level: int, worlds: dict, behaviours: dict, counts: colle
             "literals": dict(sorted(statuses.items()))}
 
 
+def resource_archives(game: Path) -> list[Path]:
+    folder = next((p for p in game.joinpath("data").iterdir() if p.name.casefold() == "resources"), None) \
+        if game.joinpath("data").is_dir() else None
+    if folder is None:
+        return []
+    return sorted(p for p in folder.iterdir() if p.name.casefold().endswith("_res_pc.aya") and p.is_file())
+
+
+def check_payloads(path: Path, counts: collections.Counter, failures: list[str]) -> None:
+    """Decode every payload of one archive that a PC loader decodes, and check what it holds."""
+    raw = b"".join(wre.inflate(wre.read_members(wre.read_retail(path))))
+    counts["archives read"] += 1
+    for tag, at, size in wre.chunks(raw):
+        decoder = PAYLOAD_DECODERS.get(tag)
+        if decoder is None:
+            continue
+        try:
+            decoded = decoder(raw[at:at + size])
+        except (wrd.DecodeError, struct.error, ValueError) as error:
+            failures.append(f"{path.name} {tag} at {at}: does not decode: {error}")
+            continue
+        counts[f"payload {tag} decoded"] += 1
+        if tag == "PMIB":
+            for problem in decoded["problems"]:
+                failures.append(f"{path.name} PMIB: {problem}")
+            counts["PMIB sets"] += decoded["sets"]
+        elif tag == "VSDS":
+            counts["VSDS shaders"] += decoded["shaders"]
+            counts["VSDS declaration shaders"] += decoded["fromDeclaration"]
+            counts["VSDS shaders whose name field has no terminator"] += sum(
+                1 for sh in decoded["shaderList"] if not sh["nameTerminated"])
+            counts["VSDS declaration keys held by more than one shader"] += decoded["declarationKeysShared"]
+        elif tag == "DMKR":
+            counts[f"DMKR with {decoded['levels'] + 1} mip levels"] += 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--game", required=True, type=Path, help="an installed game folder (read only)")
@@ -167,6 +210,13 @@ def main(argv: list[str] | None = None) -> int:
             failures.append(f"{level:03d}: the registry does not build: {error}")
     if not rows:
         failures.append("no level archive was checked: choose a game folder whose data/resources holds level archives")
+    for path in resource_archives(game):
+        if args.level is not None and not path.name.startswith(f"{args.level:03d}_"):
+            continue
+        try:
+            check_payloads(path, counts, failures)
+        except (wre.EncodeError, ValueError) as error:
+            failures.append(f"{path.name}: the archive does not read: {error}")
     if args.table:
         print("level\tbase entries\treal entries\tnames\tnames on several\tnot joined\tliterals")
         for r in rows:

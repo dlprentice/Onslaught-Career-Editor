@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-29 (`named_things.py`, the registry of named things, the catalogue's thing-name joins on it and the catalogue's retail gate `content_catalog_gate.py`; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-29 (the `VSDS`, `PMIB` and `DMKR` payloads decoded and checked by the catalogue's retail gate; `named_things.py`, the registry of named things, the catalogue's thing-name joins on it and the catalogue's retail gate `content_catalog_gate.py`; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -159,8 +159,13 @@ publish, sign, or install anything by themselves.
   `MESH` chunk rather than listing every wrapper; its offset comes from walking those wrappers, not searching bytes.
   `world_resources_decode.py` decodes the level payloads in their loaders' read order and refuses unread bytes: the
   `WRES` world bodies (`CWorld::LoadWorld`: header, compiled scripts, things, trees, influence map, waypoint paths,
-  timings, occupancy), `ERES` (mixer mips, heightfield settings and samples, mixer map), `SURF` and `SSHD`; `LNDS`
-  is skipped by the PC loader. Relationships (archive to mesh, texture record to its DDS file, mesh slot to texture
+  timings, occupancy), `ERES` (mixer mips, heightfield settings and samples, mixer map), `SURF`, `SSHD`, `VSDS` (the
+  vertex shaders `CVertexShader::Load` reads: each one's declaration, constants, compiled code and assembly text as sizes
+  and hashes, read only where the stored object's pointer to it is set; `CVertexShader::Create` finds a declaration
+  shader by its type and declaration bytes, never by name), `PMIB` (the landscape patches' index strips per level and
+  edge mask, each checked against its patch's vertices) and `DMKR` (the damage texture's mip levels; the base archive's,
+  read at start-up, means `data\textures\mixers\damage0.tga` is never read); `LNDS` is skipped by the PC loader.
+  Relationships (archive to mesh, texture record to its DDS file, mesh slot to texture
   record, imposter to mesh, placement to definition and mesh, thing to its compiled script and `.msl` source, path to
   its waypoints, script to the units, paths, scripts, text ids and thing names its literal call arguments name, level
   to the sky-cube, water and detail textures its map numbers build with `sprintf`, effect to texture, goodie to
@@ -269,15 +274,17 @@ publish, sign, or install anything by themselves.
   order; `find_by_walk` computes the same answer the loader's way, as a cross-check. Names given at run time
   (`SetName`), things spawned in play and things that leave the list are listed, not followed, and which base-world
   things a career keeps is the career's (each base-world entry carries its career bit and dies-on world).
-  `named_things_tests.py` checks each rule on authored world bodies, and the gate below on authored game folders; no
-  game bytes.
+  `named_things_tests.py` checks each rule on authored world bodies, and the gate below on authored game folders
+  (`content_catalog_tests.py` checks the payload decoders and the gate's payload checks); no game bytes.
 - `content_catalog_gate.py --game GAME [--table] [--level N]` is the content catalogue's retail gate. Over every level
   archive of an installed game it checks that the world bodies decode with the loader's slots, that every registry
   entry is a slotted record of a class that names itself, under its own name, with the base world's first and every
   base-world slot inside the career's bits, that no unit takes a slot with nothing made for it, and that `find` and
   `find_by_walk` agree on every literal thing name of every script, and every cutscene's link-to name, with every, no
-  and every other base-world thing kept. It reads the game folder, writes nothing and prints counts; `--table` adds a row per level (derived from a
-  game: keep it private).
+  and every other base-world thing kept. Over every resource archive it decodes every payload a PC loader decodes
+  (`ERES`, `SURF`, `SSHD`, `VSDS`, `PMIB`, `DMKR`) and checks that each consumes exactly its chunk and that every patch
+  strip stays inside its patch. It reads the game folder, writes nothing and prints counts; `--table` adds a row per
+  level (derived from a game: keep it private).
 - `heightfield_lookup.py ARCHIVE.aya X Y` prints the height under a position of a level archive's terrain, as the game's
   terrain lookup computes it: the archive's `ERES` chunk holds 64 x 64 tiles of 9 x 9 signed 16-bit samples (one per world
   unit; a tile's ninth row and column repeat its neighbour's first) and a height scale, and heights are world units with Z

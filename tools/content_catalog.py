@@ -8,8 +8,8 @@ resource archives (TEXT, and those inside imposter IMPS, font PLAT and goodie GD
 meshes with their animation modes; levels with their decoded world bodies (WRES: placements of units, squads and
 features, markers for every other thing, waypoint paths, the compiled mission scripts and what their literal call
 arguments name, with the thing names joined on the level's registry of named things, tools/named_things.py) and terrain
-payloads (ERES heightfield and mixers, SURF, SSHD; tools/world_resources_decode.py), the
-physics definitions they instantiate; goodies; particle effects; XAP samples, Ogg Vorbis music and voice (with the
+payloads (ERES heightfield and mixers, SURF, SSHD; tools/world_resources_decode.py), the base archive's vertex shaders
+(VSDS), landscape patch strips (PMIB) and damage texture (DMKR), the physics definitions they instantiate; goodies; particle effects; XAP samples, Ogg Vorbis music and voice (with the
 transcript line that names each voice file), Bink films; and an inventory of mission scripts, text and symbol
 tables. It joins the texture names code builds with sprintf from the map's numbers (sky cube, water, detail mixer)
 and the HUD's, and with --decomp also the texture and mesh names game code looks up literally. Each mesh and texture
@@ -975,10 +975,10 @@ PAYLOAD_LOADERS = {
     "ERES": cite("engine.cpp", "CEngine::Deserialize", "0x0044a6e0"),
     "SURF": cite("DXSurf.cpp", "CDXSurf::Deserialize", "0x00556490"),
     "SSHD": cite("StaticShadows.cpp", "CStaticShadows::DeserializeAll", "0x004ee8a0"),
-    "VSDS": cite("VertexShader.cpp", "CVertexShader::DeserializeAll", "0x005042f0"),
+    "VSDS": wrd.L_VSDS,
     "LNDS": "skipped on PC by " + L_READ_RESOURCES,
-    "PMIB": "PATCHMANAGER.DeserializeAll via " + L_READ_RESOURCES,
-    "DMKR": "landscape damage DeserializeAll via " + L_READ_RESOURCES,
+    "PMIB": wrd.L_PMIB + " (PATCHMANAGER)",
+    "DMKR": wrd.L_DMKR + " (CDXLandscape::mDamage)",
     "WRES": L_WORLD,
 }
 WORLD_KINDS = ("BSWD", "RLWD")
@@ -1689,7 +1689,11 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
     return out
 
 
-DECODED_TAGS = {"ERES": "parse_eres", "SURF": "parse_surf", "SSHD": "parse_sshd"}
+DECODED_TAGS = {"ERES": "parse_eres", "SURF": "parse_surf", "SSHD": "parse_sshd", "VSDS": "parse_vsds",
+                "PMIB": "parse_pmib", "DMKR": "parse_dmkr"}
+L_SYSTEM_INIT = cite("System.cpp", "CSystem::Init (reads the base archive at start-up, before any CGame::RunLevel)",
+                     "0x004efb10")
+DAMAGE_TEXTURE_FILE = "data\\textures\\mixers\\damage0.tga"
 L_KEMPY = cite("DXKempyCube.cpp", "CDXKempyCube::Load", "0x005440a0") + " -> " + cite(
     "landscape.cpp", "GetCubeTextureName", "0x0048de30")
 L_WATER = cite("DXWater.cpp", "CDXWater::Load", "0x0055b230")
@@ -2039,6 +2043,33 @@ def link_compiled_scripts(inventory: list[dict], scripts: list[dict]) -> None:
             "basis": "the compiled copies' literal call arguments (" + wrd.L_OBJECTCODE + ")"}
 
 
+def payload_use(tag: str, decoded: dict, archive: str) -> dict | None:
+    """What the game does with a decoded VSDS, PMIB or DMKR payload, by the code that reads its result."""
+    if decoded["status"] != "decoded":
+        return None
+    if tag == "VSDS":
+        return {"rule": "each shader joins CVertexShader's list; CVertexShader::Create returns a listed declaration "
+                        "shader whose type and declaration bytes equal the caller's (CVertexShader::BuildRenderInfoShader "
+                        "asks by render state), and any other only for the caller's own function pointer, so these are "
+                        "found by key, never by name",
+                "loader": wrd.L_VS_CREATE}
+    if tag == "PMIB":
+        return {"rule": "CLandscapeIB::CreateIndexBuffer copies the words from a set's offset to the next as the index "
+                        "strip of the landscape patches of that level (2 << level cells a side) and edge mask, whose "
+                        "vertices CLandscapeVB::Create makes (cells + 1) squared",
+                "loader": wrd.L_PATCH_IB + "; " + wrd.L_PATCH_VB}
+    if tag == "DMKR":
+        base = PurePosixPath(archive).name.casefold() == "base_res_pc.aya"
+        return {"rule": "CDamage::DeserializeAll sets mLoaded, and CDamage::Init (from CDXLandscape::Init) builds the "
+                        "texture from " + DAMAGE_TEXTURE_FILE + " only when nothing was deserialized; "
+                        + ("the base archive is read at start-up (" + L_SYSTEM_INIT + "), before any level's "
+                           "CDXLandscape::Init, so that file is never read" if base else
+                           "this payload replaces the texture when its archive is read"),
+                "replacesFile": DAMAGE_TEXTURE_FILE, "fileReadFromDisk": False if base else None,
+                "loader": wrd.L_DMKR + "; " + wrd.L_DAMAGE_INIT}
+    return None
+
+
 def catalog_payloads(collect: dict) -> list[dict]:
     records = []
     for p in collect["payloads"]:
@@ -2055,6 +2086,9 @@ def catalog_payloads(collect: dict) -> list[dict]:
         elif p["decoded"] is not None:
             rec["payload"]["structure"] = p["decoded"]["status"]
             rec["payload"]["decoded"] = p["decoded"]
+            use = payload_use(p["tag"], p["decoded"], p["archive"])
+            if use:
+                rec["payload"]["use"] = use
         else:
             rec["payload"]["structure"] = "not itemised yet"
         records.append(rec)
@@ -2140,7 +2174,8 @@ def level_terrain(arc: dict | None, payloads: list[dict]) -> dict:
             out["heightField"] = d["heightField"]
             out["mixerMips"] = [{k: m[k] for k in ("mip", "set", "size", "textures")} for m in d["mixerMips"]]
             out["mixerMap"] = d["mixerMap"]
-        key = {"ERES": "engine", "SURF": "surf", "SSHD": "staticShadows", "LNDS": "landscape"}[p["tag"]]
+        key = {"ERES": "engine", "SURF": "surf", "SSHD": "staticShadows", "LNDS": "landscape", "VSDS": "vertexShaders",
+               "PMIB": "patchStrips", "DMKR": "damageTexture"}[p["tag"]]
         out.setdefault("payloads", {})[key] = {"status": d["status"], "payload": f"level-payload:"
                                                f"{p['archive'].casefold()}#{p['chunk']}"}
         if p["tag"] in ("SURF", "SSHD") and d["status"] == "decoded":
@@ -2436,8 +2471,8 @@ def build_coverage(catalog: dict) -> dict:
             f"{a['payload']['tag']}:{a['payload']['structure'] if a['payload']['tag'] != 'WRES' else 'decoded'}"
             for a in assets if a["type"] == "level-payload").items())),
         "notYetCatalogued": [
-            "VSDS (vertex shaders), PMIB (patch manager), DMKR (landscape damage) payload structure: payload records "
-            "with hashes only",
+            "VSDS, PMIB and DMKR are decoded to summaries and hashes (shader declarations, constants and assembly "
+            "text; patch strip words; damage mip bytes), not exported",
             "the mixer-map slot entries, heightfield samples and static-shadow cells are summarised (counts, ranges, "
             "hashes), not itemised per cell",
             "script arguments that are not literal pushes (computed values, variables) stay unresolved and are counted "
