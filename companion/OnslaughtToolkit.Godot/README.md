@@ -311,8 +311,8 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   A move can be undone, redone and reset; a position outside the 0 to 512 square the terrain covers is warned about; and the
   result is saved as an Onslaught CE mod, a new folder holding `mod.json` and the level's world file, never inside the game
   folder or the backups (even one that does not exist yet) and never over an existing folder. A move you have not saved as a mod
-  is asked about before it is dropped: when you close the Companion, open another level, switch games or choose another game
-  folder. The page is laid out for a window of about 1366 by 800 or more; in a smaller one, down to the Companion's 1024 by 700
+  is asked about before it is dropped when you close the Companion, open another level or choose another game folder, and
+  switching games is refused, with a message, until the move is saved or undone. The page is laid out for a window of about 1366 by 800 or more; in a smaller one, down to the Companion's 1024 by 700
   minimum, the right-hand column scrolls and the table is narrower. Only a level's own world is changed: the base world a level also
   loads is mentioned, not edited. Onslaught CE loads a world file from a mod on Linux only for now, and only from a version
   whose README's Mods section lists world files. The page's reader and writer are checked against the Toolkit's Python reference
