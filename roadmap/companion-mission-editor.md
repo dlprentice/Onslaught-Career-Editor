@@ -348,8 +348,12 @@ steps, 100 levels of nesting) are the reference's and are a parameter, so that t
   session's counters taken from the shipped script. Every script is exact, exact once an include the install lacks is bound from the shipped
   constants, or one of the seven pinned stale sources (section 11), and the status of each equals the Python gate's, script by script
   (`msl_gate.py --table`); and a world body whose scripts all compile, written with the compiled scripts in the place of the shipped ones,
-  writes back to the bytes it was read from. (3) A mutation sweep over the compiler files, each mutant a one-line change that the vectors, the
-  hand-worked shapes or the file and limit tests must fail.
+  writes back to the bytes it was read from. (3) A mutation sweep over the compiler files and the include lookup (about 170 one-line changes), each of which the vectors, the
+  hand-worked shapes or the file and limit tests must fail. The first pass let nine live (the counter reader's anchors, a named pipe or a dot in
+  an include path, a minus before a variable, the index a resolver is asked for, a dot followed by something that is not a word, leading zeros in a
+  long integer, blanks inside a note's operand) and six did not build; each live one got a vector or a test, the six were rewritten, and all were killed
+  on the second pass. One mutant is equivalent on Linux and was dropped: a folder is refused both by `File.Exists` and by the regular-file type
+  check, and `File.Exists` is the portable test.
 - **Made equal in the Python on the way.** The reference's lexer and directive patterns used Unicode classes (`\d`, `\s`) and `str.split()`;
   they are ASCII blanks and digits now (a source typed in the editor may hold characters a Latin-1 game file cannot), and the compiler takes its 13
   event names from the decoder's table instead of a second copy. The gate's result is unchanged.
