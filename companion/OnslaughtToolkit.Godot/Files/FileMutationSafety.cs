@@ -728,6 +728,12 @@ namespace OnslaughtToolkit.Companion.Files
         private bool _committed;
 
         /// <summary>
+        /// True once this transaction has moved its file into place, whether or not the checks after the move passed: the file at the
+        /// output path is then this transaction's, and a caller whose commit failed removes it with whatever else it made.
+        /// </summary>
+        internal bool Published { get; private set; }
+
+        /// <summary>
         /// Holds the protected inputs and the output folder for one new file. The output must be vacant: a
         /// guarded mutation never replaces an existing file.
         /// </summary>
@@ -859,6 +865,7 @@ namespace OnslaughtToolkit.Companion.Files
                 temp.Dispose();
                 File.Move(tempPath, _physicalOutputPath, overwrite: false);
                 tempEntryExists = false;
+                Published = true;
                 beforeCommittedOpen?.Invoke(_physicalOutputPath);
 
                 SafeFileHandle? committedHandle = FileMutationSafety.OpenNoFollowReadHandle(

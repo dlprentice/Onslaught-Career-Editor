@@ -3,26 +3,29 @@ using System.Numerics;
 
 namespace OnslaughtToolkit.Companion.Levels;
 
-/// <summary>A change to a world body that can be made and taken back.</summary>
+/// <summary>A change to a world body that can be made and taken back. One instance is one change: it is made, taken back and made again in turn.</summary>
 public interface IEditCommand
 {
     /// <summary>What the change does, in words, once it has been made (for an undo list).</summary>
     string Description { get; }
 
-    /// <summary>Makes the change. Throws <see cref="InvalidOperationException"/>, changing nothing, when it cannot be made.</summary>
+    /// <summary>Makes the change. Throws <see cref="InvalidOperationException"/>, changing nothing, when it cannot be made (or has been made already).</summary>
     void Do(WorldBody body);
 
-    /// <summary>Takes the change back; only called after <see cref="Do"/> succeeded.</summary>
+    /// <summary>Takes the change back; only called after <see cref="Do"/> succeeded and has not been undone since.</summary>
     void Undo(WorldBody body);
 }
 
 /// <summary>
 /// Moves one stored thing record to a new position. Nothing else about the record changes, so the row counts and order, and
-/// with them every waypoint path and every career's index into a base world, stay as they are.
+/// with them every waypoint path and every career's index into a base world, stay as they are. One instance is one move: it
+/// remembers the position it replaced, so it cannot be made twice without being taken back between (a second move to the same
+/// place is a second <see cref="MoveObject"/>).
 /// </summary>
 public sealed class MoveObject(int thingIndex, Vector3 position) : IEditCommand
 {
     private Vector3 _previous;
+    private bool _made;
     private string _description = $"Move row {thingIndex}";
 
     public int ThingIndex => thingIndex;
@@ -31,6 +34,7 @@ public sealed class MoveObject(int thingIndex, Vector3 position) : IEditCommand
 
     public void Do(WorldBody body)
     {
+        if (_made) throw new InvalidOperationException("This move has already been made. Take it back first, or make a new move.");
         if (thingIndex < 0 || thingIndex >= body.Things.Count)
             throw new InvalidOperationException($"There is no row {thingIndex}: this world has {body.Things.Count}.");
         if (!IsFinite(position)) throw new InvalidOperationException("A position must be three finite numbers.");
@@ -38,11 +42,17 @@ public sealed class MoveObject(int thingIndex, Vector3 position) : IEditCommand
         if (!IsFinite(thing.Init.Position)) throw new InvalidOperationException($"Row {thingIndex} stores a position that is not three finite numbers, so it cannot be moved.");
         _previous = thing.Init.Position;
         thing.Init.Position = position;
+        _made = true;
         string name = thing.Init.Name.Length > 0 ? thing.Init.Name : thing.Kind;
         _description = $"Move {name} (row {thingIndex})";
     }
 
-    public void Undo(WorldBody body) => body.Things[thingIndex].Init.Position = _previous;
+    public void Undo(WorldBody body)
+    {
+        if (!_made) throw new InvalidOperationException("This move has not been made, so there is nothing to take back.");
+        body.Things[thingIndex].Init.Position = _previous;
+        _made = false;
+    }
 
     internal static bool IsFinite(Vector3 value) => float.IsFinite(value.X) && float.IsFinite(value.Y) && float.IsFinite(value.Z);
 }
@@ -113,21 +123,25 @@ public sealed class EditSession
         Changed?.Invoke();
     }
 
+    /// <summary>Takes back the last change. If the command cannot be taken back it stays where it was, and the exception comes out.</summary>
     public bool Undo()
     {
         if (_undo.Count == 0) return false;
-        IEditCommand command = _undo.Pop();
+        IEditCommand command = _undo.Peek();
         command.Undo(Body);
+        _undo.Pop();
         _redo.Push(command);
         Changed?.Invoke();
         return true;
     }
 
+    /// <summary>Makes the last change again. If the command cannot be made it stays where it was, and the exception comes out.</summary>
     public bool Redo()
     {
         if (_redo.Count == 0) return false;
-        IEditCommand command = _redo.Pop();
+        IEditCommand command = _redo.Peek();
         command.Do(Body);
+        _redo.Pop();
         _undo.Push(command);
         Changed?.Invoke();
         return true;

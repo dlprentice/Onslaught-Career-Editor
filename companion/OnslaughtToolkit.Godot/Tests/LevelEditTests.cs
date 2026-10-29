@@ -21,6 +21,7 @@ internal static class LevelEditTests
         Stage(check, "the destination rules", () => DestinationRules(Path.Combine(outputDirectory, "level-stage-rules"), check));
         Stage(check, "the failure rules", () => FailureRules(Path.Combine(outputDirectory, "level-stage-failures"), check));
         Stage(check, "the session", () => SessionBasics(check));
+        Stage(check, "the history rules", () => HistoryRules(check));
         Stage(check, "the move vectors", () => MoveVectors(check));
         Stage(check, "the session refusals", () => SessionRefusals(check));
         Stage(check, "the validation", () => Validation(check));
@@ -81,6 +82,31 @@ internal static class LevelEditTests
         }
     }
 
+    /// <summary>Everything under a folder, files and folders, as '/'-separated paths from it.</summary>
+    private static string[] Entries(string root) => [.. Directory.EnumerateFileSystemEntries(root, "*", SearchOption.AllDirectories)
+        .Select(path => Path.GetRelativePath(root, path).Replace(Path.DirectorySeparatorChar, '/')).Order(StringComparer.Ordinal)];
+
+    private static Exception? Captured(Action action)
+    {
+        try
+        {
+            action();
+            return null;
+        }
+        catch (Exception error)
+        {
+            return error;
+        }
+    }
+
+    /// <summary>A staging that must be refused before anything is made: the write hook, which runs once the folders exist, is never reached.</summary>
+    private static void RefusedFirst(Checks check, string what, string parent, ModInfo info, Dictionary<int, byte[]> worlds, params string?[] protectedFolders)
+    {
+        int reached = 0;
+        Refuses<ModStageException>(check, what, () => ModStager.Stage(parent, info, worlds, protectedFolders, beforeWrite: _ => reached++));
+        check.That(reached == 0, $"{what}: nothing is made before the refusal");
+    }
+
     /// <summary>Every file under a folder, as '/'-separated paths from it.</summary>
     private static string[] Listing(string root) => [.. Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
         .Select(path => Path.GetRelativePath(root, path).Replace(Path.DirectorySeparatorChar, '/')).Order(StringComparer.Ordinal)];
@@ -139,8 +165,17 @@ internal static class LevelEditTests
         check.That(ModStager.Problem(new ModInfo("ok", "Name", CeMin: "99999")) is null && ModStager.Problem(new ModInfo("ok", "Name", CeMax: "0")) is null, "one bound alone is never compared");
         Refuses<ModStageException>(check, "a file that is not a world file", () => ModStager.BuildManifest(new ModInfo("ok", "Name"), new Dictionary<string, byte[]> { ["data/other.bin"] = [1] }));
         Refuses<ModStageException>(check, "a world path with four digits", () => ModStager.BuildManifest(new ModInfo("ok", "Name"), new Dictionary<string, byte[]> { ["data/worlds/world1000.wrd"] = [1] }));
-        Refuses<ModStageException>(check, "more files than a mod may list", () => ModStager.BuildManifest(new ModInfo("ok", "Name"),
-            Enumerable.Range(0, ModStager.MaxFilesPerMod + 1).ToDictionary(i => $"data/worlds/world{i:D3}.wrd", _ => new byte[] { 1 })));
+        check.That(ModStager.WorldPath(0) == "data/worlds/world000.wrd" && ModStager.WorldPath(999) == "data/worlds/world999.wrd", "levels 0 and 999 have world files");
+        foreach (int level in new[] { -1, 1000 })
+        {
+            Exception? error = Captured(() => ModStager.WorldPath(level));
+            check.That(error is ModStageException && error.Message.Contains("0 to 999", StringComparison.Ordinal), $"level {level} has no world file: {error?.Message}");
+        }
+        // The count is checked before the paths: 4097 files are too many whatever they are called, 4096 are refused for their paths.
+        Exception? tooMany = Captured(() => ModStager.BuildManifest(new ModInfo("ok", "Name"), Enumerable.Range(0, 4097).ToDictionary(i => $"data/worlds/world{i:D3}.wrd", _ => new byte[] { 1 })));
+        check.That(ModStager.MaxFilesPerMod == 4096 && tooMany is ModStageException && tooMany.Message.Contains("at most 4096 files", StringComparison.Ordinal), $"more files than a mod may list: {tooMany?.Message}");
+        Exception? notTooMany = Captured(() => ModStager.BuildManifest(new ModInfo("ok", "Name"), Enumerable.Range(0, 4096).ToDictionary(i => $"data/worlds/world{i:D3}.wrd", _ => new byte[] { 1 })));
+        check.That(notTooMany is ModStageException && !notTooMany.Message.Contains("at most", StringComparison.Ordinal), $"as many files as a mod may list are refused for their names, not their number: {notTooMany?.Message}");
     }
 
     // ---- where it writes -----------------------------------------------------------------------------------------------------
@@ -167,24 +202,42 @@ internal static class LevelEditTests
         string aFile = Path.Combine(folder, "isfile");
         Directory.CreateDirectory(aFile);
         File.WriteAllText(Path.Combine(aFile, "rules"), "a file where the folder goes");
-        Refuses<ModStageException>(check, "a file where the mod folder goes", () => ModStager.Stage(aFile, info, worlds, []));
+        Exception? isFile = Captured(() => ModStager.Stage(aFile, info, worlds, []));
+        check.That(isFile is ModStageException && isFile.Message.Contains("is a file, not a folder", StringComparison.Ordinal), $"a file where the mod folder goes is refused as a file, before anything is made: {isFile?.Message}");
 
         Refuses<ModStageException>(check, "a parent that is not a full path", () => ModStager.Stage("relative/folder", info, worlds, []));
 
         // Never into a protected folder (the game folder, the companion's backups), compared after resolving links.
         string game = Path.Combine(folder, "game");
         Directory.CreateDirectory(Path.Combine(game, "data"));
-        Refuses<ModStageException>(check, "a mod folder inside a protected folder", () => ModStager.Stage(Path.Combine(game, "mods"), info, worlds, [game]));
-        Refuses<ModStageException>(check, "a mod folder that is the protected folder itself", () => ModStager.Stage(Path.GetDirectoryName(game)!, new ModInfo("game", "Game"), worlds, [game]));
-        check.That(!Directory.Exists(Path.Combine(game, "mods")), "nothing is made inside a protected folder");
+        RefusedFirst(check, "a mod folder inside a protected folder", Path.Combine(game, "mods"), info, worlds, game);
+        RefusedFirst(check, "a mod folder that is the protected folder itself", Path.GetDirectoryName(game)!, new ModInfo("game", "Game"), worlds, game);
+        check.That(Entries(game).SequenceEqual(["data"]), "nothing is made inside a protected folder: " + string.Join(", ", Entries(game)));
         check.That(ModStager.Stage(Path.Combine(folder, "beside-game"), info, worlds, [game, null, "", Path.Combine(folder, "missing")]).Files.Count == 1, "a mod folder beside a protected folder is fine, and empty or missing guards are ignored");
 
         // Never inside an install: a folder with BEA.exe and data above it.
         string install = Path.Combine(folder, "install");
         Directory.CreateDirectory(Path.Combine(install, "data"));
         File.WriteAllBytes(Path.Combine(install, "BEA.exe"), [1]);
-        Refuses<ModStageException>(check, "a mod folder inside an install, though none is listed as protected", () => ModStager.Stage(Path.Combine(install, "mods"), info, worlds, []));
-        check.That(!Directory.Exists(Path.Combine(install, "mods")), "nothing is made inside an install");
+        RefusedFirst(check, "a mod folder inside an install, though none is listed as protected", Path.Combine(install, "mods"), info, worlds);
+        check.That(Entries(install).SequenceEqual(["BEA.exe", "data"]), "nothing is made inside an install: " + string.Join(", ", Entries(install)));
+
+        // A destination that cannot be examined is refused in a sentence, with nothing written.
+        Refuses<ModStageException>(check, "a path with a NUL in it", () => ModStager.Stage(Path.Combine(folder, "nul\0folder"), info, worlds, []));
+        if (!OperatingSystem.IsWindows() && !Environment.IsPrivilegedProcess)
+        {
+            string unreadable = Path.Combine(folder, "unreadable", "rules");
+            Directory.CreateDirectory(unreadable);
+            File.SetUnixFileMode(unreadable, UnixFileMode.None);
+            try
+            {
+                Refuses<ModStageException>(check, "an existing mod folder that cannot be read", () => ModStager.Stage(Path.GetDirectoryName(unreadable)!, info, worlds, []));
+            }
+            finally
+            {
+                File.SetUnixFileMode(unreadable, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+            }
+        }
 
         // Never through a link.
         string real = Path.Combine(folder, "real");
@@ -203,11 +256,11 @@ internal static class LevelEditTests
         {
             return;
         }
-        Refuses<ModStageException>(check, "a parent that is a link", () => ModStager.Stage(link, info, worlds, []));
-        Refuses<ModStageException>(check, "a parent below a link", () => ModStager.Stage(Path.Combine(link, "deeper"), info, worlds, []));
-        Refuses<ModStageException>(check, "a mod folder that is a link", () => ModStager.Stage(linkedRoot, info, worlds, []));
-        Refuses<ModStageException>(check, "a link that leads into a protected folder", () => ModStager.Stage(Path.Combine(linkToGame, "mods"), info, worlds, [game]));
-        check.That(Listing(real).Length == 0 && !Directory.Exists(Path.Combine(game, "mods")), "nothing is written through a link");
+        RefusedFirst(check, "a parent that is a link", link, info, worlds);
+        RefusedFirst(check, "a parent below a link", Path.Combine(link, "deeper"), info, worlds);
+        RefusedFirst(check, "a mod folder that is a link", linkedRoot, info, worlds);
+        RefusedFirst(check, "a link that leads into a protected folder", Path.Combine(linkToGame, "mods"), info, worlds, game);
+        check.That(Entries(real).Length == 0 && Entries(game).SequenceEqual(["data"]), "nothing is made behind a link, not even a folder: " + string.Join(", ", Entries(real)));
     }
 
     // ---- when something fails ------------------------------------------------------------------------------------------------
@@ -238,6 +291,85 @@ internal static class LevelEditTests
         Directory.CreateDirectory(Path.Combine(kept, "fails"));
         Refuses<ModStageException>(check, "a failure into an existing empty folder", () => ModStager.Stage(kept, info, worlds, [], beforeWrite: path => { if (path.EndsWith("mod.json", StringComparison.Ordinal)) throw new IOException("no"); }));
         check.That(Directory.Exists(Path.Combine(kept, "fails")) && Directory.GetFileSystemEntries(Path.Combine(kept, "fails")).Length == 0, "an existing empty folder is left empty after a failure");
+
+        // Whatever fails, what the call made goes. A problem with the folders or files comes out as a ModStageException; any other failure
+        // (a cancellation, a bug) comes out as it was thrown, after the cleanup.
+        (string Label, Func<Exception> Make, Type Comes)[] failures =
+        [
+            ("an IOException", () => new IOException("the disk said no"), typeof(ModStageException)),
+            ("an InvalidOperationException", () => new InvalidOperationException("not allowed"), typeof(ModStageException)),
+            ("an UnauthorizedAccessException", () => new UnauthorizedAccessException("no access"), typeof(ModStageException)),
+            ("an ArgumentException", () => new ArgumentException("odd argument"), typeof(ArgumentException)),
+            ("a NotSupportedException", () => new NotSupportedException("not supported"), typeof(NotSupportedException)),
+            ("an InvalidDataException", () => new InvalidDataException("bad data"), typeof(InvalidDataException)),
+            ("an OperationCanceledException", () => new OperationCanceledException("cancelled"), typeof(OperationCanceledException)),
+        ];
+        foreach ((string label, Func<Exception> make, Type comes) in failures)
+        {
+            for (int failAt = 0; failAt < 3; failAt++)
+            {
+                string where = Path.Combine(folder, $"throws-{label.Replace(' ', '-')}-{failAt}");
+                Directory.CreateDirectory(where);
+                int writes = 0, at = failAt;
+                Exception? error = Captured(() => ModStager.Stage(Path.Combine(where, "made", "twice"), info, worlds, [], beforeWrite: _ => { if (writes++ == at) throw make(); }));
+                check.That(error?.GetType() == comes, $"{label} at write {failAt} comes out as {comes.Name}, not {error?.GetType().Name}");
+                check.That(Entries(where).Length == 0, $"{label} at write {failAt} leaves nothing behind: " + string.Join(", ", Entries(where)));
+            }
+        }
+
+        // A failure inside the publisher after it moved a file into place (here the file no longer holds what was written) leaves that file nowhere.
+        for (int failAt = 0; failAt < 3; failAt++)
+        {
+            string where = Path.Combine(folder, $"published-{failAt}");
+            Directory.CreateDirectory(where);
+            int published = 0, at = failAt;
+            Exception? error = Captured(() => ModStager.Stage(Path.Combine(where, "made", "twice"), info, worlds, [], beforeWrite: null,
+                beforeCommittedOpen: path => { if (published++ == at) File.AppendAllText(path, "x"); }));
+            check.That(error is ModStageException && error.Message.Contains("Atomic output verification failed after commit", StringComparison.Ordinal),
+                $"a file that fails its check once published (write {failAt}) is reported: {error?.GetType().Name}: {error?.Message}");
+            check.That(Entries(where).Length == 0, $"a file that fails its check once published (write {failAt}) goes with the rest: " + string.Join(", ", Entries(where)));
+        }
+        string thrown = Path.Combine(folder, "published-thrown");
+        Directory.CreateDirectory(thrown);
+        Exception? odd = Captured(() => ModStager.Stage(Path.Combine(thrown, "made"), info, worlds, [], beforeWrite: null, beforeCommittedOpen: _ => throw new InvalidDataException("odd")));
+        check.That(odd is InvalidDataException && Entries(thrown).Length == 0, $"any failure after a file was published leaves nothing behind: {odd?.GetType().Name}, " + string.Join(", ", Entries(thrown)));
+
+        // Somebody else's file is never removed. One that appears at a path after the publisher began, before its last look at the destination,
+        // makes the commit fail; that path was never this call's, so the file stays and the folders around it are reported as left.
+        string raceRoot = Path.Combine(folder, "race");
+        Directory.CreateDirectory(raceRoot);
+        string raced = Path.Combine(raceRoot, "made", "fails", "data", "worlds", "world007.wrd");
+        int publishes = 0;
+        Exception? raceError = Captured(() => ModStager.Stage(Path.Combine(raceRoot, "made"), info, worlds, [], beforeWrite: null, beforeCommittedOpen: null,
+            beforePublish: path => { if (publishes++ == 0) File.WriteAllText(path, "somebody else's"); }));
+        check.That(raceError is ModStageException && raceError.Message.Contains("no longer vacant", StringComparison.Ordinal) && raceError.Message.Contains("could not be removed", StringComparison.Ordinal),
+            $"a file that appears before the publisher moves its own into place makes the commit fail, and what stays is said: {raceError?.Message}");
+        check.That(File.Exists(raced) && File.ReadAllText(raced) == "somebody else's", "a file that appears before the publisher moves its own into place is not removed");
+        Directory.GetFiles(raceRoot, ".onslaught-*", SearchOption.AllDirectories).ToList().ForEach(leftover => check.Fail($"the publisher left its temporary file behind: {leftover}"));
+
+        // The same for a file that is there before the publisher begins: it refuses at once.
+        string theirsRoot = Path.Combine(folder, "theirs");
+        Directory.CreateDirectory(theirsRoot);
+        string theirs = Path.Combine(theirsRoot, "made", "fails", "data", "worlds", "world007.wrd");
+        int first = 0;
+        Exception? refused = Captured(() => ModStager.Stage(Path.Combine(theirsRoot, "made"), info, worlds, [], beforeWrite: path =>
+        {
+            if (first++ == 0) File.WriteAllText(path, "somebody else's");
+        }));
+        check.That(refused is ModStageException && refused.Message.Contains("could not be removed", StringComparison.Ordinal), $"a file that appeared where one was to be written is refused, and what stays is said: {refused?.Message}");
+        check.That(File.Exists(theirs) && File.ReadAllText(theirs) == "somebody else's", "a file that appeared where one was to be written is not removed");
+
+        // An unexpected failure comes out as thrown, unless something could not be removed: then the player is told, with the failure inside.
+        string strayRoot = Path.Combine(folder, "stray");
+        Directory.CreateDirectory(strayRoot);
+        Exception? strayed = Captured(() => ModStager.Stage(Path.Combine(strayRoot, "made"), info, worlds, [], beforeWrite: path =>
+        {
+            File.WriteAllText(Path.Combine(Path.GetDirectoryName(path)!, "stray.txt"), "not this call's");
+            throw new ArgumentException("odd argument");
+        }));
+        check.That(strayed is ModStageException { InnerException: ArgumentException } && strayed.Message.Contains("could not be removed", StringComparison.Ordinal),
+            $"an unexpected failure that leaves something behind says so, and keeps the failure: {strayed?.GetType().Name}: {strayed?.Message}");
+        check.That(File.Exists(Path.Combine(strayRoot, "made", "fails", "data", "worlds", "stray.txt")), "what the call did not make is left alone");
     }
 
     // ---- the edit session ----------------------------------------------------------------------------------------------------
@@ -292,6 +424,74 @@ internal static class LevelEditTests
         EditSession copied = new(mine);
         mine[10] ^= 0xFF;
         check.That(copied.Baseline.AsSpan().SequenceEqual(baseline) && copied.ToBytes().AsSpan().SequenceEqual(baseline), "the session keeps its own copy of the baseline");
+    }
+
+    /// <summary>A command that can be made to fail, to see what the history does with a command that throws.</summary>
+    private sealed class FlakyMove(int thing, Vector3 to) : IEditCommand
+    {
+        private readonly MoveObject _move = new(thing, to);
+
+        public bool FailDo { get; set; }
+        public bool FailUndo { get; set; }
+        public string Description => _move.Description;
+
+        public void Do(WorldBody body)
+        {
+            if (FailDo) throw new InvalidOperationException("do failed");
+            _move.Do(body);
+        }
+
+        public void Undo(WorldBody body)
+        {
+            if (FailUndo) throw new InvalidOperationException("undo failed");
+            _move.Undo(body);
+        }
+    }
+
+    private static void HistoryRules(Checks check)
+    {
+        byte[] baseline = LevelTests.Body("authored-v50");
+
+        // One MoveObject is one move: made twice without an undo between, it would forget where the thing was.
+        EditSession session = new(baseline);
+        int events = 0;
+        session.Changed += () => events++;
+        MoveObject move = new(0, new Vector3(1f, 1f, 1f));
+        session.Apply(move);
+        Refuses<InvalidOperationException>(check, "applying one move twice", () => session.Apply(move));
+        check.That(events == 1 && session.Changes().Count == 1 && session.Body.Things[0].Init.Position == new Vector3(1f, 1f, 1f), "a refused second application changes nothing and raises nothing");
+        session.UndoAll();
+        check.That(session.ToBytes().AsSpan().SequenceEqual(baseline) && !session.CanUndo, "UndoAll after a refused second application gives the baseline back");
+        session.Apply(move);
+        check.That(session.CanUndo && !session.CanRedo && session.Changes().Count == 1, "a move that was undone can be made again");
+        WorldBody body = WorldBody.Read(baseline);
+        MoveObject direct = new(0, new Vector3(3f, 3f, 3f));
+        Refuses<InvalidOperationException>(check, "taking back a move that was not made", () => direct.Undo(body));
+        direct.Do(body);
+        Refuses<InvalidOperationException>(check, "making a move twice", () => direct.Do(body));
+        direct.Undo(body);
+        check.That(body.Write().AsSpan().SequenceEqual(baseline), "a move made and taken back leaves the body as it was");
+        Refuses<InvalidOperationException>(check, "taking a move back twice", () => direct.Undo(body));
+        check.That(body.Write().AsSpan().SequenceEqual(baseline), "a refused second undo leaves the body as it was");
+
+        // A redo whose command cannot be made keeps the command; so does an undo that cannot be taken back.
+        EditSession flaky = new(baseline);
+        int seen = 0;
+        flaky.Changed += () => seen++;
+        FlakyMove command = new(0, new Vector3(5f, 5f, 5f));
+        flaky.Apply(command);
+        flaky.Undo();
+        command.FailDo = true;
+        Refuses<InvalidOperationException>(check, "a redo that fails", () => flaky.Redo());
+        check.That(flaky.CanRedo && !flaky.CanUndo && seen == 2 && flaky.ToBytes().AsSpan().SequenceEqual(baseline), "a redo that fails keeps its command to redo and changes nothing");
+        command.FailDo = false;
+        check.That(flaky.Redo() && flaky.CanUndo && !flaky.CanRedo && flaky.Changes().Count == 1 && seen == 3, "the command is redone once it can be made");
+        command.FailUndo = true;
+        Refuses<InvalidOperationException>(check, "an undo that fails", () => flaky.Undo());
+        check.That(flaky.CanUndo && !flaky.CanRedo && seen == 3 && flaky.Changes().Count == 1, "an undo that fails keeps its command to undo and changes nothing");
+        Refuses<InvalidOperationException>(check, "UndoAll when an undo fails", () => flaky.UndoAll());
+        command.FailUndo = false;
+        check.That(flaky.Undo() && !flaky.CanUndo && flaky.CanRedo && flaky.ToBytes().AsSpan().SequenceEqual(baseline), "the command is undone once it can be taken back");
     }
 
     /// <summary>Every edit vector made only of moves, made through a session: the reference's bytes, and undo to the baseline.</summary>

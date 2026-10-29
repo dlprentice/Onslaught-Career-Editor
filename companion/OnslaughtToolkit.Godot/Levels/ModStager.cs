@@ -46,6 +46,14 @@ public sealed class ModStageException : Exception
 /// A mod is always a new folder (an existing empty one is used), never inside a game folder or a protected folder, with the
 /// world files written first and <c>mod.json</c> last (a folder without it is inert). Each file goes through the companion's
 /// new-file-only publisher. When anything fails, what this call created is removed again.
+/// <para>
+/// It detects replacement; it does not lock, as the Python helper does not. The folder checks (no link on the way, not inside a
+/// game folder or a protected folder, nothing already in the mod folder) run first and the folders are created after them, and
+/// the publisher checks each file's destination again as it publishes it, but nothing holds the folders in between: a directory
+/// swapped for a link, or moved into a game folder, by another process after the early checks and before the folders are created
+/// is not caught by them, and a folder moved by another process during the run is not guaranteed to stay outside the game folder
+/// (the limit every writer through the publisher has). The page that calls it says where the mod was written.
+/// </para>
 /// </summary>
 public static class ModStager
 {
@@ -137,34 +145,17 @@ public static class ModStager
     public static StagedMod Stage(string parent, ModInfo info, IReadOnlyDictionary<int, byte[]> worlds, IEnumerable<string?> protectedFolders) =>
         Stage(parent, info, worlds, protectedFolders, null);
 
+    /// <param name="beforeWrite">Test hook: called with each file's path before it is written.</param>
+    /// <param name="beforeCommittedOpen">Test hook: called with each file's path after the publisher moved it into place and before it checks it.</param>
+    /// <param name="beforePublish">Test hook: called with each file's path after the publisher began and before it moves the file into place.</param>
     internal static StagedMod Stage(string parent, ModInfo info, IReadOnlyDictionary<int, byte[]> worlds, IEnumerable<string?> protectedFolders,
-        Action<string>? beforeWrite)
+        Action<string>? beforeWrite, Action<string>? beforeCommittedOpen = null, Action<string>? beforePublish = null)
     {
         Dictionary<string, byte[]> files = [];
         foreach ((int level, byte[] body) in worlds) files[WorldPath(level)] = body;
         byte[] manifest = BuildManifest(info, files);
 
-        if (!Path.IsPathFullyQualified(parent)) throw new ModStageException("Choose a full folder path to save the mod in.");
-        string root = Path.Combine(Path.GetFullPath(parent), info.Id);
-        try
-        {
-            // No link anywhere on the way (the folder, its parents), and not inside a game folder.
-            FileMutationSafety.RejectExistingReparseAncestors(root, "Mod folder");
-            FileMutationSafety.RejectOutputInGameTree(Path.Combine(root, "mod.json"));
-        }
-        catch (InvalidOperationException error)
-        {
-            throw new ModStageException(error.Message, error);
-        }
-        foreach (string? guarded in protectedFolders)
-            if (!string.IsNullOrEmpty(guarded) && Directory.Exists(guarded) && ExportFiles.Inside(root, ExportFiles.RealPath(guarded)))
-                throw new ModStageException("A mod is never saved into your game folder or the companion's backups. Choose another folder.");
-        if (File.Exists(root)) throw new ModStageException($"{root} is a file, not a folder: nothing was written.");
-        if (Directory.Exists(root))
-        {
-            string? existing = Directory.EnumerateFileSystemEntries(root).Select(Path.GetFileName).Order(StringComparer.Ordinal).FirstOrDefault();
-            if (existing is not null) throw new ModStageException($"{root} already holds \"{existing}\": save the mod in a new folder (nothing was written).");
-        }
+        string root = CheckDestination(parent, info.Id, protectedFolders);
 
         List<string> createdFiles = [], createdFolders = [];
         try
@@ -173,28 +164,72 @@ public static class ModStager
             List<StagedFile> written = [];
             foreach (string path in files.Keys.Order(StringComparer.Ordinal))
             {
-                Write(Path.Combine(root, path.Replace('/', Path.DirectorySeparatorChar)), files[path], beforeWrite, createdFiles);
+                Write(Path.Combine(root, path.Replace('/', Path.DirectorySeparatorChar)), files[path], beforeWrite, beforeCommittedOpen, beforePublish, createdFiles);
                 written.Add(new StagedFile(path, files[path].Length, Hex(files[path])));
             }
-            Write(Path.Combine(root, "mod.json"), manifest, beforeWrite, createdFiles);
+            Write(Path.Combine(root, "mod.json"), manifest, beforeWrite, beforeCommittedOpen, beforePublish, createdFiles);
             return new StagedMod(root, Hex(manifest), written);
         }
-        catch (Exception error) when (error is ModStageException or IOException or InvalidOperationException or UnauthorizedAccessException)
+        catch (Exception error)
         {
+            // Whatever went wrong, what this call made goes. A problem with the folders or files is reported as a ModStageException; anything
+            // else (a cancellation, a bug) is let through as it is, unless something could not be removed, which the player must be told.
             string left = Cleanup(createdFiles, createdFolders);
-            throw error is ModStageException ? Rethrow(error, left) : new ModStageException($"The mod was not saved: {error.Message}{left}", error);
+            if (error is ModStageException) throw Rethrow(error, left);
+            if (error is IOException or InvalidOperationException or UnauthorizedAccessException || left.Length > 0)
+                throw new ModStageException($"The mod was not saved: {error.Message}{left}", error);
+            throw;
+        }
+    }
+
+    /// <summary>The mod folder's full path, after the checks that need nothing written: nothing is made before they pass.</summary>
+    private static string CheckDestination(string parent, string id, IEnumerable<string?> protectedFolders)
+    {
+        if (!Path.IsPathFullyQualified(parent)) throw new ModStageException("Choose a full folder path to save the mod in.");
+        try
+        {
+            string root = Path.Combine(Path.GetFullPath(parent), id);
+            // No link anywhere on the way (the folder, its parents), and not inside a game folder.
+            FileMutationSafety.RejectExistingReparseAncestors(root, "Mod folder");
+            FileMutationSafety.RejectOutputInGameTree(Path.Combine(root, "mod.json"));
+            foreach (string? guarded in protectedFolders)
+                if (!string.IsNullOrEmpty(guarded) && Directory.Exists(guarded) && ExportFiles.Inside(root, ExportFiles.RealPath(guarded)))
+                    throw new ModStageException("A mod is never saved into your game folder or the companion's backups. Choose another folder.");
+            if (File.Exists(root)) throw new ModStageException($"{root} is a file, not a folder: nothing was written.");
+            if (Directory.Exists(root))
+            {
+                string? existing = Directory.EnumerateFileSystemEntries(root).Select(Path.GetFileName).Order(StringComparer.Ordinal).FirstOrDefault();
+                if (existing is not null) throw new ModStageException($"{root} already holds \"{existing}\": save the mod in a new folder (nothing was written).");
+            }
+            return root;
+        }
+        catch (InvalidOperationException error)
+        {
+            throw new ModStageException(error.Message, error);
+        }
+        catch (Exception error) when (error is ArgumentException or NotSupportedException or IOException or UnauthorizedAccessException)
+        {
+            throw new ModStageException($"That folder cannot be used: {error.Message} Nothing was written.", error);
         }
     }
 
     private static ModStageException Rethrow(Exception error, string left) =>
         left.Length == 0 ? (ModStageException)error : new ModStageException(error.Message + left, error);
 
-    private static void Write(string path, byte[] bytes, Action<string>? beforeWrite, List<string> created)
+    private static void Write(string path, byte[] bytes, Action<string>? beforeWrite, Action<string>? beforeCommittedOpen, Action<string>? beforePublish, List<string> created)
     {
         beforeWrite?.Invoke(path);
         using GuardedFileMutation guard = FileMutationSafety.BeginGeneratedVacant(path);
-        guard.Commit(bytes);
-        created.Add(path);
+        try
+        {
+            guard.Commit(bytes, beforeCommittedOpen, beforePublish);
+        }
+        finally
+        {
+            // A commit that fails after the publisher moved the file into place leaves that file here; it is this call's, so it goes with the rest.
+            // (The path is not recorded before the commit: until the file is published, the path may be somebody else's.)
+            if (guard.Published) created.Add(path);
+        }
     }
 
     private static void CreateFolder(string path, List<string> created)

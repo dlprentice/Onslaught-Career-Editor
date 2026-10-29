@@ -459,6 +459,14 @@ move, then verifies the published identity. Native Windows checks exercised prot
 Unicode publication/discovery and stale-source refusal. An adversarial race at every publication
 boundary remains untested; neither these backend checks nor a cross-export validate the Windows UI.
 
+The level data layer adds one writer of folders: [ModStager](Levels/ModStager.cs) writes an Onslaught CE mod folder
+(`mod.json` and `data/worlds/worldNNN.wrd`) through the same guarded publication, one new file at a time, the world files
+first and `mod.json` last. It refuses a folder inside a game folder or one of the protected folders, a link anywhere on the
+way, and a folder that already holds anything; when it fails, it removes what it made. It detects replacement; it does not
+lock, as the Toolkit's Python stager does not: a directory swapped for a link, or moved into a game folder, by another
+process after its early checks and before it creates the folders is not caught by those checks, and a folder moved by another
+process during the run is not guaranteed to stay outside the game folder (the limit every writer through the publication has).
+
 ## Exact toolchain and rollback
 
 [toolchain.json](toolchain.json) records the measured engine, SDK and template hashes and
