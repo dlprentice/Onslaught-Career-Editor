@@ -100,6 +100,7 @@ class TextureFormatRuleTests(unittest.TestCase):
             ("meshtex\\", "utf8-decoded", None),         # exactly 8 bytes: an empty suffix is a null texture name
             ("short", "utf8-decoded", None),              # no suffix of its own; the loader would read bytes after the NUL
             ("meshtex\\\u00e9.tga", "utf8-decoded", 1),   # the suffix is read in bytes: c3 a9 is not A8 or A4
+            ("meshte\u00e9A8z", "utf8-decoded", 4),     # byte 8 is the A of A8 because \u00e9 is two bytes; a character slice would give 1
             ("", "empty", None),
             (None, "unterminated", None),
             (None, "invalid-utf8", None),
