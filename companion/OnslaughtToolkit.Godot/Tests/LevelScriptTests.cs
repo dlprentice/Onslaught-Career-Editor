@@ -124,14 +124,30 @@ internal static class LevelScriptTests
             "without a base world there are none, an empty text matches nothing, and the base world's paths are not names to follow here");
         body.Things[3].Init.Name = "";
         // The game finds a waypoint path by name ignoring letter case where a script follows one, and compares every other name as it is: only a path argument is case-blind.
+        // It keeps one list of paths, the base world's before the level's own, and takes the first that matches: one path is named.
         WaypointPath shout = new() { Name = "PATH A" };
         shout.Slots.AddRange([3, 2]);
         body.WaypointPaths.Add(shout);
         check.That(ScriptNames.Resolve("Path A", body, own).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0)]) && ScriptNames.Resolve("path a", body, own).Count == 0 &&
-                   ScriptNames.Resolve("Path A", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0), new NameMatch(NameKind.Path, "path PATH A · 2 points", 1, false)]) &&
-                   ScriptNames.Resolve("path a", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0, false), new NameMatch(NameKind.Path, "path PATH A · 2 points", 1, false)]) &&
-                   ScriptNames.Resolve("PATH A", body, own, baseBody, true).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0, false), new NameMatch(NameKind.Path, "path PATH A · 2 points", 1)]),
-            "a path argument names every path of that name in any letter case, each marked when the case differs; anywhere else only the exact name is a path");
+                   ScriptNames.Resolve("Path A", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0)]) &&
+                   ScriptNames.Resolve("path a", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0, false)]) &&
+                   ScriptNames.Resolve("PATH A", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0, false)]),
+            "a path argument names the first path of that name in any letter case (not the exact one when another comes first), marked when its case differs; anywhere else only the exact name is a path");
+        body.WaypointPaths.Reverse();
+        check.That(ScriptNames.Resolve("Path A", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path PATH A · 2 points", 0, false)]) &&
+                   ScriptNames.Resolve("PATH A", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path PATH A · 2 points", 0)]),
+            "the first in the list wins whatever the case, so with the other order the other path is the one");
+        body.WaypointPaths.Reverse();
+        // The base world's paths come before the level's own: a base world's path of that name is the one a follow call finds, and the level's own is not named.
+        check.That(ScriptNames.Resolve("PATH A", body, own, baseBody, true).SequenceEqual([new NameMatch(NameKind.BasePath, "path Path A · 1 point", 0, false)]) &&
+                   ScriptNames.Resolve("Path A", body, own, baseBody, true).SequenceEqual([new NameMatch(NameKind.BasePath, "path Path A · 1 point", 0)]) &&
+                   ScriptNames.Resolve("Path A", body, own, baseBody).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0)]),
+            "the base world's paths are looked at first, and only for a path argument");
+        baseBody.WaypointPaths[0].Name = "Base Route";
+        check.That(ScriptNames.Resolve("base route", body, own, baseBody, true).SequenceEqual([new NameMatch(NameKind.BasePath, "path Base Route · 1 point", 0, false)]) &&
+                   ScriptNames.Resolve("path a", body, own, baseBody, true).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0, false)]) &&
+                   ScriptNames.Resolve("Base Route", body, own, baseBody).Count == 0 && ScriptNames.Resolve("nothing", body, own, baseBody, true).Count == 0,
+            "a name only the base world's path has is that path, one it lacks goes on to the level's own, and a base world's path is not a name outside a path argument");
         check.That(ScriptNames.Resolve("ALPHA", body, both, null, true).Count == 0 && ScriptNames.Resolve("Go", body, own, null, true).Count == 0 &&
                    ScriptNames.Resolve("TANK 1", body, own, baseBody, true).SequenceEqual(ScriptNames.Resolve("TANK 1", body, own, baseBody)) && ScriptNames.Resolve("nothing", body, own, null, true).Count == 0,
             "and objects, scripts and events stay exact in a path argument, as the game compares them");

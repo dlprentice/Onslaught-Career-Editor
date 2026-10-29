@@ -192,10 +192,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         }
         if (_currentSource.Source is { } source)
         {
-            _source.Text = source.Text;
-            _source.SetCaretLine(0);
-            _source.ScrollVertical = 0;
-            _source.ScrollHorizontal = 0;
+            SetSourceText(source.Text);
             string relative = Path.GetRelativePath(_root!, source.Path).Replace('\\', '/');
             const string folder = "data/MissionScripts/";
             string shown = relative.StartsWith(folder, StringComparison.OrdinalIgnoreCase) ? relative[folder.Length..] : relative;  // the folder is the same for every script
@@ -204,11 +201,27 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         }
         else
         {
-            _source.Text = "";
+            SetSourceText("");
             _info.Text = _currentSource.Problem ?? "";
             _info.TooltipText = "";
         }
         Selected?.Invoke(entry, _currentSource);
+    }
+
+    /// <summary>
+    /// Puts new text in the source view, at its first line. The view is brought to its top while the old text is still there: the scroll position or first
+    /// visible line kept from a longer text would lie past the end of a shorter one, and Godot reports a line past the end as an engine error.
+    /// </summary>
+    private void SetSourceText(string text)
+    {
+        _source.SetCaretLine(0);
+        _source.SetCaretColumn(0);
+        _source.ScrollVertical = 0;
+        _source.ScrollHorizontal = 0;
+        _source.Text = text;
+        _source.SetCaretLine(0);
+        _source.ScrollVertical = 0;
+        _source.ScrollHorizontal = 0;
     }
 
     private void OnCaret()
@@ -225,7 +238,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         bool had = _current is not null;
         _current = null;
         _currentSource = null;
-        _source.Text = "";
+        SetSourceText("");
         _info.Text = "";
         _info.TooltipText = "";
         if (had) Selected?.Invoke(null, null);
