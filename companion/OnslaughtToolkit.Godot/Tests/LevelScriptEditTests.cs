@@ -521,6 +521,35 @@ internal static class LevelScriptEditTests
         check.That(model.Open(100) && model.ChangeSummary() is null && model.Scripts[0].Summary.Instructions == shippedInstructions, "opening the level again starts from the shipped script");
         check.That(model.OwnScriptIndex(new ScriptEntry(model.Scripts[0].Summary, 100, FromBaseWorld: true)) is null && model.OwnScriptIndex(new ScriptEntry(model.Scripts[0].Summary, 100, FromBaseWorld: false)) is null,
             "an entry of the base world, or one the model does not list, has no place in the world's own scripts");
+
+        // A notification happens after the edit. If an observer fails, the already-applied edit must not be called a refusal.
+        Action brokenObserver = () => throw new InvalidOperationException("observer failed");
+        model.Changed += brokenObserver;
+        bool scriptObserverThrew = false;
+        try { model.ReplaceScriptFromSource(0, Source, game); }
+        catch (InvalidOperationException error) when (error.Message == "observer failed") { scriptObserverThrew = true; }
+        finally { model.Changed -= brokenObserver; }
+        check.That(scriptObserverThrew && model.HasUnsavedChanges && model.Session!.CanUndo && model.Session.ScriptChanges().Count == 1,
+            "a failed observer is not reported as a refused script replacement after it was applied");
+        check.That(model.Session!.Undo() && !model.HasUnsavedChanges, "the replacement remains undoable after a failed observer");
+
+        Vector3 beforeMove = model.Row(0)!.Position;
+        model.Changed += brokenObserver;
+        bool moveObserverThrew = false;
+        try { model.MoveTo(0, beforeMove.X + 1, beforeMove.Y); }
+        catch (InvalidOperationException error) when (error.Message == "observer failed") { moveObserverThrew = true; }
+        finally { model.Changed -= brokenObserver; }
+        check.That(moveObserverThrew && model.HasUnsavedChanges && model.Session!.CanUndo && model.Row(0)!.Position.X == beforeMove.X + 1,
+            "a failed observer is not reported as a refused move after it was applied");
+        check.That(model.Session!.Undo() && !model.HasUnsavedChanges, "the move remains undoable after a failed observer");
+        byte[] beforeRefusal = model.Session!.ToBytes();
+        string? redoBeforeRefusal = model.Session.RedoDescription;
+        int notificationsBeforeRefusal = changed;
+        bool applied = model.Session.TryApply(new MoveObject(-1, Vector3.Zero), out string? refusal);
+        check.That(!applied && refusal is not null && model.Session.ToBytes().AsSpan().SequenceEqual(beforeRefusal) &&
+                   model.Session.RedoDescription == redoBeforeRefusal && changed == notificationsBeforeRefusal,
+            "a refused command changes neither the body, history nor notifications");
+
         model.Session!.Body.Scripts[0].Name = "renamed";
         check.That(!model.CompileScript(0, Source, game).Ok && model.ReplaceScriptFromSource(0, Source, game).Result == ScriptEditResult.Refused &&
                    model.ResetScript(0).Result == ScriptEditResult.Refused && model.HasUnsavedChanges,

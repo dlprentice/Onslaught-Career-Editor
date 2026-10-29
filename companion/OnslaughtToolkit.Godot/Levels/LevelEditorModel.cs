@@ -336,15 +336,9 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
 
     private MoveOutcome Apply(IEditCommand command, string done)
     {
-        try
-        {
-            Session!.Apply(command);
-        }
-        catch (InvalidOperationException error)
-        {
-            return new MoveOutcome(MoveResult.Refused, error.Message);
-        }
-        return new MoveOutcome(MoveResult.Moved, done);
+        return Session!.TryApply(command, out string? refusal)
+            ? new MoveOutcome(MoveResult.Moved, done)
+            : new MoveOutcome(MoveResult.Refused, refusal!);
     }
 
     private static string Describe(Vector3 position) => $"{CoordinateInput.Format(position.X)}, {CoordinateInput.Format(position.Y)}, {CoordinateInput.Format(position.Z)}";
@@ -458,15 +452,9 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
 
     private ScriptEditOutcome ApplyScript(ReplaceScript command, string done, IReadOnlyList<CompileNote> notes)
     {
-        try
-        {
-            Session!.Apply(command);
-        }
-        catch (InvalidOperationException error)
-        {
-            return new ScriptEditOutcome(ScriptEditResult.Refused, error.Message, null, notes);
-        }
-        return new ScriptEditOutcome(ScriptEditResult.Replaced, done, null, notes);
+        return Session!.TryApply(command, out string? refusal)
+            ? new ScriptEditOutcome(ScriptEditResult.Replaced, done, null, notes)
+            : new ScriptEditOutcome(ScriptEditResult.Refused, refusal!, null, notes);
     }
 
     private static bool Same(MissionScript a, MissionScript b) => WorldBodyWriter.ScriptBytes(a).AsSpan().SequenceEqual(WorldBodyWriter.ScriptBytes(b));

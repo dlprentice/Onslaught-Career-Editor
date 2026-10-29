@@ -124,6 +124,21 @@ public sealed class EditSession
     public void Apply(IEditCommand command)
     {
         command.Do(Body);
+        RecordApplied(command);
+    }
+
+    /// <summary>Attempts the command, separating its refusal from an exception raised by a later change observer.</summary>
+    internal bool TryApply(IEditCommand command, out string? refusal)
+    {
+        try { command.Do(Body); }
+        catch (InvalidOperationException error) { refusal = error.Message; return false; }
+        refusal = null;
+        RecordApplied(command);
+        return true;
+    }
+
+    private void RecordApplied(IEditCommand command)
+    {
         _undo.Push(command);
         _redo.Clear();
         Changed?.Invoke();
