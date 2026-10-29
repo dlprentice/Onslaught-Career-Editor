@@ -1,12 +1,12 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-10-23 (retained rebuild and current documentation owners clarified; platform-validation rule no longer assumes Windows is unavailable; earlier: companion CE support and public exports)
+Last updated: 2026-10-29 (the companion described without a signed-update check; the maintainer's storage layout moved out of the tracked text; earlier: retained rebuild and current documentation owners clarified; platform-validation rule no longer assumes Windows is unavailable; companion CE support and public exports)
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
-The machine and category guides (`~/AGENTS.md`, `~/Projects/AGENTS.md`, `~/Projects/game-dev/AGENTS.md`) apply;
-this guide adds only what is specific to this repository.
+The maintainer's machine-level and category guides apply (an agent's own instruction discovery supplies them; they
+live outside this repository); this guide adds only what is specific to this repository.
 
 ## What this is
 
@@ -18,7 +18,7 @@ A preservation project for *Battle Engine Aquila* (2003). This public repository
   `OnslaughtRebuild.Host` the presentation owner; the earlier `OnslaughtRebuild.Core`, `Client` and `Godot` projects
   are reference material, not a second production simulation;
 - the **companion** (`companion/`), Onslaught Companion: the Godot .NET app for careers, saves, backups, settings,
-  music and lore for the original game and Onslaught CE, including CE launcher settings and signed update information. The old AppCore patching
+  music and lore for the original game and Onslaught CE, including CE launcher settings and the steps for updating CE (the companion contacts nothing). The old AppCore patching
   core is gone; the file-safety and save-layout code the companion uses lives in the companion, and Git keeps the rest;
 - documentation of the game (formats, behaviours, contracts) and our own tools.
 
@@ -38,10 +38,10 @@ current milestones and measured parity. The local [`rebuild/PARITY.md`](rebuild/
 
 - `main` is the integration branch; a lane merges into it when its own gate passes. Lane branches start from the
   flattened `main`; never merge a pre-flatten branch or resurrect its plans.
-- The familiar checkout `~/Projects/game-dev/Onslaught-Career-Editor` physically lives on Archive B
-  (`/srv/archive-b/Onslaught-Career-Editor`, a USB drive, bind-mounted). It holds the canonical `local-lab/`.
-  Give it light I/O only: do builds, test runs, captures and worktrees in a clone on the internal disk and point it at
-  the canonical lab ([LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md)). Worktrees never receive a copied corpus.
+- The maintainer's working checkout may sit on slow external storage, and it holds the canonical `local-lab/`. Give
+  such a checkout light I/O only: do builds, test runs, captures and worktrees in a clone on a fast internal disk and
+  point it at the canonical lab ([LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md)). Worktrees never receive a copied
+  corpus. Where the checkout and the clone are on a given machine is in the ignored `local-data/` notes.
 - Current rebuild development is documented in [onslaught-godot](https://github.com/dlprentice/onslaught-godot); the
   local `rebuild/README.md` records the frozen copy. The companion's own
   [README](companion/OnslaughtToolkit.Godot/README.md) describes its workflows and validation limits. Which clone and
@@ -70,7 +70,7 @@ current milestones and measured parity. The local [`rebuild/PARITY.md`](rebuild/
   function, never quoted. Static evidence establishes identities and structures; only controlled runtime evidence
   establishes causality and values. Write unknowns as open questions with the cheapest falsifier.
 - Ghidra is retired as an authority. The working project `local-lab/ghidra-projects/BEA/BEA.gpr` and the cold copies
-  in `/srv/archive-a/onslaught-ghidra-cold/` stay untouched (restore a copy, never open one in place; opening without
+  kept outside this checkout (the ignored local notes say where) stay untouched (restore a copy, never open one in place; opening without
   `-readOnly` can roll its `db.NNNNN` version). Nothing Ghidra-derived returns to this repository.
 - `local-lab/` and `local-data/` are real ignored directories inside this checkout. Never run `git clean` here
   (`-x`/`-X` would erase the lab) and never stage them; add paths explicitly. Before calling anything in them stale,

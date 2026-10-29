@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-10-26 (decompilation concessions and native-port validation scope clarified)
+Last updated: 2026-10-29 (the companion's update guidance described as it is; earlier: decompilation concessions and native-port validation scope clarified)
 Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
 
 Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
@@ -17,8 +17,8 @@ repository holds it and the project's overview.
   corrections and remaining limits.
 - **The companion, Onslaught Companion, manages careers for the original game and Onslaught CE.** It is a Godot
   .NET app that shows progress and Goodies, edits careers and settings after a verified backup and a clear choice,
-  and keeps automatic backups that can be put back. It offers CE launch, two CE launcher settings and a check of
-  the signed public update information. It also plays and explains the game's own music, voices and lore.
+  and keeps automatic backups that can be put back. It offers CE launch, two CE launcher settings and the steps for
+  updating CE (the companion itself contacts nothing; CE checks its own signed feed). It also plays and explains the game's own music, voices and lore.
   The [companion's limits](companion/OnslaughtToolkit.Godot/README.md#known-limits) distinguish tested file operations
   from game launch and Windows behavior that still need to be tried.
 - **The Godot rebuild** aims to be 1:1 with retail from startup to exit, with level 100 playable to completion. It

@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-27 (CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
+Last updated: 2026-10-29 (what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -79,7 +79,7 @@ the feed's domain prefix and exact bytes, and the MIT-licensed BouncyCastle.Cryp
 included in exports) stays in the source for its tests; the companion does not call it and never reads the old
 `latest.json`.
 
-The current source contract is
+The source contract was read at
 [CE 0.1.4](https://github.com/dlprentice/onslaught-ce/tree/93ea9145d6d4d9f36f7cd9a800506ebf5bcbd788):
 `port/updater/ce_launch.c`, `port/updater/ce_report.h`, `port/tools/package.py` and
 `port/tools/sign_release.py`. Both
@@ -88,6 +88,21 @@ and [Windows files.cpp](https://github.com/dlprentice/onslaught-ce/blob/93ea9145
 merge careers from the user and original-data folders. The original-install rows remain read-only in the
 companion's CE mode. Its data-folder selection follows
 [the launcher's validation and search](https://github.com/dlprentice/onslaught-ce/blob/93ea9145d6d4d9f36f7cd9a800506ebf5bcbd788/port/updater/ce_launch.c).
+
+On 2026-10-29 part of that contract was read again at CE 0.1.10
+([d6aafb7](https://github.com/dlprentice/onslaught-ce/commit/d6aafb7)). Still true there: the two data-file hashes the
+launcher admits an install by (`install_problem` in `ce_launch.c`) are the ones the companion pins; the search order for the
+data folder is unchanged (`BEA_GAME_DIR`, then `ce.ini`'s `gamedir`, then Steam, then the launcher asks); the published
+Linux launcher, run with a private home folder, prints `Onslaught CE V0.1.10, build d6aafb7d04b2`, which the companion's
+version pattern reads; and the first line of the published packages' `README.txt` is `Onslaught CE V0.1.10`, which the
+package-header check accepts. **Not read again:** the Windows `files.cpp` career merge, and `package.py` beyond that header
+line. Between 0.1.4 and 0.1.10 `ce_launch.c`, `package.py` and the Windows `files.cpp` changed a good deal, so what this
+README says about those files is as of 0.1.4 until they are read again.
+
+**No acceptance run exists against a real CE 0.1.7 or later package.** The last recorded runs with a real CE package are
+CE 0.1.4 on Linux and a `0.1.6-dev` package on Windows (below). The 0.1.8 hand-off to a package's `versions` folder is
+covered by tests with fixture launchers only, and the 0.1.10 reading above is a reading of files and of one `--version`
+line, not a launch, a user-interface session or a career edit.
 
 Native Windows checks exercised production process detection and protected file/settings writes;
 CE also loaded the edited Unicode career through its own menu. Those backend/load experiments used the

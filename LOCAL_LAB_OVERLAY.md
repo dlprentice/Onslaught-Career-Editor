@@ -1,7 +1,7 @@
 # Local lab overlay
 
 Status: active — the ignored-directory boundary
-Last updated: 2026-10-15 (Ghidra and the RE campaign retired as authorities; their tracked records moved to the private RE archive).
+Last updated: 2026-10-29 (the maintainer's paths and storage names removed; earlier: Ghidra and the RE campaign retired as authorities; their tracked records moved to the private RE archive).
 Summary: which local paths own retail inputs and bulky generated work, and what
 may be promoted out of them into tracked evidence.
 
@@ -14,7 +14,7 @@ payloads repository source.
 Current owners:
 
 - canonical
-  `~/Projects/game-dev/Onslaught-Career-Editor/local-lab/` — the one real,
+  `local-lab/` of the maintainer's checkout (`BEA_LOCAL_LAB` names its absolute path) — the one real,
   writable, Git-ignored owner for manually supplied game installs, copied
   runtime targets, converted rebuild assets, campaign evidence, and other
   durable workstation-local inputs;
@@ -29,10 +29,11 @@ Current owners:
   copies, never writable inputs.
 
 The canonical lab was moved inside the checkout by atomic rename on 2026-08-30.
-On 2026-09-05 the complete checkout moved to `/srv/archive-b/Onslaught-Career-Editor`
-on encrypted ext4. The familiar Projects path bind/automount reaches those same files;
-the lab itself remains a normal writable child directory. The verified Samsung original
-was retired. The old ProjectData path is absent, not a compatibility link.
+On 2026-09-05 the complete checkout moved to external encrypted storage; the maintainer's
+usual path reaches those same files, and the lab itself remains a normal writable child
+directory. The earlier original copy was retired. The old ProjectData path is absent, not a
+compatibility link. Where the storage is mounted on a given machine is in the ignored
+`local-data/` notes.
 Fresh clones and Git child worktrees do not receive ignored content. A worktree
 must set `BEA_LOCAL_LAB` to the canonical absolute path or pass that path through
 the owning tool's explicit lab option; do not create a per-worktree copy.
@@ -73,4 +74,4 @@ history, not a liveness oracle. The DeepSeek drop remains at
 
 OpenJDK 21.0.12.1 and the verified Ghidra 12.1.3 distribution remain installed (activation receipt under
 `local-lab/ghidra-linux-12.1.3-activation-20260830-v1/receipts/`). No Ghidra work is planned; the working project
-and the independent cold recovery on Archive A stay as preservation copies.
+and the independent cold recovery on the maintainer's archive storage stay as preservation copies.

@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-10-27 (longer-term port, commander and Godot goals clarified)
+Last updated: 2026-10-29 (the companion's update guidance and the published decompilation's score stated as they are; earlier: longer-term port, commander and Godot goals clarified)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
@@ -11,9 +11,10 @@ archive.
 ## The direction (David, 2026-10-15, with the rebuild reactivated the same day)
 
 - **Reverse engineering is grounded in decompilation.** The reconstruction matches all 5,482 mapped game functions
-  with a documented one-byte object-code correction; without that correction, one function remains unmatched.
-  Matching does not by itself establish complete behavioural understanding. Its public export is
-  [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp).
+  in the maintainer's private working tree, with a documented one-byte object-code correction; without that correction,
+  one function remains unmatched. Matching does not by itself establish complete behavioural understanding. Its public
+  export, [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), reproduces 5,449 of the 5,482 (99.40% when
+  this was written; the other 33 are in four DirectX sample files the export leaves out).
 - **The faithful game is a native source port** of that decompilation, for Windows and Linux, published separately
   as [Onslaught CE](https://github.com/dlprentice/onslaught-ce): GPL-3.0-only source and binaries, no game files.
   Preserve a faithful baseline while improving reliability, controls, 4K readability and performance, and adding
@@ -30,7 +31,8 @@ archive.
   such as modern creation tools, HD assets and expanded multiplayer. `rebuild/` here is a frozen copy.
 - **The companion, Onslaught Companion, is the player app and Onslaught CE launcher.** A Godot .NET app for Linux
   and Windows, for players: careers, Goodies, settings, backups, music, voices and lore, with no known data-loss path.
-  It supports original-game and CE careers and backups, CE launcher settings and signed update information. A safety
+  It supports original-game and CE careers and backups, CE launcher settings and the steps for updating CE (the companion
+  contacts nothing). A safety
   hold applies to affected CE launchers; see the [CE safety notice](https://github.com/dlprentice/onslaught-ce).
   Its [known limits](companion/OnslaughtToolkit.Godot/README.md#known-limits) distinguish
   the exercised Linux CE workflow and native Windows backend/load checks from Windows Godot UI

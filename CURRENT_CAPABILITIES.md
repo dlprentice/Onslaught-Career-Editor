@@ -1,14 +1,14 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-25 (CE 0.1.5 publishes the redirected-output correction; earlier: Linux CE workflow and native Windows backend/load evidence; remaining UI/version and player limits)
+Last updated: 2026-10-29 (the companion's update guidance and the published decompilation's score stated as they are; earlier: CE 0.1.5 publishes the redirected-output correction; Linux CE workflow and native Windows backend/load evidence; remaining UI/version and player limits)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
 
 The companion, Onslaught Companion, lets players choose the original game or Onslaught CE. It supports finding
-CE's launcher, protected career writes, two launcher settings and signed update information; the CE launcher
-installs updates.
+CE's launcher, protected career writes, two launcher settings and the steps for updating CE (the companion
+contacts nothing; CE checks its own signed feed and installs updates).
 See its [README](companion/OnslaughtToolkit.Godot/README.md) for the contract and platform limits.
 The byte-matching decompilation is complete and is the reverse-engineering authority (public export:
 [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp)); its native port is published separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce), and this
@@ -155,9 +155,9 @@ safe for their game and saves.
 installation's careers and `defaultoptions.bea`. With CE selected, the companion lists its user-folder careers
 and original-install files for browsing and backups, preferring the user file for a duplicate name regardless of case.
 Original-install careers are labeled read-only; edits can become a new named
-CE copy, and CE writes go to its user folder. The companion offers Play through the selected CE launcher, displays
-a signature-verified public release version, and edits only the launcher's `update_check` and `record_sessions`
-switches. Original data also supplies music, voices and art. CE settings backups are separate verified files; the career Backups page does
+CE copy, and CE writes go to its user folder. The companion offers Play through the selected CE launcher, shows the steps
+for updating CE on Home (it contacts nothing and displays no release version), and edits only the launcher's
+`update_check` and `record_sessions` switches. Original data also supplies music, voices and art. CE settings backups are separate verified files; the career Backups page does
 not restore `ce.ini`.
 CE 0.1.4 merges both lists on Linux and Windows; the older Linux listing defect described in earlier records
 was corrected in that CE release. See the linked current source in the companion README.
@@ -851,8 +851,10 @@ Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
 
 ## Reverse engineering
 
-The byte-matching decompilation, published as [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), matches all 5,482 retail functions and is
-the reverse-engineering authority; its README holds the score, the matched list and the remaining divergences.
+The byte-matching decompilation matches all 5,482 retail functions in the maintainer's private working tree and is the
+reverse-engineering authority. Its public export, [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp),
+reproduces 5,449 of them (99.40% when this was written; the other 33 are in four DirectX sample files the export leaves
+out), and its README holds the current score, the matched list and the remaining divergences.
 Findings reach this repository as prose and specs in [`reverse-engineering/`](reverse-engineering/RE-INDEX.md),
 citing functions rather than quoting code.
 

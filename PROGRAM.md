@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-27 (content catalogue phase 3: world bodies, compiled scripts, terrain payloads, sprintf texture names; earlier: content catalogue survey, schema, generator, levels, placements and usage, Linux CE workflow and native Windows backend/load checks completed)
+Last updated: 2026-10-29 (the companion's update guidance and the published decompilation's score stated as they are; earlier: content catalogue phase 3: world bodies, compiled scripts, terrain payloads, sprintf texture names; content catalogue survey, schema, generator, levels, placements and usage, Linux CE workflow and native Windows backend/load checks completed)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
@@ -25,7 +25,8 @@ and voices, and lore (see its [README](companion/OnslaughtToolkit.Godot/README.m
 choice made after a verified backup, never while the game runs.
 [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore) records
 what is proven. Players can choose the original game or CE, manage careers and backups, and use CE's two supported
-launcher settings and signed public update information. The CE launcher installs updates.
+launcher settings and the steps for updating CE (the companion contacts nothing). The CE launcher checks its own signed
+feed and installs updates.
 
 Remaining acceptance and release work:
 
@@ -68,8 +69,9 @@ the mod system or an HD conversion.
 
 ### Decompilation and native port
 
-The byte-matching decompilation is complete (5,482 of 5,482 functions) and published as
-[onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), whose README holds its score and divergences. Its
+The byte-matching decompilation is complete in the maintainer's private working tree (5,482 of 5,482 functions). Its
+public export, [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), reproduces 5,449 of them (the other
+33 are in four DirectX sample files it leaves out), and its README holds that score and its divergences. Its
 native source port (Windows and Linux) is published as [Onslaught CE](https://github.com/dlprentice/onslaught-ce)
 (GPL-3.0-only source and binaries, no game files). Nothing from either is copied into this repository.
 
@@ -95,7 +97,7 @@ native source port (Windows and Linux) is published as [Onslaught CE](https://gi
 | Item | Outcome |
 | --- | --- |
 | Retail RE by Ghidra campaign (generations, contracts, promotion cohorts, record audit) | Superseded by the byte-matching decompilation; records in the private RE archive. |
-| Byte-matching decompilation | Complete (5,482/5,482), published as [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp). |
+| Byte-matching decompilation | Complete in the private working tree (5,482/5,482); the published [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) reproduces 5,449 of them. |
 | WinUI toolkit, its UI tests and CLI (former P11) | Removed 2026-10-15; the companion replaced them. |
 | Campaign bookkeeping relief (former P6) | Retired with the campaign. |
 | Repository preparation (former P12) | The checkout lives on Archive B behind the Projects bind; `local-lab/` and `local-data/` are real ignored children. The 2026-10-15 cleanup moved the Ghidra checkpoint and RE machinery to the private archive and removed the WinUI surfaces. |

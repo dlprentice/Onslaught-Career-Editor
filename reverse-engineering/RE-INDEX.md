@@ -1,7 +1,7 @@
 # Reverse-Engineering Index
 
 Status: active — the front door to the game documentation
-Last updated: 2026-10-22 (moved: maintained at onslaught-preservation, this copy frozen; the decompilation cited as onslaught-decomp; retired WinUI/AppCore surfaces named in the past tense; patch recipes: the executable-patch catalog and its contract were retired; removed the tracked retail string table row)
+Last updated: 2026-10-29 (the decompilation's published score stated as it is; earlier: moved: maintained at onslaught-preservation, this copy frozen; the decompilation cited as onslaught-decomp; retired WinUI/AppCore surfaces named in the past tense; patch recipes: the executable-patch catalog and its contract were retired; removed the tracked retail string table row)
 Summary: where the documentation of Battle Engine Aquila lives, what each store covers, and the rules a claim about the shipped game has to meet before it is written down.
 
 > **Moved:** this documentation is maintained at
@@ -10,8 +10,8 @@ Summary: where the documentation of Battle Engine Aquila lives, what each store 
 
 This tree documents *Battle Engine Aquila* as prose and specs: file formats, save and options layouts, mechanics,
 assets and mission data, per-function notes and behaviour contracts, patch analyses, and notes on Stuart's pinned
-source release (GitHub `stuart73/Onslaught`, in `references/Onslaught`). Since 2026-10-15 the byte-matching decompilation of the retail executable (published as [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp);
-5,482 of 5,482 functions match) is the authority behind these documents; new findings cite its functions and never quote
+source release (GitHub `stuart73/Onslaught`, in `references/Onslaught`). Since 2026-10-15 the byte-matching decompilation of the retail executable (published as [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), which reproduces 5,449 of the
+5,482 functions; all 5,482 match in the maintainer's working tree) is the authority behind these documents; new findings cite its functions and never quote
 its code.
 
 The Ghidra-era campaign that produced many of these notes has ended. Its records (the tracked Ghidra checkpoint,

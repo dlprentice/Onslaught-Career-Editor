@@ -1,7 +1,7 @@
 # Companion provenance and license
 
 Status: active independent GPL-3.0-only application boundary
-Last updated: 2026-10-23 (BouncyCastle.Cryptography 2.7.0 disclosed for signed CE update verification, with its pin and export notice)
+Last updated: 2026-10-29 (the signed-feed verifier described as kept for tests, not called by the app; earlier: BouncyCastle.Cryptography 2.7.0 disclosed for signed CE update verification, with its pin and export notice)
 Evidence: SOURCE — code-built C# application, project source moved in from the retired AppCore library, and embedded project lore; executed package boundaries are recorded in VALIDATION.md.
 Summary: the companion's C# derives only from the project's own application code and the RE lane's published contracts; it bundles the project's own lore, reads the game's files and manual art from the player's install at run time, and keeps retail data and GPL reconstruction out.
 
@@ -34,7 +34,8 @@ third-party notices, which every export carries. Godot retains its own MIT and t
 licenses.
 
 `BouncyCastle.Cryptography` 2.7.0, copyright The Legion of the Bouncy Castle Inc., is a production dependency
-under the MIT licence. It verifies the CE update feed's Ed25519 signature before the companion reads the feed.
+under the MIT licence. It verifies the CE update feed's Ed25519 signature in the signed-feed verifier (`CeUpdateFeed`), which the source keeps
+for its tests: the app does not call it and contacts nothing.
 The exact version is declared in [OnslaughtToolkit.Godot.csproj](OnslaughtToolkit.Godot.csproj) and its package hash
 is pinned by `contentHash` in [packages.lock.json](packages.lock.json). The build runner restores with
 `--locked-mode`; every export copies the package's `LICENSE.md` as `BOUNCYCASTLE-LICENSE.txt`
