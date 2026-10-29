@@ -14,13 +14,21 @@ import heightfield_lookup as hf
 import world_resources_decode as wrd
 
 
-def eres_with_heightfield(samples: list[int] | tuple[int, ...], scale: float, water: float = 0.0) -> bytes:
-    """An authored ERES payload (CEngine::Deserialize's layout, no mixer pixels) holding the given height samples."""
+def eres_with_heightfield(samples: list[int] | tuple[int, ...], scale: float, water: float = 0.0, mixer_data: bool = False) -> bytes:
+    """
+    An authored ERES payload (CEngine::Deserialize's layout) holding the given height samples. With mixer_data the one mixer mip and
+    the one mixer slot that carry optional data (the loader reads it when their pointers are not 0) do: the second mip has two
+    textures of 6 bytes and two extra 1,024-byte blocks, and the sixth slot has 3 entries of 81 bytes. A reader that gets a size or an
+    offset of those wrong does not end where the payload ends.
+    """
     assert len(samples) == hf.SAMPLE_COUNT
     header = lambda tag, size=0: tag + struct.pack("<I", size)
     out = header(b"ENGN") + struct.pack("<i", 7)
-    for _ in range(7):
-        out += header(b"MTEX") + header(b"DATA") + struct.pack("<IiIhxxiii6i6i", 0, 0, 0, 3, 0, 0, 0, *([0] * 12))
+    for mip in range(7):
+        carries = mixer_data and mip == 1
+        out += header(b"MTEX") + header(b"DATA") + struct.pack("<IiIhxxiii6i6i", 1 if carries else 0, 0, 1 if carries else 0, 3, 6 if carries else 0, 2 if carries else 0, 0, *([0] * 12))
+        if carries:
+            out += header(b"TXDT") + bytes(2 * 6) + header(b"TXEX") + bytes(2 * 1024)
     out += header(b"MAP ") + struct.pack("<i", 7) + header(b"HFLD") + header(b"DATA")
     record = bytearray(wrd.HEIGHTFIELD_SIZE)
     struct.pack_into("<f", record, hf.SCALE_AT, scale)
@@ -28,7 +36,15 @@ def eres_with_heightfield(samples: list[int] | tuple[int, ...], scale: float, wa
     record[0x1030] = 3
     record[0x1078 + 0x18], record[0x1078 + 0x1C], record[0x1078 + 0x1D] = 2, 1, 4
     out += bytes(record) + header(b"HGTS") + struct.pack(f"<{hf.SAMPLE_COUNT}h", *samples)
-    out += header(b"MIXR") + (header(b"SLOT") + header(b"DATA") + bytes(0x14)) * wrd.MIXER_MAP_SLOTS
+    out += header(b"MIXR")
+    for slot in range(wrd.MIXER_MAP_SLOTS):
+        carries = mixer_data and slot == 5
+        entry = bytearray(wrd.MIXER_SLOT_SIZE)
+        if carries:
+            struct.pack_into("<iI", entry, 0, 3, 1)
+        out += header(b"SLOT") + header(b"DATA") + bytes(entry)
+        if carries:
+            out += header(b"SDAT") + bytes(3 * 81)
     return out + header(b"MMAP") + bytes(wrd.MIXER_MAP_SIZE)
 
 
@@ -51,6 +67,27 @@ def ramp_samples() -> list[int]:
     samples[at(0, 0, 0, 0)], samples[at(0, 0, 0, 1)] = 100, 99  # a step down
     samples[at(63, 63, 8, 8)] = 4242  # the last sample of the last tile
     return samples
+
+
+class MixerDataTests(unittest.TestCase):
+    def test_optional_mixer_data_is_walked_to_the_same_terrain(self) -> None:
+        plain = eres_with_heightfield(ramp_samples(), 0.5, -2.0)
+        carrying = eres_with_heightfield(ramp_samples(), 0.5, -2.0, mixer_data=True)
+        self.assertEqual(len(carrying) - len(plain), 2 * 6 + 2 * 1024 + 3 * 81 + 3 * 8)  # a mip's textures and extra blocks, a slot's entries, and their three headers
+        self.assertEqual(hf.read_heightfield(carrying), hf.read_heightfield(plain))
+        self.assertEqual(hf.read_heightfield(carrying).samples_sha256(), hf.read_heightfield(plain).samples_sha256())
+
+    def test_a_texture_count_that_cannot_be_walked_is_refused(self) -> None:
+        carrying = bytearray(eres_with_heightfield(ramp_samples(), 0.5, -2.0, mixer_data=True))
+        # the second mip's map record starts after ENGN (8), the count (4), one plain mip (8 + 8 + 0x4C) and the MTEX and DATA headers (16)
+        record = 12 + 8 + 8 + 0x4C + 16
+        struct.pack_into("<i", carrying, record + 20, -5)
+        with self.assertRaises(hf.DecodeError):
+            hf.read_heightfield(bytes(carrying))
+        struct.pack_into("<i", carrying, record + 20, 2)
+        struct.pack_into("<i", carrying, record + 16, 7)  # a texture size that no longer matches the bytes that follow
+        with self.assertRaises(hf.DecodeError):
+            hf.read_heightfield(bytes(carrying))
 
 
 class LookupTests(unittest.TestCase):

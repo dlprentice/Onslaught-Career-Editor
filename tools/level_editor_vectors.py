@@ -429,11 +429,12 @@ def split(data: bytes, count: int) -> list[bytes]:
     return [data[i:i + 1] for i in range(count - 1)] + [data[count - 1:]]
 
 
-def level_stream(wdat: bytes | None, bodies: list[tuple[bytes, bytes]], terrain: bytes | None = None) -> bytes:
-    """The authored level stream; its ERES chunk is 40 zero bytes (not a terrain) unless `terrain` gives one."""
+def level_stream(wdat: bytes | None, bodies: list[tuple[bytes, bytes]], terrain: bytes | None = None, later_eres: bytes | None = None) -> bytes:
+    """The authored level stream; its ERES chunk is 40 zero bytes (not a terrain) unless `terrain` gives one, and `later_eres` adds a second."""
     wrld = (fixtures.chunk(b"WDAT", wdat) if wdat is not None else b"") + b"".join(fixtures.chunk(tag, body) for tag, body in bodies)
     return (fixtures.chunk(b"LVLR", struct.pack("<I", 103)) + fixtures.chunk(b"TARG", struct.pack("<I", 1))
             + fixtures.chunk(b"AYAD", bytes(24)) + fixtures.chunk(b"ERES", terrain if terrain is not None else b"\0" * 40)
+            + (fixtures.chunk(b"ERES", later_eres) if later_eres is not None else b"")
             + fixtures.chunk(b"WRES", fixtures.chunk(b"WRLD", wrld)) + fixtures.chunk(b"LNDS", b""))
 
 
@@ -502,6 +503,10 @@ def archive_vectors(valid: dict[str, bytes]) -> list[tuple[str, str, bytes, dict
     third = len(terrain_stream) // 3 + 1
     out.append(("level-100-terrain", "a level 100 whose ERES chunk is the authored terrain, split over three members under the 1 MiB bound",
                 archive_file([terrain_stream[i:i + third] for i in range(0, len(terrain_stream), third)])))
+    two_terrains = level_stream(struct.pack("<ii", -1, 100), [(b"RLWD", real)], terrain=authored_terrain().eres, later_eres=b"\0" * 40)
+    third_two = len(two_terrains) // 3 + 1
+    out.append(("level-100-two-terrains", "a level 100 with two top-level ERES chunks, the authored terrain and then 40 zero bytes, split over three members: the reader keeps the first",
+                archive_file([two_terrains[i:i + third_two] for i in range(0, len(two_terrains), third_two)])))
     two = level_stream(struct.pack("<ii", 100, 200), [(b"BSWD", base), (b"RLWD", real)])
     out.append(("base-and-real", "a base world and a real world", archive_file([two])))
     third = len(two) // 3
@@ -604,7 +609,7 @@ class AuthoredTerrain:
         samples[terrain_fixtures.at(63, 63, 8, 8)] = -32768
         self.scale = heights.f32(0.0009155832)
         self.water = heights.f32(-8.84)
-        self.eres = terrain_fixtures.eres_with_heightfield(samples, self.scale, self.water)
+        self.eres = terrain_fixtures.eres_with_heightfield(samples, self.scale, self.water, mixer_data=True)  # with the optional mixer data the loader reads
         self.field = heights.read_heightfield(self.eres)
 
 
@@ -619,8 +624,8 @@ def authored_terrain() -> AuthoredTerrain:
 
 
 TERRAIN_COORDINATES = [-math.inf, -1e30, -600.0, -513.0, -8.0, -1.0, -0.5, -0.002, -0.001953125, -0.0, 0.0, 1e-9, 0.001953125, 0.5, 1.0, 7.998, 8.0, 8.001, 9.0,
-                       63.5, 64.0, 100.25, 255.998, 256.0, 300.5, 504.0, 511.0, 511.99, 511.998, 511.99609375, 512.0, 512.001, 513.0, 1000.0, 16383.99, 16384.0,
-                       20000.0, 3e38, math.inf, math.nan]
+                       63.5, 64.0, 100.25, 255.998, 256.0, 300.5, 504.0, 511.0, 511.99, 511.998, 511.99609375, 512.0, 512.001, 513.0, 1000.0, 1024.0, 2048.0, 4096.0,
+                       8192.0, 16383.99, 16384.0, 20000.0, 3e38, math.inf, math.nan]
 
 
 def float_bits(value: float) -> int:
