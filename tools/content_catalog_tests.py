@@ -5,6 +5,7 @@
 headers, the schema, and the generated-output boundary."""
 from __future__ import annotations
 
+import collections
 import hashlib
 import json
 import struct
@@ -871,6 +872,214 @@ class TextureTreatmentSemanticsTests(unittest.TestCase):
                     authored_rgb_dds("A8R8G8B8", 1, 1, bytes(4))):
             upscale = catalog.texture_upscale(catalog.dds_census.texture_metadata(raw), None)
             self.assertTrue(validator.is_valid(upscale), list(validator.iter_errors(upscale)))
+
+
+def texb_field(raw: bytes) -> bytes:
+    """A 128-byte TEXB name field holding exactly ``raw`` then NULs (``raw`` itself may fill all 128 bytes)."""
+    assert len(raw) <= 128
+    return raw.ljust(128, b"\0")
+
+
+def multi_texture_mesh(name: str, fields: list[bytes]) -> bytes:
+    """An authored CMSH whose texture table holds one TEXB per entry of ``fields`` (each exactly 128 bytes)."""
+    stream = bytearray(mesh_fixtures._catalog_stream(name=name))
+    assert stream[380:384] == b"CMST" and stream[588:592] == b"MESP"      # the layout this surgery relies on
+    stream[12:16] = struct.pack("<I", len(fields))
+    entry = bytearray(36)
+    struct.pack_into("<I", entry, 8, 1)                                   # one frame per slot
+    lanes = struct.pack("<5f", 1.0, 0.0, 0.25, 1.0, 1.0)
+    assert all(len(f) == 128 for f in fields)
+    return (bytes(stream[:380]) + chunk(b"CMST", bytes(entry) * len(fields))
+            + b"".join(chunk(b"MSHT", chunk(b"TEXB", lanes + f)) for f in fields) + bytes(stream[588:]))
+
+
+class TexbNameIdentityTests(unittest.TestCase):
+    """The 128-byte TEXB name: an unreadable field is unknown, a stored empty name is known to be empty, and neither is
+    given a format or joined to a descriptor. The distinction survives the slot record, the uses-texture relationship, the
+    unloaded-name link, the tiling roll-up, the coverage counts and the schema."""
+
+    GOOD = b"meshtex\\skin.tga"
+    BOUNDARY = ("meshtex\\" + "y" * 119).encode()          # 127 characters, then the NUL: still readable
+    UNTERMINATED = ("meshtex\\" + "x" * 120).encode()       # 128 bytes, no NUL: the field is not a name
+    INVALID = b"meshtex\\sk\xffn.tga"
+    SKIN = "texture:data/resources/dxtntextures/meshtex%skin.tga(0)a1r5g5b5.aya"
+    LOADED = {          # stem -> TEXB name fields; every one of these meshes is loaded by archive 104
+        "texb_good": [GOOD],
+        "texb_after_nul": [GOOD + b"\0" + b"junk after the terminator"],
+        "texb_boundary": [BOUNDARY],
+        "texb_unterminated": [UNTERMINATED],
+        "texb_invalid": [INVALID],
+        "texb_empty": [b""],
+        "texb_empty_junk": [b"\0leftover bytes"],
+        "texb_short": [b"tex"],
+        "texb_mixed": [GOOD, UNTERMINATED, b"", INVALID],
+    }
+    UNLOADED = {        # loaded by no archive: only the unloaded-name link looks at these
+        "texb_unloaded": [b"unused.tga", UNTERMINATED, b"", INVALID, b"tex"],
+    }
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            resources = game / "data/resources"
+            for stem, fields in {**cls.LOADED, **cls.UNLOADED}.items():
+                stream = multi_texture_mesh(stem, [texb_field(f) for f in fields])
+                (resources / "meshes" / f"m_{stem}.msh.aya").write_bytes(aya(stream))
+            (resources / "104_res_PC.aya").write_bytes(aya(
+                chunk(b"LVLR", struct.pack("<I", 104)) + chunk(b"TARG", struct.pack("<I", 1)) + chunk(b"AYAD", bytes(24))
+                + text_record("meshtex\\skin.tga", requested=1, levels=-1)
+                + text_record(cls.BOUNDARY.decode(), requested=1, levels=-1)
+                + text_record("tex", requested=1, levels=-1)              # bait for a name too short to have a suffix
+                + b"".join(named_mesh_record(stem + ".msh") for stem in cls.LOADED)))
+            cls.catalog = catalog.build_catalog(game, None)
+        cls.coverage = catalog.build_coverage(cls.catalog)
+        cls.assets = {a["id"]: a for a in cls.catalog["assets"]}
+
+    def mesh(self, stem: str) -> dict:
+        return self.assets[f"mesh:data/resources/meshes/m_{stem}.msh.aya"]
+
+    def uses(self, stem: str) -> list[dict]:
+        return [r for r in self.mesh(stem)["relationships"] if r["type"] == "uses-texture"]
+
+    def test_slot_records_keep_unknown_and_empty_apart(self) -> None:
+        sha = lambda raw: hashlib.sha256(raw).hexdigest()
+        expected = {                       # stem -> [(name, status, hash, requestedFormat)]
+            "texb_good": [("meshtex\\skin.tga", "utf8-decoded", sha(self.GOOD), 1)],
+            "texb_after_nul": [("meshtex\\skin.tga", "utf8-decoded", sha(self.GOOD), 1)],
+            "texb_boundary": [(self.BOUNDARY.decode(), "utf8-decoded", sha(self.BOUNDARY), 1)],
+            "texb_unterminated": [(None, "unterminated", None, None)],
+            "texb_invalid": [(None, "invalid-utf8", sha(self.INVALID), None)],
+            "texb_empty": [("", "empty", sha(b""), None)],
+            "texb_empty_junk": [("", "empty", sha(b""), None)],
+            "texb_short": [("tex", "utf8-decoded", sha(b"tex"), None)],
+            "texb_mixed": [("meshtex\\skin.tga", "utf8-decoded", sha(self.GOOD), 1), (None, "unterminated", None, None),
+                           ("", "empty", sha(b""), None), (None, "invalid-utf8", sha(self.INVALID), None)],
+        }
+        for stem, slots in expected.items():
+            with self.subTest(stem):
+                got = [(s["name"], s["nameStatus"], s["nameBytesSha256"], s["requestedFormat"])
+                       for s in self.mesh(stem)["mesh"]["textures"]]
+                self.assertEqual(slots, got)
+                self.assertEqual(list(range(len(slots))), [s["slot"] for s in self.mesh(stem)["mesh"]["textures"]])
+
+    def test_only_a_readable_classifiable_name_is_joined(self) -> None:
+        expected = {                        # stem -> [(relationship status, has a target, targetName, targetNameStatus, requestedFormat)]
+            "texb_good": [("resolved", True, "meshtex\\skin.tga", "utf8-decoded", 1)],
+            "texb_after_nul": [("resolved", True, "meshtex\\skin.tga", "utf8-decoded", 1)],
+            "texb_boundary": [("resolved", True, self.BOUNDARY.decode(), "utf8-decoded", 1)],
+            "texb_unterminated": [("unknown-name", False, None, "unterminated", None)],
+            "texb_invalid": [("unknown-name", False, None, "invalid-utf8", None)],
+            "texb_empty": [("empty-name", False, "", "empty", None)],
+            "texb_empty_junk": [("empty-name", False, "", "empty", None)],
+            "texb_short": [("unresolved", False, "tex", "utf8-decoded", None)],
+            "texb_mixed": [("resolved", True, "meshtex\\skin.tga", "utf8-decoded", 1),
+                           ("unknown-name", False, None, "unterminated", None),
+                           ("empty-name", False, "", "empty", None),
+                           ("unknown-name", False, None, "invalid-utf8", None)],
+        }
+        for stem, rels in expected.items():
+            with self.subTest(stem):
+                got = [(r["status"], bool(r["target"] or r.get("targets")), r["targetName"], r["targetNameStatus"],
+                        r["requestedFormat"]) for r in self.uses(stem)]
+                self.assertEqual(rels, got)
+                self.assertEqual(list(range(len(rels))), [r["slot"] for r in self.uses(stem)])
+
+    def test_a_name_too_short_for_a_suffix_does_not_join_the_descriptor_of_the_same_name(self) -> None:
+        # The loader reads the suffix from byte 8; "tex" has none, so a descriptor literally named "tex" is not its target.
+        desc = [a for a in self.catalog["assets"] if a["type"] == "texture-descriptor"
+                and a["textureDescriptor"]["name"] == "tex"]
+        self.assertEqual(1, len(desc))
+        self.assertFalse(any(r["target"] == desc[0]["id"] or desc[0]["id"] in (r.get("targets") or [])
+                             for a in self.catalog["assets"] for r in a["relationships"] if r["type"] == "uses-texture"))
+        self.assertNotIn(self.mesh("texb_short")["id"], desc[0].get("referencedBy", []))
+
+    def test_bytes_after_the_terminator_are_not_part_of_the_identity(self) -> None:
+        good, after = self.mesh("texb_good")["mesh"]["textures"][0], self.mesh("texb_after_nul")["mesh"]["textures"][0]
+        self.assertEqual((good["name"], good["nameBytesSha256"]), (after["name"], after["nameBytesSha256"]))
+        self.assertEqual(self.uses("texb_good")[0]["target"], self.uses("texb_after_nul")[0]["target"])
+        empty, junk = self.mesh("texb_empty")["mesh"]["textures"][0], self.mesh("texb_empty_junk")["mesh"]["textures"][0]
+        self.assertEqual((empty["name"], empty["nameStatus"], empty["nameBytesSha256"]),
+                         (junk["name"], junk["nameStatus"], junk["nameBytesSha256"]))
+
+    def test_unreadable_and_empty_slots_never_reach_a_texture(self) -> None:
+        skin = self.assets[self.SKIN]
+        not_texture_users = [self.mesh(s)["id"] for s in ("texb_unterminated", "texb_invalid", "texb_empty", "texb_empty_junk",
+                                                          "texb_short", "texb_unloaded")]
+        self.assertTrue(set(not_texture_users).isdisjoint(skin.get("referencedBy", [])))
+        every = [a for a in self.catalog["assets"] if a["type"] == "texture"]
+        for texture in every:
+            self.assertTrue(set(not_texture_users).isdisjoint(texture.get("referencedBy", [])), texture["id"])
+        # the roll-up counts exactly the relationships that name a descriptor, and the mixed mesh adds one binding, not four
+        bound = sum(1 for a in self.catalog["assets"] if a["type"] == "mesh" for r in a["relationships"]
+                    if r["type"] == "uses-texture" and (r["target"] or r.get("targets")))
+        self.assertEqual(bound, sum(1 for a in self.catalog["assets"] if a["type"] == "mesh" for r in a["relationships"]
+                                    if r["type"] == "uses-texture" and r["status"] in ("resolved", "resolved-per-archive")))
+        self.assertEqual(1, sum(1 for r in self.uses("texb_mixed") if r["target"] or r.get("targets")))
+
+    def test_tiling_takes_no_uv_range_from_a_slot_without_a_readable_name(self) -> None:
+        meta = catalog.dds_census.texture_metadata(authored_dds(4, 4))
+        texture = {"id": "texture:test", "texture": {"status": meta["status"]}, "upscale": catalog.texture_upscale(meta, None)}
+        desc = {"id": "desc:test", "relationships": [{"type": "pixels-from", "target": "texture:test"}]}
+        known = {"id": "mesh:known", "relationships": [{"type": "uses-texture", "target": "desc:test", "slot": 0}],
+                 "mesh": {"textures": [{"slot": 0, "uvRange": [0., 0., 1., 1.]}]}}
+        # Slots bound with a wide UV range but with no readable name: they carry no target, so they cannot widen the texture's range.
+        unknown = {"id": "mesh:unknown", "mesh": {"textures": [{"slot": 0, "uvRange": [0., 0., 9., 9.]},
+                                                                {"slot": 1, "uvRange": [-9., -9., 1., 1.]},
+                                                                {"slot": 2, "uvRange": [0., 0., 7., 7.]}]},
+                   "relationships": [{"type": "uses-texture", "target": None, "status": "unknown-name", "slot": 0},
+                                     {"type": "uses-texture", "target": None, "status": "empty-name", "slot": 1},
+                                     {"type": "uses-texture", "target": None, "status": "unresolved", "slot": 2}]}
+        catalog.apply_tiling([known, unknown], [desc], [texture])
+        self.assertEqual([0., 0., 1., 1.], texture["upscale"]["tiling"]["uvRange"])
+        self.assertEqual(1, texture["upscale"]["tiling"]["meshes"])
+        self.assertEqual("within-0-1", texture["upscale"]["tiling"]["status"])
+
+    def test_an_unloaded_mesh_with_unreadable_names_neither_breaks_nor_matches_a_file(self) -> None:
+        # link_unloaded_mesh_names keys slots by folded name: an unknown (None) name must be skipped, and empty and short
+        # names must not become keys that a file could match.
+        unused = self.assets["texture:data/resources/dxtntextures/unused.tga(0)a1r5g5b5.aya"]
+        owners = [r for r in unused["relationships"] if r["type"] == "same-name-as-mesh-slot"]
+        self.assertEqual(1, len(owners))
+        self.assertEqual([self.mesh("texb_unloaded")["id"]], owners[0]["targets"])
+        statuses = [s["nameStatus"] for s in self.mesh("texb_unloaded")["mesh"]["textures"]]
+        self.assertEqual(["utf8-decoded", "unterminated", "empty", "invalid-utf8", "utf8-decoded"], statuses)
+        self.assertEqual(["unresolved", "unknown-name", "empty-name", "unknown-name", "unresolved"],
+                         [r["status"] for r in self.uses("texb_unloaded")])
+        self.assertFalse(any(r["target"] or r.get("targets") for r in self.uses("texb_unloaded")))
+
+    def test_coverage_counts_every_slot_name_status(self) -> None:
+        counts = self.coverage["meshTextureNameStatus"]
+        recount = collections.Counter(s["nameStatus"] for a in self.catalog["assets"] if a["type"] == "mesh"
+                                      for s in a["mesh"]["textures"])
+        self.assertEqual(dict(recount), counts)
+        # unterminated: unterminated, mixed, unloaded; invalid: invalid, mixed, unloaded; empty: empty, empty_junk, mixed, unloaded
+        self.assertEqual((3, 3, 4), (counts["unterminated"], counts["invalid-utf8"], counts["empty"]))
+        relationship_status = self.coverage["relationshipStatus"]["uses-texture"]
+        self.assertEqual(6, relationship_status["unknown-name"])           # one relationship per unterminated or invalid slot
+        self.assertEqual(4, relationship_status["empty-name"])             # one per empty slot
+
+    def test_the_adversarial_records_validate_against_the_schema(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        schema = json.loads((catalog.TOOLS / "content_catalog.schema.json").read_text(encoding="utf-8"))
+        validator = jsonschema.Draft202012Validator(schema)
+        for stem in (*self.LOADED, *self.UNLOADED):
+            with self.subTest(stem):
+                validator.validate({**self.mesh(stem), catalog.GENERATED_MARKER: True})
+        # the schema itself rejects an unknown status and a name that is neither text nor null
+        bad = json.loads(json.dumps(self.mesh("texb_mixed")))
+        bad["mesh"]["textures"][1]["nameStatus"] = "mostly-empty"
+        self.assertFalse(validator.is_valid({**bad, catalog.GENERATED_MARKER: True}))
+        bad = json.loads(json.dumps(self.mesh("texb_mixed")))
+        bad["mesh"]["textures"][1]["name"] = 7
+        self.assertFalse(validator.is_valid({**bad, catalog.GENERATED_MARKER: True}))
+        bad = json.loads(json.dumps(self.mesh("texb_mixed")))
+        del bad["mesh"]["textures"][2]["nameStatus"]
+        self.assertFalse(validator.is_valid({**bad, catalog.GENERATED_MARKER: True}))
 
 
 if __name__ == "__main__":

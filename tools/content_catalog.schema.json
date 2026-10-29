@@ -497,9 +497,41 @@
             "required": [
               "slot",
               "name",
+              "nameStatus",
+              "nameBytesSha256",
               "requestedFormat",
               "uvRange"
-            ]
+            ],
+            "properties": {
+              "name": {
+                "type": ["string", "null"],
+                "description": "The 128-byte TEXB name field as stored: the text before the first NUL when the field is terminated and valid UTF-8 (a known-empty name is the empty string and nameStatus empty); null when the field is unterminated or not UTF-8. It is never a lossy decode of an unreadable field. Older v1 records may hold such a decode and lack nameStatus."
+              },
+              "nameStatus": {
+                "enum": [
+                  "utf8-decoded",
+                  "empty",
+                  "unterminated",
+                  "invalid-utf8"
+                ],
+                "description": "utf8-decoded: a readable name. empty: the stored name is known to be empty. unterminated and invalid-utf8: the field is not a readable name, so the name is unknown, which is not the same as empty."
+              },
+              "nameBytesSha256": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/sha256"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "SHA-256 of the bytes before the first NUL (the empty-input digest for an empty name); null when the field has no terminator."
+              },
+              "requestedFormat": {
+                "enum": [1, 2, 4, null],
+                "description": "The format CMesh::FindTexture would request, from the suffix at byte 8 of a terminated, readable name longer than 8 bytes (A8 gives 4, A4 gives 2, anything else 1). null when no format is inferred: an unreadable, empty or shorter name has no suffix this catalogue classifies."
+              }
+            }
           }
         }
       }
@@ -820,9 +852,20 @@
             "name-match",
             "name-match-unloaded",
             "code-site",
-            "code-rule"
+            "code-rule",
+            "unknown-name",
+            "empty-name"
           ],
-          "description": "name-match: a stored string equals a file name but no loader joins them; name-match-unloaded: a data observation about content no retail loader reads; code-site: a literal lookup in game code (the evidence names the site); code-rule: a name game code builds with sprintf from a format rule and data (the evidence names the function and the rule). name-match also covers a script argument that equals a thing's name."
+          "description": "unknown-name: the mesh slot's stored name field is unreadable (unterminated or not UTF-8), so nothing was looked up or joined; empty-name: the slot's stored name is known to be empty and nothing was joined; both differ from unresolved, where a readable name was looked up and found nothing. name-match: a stored string equals a file name but no loader joins them; name-match-unloaded: a data observation about content no retail loader reads; code-site: a literal lookup in game code (the evidence names the site); code-rule: a name game code builds with sprintf from a format rule and data (the evidence names the function and the rule). name-match also covers a script argument that equals a thing's name."
+        },
+        "targetNameStatus": {
+          "enum": [
+            "utf8-decoded",
+            "empty",
+            "unterminated",
+            "invalid-utf8"
+          ],
+          "description": "For uses-texture: the stored-name status of the mesh slot, as in mesh.textures[].nameStatus."
         },
         "evidence": {
           "type": "array",

@@ -2,7 +2,7 @@
 
 Status: active format contract — the PC loader's complete chunk grammar and every stored record layout
 Date: 2026-10-16
-Last updated: 2026-10-28 (corrected the number of files containing chained meshes)
+Last updated: 2026-10-29 (the TEXB name field: terminator, the loader's suffix rule and how tools read an unreadable name; earlier: corrected the number of files containing chained meshes)
 Verdict: all 213 installed PC mesh files (228 meshes, counting 15 chained meshes) parse to their exact
 final byte under the grammar below, with exactly one tag in every grammar slot. Every stored record is the
 loader's in-memory object image: 372, 316, 296 and 184 bytes for the mesh, part, vertex-buffer and
@@ -207,7 +207,14 @@ which the loader replaces without reading: it means nothing to the game.
 4. U scale
 5. V scale
 
-The name is looked up among the textures already loaded. At draw time the renderer picks a lane value as
+The name is looked up among the textures already loaded. It is a NUL-terminated string in a fixed 128-byte field, and
+nothing guarantees a terminator or UTF-8. `CMesh::FindTexture` (`0x004aa410`) reads the suffix that begins at byte 8 of
+the field: an empty suffix is reported as a null texture name and nothing is looked up; a suffix starting `A8` or `A4`
+(either case) requests format 4 or 2, and any other suffix requests 1. The repository's tools classify the field from
+its stored bytes: an unterminated or non-UTF-8 field is an unknown name, a field whose first byte is NUL is a known-empty
+name, and bytes after the first NUL are not part of the name.
+
+At draw time the renderer picks a lane value as
 follows (the renderer is `0x0054d530`):
 1. Take the virtual frame: `floor(render_frame × mode.frame_scaler + mode.start)`, modulo the part's
    `vframe_count`. A part drawn without an animation uses frame 0.

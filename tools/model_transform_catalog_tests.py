@@ -86,6 +86,40 @@ class MatrixClassificationTests(unittest.TestCase):
         self.assertEqual("nonOrthogonal", catalog.classify_orientation(outside)[0])
 
 
+class TextureFormatRuleTests(unittest.TestCase):
+    """CMesh::FindTexture (0x004aa410): the suffix from byte 8 picks the requested format; an empty suffix is no lookup."""
+
+    def test_requested_format_follows_the_suffix_at_byte_8(self) -> None:
+        cases = (
+            ("meshtex\\A8trust5.tga", "utf8-decoded", 4),
+            ("meshtex\\a4x.tga", "utf8-decoded", 2),
+            ("meshtex\\A4X.TGA", "utf8-decoded", 2),
+            ("meshtex\\grass.tga", "utf8-decoded", 1),
+            ("meshtex\\A8", "utf8-decoded", 4),          # two bytes of suffix are enough
+            ("meshtex\\A", "utf8-decoded", 1),           # one byte cannot be A8 or A4
+            ("meshtex\\", "utf8-decoded", None),         # exactly 8 bytes: an empty suffix is a null texture name
+            ("short", "utf8-decoded", None),              # no suffix of its own; the loader would read bytes after the NUL
+            ("meshtex\\\u00e9.tga", "utf8-decoded", 1),   # the suffix is read in bytes: c3 a9 is not A8 or A4
+            ("", "empty", None),
+            (None, "unterminated", None),
+            (None, "invalid-utf8", None),
+        )
+        for name, status, expected in cases:
+            with self.subTest(name=name, status=status):
+                self.assertEqual(expected, catalog.requested_texture_format(name, status))
+
+    def test_a_status_that_is_not_a_readable_name_never_yields_a_format(self) -> None:
+        for status in ("unterminated", "invalid-utf8", "empty", "unavailable"):
+            with self.subTest(status=status):
+                self.assertIsNone(catalog.requested_texture_format("meshtex\\A8trust5.tga", status))
+
+    def test_texb_name_field_geometry_matches_the_parser(self) -> None:
+        stream = fixtures._catalog_stream()
+        start = stream.index(b"TEXB") + 8 + catalog.TEXB_NAME_OFFSET
+        self.assertEqual(b"Skin.dds".ljust(catalog.TEXB_NAME_BYTES, b"\0"), stream[start:start + catalog.TEXB_NAME_BYTES])
+        self.assertEqual((20, 128), (catalog.TEXB_NAME_OFFSET, catalog.TEXB_NAME_BYTES))
+
+
 class MeshProjectionTests(unittest.TestCase):
     def test_empty_part_name_is_not_the_preview_generated_label(self) -> None:
         part = fixtures._catalog_part(0, name="", geometry=True)

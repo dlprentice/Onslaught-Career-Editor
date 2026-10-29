@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-29 (census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-29 (TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -83,7 +83,8 @@ publish, sign, or install anything by themselves.
   at all, so those counts in `meshSummary` (`parts`, `meshesWithNontrivialFrameMaps`,
   `partsWithNontrivialFrameMaps`, `boneMeshes`, `boneCarriers`, `hfovMeshes`, `hfovParts`)
   cover parsed meshes only; its `meshes` count still includes every selected file.
-  The model-metadata v1 record remains available with its existing fields. Census v4
+  The model-metadata v1 record keeps its field names; its texture rows gain `nameStatus` and `nameBytesSha256`, and `name`
+  is null where the 128-byte TEXB name field is unterminated or not UTF-8 (it was the parser's lossy decode). Census v4
   is an output format identifier; there is no separate machine-readable schema for the
   census. Its JSON output is restricted to ignored `local-lab` or `.artifacts` paths.
   It distinguishes
@@ -115,6 +116,15 @@ publish, sign, or install anything by themselves.
   Existing v1 catalogs may contain the older false values or treatment text; regenerate them to get these corrections.
   The legacy `repeats-beyond-0-1` label reports raw mesh UVs outside a 0.01 tolerance before transforms; it does not
   establish the sampler mode or visible repetition.
+  A mesh's texture slots keep the stored 128-byte `TEXB` name as `name` with a `nameStatus` (`utf8-decoded`, `empty`,
+  `unterminated` or `invalid-utf8`) and the SHA-256 of its bytes before the first NUL. An unterminated or non-UTF-8 field is
+  an unknown name: its `name` is null, which is not the same as empty, and bytes after the first NUL are not part of the name.
+  `requestedFormat` is inferred only for a terminated, readable name longer than 8 bytes, by `CMesh::FindTexture`'s rule (the
+  suffix from byte 8: `A8` gives 4, `A4` gives 2, anything else 1; an empty suffix is a null texture name and nothing is looked
+  up), and only such a name is joined to a descriptor. Every other slot's `uses-texture` relationship has no target and the
+  status `unknown-name` (unreadable field), `empty-name` (known empty) or `unresolved` (a readable name shorter than 9 bytes),
+  so it adds nothing to a texture's usage or tiling roll-up; `coverage.json` counts the statuses in `meshTextureNameStatus`.
+  Existing v1 catalogs may hold a lossy name and an inferred format for such slots; regenerate them.
   Mesh hierarchy rows also retain each part's CMSP and MESP payload hashes and its stored BBOX center, half-extents,
   flag and radius, without exporting geometry. The flag is the stored value, not a validity check; non-finite numbers
   are `null`. These are part records before transforms, not world-space or animated bounds. The source is
@@ -219,6 +229,8 @@ publish, sign, or install anything by themselves.
   only: it is a candidate, not proof of the file's ownership or runtime use.
   A selected mesh's internal name is shown only for a NUL-terminated, nonempty
   printable ASCII value within its 300-byte name field; other names are null.
+  A slot's name status is `readable`, `empty` (known empty: its candidates are not evaluated, `candidateStatus`
+  `empty-name-not-evaluated`), `unterminated` or `unsupported-name`; the last two are unknown names.
   Duplicate, absent, unparsed and unsupported-name candidates remain separate
   or unknown. Unsupported `TEXT` names make comparison coverage partial;
   uncomparable or embedded `MESH` names likewise make reverse filename

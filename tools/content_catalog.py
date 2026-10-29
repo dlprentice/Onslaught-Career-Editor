@@ -55,9 +55,13 @@ import language_dat_decode  # noqa: E402
 import world_resources_decode as wrd  # noqa: E402
 import worldheaders_decode  # noqa: E402
 import xap_bank_walk  # noqa: E402
+from model_transform_catalog import requested_texture_format  # noqa: E402
 from safe_generated_output import SecuredOutputRoot  # noqa: E402
 
 SCHEMA_VERSION = 1
+# Stored-name statuses (model_transform_catalog.stored_name) for which the field is a name: readable, or known to be empty.
+# Any other status (unterminated, invalid-utf8) means the field is not a name: unknown, never empty.
+KNOWN_NAME_STATUSES = ("utf8-decoded", "empty")
 ASSET_SCHEMA = "onslaught.content-catalog.asset.v1"
 SURVEY_SCHEMA = "onslaught.content-catalog.survey.v1"
 COVERAGE_SCHEMA = "onslaught.content-catalog.coverage.v1"
@@ -540,13 +544,9 @@ def add_descriptor(descriptors: dict, rel: str, archive_sha: str, chunk_index: i
 
 
 # ---------------------------------------------------------------------------------------------------------- meshes
-def mesh_texture_format(texture_path: str) -> int:
-    name = texture_path[8:]
-    if name[:2].casefold() == "a8":
-        return 4
-    if name[:2].casefold() == "a4":
-        return 2
-    return 1
+def mesh_texture_format(texture_path: str) -> int | None:
+    """The format CMesh::FindTexture requests for a readable stored name; None when none is inferred (see the shared rule)."""
+    return requested_texture_format(texture_path, "utf8-decoded")
 
 
 def uv_ranges(mesh) -> dict[int, list[float]]:
@@ -647,8 +647,10 @@ def catalog_mesh(stream: bytes, *, asset_id: str, name: str, container: str, con
                    "textures": [], "emitters": emitter_count}
     slot_uv = uv_ranges(mesh) if mesh is not None else {}
     for slot in meta.get("textures") or []:
-        fmt = mesh_texture_format(slot["name"])
-        rec["mesh"]["textures"].append({"slot": slot["slotOrdinal"], "name": slot["name"], "requestedFormat": fmt,
+        fmt = requested_texture_format(slot["name"], slot["nameStatus"])
+        rec["mesh"]["textures"].append({"slot": slot["slotOrdinal"], "name": slot["name"],
+                                        "nameStatus": slot["nameStatus"], "nameBytesSha256": slot["nameBytesSha256"],
+                                        "requestedFormat": fmt,
                                         "frames": slot["declaredFrameCount"], "uvRange": slot_uv.get(slot["slotOrdinal"]),
                                         "lanes": dict(zip(slot["laneOrder"], words_to_floats(slot["storedLaneWords"][:5])))
                                         if slot["declaredFrameCount"] == 1 else None})
@@ -703,13 +705,36 @@ def link_mesh_textures(meshes: list[dict], descriptors: list[dict], archives: li
                 "loaded-by-archive", "archive:" + arc, "resolved",
                 [evidence("loader-code", L_READ_RESOURCES + " -> " + L_MESH_DESERIALIZE, "MESH chunk in this archive")]))
         for slot in mesh["mesh"]["textures"]:
+            scope = ("descriptors in the archives that load this mesh" if mesh_archives else
+                     "all archives (this mesh is not loaded by a level archive MESH record)")
+            name_status = slot["nameStatus"]
+            if name_status not in KNOWN_NAME_STATUSES or slot["requestedFormat"] is None:
+                # Nothing is joined. An unreadable name is unknown (it is not a name), a stored empty name is known to be
+                # empty, and a short name has no suffix at byte 8 to classify; the three stay distinct in the status.
+                where = mesh["source"]["container"]
+                if name_status not in KNOWN_NAME_STATUSES:
+                    status = "unknown-name"
+                    ev = [evidence("data", where, f"TEXB name field of slot {slot['slot']} is {name_status}: it is not read as a "
+                                                  "name, so no format is inferred and no texture is joined")]
+                else:
+                    status = "empty-name" if name_status == "empty" else "unresolved"
+                    why = ("the stored name is empty (its first byte is NUL); this catalogue joins nothing, and the loader warns of "
+                           "a null texture name when the suffix from byte 8 is empty" if name_status == "empty" else
+                           "the stored name is shorter than 9 bytes, so it has no suffix from byte 8 to classify; this catalogue "
+                           "joins nothing")
+                    ev = [evidence("data", where, f"TEXB texture name of slot {slot['slot']}"),
+                          evidence("loader-code", L_MESH_FINDTEX, why)]
+                mesh["relationships"].append(relation(
+                    "uses-texture", None, status, ev, slot=slot["slot"], targetName=slot["name"],
+                    targetNameStatus=name_status, requestedFormat=None, scope=scope))
+                continue
             candidates = by_key.get((fold(slot["name"]), slot["requestedFormat"]), [])
             scoped = [d for d in candidates
                       if {o["archive"].casefold() for o in d["textureDescriptor"]["occurrences"]} & mesh_archives]
             targets = scoped if mesh_archives else candidates
             ev = [evidence("data", mesh["source"]["container"], f"TEXB texture name of slot {slot['slot']}"),
                   evidence("loader-code", L_MESH_DESERIALIZE + " -> " + L_MESH_FINDTEX + " -> " + L_TEX_FIND,
-                           "stricmp name match among loaded textures, requested format from the name prefix "
+                           "stricmp name match among loaded textures, requested format from the suffix at byte 8 "
                            "(A8 -> 4, A4 -> 2, else 1) and mip levels -1")]
             status = ("resolved" if len(targets) == 1 else "resolved-per-archive" if targets
                       else "unresolved")
@@ -718,9 +743,8 @@ def link_mesh_textures(meshes: list[dict], descriptors: list[dict], archives: li
             mesh["relationships"].append(relation(
                 "uses-texture", targets[0]["id"] if len(targets) == 1 else None, status, ev,
                 targets=[d["id"] for d in targets] if len(targets) > 1 else None,
-                slot=slot["slot"], targetName=slot["name"], requestedFormat=slot["requestedFormat"],
-                scope="descriptors in the archives that load this mesh" if mesh_archives else
-                "all archives (this mesh is not loaded by a level archive MESH record)"))
+                slot=slot["slot"], targetName=slot["name"], targetNameStatus=name_status,
+                requestedFormat=slot["requestedFormat"], scope=scope))
 
 
 def apply_tiling(meshes: list[dict], descriptors: list[dict], textures: list[dict]) -> None:
@@ -775,7 +799,8 @@ def link_unloaded_mesh_names(textures: list[dict], meshes: list[dict]) -> None:
         if m["id"] in loaded:
             continue
         for slot in m["mesh"]["textures"]:
-            slots[fold(slot["name"])].append(m["id"])
+            if slot["nameStatus"] == "utf8-decoded":     # an unknown or empty name equals no file name
+                slots[fold(slot["name"])].append(m["id"])
     loaded_files = collections.defaultdict(list)
     for t in textures:
         if t.get("loadedByDescriptors"):
@@ -2227,6 +2252,8 @@ def build_coverage(catalog: dict) -> dict:
         "placementsByLevel": dict(sorted(collections.Counter(
             f"{a['placement']['level']:03d}" for a in assets if a["type"] == "placement").items())),
         "textureTiling": dict(collections.Counter(t["upscale"]["tiling"]["status"] for t in textures)),
+        "meshTextureNameStatus": dict(sorted(collections.Counter(
+            slot["nameStatus"] for a in assets if a["type"] == "mesh" for slot in a["mesh"]["textures"]).items())),
         "families": file_coverage,
         "unparsedFamilies": [f["family"] for f in survey["families"] if f["status"] in ("unparsed", "inventoried")],
         "markersByKind": dict(sorted(collections.Counter(a["marker"]["kind"] for a in assets

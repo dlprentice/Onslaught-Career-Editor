@@ -156,6 +156,35 @@ class SelectedArchiveTests(unittest.TestCase):
                 self.assertIsNone(slot["sameArchiveTextCandidates"])
                 self.assertEqual(slot["candidateStatus"], "unknown")
 
+    def test_a_stored_empty_texture_name_is_known_empty_not_unknown(self) -> None:
+        original = fixtures.mesh_stream()
+        old = b"meshtex\\Skin.tga".ljust(128, b"\0")
+        cases = (      # field, name, nameStatus, candidateStatus
+            (bytes(128), "", "empty", "empty-name-not-evaluated"),
+            (b"\0leftover bytes".ljust(128, b"\0"), "", "empty", "empty-name-not-evaluated"),
+            (b"X" * 128, None, "unterminated", "unknown"),
+            (b"meshtex\\\xff.tga".ljust(128, b"\0"), None, "unsupported-name", "unknown"),
+            ("meshtex\\\u00e9.tga".encode().ljust(128, b"\0"), None, "unsupported-name", "unknown"),
+            (b"short\0".ljust(128, b"\0"), "short", "readable", "unknown"),
+        )
+        for raw, name, status, candidate in cases:
+            with self.subTest(raw=raw[:14]):
+                self.mesh.write_bytes(fixtures.aya(original.replace(old, raw, 1)))
+                slot = xref.report_for(self.archive, [self.mesh])["selectedMeshes"][0]["textures"][0]
+                self.assertEqual((name, status, candidate), (slot["name"], slot["nameStatus"], slot["candidateStatus"]))
+                self.assertIsNone(slot["requestedFormat"])
+                self.assertIsNone(slot["sameArchiveTextCandidates"])
+                json.dumps(slot, allow_nan=False)
+
+    def test_slot_format_is_the_catalogues_rule(self) -> None:
+        # One rule in two tools: they must not drift again (the catalogue used to default every name to format 1).
+        for name in ("meshtex\\A8trust5.tga", "meshtex\\a4x.tga", "meshtex\\grass.tga", "meshtex\\A8", "meshtex\\A",
+                     "meshtex\\", "short", "x"):
+            with self.subTest(name=name):
+                self.assertEqual(xref.slot_format(name), fixtures.catalog.mesh_texture_format(name))
+        for name in ("", "meshtex\\caf\u00e9.tga", "meshtex\\\x7f.tga"):      # the xref reports ASCII names only
+            self.assertIsNone(xref.slot_format(name))
+
     def test_selected_internal_name_is_bounded_and_never_invented(self) -> None:
         original = fixtures.mesh_stream()
         start = 8 + 0x24  # CMSH header plus the source-backed name offset.

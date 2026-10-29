@@ -70,6 +70,9 @@ HAS_OPEN_DIR_FD = os.open in os.supports_dir_fd
 # CMeshPart::mName[32] +0xdc. Never include the following stored pointer.
 MESH_NAME_OFFSET, MESH_NAME_BYTES = 0x24, 300
 PART_NAME_OFFSET, PART_NAME_BYTES = 0xdc, 32
+# An MSHT holds one TEXB: five f32 lanes (20 bytes at one frame), then the 128-byte name CMesh::FindTexture looks up
+# (src/mesh.cpp, CMesh::Deserialize and CMesh::FindTexture @0x004aa410). Offsets here are within the TEXB payload.
+TEXB_NAME_OFFSET, TEXB_NAME_BYTES = 20, 128
 
 
 def stored_name(field: bytes) -> tuple[str | None, str, str | None]:
@@ -85,6 +88,24 @@ def stored_name(field: bytes) -> tuple[str | None, str, str | None]:
         return data.decode("utf-8"), "utf8-decoded", digest
     except UnicodeDecodeError:
         return None, "invalid-utf8", digest
+
+
+def requested_texture_format(name: str | None, status: str) -> int | None:
+    """The texture format CMesh::FindTexture (0x004aa410) requests for a stored name, or None when it is not inferred.
+
+    The loader reads the suffix that begins at byte 8 of the name field. An empty suffix is a null texture name and nothing
+    is looked up; a suffix beginning "A8" or "A4" (either case) requests format 4 or 2, and any other suffix requests 1.
+    Only a terminated, valid name longer than 8 bytes is classified here. A shorter name has no suffix of its own: the loader
+    would read whatever bytes follow its terminator, which this module does not interpret. An unreadable name (unterminated or
+    not UTF-8, see stored_name) is not a name at all, so no format is inferred from it.
+    """
+    if status != "utf8-decoded" or name is None:
+        return None
+    suffix = name.encode("utf-8")[8:]
+    if not suffix:
+        return None
+    prefix = suffix[:2].lower()
+    return 4 if prefix == b"a8" else 2 if prefix == b"a4" else 1
 
 
 def classify_orientation(rows: tuple[tuple[float, ...], ...]) -> tuple[str, float]:
