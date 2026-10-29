@@ -74,9 +74,9 @@ public partial class LevelEditorCapture : SceneTree
                 }
             }
             if (_expected.Length == 0) _expected = _mode == "typed" ? TypedSha256 : DragSha256;
-            if (_output.Length == 0 || _steamRoot.Length == 0 || !Directory.Exists(_steamRoot) || _mode is not ("drag" or "typed" or "markers" or "scripts" or "names"))
+            if (_output.Length == 0 || _steamRoot.Length == 0 || !Directory.Exists(_steamRoot) || _mode is not ("drag" or "typed" or "markers" or "scripts" or "names" or "flow"))
             {
-                GD.PrintErr("--output=DIR and --steam-root=DIR (a Steam-shaped folder holding the game) are required; --mode is drag, typed, markers, scripts or names.");
+                GD.PrintErr("--output=DIR and --steam-root=DIR (a Steam-shaped folder holding the game) are required; --mode is drag, typed, markers, scripts, names or flow.");
                 return;
             }
             Directory.CreateDirectory(_output);
@@ -177,6 +177,7 @@ public partial class LevelEditorCapture : SceneTree
         else if (_mode == "drag") await DragAcceptance(viewport, app, page, label, mods);
         else if (_mode == "scripts") await ScriptsView(viewport, app, page, label);
         else if (_mode == "names") await NamesView(viewport, app, page, label);
+        else if (_mode == "flow") await ScriptsFlow(viewport, app, page, label);
         else await Markers(viewport, app, page, label, mods);
         viewport.QueueFree();
         await Settle();
@@ -231,6 +232,78 @@ public partial class LevelEditorCapture : SceneTree
     }
 
     /// <summary>The links from a source's quoted texts to what they name, and the waypoint paths on the map. Writes nothing.</summary>
+    /// <summary>
+    /// The Scripts view across level changes, in a real window: the engine keeps a source view's first visible line and refreshes it only while the view is
+    /// shown, so a long source scrolled to its end, the Scripts switch turned off, another level opened and the switch turned on again used to open the new level's
+    /// first script scrolled into its middle or past its end (Godot logged "Index p_line = N is out of bounds"; this run fails on any engine error line). The
+    /// route's headless run cannot show it: the view has no size there. Each step of the chain must open its level's first script at the top.
+    /// </summary>
+    private async Task ScriptsFlow(SubViewport viewport, CompanionApp app, LevelEditorPage page, string label)
+    {
+        string root = app.Game.Folder!.AssetRoot;
+        int[] wanted = [100, 110, 200, 201, 300, 100];
+        int[] levels = [.. wanted.Where(level => page.Model!.Levels.Any(archive => archive.Level == level))];
+        Report(levels.Length >= 2, $"the game has the levels the flow goes through: {string.Join(", ", levels)}");
+        int top = 0, steps = 0;
+        for (int step = 0; step + 1 < levels.Length; step++)
+        {
+            // the level's own script with the longest source: scrolled to its end, with the caret on the last line
+            Report(page.OpenLevel(levels[step]), $"level {levels[step]} opens");
+            await Settle();
+            page.ScriptsToggle.ButtonPressed = true;
+            await Settle();
+            ScriptEntry? longest = page.Model!.Scripts.Where(entry => !entry.FromBaseWorld)
+                .OrderByDescending(entry => ScriptSources.Find(root, entry.SourceLevel, entry.Summary.Name).Source?.Lines ?? 0).FirstOrDefault();
+            if (longest is not null) page.Scripts.Select(longest.Summary.Name);
+            await Settle();
+            int lines = page.Scripts.Source.GetLineCount();
+            page.Scripts.Source.ScrollVertical = Math.Max(0, lines - 5);
+            page.Scripts.Source.SetCaretLine(lines - 1);
+            await Settle();
+            page.ScriptsToggle.ButtonPressed = false;
+            await Settle();
+            Report(page.OpenLevel(levels[step + 1]), $"level {levels[step + 1]} opens with the Scripts switch off (after {longest?.Summary.Name}, {lines} lines, first visible line {page.Scripts.Source.GetFirstVisibleLine()})");
+            await Settle();
+            page.ScriptsToggle.ButtonPressed = true;
+            await Settle();
+            await Settle();
+            int first = page.Scripts.Source.GetFirstVisibleLine(), caret = page.Scripts.Source.GetCaretLine();
+            double scroll = page.Scripts.Source.ScrollVertical;
+            steps++;
+            if (first == 0 && caret == 0 && scroll == 0) top++;
+            Report(first == 0 && caret == 0 && scroll == 0,
+                $"level {levels[step + 1]}'s first script, {page.Scripts.Current?.Summary.Name}, opens at its top: first visible line {first}, caret line {caret}, scroll {scroll} ({page.Scripts.Source.GetLineCount()} lines)");
+        }
+        Report(steps > 0 && top == steps, $"{top} of {steps} level changes opened the first script at its top");
+        // The same with the page left for another (the game folder or the level changed behind it) instead of the Scripts switch turned off.
+        for (int step = 0; step + 1 < levels.Length; step++)
+        {
+            page.OpenLevel(levels[step]);
+            await Settle();
+            page.ScriptsToggle.ButtonPressed = true;
+            await Settle();
+            ScriptEntry? longest = page.Model!.Scripts.Where(entry => !entry.FromBaseWorld)
+                .OrderByDescending(entry => ScriptSources.Find(root, entry.SourceLevel, entry.Summary.Name).Source?.Lines ?? 0).FirstOrDefault();
+            if (longest is not null) page.Scripts.Select(longest.Summary.Name);
+            await Settle();
+            int lines = page.Scripts.Source.GetLineCount();
+            page.Scripts.Source.ScrollVertical = Math.Max(0, lines - 5);
+            page.Scripts.Source.SetCaretLine(lines - 1);
+            await Settle();
+            app.Navigate("home");
+            await Settle();
+            page.OpenLevel(levels[step + 1]);
+            await Settle();
+            app.Navigate("levels");
+            await Settle();
+            await Settle();
+            int first = page.Scripts.Source.GetFirstVisibleLine(), caret = page.Scripts.Source.GetCaretLine();
+            Report(first == 0 && caret == 0 && page.Scripts.Source.ScrollVertical == 0,
+                $"leaving the page: level {levels[step + 1]}'s first script, {page.Scripts.Current?.Summary.Name}, opens at its top: first visible line {first}, caret line {caret} ({page.Scripts.Source.GetLineCount()} lines)");
+        }
+        await Shot(viewport, label, "level-editor-flow");
+    }
+
     private async Task NamesView(SubViewport viewport, CompanionApp app, LevelEditorPage page, string label)
     {
         LevelEditorModel model = page.Model!;

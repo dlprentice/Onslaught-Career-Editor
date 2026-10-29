@@ -407,6 +407,9 @@ internal sealed class LevelEditorPage : Page
         return opened;
     }
 
+    /// <summary>The source view goes to its top while the page is shown: it is hidden with the page, and a hidden view keeps its first visible line (see ScriptsPanel.ScrollToTop).</summary>
+    internal override void Leave() => _scripts.ScrollToTop();
+
     private void OnModelChanged()
     {
         _problemPanel.Visible = _model?.Problem is not null;
@@ -609,6 +612,7 @@ internal sealed class LevelEditorPage : Page
     /// <summary>The Scripts switch: the level's compiled scripts and their source in place of the table and the map.</summary>
     private void ShowScripts(bool on)
     {
+        if (!on) _scripts.ScrollToTop();  // while it is still shown: a hidden view keeps its first visible line (see ScriptsPanel.ScrollToTop)
         _split.Visible = !on;
         _scripts.Visible = on;
         MapToggle.Visible = !on;

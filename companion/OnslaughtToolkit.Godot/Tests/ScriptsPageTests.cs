@@ -99,6 +99,10 @@ internal static class ScriptsPageTests
         baseWorld.Things[1].Init.Name = "Base Hut";  // an object the level's table does not list
         baseWorld.WaypointPaths[0].Name = "Base Path";  // a path of the base world (the game finds those before the level's own paths of the same name); its name differs from the level's "Path A"
         File.WriteAllBytes(archive, LevelArchiveBytes(131, 130, baseWorld.Write(), real.Write()));
+        // A second level with one short script: what the view shows after the level is changed (the base world slot of its archive is left empty: no base level).
+        WorldBody shortWorld = LevelScriptTests.Body(LevelScriptTests.Script("shorty", [0], []));
+        File.WriteAllBytes(Path.Combine(resources, "140_res_PC.aya"), LevelArchiveBytes(-1, 140, shortWorld.Write(), shortWorld.Write()));
+        Source(install.Game, 140, "shorty", "// shorty\r\ninit()\r\n{\r\n}\r\n");
         Source(install.Game, 130, "alpha", "// alpha, the level's own\r\ninit()\r\n{\r\n\tPause(1);\r\n}\r\n");
         Source(install.Game, 130, "gamma", Gamma);
         Source(install.Game, 130, "delta", string.Concat(Enumerable.Range(0, 300).Select(line => $"// line {line}\r\n")));  // long enough to scroll far down
@@ -304,6 +308,25 @@ internal static class ScriptsPageTests
             check.That(page.ObjectPathButtons.Count == 0, "an object on no path offers none");
             page.OpenLevel(130);
             check.That(page.Map.HighlightedPath is null && page.HidePath.Disabled, "opening a level again drops the highlight");
+
+            // The engine keeps the view's first visible line and refreshes it only while the view is shown: a long source scrolled to its end, the Scripts switch turned off,
+            // another level opened and the switch turned on again must show the new level's first script from its top, with no engine error (the run fails on one).
+            check.That(page.ShowScript("delta") && page.Scripts.Source.GetLineCount() == 301, "a long source is on view");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            page.Scripts.Source.ScrollVertical = page.Scripts.Source.GetLineCount() - 5;
+            page.Scripts.Source.SetCaretLine(page.Scripts.Source.GetLineCount() - 1);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            page.ScriptsToggle.ButtonPressed = false;
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.OpenLevel(140), "another level opens while the Scripts switch is off");
+            for (int frame = 0; frame < 4; frame++) await Frame(tree);
+            page.ScriptsToggle.ButtonPressed = true;
+            for (int frame = 0; frame < 4; frame++) await Frame(tree);
+            check.That(page.Scripts.Current?.Summary.Name == "shorty" && page.Scripts.Source.GetFirstVisibleLine() == 0 && page.Scripts.Source.GetCaretLine() == 0 && page.Scripts.Source.ScrollVertical == 0,
+                $"the first script of the new level opens at its top: {page.Scripts.Current?.Summary.Name}, first visible line {page.Scripts.Source.GetFirstVisibleLine()}, caret line {page.Scripts.Source.GetCaretLine()}, scroll {page.Scripts.Source.ScrollVertical}");
+            page.ScriptsToggle.ButtonPressed = false;
+            check.That(page.OpenLevel(130), "the first level opens again");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
 
             // Nothing was written, and the move editor still works on the objects.
             page.ScriptsToggle.ButtonPressed = false;
