@@ -44,6 +44,108 @@ internal static class LevelScriptTests
         Catalog(check);
         Sources(output, check);
         Model(output, check);
+        Names(check);
+        Paths(check);
+    }
+
+    private static void Names(Checks check)
+    {
+        string call = "\tPostEvent(\"go now\");";  // tab 0, PostEvent 1 to 9, ( 10, quote 11, go now 12 to 17, quote 18, ) 19, ; 20
+        check.That(ScriptNames.TokenAt(call, 1) == new SourceToken("PostEvent", false, 1, 9) && ScriptNames.TokenAt(call, 10) == new SourceToken("PostEvent", false, 1, 9),
+            "a caret in a word, or just after it, is on that word");
+        check.That(ScriptNames.TokenAt(call, 11) == new SourceToken("go now", true, 12, 6) && ScriptNames.TokenAt(call, 15) == new SourceToken("go now", true, 12, 6) && ScriptNames.TokenAt(call, 19) == new SourceToken("go now", true, 12, 6),
+            "a caret anywhere from before the opening quote to after the closing one is on the quoted text, which is shown without its quotes");
+        check.That(ScriptNames.TokenAt(call, 20) is null && ScriptNames.TokenAt(call, 21) is null && ScriptNames.TokenAt(call, 0) is null, "and one on a symbol, a space or past the end is on nothing");
+        check.That(ScriptNames.TokenAt(call, -1) is null && ScriptNames.TokenAt(call, call.Length + 1) is null && ScriptNames.TokenAt("", 0) is null, "a column outside the line, and an empty line, are on nothing");
+        check.That(ScriptNames.TokenAt("Die(); // \"go\" says", 12) is null && ScriptNames.TokenAt("Die(); // \"go\" says", 2)?.Text == "Die" && ScriptNames.TokenAt("// only", 3) is null,
+            "a comment says nothing, even a quoted text in it, and the code before it still does");
+        check.That(ScriptNames.TokenAt("Print(\"open", 8) == new SourceToken("open", true, 7, 4), "a quote never closed runs to the end of the line");
+        check.That(ScriptNames.TokenAt("x = foo_bar2 + 10;", 6)?.Text == "foo_bar2" && ScriptNames.TokenAt("x = foo_bar2 + 10;", 16) is null && ScriptNames.TokenAt("a // b \"c\"", 1)?.Text == "a",
+            "a word may hold an underscore and digits, and a number is not a word");
+        check.That(ScriptNames.TokenAt("x = a / b; foo", 12)?.Text == "foo" && ScriptNames.TokenAt("x = a / b; \"q\"", 12)?.Text == "q", "a single slash is not a comment");
+        check.That(ScriptNames.TokenAt("\"a\" \"b\"", 5) == new SourceToken("b", true, 5, 1) && ScriptNames.TokenAt("\"a\" \"b\"", 2) == new SourceToken("a", true, 1, 1),
+            "two quoted texts on a line are told apart");
+
+        WorldBody body = Body(Script("alpha", [0], [], ("Pause", 1)), Script("beta", [], ["go"]));
+        body.Things[0].Init.Name = "Tank 1";
+        body.Things[1].Init.Name = "tank 1";
+        body.Things[2].Init.Name = "Tank 1";
+        IReadOnlyList<ScriptEntry> own = [.. ScriptCatalog.Of(body).Select(summary => new ScriptEntry(summary, 100, FromBaseWorld: false))];
+        IReadOnlyList<ScriptEntry> both = [.. own, new ScriptEntry(own[0].Summary with { Uses = [] }, 1, FromBaseWorld: true)];
+        check.That(ScriptNames.Resolve("Tank 1", body, own).SequenceEqual([new NameMatch(NameKind.Object, "unit 0 · Tank 1", 0), new NameMatch(NameKind.Object, "waypoint 2 · Tank 1", 2)]),
+            "a name matches the objects that have it exactly, and not the ones that differ in letter case when some match exactly");
+        check.That(ScriptNames.Resolve("TANK 1", body, own).SequenceEqual([new NameMatch(NameKind.Object, "unit 0 · Tank 1", 0, false), new NameMatch(NameKind.Object, "unit 1 · tank 1", 1, false), new NameMatch(NameKind.Object, "waypoint 2 · Tank 1", 2, false)]),
+            "and with no exact match it falls back to the other letter case, marked so");
+        check.That(ScriptNames.Resolve("Path A", body, own).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 3 points", 0)]) && ScriptNames.Resolve("path a", body, own).Count == 0,
+            "a waypoint path is matched by its exact name, with its point count");
+        check.That(ScriptNames.Resolve("alpha", body, both).SequenceEqual([new NameMatch(NameKind.Script, "script alpha", 0), new NameMatch(NameKind.Script, "script alpha (base world)", 2)]),
+            "a script is matched by its name, the base world's too");
+        check.That(ScriptNames.Resolve("ALPHA", body, both).Count == 0, "a script is matched in its own letter case only");
+        check.That(ScriptNames.Resolve("go", body, own).SequenceEqual([new NameMatch(NameKind.Handler, "event handled by beta", 1)]) && ScriptNames.Resolve("Go", body, own).Count == 0,
+            "a script that handles an event of that name is found, in that case only");
+        check.That(ScriptNames.Resolve("", body, own).Count == 0 && ScriptNames.Resolve("nothing", body, own).Count == 0, "an empty text and an unknown name match nothing");
+        // The base world's objects follow the level's own, by the same rule, each world on its own: they are said, and the page offers nothing to go to.
+        WorldBody baseBody = Body(Script("base", [], []));
+        baseBody.Things[0].Init.Name = "Tank 1";
+        baseBody.Things[1].Init.Name = "tank 1";
+        baseBody.Things[2].Init.Name = "Base Hut";
+        baseBody.Things[3].Init.Name = "DEPOT";
+        body.Things[3].Init.Name = "Depot";
+        check.That(ScriptNames.Resolve("Tank 1", body, own, baseBody).SequenceEqual([new NameMatch(NameKind.Object, "unit 0 · Tank 1", 0), new NameMatch(NameKind.Object, "waypoint 2 · Tank 1", 2),
+                                                                                   new NameMatch(NameKind.BaseObject, "unit 0 · Tank 1", 0)]),
+            "an object of the base world that has the name exactly is listed after the level's own");
+        check.That(ScriptNames.Resolve("TANK 1", body, own, baseBody).SequenceEqual([new NameMatch(NameKind.Object, "unit 0 · Tank 1", 0, false), new NameMatch(NameKind.Object, "unit 1 · tank 1", 1, false),
+                                                                                   new NameMatch(NameKind.Object, "waypoint 2 · Tank 1", 2, false), new NameMatch(NameKind.BaseObject, "unit 0 · Tank 1", 0, false),
+                                                                                   new NameMatch(NameKind.BaseObject, "unit 1 · tank 1", 1, false)]),
+            "and with no exact match the base world falls back to the other letter case too, marked so");
+        check.That(ScriptNames.Resolve("Base Hut", body, own, baseBody).SequenceEqual([new NameMatch(NameKind.BaseObject, "waypoint 2 · Base Hut", 2)]) &&
+                   ScriptNames.Resolve("base hut", body, own, baseBody).SequenceEqual([new NameMatch(NameKind.BaseObject, "waypoint 2 · Base Hut", 2, false)]),
+            "a name only a base-world object has is found there, row and all");
+        check.That(ScriptNames.Resolve("Depot", body, own, baseBody).SequenceEqual([new NameMatch(NameKind.Object, "waypoint 3 · Depot", 3), new NameMatch(NameKind.BaseObject, "waypoint 3 · DEPOT", 3, false)]) &&
+                   ScriptNames.Resolve("DEPOT", body, own, baseBody).SequenceEqual([new NameMatch(NameKind.Object, "waypoint 3 · Depot", 3, false), new NameMatch(NameKind.BaseObject, "waypoint 3 · DEPOT", 3)]),
+            "an exact name in one world does not silence the other-case matches of the other");
+        check.That(ScriptNames.Resolve("Base Hut", body, own).Count == 0 && ScriptNames.Resolve("Base Hut", body, own, null).Count == 0 && ScriptNames.Resolve("", body, own, baseBody).Count == 0 &&
+                   ScriptNames.Resolve("Path A", body, own, baseBody).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 3 points", 0)]),
+            "without a base world there are none, an empty text matches nothing, and the base world's paths are not names to follow here");
+        body.Things[3].Init.Name = "";
+        body.WaypointPaths[0].Slots.Clear();
+        check.That(ScriptNames.Resolve("Path A", body, own).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 0 points", 0)]), "a path with no points is still matched");
+        body.WaypointPaths[0].Slots.Add(7);
+        check.That(ScriptNames.Resolve("Path A", body, own)[0].Label == "path Path A · 1 point", "and the count says one point in the singular");
+    }
+
+    private static void Paths(Checks check)
+    {
+        WorldBody body = Body(Script("alpha", [], []));  // the authored body has one path, "Path A", through rows 1, 2 and 0
+        check.That(WaypointCatalog.Through(body, 2).SequenceEqual([new PathStop(0, "Path A", 2, 3)]) && WaypointCatalog.Through(body, 0).SequenceEqual([new PathStop(0, "Path A", 3, 3)]) &&
+                   WaypointCatalog.Through(body, 1).SequenceEqual([new PathStop(0, "Path A", 1, 3)]) && WaypointCatalog.Through(body, 4).Count == 0, "an object's place on a path is its point number of the path's count");
+        WaypointPath second = new() { Name = "Loop" };
+        second.Slots.AddRange([2, 2, 4]);
+        body.WaypointPaths.Add(second);
+        check.That(WaypointCatalog.Through(body, 2).SequenceEqual([new PathStop(0, "Path A", 2, 3), new PathStop(1, "Loop", 1, 3), new PathStop(1, "Loop", 2, 3)]),
+            "an object that a path passes through twice is listed twice, and paths in the world's order");
+        WaypointPath wild = new() { Name = "Wild" };
+        wild.Slots.AddRange([1, 99, -1, 2, (short)body.Things.Count, (short)(body.Things.Count - 1)]);
+        check.That(WaypointCatalog.Rows(body, wild).SequenceEqual([1, 2, body.Things.Count - 1]), "the slots that name no object are left out");
+        MapView view = new();
+        view.Resize(400, 300);
+        view.FitBounds(100, 100, 200, 150);
+        (double leftX, double bottomY) = view.ToScreen(100, 100);
+        (double rightX, double topY) = view.ToScreen(200, 150);
+        check.That(Math.Abs(view.Scale - 3.2) < 1e-9 && Math.Abs(view.CenterX - 150) < 1e-9 && Math.Abs(view.CenterY - 125) < 1e-9 && Math.Abs(leftX - 40) < 1e-9 && Math.Abs(rightX - 360) < 1e-9 && Math.Abs(topY - 70) < 1e-9 && Math.Abs(bottomY - 230) < 1e-9,
+            $"a box is shown as large as will fit with a margin of 40 pixels, centred: scale {view.Scale}, corners {leftX},{bottomY} and {rightX},{topY}");
+        view.Resize(500, 400);
+        check.That(Math.Abs(view.Scale - 3.2) < 1e-9 && Math.Abs(view.CenterX - 150) < 1e-9, "the view is then the player's own: a new size keeps it");
+        view.FitBounds(300, 300, 300, 300);
+        check.That(view.Scale == 8 && MapView.MaxFitScale == 8 && view.CenterX == 300 && view.CenterY == 300, "a single point is not blown up past the fit zoom");
+        view.FitBounds(600, 600, 700, 700);
+        check.That(view.CenterX == 512 && view.CenterY == 512, "a box beyond the square puts the view's centre at the square's edge, as panning does");
+        view.FitBounds(0, 0, 512, 512);
+        check.That(Math.Abs(view.Scale - 0.625) < 1e-9 && view.CenterX == 256 && view.CenterY == 256, "a box as large as the square is fitted with the same margin");
+        MapView tiny = new();
+        tiny.Resize(60, 60);
+        tiny.FitBounds(10, 10, 20, 20);
+        check.That(tiny.Scale == tiny.MinScale, "a view too small for the margin settles on the smallest scale rather than a negative one");
     }
 
     private static void Tables(Checks check)
@@ -327,7 +429,11 @@ internal static class LevelScriptTests
             "a base world of level 0 is listed, its scripts carry no users, and its source is looked for in level 0's folder");
         check.That(LevelEditorModel.ListScripts(ownBody, new LevelWorlds(-1, 9, baseBytes, null)).Count == 1 && LevelEditorModel.ListScripts(ownBody, new LevelWorlds(5, 9, null, null)).Count == 1 &&
                    LevelEditorModel.ListScripts(ownBody, new LevelWorlds(5, 9, [1, 2, 3], null)).Count == 1, "no base world, a base level of -1 and a base body that does not read list the level's own scripts only");
-        check.That(model.Open(300) is false && model.Scripts.Count == 0, "a level that cannot be opened lists no scripts");
+        check.That(LevelEditorModel.ReadBaseWorld(new LevelWorlds(0, 9, baseBytes, null))?.Things.Count == baseBody.Things.Count && LevelEditorModel.ReadBaseWorld(new LevelWorlds(-1, 9, baseBytes, null)) is null &&
+                   LevelEditorModel.ReadBaseWorld(new LevelWorlds(5, 9, null, null)) is null && LevelEditorModel.ReadBaseWorld(new LevelWorlds(5, 9, [1, 2, 3], null)) is null,
+            "the base world is read when the archive has one at a level of 0 or more, and is none when it has none or does not read");
+        check.That(model.BaseWorld is { } openBase && openBase.Things.Count > 0 && model.BaseLevel == 100, "the model keeps the open level's base world");
+        check.That(model.Open(300) is false && model.Scripts.Count == 0 && model.BaseWorld is null, "a level that cannot be opened lists no scripts and has no base world");
         check.That(model.Open(200) && model.Scripts.Count == 2 && model.Session!.Body.Scripts.Count == 1, "and opening one again lists its scripts afresh");
         Directory.Delete(game, true);
     }

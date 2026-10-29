@@ -24,6 +24,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
     private string _filter = "";
     private ScriptEntry? _current;
     private ScriptSourceResult? _currentSource;
+    private SourceToken? _token;
 
     internal ScriptsPanel()
     {
@@ -47,16 +48,25 @@ internal sealed partial class ScriptsPanel : VBoxContainer
 
         _info = this.Add(Build.Text("", "Faint", wrap: false, clip: true));
         _info.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        _info.MouseFilter = MouseFilterEnum.Pass;  // so that the tooltip, which has the whole path, shows
         _source = this.Add(NewSourceView());
         _source.SizeFlagsStretchRatio = 2.2f;
+        _source.CaretChanged += OnCaret;
     }
 
     /// <summary>Raised when the selected script changes (null: none is selected). The source result is what was found for it.</summary>
     internal event Action<ScriptEntry?, ScriptSourceResult?>? Selected;
 
+    /// <summary>Raised when the quoted text or word under the source's caret changes (null: the caret is on none).</summary>
+    internal event Action<SourceToken?>? NameUnderCaret;
+
+    /// <summary>The quoted text or word the caret is on in the source.</summary>
+    internal SourceToken? Token => _token;
+
     internal Tree List => _list;
     internal CodeEdit Source => _source;
     internal string Info => _info.Text;
+    internal Label InfoLabel => _info;
     internal string EmptyText => _empty.Visible ? _empty.Text : "";
     internal ScriptEntry? Current => _current;
     internal ScriptSourceResult? CurrentSource => _currentSource;
@@ -199,6 +209,15 @@ internal sealed partial class ScriptsPanel : VBoxContainer
             _info.TooltipText = "";
         }
         Selected?.Invoke(entry, _currentSource);
+    }
+
+    private void OnCaret()
+    {
+        int line = _source.GetCaretLine();
+        SourceToken? token = line >= 0 && line < _source.GetLineCount() ? ScriptNames.TokenAt(_source.GetLine(line), _source.GetCaretColumn()) : null;
+        if (token == _token) return;
+        _token = token;
+        NameUnderCaret?.Invoke(token);
     }
 
     private void ClearSelection()

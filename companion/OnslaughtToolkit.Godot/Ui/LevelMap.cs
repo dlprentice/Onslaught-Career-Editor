@@ -9,7 +9,8 @@ namespace OnslaughtToolkit.Companion.Ui;
 /// A top-down map of a level: its terrain as hill-shaded relief with X running right and Y running up, each placed object as a mark by
 /// kind (changed ones in amber, the selected one ringed), and a readout of the world position and ground height under the pointer. The
 /// wheel zooms about the pointer, dragging the background pans, a click on a mark selects it, and dragging a mark moves it: the mark
-/// follows the pointer, Esc puts it back, and letting go asks for the move (one drag is one move, so one undo). Every conversion between
+/// follows the pointer, Esc puts it back, and letting go asks for the move (one drag is one move, so one undo). The level's waypoint
+/// paths can be drawn through the marks they name (all of them faintly, or one highlighted and numbered). Every conversion between
 /// pixels and the world goes through <see cref="MapView"/>. The control draws and reports; it changes nothing itself.
 /// </summary>
 internal sealed partial class LevelMap : Control
@@ -19,6 +20,10 @@ internal sealed partial class LevelMap : Control
     private ImageTexture? _relief;
     private Heightfield? _terrain;
     private IReadOnlyList<ObjectRow> _rows = [];
+    private Dictionary<int, ObjectRow> _byIndex = [];
+    private IReadOnlyList<WaypointPath> _paths = [];
+    private int? _highlightedPath;
+    private bool _showAllPaths;
     private int? _selected, _hover;
     private (int Row, double X, double Y)? _drag;
     private int? _pressedRow;
@@ -55,6 +60,23 @@ internal sealed partial class LevelMap : Control
 
     internal MapView View => _view;
     internal int? Selected => _selected;
+
+    /// <summary>The index (in the level's path list) of the path drawn highlighted, or null.</summary>
+    internal int? HighlightedPath => _highlightedPath;
+
+    /// <summary>Whether every path is drawn (faintly) and not only the highlighted one.</summary>
+    internal bool ShowAllPaths
+    {
+        get => _showAllPaths;
+        set
+        {
+            _showAllPaths = value;
+            QueueRedraw();
+        }
+    }
+
+    /// <summary>How many paths have a line to draw: two or more of their points name an object of the level.</summary>
+    internal int DrawablePaths => _paths.Count(path => PathPoints(path).Count >= 2);
     internal bool Dragging => _drag is not null;
 
     /// <summary>
@@ -86,6 +108,7 @@ internal sealed partial class LevelMap : Control
     internal void SetRows(IReadOnlyList<ObjectRow> rows)
     {
         _rows = rows;
+        _byIndex = rows.ToDictionary(row => row.Index);
         if (_selected is int selected && rows.All(row => row.Index != selected)) _selected = null;
         QueueRedraw();
     }
@@ -94,6 +117,41 @@ internal sealed partial class LevelMap : Control
     {
         _selected = row;
         QueueRedraw();
+    }
+
+    /// <summary>The level's waypoint paths (by the objects they pass through). A highlighted path that the new list does not have is dropped.</summary>
+    internal void SetPaths(IReadOnlyList<WaypointPath> paths)
+    {
+        _paths = paths;
+        if (_highlightedPath is int highlighted && highlighted >= paths.Count) _highlightedPath = null;
+        QueueRedraw();
+    }
+
+    /// <summary>Highlights a path (null for none), and brings it into view when asked.</summary>
+    internal void HighlightPath(int? index, bool fit = false)
+    {
+        _highlightedPath = index is int i && i >= 0 && i < _paths.Count ? i : null;
+        if (fit && _highlightedPath is int shown)
+        {
+            List<(double X, double Y)> points = [];
+            foreach (short slot in _paths[shown].Slots)
+                if (_byIndex.TryGetValue(slot, out ObjectRow? row)) points.Add((row.Position.X, row.Position.Y));
+            if (points.Count > 0) _view.FitBounds(points.Min(point => point.X), points.Min(point => point.Y), points.Max(point => point.X), points.Max(point => point.Y));
+        }
+        QueueRedraw();
+    }
+
+    /// <summary>The screen positions of a path's points that name an object of the level, in the path's order (a mark being dragged is where it is dragged to).</summary>
+    private List<Vector2> PathPoints(WaypointPath path)
+    {
+        List<Vector2> points = [];
+        foreach (short slot in path.Slots)
+            if (_byIndex.TryGetValue(slot, out ObjectRow? row))
+            {
+                (double x, double y) = MarkAt(row);
+                points.Add(ToScreen(x, y));
+            }
+        return points;
     }
 
     /// <summary>Back to the whole square.</summary>
@@ -239,8 +297,65 @@ internal sealed partial class LevelMap : Control
         DrawRect(square, Palette.Border, false, 1.5f);
         if (_relief is null) DrawString(ThemeDB.FallbackFont, new Vector2(square.Position.X + 12, square.Position.Y + 24), "No terrain to draw for this level.", HorizontalAlignment.Left, -1, 13, Palette.Muted);
 
+        DrawPaths();
         foreach (ObjectRow row in _rows.OrderBy(Layer)) DrawMark(row, row.Index == _selected, row.Index == _hover || _drag?.Row == row.Index);
+        DrawPathNumbers();
         DrawReadout();
+    }
+
+    /// <summary>The paths under the marks: every one as a faint line when asked for, the highlighted one bold, with an arrowhead on each leg and a ring round each point.</summary>
+    private void DrawPaths()
+    {
+        for (int index = 0; index < _paths.Count; index++)
+        {
+            bool highlighted = index == _highlightedPath;
+            if (!highlighted && !_showAllPaths) continue;
+            List<Vector2> points = PathPoints(_paths[index]);
+            if (points.Count == 0) continue;
+            if (!highlighted)
+            {
+                if (points.Count > 1) DrawPolyline([.. points], new Color(Palette.Data, 0.40f), 1.2f, true);
+                continue;
+            }
+            Color colour = Palette.AccentHover;
+            if (points.Count > 1)
+            {
+                DrawPolyline([.. points], new Color(Palette.Background, 0.7f), 5f, true);
+                DrawPolyline([.. points], colour, 2.5f, true);
+                for (int leg = 1; leg < points.Count; leg++)
+                {
+                    Vector2 a = points[leg - 1], b = points[leg], across = b - a;
+                    if (across.Length() < 16) continue;
+                    Vector2 along = across.Normalized(), side = new(-along.Y, along.X), middle = (a + b) / 2;
+                    DrawColoredPolygon([middle + along * 7, middle - along * 4 + side * 5, middle - along * 4 - side * 5], colour);
+                }
+            }
+            for (int point = 0; point < points.Count && points.Count <= MaxNumberedPoints; point++)
+            {
+                DrawCircle(points[point], 8, new Color(Palette.Background, 0.8f), true, -1, true);
+                DrawCircle(points[point], 8, colour, false, 1.5f, true);
+            }
+            DrawLabel(points[0] + new Vector2(14, 22), _paths[index].Name);
+        }
+    }
+
+    /// <summary>A path longer than this has no numbers, which would only crowd it.</summary>
+    internal const int MaxNumberedPoints = 60;
+
+    /// <summary>The highlighted path's point numbers, drawn over the marks (the mark of an object on the path would hide a number drawn under it), beside each point.</summary>
+    private void DrawPathNumbers()
+    {
+        if (_highlightedPath is not int index) return;
+        List<Vector2> points = PathPoints(_paths[index]);
+        if (points.Count > MaxNumberedPoints) return;
+        Font font = ThemeDB.FallbackFont;
+        for (int point = 0; point < points.Count; point++)
+        {
+            string number = (point + 1).ToString(CultureInfo.InvariantCulture);
+            Vector2 at = points[point] + new Vector2(9, -9);
+            DrawStringOutline(font, at, number, HorizontalAlignment.Left, -1, 12, 4, new Color(Palette.Background, 0.95f));
+            DrawString(font, at, number, HorizontalAlignment.Left, -1, 12, Palette.AccentHover);
+        }
     }
 
     /// <summary>Faint lines every 64 world units, with their numbers along the edges once there is room.</summary>

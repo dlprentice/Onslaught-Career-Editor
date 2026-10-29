@@ -34,8 +34,8 @@ internal sealed class LevelEditorPage : Page
     private readonly Control _mapPanel;
     private readonly ScriptsPanel _scripts;
     private readonly PanelContainer _scriptCard;
-    private readonly Label _scriptTitle, _scriptWhere, _scriptHandles, _scriptCalls, _scriptRuns, _scriptSource;
-    private readonly HFlowContainer _scriptUses, _objectScripts;
+    private readonly Label _scriptTitle, _scriptWhere, _scriptHandles, _scriptCalls, _scriptRuns, _scriptSource, _scriptNamesTitle, _pathText;
+    private readonly HFlowContainer _scriptUses, _objectScripts, _scriptNames, _objectPaths;
     private IReadOnlyList<ScriptEntry>? _shownScripts;
     private LevelEditorModel? _model;
     private string? _root;
@@ -110,6 +110,15 @@ internal sealed class LevelEditorPage : Page
         _mapPanel = mapColumn;
         Map = mapColumn.Add(new LevelMap { SizeFlagsVertical = Control.SizeFlags.ExpandFill, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
         mapColumn.Add(Build.Text("Wheel zooms · drag the background to pan · click or drag a mark to select or move it (Esc cancels) · Home fits the level", "Faint"));
+        HBoxContainer pathBar = mapColumn.Add(Build.Row(8));
+        PathsToggle = pathBar.Add(new CheckButton { Text = "Paths", TooltipText = "Draw every waypoint path of the level, faintly, through the objects it names." });
+        PathsToggle.Toggled += on => Map.ShowAllPaths = on;
+        _pathText = pathBar.Add(Build.Text("", "Muted", wrap: false, clip: true));
+        _pathText.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        _pathText.MouseFilter = Control.MouseFilterEnum.Pass;  // so that the tooltip, which has the whole text when it is cut short, shows
+        HidePath = pathBar.Add(Build.Button("Hide path", tooltip: "Stop highlighting the path."));
+        HidePath.Visible = false;
+        HidePath.Pressed += () => HighlightPath(null);
         Map.RowPicked += row => SelectIndex(row);
         Map.MoveRequested += (row, x, y) => Dragged(row, x, y);
         foreach (int column in new[] { 0, 1, 3, 4, 5 }) Table.SetColumnExpand(column, false);
@@ -148,6 +157,12 @@ internal sealed class LevelEditorPage : Page
         _scriptUses.AddThemeConstantOverride("h_separation", 6);
         _scriptUses.AddThemeConstantOverride("v_separation", 6);
         _scriptSource = scriptInside.Add(Build.Text("", "Faint"));
+        _scriptNamesTitle = scriptInside.Add(Build.Text("", "Strong"));
+        _scriptNamesTitle.Visible = false;
+        _scriptNames = scriptInside.Add(new HFlowContainer());
+        _scriptNames.AddThemeConstantOverride("h_separation", 6);
+        _scriptNames.AddThemeConstantOverride("v_separation", 6);
+        _scripts.NameUnderCaret += OnNameUnderCaret;
 
         (PanelContainer inspector, VBoxContainer inside) = Build.Panel("Card", 8);
         right.Add(inspector);
@@ -157,6 +172,9 @@ internal sealed class LevelEditorPage : Page
         _objectScripts = inside.Add(new HFlowContainer());
         _objectScripts.AddThemeConstantOverride("h_separation", 6);
         _objectScripts.AddThemeConstantOverride("v_separation", 6);
+        _objectPaths = inside.Add(new HFlowContainer());
+        _objectPaths.AddThemeConstantOverride("h_separation", 6);
+        _objectPaths.AddThemeConstantOverride("v_separation", 6);
         GridContainer fields = inside.Add(new GridContainer { Columns = 2 });
         fields.AddThemeConstantOverride("h_separation", 10);
         fields.AddThemeConstantOverride("v_separation", 6);
@@ -223,7 +241,15 @@ internal sealed class LevelEditorPage : Page
     internal LevelMap Map { get; }
     internal CheckButton MapToggle { get; }
     internal CheckButton ScriptsToggle { get; }
+    internal CheckButton PathsToggle { get; }
+    internal Button HidePath { get; }
+    internal string HighlightedPathText => _pathText.Text;
     internal ScriptsPanel Scripts => _scripts;
+    internal string NamesTitle => _scriptNamesTitle.Visible ? _scriptNamesTitle.Text : "";
+    internal IReadOnlyList<Button> NameButtons => [.. _scriptNames.GetChildren().OfType<Button>()];
+    internal IReadOnlyList<Label> NameLabels => [.. _scriptNames.GetChildren().OfType<Label>()];
+    internal Label PathLabel => _pathText;
+    internal IReadOnlyList<Button> ObjectPathButtons => [.. _objectPaths.GetChildren().OfType<Button>()];
     internal string ScriptCardTitle => _scriptCard.Visible ? _scriptTitle.Text : "";
     internal string ScriptCardText => _scriptCard.Visible ? string.Join("\n", new[] { _scriptWhere.Text, _scriptHandles.Text, _scriptCalls.Text, _scriptRuns.Text, _scriptSource.Text }.Where(text => text.Length > 0)) : "";
     internal IReadOnlyList<Button> ScriptUseButtons => [.. _scriptUses.GetChildren().OfType<Button>()];
@@ -373,6 +399,7 @@ internal sealed class LevelEditorPage : Page
         Map.SetLevel(_model.Terrain, _model.Rows());
         Map.FitToLevel();
         Map.Select(null);
+        HighlightPath(null);
         UpdateInspector(clearNote: true);
         UpdateChanges();
         UpdateEmpty();
@@ -392,6 +419,8 @@ internal sealed class LevelEditorPage : Page
         }
         RebuildTable();
         Map.SetLevel(_model?.Terrain, _model?.Rows() ?? []);
+        Map.SetPaths(_model?.Session?.Body.WaypointPaths ?? []);
+        ShowPathState();
         Map.Select(_selected);
         UpdateInspector(clearNote: false);
         UpdateChanges();
@@ -471,6 +500,7 @@ internal sealed class LevelEditorPage : Page
         Apply.Disabled = row is null;
         Reset.Disabled = row is not { Changed: true };
         ShowObjectScripts(row);
+        ShowObjectPaths(row);
         if (row is null)
         {
             _objectTitle.Text = "Nothing selected";
@@ -656,6 +686,96 @@ internal sealed class LevelEditorPage : Page
         _scriptSource.Text = source?.Source is { } found
             ? $"Source: {Path.GetFileName(found.Path)}, read only. The game runs the compiled script, which a source in your game folder may differ from."
             : source?.Problem ?? "";
+    }
+
+    /// <summary>Highlights a waypoint path of the open level on the map and brings the map to the objects it passes through. Returns false if there is no such path.</summary>
+    internal bool ShowPath(int index)
+    {
+        if (_model?.Session?.Body.WaypointPaths is not { } paths || index < 0 || index >= paths.Count) return false;
+        Search.Text = "";
+        if (ScriptsToggle.ButtonPressed) ScriptsToggle.ButtonPressed = false;
+        if (!MapToggle.ButtonPressed) MapToggle.ButtonPressed = true;
+        RebuildTable();
+        HighlightPath(index, fit: true);
+        return Map.HighlightedPath == index;
+    }
+
+    private void HighlightPath(int? index, bool fit = false)
+    {
+        Map.HighlightPath(index, fit);
+        ShowPathState();
+    }
+
+    private void ShowPathState()
+    {
+        WaypointPath? path = Map.HighlightedPath is int index && _model?.Session?.Body.WaypointPaths is { } paths && index < paths.Count ? paths[index] : null;
+        _pathText.Text = path is null ? "" : $"Path {path.Name} · {Build.Count(path.Slots.Count, "point")}, numbered along it";
+        _pathText.TooltipText = _pathText.Text;
+        HidePath.Visible = path is not null;
+    }
+
+    /// <summary>Under the caret of a source there is a quoted text: say what in this level has that name, each a button that goes to it.</summary>
+    private void OnNameUnderCaret(SourceToken? token)
+    {
+        _scriptNames.Clear();
+        _scriptNamesTitle.Visible = false;
+        if (token is not { Quoted: true } quoted || _model?.Session is not { } session) return;
+        IReadOnlyList<NameMatch> matches = ScriptNames.Resolve(quoted.Text, session.Body, _model.Scripts, _model.BaseWorld);
+        _scriptNamesTitle.Visible = true;
+        _scriptNamesTitle.Text = matches.Count == 0 ? $"“{quoted.Text}” names nothing in this level." : $"“{quoted.Text}” names:";
+        foreach (NameMatch match in matches.Take(10))
+        {
+            string text = match.Label + (match.ExactCase ? "" : " (other letter case)");
+            if (match.Kind == NameKind.BaseObject)
+            {
+                // This page does not list the base world's objects, so there is nothing to go to: the object is said, not offered.
+                Label note = _scriptNames.Add(Build.Text($"{text} · base world", "Muted", wrap: false));
+                note.MouseFilter = Control.MouseFilterEnum.Pass;  // so that the tooltip shows
+                note.TooltipText = $"An object of the base world (level {_model.BaseLevel}), which the game loads with this level. This page does not list that world's objects.";
+                continue;
+            }
+            Button button = _scriptNames.Add(Build.Button(text, tooltip: match.Kind switch
+            {
+                NameKind.Object => "Shows the object on the table and the map.",
+                NameKind.Path => "Shows the path on the map.",
+                _ => "Shows the script and its source.",
+            }));
+            NameMatch followed = match;
+            button.Pressed += () => Follow(followed);
+        }
+        if (matches.Count > 10) _scriptNames.Add(Build.Text($"and {matches.Count - 10} more", "Faint", wrap: false));
+    }
+
+    private void Follow(NameMatch match)
+    {
+        switch (match.Kind)
+        {
+            case NameKind.Object:
+                ShowObject(match.Index);
+                break;
+            case NameKind.Path:
+                ShowPath(match.Index);
+                break;
+            default:
+                if (_model?.Scripts.ElementAtOrDefault(match.Index) is { } entry) ShowScript(entry.Summary.Name, entry.FromBaseWorld);
+                break;
+        }
+    }
+
+    /// <summary>The waypoint paths the selected object is a point of, as buttons that show them on the map.</summary>
+    private void ShowObjectPaths(ObjectRow? row)
+    {
+        _objectPaths.Clear();
+        if (row is null || _model?.Session is not { } session) return;
+        foreach (PathStop stop in WaypointCatalog.Through(session.Body, row.Index))
+        {
+            Button button = _objectPaths.Add(Build.Button($"Path {stop.Name} · point {stop.Position} of {stop.Count}", tooltip: "Shows the path on the map, numbered along it."));
+            int path = stop.PathIndex;
+            button.Pressed += () =>
+            {
+                if (ShowPath(path) && _selected is int keep) Map.Select(keep);
+            };
+        }
     }
 
     /// <summary>The scripts the selected object names, as buttons that show them (a name this level has no script of is only said).</summary>
