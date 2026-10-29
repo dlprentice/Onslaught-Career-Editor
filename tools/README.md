@@ -52,8 +52,21 @@ publish, sign, or install anything by themselves.
 - `public_allowlist_safety_check.py` rejects tracked game/runtime payloads,
   build output, raw debugger scripts, common secret patterns, and unsafe
   submodule payloads while preserving the two reviewed fixture exceptions.
-- `safe_generated_output.py` provides guarded local publication for Python
-  exporters.
+- `safe_generated_output.py` is the publication helper behind the Python writers `aya_archive_inventory.py`,
+  `aya_cross_platform_compare.py`, `aya_texture_fidelity_census.py`, `cmsh_animation_usage_census.py`,
+  `cmsh_skinning_contract.py`, `cmsh_matrix_normal_contract.py`, `content_catalog.py`, `export_asset_catalog.py`,
+  `export_game_assets.py`, `export_language_corpus.py` and `export_video_manifest.py` (the frozen rebuild's
+  `cmsh_static_preview.py` uses it too). On POSIX it creates and opens every output directory relative to a directory
+  descriptor it already holds, so a symlink or directory put at the output path during a run cannot redirect a write;
+  it writes an exclusive temporary name, publishes with a rename that follows no link, and refuses a destination that
+  is a symlink, a hard link or not a regular file. It re-checks that every held directory is still named where it was
+  found before each write, again just before the rename and once after publishing. That is detection, not a lock.
+  **Moved-destination limit:** a directory renamed while a file is being published still receives that file, wherever
+  the directory now is, and the writer refuses only afterwards; later writes are refused before anything is created.
+  The check that the output root does not overlap a protected source (the game folder) is made once, when the root is
+  opened, so the helper does not guarantee that a destination moved by another process during a run stays outside the
+  game folder. Do not point a writer at an output root that another process can rename. The Windows path holds the
+  directories with share modes meant to block a rename; no native Windows run has validated it here.
 
 ## Assets and formats
 
@@ -62,7 +75,7 @@ publish, sign, or install anything by themselves.
   cross-platform pairing, and stored-texture geometry/block comparison. The
   texture census also exposes a bounded `serialized_texture_metadata` API for
   selected held TEXT payloads; external PC mip contents and runtime selection
-  remain unknown.
+  remain unknown. These writers publish through `safe_generated_output.py` and have its moved-destination limit (see `safe_generated_output.py` above).
 - `mission_script_inspect.py` inspects one explicitly selected, hash-bound
   compiled-script record or range. Its bounded output describes stored
   structure and unknowns; it does not execute scripts or edit missions.
@@ -86,7 +99,7 @@ publish, sign, or install anything by themselves.
   The model-metadata v1 record keeps its field names; its texture rows gain `nameStatus` and `nameBytesSha256`, and `name`
   is null where the 128-byte TEXB name field is unterminated or not UTF-8 (it was the parser's lossy decode). Census v4
   is an output format identifier; there is no separate machine-readable schema for the
-  census. Its JSON output is restricted to ignored `local-lab` or `.artifacts` paths.
+  census. Its JSON output is restricted to ignored `local-lab` or `.artifacts` paths and is published with its moved-destination limit (see `safe_generated_output.py` above).
   It distinguishes
   the loose mesh's direct `PMS2` child from the embedded resource's
   `PMSH`/`PMS2` plus 309-byte header, and keeps a mismatched or unknown reader
@@ -147,7 +160,8 @@ publish, sign, or install anything by themselves.
   the public decompilation or from the data, and each names that evidence; unresolved links stay explicit. The
   single-record `mission_script_inspect.py` is the independent check of the compiled-script reader. Output is accepted
   only below the ignored `local-data/`, and every generated file carries a marker that
-  `public_allowlist_safety_check.py` refuses, as it refuses any tracked `local-data/` path.
+  `public_allowlist_safety_check.py` refuses, as it refuses any tracked `local-data/` path. The catalogue is published with
+  its moved-destination limit (see `safe_generated_output.py` above).
   `world_resources_encode.py` is the decoder's inverse for world bodies: `read_world_model` keeps every field
   `CWorld::LoadWorld` reads (the regions it only skips as base64 blobs). The tested PC installation's bodies round-trip
   byte for byte; `verify --game DIR` checks the level archives in the selected installation. This does not establish
@@ -219,7 +233,7 @@ publish, sign, or install anything by themselves.
   user-supplied local inputs and write to a separate local output root. The
   asset catalogue's exact-content mesh variants contain payload-relative
   metadata; selected source paths and occurrence identities stay on occurrence
-  rows rather than changing the shared variant.
+  rows rather than changing the shared variant. All four publish with its moved-destination limit (see `safe_generated_output.py` above).
 - `level_asset_xref.py --archive LEVEL_res_PC.aya [--mesh m_NAME.msh.aya ...] --stdout`
   reports metadata from one selected PC archive and up to 16 selected loose
   meshes. It retains each top-level `MESH` and `TEXT` occurrence and lists
@@ -326,7 +340,8 @@ writes at all, to ignored local paths. Their findings are documented under
   animation at every sample with the game's composition (it needs numpy and the exports a
   `Development/AssetCheck.cs` run keeps with `ASSET_KEEP=all`); `cmsh_cpos_cori_verify.py`, `cmsh_track_probe.py`, `cmsh_matrix_normal_contract.py` and
   `cmsh_skinning_contract.py` settle position/orientation tracks, per-part tracks and the matrix-palette skinning
-  and normal contracts; `world_mesh_normal_probe.py` carries static-world OBJ bytes through both lighting chains.
+  and normal contracts (`cmsh_matrix_normal_contract.py` and `cmsh_skinning_contract.py` write their JSON with its moved-destination limit (see `safe_generated_output.py` above));
+  `world_mesh_normal_probe.py` carries static-world OBJ bytes through both lighting chains.
 - Executable reading: `pe_read_va.py` reads a PE virtual address; `call_xref_scan.py` finds every direct
   CALL/JMP rel32 reference to a VA (verify each hit by disassembling it).
 - Capture analysis (retail frame against a reconstruction frame): `frame_alignment_probe.py`,

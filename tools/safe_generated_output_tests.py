@@ -129,6 +129,29 @@ class DescriptorPublicationTests(unittest.TestCase):
         self.assertEqual(b"original source", self.original.read_bytes())
         self.assertEqual("generated only in held output", (self.root / "held-output/catalog.json").read_text())
 
+    def test_documented_limit_a_directory_moved_into_a_protected_tree_still_receives_the_inflight_file(self):
+        # tools/README.md states this limit for every writer: the helper detects a moved held directory but does not lock it.
+        # A directory renamed while a file is being published receives that file, here inside the protected tree; the writer
+        # then refuses, and later writes are refused before anything is created. If the helper ever prevents this, update the README.
+        game = self.root / "game"
+        (game / "data").mkdir(parents=True)
+        (game / "BEA.exe").write_bytes(b"authored stand-in")
+        moved = game / "data" / "moved-output"
+        replace = os.replace
+        with output.SecuredOutputRoot(self.destination_root, protected_sources=[game]) as secured:
+            def moving_replace(source, destination, **kwargs):
+                self.destination_root.rename(moved)           # another process moves the output into the game folder
+                return replace(source, destination, **kwargs)
+            with patch.object(output.os, "replace", side_effect=moving_replace), \
+                    self.assertRaisesRegex(output.UnsafeGeneratedOutputError, "no longer named|changed identity"):
+                secured.atomic_write_text(self.destination_root / "catalog.json", "generated while the directory was moved")
+            self.assertEqual("generated while the directory was moved", (moved / "catalog.json").read_text())
+            before = sorted(p.name for p in moved.iterdir())
+            with self.assertRaises(output.UnsafeGeneratedOutputError):
+                secured.atomic_write_text(self.destination_root / "later.json", "after the move")
+            self.assertEqual(before, sorted(p.name for p in moved.iterdir()))      # the later write created nothing
+        self.assertEqual(b"original source", self.original.read_bytes())
+
     def test_new_nested_directory_uses_held_parent_after_path_swap(self):
         mkdir = os.mkdir
         with output.SecuredOutputRoot(self.destination_root) as secured:
