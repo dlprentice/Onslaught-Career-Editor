@@ -50,6 +50,7 @@ internal static class CompanionUiTests
             await Edit(app, files, tree, install, fixture, outputDirectory, original, running, check);
             await UnsavedChanges(app, tree, install, quit, check);
             await CheatsAndSettings(app, tree, install, outputDirectory, quit, check);
+            await ChangeFolder(app, tree, install, outputDirectory, original, check);
             await BackupsAndHome(app, tree, install, outputDirectory, original, defaultBackups, openedUrls, running, check);
             await DriveLore(app, tree, openedUrls, check);
             await ModelsAndTextures(app, tree, install, outputDirectory, check);
@@ -499,6 +500,55 @@ internal static class CompanionUiTests
         settings.Source.EmitSignal(OptionButton.SignalName.ItemSelected, careerSource);
         for (int frame = 0; frame < 600 && (app.Workspace.Busy || settings.Opened?.Path.EndsWith(".bes", StringComparison.Ordinal) != true); frame++) await Frame(tree);
         check.That(settings.Opened?.Path.EndsWith(".bes", StringComparison.Ordinal) == true, "a career's own settings can be chosen and opened");
+    }
+
+    /// <summary>
+    /// Choosing another game folder from Home leaves unsaved Edit career and Settings changes alone: the open career and the settings file
+    /// stay the files they were read from, a replace into the new folder is refused because they are not in it, and neither folder is
+    /// written. (The Level editor does start over on another folder, so it asks first: <see cref="LevelEditorPageTests.UnsavedAsync"/>.)
+    /// </summary>
+    private static async Task ChangeFolder(CompanionApp app, SceneTree tree, FakeInstall install, string outputDirectory, byte[] original, Checks check)
+    {
+        check.Suite("changing the game folder");
+        FakeInstall other = FakeInstall.Create(Path.Combine(outputDirectory, "ui-install-other"), original);
+        await app.OpenCareerAsync(install.Career);
+        EditCareerPage edit = app.EditCareer;
+        SettingsPage settings = app.Settings;
+        app.Navigate("settings");
+        for (int frame = 0; frame < 600 && (settings.Reading is null || app.Workspace.Busy); frame++) await Frame(tree);
+        // The page shows whichever file it opened last (the test before left a career's own settings): open the game's defaults.
+        settings.OpenDialog.EmitSignal(FileDialog.SignalName.FileSelected, install.Options);
+        for (int frame = 0; frame < 600 && (app.Workspace.Busy || settings.Opened?.Path != install.Options); frame++) await Frame(tree);
+        edit.Rows[0].Target.Value = edit.Rows[0].Target.Value + 1;
+        settings.Music.Value = settings.Music.Value > 50 ? 20 : 80;
+        check.That(edit.HasChanges && settings.HasChanges && settings.Opened?.Path == install.Options && app.Workspace.Session?.Path == install.Career,
+            "an unsaved career change and an unsaved settings change are held, each on the file it was read from");
+        string[] firstFolder = LevelEditorPageTests.Snapshot(install.Game), secondFolder = LevelEditorPageTests.Snapshot(other.Game);
+
+        await app.Home.ChooseAsync(other.Game);
+        for (int frame = 0; frame < 600 && (app.Game.Busy || app.Workspace.Busy); frame++) await Frame(tree);
+        check.That(app.Game.Folder?.Root == SteamLibraries.Canonical(other.Game) && !app.DiscardDialog.Visible && app.Status.Label.Text.Contains("Game folder set", StringComparison.Ordinal),
+            $"choosing another game folder is not refused or asked about: \"{app.Status.Label.Text}\"");
+        check.That(edit.HasChanges && app.Workspace.Session?.Path == install.Career, "the career change is kept, and the open career is still the file it was read from");
+        check.That(settings.HasChanges && settings.Opened?.Path == install.Options, "the settings change is kept, and the settings are still the file they were read from");
+        InstallReceipt replaced = await edit.SaveIntoGameAsync(SaveTarget.Replace, "");
+        check.That(!replaced.Ok && replaced.Message.Contains("cannot be replaced here", StringComparison.Ordinal), $"the career is not in the new folder, so a replace is refused: \"{replaced.Message}\"");
+        InstallReceipt settingsSaved = await settings.SaveIntoGameAsync();
+        check.That(!settingsSaved.Ok && settingsSaved.Message.Contains("not in your game", StringComparison.Ordinal), $"the settings file is not in the new folder, so saving it there is refused: \"{settingsSaved.Message}\"");
+        check.That(firstFolder.SequenceEqual(LevelEditorPageTests.Snapshot(install.Game)) && secondFolder.SequenceEqual(LevelEditorPageTests.Snapshot(other.Game)), "neither game folder was written");
+        check.That(!app.RequestClose() && app.DiscardDialog.Visible, "closing still asks, since the changes are still unsaved");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+
+        // Back to the first folder (which also puts the remembered choice back for the tests that follow): the changes are still there.
+        await app.Home.ChooseAsync(install.Game);
+        for (int frame = 0; frame < 600 && (app.Game.Busy || app.Workspace.Busy); frame++) await Frame(tree);
+        check.That(app.Game.Folder?.Root == SteamLibraries.Canonical(install.Game) && edit.HasChanges && settings.HasChanges && app.Workspace.Session?.Path == install.Career && settings.Opened?.Path == install.Options,
+            "choosing the first folder again keeps both changes too");
+        edit.UndoAll.EmitSignal(BaseButton.SignalName.Pressed);
+        settings.UndoAll.EmitSignal(BaseButton.SignalName.Pressed);
+        for (int frame = 0; frame < 600 && (app.Workspace.Busy || edit.HasChanges || settings.HasChanges); frame++) await Frame(tree);
+        check.That(!edit.HasChanges && !settings.HasChanges, "undoing clears both");
     }
 
     private static async Task BackupsAndHome(CompanionApp app, SceneTree tree, FakeInstall install, string outputDirectory, byte[] original,
