@@ -55,6 +55,7 @@ internal static class CompanionUiTests
             await ModelsAndTextures(app, tree, install, outputDirectory, check);
             await LevelEditorPageTests.RunAsync(app, tree, install, outputDirectory, check);
             await LevelEditorPageTests.UnsavedAsync(app, tree, install, outputDirectory, quit, check);
+            await LevelMapPageTests.RunAsync(app, tree, install, check);
         }
         finally
         {
@@ -90,15 +91,17 @@ internal static class CompanionUiTests
         }
         check.That(app.Sidebar.IsOpen("Advanced"), "going to an Advanced page opens its group");
         // The window may be as short as its 700-pixel minimum: no page, with every sidebar group open, may need more.
-        List<string> tall = [];
+        List<string> tall = [], wide = [];
         foreach (Page page in app.Pages.Values)
         {
             app.Navigate(page.Key);
             for (int frame = 0; frame < 2; frame++) await Frame(tree);
             if (app.GetCombinedMinimumSize().Y > 700) tall.Add($"{page.Key} {app.GetCombinedMinimumSize().Y}");
+            if (app.GetCombinedMinimumSize().X > 1024) wide.Add($"{page.Key} {app.GetCombinedMinimumSize().X}");
         }
         check.That(tall.Count == 0, "every page fits the smallest window, 700 pixels tall, with the sidebar open" +
             (tall.Count > 0 ? ": too tall " + string.Join(", ", tall) : ""));
+        check.That(wide.Count == 0, "and 1024 pixels wide" + (wide.Count > 0 ? ": too wide " + string.Join(", ", wide) : ""));
         app.Navigate("home");
         for (int frame = 0; frame < 3; frame++) await Frame(tree);
         check.That(app.Home.Promises.Count == 3 && app.Home.Promises.All(promise => promise.Size.X > 200 && promise.GetLineCount() <= 3),

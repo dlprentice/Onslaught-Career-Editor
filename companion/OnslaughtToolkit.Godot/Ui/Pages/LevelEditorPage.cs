@@ -18,11 +18,16 @@ internal sealed class LevelEditorPage : Page
 
     /// <summary>The most characters of the saved mod's folder the notice shows (its middle is left out); the full path is on the Copy button and the tooltip.</summary>
     private const int SavedPathLength = 52;
+
+    /// <summary>The width of the left column from which the table and the map sit side by side; narrower, the map is above the table.</summary>
+    private const float SideBySideFrom = 880;
     private readonly AppServices _services;
     private readonly Label _empty, _worldNote, _objectTitle, _objectDetail, _stock, _note, _hint, _summary, _warnings, _problemText, _savedText;
     private readonly PanelContainer _problemPanel, _savedPanel;
+    private readonly SplitContainer _split;
     private readonly Button _copy, _copyFolder;
     private readonly Control _body;
+    private readonly Control _mapPanel;
     private LevelEditorModel? _model;
     private string? _root;
     private int? _selected;
@@ -60,11 +65,15 @@ internal sealed class LevelEditorPage : Page
         Redo = toolbar.Add(Build.Button("Redo", tooltip: "Make the move you took back.", disabled: true));
         Undo.Pressed += () => Step(undo: true);
         Redo.Pressed += () => Step(undo: false);
-        Search = left.Add(new LineEdit
+        // The search shares its line with the Map switch: the toolbar above has no width to spare in the smallest window.
+        HBoxContainer searchRow = left.Add(Build.Row(10));
+        Search = searchRow.Add(new LineEdit
         {
             PlaceholderText = "Search by name, kind, script or row", ClearButtonEnabled = true, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
             TooltipText = "Shows the objects whose row number, name, kind or script holds this text.",
         });
+        MapToggle = searchRow.Add(new CheckButton { Text = "Map", ButtonPressed = true, TooltipText = "Show or hide the map next to the table." });
+        MapToggle.Toggled += on => _mapPanel!.Visible = on;
         Search.TextChanged += _ => RebuildTable();
         _worldNote = left.Add(Build.Text("", "Faint"));
         (_savedPanel, VBoxContainer savedInside) = Build.Panel("SuccessNotice", 6);
@@ -88,8 +97,27 @@ internal sealed class LevelEditorPage : Page
             DisplayServer.ClipboardSet(_savedFolder);
             _services.Status.Show("Copied the mod folder's path.", StatusKind.Info);
         };
-        Table = left.Add(Build.Table("Row", "Kind", "Name", "X", "Y", "Z"));
-        Table.CustomMinimumSize = new Vector2(0, 150);
+        // The table and the map share the column: side by side when it is wide, one above the other (the table keeps its columns) when it is not.
+        _split = left.Add(new SplitContainer { SizeFlagsVertical = Control.SizeFlags.ExpandFill, Vertical = true });
+        _split.Resized += () =>
+        {
+            _split.Vertical = _split.Size.X < SideBySideFrom;
+            _mapPanel!.SizeFlagsStretchRatio = _split.Vertical ? 1.6f : 1.25f;  // the map is what the room is for
+        };
+        Table = _split.Add(Build.Table("Row", "Kind", "Name", "X", "Y", "Z"));
+        Table.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        Table.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+        Table.SizeFlagsStretchRatio = 1f;
+        Table.CustomMinimumSize = new Vector2(280, 150);
+        VBoxContainer mapColumn = _split.Add(Build.Column(6));
+        mapColumn.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        mapColumn.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+        mapColumn.SizeFlagsStretchRatio = 1.6f;
+        _mapPanel = mapColumn;
+        Map = mapColumn.Add(new LevelMap { SizeFlagsVertical = Control.SizeFlags.ExpandFill, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
+        mapColumn.Add(Build.Text("Wheel zooms · drag the background to pan · click or drag a mark to select or move it (Esc cancels) · Home fits the level", "Faint"));
+        Map.RowPicked += row => SelectIndex(row);
+        Map.MoveRequested += (row, x, y) => Dragged(row, x, y);
         foreach (int column in new[] { 0, 1, 3, 4, 5 }) Table.SetColumnExpand(column, false);
         Table.SetColumnCustomMinimumWidth(0, 46);
         Table.SetColumnCustomMinimumWidth(1, 108);
@@ -155,6 +183,8 @@ internal sealed class LevelEditorPage : Page
     internal OptionButton Level { get; }
     internal LineEdit Search { get; }
     internal Tree Table { get; }
+    internal LevelMap Map { get; }
+    internal CheckButton MapToggle { get; }
     internal LineEdit X { get; }
     internal LineEdit Y { get; }
     internal LineEdit Z { get; }
@@ -181,6 +211,10 @@ internal sealed class LevelEditorPage : Page
     internal string SavedTooltip => _savedText.TooltipText;
     internal bool EmptyVisible => _empty.Visible;
     internal string? SelectedName => _selected is int row ? _model?.Row(row)?.Label : null;
+    internal int? SelectedRow => _selected;
+
+    /// <summary>Whether the map sits beside the table (a wide column) rather than above it.</summary>
+    internal bool MapBesideTable => !_split.Vertical;
 
     /// <summary>Whether the open level holds moves that no Save as mod has written: what leaving the level, the game or the companion would drop.</summary>
     internal bool HasChanges => _model?.HasUnsavedChanges ?? false;
@@ -216,6 +250,7 @@ internal sealed class LevelEditorPage : Page
             _worldNote.Text = "";
             FillLevels();
             RebuildTable();
+            Map.SetLevel(null, []);
         }
         else if (root is not null && _model.Rescan(root))
         {
@@ -286,6 +321,9 @@ internal sealed class LevelEditorPage : Page
         bool opened = _model.Open(level);
         ShowInPicker(level);
         RebuildTable();
+        Map.SetLevel(_model.Terrain, _model.Rows());
+        Map.FitToLevel();
+        Map.Select(null);
         UpdateInspector(clearNote: true);
         UpdateChanges();
         UpdateEmpty();
@@ -299,6 +337,8 @@ internal sealed class LevelEditorPage : Page
         _problemText.Text = _model?.Problem ?? "";
         _worldNote.Text = _model?.BaseLevel is int baseLevel ? $"This level also loads the base world of level {baseLevel}. This editor does not change it." : "";
         RebuildTable();
+        Map.SetLevel(_model?.Terrain, _model?.Rows() ?? []);
+        Map.Select(_selected);
         UpdateInspector(clearNote: false);
         UpdateChanges();
     }
@@ -343,8 +383,30 @@ internal sealed class LevelEditorPage : Page
         if (item is null || _model?.Row(item.GetMetadata(0).AsInt32()) is not { } row) return false;
         if (_selected == row.Index) return true;
         _selected = row.Index;
+        Map.Select(row.Index);
         UpdateInspector(clearNote: true);
         return true;
+    }
+
+    /// <summary>Selects a row by its index wherever the click came from (the map): in the table too, when the search leaves it there.</summary>
+    internal bool SelectIndex(int index)
+    {
+        if (_model?.Row(index) is null) return false;
+        if (SelectRow(index)) return true;  // the table shows it
+        _selected = index;
+        Map.Select(index);
+        UpdateInspector(clearNote: true);
+        return true;
+    }
+
+    /// <summary>A mark was dragged and let go: move the row there. The move is one undo step; Z stays as it was.</summary>
+    internal MoveOutcome? Dragged(int row, float x, float y)
+    {
+        if (_model is null) return null;
+        MoveOutcome outcome = _model.MoveTo(row, x, y);
+        if (_selected != row) SelectIndex(row);
+        ShowNote(outcome.Message, outcome.Result == MoveResult.Refused);
+        return outcome;
     }
 
     private void UpdateInspector(bool clearNote)
