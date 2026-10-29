@@ -11,8 +11,8 @@ a counter the source cannot give). A script is
   exact            every field of the record equal, and the record writes to the same bytes
   exact, assisted  the same, after an #include the game folder does not hold (a few sources name files only the developers had) is
                    treated as empty and the names it would have defined are taken from the shipped constants at their positions
-  stale source     different, and listed in STALE_SOURCES: the installed .msl is not the source of the shipped script. Each entry says
-                   how it differs; an entry that compiles exact (or is not found) fails, so the list cannot rot
+  stale source     different, and the complete shipped/compiled record pair has the listed identity. Each entry describes the observed
+                   difference; an exact, missing or changed pair fails. The identity does not establish why the sources differ.
   anything else    a failure: a difference nobody explained, a refusal, a script with no source
 
 The gate reads the game folder and writes nothing. It needs an installed game (the Steam copy or a read-only view of it); the exit code is
@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import collections
+import hashlib
 import sys
 from pathlib import Path
 
@@ -34,16 +35,17 @@ import msl_compile as mc  # noqa: E402
 import world_resources_encode as wre  # noqa: E402
 
 # (folder level, script name) -> how the installed source differs from the shipped script. Found by reading each difference: the shipped
-# script has statements, variables or handlers the file lacks (or the reverse), so the file is another revision. Described by structure;
-# the scripts themselves stay out of the repository.
+# script has statements, variables or handlers the file lacks (or the reverse), so the file is another revision. Each description is paired
+# with a SHA-256 identity of the complete ordered shipped/compiled records. The identity pins the observation, not the explanation; no record
+# or source bytes are stored here.
 STALE_SOURCES = {
-    (201, "EnemyLander"): "the shipped script has a variable and a started_dying handler where the file has a died handler, and posts different events",
-    (201, "EnemyLander2"): "the shipped script has a variable and a started_dying handler where the file has a died handler",
-    (201, "LevelScript"): "the shipped script has a variable, different print statements and a different message call",
-    (720, "battleline"): "the shipped script has an objective check (a lookup, an Exists call and an objective-complete call) the file lacks",
-    (731, "Fenrir"): "the shipped script makes three more components invulnerable before its waypoint call than the file does (7 against 4), and none after it",
-    (732, "Fenrir"): "the shipped script makes three more components invulnerable before its waypoint call than the file does (7 against 4), and none after it",
-    (720, "Level720script"): "one message call names a different speaker than the file does",
+    (201, "EnemyLander"): ("the shipped script has a variable and a started_dying handler where the file has a died handler, and posts different events", "6a9d252f0c13f5dbb59b6aa6ef76de8429807a7cf6f81569837da3113681ecd1"),
+    (201, "EnemyLander2"): ("the shipped script has a variable and a started_dying handler where the file has a died handler", "e31cf5fcb62eb5449e56d51d3e466f21cd9e26896ef2530cd56a85274f9975ba"),
+    (201, "LevelScript"): ("the shipped script has a variable, different print statements and a different message call", "1fce2f4f0f7196e207ece2858d9f6e3501882b32981385be641213f853985643"),
+    (720, "battleline"): ("the shipped script has an objective check (a lookup, an Exists call and an objective-complete call) the file lacks", "4b2531f3a62a9167538d62e414ef355c92c6b234bc937d5a12fb78da63f7c089"),
+    (731, "Fenrir"): ("the shipped script makes three more components invulnerable before its waypoint call than the file does (7 against 4), and none after it", "7de058fce0c57dc5268915aa7e0e5412e96e062eea5e6b4f0c62eae38c2e27fd"),
+    (732, "Fenrir"): ("the shipped script makes three more components invulnerable before its waypoint call than the file does (7 against 4), and none after it", "1e904da457100866ded5140b05eb4195d4de0d21296bf02ecf683056f5d5482e"),
+    (720, "Level720script"): ("one message call names a different speaker than the file does", "6c0ada717734b58333d42e74b20f5bcff81569e59fd92c276f33c0e8543eef5b"),
 }
 
 
@@ -51,6 +53,24 @@ def bytes_of(code: dict) -> bytes:
     writer = wre.Writer()
     wre.write_code(writer, code)
     return writer.bytes()
+
+
+def record_bytes(record: dict) -> bytes:
+    """The complete stored record, used only in memory for an identity check."""
+    writer = wre.Writer()
+    writer.lstring(record["name"], "i")
+    wre.write_code(writer, record["code"])
+    trailer = bytes.fromhex(record["trailer"])
+    if len(trailer) != 10:
+        raise wre.EncodeError("a script trailer is 10 bytes")
+    writer.raw(trailer)
+    return writer.bytes()
+
+
+def stale_identity(shipped: dict, compiled: dict) -> str:
+    """A SHA-256 fingerprint of the ordered pair; it pins the observed difference, not its reason."""
+    pair = hashlib.sha256(record_bytes(shipped)).digest() + hashlib.sha256(record_bytes(compiled)).digest()
+    return hashlib.sha256(b"onslaught-stale-pair-v1\0" + pair).hexdigest()
 
 
 def scripts_of(game: Path, only_level: int | None = None):
@@ -83,13 +103,19 @@ def assisted_resolver(record: dict):
 
 def judge(game: Path, read_include, folder_level: int, record: dict) -> tuple[str, str]:
     """(status, detail) for one shipped script."""
+    status, detail, _compiled = judge_record(game, read_include, folder_level, record)
+    return status, detail
+
+
+def judge_record(game: Path, read_include, folder_level: int, record: dict) -> tuple[str, str, dict | None]:
+    """As judge, also retaining the compiled record in memory for the stale-pair identity."""
     name = record["name"]
     try:
         path = source_path(game, folder_level, name)
     except mc.MissingInclude as error:
-        return "no source", f"{error.path} is not in the game folder"
+        return "no source", f"{error.path} is not in the game folder", None
     except mc.CompileError as error:
-        return "no source", str(error)
+        return "no source", str(error), None
     source = mc.read_source(path)
     starts = (mc.const_start_of(record), mc.do_once_start_of(record))
     status = "exact"
@@ -110,15 +136,15 @@ def judge(game: Path, read_include, folder_level: int, record: dict) -> tuple[st
         try:
             compiled = mc.compile_script(name, source, read_missing_as_empty, *starts, resolve=assisted_resolver(record))
         except mc.CompileError as inner:
-            return "refused", f"{inner} (without {', '.join(missing)})"
+            return "refused", f"{inner} (without {', '.join(missing)})", None
     except mc.CompileError as error:
-        return "refused", str(error)
+        return "refused", str(error), None
     difference = mc.first_difference(compiled, record)
     if difference is not None:
-        return "different", difference
+        return "different", difference, compiled
     if bytes_of(compiled["code"]) != bytes_of(record["code"]):
-        return "different", "the compiled record writes to other bytes"
-    return status, ""
+        return "different", "the compiled record writes to other bytes", compiled
+    return status, "", compiled
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -134,11 +160,19 @@ def main(argv: list[str] | None = None) -> int:
     seen_stale: set = set()
     rows = []
     for level, tag, folder_level, record in scripts_of(game, args.level):
-        status, detail = judge(game, read_include, folder_level, record)
+        status, detail, compiled = judge_record(game, read_include, folder_level, record)
         key = (folder_level, record["name"])
         if status == "different" and key in STALE_SOURCES:
-            status, detail = "stale source", STALE_SOURCES[key]
             seen_stale.add(key)
+            description, expected = STALE_SOURCES[key]
+            try:
+                matches = compiled is not None and stale_identity(record, compiled) == expected
+            except (wre.EncodeError, ValueError, TypeError, KeyError, OverflowError):
+                matches = False
+            if matches:
+                status, detail = "stale source", description
+            else:
+                detail = "the pinned stale source comparison changed or could not be checked"
         elif key in STALE_SOURCES:
             failures.append(f"{key[0]} {key[1]}: listed as a stale source but it is {status}")
             seen_stale.add(key)

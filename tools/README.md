@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-29 (`msl_vectors.py`, the vectors for the Companion's C# compiler; the gate table's NAMES and PATHS rows; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-29 (the script gate pins each known stale record pair; `msl_vectors.py`, the vectors for the Companion's C# compiler; the gate table's NAMES and PATHS rows; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -312,8 +312,10 @@ publish, sign, or install anything by themselves.
   installed game it compiles `data/MissionScripts/level<NNN>/<name>.msl` and compares the record field by field and as the bytes
   the world encoder writes. A script is exact; exact with an `#include` the install lacks (a few sources name files only the
   developers had, so the gate treats the header as empty and takes each name it would have defined from the shipped constants);
-  or one of a pinned list of installed sources that are another revision than the one compiled into the world file, each with
-  how it differs. Anything else fails, and so does a pinned entry that has become exact. It reads the game folder, writes nothing,
+  or one of a pinned list of installed sources that differs from the compiled world-file script. Each pinned entry has a description and a
+  SHA-256 identity of the complete ordered shipped/compiled record pair; a different pair, a missing entry or an entry that has become exact
+  fails. The fingerprint pins the observed pair, not the explanation for its difference; a legitimate different installation may need its
+  own independently verified baseline. It reads the game folder, writes nothing,
   and needs an installed game; `--table` lists one row per script (private, derived from a game).
   `msl_compile_tests.py` runs on authored sources only (the shape of every statement, the call flag, the counters, the grouping
   rules and the refusals, the header search, a record's round trip through the world encoder, and the gate's verdicts on an

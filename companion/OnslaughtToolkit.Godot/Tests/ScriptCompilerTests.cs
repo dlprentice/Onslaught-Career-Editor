@@ -26,6 +26,7 @@ internal static class ScriptCompilerTests
         ReaderFailures(check);
         Files(output, check);
         GatePrivacy(output, check);
+        GateStaleIdentity(output, check);
         Limits(check);
         Records(check);
     }
@@ -93,6 +94,39 @@ internal static class ScriptCompilerTests
         check.That(result == 1 && errors.Any(line => line.Contains(": refused", StringComparison.Ordinal)) &&
                    !printed.Concat(errors).Any(line => line.Contains(marker, StringComparison.Ordinal)),
             "the actual gate reports a refused authored script without printing its source or record detail");
+    }
+
+    private static void GateStaleIdentity(string output, Checks check)
+    {
+        string game = Path.Combine(output, "compiler-gate-stale"), resources = Path.Combine(game, "data", "resources");
+        Directory.CreateDirectory(resources);
+        byte[] archive = LevelTests.Unpack(LevelVectors.Archives.First(item => item.Name == "level-100").File);
+        File.WriteAllBytes(Path.Combine(resources, "100_res_PC.aya"), archive);
+        MissionScript shipped = WorldBody.Read(LevelArchive.Read(archive).RealBody!).Scripts[0];
+        const string source = "init() { Pause(1); }\n";
+        MissionScript compiled = ScriptCompiler.Compile(shipped.Name, source, _ => throw new MissingInclude("none"),
+            ScriptCompiler.ConstStartOf(shipped), ScriptCompiler.DoOnceStartOf(shipped));
+        string identity = ScriptsGateCheck.StaleIdentity(shipped, compiled);
+        MissionScript altered = ScriptCopy.Of(shipped);
+        altered.Code.Tail1 ^= 1;
+        check.That(identity != ScriptsGateCheck.StaleIdentity(altered, compiled) && identity != ScriptsGateCheck.StaleIdentity(compiled, shipped),
+            "the ordered stale identity changes when the shipped record or the record order changes");
+        string sourceFolder = Path.Combine(game, "data", "MissionScripts", "level100");
+        Directory.CreateDirectory(sourceFolder);
+        string path = Path.Combine(sourceFolder, shipped.Name + ".msl");
+        File.WriteAllText(path, source);
+        Dictionary<(int Level, string Name), ScriptsGateCheck.StalePin> pins = new() { [(100, shipped.Name)] = new("an authored mismatch", identity) };
+        List<string> printed = [], errors = [];
+        int result = ScriptsGateCheck.Run(game, "", printed.Add, errors.Add, pins);
+        check.That(result == 0 && printed.Any(line => line.Contains("1 stale source", StringComparison.Ordinal)),
+            "the actual gate accepts the pinned authored record pair as stale");
+        printed.Clear();
+        errors.Clear();
+        File.WriteAllText(path, "init() { Pause(73); }\n");
+        result = ScriptsGateCheck.Run(game, "", printed.Add, errors.Add, pins);
+        check.That(result == 1 && errors.Any(line => line.Contains("the pinned stale source comparison changed", StringComparison.Ordinal)) &&
+                   !printed.Concat(errors).Any(line => line.Contains("Pause", StringComparison.Ordinal)),
+            "the actual gate rejects a different compiled record without printing source or record content");
     }
 
     // ---- the reference's own answers

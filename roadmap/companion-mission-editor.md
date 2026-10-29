@@ -2,7 +2,7 @@
 
 Status: design; the reference compiler and read-only scripts view with name links and map paths are built. The C# compiler is a validation candidate; editing scripts remains planned. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-10-29 (MS2 compiler and include limits under review; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
+Last updated: 2026-10-29 (script-gate stale record pairs pinned by identity; MS2 compiler and include limits under review; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours checked against the shipped scripts with the documented
 missing-header and stale-source cases, and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -354,7 +354,8 @@ steps, 100 levels of nesting) are the reference's and are a parameter, so that t
   few shapes worked out by hand from what the shipped scripts show. (2) The local retail gate, `Development/ScriptsGate.cs`: every compiled
   script of every world body of an installed game is compared with what the C# makes of the source the game folder holds for it, with the
   session's counters taken from the shipped script. Every script is exact, exact once an include the install lacks is bound from the shipped
-  constants, or one of the seven pinned stale sources (section 11), and the status of each equals the Python gate's, script by script
+  constants, or one of the seven pinned stale sources (section 11). A SHA-256 identity of each complete shipped/compiled record pair must
+  match the recorded pair; this pins the observed difference, not its explanation. The status of each equals the Python gate's, script by script
   (`msl_gate.py --table`); and a world body whose scripts all compile, written with the compiled scripts in the place of the shipped ones,
   writes back to the bytes it was read from. (3) A mutation sweep over the compiler files and the include lookup (about 170 one-line changes), each of which the vectors, the
   hand-worked shapes or the file and limit tests must fail. The first pass let nine live (the counter reader's anchors, a named pipe or a dot in

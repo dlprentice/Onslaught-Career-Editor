@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import re
 import struct
 import tempfile
 import time
@@ -396,9 +397,14 @@ class Judging(unittest.TestCase):
 
     def test_the_pinned_stale_sources_are_named_scripts_with_a_reason(self):
         self.assertEqual(len(gate.STALE_SOURCES), 7)
-        for (level, name), reason in gate.STALE_SOURCES.items():
+        for (level, name), (reason, identity) in gate.STALE_SOURCES.items():
             self.assertIsInstance(level, int)
             self.assertTrue(name and len(reason) > 20)
+            self.assertRegex(identity, r"^[0-9a-f]{64}$")
+        cs = (Path(__file__).resolve().parent.parent / "companion/OnslaughtToolkit.Godot/Development/ScriptsGateCheck.cs").read_text(encoding="utf-8")
+        entries = re.findall(r'\[\((\d+), "([^\"]+)"\)\] = new\("([^\"]+)", "([0-9a-f]{64})"\)', cs)
+        self.assertEqual(len(entries), len(gate.STALE_SOURCES))
+        self.assertEqual({(int(level), name): (reason, identity) for level, name, reason, identity in entries}, gate.STALE_SOURCES)
 
 
 class Limits(unittest.TestCase):
@@ -645,7 +651,8 @@ class GateMain(unittest.TestCase):
     def test_a_pinned_stale_source_passes_and_is_counted_apart(self):
         self.two_worlds()
         self.source(123, "A", self.OTHER)
-        with mock.patch.object(gate, "STALE_SOURCES", {(123, "A"): "the shipped script calls another function than the file does"}):
+        identity = gate.stale_identity(self.record("A", self.GOOD), self.record("A", self.OTHER))
+        with mock.patch.object(gate, "STALE_SOURCES", {(123, "A"): ("the shipped script calls another function than the file does", identity)}):
             code, out = self.run_gate("--table")
         self.assertEqual(code, 0)
         self.assertIn("2 exact, 1 stale source", out.splitlines()[-1])
@@ -653,13 +660,32 @@ class GateMain(unittest.TestCase):
         self.assertIn("123\tBSWD\tC\texact\t", out)
         self.assertTrue(out.startswith("level\tbody\tscript\tstatus\tdetail\n"))
 
+    def test_a_pinned_stale_pair_rejects_changed_source_or_shipped_record(self):
+        self.two_worlds()
+        self.source(123, "A", self.OTHER)
+        identity = gate.stale_identity(self.record("A", self.GOOD), self.record("A", self.OTHER))
+        pins = {(123, "A"): ("an authored known mismatch", identity)}
+        with mock.patch.object(gate, "STALE_SOURCES", pins):
+            self.assertEqual(self.run_gate()[0], 0)
+            self.source(123, "A", "init() { Pause(73); }\n")
+            code, out = self.run_gate()
+            self.assertEqual(code, 1)
+            self.assertIn("the pinned stale source comparison changed or could not be checked", out)
+            self.assertNotIn("Pause(73)", out)
+            self.source(123, "A", self.OTHER)
+            self.archive(123, 123, 124, {"A": "init() { Pause(92); }\n", "B": self.OTHER}, {"C": self.GOOD})
+            code, out = self.run_gate()
+            self.assertEqual(code, 1)
+            self.assertIn("the pinned stale source comparison changed or could not be checked", out)
+            self.assertNotIn("Pause(92)", out)
+
     def test_a_pin_cannot_rot(self):
         self.two_worlds()
-        with mock.patch.object(gate, "STALE_SOURCES", {(123, "A"): "a reason that is no longer true"}):
+        with mock.patch.object(gate, "STALE_SOURCES", {(123, "A"): ("a reason that is no longer true", "0" * 64)}):
             code, out = self.run_gate()
         self.assertEqual(code, 1)
         self.assertIn("FAIL 123 A: listed as a stale source but it is exact", out)
-        with mock.patch.object(gate, "STALE_SOURCES", {(999, "Nope"): "a script no level has"}):
+        with mock.patch.object(gate, "STALE_SOURCES", {(999, "Nope"): ("a script no level has", "0" * 64)}):
             code, out = self.run_gate()
             self.assertEqual(code, 1)
             self.assertIn("FAIL 999 Nope: listed as a stale source but no such script was met", out)
