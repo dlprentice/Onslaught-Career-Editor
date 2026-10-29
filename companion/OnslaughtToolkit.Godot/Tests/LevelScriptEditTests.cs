@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using System.Numerics;
 using OnslaughtToolkit.Companion.Levels;
+using OnslaughtToolkit.Companion.Missions;
 
 namespace OnslaughtToolkit.Companion.Tests;
 
@@ -21,6 +22,7 @@ internal static class LevelScriptEditTests
         Validation(check);
         BrokenScripts(check);
         Model(output, check);
+        EditableModel(output, check);
     }
 
     /// <summary>The replacement the checks that save use: the shape of the authored alpha, as a program the checker accepts (the authored one is a stand-in that is never run).</summary>
@@ -454,6 +456,90 @@ internal static class LevelScriptEditTests
         ValidationReport baseReport = baseWorld.Validate();
         check.That(!baseReport.CanSave && baseReport.Errors.Select(error => error.Code).SequenceEqual(["script-broken"]) && baseReport.Warnings.Select(warning => warning.Code).SequenceEqual(["base-world-scripts"]),
             $"a base world's broken script is refused and the warning about its other levels stays: {string.Join(",", baseReport.Errors.Select(error => error.Code))} / {string.Join(",", baseReport.Warnings.Select(warning => warning.Code))}");
+    }
+
+    /// <summary>The model on an authored game folder with one level (100), whose world holds the one compiled script "main".</summary>
+    private static void EditableModel(string output, Checks check)
+    {
+        string folder = Path.Combine(output, "script-edit-model"), game = Path.Combine(folder, "game");
+        if (Directory.Exists(folder)) Directory.Delete(folder, true);
+        Directory.CreateDirectory(Path.Combine(game, "data", "resources"));
+        Directory.CreateDirectory(Path.Combine(game, "data", "inc"));
+        File.WriteAllBytes(Path.Combine(game, "data", "resources", "100_res_PC.aya"), LevelTests.Unpack(LevelVectors.Archives.First(archive => archive.Name == "level-100").File));
+        File.WriteAllText(Path.Combine(game, "data", "inc", "defs.msl"), "#define DELAY 7\n");
+        LevelEditorModel model = LevelEditorModel.ForGame(game);
+        int changed = 0;
+        model.Changed += () => changed++;
+        check.That(model.Open(100) && model.Scripts.Count == 1 && model.Scripts[0] is { FromBaseWorld: false, Summary.Name: "main" } && model.OwnScriptIndex(model.Scripts[0]) == 0,
+            "a level opens with its compiled script listed, and the list says which place of the world's it is");
+        EditSession session = model.Session!;
+        const string Source = "init()\n{\n\tPause(2);\n}\n";
+        int shippedInstructions = model.Scripts[0].Summary.Instructions;
+
+        ScriptCompileOutcome compiled = model.CompileScript(0, Source, game);
+        check.That(compiled.Ok && compiled.Script!.Name == "main" && compiled.Message == $"Compiled main: {compiled.Script.Code.Instructions.Count} instructions." && compiled.Notes.Count == 0 && compiled.Line is null &&
+                   session.CanUndo == false && !model.HasUnsavedChanges, "a source compiles under the name of the script it would replace, and compiling alone changes nothing");
+        ScriptCompileOutcome unknown = model.CompileScript(0, "init()\n{\n\tFrobnicate(1);\n}\n", game);
+        check.That(!unknown.Ok && unknown.Line == 2 && unknown.Message.StartsWith("line 3: ", StringComparison.Ordinal) && unknown.Message.Contains("Frobnicate", StringComparison.Ordinal),
+            $"a source that does not compile says why and where: {unknown.Message} (line {unknown.Line})");
+        ScriptCompileOutcome missing = model.CompileScript(0, "#include data\\inc\\nothing.msl\ninit()\n{\n}\n", game);
+        check.That(!missing.Ok && missing.Message.Contains("data\\inc\\nothing.msl is not in the game folder", StringComparison.Ordinal) && missing.Message.EndsWith("so this script cannot be compiled here.", StringComparison.Ordinal),
+            $"a header the game folder lacks is named: {missing.Message}");
+        ScriptCompileOutcome included = model.CompileScript(0, "#include data\\inc\\defs.msl\ninit()\n{\n\tPause(DELAY);\n}\n", game);
+        check.That(included.Ok && included.Script!.Code.Symbols.Any(symbol => symbol.Value is ScriptInt { Value: 7 }), "a header the game folder has is read");
+        check.That(!model.CompileScript(-1, Source, game).Ok && !model.CompileScript(1, Source, game).Ok && model.CompileScript(1, Source, game).Message == "There is no script 1 in this world.", "a script number the world lacks is refused");
+        check.That(model.ReplaceScriptFromSource(0, "init()\n{\n\tFrobnicate(1);\n}\n", game) is { Result: ScriptEditResult.Refused, Line: 2 } && !session.CanUndo && model.Scripts[0].Summary.Instructions == shippedInstructions,
+            "a source that does not compile replaces nothing");
+
+        int before = changed;
+        ScriptEditOutcome replaced = model.ReplaceScriptFromSource(0, Source, game);
+        ScriptChange change = session.ScriptChanges().Single();
+        check.That(replaced.Result == ScriptEditResult.Replaced && replaced.Message == "Replaced main." && changed == before + 1 && session.UndoDescription == "Replace script main" &&
+                   model.Scripts[0].Summary.Instructions == compiled.Script!.Code.Instructions.Count && model.Scripts[0].Summary.Instructions != shippedInstructions && model.OwnScriptIndex(model.Scripts[0]) == 0,
+            "a source that compiles replaces the script as one edit, announces it, and the script list shows the new script");
+        check.That(model.ChangeSummary() == $"1 script replaced: main ({change.Describe()})." && model.HasUnsavedChanges && model.UnsavedChangeCount == 1, $"the summary and the unsaved count say so: {model.ChangeSummary()}");
+        check.That(model.ReplaceScriptFromSource(0, Source, game) is { Result: ScriptEditResult.Unchanged } && session.Undo() && !session.CanUndo, "the same source again changes nothing, and adds nothing to take back");
+        check.That(model.Scripts[0].Summary.Instructions == shippedInstructions && model.ChangeSummary() is null && !model.HasUnsavedChanges, "taking the replacement back brings the shipped script and an empty summary back");
+        check.That(session.Redo() && model.Scripts[0].Summary.Instructions != shippedInstructions && model.HasUnsavedChanges, "and making it again brings the new script back");
+
+        check.That(model.ResetScript(0) is { Result: ScriptEditResult.Replaced, Message: "main is back as the level has it." } && model.Scripts[0].Summary.Instructions == shippedInstructions && model.ChangeSummary() is null,
+            "putting the shipped script back is an edit, and leaves the level as it was loaded");
+        check.That(model.ResetScript(0) is { Result: ScriptEditResult.Unchanged, Message: "main has not been replaced." } && model.ResetScript(3).Result == ScriptEditResult.Refused, "a script that was not replaced has nothing to put back");
+
+        model.ReplaceScriptFromSource(0, Source, game);
+        string parent = Path.Combine(folder, "mods");
+        SaveOutcome saved = model.SaveAsMod(parent, new ModInfo("script-edit", "Script edit"), [game]);
+        check.That(saved.Ok && !model.HasUnsavedChanges, $"the edit saves as a mod, and what was saved is no longer unsaved: {saved.Message}");
+        if (saved.Staged is { } staged)
+        {
+            WorldBody written = WorldBody.Read(File.ReadAllBytes(Path.Combine(staged.Root, "data", "worlds", "world100.wrd")));
+            check.That(written.Scripts.Count == 1 && WorldBodyWriter.ScriptBytes(written.Scripts[0]).AsSpan().SequenceEqual(WorldBodyWriter.ScriptBytes(session.Body.Scripts[0])), "the saved world holds the replaced script");
+        }
+        model.ReplaceScriptFromSource(0, "init()\n{\n\tPause(3);\n}\n", game);
+        check.That(model.HasUnsavedChanges && model.ChangeSummary()!.StartsWith("1 script replaced: main (", StringComparison.Ordinal), "a further edit after the save is unsaved again");
+
+        check.That(model.Open(100) && model.ChangeSummary() is null && model.Scripts[0].Summary.Instructions == shippedInstructions, "opening the level again starts from the shipped script");
+        check.That(model.OwnScriptIndex(new ScriptEntry(model.Scripts[0].Summary, 100, FromBaseWorld: true)) is null && model.OwnScriptIndex(new ScriptEntry(model.Scripts[0].Summary, 100, FromBaseWorld: false)) is null,
+            "an entry of the base world, or one the model does not list, has no place in the world's own scripts");
+        model.Session!.Body.Scripts[0].Name = "renamed";
+        check.That(!model.CompileScript(0, Source, game).Ok && model.ReplaceScriptFromSource(0, Source, game).Result == ScriptEditResult.Refused &&
+                   model.ResetScript(0).Result == ScriptEditResult.Refused && model.HasUnsavedChanges,
+            "a changed script list is refused without losing its unsaved state");
+        model.Open(100);
+        model.Session!.Body.Scripts.Add(model.Session.ShippedScript(0));
+        check.That(!model.CompileScript(1, Source, game).Ok && model.ResetScript(1).Result == ScriptEditResult.Refused && model.HasUnsavedChanges,
+            "an appended script cannot index past the shipped list and the level stays dirty");
+        model.Open(100);
+        model.Session!.Body.Scripts[0].Code = null!;
+        check.That(model.ReplaceScriptFromSource(0, Source, game).Result == ScriptEditResult.Refused && model.ResetScript(0).Result == ScriptEditResult.Refused &&
+                   model.HasUnsavedChanges && !model.Session.Validate().CanSave,
+            "an unstorable current script cannot be replaced or reset silently, and stays unsaved");
+        model.Open(100);
+        model.Session!.Body.Scripts[0].Trailer = null!;
+        check.That(model.ReplaceScriptFromSource(0, Source, game).Result == ScriptEditResult.Refused && model.ResetScript(0).Result == ScriptEditResult.Refused &&
+                   model.HasUnsavedChanges && !model.Session.Validate().CanSave,
+            "a script that lists but cannot be serialized is refused without discarding its unsaved state");
+        Directory.Delete(folder, true);
     }
 
     private static WorldBody WithFloat(float value)
