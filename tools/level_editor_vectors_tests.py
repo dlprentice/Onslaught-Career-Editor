@@ -371,9 +371,10 @@ class VectorTests(unittest.TestCase):
         # "Path A" is path 0, the object named "Tank 1" is row 0, "Go" is the event the authored script handles (twice over for archive 100, whose base world has the
         # same script), "unit-2" is the third object of archive 100's base world (exactly, then in another letter case) and of no world of the others, two texts name
         # nothing, "path a" is path 0 in another letter case where it is the argument of FollowWaypointWait (blanks around it do not matter) and nothing as an
-        # argument of GetThingRef or of FollowWaypointX.
-        self.assertEqual(rows[4][2:], ["10", gen.dump_hash(["main|0|Path A|path:0", "main|1|Tank 1|object:0", "main|2|Go|handler:0,handler:1", "main|2|nothing|", "main|3|unterminated|",
-                                                            "main|4|unit-2|baseobject:2", "main|4|UNIT-2|baseobject:2:case", "main|5|path a|path:0:case", "main|5|path a|", "main|5|path a|"]), "6", "-"])
+        # argument of GetThingRef or of FollowWaypointX. A path argument takes the game's first match: archive 100's base world has the same path "Path A", and the
+        # game's one list holds the base world's paths first, so there both path arguments name the base world's path (`basepath:0`).
+        self.assertEqual(rows[4][2:], ["10", gen.dump_hash(["main|0|Path A|basepath:0", "main|1|Tank 1|object:0", "main|2|Go|handler:0,handler:1", "main|2|nothing|", "main|3|unterminated|",
+                                                            "main|4|unit-2|baseobject:2", "main|4|UNIT-2|baseobject:2:case", "main|5|path a|basepath:0:case", "main|5|path a|", "main|5|path a|"]), "6", "-"])
         self.assertEqual(rows[9][2:], ["10", gen.dump_hash(["main|0|Path A|path:0", "main|1|Tank 1|object:0", "main|2|Go|handler:0", "main|2|nothing|", "main|3|unterminated|",
                                                              "main|4|unit-2|", "main|4|UNIT-2|", "main|5|path a|path:0:case", "main|5|path a|", "main|5|path a|"]), "4", "-"])
         self.assertEqual(rows[14][2:], ["0", gen.dump_hash([]), "0", "-"])
@@ -435,14 +436,24 @@ class VectorTests(unittest.TestCase):
         self.assertEqual(resolve_with_base("tank 1"), ["object:1", "baseobject:1"])
         self.assertEqual(resolve_with_base("Base Path"), [])
         self.assertEqual((resolve_with_base(""), resolve("Base Hut")), ([], []))
-        # A waypoint path's name is matched exactly, except where the game compares ignoring letter case: then each path of that name in any case is named, the others marked.
+        # A waypoint path's name is matched exactly, except where the game compares ignoring letter case: it takes the first path of its one list (the base
+        # world's paths, then the level's own) whose name matches in any case, so one path is named, marked when its case differs.
         paths = {"things": [], "waypointPaths": [{"name": "Route"}, {"name": "route"}, {"name": "ROUTE 2"}]}
         self.assertEqual(gen.resolve_name("route", paths, []), ["path:1"])
-        self.assertEqual(gen.resolve_name("route", paths, [], None, True), ["path:0:case", "path:1"])
-        self.assertEqual(gen.resolve_name("ROUTE", paths, [], None, True), ["path:0:case", "path:1:case"])
-        self.assertEqual(gen.resolve_name("Route", paths, [], None, True), ["path:0", "path:1:case"])
+        self.assertEqual(gen.resolve_name("route", paths, [], None, True), ["path:0:case"])
+        self.assertEqual(gen.resolve_name("ROUTE", paths, [], None, True), ["path:0:case"])
+        self.assertEqual(gen.resolve_name("Route", paths, [], None, True), ["path:0"])
         self.assertEqual(gen.resolve_name("Route", paths, []), ["path:0"])
         self.assertEqual(gen.resolve_name("rout", paths, [], None, True), [])
+        self.assertEqual(gen.resolve_name("route 2", paths, [], None, True), ["path:2:case"])
+        base = {"things": [], "waypointPaths": [{"name": "Shared"}, {"name": "ROUTE"}]}
+        self.assertEqual(gen.resolve_name("route", paths, [], base, True), ["basepath:1:case"])  # the base world's path comes first, whatever the case
+        self.assertEqual(gen.resolve_name("Route", paths, [], base, True), ["basepath:1:case"])  # even when the level's own path is an exact match
+        self.assertEqual(gen.resolve_name("ROUTE", paths, [], base, True), ["basepath:1"])
+        self.assertEqual(gen.resolve_name("shared", paths, [], base, True), ["basepath:0:case"])
+        self.assertEqual(gen.resolve_name("Route 2", paths, [], base, True), ["path:2:case"])  # nothing of that name in the base world: the level's own
+        self.assertEqual(gen.resolve_name("Route", paths, [], base), ["path:0"])  # not a path argument: exact, the level's own paths only
+        self.assertEqual(gen.resolve_name("Shared", paths, [], base), [])
 
     def test_the_source_finder_matches_the_companions(self) -> None:
         """tools/level_editor_vectors.py's source_text is the reference the C# ScriptSources is held to on a game: any case, the exact spelling
