@@ -179,6 +179,10 @@ namespace OnslaughtToolkit.Companion.Files
             return new GuardedFileMutation(outputPath, protectedInputPaths);
         }
 
+        /// <summary>For multi-file staging: leave a failed temporary pathname untouched, since another writer may have replaced it.</summary>
+        internal static GuardedFileMutation BeginGeneratedVacantRetainingTemporary(string outputPath) =>
+            new(outputPath, [], retainFailedTemporary: true);
+
         internal static FileStream CreateStagedFile(
             string path,
             Action<string>? afterCreateForTest = null)
@@ -722,16 +726,15 @@ namespace OnslaughtToolkit.Companion.Files
     internal sealed class GuardedFileMutation : IDisposable
     {
         private readonly Dictionary<string, ProtectedInput> _inputs = new(FileMutationSafety.PathComparer);
+        private readonly bool _retainFailedTemporary;
         private FileMutationSafety.DirectoryLockSet? _outputDirectoryLocks;
         private FileStream? _committedStream;
         private string _physicalOutputPath = string.Empty;
         private bool _committed;
 
         /// <summary>
-        /// True once this transaction has moved its file into place, whether or not the checks after the move passed: the file at the
-        /// output path is then this transaction's, and a caller whose commit failed removes it with whatever else it made. It is set right
-        /// after <c>File.Move</c> succeeds; no test hook reaches the moment between the last destination check and the move (the staged
-        /// file's quarantine release and its stream's disposal run inside it), so nothing here would notice it being set earlier.
+        /// True once this transaction has moved its file into place, whether or not checks after the move passed. The pathname can
+        /// subsequently change, so the flag alone does not prove that a later file at that path is the one this transaction published.
         /// </summary>
         internal bool Published { get; private set; }
 
@@ -741,8 +744,10 @@ namespace OnslaughtToolkit.Companion.Files
         /// </summary>
         internal GuardedFileMutation(
             string outputPath,
-            IReadOnlyList<string?> protectedInputPaths)
+            IReadOnlyList<string?> protectedInputPaths,
+            bool retainFailedTemporary = false)
         {
+            _retainFailedTemporary = retainFailedTemporary;
             OutputPath = FileMutationSafety.NormalizeLocalPath(outputPath, "Output file");
 
             try
@@ -923,7 +928,7 @@ namespace OnslaughtToolkit.Companion.Files
             }
             finally
             {
-                if (tempEntryExists && File.Exists(tempPath))
+                if (tempEntryExists && !_retainFailedTemporary && File.Exists(tempPath))
                     File.Delete(tempPath);
             }
         }

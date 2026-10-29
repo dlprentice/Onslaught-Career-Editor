@@ -45,7 +45,8 @@ public sealed class ModStageException : Exception
 /// </code>
 /// A mod is always a new folder (an existing empty one is used), never inside a game folder or a protected folder, with the
 /// world files written first and <c>mod.json</c> last (a folder without it is inert). Each file goes through the companion's
-/// new-file-only publisher. When anything fails, what this call created is removed again.
+/// new-file-only publisher. If a write fails, files and folders may remain: they are not removed by path because another
+/// writer may have changed them. The error names the folder and warns that a manifest may also be present.
 /// <para>
 /// It detects replacement; it does not lock, as the Python helper does not. The folder checks (no link on the way, not inside a
 /// game folder or a protected folder, nothing already in the mod folder) run first and the folders are created after them, and
@@ -157,28 +158,22 @@ public static class ModStager
 
         string root = CheckDestination(parent, info.Id, protectedFolders);
 
-        List<string> createdFiles = [], createdFolders = [];
         try
         {
-            CreateFolder(Path.Combine(root, "data", "worlds"), createdFolders);
+            CreateFolder(Path.Combine(root, "data", "worlds"));
             List<StagedFile> written = [];
             foreach (string path in files.Keys.Order(StringComparer.Ordinal))
             {
-                Write(Path.Combine(root, path.Replace('/', Path.DirectorySeparatorChar)), files[path], beforeWrite, beforeCommittedOpen, beforePublish, createdFiles);
+                Write(Path.Combine(root, path.Replace('/', Path.DirectorySeparatorChar)), files[path], beforeWrite, beforeCommittedOpen, beforePublish);
                 written.Add(new StagedFile(path, files[path].Length, Hex(files[path])));
             }
-            Write(Path.Combine(root, "mod.json"), manifest, beforeWrite, beforeCommittedOpen, beforePublish, createdFiles);
+            Write(Path.Combine(root, "mod.json"), manifest, beforeWrite, beforeCommittedOpen, beforePublish);
             return new StagedMod(root, Hex(manifest), written);
         }
         catch (Exception error)
         {
-            // Whatever went wrong, what this call made goes. A problem with the folders or files is reported as a ModStageException; anything
-            // else (a cancellation, a bug) is let through as it is, unless something could not be removed, which the player must be told.
-            string left = Cleanup(createdFiles, createdFolders);
-            if (error is ModStageException) throw Rethrow(error, left);
-            if (error is IOException or InvalidOperationException or UnauthorizedAccessException || left.Length > 0)
-                throw new ModStageException($"The mod was not saved: {error.Message}{left}", error);
-            throw;
+            // A name we created may now hold another writer's data. Preserve it instead of deleting by pathname.
+            throw new ModStageException($"The mod could not be saved: {error.Message} The folder {root} may contain files, including mod.json. The mod may be active on the next game launch. Check the folder before using or removing it.", error);
         }
     }
 
@@ -215,61 +210,19 @@ public static class ModStager
         }
     }
 
-    private static ModStageException Rethrow(Exception error, string left) =>
-        left.Length == 0 ? (ModStageException)error : new ModStageException(error.Message + left, error);
-
-    private static void Write(string path, byte[] bytes, Action<string>? beforeWrite, Action<string>? beforeCommittedOpen, Action<string>? beforePublish, List<string> created)
+    private static void Write(string path, byte[] bytes, Action<string>? beforeWrite, Action<string>? beforeCommittedOpen, Action<string>? beforePublish)
     {
         beforeWrite?.Invoke(path);
-        using GuardedFileMutation guard = FileMutationSafety.BeginGeneratedVacant(path);
-        try
-        {
-            guard.Commit(bytes, beforeCommittedOpen, beforePublish);
-        }
-        finally
-        {
-            // A commit that fails after the publisher moved the file into place leaves that file here; it is this call's, so it goes with the rest.
-            // (The path is not recorded before the commit: until the file is published, the path may be somebody else's.)
-            if (guard.Published) created.Add(path);
-        }
+        using GuardedFileMutation guard = FileMutationSafety.BeginGeneratedVacantRetainingTemporary(path);
+        guard.Commit(bytes, beforeCommittedOpen, beforePublish);
     }
 
-    private static void CreateFolder(string path, List<string> created)
+    private static void CreateFolder(string path)
     {
         if (Directory.Exists(path)) return;
         string? parent = Path.GetDirectoryName(path);
-        if (parent is not null) CreateFolder(parent, created);
+        if (parent is not null) CreateFolder(parent);
         Directory.CreateDirectory(path);
-        created.Add(path);
-    }
-
-    /// <summary>Removes what one call created, files then folders, newest first; a folder that is not empty is left. Returns a sentence about anything left.</summary>
-    private static string Cleanup(List<string> files, List<string> folders)
-    {
-        List<string> left = [];
-        foreach (string file in Enumerable.Reverse(files))
-        {
-            try
-            {
-                File.Delete(file);
-            }
-            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
-            {
-                left.Add(file);
-            }
-        }
-        foreach (string folder in Enumerable.Reverse(folders))
-        {
-            try
-            {
-                Directory.Delete(folder);
-            }
-            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
-            {
-                left.Add(folder);
-            }
-        }
-        return left.Count == 0 ? "" : $" These could not be removed and may be deleted: {string.Join(", ", left)}.";
     }
 
     private static string Hex(byte[] data) => Convert.ToHexStringLower(SHA256.HashData(data));
