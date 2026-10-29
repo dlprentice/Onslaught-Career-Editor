@@ -117,7 +117,7 @@ public partial class CompanionApp : Control
             ChooseCareer = ChooseCareerAsync, Popups = popups, SelectTarget = SelectTargetAsync,
             CatchUp = () => CatchUpAsync(force: true, backUp: false),
             OpenCareerFile = () => Home.OpenDialog.PopupCenteredRatio(0.75f),
-            AskToDiscard = AskToDiscard, LevelMovesUnsaved = () => LevelEditor.ChangeCount,
+            AskToDiscard = AskToDiscard, LevelEditsUnsaved = () => LevelEditor.ChangeCount,
             OldCopiesFolder = environment.OldCopiesFolder ?? OldSafeCopies.DefaultRoot(),
         };
 
@@ -316,7 +316,7 @@ public partial class CompanionApp : Control
         List<string> unsaved = [];
         if (EditCareer.HasChanges) unsaved.Add($"{Build.Count(EditCareer.ChangeCount, "change")} on Edit career");
         if (Settings.HasChanges) unsaved.Add($"{Build.Count(Settings.ChangeCount, "change")} on Game settings");
-        if (LevelEditor.HasChanges) unsaved.Add($"{Build.Count(LevelEditor.ChangeCount, "object")} moved on Level editor");
+        if (LevelEditor.HasChanges) unsaved.Add($"{Build.Count(LevelEditor.ChangeCount, "change")} on Level editor");
         if (unsaved.Count == 0)
         {
             _quit();

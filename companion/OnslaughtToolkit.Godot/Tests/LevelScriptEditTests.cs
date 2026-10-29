@@ -20,6 +20,7 @@ internal static class LevelScriptEditTests
         Unstorable(check);
         Validation(check);
         BrokenScripts(check);
+        Model(output, check);
     }
 
     /// <summary>The replacement the checks that save use: the shape of the authored alpha, as a program the checker accepts (the authored one is a stand-in that is never run).</summary>
@@ -168,7 +169,11 @@ internal static class LevelScriptEditTests
             bool explained = field is null
                 ? change.Symbols.Count == 1 && change.Symbols[0].From != change.Symbols[0].To
                 : change.Fields.Any(entry => entry.Field == field && entry.From != entry.To);
-            check.That(explained, $"a {what}-only record change identifies the field and gives different before/after values");
+            string summary = change.Describe();
+            bool summarized = field is null ? summary.Contains("symbol", StringComparison.Ordinal)
+                : field.StartsWith("instruction ", StringComparison.Ordinal) ? summary.Contains("code differs", StringComparison.Ordinal)
+                : summary.Contains(field, StringComparison.Ordinal);
+            check.That(explained && summarized, $"a {what}-only record change identifies the field, gives different values and summarizes it: {summary}");
         }
 
         EditSession additions = new(baseline);
@@ -181,6 +186,14 @@ internal static class LevelScriptEditTests
         check.That(added.Fields.Any(field => field.Field == "handler 1" && field.From == "(none)") &&
                    added.Fields.Any(field => field.Field.StartsWith("instruction ", StringComparison.Ordinal) && field.From == "(none)") &&
                    added.Symbols.Single().From == "(none)", "added instructions, handlers and symbols are listed from none");
+
+        EditSession many = new(baseline);
+        MissionScript manyEntries = many.ShippedScript(0);
+        for (int i = 0; i < 5; i++) manyEntries.Code.EventPcs[i]++;
+        many.Apply(new ReplaceScript(0, manyEntries));
+        ScriptChange several = many.ScriptChanges().Single();
+        check.That(several.Fields.Count == 5 && several.Describe().Contains("2 more fields differ", StringComparison.Ordinal),
+            "a long summary names its first three changed fields and says how many more, while retaining every detail");
 
         float nan1 = BitConverter.UInt32BitsToSingle(0x7fc00001), nan2 = BitConverter.UInt32BitsToSingle(0x7fc00002);
         WorldBody vectors = LevelScriptTests.Body(LevelScriptTests.Script("alpha", [], []));
@@ -222,7 +235,8 @@ internal static class LevelScriptEditTests
             session.Apply(new ReplaceScript(0, script));
             ScriptChange change = session.ScriptChanges().Single();
             ValidationReport report = session.Validate();
-            check.That(change.StorageError is { Length: > 0 } && !report.CanSave && report.Errors.Single() is { Code: "script-unstorable", Index: 0 } &&
+            check.That(change.StorageError is { Length: > 0 } && change.Describe().StartsWith("cannot be saved: ", StringComparison.Ordinal) &&
+                       !report.CanSave && report.Errors.Single() is { Code: "script-unstorable", Index: 0 } &&
                        report.Errors[0].Message.Contains(change.StorageError, StringComparison.Ordinal),
                 $"{what} is reported by ScriptChanges and refused by Validate without throwing");
             check.That(session.Undo() && session.ToBytes().AsSpan().SequenceEqual(baseline), $"an edit with {what} can still be undone");
@@ -249,6 +263,58 @@ internal static class LevelScriptEditTests
         missing.Body.Scripts[0] = null!;
         check.That(missing.ScriptChanges().Count == 0 && missing.Validate().Errors.Single().Code == "cannot-write",
             "a missing script record is refused as an unwritable world, without throwing while listing changes");
+    }
+
+    /// <summary>The real level-editor model on an authored archive: summary, refusal, save and undo/redo across script changes.</summary>
+    private static void Model(string output, Checks check)
+    {
+        string folder = Path.Combine(output, "script-edit-summary"), game = Path.Combine(folder, "game");
+        string resources = Path.Combine(game, "data", "resources");
+        Directory.CreateDirectory(resources);
+        File.WriteAllBytes(Path.Combine(resources, "100_res_PC.aya"), LevelTests.Unpack(LevelVectors.Archives.First(archive => archive.Name == "level-100").File));
+        LevelEditorModel model = LevelEditorModel.ForGame(game);
+        bool opened = model.Open(100) && model.Session is not null;
+        check.That(opened, "the authored level opens for script-change summary checks");
+        if (!opened) return;
+        EditSession session = model.Session!;
+
+        MissionScript trailer = session.ShippedScript(0);
+        trailer.Trailer[0]++;
+        session.Apply(new ReplaceScript(0, trailer));
+        check.That(model.HasUnsavedChanges && model.UnsavedChangeCount == 1 &&
+                   model.ChangeSummary() is { } summary && summary.Contains("1 script replaced: main", StringComparison.Ordinal) && summary.Contains("trailer:", StringComparison.Ordinal),
+            "a trailer-only script change is unsaved and its named field appears in the model summary");
+        check.That(session.Undo() && !model.HasUnsavedChanges && model.ChangeSummary() is null && session.Redo() && model.HasUnsavedChanges,
+            "undo and redo update the model's script-only unsaved state");
+
+        MissionScript invalid = session.ShippedScript(0);
+        invalid.Trailer = new byte[9];
+        session.Apply(new ReplaceScript(0, invalid));
+        string refusedFolder = Path.Combine(folder, "refused-mods");
+        SaveOutcome refused = model.SaveAsMod(refusedFolder, new ModInfo("bad-script", "Bad script"), [game]);
+        check.That(model.HasUnsavedChanges && model.UnsavedChangeCount == 1 && model.ChangeSummary()!.Contains("cannot be saved:", StringComparison.Ordinal) &&
+                   !refused.Ok && refused.Message.Contains("cannot be saved", StringComparison.Ordinal) && !Directory.Exists(refusedFolder),
+            "an unstorable script remains unsaved, explains why, and cannot create a mod folder");
+
+        check.That(model.Open(100) && model.Session is not null, "reopening the authored level resets the session");
+        session = model.Session!;
+        MissionScript valid = LevelScriptCheckerTests.WellFormed("main", [0], [], ("Pause", 1));
+        session.Apply(new ReplaceScript(0, valid));
+        check.That(session.Validate().CanSave && model.HasUnsavedChanges, "a valid authored replacement can be saved and starts unsaved");
+        string mods = Path.Combine(folder, "mods");
+        SaveOutcome saved = model.SaveAsMod(mods, new ModInfo("script-edit", "Script edit"), [game]);
+        check.That(saved.Ok && !model.HasUnsavedChanges && model.UnsavedChangeCount == 0, $"saving the script's exact state clears the unsaved flag: {saved.Message}");
+        MissionScript later = ScriptCopy.Of(session.Body.Scripts[0]);
+        int originalTail = session.ShippedScript(0).Code.Tail1;
+        int changedTail = originalTail ^ 1;
+        later.Code.Tail1 = changedTail == later.Code.Tail1 ? originalTail ^ 2 : changedTail;
+        session.Apply(new ReplaceScript(0, later));
+        check.That(model.HasUnsavedChanges && model.UnsavedChangeCount == 1 &&
+                   session.ScriptChanges().Single().Fields.Any(field => field.Field == "first trailing word") &&
+                   model.ChangeSummary()!.Contains("more field", StringComparison.Ordinal),
+            $"a later same-size script edit is unsaved even though the number of changed scripts is the same: {model.HasUnsavedChanges}, {model.UnsavedChangeCount}, {model.ChangeSummary()}");
+        check.That(session.Undo() && !model.HasUnsavedChanges && session.Redo() && model.HasUnsavedChanges,
+            "undoing to the saved script clears the flag and redoing the later edit sets it again");
     }
 
     private static void Validation(Checks check)

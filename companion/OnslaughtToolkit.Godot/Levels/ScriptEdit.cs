@@ -102,6 +102,25 @@ public sealed record ScriptChange(int Index, string Name, int InstructionsFrom, 
 
     /// <summary>Why the working record cannot be stored, or null when it can.</summary>
     public string? StorageError { get; init; }
+
+    /// <summary>A short player-facing summary. The full before/after details remain in <see cref="Fields"/> and <see cref="Symbols"/>.</summary>
+    public string Describe()
+    {
+        if (StorageError is { } error) return $"cannot be saved: {error}";
+        List<string> parts = [];
+        if (CodeDiffers) parts.Add(InstructionsFrom == InstructionsTo ? "its code differs" : $"{InstructionsFrom} to {InstructionsTo} instructions");
+        if (Symbols.Count > 0) parts.Add(Symbols.Count == 1 ? "1 symbol differs" : $"{Symbols.Count} symbols differ");
+        ScriptFieldChange[] other = [.. Fields.Where(field => !field.Field.StartsWith("instruction ", StringComparison.Ordinal))];
+        parts.AddRange(other.Take(3).Select(field => $"{field.Field}: {Brief(field.From)} to {Brief(field.To)}"));
+        if (other.Length > 3)
+        {
+            int more = other.Length - 3;
+            parts.Add(more == 1 ? "1 more field differs" : $"{more} more fields differ");
+        }
+        return parts.Count == 0 ? "its record differs" : string.Join(", ", parts);
+    }
+
+    private static string Brief(string text) => text.Length <= 80 ? text : text[..77] + "...";
 }
 
 internal static class ScriptDiff

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using System.Numerics;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace OnslaughtToolkit.Companion.Levels;
@@ -73,22 +74,37 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
 
     private string? _savedSignature;
 
-    /// <summary>The moved objects and where each stands, bit for bit, as one text: two edits that put everything in the same places have the same one.</summary>
-    private static string Signature(EditSession session) => string.Join(';', session.Changes().Select(change =>
-        $"{change.Index}:{BitConverter.SingleToUInt32Bits(change.To.X):x8}:{BitConverter.SingleToUInt32Bits(change.To.Y):x8}:{BitConverter.SingleToUInt32Bits(change.To.Z):x8}"));
+    /// <summary>The moved objects and changed scripts, bit for bit. A script that cannot be stored has no saveable signature.</summary>
+    private static string? Signature(EditSession session)
+    {
+        IReadOnlyList<ScriptChange> scripts = session.ScriptChanges();
+        if (scripts.Any(change => change.StorageError is not null)) return null;
+        try
+        {
+            return string.Join(';', session.Changes().Select(change =>
+                $"{change.Index}:{BitConverter.SingleToUInt32Bits(change.To.X):x8}:{BitConverter.SingleToUInt32Bits(change.To.Y):x8}:{BitConverter.SingleToUInt32Bits(change.To.Z):x8}")
+                .Concat(scripts.Select(change => $"script {change.Index}:{Convert.ToHexStringLower(SHA256.HashData(WorldBodyWriter.ScriptBytes(session.Body.Scripts[change.Index])))}")));
+        }
+        catch (InvalidDataException)
+        {
+            // The working body is mutable; if it became unwritable while computing the signature, it remains unsaved.
+            return null;
+        }
+    }
 
     /// <summary>
-    /// How many objects stand somewhere their level does not have them and no Save as mod has written that yet (0 when there is nothing
-    /// to lose): what leaving the level, the game or the companion would drop. An edit that was saved and then undone, or saved and
-    /// left as it is, holds nothing unsaved.
+    /// How many objects or scripts differ from the level and no Save as mod has written that state yet (0 when there is nothing to lose).
+    /// An unstorable script always remains unsaved. An edit that was saved and then undone, or saved and left as it is, holds nothing unsaved.
     /// </summary>
     public int UnsavedChangeCount
     {
         get
         {
             if (Session is not { } session) return 0;
-            int moved = session.Changes().Count;
-            return moved > 0 && Signature(session) != _savedSignature ? moved : 0;
+            int changed = session.Changes().Count + session.ScriptChanges().Count;
+            if (changed == 0) return 0;
+            string? signature = Signature(session);
+            return signature is null || signature != _savedSignature ? changed : 0;
         }
     }
 
@@ -303,13 +319,23 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         BitConverter.SingleToUInt32Bits(a.Y) == BitConverter.SingleToUInt32Bits(b.Y) &&
         BitConverter.SingleToUInt32Bits(a.Z) == BitConverter.SingleToUInt32Bits(b.Z);
 
-    /// <summary>A sentence about the changes made, or null when there are none: "1 object moved: Target Tank (row 12), 62.1 units."</summary>
+    /// <summary>A sentence about moved objects and changed scripts, or null when there are none.</summary>
     public string? ChangeSummary()
     {
         IReadOnlyList<ObjectChange> changes = Session?.Changes() ?? [];
-        if (changes.Count == 0) return null;
-        string list = string.Join("; ", changes.Take(3).Select(change => $"{change.Name} (row {change.Index}), {change.Distance:0.0} units"));
-        return $"{(changes.Count == 1 ? "1 object moved" : $"{changes.Count} objects moved")}: {list}{(changes.Count > 3 ? $" and {changes.Count - 3} more" : "")}.";
+        IReadOnlyList<ScriptChange> scripts = Session?.ScriptChanges() ?? [];
+        List<string> sentences = [];
+        if (changes.Count > 0)
+        {
+            string list = string.Join("; ", changes.Take(3).Select(change => $"{change.Name} (row {change.Index}), {change.Distance:0.0} units"));
+            sentences.Add($"{(changes.Count == 1 ? "1 object moved" : $"{changes.Count} objects moved")}: {list}{(changes.Count > 3 ? $" and {changes.Count - 3} more" : "")}.");
+        }
+        if (scripts.Count > 0)
+        {
+            string list = string.Join("; ", scripts.Take(3).Select(change => $"{change.Name} ({change.Describe()})"));
+            sentences.Add($"{(scripts.Count == 1 ? "1 script replaced" : $"{scripts.Count} scripts replaced")}: {list}{(scripts.Count > 3 ? $" and {scripts.Count - 3} more" : "")}.");
+        }
+        return sentences.Count == 0 ? null : string.Join(" ", sentences);
     }
 
     /// <summary>"Level 100 edit".</summary>
