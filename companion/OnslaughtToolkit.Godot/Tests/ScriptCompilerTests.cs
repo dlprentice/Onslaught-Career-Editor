@@ -69,6 +69,8 @@ internal static class ScriptCompilerTests
         CompileError error = Refused(input, failing);
         check.That(error.Message == "the included file data\\missing.msl could not be read" && !error.Message.Contains("private system detail", StringComparison.Ordinal),
             "an include-reader failure becomes a stable compiler refusal without system details");
+        check.That(Refused(input, _ => null!).Message == "the included file data\\missing.msl could not be read",
+            "an invalid null result from an include reader has the same stable refusal");
         CompileError expected = new("specific refusal");
         Func<string, string> stated = _ => throw expected;
         check.That(ReferenceEquals(Refused(input, stated), expected), "an existing compiler refusal keeps its original type and message");
@@ -418,6 +420,28 @@ internal static class ScriptCompilerTests
         check.That(Refuses(Nine, "longer than 8 tokens", new CompileLimits(MaxTokens: 8)), "the token limit counts the tokens of the script, at its edge");
         Compile(Nine, limits: new CompileLimits(MaxExpansionSteps: 9));
         check.That(Refuses(Nine, "makes the script longer", new CompileLimits(MaxExpansionSteps: 8)), "the step limit counts the names looked at, at its edge");
+        const string Includes = "#include a\n#include b\ninit() { Die(); }\n";
+        Func<string, string> included = _ => "//x";
+        Compile(Includes, read: included, limits: new CompileLimits(MaxIncludes: 2, MaxIncludeChars: 6));
+        check.That(Refuses(Includes, included, "included files together exceed 5 characters", new CompileLimits(MaxIncludeChars: 5)) &&
+                   Refuses(Includes, included, "the #include count exceeds 1", new CompileLimits(MaxIncludes: 1)),
+            "include count and total included text are bounded at the edge");
+        int includeReads = 0;
+        check.That(Refuses(Includes, _ => { includeReads++; return ""; }, "the #include count exceeds 1", new CompileLimits(MaxIncludes: 1)) && includeReads == 1,
+            "the include count is checked before another header is opened");
+        Func<string, string> astralInclude = _ => "//\U0001f600";
+        Compile("#include a\n", read: astralInclude, limits: new CompileLimits(MaxIncludeChars: 3));
+        check.That(Refuses("#include a\n", astralInclude, "included files together exceed 2 characters", new CompileLimits(MaxIncludeChars: 2)),
+            "the aggregate include limit counts an astral character as one character");
+        Compile("#include a\n", read: _ => new string(' ', 11), limits: new CompileLimits(MaxSource: 11));
+        check.That(Refuses("#include a\n", _ => new string(' ', 12), "an included file exceeds 11 characters", new CompileLimits(MaxSource: 11)),
+            "a custom include reader cannot bypass the per-header text limit");
+        foreach (string character in new[] { "\U0001f600", "\ud800" })
+        {
+            Compile("#include a\n", read: _ => string.Concat(Enumerable.Repeat(character, 11)), limits: new CompileLimits(MaxSource: 11));
+            check.That(Refuses("#include a\n", _ => string.Concat(Enumerable.Repeat(character, 12)), "an included file exceeds 11 characters", new CompileLimits(MaxSource: 11)),
+                "the per-header limit counts astral and lone-surrogate characters like the reference");
+        }
         check.That(Refuses(Init("\tDie();"), "nested more than 1 deep", new CompileLimits(MaxDepth: 1)) && Compile(Init("\tDie();"), limits: new CompileLimits(MaxDepth: 2)).Code.Instructions.Count > 0,
             "the depth limit is a parameter: a call statement is a statement inside the handler and an expression inside the statement, two deep");
         Compile("//" + new string('x', ScriptCompiler.MaxSource - 2));

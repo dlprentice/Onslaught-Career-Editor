@@ -300,7 +300,9 @@ publish, sign, or install anything by themselves.
   of one operator, `&&` with `==` (one rank, left to right, unlike C) and arithmetic inside comparisons, and refuses any other
   mix without parentheses, naming both operators. It refuses, with a line and a reason, statements nested more than 100 deep, a
   script that grows past a million tokens when its `#define` names are replaced, a number that does not fit 32 bits or float32, and
-  an `#include` that is a link out of the game folder. Besides the record it returns notes (how a mixed chain was grouped, a handler the
+  an `#include` that is a link or passes through one below the selected game folder. It reads at most 128 included headers per script,
+  with at most 1,048,576 characters per header and 2,097,152 characters in total, including repeated headers; the file reader also caps
+  a header's bytes. Besides the record it returns notes (how a mixed chain was grouped, a handler the
   game never calls) for an editor to show.
 - `msl_gate.py --game GAME [--table] [--level N]` is its retail gate: for every compiled script of every world body of an
   installed game it compiles `data/MissionScripts/level<NNN>/<name>.msl` and compares the record field by field and as the bytes

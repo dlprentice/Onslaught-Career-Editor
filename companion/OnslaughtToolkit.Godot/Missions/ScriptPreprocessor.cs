@@ -14,6 +14,8 @@ internal static class ScriptPreprocessor
     public static (List<Token> Tokens, string Text) Run(string source, Func<string, string> readInclude, CompileLimits limits)
     {
         Dictionary<string, List<Token>> defines = new(StringComparer.Ordinal);
+        int includeCount = 0;
+        long includeChars = 0;
 
         void DefineFrom(string text)
         {
@@ -26,14 +28,23 @@ internal static class ScriptPreprocessor
         {
             if (ScriptLexer.IncludeOf(raw) is { } path)
             {
+                includeCount++;
+                if (includeCount > limits.MaxIncludes)
+                    throw new CompileError($"the #include count exceeds {limits.MaxIncludes.ToString("N0", CultureInfo.InvariantCulture)}");
                 string included;
-                try { included = readInclude(path); }
+                try { included = readInclude(path) ?? throw new InvalidOperationException(); }
                 catch (CompileError) { throw; }
                 catch (Exception error) when (error is not OutOfMemoryException)
                 {
                     // A caller-supplied reader may fail for many reasons; do not expose system text in a compiler diagnostic.
                     throw new CompileError($"the included file {path} could not be read");
                 }
+                int headerChars = PythonText.CharacterCount(included);
+                if (headerChars > limits.MaxSource)
+                    throw new CompileError($"an included file exceeds {limits.MaxSource.ToString("N0", CultureInfo.InvariantCulture)} characters");
+                includeChars += headerChars;
+                if (includeChars > limits.MaxIncludeChars)
+                    throw new CompileError($"included files together exceed {limits.MaxIncludeChars.ToString("N0", CultureInfo.InvariantCulture)} characters");
                 DefineFrom(included);
                 body.Add("");  // the line stays, so the lines after it keep their numbers
             }

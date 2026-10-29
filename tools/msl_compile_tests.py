@@ -452,6 +452,37 @@ class Limits(unittest.TestCase):
         with mock.patch.object(mc, "MAX_EXPANSION_STEPS", 8), self.assertRaisesRegex(mc.CompileError, "makes the script longer"):
             compile_text(source)
 
+    def test_includes_have_a_total_text_and_call_budget(self):
+        source = "#include a\n#include b\ninit() { Die(); }\n"
+        includes = {"a": "//a", "b": "//b"}
+        with mock.patch.object(mc, "MAX_INCLUDE_CHARS", 6), mock.patch.object(mc, "MAX_INCLUDES", 2):
+            compile_text(source, includes)
+        with mock.patch.object(mc, "MAX_INCLUDE_CHARS", 5), self.assertRaisesRegex(mc.CompileError, "included files together exceed 5 characters"):
+            compile_text(source, includes)
+        with mock.patch.object(mc, "MAX_INCLUDES", 1), self.assertRaisesRegex(mc.CompileError, "the #include count exceeds 1"):
+            compile_text(source, includes)
+        calls = []
+        def read(path):
+            calls.append(path)
+            return ""
+        with mock.patch.object(mc, "MAX_INCLUDES", 1), self.assertRaises(mc.CompileError):
+            mc.compile_script("t", source, read)
+        self.assertEqual(calls, ["a"])  # the second file is not opened after the count limit
+        with self.assertRaisesRegex(mc.CompileError, "the included file a could not be read"):
+            mc.compile_script("t", source, lambda path: None)
+        with mock.patch.object(mc, "MAX_INCLUDE_CHARS", 3):
+            compile_text("#include a\n", {"a": "//😀"})
+        with mock.patch.object(mc, "MAX_INCLUDE_CHARS", 2), self.assertRaisesRegex(mc.CompileError, "included files together exceed 2 characters"):
+            compile_text("#include a\n", {"a": "//😀"})
+        with mock.patch.object(mc, "MAX_SOURCE", 11):
+            compile_text("#include a\n", {"a": " " * 11})
+            with self.assertRaisesRegex(mc.CompileError, "an included file exceeds 11 characters"):
+                compile_text("#include a\n", {"a": " " * 12})
+            for character in ("😀", "\ud800"):
+                compile_text("#include a\n", {"a": character * 11})
+                with self.assertRaisesRegex(mc.CompileError, "an included file exceeds 11 characters"):
+                    compile_text("#include a\n", {"a": character * 12})
+
     def test_a_number_the_game_cannot_store_is_refused(self):
         for digits in ("9" * 400, "9" * 39, "340282356779733661637539395458142568448"):  # the last is the first value that rounds past float32's largest
             self.refused(self.init(f"\tr = Pause({digits}.0);"), "too large for a float")

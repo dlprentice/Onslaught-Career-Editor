@@ -60,9 +60,11 @@ TRAILER = "656e645f736372697074"  # "end_script", as the world model shows bytes
 USED = 1 << 16  # a CALL attribute's flag: the result is used (an argument, an assignment, a condition), not dropped
 DT = {"int": 1, "float": 2, "string": 3, "bool": 4, "thing": 5, "position": 6}
 DT_NAME = {value: name for name, value in DT.items()}
-MAX_SOURCE = 1 << 20  # characters of a script, bytes of a header
+MAX_SOURCE = 1 << 20  # characters of a script or included text; file readers also cap header bytes
 MAX_TOKENS = 1 << 20  # tokens of a script after #define names are replaced
 MAX_EXPANSION_STEPS = 4 << 20  # names looked at while replacing them (a define can expand to nothing, so tokens alone do not bound the work)
+MAX_INCLUDES = 128  # includes read for one script, even when the headers are empty or repeated
+MAX_INCLUDE_CHARS = 2 << 20  # total characters of those headers before parsing their definitions
 MAX_DEPTH = 100  # statements and expressions inside one another (the parser calls itself for each)
 MAX_NOTE_CHARS = 5000  # characters of source text a grouping note may repeat (the expression once, each operand once more)
 MAX_COUNTER = (1 << 31) - 1  # a compile-session counter (constants, do_once symbols) is numbered up to here, as the game stores an int
@@ -146,17 +148,32 @@ def preprocess(source: str, read_include: Callable[[str], str]) -> tuple[list[To
 
     def read_included(path: str) -> str:
         try:
-            return read_include(path)
+            text = read_include(path)
+            if not isinstance(text, str):
+                raise TypeError("an include reader must return text")
+            return text
         except CompileError:
             raise
         except Exception:  # noqa: BLE001 - a reader that fails any other way is a header that cannot be read; no system text, so both compilers say the same
             raise CompileError(f"the included file {path} could not be read") from None
 
     body: list[str] = []
+    include_count = 0
+    include_chars = 0
     for raw in source.split("\n"):
         m = re.match(rf"{BLANK}*#{BLANK}*include{BLANK}+([^ \t\r\f\v]+)", raw)
         if m:
-            define_from(read_included(m.group(1)))
+            include_count += 1
+            if include_count > MAX_INCLUDES:
+                raise CompileError(f"the #include count exceeds {MAX_INCLUDES:,}")
+            included = read_included(m.group(1))
+            header_chars = len(included)
+            if header_chars > MAX_SOURCE:
+                raise CompileError(f"an included file exceeds {MAX_SOURCE:,} characters")
+            include_chars += header_chars
+            if include_chars > MAX_INCLUDE_CHARS:
+                raise CompileError(f"included files together exceed {MAX_INCLUDE_CHARS:,} characters")
+            define_from(included)
             body.append("")  # the line stays, so the lines after it keep their numbers
         elif re.match(rf"{BLANK}*#{BLANK}*define(?![A-Za-z0-9_])", raw):
             define_from(raw)

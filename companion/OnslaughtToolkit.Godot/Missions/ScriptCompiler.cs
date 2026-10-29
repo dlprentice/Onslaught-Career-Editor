@@ -9,12 +9,13 @@ namespace OnslaughtToolkit.Companion.Missions;
 public sealed record CompileNote(int Line, string Kind, string Text);
 
 /// <summary>
-/// What the compiler refuses instead of running out of stack, time or memory: the characters of a script (and bytes of a header), the tokens of a
+/// What the compiler refuses instead of running out of stack, time or memory: the characters of a script or one included text (file readers also cap header bytes), the tokens of a
 /// script once <c>#define</c> names are replaced, the names looked at while replacing them (a define can expand to nothing, so tokens alone do not
-/// bound the work) and how deep statements and expressions may nest (the parser calls itself for each level). The defaults are the reference's;
+/// bound the work), the number and total characters of included headers, and how deep statements and expressions may nest (the parser calls itself for each level). The defaults are the reference's;
 /// the tests pass smaller ones to put each limit exactly at its edge.
 /// </summary>
-public sealed record CompileLimits(int MaxSource = 1 << 20, int MaxTokens = 1 << 20, int MaxExpansionSteps = 4 << 20, int MaxDepth = 100)
+public sealed record CompileLimits(int MaxSource = 1 << 20, int MaxTokens = 1 << 20, int MaxExpansionSteps = 4 << 20, int MaxDepth = 100,
+    int MaxIncludes = 128, int MaxIncludeChars = 2 << 20)
 {
     public static CompileLimits Default { get; } = new();
 }

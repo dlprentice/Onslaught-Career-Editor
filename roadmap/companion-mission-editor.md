@@ -2,7 +2,7 @@
 
 Status: design; the reference compiler and its retail gate (MS1, section 11), the read-only scripts view (MS0, section 12) and the C# compiler (MS2, section 14) are built, the rest is plan. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-10-29 (the review findings of MS2 fixed in the reference compiler, their C# port pending; earlier: MS2, the C# compiler, built; earlier: MS0, the read-only scripts view, built; earlier: CE 0.1.11, the first to take a world file from a mod, stated as published; earlier: the spike's result and the operator-grouping decision; the lead's earlier decisions; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
+Last updated: 2026-10-29 (MS2's compiler fixes and included-header limits in both languages are work in progress pending independent review and Windows validation; earlier: MS2, the C# compiler, built; earlier: MS0, the read-only scripts view, built; earlier: CE 0.1.11, the first to take a world file from a mod, stated as published; earlier: the spike's result and the operator-grouping decision; the lead's earlier decisions; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours that is proved against every script the game
 shipped (byte for byte), and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -316,5 +316,7 @@ steps, 100 levels of nesting) are the reference's and are a parameter, so that t
   first: a link anywhere below the game folder, or the file itself, is refused and never followed; a header that cannot be read, a missing
   game folder and a counter past 2147483647 are refusals with fixed messages; names match in ASCII letter case only; symbols are looked up
   in dictionaries; and a grouping note is made from the chain only when it is written, and says it is not written out when its text would
-  repeat more than 5,000 characters. The C# port of these fixes, the vectors for them and the changed C# tests are not done yet, so until they
-  are the C# still follows the old rules, except that `PythonText.Repr` already goes by code point.
+  repeat more than 5,000 characters. The C# port implements these changes on the work branch; its platform-specific reader still needs
+  independent review and native Windows checks before integration. Both compilers now cap each included text at 1,048,576 characters,
+  and each script at 128 includes and 2,097,152 included characters in total. A supplied reader runs before its result can be checked;
+  the built-in file reader separately bounds the bytes it reads. These are tool limits, not claims about the original compiler.
