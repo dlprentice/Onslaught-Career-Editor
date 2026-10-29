@@ -316,6 +316,8 @@ internal static class LevelEditorPageTests
         check.That(page.SavedText.StartsWith($"Saved the mod to {PathText.Elide(root, 52)}.", StringComparison.Ordinal) && page.SavedFolder == root && page.SavedTooltip.StartsWith(root + "\n", StringComparison.Ordinal) &&
                    page.SavedText.Contains($"mods={vector.Id}", StringComparison.Ordinal) && page.CopyVisible &&
                    app.Status.Label.Text.EndsWith("Saved the mod Level 100 edit.", StringComparison.Ordinal) && app.Status.Label.Text.StartsWith("✓", StringComparison.Ordinal), $"saving says where the mod is and what to add to ce.ini: \"{page.SavedText}\"");
+        for (int frame = 0; frame < 5; frame++) await Frame(tree);
+        check.That(page.SavedNoticeInView, "the notice, which sits under the Save button in the column that scrolls, is brought into view when it appears");
         check.That(File.ReadAllBytes(Path.Combine(root, "mod.json")).AsSpan().SequenceEqual(LevelTests.Unpack(vector.Manifest)) &&
                    File.ReadAllBytes(Path.Combine(root, "data", "worlds", "world100.wrd")).AsSpan().SequenceEqual(LevelTests.Unpack(LevelVectors.Edits.First(e => e.Name == "move-v50").Body)) &&
                    Directory.GetFiles(root, "*", SearchOption.AllDirectories).Length == 2, "the saved mod.json and world file are the reference stager's, byte for byte");

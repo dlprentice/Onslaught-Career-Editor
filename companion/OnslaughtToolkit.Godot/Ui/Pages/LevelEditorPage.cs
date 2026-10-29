@@ -25,6 +25,7 @@ internal sealed class LevelEditorPage : Page
     private readonly Label _empty, _worldNote, _objectTitle, _objectDetail, _stock, _note, _hint, _summary, _warnings, _problemText, _savedText;
     private readonly PanelContainer _problemPanel, _savedPanel;
     private readonly SplitContainer _split;
+    private readonly ScrollContainer _side;
     private readonly Button _copy, _copyFolder;
     private readonly Control _body;
     private readonly Control _mapPanel;
@@ -76,27 +77,6 @@ internal sealed class LevelEditorPage : Page
         MapToggle.Toggled += on => _mapPanel!.Visible = on;
         Search.TextChanged += _ => RebuildTable();
         _worldNote = left.Add(Build.Text("", "Faint"));
-        (_savedPanel, VBoxContainer savedInside) = Build.Panel("SuccessNotice", 6);
-        left.Add(_savedPanel);
-        _savedPanel.Visible = false;
-        _savedText = savedInside.Add(Build.Text("", ""));
-        _savedText.MouseFilter = Control.MouseFilterEnum.Pass;  // so that the tooltip, which has the full path, shows
-        // The notice never grows with its path: the text shows the path's ends, and the buttons wrap in a narrow column.
-        HFlowContainer savedActions = savedInside.Add(new HFlowContainer());
-        savedActions.AddThemeConstantOverride("h_separation", 8);
-        savedActions.AddThemeConstantOverride("v_separation", 6);
-        _copy = savedActions.Add(Build.Button("Copy mods= line", tooltip: "Copies the line to put in ce.ini."));
-        _copyFolder = savedActions.Add(Build.Button("Copy folder path", tooltip: "Copies the mod folder's full path."));
-        _copy.Pressed += () =>
-        {
-            DisplayServer.ClipboardSet($"mods={_savedId}");
-            _services.Status.Show($"Copied mods={_savedId}.", StatusKind.Info);
-        };
-        _copyFolder.Pressed += () =>
-        {
-            DisplayServer.ClipboardSet(_savedFolder);
-            _services.Status.Show("Copied the mod folder's path.", StatusKind.Info);
-        };
         // The table and the map share the column: side by side when it is wide, one above the other (the table keeps its columns) when it is not.
         _split = left.Add(new SplitContainer { SizeFlagsVertical = Control.SizeFlags.ExpandFill, Vertical = true });
         _split.Resized += () =>
@@ -129,7 +109,7 @@ internal sealed class LevelEditorPage : Page
         Table.ItemSelected += () => Select(Table.GetSelected());
 
         // Right: the selected object, and what the edit has changed so far.
-        ScrollContainer side = layout.Add(new ScrollContainer
+        ScrollContainer side = _side = layout.Add(new ScrollContainer
         {
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, CustomMinimumSize = new Vector2(370, 0), SizeFlagsVertical = Control.SizeFlags.ExpandFill,
         });
@@ -163,6 +143,28 @@ internal sealed class LevelEditorPage : Page
         _summary = changesBody.Add(Build.Text("", "Strong"));
         _warnings = changesBody.Add(Build.Text("", "Warn"));
         Save = changesBody.Add(Build.Button("Save as mod…", "Primary", "Save the changes as an Onslaught CE mod: a new folder. Nothing in your game changes.", disabled: true));
+        (_savedPanel, VBoxContainer savedInside) = Build.Panel("SuccessNotice", 6);
+        changesBody.Add(_savedPanel);
+        _savedPanel.Visible = false;
+        _savedText = savedInside.Add(Build.Text("", ""));
+        _savedText.MouseFilter = Control.MouseFilterEnum.Pass;  // so that the tooltip, which has the full path, shows
+        // What saving did shows under the button, in the column that scrolls, so it never takes room from the table and the map (or moves them when
+        // it appears); the page scrolls it into view. It never grows with its path: the text shows the path's ends, and the buttons wrap in a narrow column.
+        HFlowContainer savedActions = savedInside.Add(new HFlowContainer());
+        savedActions.AddThemeConstantOverride("h_separation", 8);
+        savedActions.AddThemeConstantOverride("v_separation", 6);
+        _copy = savedActions.Add(Build.Button("Copy mods= line", tooltip: "Copies the line to put in ce.ini."));
+        _copyFolder = savedActions.Add(Build.Button("Copy folder path", tooltip: "Copies the mod folder's full path."));
+        _copy.Pressed += () =>
+        {
+            DisplayServer.ClipboardSet($"mods={_savedId}");
+            _services.Status.Show($"Copied mods={_savedId}.", StatusKind.Info);
+        };
+        _copyFolder.Pressed += () =>
+        {
+            DisplayServer.ClipboardSet(_savedFolder);
+            _services.Status.Show("Copied the mod folder's path.", StatusKind.Info);
+        };
         changesBody.Add(Build.Text("A saved mod is a new folder; the game's own files are never touched. Onslaught CE loads a level's world from a mod " +
             "only on Linux for now, and only if its README's Mods section lists world files as something a mod may add.", "Faint"));
         SaveDialog = new SaveAsModDialog(services.Popups);
@@ -209,6 +211,9 @@ internal sealed class LevelEditorPage : Page
 
     /// <summary>What the notice says when the pointer rests on it: the full path and what the mod holds.</summary>
     internal string SavedTooltip => _savedText.TooltipText;
+
+    /// <summary>Whether the saved notice, which sits in the column that scrolls, is wholly inside what that column shows.</summary>
+    internal bool SavedNoticeInView => _savedPanel.Visible && _side.GetGlobalRect().Encloses(_savedPanel.GetGlobalRect());
     internal bool EmptyVisible => _empty.Visible;
     internal string? SelectedName => _selected is int row ? _model?.Row(row)?.Label : null;
     internal int? SelectedRow => _selected;
@@ -510,6 +515,16 @@ internal sealed class LevelEditorPage : Page
         ShowNote(done ? (undo ? $"Took back: {what}." : $"Made again: {what}.") : "", refusal: false);
     }
 
+    /// <summary>Scrolls the right-hand column to the saved notice, once the notice has its place and size (a frame or two after it is shown).</summary>
+    private async void BringNoticeIntoView()
+    {
+        SceneTree? tree = _side.GetTree();
+        if (tree is null) return;
+        await _side.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+        await _side.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+        if (GodotObject.IsInstanceValid(_side) && _side.IsInsideTree() && _savedPanel.Visible) _side.EnsureControlVisible(_savedPanel);
+    }
+
     // ---- saving ------------------------------------------------------------------------------------------------------------------
     private string DefaultDestination() => _services.Game.CeUserFolder.Length > 0 ? Path.Combine(_services.Game.CeUserFolder, "mods") : "";
 
@@ -550,6 +565,7 @@ internal sealed class LevelEditorPage : Page
             _savedText.TooltipText = outcome.Message;
         }
         _services.Status.Show(outcome.Ok ? $"Saved the mod {info.Name}." : outcome.Message, outcome.Ok ? StatusKind.Success : StatusKind.Failure);
+        BringNoticeIntoView();
         return outcome;
     }
 }
