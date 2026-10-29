@@ -384,6 +384,33 @@ class GateTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("do not decode", out)
 
+    def test_incomplete_or_misordered_world_layouts_fail(self) -> None:
+        def chunk(tag: bytes, payload: bytes) -> bytes:
+            return tag + struct.pack("<I", len(payload)) + payload
+
+        wdat_no_base = chunk(b"WDAT", struct.pack("<ii", -1, 201))
+        wdat_base = chunk(b"WDAT", struct.pack("<ii", 10, 201))
+        real = chunk(b"RLWD", body([unit("Turret", "Gun")]))
+        base = chunk(b"BSWD", body([unit("Turret", "Depot")]))
+        malformed = {
+            "no world bodies": wdat_no_base,
+            "missing real body": wdat_base + base,
+            "missing required base body": wdat_base + real,
+            "missing world numbers": real,
+            "real-world number does not match archive": chunk(b"WDAT", struct.pack("<ii", -1, 999)) + real,
+            "unexpected base body": wdat_no_base + base + real,
+            "base and real bodies reversed": wdat_base + real + base,
+            "duplicate real body": wdat_no_base + real + real,
+        }
+        for label, world in malformed.items():
+            with self.subTest(label=label):
+                raw = (chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1))
+                       + chunk(b"AYAD", bytes(24)) + chunk(b"WRES", chunk(b"WRLD", world)))
+                compressed = zlib.compress(raw)
+                code, out = self.run_gate({201: struct.pack("<I", len(compressed)) + compressed})
+                self.assertEqual(code, 1, out)
+                self.assertIn("world layout", out)
+
     def test_a_folder_without_level_archives_fails(self) -> None:
         code, out = self.run_gate({})
         self.assertEqual(code, 1)

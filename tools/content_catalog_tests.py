@@ -714,6 +714,25 @@ def broken_base_archive() -> bytes:
                + chunk(b"AYAD", bytes(24)) + chunk(b"WRES", chunk(b"WRLD", wrld)))
 
 
+def missing_base_archive() -> bytes:
+    """WDAT requires a base body which is absent; the partial lookup must not assert an answer."""
+    real = named.body([named.unit("Gun Turret", "Gun"), named.marker(27, script="Finder")],
+                      scripts=(named.script("Finder", [("GetThingRef", ["Gun"]), ("GetThingRef", ["Depot"])]),),
+                      base_level=10)
+    wrld = chunk(b"WDAT", struct.pack("<ii", 10, 203)) + chunk(b"RLWD", real)
+    return aya(chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1))
+               + chunk(b"AYAD", bytes(24)) + chunk(b"WRES", chunk(b"WRLD", wrld)))
+
+
+def misordered_worlds_archive() -> bytes:
+    real = named.body([named.unit("Gun Turret", "Gun"), named.marker(27, script="Finder")],
+                      scripts=(named.script("Finder", [("GetThingRef", ["Gun"])]),), base_level=10)
+    base = named.body([named.unit("Gun Turret", "Gun")])
+    wrld = chunk(b"WDAT", struct.pack("<ii", 10, 204)) + chunk(b"RLWD", real) + chunk(b"BSWD", base)
+    return aya(chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1))
+               + chunk(b"AYAD", bytes(24)) + chunk(b"WRES", chunk(b"WRLD", wrld)))
+
+
 class NamedThingsCatalogueTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -722,6 +741,8 @@ class NamedThingsCatalogueTests(unittest.TestCase):
             authored_install(game)
             (game / "data/resources/201_res_PC.aya").write_bytes(registry_archive())
             (game / "data/resources/202_res_PC.aya").write_bytes(broken_base_archive())
+            (game / "data/resources/203_res_PC.aya").write_bytes(missing_base_archive())
+            (game / "data/resources/204_res_PC.aya").write_bytes(misordered_worlds_archive())
             (game / "data/default physics.dat").write_bytes(mesh_fixtures._physics_fixture(
                 (1, "Tank", {8: struct.pack("<I", 3), 9: b"authored.msh\0"}),
                 (1, "Gun Turret", {8: struct.pack("<I", 5), 9: b"authored.msh\0"}),  # UB_TURRET: no squad
@@ -793,9 +814,27 @@ class NamedThingsCatalogueTests(unittest.TestCase):
         reg = self.assets["level:202"]["level"]["namedThings"]
         self.assertEqual((reg["complete"], reg["undecodedWorlds"], reg["entries"]), (False, ["BSWD"], []))
         [depot] = [r for r in self.assets["script-code:202:rlwd#0"]["relationships"] if r["type"] == "names-thing"]
-        self.assertEqual((depot["status"], depot["registryIncomplete"]), ("unresolved", ["BSWD"]))
+        self.assertEqual((depot["status"], depot["target"], depot["registryIncomplete"]),
+                         ("incomplete", None, ["BSWD"]))
         self.assertTrue(self.assets["level:201"]["level"]["namedThings"]["complete"])
         self.assertNotIn("registryIncomplete", self.lookups()["Depot"])
+
+    def test_a_missing_required_world_does_not_claim_a_complete_or_resolved_registry(self) -> None:
+        reg = self.assets["level:203"]["level"]["namedThings"]
+        self.assertEqual((reg["complete"], reg["undecodedWorlds"]), (False, ["BSWD"]))
+        relations = [r for r in self.assets["script-code:203:rlwd#0"]["relationships"]
+                     if r["type"] == "names-thing"]
+        self.assertEqual({r["targetName"]: (r["status"], r["target"], r["registryIncomplete"]) for r in relations},
+                         {"Gun": ("incomplete", None, ["BSWD"]), "Depot": ("incomplete", None, ["BSWD"])})
+        [gun] = [a["placement"]["namedThing"] for a in self.catalog["assets"]
+                 if a["type"] == "placement" and a["placement"]["level"] == 203]
+        self.assertEqual((gun["foundByName"], gun["registryIncomplete"]), ("unknown", ["BSWD"]))
+
+    def test_reordered_world_bodies_do_not_claim_a_complete_or_resolved_registry(self) -> None:
+        reg = self.assets["level:204"]["level"]["namedThings"]
+        self.assertEqual((reg["complete"], reg["undecodedWorlds"]), (False, ["WRLD"]))
+        [gun] = [r for r in self.assets["script-code:204:rlwd#0"]["relationships"] if r["type"] == "names-thing"]
+        self.assertEqual((gun["status"], gun["target"], gun["registryIncomplete"]), ("incomplete", None, ["WRLD"]))
 
     def test_duplicate_unit_metadata_uses_the_same_first_definition_as_the_registry(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

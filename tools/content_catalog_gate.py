@@ -71,8 +71,23 @@ def physics_of(game: Path) -> tuple[dict, dict]:
     return lookup, behaviours
 
 
-def level_bodies(path: Path) -> dict:
-    return wre.level_worlds(b"".join(wre.inflate(wre.read_members(wre.read_retail(path)))))
+def level_bodies(path: Path, level: int) -> dict:
+    raw = b"".join(wre.inflate(wre.read_members(wre.read_retail(path))))
+    worlds = wre.level_worlds(raw)
+    # The loader reads WDAT and then the required bodies in order. A missing body, wrong level number, duplicate or
+    # misordered chunk must not count as a successfully checked level merely because the remaining bodies decode.
+    for tag, at, size in wre.chunks(raw):
+        if tag != "WRES":
+            continue
+        for subtag, start, length in wre.chunks(raw, at, at + size):
+            if subtag != "WRLD":
+                continue
+            tags = [name for name, _offset, _length in wre.chunks(raw, start, start + length)]
+            parts = cc.world_layout_parts(tags, worlds.get("baseLevel"), worlds.get("realLevel"), level)
+            if parts:
+                raise wre.EncodeError("incomplete or inconsistent world layout: " + ", ".join(parts))
+            return worlds
+    raise wre.EncodeError("no WRES/WRLD chunk")
 
 
 def thing_name_literals(worlds: dict) -> list[tuple[str, str, str, str]]:
@@ -281,7 +296,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.level is not None and level != args.level:
             continue
         try:
-            raw = level_bodies(path)
+            raw = level_bodies(path, level)
             worlds = {tag: wrd.parse_world_body(body, lookup, base=tag == "BSWD")
                       for tag, body in sorted(raw["bodies"].items())}
         except (wre.EncodeError, wrd.DecodeError, struct.error, ValueError) as error:

@@ -179,7 +179,8 @@ publish, sign, or install anything by themselves.
   career's keeping decides (`career-dependent`), a name a script's literal `SetName` call could give its own thing
   (`runtime-name`), or nothing (`unresolved`). Each named placement and marker says whether and how it joins the list
   and whether its own name finds it, and each level record lists the modelled registry in joining order. These are
-  predictions, not observations of runtime names or later changes. A registry requiring over 10,000 entries is
+  predictions, not observations of runtime names or later changes. Missing, misordered or undecodable world parts mark
+  the registry and its lookups incomplete; a partial list never claims a target. A registry requiring over 10,000 entries is
   refused explicitly before the catalogue is written; the limit is the tool's, not the game's. The
   single-record `mission_script_inspect.py` is the independent check of the compiled-script reader. Output is accepted
   only below the ignored `local-data/`, and every generated file carries a marker that
@@ -302,7 +303,8 @@ publish, sign, or install anything by themselves.
   language's XAP bank, as a script's `PlaySample` argument does (it names a bank sample, not an effect).
   `game_tables_decode_tests.py` checks both readers on authored files.
 - `content_catalog_gate.py --game GAME [--table] [--level N]` is the content catalogue's retail gate. Over every level
-  archive of an installed game it checks that the world bodies decode with the loader's slots, that every registry
+  archive of an installed game it checks that WDAT and its required world bodies are complete, in loader order, and
+  name the selected level; it checks that the world bodies decode with the loader's slots, that every registry
   entry is a slotted record of a class that names itself, under its own name, with the base world's first and every
   base-world slot inside the career's bits, that no unit takes a slot with nothing made for it, and that `find` and
   `find_by_walk` agree on every literal thing name of every script, and every cutscene's link-to name, with every, no
@@ -310,8 +312,8 @@ publish, sign, or install anything by themselves.
   (`ERES`, `SURF`, `SSHD`, `VSDS`, `PMIB`, `DMKR`) and checks that each consumes exactly its chunk and that every patch
   strip stays inside its patch. It decodes the configurations and `sounds.sfx` and counts what they name that the
   install lacks, and the levels whose world header lists other configurations than `worldheaders.dat`. It reads the
-  game folder, writes nothing and prints counts; `--table` adds a row per level (derived from a game: keep it
-  private).
+  game folder, writes nothing and prints counts; it checks the archives present, so the counts alone do not prove an
+  installation is complete. `--table` adds a row per level (derived from a game: keep it private).
 - `heightfield_lookup.py ARCHIVE.aya X Y` prints the height under a position of a level archive's terrain, as the game's
   terrain lookup computes it: the archive's `ERES` chunk holds 64 x 64 tiles of 9 x 9 signed 16-bit samples (one per world
   unit; a tile's ninth row and column repeat its neighbour's first) and a height scale, and heights are world units with Z

@@ -648,7 +648,7 @@
                 "properties": {"name": {"type": ["string", "null"], "description": "null when the argument is not a literal."}}
               }
             },
-            "complete": {"type": "boolean", "description": "false when a world body of the level did not decode (undecodedWorlds names it): its things are missing from the list."}
+            "complete": {"type": "boolean", "description": "false when the world layout is missing or inconsistent, or a world body did not decode; undecodedWorlds names the affected parts."}
           }
         }
       }
@@ -809,7 +809,8 @@
         "joins": {"type": "integer", "minimum": 0},
         "object": {"enum": ["thing", "squad", "squad-member", "squad-members", null]},
         "orders": {"type": "array", "items": {"type": "integer", "minimum": 0}},
-        "foundByName": {"enum": ["found", "found-if-kept", "found-if-later-not-kept", "shadowed", "not-joined"]},
+        "foundByName": {"enum": ["found", "found-if-kept", "found-if-later-not-kept", "shadowed", "not-joined", "unknown"]},
+        "registryIncomplete": {"type": "array", "items": {"type": "string"}, "description": "World parts missing, inconsistent or undecoded; the partial registry cannot establish the name lookup."},
         "reason": {"enum": ["no-slot", "not-a-complex-thing", "no-object"], "description": "Why nothing joins: the record took no slot, it is a tree or waypoint (CThing), or its unit is UB_JEEP (SpawnThing makes nothing)."},
         "keep": {
           "type": "object",
@@ -936,9 +937,10 @@
             "unknown-name",
             "empty-name",
             "career-dependent",
-            "runtime-name"
+            "runtime-name",
+            "incomplete"
           ],
-          "description": "unknown-name: the mesh slot's stored name field is unreadable (unterminated or not UTF-8), so nothing was looked up or joined; empty-name: the slot's stored name is known to be empty and nothing was joined; both differ from unresolved, where a readable name matched nothing: it was looked up and found nothing or, for a name shorter than 9 bytes that has no suffix from byte 8 to classify, nothing was looked up or joined (the evidence says which). name-match: a stored string equals a file name but no loader joins them; name-match-unloaded: a data observation about content no retail loader reads; code-site: a literal lookup in game code (the evidence names the site); code-rule: a name game code builds with sprintf from a format rule and data (the evidence names the function and the rule). name-match also covers a script argument that equals a thing's name. For names-thing (a source-modelled lookup of a script's literal name just after a successful load): resolved predicts the target in every career (shadowed lists records of the same name it hides); career-dependent predicts that every matching record is in the base world, so the first one the career keeps is found (candidates lists them in that order, target is the first); runtime-name predicts no match immediately after load but a script contains a literal SetName call that could assign it if executed (setBy names the scripts); unresolved predicts no match. These are not runtime observations."
+          "description": "unknown-name: the mesh slot's stored name field is unreadable (unterminated or not UTF-8), so nothing was looked up or joined; empty-name: the slot's stored name is known to be empty and nothing was joined; both differ from unresolved, where a readable name matched nothing: it was looked up and found nothing or, for a name shorter than 9 bytes that has no suffix from byte 8 to classify, nothing was looked up or joined (the evidence says which). name-match: a stored string equals a file name but no loader joins them; name-match-unloaded: a data observation about content no retail loader reads; code-site: a literal lookup in game code (the evidence names the site); code-rule: a name game code builds with sprintf from a format rule and data (the evidence names the function and the rule). name-match also covers a script argument that equals a thing's name. For names-thing (a source-modelled lookup of a script's literal name just after a successful load): resolved predicts the target in every career (shadowed lists records of the same name it hides); career-dependent predicts that every matching record is in the base world, so the first one the career keeps is found (candidates lists them in that order, target is the first); runtime-name predicts no match immediately after load but a script contains a literal SetName call that could assign it if executed (setBy names the scripts); unresolved predicts no match; incomplete means a missing, inconsistent or undecoded world part prevents a reliable prediction. These are not runtime observations."
         },
         "targetNameStatus": {
           "enum": [
@@ -952,7 +954,7 @@
         "candidates": {
           "type": "array",
           "items": {"type": "string"},
-          "description": "For names-thing (career-dependent): the records of the name in the order FindThingByName meets them."
+          "description": "For names-thing (career-dependent): the records of the name in the order FindThingByName meets them. For incomplete, candidates are only the matches visible in the partial model and do not establish the actual target."
         },
         "shadowed": {
           "type": "array",
@@ -970,7 +972,7 @@
         "registryIncomplete": {
           "type": "array",
           "items": {"type": "string"},
-          "description": "For names-thing: the level's world bodies that did not decode, so their things are missing from the list the answer was taken from."
+          "description": "For names-thing: world parts missing, inconsistent or undecoded, so the partial list cannot establish the answer."
         },
         "setBy": {
           "type": "array",

@@ -1261,13 +1261,37 @@ FOUND_TEXT = {
     "shadowed": "a real-world thing of the same name joined later, so the name finds that one while it stays on the "
                 "list",
     "not-joined": "never on the list, so its name finds something else or nothing",
+    "unknown": "the world layout or a world body is incomplete, so the name lookup cannot be determined",
 }
 
 
-def named_thing_summary(outcome: dict, entries: list[dict], name: str) -> dict:
+def world_layout_parts(tags: list[str], base_level: int | None, real_level: int | None, level: int) -> list[str]:
+    """Missing/unusable world parts, given the children in the order CWorld::Deserialize reads them.
+
+    A missing WDAT or a real-world number for a different level cannot establish which worlds the selected archive
+    supplies. A named base world needs BSWD and every archive needs RLWD; duplicated, unexpected or reordered chunks
+    make the observed layout incomplete too. Do not call a registry made from such data complete.
+    """
+    incomplete = []
+    if "WDAT" not in tags or base_level is None or real_level != level:
+        incomplete.append("WDAT")
+    if "RLWD" not in tags:
+        incomplete.append("RLWD")
+    if base_level is not None and base_level != -1 and "BSWD" not in tags:
+        incomplete.append("BSWD")
+    if not incomplete:
+        expected = ["WDAT"] + (["BSWD"] if base_level != -1 else []) + ["RLWD"]
+        if tags != expected:
+            incomplete.append("WRLD")
+    return sorted(incomplete)
+
+
+def named_thing_summary(outcome: dict, entries: list[dict], name: str, undecoded: list[str]) -> dict:
     """A named placement or marker: whether and how it joins WORLD.mNamedThings, and whether its name finds it."""
     found = "not-joined"
-    if outcome["joins"]:
+    if undecoded:
+        found = "unknown"
+    elif outcome["joins"]:
         result = named_things.find(entries, name)
         mine = [k for k, e in enumerate(result["candidates"])
                 if (e["world"], e["ordinal"]) == (outcome["world"], outcome["ordinal"])]
@@ -1278,6 +1302,8 @@ def named_thing_summary(outcome: dict, entries: list[dict], name: str) -> dict:
     row = {"joins": outcome["joins"], "object": outcome["object"], "orders": outcome["orders"], "foundByName": found,
            "foundRule": FOUND_TEXT[found], "rule": outcome["rule"],
            "loader": named_things.L_LOADWORLD + "; " + named_things.L_SETNAME}
+    if undecoded:
+        row["registryIncomplete"] = undecoded
     for key in ("reason", "squad", "members", "keep"):
         if key in outcome:
             row[key] = outcome[key]
@@ -1340,6 +1366,12 @@ def names_thing_relation(name: str, natives: list[str], entries: list[dict], thi
         extra["natives"] = natives
     if undecoded:
         extra["registryIncomplete"] = undecoded
+        if ids:
+            extra["candidates"] = ids
+        ev.append(evidence("loader-code", named_things.L_LOADWORLD,
+                           "the world layout or a world body is incomplete, so the partial list cannot determine "
+                           "this lookup"))
+        return relation("names-thing", None, "incomplete", ev, **extra)
     status = result["status"]
     target = ids[0] if ids else None
     if status == "resolved":
@@ -1435,12 +1467,13 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
             stats["worldBodiesUndecoded"] += 1
             continue
         worlds = {}
-        wdat = next((wrld[c.offset + 8:c.offset + 16] for c in aai.parse_top_level_chunks(wrld) if c.tag == "WDAT"
+        chunks = aai.parse_top_level_chunks(wrld)
+        wdat = next((wrld[c.offset + 8:c.offset + 16] for c in chunks if c.tag == "WDAT"
                      and c.size >= 8), None)
         # CWorld::Deserialize reads the base and the real world's level numbers from WDAT
         base_level, real_level = struct.unpack("<ii", wdat) if wdat else (None, level)
         folder_of = {"RLWD": real_level, "BSWD": base_level}
-        for wc in aai.parse_top_level_chunks(wrld):
+        for wc in chunks:
             if wc.tag not in WORLD_KINDS:
                 continue
             body = wrld[wc.offset + 8:wc.offset + 8 + wc.size]
@@ -1451,6 +1484,13 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
                 worlds[wc.tag] = {"error": str(error)}
                 continue
             stats["worldBodiesDecoded"] += 1
+        layout_parts = world_layout_parts([c.tag for c in chunks], base_level, real_level if wdat else None, level)
+        for part in layout_parts:
+            if part not in worlds:
+                worlds[part] = {"error": "world layout is incomplete or inconsistent with WDAT"}
+        if layout_parts:
+            stats["worldLayoutsIncomplete"] += 1
+        undecoded = sorted(t for t, w in worlds.items() if "error" in w)
         decoded = {t: w for t, w in worlds.items() if "error" not in w}
         out["worlds"][level] = worlds
         named = {meshcensus._normalized_mesh_identity(m["name"]): m for m in arc["archive"]["meshChunks"] if m.get("name")}
@@ -1568,7 +1608,7 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
                 if init["name"]:
                     outcome = registry["outcomes"][(tag, t["ordinal"])]
                     (rec["placement"] if is_placement else rec["marker"])["namedThing"] = named_thing_summary(
-                        outcome, registry["entries"], init["name"])
+                        outcome, registry["entries"], init["name"], undecoded)
                     stats["namedRecordsJoined" if outcome["joins"] else "namedRecordsNotJoined"] += 1
                 (out["placements"] if is_placement else out["markers"]).append(rec)
         # waypoint paths: CWaypointPath::Load indexes LoadWorld's things[] (the record's slot), keeping waypoints only
@@ -1685,7 +1725,6 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
         # names a script of this level gives its own thing at run time (IScript::SetName)
         runtime = [{"name": n["name"], "script": sid, "pc": n["pc"]} for _tag, sid, s in script_ids_here
                    for n in named_things.runtime_names(wrd.analyse_script(s["code"])["calls"])]
-        undecoded = sorted(t for t, w in worlds.items() if "error" in w)
         out["registries"][level] = level_registry(registry, thing_rid, runtime, undecoded)
         stats["namedThingEntries"] += len(registry["entries"])
         for rec, link in cutscene_links:
