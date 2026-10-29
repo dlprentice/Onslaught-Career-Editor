@@ -41,8 +41,8 @@ class VectorTests(unittest.TestCase):
         self.assertGreaterEqual(len(self.data["edits"]), 8)
         self.assertGreaterEqual(len(self.data["archives"]), 7)
         self.assertGreaterEqual(len(self.data["badArchives"]), 15)
-        self.assertGreaterEqual(len(self.data["stages"]), 11)
-        self.assertGreaterEqual(len(self.data["badStages"]), 40)
+        self.assertGreaterEqual(len(self.data["stages"]), 14)
+        self.assertGreaterEqual(len(self.data["badStages"]), 45)
         names = [v["name"] for v in self.data["valids"]]
         self.assertEqual(len(names), len(set(names)))
         for version in range(43, 51):

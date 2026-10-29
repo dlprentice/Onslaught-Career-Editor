@@ -88,7 +88,7 @@ internal static class LevelEditTests
     // ---- the stager against the reference ------------------------------------------------------------------------------------
     private static void StageVectors(string folder, Checks check)
     {
-        check.That(LevelVectors.Stages.Length >= 11, "the vector file holds the staged mods");
+        check.That(LevelVectors.Stages.Length >= 14, "the vector file holds the staged mods");
         foreach (LevelVectors.StageVector vector in LevelVectors.Stages)
         {
             ModInfo info = Info(vector);
@@ -118,7 +118,7 @@ internal static class LevelEditTests
 
     private static void RefusedStageVectors(string folder, Checks check)
     {
-        check.That(LevelVectors.RefusedStages.Length >= 40, "the vector file holds the refused stagings");
+        check.That(LevelVectors.RefusedStages.Length >= 45, "the vector file holds the refused stagings");
         Directory.CreateDirectory(folder);
         foreach (LevelVectors.RefusedStage vector in LevelVectors.RefusedStages)
         {
@@ -129,6 +129,14 @@ internal static class LevelEditTests
         // Problem() names the first thing wrong with what a mod says about itself.
         check.That(ModStager.Problem(new ModInfo("ok-1", "Name")) is null && ModStager.Problem(new ModInfo("Bad", "Name")) is { } && ModStager.Problem(new ModInfo("ok", "")) is { } &&
                    ModStager.Problem(new ModInfo("ok", "Name", CeMin: "1.2.3.4.5")) is { }, "Problem names what is wrong with a mod's own words");
+        // Versions are ordered as the loader orders them, and a range of one version is fine.
+        foreach ((string low, string high, bool refused) in new[]
+                 {
+                     ("1.2", "1.1", true), ("1.10", "1.9", true), ("0.1.11", "0.1.10", true), ("2", "1.99999", true), ("1.2.0.1", "1.2", true),
+                     ("1.2", "1.2", false), ("1.2.0", "1.2", false), ("1.2", "1.2.0.0", false), ("1.9", "1.10", false), ("0.1.11", "0.1.12", false),
+                 })
+            check.That((ModStager.Problem(new ModInfo("ok", "Name", CeMin: low, CeMax: high)) is not null) == refused, $"ce_min {low} and ce_max {high} are {(refused ? "refused" : "accepted")}");
+        check.That(ModStager.Problem(new ModInfo("ok", "Name", CeMin: "99999")) is null && ModStager.Problem(new ModInfo("ok", "Name", CeMax: "0")) is null, "one bound alone is never compared");
         Refuses<ModStageException>(check, "a file that is not a world file", () => ModStager.BuildManifest(new ModInfo("ok", "Name"), new Dictionary<string, byte[]> { ["data/other.bin"] = [1] }));
         Refuses<ModStageException>(check, "a world path with four digits", () => ModStager.BuildManifest(new ModInfo("ok", "Name"), new Dictionary<string, byte[]> { ["data/worlds/world1000.wrd"] = [1] }));
         Refuses<ModStageException>(check, "more files than a mod may list", () => ModStager.BuildManifest(new ModInfo("ok", "Name"),

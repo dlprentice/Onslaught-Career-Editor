@@ -505,6 +505,9 @@ def stage_specs() -> list[dict]:
         spec("worlds-sorted-by-path", "three-worlds", "Three", [from_(999, "authored-v50"), from_(7, "authored-v44"), from_(100, "authored-v45")]),
         spec("version-numbers", "ver", "Versions", [from_(100, "authored-v50")], ceMin="1.2.3.4", ceMax="65535.0.0"),
         spec("edit-one-version-only", "only-min", "Only min", [from_(100, "authored-v50")], ceMin="0"),
+        spec("range-of-one-version", "one-version", "One version", [from_(100, "authored-v50")], ceMin="0.1.11", ceMax="0.1.11"),
+        spec("range-in-numeric-order", "numeric-order", "Numeric order", [from_(100, "authored-v50")], ceMin="1.9", ceMax="1.10"),
+        spec("range-equal-after-padding", "padded", "Padded", [from_(100, "authored-v50")], ceMin="1.2.0", ceMax="1.2"),
         spec("world-of-4-mib", "big-world", "Big", [repeat(100, 0x77, BIG_WORLD)]),
         spec("world-of-one-byte", "tiny-world", "Tiny", [repeat(0, 0x01, 1)]),
         spec("levels-zero-and-999", "ends", "Ends", [from_(0, "authored-v50"), from_(999, "authored-v43")]),
@@ -535,6 +538,8 @@ def refused_stage_specs() -> list[dict]:
     for index, text in enumerate(("1.2.3.4.5", "a.b", "123456", "1..2", ".1", "1.", "", " 1", "1.2.3.4.", "-1", "1e3")):
         bad(f"ce-min-{index}", f"ce_min {text!r}", ceMin=text)
     bad("ce-max-bad", "ce_max that is not a version", ceMax="x")
+    for index, (low, high) in enumerate((("1.2", "1.1"), ("0.1.11", "0.1.10"), ("1.10", "1.9"), ("2", "1.99999"), ("1.2.0.1", "1.2"))):
+        bad(f"ce-range-{index}", f"ce_min {low} after ce_max {high}", ceMin=low, ceMax=high)
     bad("no-worlds", "a mod with no world files", worlds=[])
     bad("level-minus-one", "a level below 0", worlds=[{"level": -1, "from": "authored-v50"}])
     bad("level-1000", "a level above 999", worlds=[{"level": 1000, "from": "authored-v50"}])

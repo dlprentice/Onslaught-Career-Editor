@@ -62,7 +62,7 @@ public static class ModStager
         return LevelWorlds.WorldFileName(level);
     }
 
-    /// <summary>The first thing wrong with what a mod says about itself, or null when CE's loader would accept it.</summary>
+    /// <summary>The first thing wrong with what a mod says about itself, or null when CE's loader would accept it (and, as the Toolkit stager does, some CE could load it: ce_min is not after ce_max).</summary>
     public static string? Problem(ModInfo info)
     {
         if (!IdPattern.IsMatch(info.Id)) return "A mod id is 1 to 48 lowercase letters, digits, '-' or '_' (it is also the folder's name).";
@@ -77,7 +77,25 @@ public static class ModStager
         foreach ((string label, string? value) in new[] { ("ce_min", info.CeMin), ("ce_max", info.CeMax) })
             if (value is not null && !VersionPattern.IsMatch(value))
                 return $"The {label} must be one to four numbers of up to five digits joined by dots, such as 0.1.11.";
+        if (info.CeMin is not null && info.CeMax is not null && CompareVersions(info.CeMin, info.CeMax) > 0)
+            return $"The ce_min {info.CeMin} is after the ce_max {info.CeMax}: no released CE version could load this mod.";
         return null;
+    }
+
+    /// <summary>Two versions as CE's loader orders them: four numbers, the missing ones zero (1.2 equals 1.2.0.0; 1.10 is after 1.9).</summary>
+    internal static int CompareVersions(string a, string b)
+    {
+        static int[] Parts(string text)
+        {
+            int[] numbers = new int[4];
+            string[] parts = text.Split('.');
+            for (int i = 0; i < parts.Length; i++) numbers[i] = int.Parse(parts[i], System.Globalization.CultureInfo.InvariantCulture);
+            return numbers;
+        }
+        int[] left = Parts(a), right = Parts(b);
+        for (int i = 0; i < 4; i++)
+            if (left[i] != right[i]) return left[i] < right[i] ? -1 : 1;
+        return 0;
     }
 
     /// <summary><c>mod.json</c> as CE's loader reads it: strict JSON, schema 1, only the keys it knows, every file with size and SHA-256.</summary>

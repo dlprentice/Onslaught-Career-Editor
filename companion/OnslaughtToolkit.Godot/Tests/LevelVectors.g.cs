@@ -1912,6 +1912,30 @@ internal static class LevelVectors
             LAVoKkuEqqhzIRXlqqmNDAZKbazSdYNQ8HRyDfWardkXiTJE3A==
             """,
             "71c8f0184ec08dcf081af45e3e61999f48b9b1ea4c04f834e13d529caaa922d8", [new("data/worlds/world100.wrd", 990, "be13f933b6263efeaafce4bedd50a9e55da6472013e2387c1dd5d19cf3978da4")]),
+        new("range-of-one-version", "one-version", "One version", "1", "", "",
+            "0.1.11", "0.1.11", [new(100, "authored-v50", "", 0, 0)],
+            """
+            eNpdjt1uwjAMhe/7FFGuWRc3/QsvsQdAaHJjR41EW9SggUC8O0kQYtuN7fMdH8u3QggZ7MgTyq2ATZKe4iiXmT9+eA1+mWXGM06c
+            jK+ZxR/jJaIHT2L5e/IZqBJK+EXx8p86f+AQ4S4KIW65RnzE05hWCU/4eV7WA4VnA6XK80o5nDeDv6a/jFFvNGLVtCk+MGhntB7a
+            qtXsGNFZrgcmahQabhrCtu4qBZor3XcWokFgrNOm6wlrmU/eY90X9+IBLydNMw==
+            """,
+            "95d1a31b02f4fc58d10bd16fcda740e3e305857bf026436bcb7dea9f322c1e12", [new("data/worlds/world100.wrd", 990, "be13f933b6263efeaafce4bedd50a9e55da6472013e2387c1dd5d19cf3978da4")]),
+        new("range-in-numeric-order", "numeric-order", "Numeric order", "1", "", "",
+            "1.9", "1.10", [new(100, "authored-v50", "", 0, 0)],
+            """
+            eNpNjkuOwjAMQPc9RZT1AEnTXzjEXGCEkBs7aiTaogQGBOLu5LOAjT/v2ZafFWM8mIlm4Hsmf1LrMJZ8uc7kndmsHsnzLBaYKanf
+            otiX+icf3LokKwsxdJxdAVv9QXAvSIrCrDtRiOgvNow9c4z4DJcpDSJcYHdb/QlDSVKI7c1jXs6TwT3SU1qLD5qgbru0PpJUVis1
+            dnWnyBKANdSMhNgK0NS2CF3T10IqqtXQGxkFSm2s0v2A0PB88hXjoXpVb7LdTds=
+            """,
+            "193bc9d9aab9f106b7fcde49d3516b4a820cebd2fe9032b7f87233833a0167af", [new("data/worlds/world100.wrd", 990, "be13f933b6263efeaafce4bedd50a9e55da6472013e2387c1dd5d19cf3978da4")]),
+        new("range-equal-after-padding", "padded", "Padded", "1", "", "",
+            "1.2.0", "1.2", [new(100, "authored-v50", "", 0, 0)],
+            """
+            eNpNzs0OwiAMAOD7noJwNpOf/YhP4d0Y09GSkbhphnHGxXcXholeWvpRaJeCMR5sTwPwPZObVHqMR34DREK+yggDJTv82YOm4K9j
+            YpnF0nnwGUpVih/C84uZnL9QiHKMBWPLGlkaeO9TH8IdtvN1umDISQpRzlMeu3YG/0rrGCN+1IOqm/S8I6md0bprVKPJEYCzVHWE
+            WAswVNcITdUqITUpvWutjBcojXXatDuEiq9fvmM8Fe/iA7fbSFw=
+            """,
+            "25b25845c177f8462acdb0cb439fe78daef3dea891db5d056d9890943fcb5320", [new("data/worlds/world100.wrd", 990, "be13f933b6263efeaafce4bedd50a9e55da6472013e2387c1dd5d19cf3978da4")]),
         new("world-of-4-mib", "big-world", "Big", "1", "", "",
             null, null, [new(100, "", "", 119, 4194304)],
             """
@@ -2020,6 +2044,16 @@ internal static class LevelVectors
             "1e3", null, [new(100, "authored-v50", "", 0, 0)]),
         new("ce-max-bad", "ce_max that is not a version", "ce-edit", "Edit", "1", "", "",
             null, "x", [new(100, "authored-v50", "", 0, 0)]),
+        new("ce-range-0", "ce_min 1.2 after ce_max 1.1", "ce-edit", "Edit", "1", "", "",
+            "1.2", "1.1", [new(100, "authored-v50", "", 0, 0)]),
+        new("ce-range-1", "ce_min 0.1.11 after ce_max 0.1.10", "ce-edit", "Edit", "1", "", "",
+            "0.1.11", "0.1.10", [new(100, "authored-v50", "", 0, 0)]),
+        new("ce-range-2", "ce_min 1.10 after ce_max 1.9", "ce-edit", "Edit", "1", "", "",
+            "1.10", "1.9", [new(100, "authored-v50", "", 0, 0)]),
+        new("ce-range-3", "ce_min 2 after ce_max 1.99999", "ce-edit", "Edit", "1", "", "",
+            "2", "1.99999", [new(100, "authored-v50", "", 0, 0)]),
+        new("ce-range-4", "ce_min 1.2.0.1 after ce_max 1.2", "ce-edit", "Edit", "1", "", "",
+            "1.2.0.1", "1.2", [new(100, "authored-v50", "", 0, 0)]),
         new("no-worlds", "a mod with no world files", "ce-edit", "Edit", "1", "", "",
             null, null, []),
         new("level-minus-one", "a level below 0", "ce-edit", "Edit", "1", "", "",
