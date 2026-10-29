@@ -375,9 +375,9 @@ internal sealed class LevelEditorPage : Page
     /// </summary>
     internal void PickLevel(int level)
     {
-        if (_model?.Level is int open && HasChanges)
+        int changed = ChangeCount;
+        if (_model?.Level is int open && changed > 0)
         {
-            int changed = ChangeCount;
             ShowInPicker(open);
             _services.AskToDiscard($"{Build.Count(changed, "change")} on level {open} {(changed == 1 ? "is" : "are")} not saved. Open level {level} and discard {(changed == 1 ? "it" : "them")}?",
                 "Discard and open", () => OpenLevel(level));

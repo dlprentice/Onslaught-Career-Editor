@@ -316,7 +316,7 @@ public partial class CompanionApp : Control
         List<string> unsaved = [];
         if (EditCareer.HasChanges) unsaved.Add($"{Build.Count(EditCareer.ChangeCount, "change")} on Edit career");
         if (Settings.HasChanges) unsaved.Add($"{Build.Count(Settings.ChangeCount, "change")} on Game settings");
-        if (LevelEditor.HasChanges) unsaved.Add($"{Build.Count(LevelEditor.ChangeCount, "change")} on Level editor");
+        if (LevelEditor.ChangeCount is int levelChanges and > 0) unsaved.Add($"{Build.Count(levelChanges, "change")} on Level editor");
         if (unsaved.Count == 0)
         {
             _quit();
