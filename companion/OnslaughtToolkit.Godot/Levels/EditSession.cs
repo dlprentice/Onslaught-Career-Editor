@@ -173,6 +173,7 @@ public sealed class EditSession
     /// <summary>
     /// The scripts whose record differs from the baseline's, in script order, with what differs said in numbers and values. Empty when the two bodies do not
     /// have the same scripts by name and order (<see cref="Validate"/> says so): a script is replaced, never added, dropped or renamed here.
+    /// A script that cannot be stored is included with <see cref="ScriptChange.StorageError"/> instead of throwing.
     /// </summary>
     public IReadOnlyList<ScriptChange> ScriptChanges()
     {
@@ -191,10 +192,11 @@ public sealed class EditSession
         return WorldBody.Read(Baseline).Scripts[index];
     }
 
-    private bool SameScripts() => Body.Scripts.Count == _baseline.Scripts.Count && Body.Scripts.Zip(_baseline.Scripts).All(pair => pair.First.Name == pair.Second.Name);
+    private bool SameScripts() => Body.Scripts.Count == _baseline.Scripts.Count &&
+        Body.Scripts.Zip(_baseline.Scripts).All(pair => pair.First is not null && pair.First.Name == pair.Second.Name);
 
     /// <summary>
-    /// Errors that stop a save: nothing changed, the body cannot be written, the row list or the script list changed, something other than a
+    /// Errors that stop a save: nothing changed, the body cannot be written, a script cannot be stored (<c>script-unstorable</c>), the row list or the script list changed, something other than a
     /// position or the code of a script differs from the baseline, or a replaced script breaks one of the game's rules (<c>script-broken</c>, one
     /// finding per problem <see cref="ScriptChecker"/> lists; the finding's index is the script's number). Warnings: a position outside the square the
     /// terrain lookup covers, and any change to a base world.
@@ -209,7 +211,9 @@ public sealed class EditSession
         }
         catch (InvalidDataException error)
         {
-            errors.Add(new Finding("cannot-write", $"This world cannot be saved: {error.Message}"));
+            foreach (ScriptChange change in ScriptChanges().Where(change => change.StorageError is not null))
+                errors.Add(new Finding("script-unstorable", $"Script {change.Name} cannot be saved: {change.StorageError}", change.Index));
+            if (errors.Count == 0) errors.Add(new Finding("cannot-write", $"This world cannot be saved: {error.Message}"));
             return new ValidationReport(errors, warnings);
         }
         if (bytes.AsSpan().SequenceEqual(Baseline))

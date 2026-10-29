@@ -14,7 +14,7 @@ internal enum LengthKind { SignedByte, UnsignedByte, Int32 }
 internal sealed class ByteReader(byte[] data)
 {
     /// <summary>A count above this is framing damage, not data (the Toolkit decoder's limit).</summary>
-    private const int CountLimit = 1 << 20;
+    internal const int CountLimit = 1 << 20;
 
     private int _position;
 

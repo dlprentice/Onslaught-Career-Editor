@@ -14,7 +14,10 @@ internal static class LevelScriptEditTests
     {
         check.Suite("level script edits");
         Command(check);
+        Snapshots(check);
         Session(check);
+        StoredFields(check);
+        Unstorable(check);
         Validation(check);
         BrokenScripts(check);
     }
@@ -28,22 +31,56 @@ internal static class LevelScriptEditTests
     {
         WorldBody body = Authored();
         MissionScript original = body.Scripts[0], replacement = LevelScriptTests.Script("alpha", [0], ["stop"], ("PostEvent", 1));
+        byte[] originalBytes = WorldBodyWriter.ScriptBytes(original), replacementBytes = WorldBodyWriter.ScriptBytes(replacement);
         ReplaceScript replace = new(0, replacement);
         replace.Do(body);
-        check.That(ReferenceEquals(body.Scripts[0], replacement) && replace.Description == "Replace script alpha" && replace.ScriptIndex == 0 && ReferenceEquals(replace.Script, replacement),
-            "a replacement puts the new script in the old one's place and says so in words");
+        check.That(!ReferenceEquals(body.Scripts[0], replacement) && WorldBodyWriter.ScriptBytes(body.Scripts[0]).AsSpan().SequenceEqual(replacementBytes) &&
+                   replace.Description == "Replace script alpha" && replace.ScriptIndex == 0 && !ReferenceEquals(replace.Script, replacement) &&
+                   WorldBodyWriter.ScriptBytes(replace.Script).AsSpan().SequenceEqual(replacementBytes),
+            "a replacement puts a copy of the new script in the old one's place and says so in words");
         replace.Undo(body);
-        check.That(ReferenceEquals(body.Scripts[0], original), "taking it back puts the script that was there back");
+        check.That(WorldBodyWriter.ScriptBytes(body.Scripts[0]).AsSpan().SequenceEqual(originalBytes), "taking it back puts the script that was there back");
         replace.Do(body);
-        check.That(ReferenceEquals(body.Scripts[0], replacement), "and it can be made again");
+        check.That(WorldBodyWriter.ScriptBytes(body.Scripts[0]).AsSpan().SequenceEqual(replacementBytes), "and it can be made again");
         check.That(Throws(() => replace.Do(body)), "a replacement already made is not made twice");
         replace.Undo(body);
-        check.That(Throws(() => replace.Undo(body)) && ReferenceEquals(body.Scripts[0], original), "and one taken back is not taken back twice");
+        check.That(Throws(() => replace.Undo(body)) && WorldBodyWriter.ScriptBytes(body.Scripts[0]).AsSpan().SequenceEqual(originalBytes), "and one taken back is not taken back twice");
         check.That(Throws(() => new ReplaceScript(-1, replacement).Do(body)) && Throws(() => new ReplaceScript(2, replacement).Do(body)) && Throws(() => new ReplaceScript(int.MaxValue, replacement).Do(body)),
             "a script number outside the world's list is refused");
         MissionScript other = LevelScriptTests.Script("Alpha", [], []);
-        check.That(Throws(() => new ReplaceScript(0, other).Do(body)) && ReferenceEquals(body.Scripts[0], original) && Throws(() => new ReplaceScript(1, replacement).Do(body)) && body.Scripts[1].Name == "beta",
+        check.That(Throws(() => new ReplaceScript(0, other).Do(body)) && WorldBodyWriter.ScriptBytes(body.Scripts[0]).AsSpan().SequenceEqual(originalBytes) && Throws(() => new ReplaceScript(1, replacement).Do(body)) && body.Scripts[1].Name == "beta",
             "a script keeps its name (in its exact spelling), and a refused replacement changes nothing");
+    }
+
+    private static void Snapshots(Checks check)
+    {
+        byte[] baseline = Authored().Write();
+        EditSession session = new(baseline);
+        MissionScript priorReference = session.Body.Scripts[0], caller = Saveable();
+        byte[] expected = WorldBodyWriter.ScriptBytes(caller);
+        ReplaceScript command = new(0, caller);
+        caller.Code.Symbols[0].Value = new ScriptInt(17);
+        caller.Code.EventPcs[0] = 99;
+        caller.Code.Instructions.Clear();
+        caller.Code.EventFunctions[0].Parameters.Clear();
+        caller.Trailer[0] = 42;
+        session.Apply(command);
+        int events = 0;
+        session.Changed += () => events++;
+        caller.Name = "changed after Apply";
+        caller.Code.Tail1 = 123;
+        caller.Trailer[2] = 8;
+        MissionScript exposed = command.Script;
+        exposed.Code.Symbols[0].Name = "changed through getter";
+        exposed.Trailer[1] = 7;
+        priorReference.Code.Symbols[0].Value = new ScriptText("changed while set aside");
+        check.That(events == 0 && WorldBodyWriter.ScriptBytes(session.Body.Scripts[0]).AsSpan().SequenceEqual(expected) &&
+                   WorldBodyWriter.ScriptBytes(command.Script).AsSpan().SequenceEqual(expected),
+            "caller changes before and after Apply and changes to the getter copy do not silently change the working edit");
+        session.Body.Scripts[0].Code.EventPcs[0] = 55;
+        check.That(session.Undo() && session.ToBytes().AsSpan().SequenceEqual(baseline) && session.Redo() &&
+                   WorldBodyWriter.ScriptBytes(session.Body.Scripts[0]).AsSpan().SequenceEqual(expected) && events == 2,
+            "undo restores the captured prior record and redo restores the captured replacement even if both exposed objects were mutated");
     }
 
     private static void Session(Checks check)
@@ -98,6 +135,120 @@ internal static class LevelScriptEditTests
         check.That(moved.Validate().Warnings.Select(finding => finding.Code).SequenceEqual(["base-world"]), "a base world with a thing moved and no script replaced has no word about scripts");
         check.That(report.CanSave && report.Warnings.Select(finding => finding.Code).SequenceEqual(["base-world-scripts"]),
             $"a base world's replaced script is saved with a warning that every level loading it runs the new one: {string.Join(", ", report.Warnings.Select(finding => finding.Code))}");
+    }
+
+    private static void StoredFields(Checks check)
+    {
+        byte[] baseline = LevelScriptTests.Body(Saveable()).Write();
+        (string What, Action<MissionScript> Edit, string? Field)[] cases =
+        [
+            ("instruction opcode", s => s.Code.Instructions[0] = s.Code.Instructions[0] with { Opcode = 7 }, "instruction 0"),
+            ("instruction operand", s => s.Code.Instructions[0] = s.Code.Instructions[0] with { Attribute = 8 }, "instruction 0"),
+            ("fixed event entry", s => s.Code.EventPcs[0]++, "event 0 entry"),
+            ("symbol name", s => s.Code.Symbols[0].Name += "x", null),
+            ("symbol data type", s => s.Code.Symbols[0].DataType = 4, null),
+            ("symbol value", s => s.Code.Symbols[0].Value = new ScriptInt(3), null),
+            ("symbol type/line", s => s.Code.Symbols[0].SymbolType++, null),
+            ("symbol index", s => s.Code.Symbols[0].Index++, null),
+            ("symbol flag", s => s.Code.Symbols[0].Flag++, null),
+            ("next symbol index", s => s.Code.NextSymbolIndex++, "next symbol index"),
+            ("handler entry", s => s.Code.EventFunctions[0].EntryPc++, "handler 0"),
+            ("handler parameter", s => s.Code.EventFunctions[0].Parameters[0]++, "handler 0"),
+            ("first trailing word", s => s.Code.Tail1++, "first trailing word"),
+            ("second trailing word", s => s.Code.Tail2++, "second trailing word"),
+            ("trailer byte", s => s.Trailer[9]++, "trailer"),
+        ];
+        foreach ((string what, Action<MissionScript> edit, string? field) in cases)
+        {
+            EditSession session = new(baseline);
+            MissionScript changed = session.ShippedScript(0);
+            edit(changed);
+            session.Apply(new ReplaceScript(0, changed));
+            ScriptChange change = session.ScriptChanges().Single();
+            bool explained = field is null
+                ? change.Symbols.Count == 1 && change.Symbols[0].From != change.Symbols[0].To
+                : change.Fields.Any(entry => entry.Field == field && entry.From != entry.To);
+            check.That(explained, $"a {what}-only record change identifies the field and gives different before/after values");
+        }
+
+        EditSession additions = new(baseline);
+        MissionScript larger = additions.ShippedScript(0);
+        larger.Code.Instructions.Add(new ScriptInstruction(23, -1));
+        larger.Code.EventFunctions.Add(new EventFunction { EntryPc = 2 });
+        larger.Code.Symbols.Add(new ScriptSymbol { Name = "added", DataType = 1, Value = new ScriptInt(1), Index = 2 });
+        additions.Apply(new ReplaceScript(0, larger));
+        ScriptChange added = additions.ScriptChanges().Single();
+        check.That(added.Fields.Any(field => field.Field == "handler 1" && field.From == "(none)") &&
+                   added.Fields.Any(field => field.Field.StartsWith("instruction ", StringComparison.Ordinal) && field.From == "(none)") &&
+                   added.Symbols.Single().From == "(none)", "added instructions, handlers and symbols are listed from none");
+
+        float nan1 = BitConverter.UInt32BitsToSingle(0x7fc00001), nan2 = BitConverter.UInt32BitsToSingle(0x7fc00002);
+        WorldBody vectors = LevelScriptTests.Body(LevelScriptTests.Script("alpha", [], []));
+        vectors.Scripts[0].Code.Symbols.Add(new ScriptSymbol { Name = "v", DataType = 6, Value = new ScriptVector(new Vector3(0f, nan1, 0f)), Index = 0 });
+        vectors.Scripts[0].Code.NextSymbolIndex = 1;
+        EditSession bitChange = new(vectors.Write());
+        MissionScript signed = bitChange.ShippedScript(0);
+        signed.Code.Symbols[0].Value = new ScriptVector(new Vector3(-0f, nan2, 0f));
+        bitChange.Apply(new ReplaceScript(0, signed));
+        SymbolChange vector = bitChange.ScriptChanges().Single().Symbols.Single();
+        check.That(vector.From.Contains("0x00000000", StringComparison.Ordinal) && vector.From.Contains("0x7fc00001", StringComparison.Ordinal) &&
+                   vector.To.Contains("0x80000000", StringComparison.Ordinal) && vector.To.Contains("0x7fc00002", StringComparison.Ordinal),
+            "vector components show their exact float bits, including signed zero and distinct NaN payloads");
+    }
+
+    private static void Unstorable(Checks check)
+    {
+        byte[] baseline = LevelScriptTests.Body(Saveable()).Write();
+        (string What, Action<MissionScript> Break)[] cases =
+        [
+            ("wrong value type", s => s.Code.Symbols[0].Value = new ScriptText("not an integer")),
+            ("unknown data type", s => s.Code.Symbols[0].DataType = 99),
+            ("non-Latin-1 symbol", s => s.Code.Symbols[0].Name = "\u0100"),
+            ("wrong trailer length", s => s.Trailer = new byte[9]),
+            ("missing trailer", s => s.Trailer = null!),
+            ("wrong entry count", s => s.Code.EventPcs = new int[12]),
+            ("missing entries", s => s.Code.EventPcs = null!),
+            ("missing code", s => s.Code = null!),
+            ("missing symbol", s => s.Code.Symbols[0] = null!),
+            ("missing symbol name", s => s.Code.Symbols[0].Name = null!),
+            ("missing text value", s => s.Code.Symbols[1].Value = new ScriptText(null!)),
+            ("missing handler", s => s.Code.EventFunctions[0] = null!),
+        ];
+        foreach ((string what, Action<MissionScript> breakScript) in cases)
+        {
+            EditSession session = new(baseline);
+            MissionScript script = session.ShippedScript(0);
+            breakScript(script);
+            session.Apply(new ReplaceScript(0, script));
+            ScriptChange change = session.ScriptChanges().Single();
+            ValidationReport report = session.Validate();
+            check.That(change.StorageError is { Length: > 0 } && !report.CanSave && report.Errors.Single() is { Code: "script-unstorable", Index: 0 } &&
+                       report.Errors[0].Message.Contains(change.StorageError, StringComparison.Ordinal),
+                $"{what} is reported by ScriptChanges and refused by Validate without throwing");
+            check.That(session.Undo() && session.ToBytes().AsSpan().SequenceEqual(baseline), $"an edit with {what} can still be undone");
+        }
+
+        EditSession both = new(LevelScriptTests.Body(Saveable(), LevelScriptCheckerTests.WellFormed("beta", [0], [], ("PostEvent", 1))).Write());
+        MissionScript first = both.ShippedScript(0), second = both.ShippedScript(1);
+        first.Trailer = new byte[9];
+        second.Code.EventPcs = new int[12];
+        both.Apply(new ReplaceScript(0, first));
+        both.Apply(new ReplaceScript(1, second));
+        check.That(both.ScriptChanges().Count(change => change.StorageError is not null) == 2 &&
+                   both.Validate().Errors.Select(error => (error.Code, error.Index)).SequenceEqual([("script-unstorable", 0), ("script-unstorable", 1)]),
+            "each of two unstorable scripts is reported with its own index");
+
+        EditSession tooLong = new(baseline);
+        tooLong.Body.Scripts[0].Code.Instructions.AddRange(Enumerable.Repeat(new ScriptInstruction(0, 0), ByteReader.CountLimit + 1));
+        ScriptChange excessive = tooLong.ScriptChanges().Single();
+        check.That(excessive.StorageError?.Contains("reader's", StringComparison.Ordinal) == true &&
+                   tooLong.Validate().Errors.Single() is { Code: "script-unstorable", Index: 0 },
+            "an instruction count the strict reader refuses is reported before a large diff is assembled or an unreadable world is accepted");
+
+        EditSession missing = new(baseline);
+        missing.Body.Scripts[0] = null!;
+        check.That(missing.ScriptChanges().Count == 0 && missing.Validate().Errors.Single().Code == "cannot-write",
+            "a missing script record is refused as an unwritable world, without throwing while listing changes");
     }
 
     private static void Validation(Checks check)
