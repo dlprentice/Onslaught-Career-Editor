@@ -421,6 +421,34 @@ def level_stream(wdat: bytes | None, bodies: list[tuple[bytes, bytes]]) -> bytes
             + fixtures.chunk(b"WRES", fixtures.chunk(b"WRLD", wrld)) + fixtures.chunk(b"LNDS", b""))
 
 
+def padded_level_stream(total: int, real: bytes) -> bytes:
+    """A level stream of exactly `total` bytes: an unused chunk (before the trailing LNDS chunk) takes up the difference."""
+    stream = level_stream(struct.pack("<ii", -1, 400), [(b"RLWD", real)])
+    padding = total - len(stream) - 8
+    assert padding >= 0, "the stream is longer than the size asked for"
+    return stream[:-8] + fixtures.chunk(b"PADD", bytes(padding)) + stream[-8:]
+
+
+def cut_short_member(stream: bytes) -> bytes:
+    """A zlib stream that inflates to exactly `stream` but never ends, and whose last four bytes are the Adler-32 of what it
+    inflates to: a stored block holding the stream, then the checksum where a complete stream would end after its last block.
+    A reader that takes "the last four bytes are the checksum" for "the stream is complete" accepts it. The checksum's own first
+    byte starts the next block header, so a stream is only left waiting for input (not broken) when that byte is a stored block's:
+    the stream is padded, a byte at a time, until it is."""
+    for pad in range(64):
+        data = stream[:-8] + fixtures.chunk(b"PADD", bytes(pad)) + stream[-8:] if pad else stream
+        assert len(data) <= 0xFFFF, "a stored block holds at most 65535 bytes"
+        member = b"\x78\x01" + b"\x00" + struct.pack("<HH", len(data), len(data) ^ 0xFFFF) + data + struct.pack(">I", zlib.adler32(data))
+        decoder = zlib.decompressobj()
+        try:
+            inflated = decoder.decompress(member)
+        except zlib.error:
+            continue
+        if inflated == data and not decoder.eof:
+            return member
+    raise AssertionError("no padding leaves the cut-short stream waiting for input")
+
+
 def archive_vectors(valid: dict[str, bytes]) -> list[tuple[str, str, bytes, dict]]:
     real, base = valid["authored-v50"], valid["kinds-v46"]
     out: list[tuple[str, str, bytes, dict]] = []
@@ -444,6 +472,8 @@ def archive_vectors(valid: dict[str, bytes]) -> list[tuple[str, str, bytes, dict
     stream = level_stream(struct.pack("<ii", -1, 400), [(b"RLWD", real)])
     stream = stream[:-8] + fixtures.chunk(b"PADD", bytes(6000)) + stream[-8:]  # before the trailing LNDS chunk
     out.append(("members-4096", "a stream split into 4096 members, the most the reader accepts", archive_file(split(stream, 4096))))
+    out.append(("member-exactly-1mib", "one member that inflates to exactly the 1 MiB a member may",
+                archive_file([padded_level_stream(enc.MAX_INFLATED_MEMBER_BYTES, real)])))
     results = []
     for name, note, data in out:
         worlds = enc.level_worlds(b"".join(enc.inflate(enc.read_members(data))))
@@ -463,6 +493,8 @@ def refused_archives(valid: dict[str, bytes]) -> list[tuple[str, str, bytes]]:
     short_wdat = level_stream(b"\0" * 4, [(b"RLWD", real)])
     no_wdat = level_stream(None, [(b"RLWD", real)])
     member = zlib.compress(good)
+    adler = member[-4:]  # the stream's own Adler-32, big-endian: the last four bytes of every complete zlib stream
+    framed = lambda body: struct.pack("<I", len(body)) + body
     return [
         ("no-bytes", "an empty file", b""),
         ("length-only", "a file that ends inside a member length", b"\x05\x00"),
@@ -471,7 +503,14 @@ def refused_archives(valid: dict[str, bytes]) -> list[tuple[str, str, bytes]]:
         ("not-zlib", "a member that is not a zlib stream", struct.pack("<I", 8) + b"notzlib!"),
         ("member-truncated", "a zlib stream cut short", struct.pack("<I", len(member) - 5) + member[:-5]),
         ("member-trailing-data", "bytes after the end of a zlib stream", struct.pack("<I", len(member) + 4) + member + b"junk"),
+        ("member-adler-repeated", "a complete zlib stream followed by a second copy of its own Adler-32", framed(member + adler)),
+        ("member-adler-after-gap", "a complete zlib stream, four zero bytes and a second copy of its own Adler-32", framed(member + bytes(4) + adler)),
+        ("member-adler-after-junk", "a complete zlib stream, four bytes of junk and a second copy of its own Adler-32", framed(member + b"junk" + adler)),
+        ("member-cut-short-before-adler", "a stored block holding the stream, then its Adler-32 where a complete zlib stream would have ended: cut short",
+         framed(cut_short_member(good))),
         ("member-over-1mib", "one member that inflates past the game's 1 MiB pack buffer", fixtures.world_archive()),
+        ("member-1mib-plus-one", "one member that inflates to one byte more than the 1 MiB a member may",
+         archive_file([padded_level_stream(enc.MAX_INFLATED_MEMBER_BYTES + 1, real)])),
         ("no-wres", "no WRES chunk", archive_file([no_wres])),
         ("no-wrld", "a WRES chunk with no WRLD chunk", archive_file([no_wrld])),
         ("truncated-chunk-header", "a chunk header cut short", archive_file([truncated_header])),
@@ -707,6 +746,11 @@ def render(data: dict) -> str:
            "    internal sealed record StageVector(string Name, string Id, string ModName, string Version, string Author, string Description, string? CeMin, string? CeMax, StageWorld[] Worlds, string Manifest, string ManifestSha256, StageFile[] Files);", "",
            "    /// <summary>Inputs the reference stager refuses.</summary>",
            "    internal sealed record RefusedStage(string Name, string Why, string Id, string ModName, string Version, string Author, string Description, string? CeMin, string? CeMax, StageWorld[] Worlds);", "",
+           "    /// <summary>The reference's archive limits (tools/world_resources_encode.py), which LevelArchive holds to as well.</summary>",
+           "    internal static class ReferenceLimits", "    {",
+           f"        internal const int MaxFileBytes = {enc.MAX_ARCHIVE_BYTES}, MaxInflatedBytes = {enc.MAX_ARCHIVE_INFLATED_BYTES}, MaxMembers = {enc.MAX_ARCHIVE_MEMBERS},",
+           f"            PackBufferBytes = {enc.PACK_BUFFER_SIZE}, MaxMemberInflatedBytes = {enc.MAX_INFLATED_MEMBER_BYTES};",
+           "    }", "",
            "    internal static readonly WorldVector[] Valid =", "    ["]
     for v in data["valids"]:
         out.append(f"        new({cs_text(v['name'])}, {cs_text(v['note'])},")

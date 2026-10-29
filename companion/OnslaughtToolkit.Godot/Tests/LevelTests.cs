@@ -261,7 +261,7 @@ internal static class LevelTests
 
     private static void Archives(Checks check)
     {
-        check.That(LevelVectors.Archives.Length >= 7 && LevelVectors.RefusedArchives.Length >= 15, "the vector file holds the archives");
+        check.That(LevelVectors.Archives.Length >= 8 && LevelVectors.RefusedArchives.Length >= 20, "the vector file holds the archives");
         foreach (LevelVectors.ArchiveVector vector in LevelVectors.Archives)
         {
             try
@@ -279,7 +279,48 @@ internal static class LevelTests
         }
         foreach (LevelVectors.RefusedArchive vector in LevelVectors.RefusedArchives)
             Refuses(check, vector.Name + " (" + vector.Why + ")", () => LevelArchive.Read(Unpack(vector.File)));
+        // Each of these is a valid archive but for its one member, so it is refused for that member and for nothing the chunks hold.
+        foreach ((string name, string reason) in new[]
+                 {
+                     ("member-trailing-data", "data after it"), ("member-adler-repeated", "data after it"), ("member-adler-after-gap", "data after it"),
+                     ("member-adler-after-junk", "data after it"), ("member-cut-short-before-adler", "truncated zlib stream"),
+                     ("member-truncated", "truncated zlib stream"), ("member-over-1mib", "limit"), ("member-1mib-plus-one", "limit"),
+                 })
+        {
+            LevelVectors.RefusedArchive vector = LevelVectors.RefusedArchives.First(v => v.Name == name);
+            try
+            {
+                LevelArchive.Read(Unpack(vector.File));
+                check.Fail($"{name}: accepted");
+            }
+            catch (InvalidDataException error)
+            {
+                check.That(error.Message.Contains(reason, StringComparison.Ordinal), $"{name}: refused for \"{error.Message}\", not for \"{reason}\"");
+            }
+        }
         check.That(LevelWorlds.WorldFileName(7) == "data/worlds/world007.wrd" && LevelWorlds.WorldFileName(100) == "data/worlds/world100.wrd", "a level's loose world file is world%03d.wrd");
+        ArchiveLimits(check);
+    }
+
+    private static void ArchiveLimits(Checks check)
+    {
+        check.That(LevelArchive.MaxFileBytes == LevelVectors.ReferenceLimits.MaxFileBytes && LevelArchive.MaxInflatedBytes == LevelVectors.ReferenceLimits.MaxInflatedBytes &&
+                   LevelArchive.MaxMembers == LevelVectors.ReferenceLimits.MaxMembers && LevelArchive.PackBufferBytes == LevelVectors.ReferenceLimits.PackBufferBytes &&
+                   LevelArchive.MaxMemberInflatedBytes == LevelVectors.ReferenceLimits.MaxMemberInflatedBytes, "the archive limits are the reference's");
+
+        // The members of an archive inflate to at most the archive total together: each may take what the earlier ones left.
+        byte[] Member(int inflated)
+        {
+            using MemoryStream packed = new();
+            using (ZLibStream zlib = new(packed, CompressionLevel.Optimal, leaveOpen: true)) zlib.Write(new byte[inflated]);
+            byte[] member = packed.ToArray();
+            return [.. BitConverter.GetBytes((uint)member.Length), .. member];
+        }
+        byte[] three = [.. Member(1000), .. Member(1000), .. Member(1000)];
+        check.That(LevelArchive.Inflate(three, 3000).Length == 3000, "members that inflate to exactly the archive total are read");
+        Refuses(check, "members that inflate to one byte more than the archive total", () => LevelArchive.Inflate(three, 2999));
+        Refuses(check, "a member that has nothing left of the archive total", () => LevelArchive.Inflate(three, 2000));
+        Refuses(check, "a first member over the archive total", () => LevelArchive.Inflate(three, 999));
     }
 
     private static void ArchiveFolder(string folder, Checks check)

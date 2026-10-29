@@ -39,8 +39,8 @@ class VectorTests(unittest.TestCase):
         self.assertGreaterEqual(len(self.data["valids"]), 25)
         self.assertGreaterEqual(len(self.data["refused"]), 19)
         self.assertGreaterEqual(len(self.data["edits"]), 8)
-        self.assertGreaterEqual(len(self.data["archives"]), 7)
-        self.assertGreaterEqual(len(self.data["badArchives"]), 15)
+        self.assertGreaterEqual(len(self.data["archives"]), 8)
+        self.assertGreaterEqual(len(self.data["badArchives"]), 20)
         self.assertGreaterEqual(len(self.data["stages"]), 14)
         self.assertGreaterEqual(len(self.data["badStages"]), 45)
         names = [v["name"] for v in self.data["valids"]]
@@ -169,6 +169,39 @@ class VectorTests(unittest.TestCase):
                 except (enc.EncodeError, struct.error):
                     continue
                 self.assertNotIn("baseLevel", worlds)  # the one the reference accepts without level numbers
+
+    def test_the_member_vectors_are_refused_for_the_members_own_fault(self) -> None:
+        bad = {v["name"]: v["file"] for v in self.data["badArchives"]}
+        good = {v["name"]: v["file"] for v in self.data["archives"]}
+
+        def refusal(file: bytes) -> str:
+            with self.assertRaises(enc.EncodeError) as caught:
+                enc.inflate(enc.read_members(file))
+            return str(caught.exception)
+
+        # A complete zlib stream with bytes after it, the last four of them its own Adler-32: "the last four bytes are the
+        # checksum of what the member inflates to" holds, and the member is still not one zlib stream.
+        for name in ("member-adler-repeated", "member-adler-after-gap", "member-adler-after-junk"):
+            with self.subTest(name):
+                member = enc.read_members(bad[name])[0]
+                decoder = zlib.decompressobj()
+                inflated = decoder.decompress(member)
+                self.assertTrue(decoder.eof)
+                self.assertGreaterEqual(len(decoder.unused_data), 4)
+                self.assertEqual(member[-4:], struct.pack(">I", zlib.adler32(inflated)))
+                self.assertIn("trailing data after zlib stream", refusal(bad[name]))
+        # A stream cut short that ends in the Adler-32 of everything it inflated to: the same check passes, the stream is not complete.
+        member = enc.read_members(bad["member-cut-short-before-adler"])[0]
+        decoder = zlib.decompressobj()
+        inflated = decoder.decompress(member)
+        self.assertFalse(decoder.eof)
+        self.assertEqual(member[-4:], struct.pack(">I", zlib.adler32(inflated)))
+        self.assertIn("truncated zlib stream", refusal(bad["member-cut-short-before-adler"]))
+        # The bound on what one member inflates to: exactly the bound is read, one byte more is not.
+        self.assertEqual([len(block) for block in enc.inflate(enc.read_members(good["member-exactly-1mib"]))], [enc.MAX_INFLATED_MEMBER_BYTES])
+        self.assertEqual(len(zlib.decompress(enc.read_members(bad["member-1mib-plus-one"])[0])), enc.MAX_INFLATED_MEMBER_BYTES + 1)
+        self.assertIn("inflated archive/member limit", refusal(bad["member-1mib-plus-one"]))
+        self.assertEqual(enc.MAX_INFLATED_MEMBER_BYTES, 1 << 20)
 
     def test_the_staged_mods_are_what_the_reference_stager_wrote(self) -> None:
         bodies = {v["name"]: v["body"] for v in self.data["valids"]}

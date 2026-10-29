@@ -35,6 +35,13 @@ internal static class LevelVectors
     /// <summary>Inputs the reference stager refuses.</summary>
     internal sealed record RefusedStage(string Name, string Why, string Id, string ModName, string Version, string Author, string Description, string? CeMin, string? CeMax, StageWorld[] Worlds);
 
+    /// <summary>The reference's archive limits (tools/world_resources_encode.py), which LevelArchive holds to as well.</summary>
+    internal static class ReferenceLimits
+    {
+        internal const int MaxFileBytes = 67108864, MaxInflatedBytes = 134217728, MaxMembers = 4096,
+            PackBufferBytes = 1059111, MaxMemberInflatedBytes = 1048576;
+    }
+
     internal static readonly WorldVector[] Valid =
     [
         new("authored-v50", "the hand-assembled authored body, as the reference reads it",
@@ -1754,6 +1761,16 @@ internal static class LevelVectors
             Lg==
             """,
             -1, 400, null, "be13f933b6263efeaafce4bedd50a9e55da6472013e2387c1dd5d19cf3978da4"),
+        new("member-exactly-1mib", "one member that inflates to exactly the 1 MiB a member may",
+            """
+            eNrrZmVgqJjz9uL5LGFHCYYPvuaZi1m54748UHxwdPHa//mxNyZ5T5jA0n3c9ei0rKCcg7v9L7h/OFnDw891be5Zl2k5Wr3mD783
+            P739c9/Mm/lp7OvZFpdNUnl/On1S76+He0Ptbr7W2T875m1CiUHdh+m/Nh0u+rfe5IjjP9sjNrNLTv9Jfbnoz4OMghn12p+rPaOi
+            Ra1uSonJd20/fvmp7OFTAfyy9Tp9y61T3xyJUl/HW6h8bEO+ReCtef23DfdXmCX/jbOSzz9aY/7ssJvivc6f0ob1q03fp8be3rh9
+            c3vmm7QgH/9X6mtW7c58k1oTVTNv3+8rMzZc72rPDZHTNeO7fnmFXVxMwOJPKiF1U3TNtPzNV33/+9ftaaTU+g9bLOxfifb++vyU
+            739InE5Y2+PvZa+/btnV8Kru0JV/a+LurJO1PjJb287gv7Fn6YU803epnp9Mo003i6aHT9/6IvVjY5lHy6vS8pWm11/Knz13zvnT
+            t1/d/xNP/v06fYv7ZnP16d71NXblxRJ1GdPCmntDfx+tXbfqKu9mm/+fip9LGTMyjIJRMApGFmj4f/xBqh3fR3NW3/n9AO4+2e0=
+            """,
+            -1, 400, null, "be13f933b6263efeaafce4bedd50a9e55da6472013e2387c1dd5d19cf3978da4"),
     ];
 
     internal static readonly RefusedArchive[] RefusedArchives =
@@ -1789,6 +1806,34 @@ internal static class LevelVectors
             6qlekKWcgfIlLVrKuau+BwNLuaC4wrlYTkJh6ZdVhz/Kla6E8cOeqVO1ALUfSI0KU+wYYwNu1/ygfBmiBg3UPWSEvLG6TAez1bK0
             F/0DDwhQ/9rFMOdHk2KxBHKvefE/Sg6bl3hJcTdbV168zG2N4EEZVRe3rh/22aSZEV/zFPAb8eidIWp1bmuxKKu0
             """),
+        new("member-adler-repeated", "a complete zlib stream followed by a second copy of its own Adler-32", """
+            eNoBYwGc/l8BAAB4nJ1RTUvDQBDdZJM2WlDwUg8eAl482vp968KWXIKUJFg8Liq2VJNiC/4df46/wp/hwUPrzmZWlmwqxoHlZd+b
+            mbyZjW/ixCOEPMqTsSSCb0cedsv4Ptkcw2SYHv2iV2Ms81cUMOafgJxlgeTXMt4lJvGYf0i+T6hRBU7aI/Ek7qd5tSNUgg6On8U0
+            35Xoo+ZjLaCLCH1hIuqVdw95fVqoH9Dy3kY+QB4aAXaR30J+xym9NI0OelscU3STiXxmTqjUHkUv6Vy85g8vVkLfwWEt5UQ3hvVY
+            6qlekKWcgfIlLVrKuau+BwNLuaC4wrlYTkJh6ZdVhz/Kla6E8cOeqVO1ALUfSI0KU+wYYwNu1/ygfBmiBg3UPWSEvLG6TAez1bK0
+            F/0DDwhQ/9rFMOdHk2KxBHKvefE/Sg6bl3hJcTdbV168zG2N4EEZVRe3rh/22aSZEV/zFPAb8eidIfHonSG0sayT
+            """),
+        new("member-adler-after-gap", "a complete zlib stream, four zero bytes and a second copy of its own Adler-32", """
+            eNoBZwGY/mMBAAB4nJ1RTUvDQBDdZJM2WlDwUg8eAl482vp968KWXIKUJFg8Liq2VJNiC/4df46/wp/hwUPrzmZWlmwqxoHlZd+b
+            mbyZjW/ixCOEPMqTsSSCb0cedsv4Ptkcw2SYHv2iV2Ms81cUMOafgJxlgeTXMt4lJvGYf0i+T6hRBU7aI/Ek7qd5tSNUgg6On8U0
+            35Xoo+ZjLaCLCH1hIuqVdw95fVqoH9Dy3kY+QB4aAXaR30J+xym9NI0OelscU3STiXxmTqjUHkUv6Vy85g8vVkLfwWEt5UQ3hvVY
+            6qlekKWcgfIlLVrKuau+BwNLuaC4wrlYTkJh6ZdVhz/Kla6E8cOeqVO1ALUfSI0KU+wYYwNu1/ygfBmiBg3UPWSEvLG6TAez1bK0
+            F/0DDwhQ/9rFMOdHk2KxBHKvefE/Sg6bl3hJcTdbV168zG2N4EEZVRe3rh/22aSZEV/zFPAb8eidIQAAAADx6J0hYmqslw==
+            """),
+        new("member-adler-after-junk", "a complete zlib stream, four bytes of junk and a second copy of its own Adler-32", """
+            eNoBZwGY/mMBAAB4nJ1RTUvDQBDdZJM2WlDwUg8eAl482vp968KWXIKUJFg8Liq2VJNiC/4df46/wp/hwUPrzmZWlmwqxoHlZd+b
+            mbyZjW/ixCOEPMqTsSSCb0cedsv4Ptkcw2SYHv2iV2Ms81cUMOafgJxlgeTXMt4lJvGYf0i+T6hRBU7aI/Ek7qd5tSNUgg6On8U0
+            35Xoo+ZjLaCLCH1hIuqVdw95fVqoH9Dy3kY+QB4aAXaR30J+xym9NI0OelscU3STiXxmTqjUHkUv6Vy85g8vVkLfwWEt5UQ3hvVY
+            6qlekKWcgfIlLVrKuau+BwNLuaC4wrlYTkJh6ZdVhz/Kla6E8cOeqVO1ALUfSI0KU+wYYwNu1/ygfBmiBg3UPWSEvLG6TAez1bK0
+            F/0DDwhQ/9rFMOdHk2KxBHKvefE/Sg6bl3hJcTdbV168zG2N4EEZVRe3rh/22aSZEV/zFPAb8eidIWp1bmvx6J0hbZiuTw==
+            """),
+        new("member-cut-short-before-adler", "a stored block holding the stream, then its Adler-32 where a complete zlib stream would have ended: cut short", """
+            eNqdU01Lw0AQ3c1u2mpBwYsePES8eLT1+9aFlFyClCRYPC4qtlSTYot69eiPEPw5/grPXr14ULDubCawNik2Diwv+97M5s1s8sAJ
+            uafklj9++Sd+oHbkUq1IBB48U7XEqXDXyOxoB+1wi8wfXZX/zQB99wPQFVFN8RMVLwoDv+u+Kr5JmFEFTqodeSXP+/H0iVAJOji+
+            lv14WaGNmo21gBYinAsdMZ7uOfLZqqC+ztJ9Ffka8nAQ4CryC8gv0dRL2aijt9E2QzeRjAdmh1ptMPQSDuVdfHGTS2hSbDan7DBj
+            PDl1lxoD+6XsgfKpLOaUfUs/t1o55YDhCIdy3HNkTj+kBR+FVo6ySmjfaZg60wPQ84FULzHFutE24GLhdzfBNmx9j4Q4gpBnUZRJ
+            MVsPK/OSvYADAeq8pxjmbK+XjMZArpQv/kfJZvkSHiRng8nUjae5lQ5cqGB6Y834uyne0F/hH7sh4Pvb08YP2EiitA==
+            """),
         new("member-over-1mib", "one member that inflates past the game's 1 MiB pack buffer", """
             eNrz4WBgqJjz9oZv/u0UhgMfl3hen+bZsGMDc7vXneXbDOL4FkQW3/Lx8hKRDlvilXArY+WvVWqsfTVTamXsWOWbmdm75h8RC7xc
             oj17m8+fuknfb9T9K5ujHsmXW3v91TXtqacu13gvfhd2Y/2z6C+1IvdXn7mWp3LWTa7slufn1R93fFSQ39yd+P/Lnu31/ysu7H9Y
@@ -1801,6 +1846,15 @@ internal static class LevelVectors
             G8K056md9eNTv/8wo2xvmI130bS/RZes53OZnfpfFmw8f4o532lj09+ZOx2CjfkPnYn/qex3tmabwa36HwVZzz5HbWxJv7lh/yzf
             s/WFd/sPZjw7/enUh2/h19WfZy9mlVjr77HdT139vd+etwb7is9y99jPPPWiV6+/L/xz/K70i6WpW1e4d4faef9k+lqgdGbfi1g1
             ubzC1fVWEm2T5e/8e/S/4OTx7fuX3LO9a71nz6fO/tvWcz80um29ePBQ6Xftd8bZeZfsGbfvngcATo9zZg==
+            """),
+        new("member-1mib-plus-one", "one member that inflates to one byte more than the 1 MiB a member may", """
+            eNrrYWVgqJjz9uL5LGFHCYYPvuaZi1m54748UHxwdPHa//mxNyZ5T5jA0n3c9ei0rKCcg+wfWH9x2M3sf+h4cNfmmScm+S79qPan
+            bkON9X1z499n3zy4mnDFb9KT2p8+mwLt92w/pV4992n55NWyPXzH+P8FxZdFnPs/tc3ixP72GemT82bu14mdIi/Dy/c5P7VO3zN7
+            tZN69OFHzh+/Vezakxwh+Wrh4/6jH0uW98yNeH1kq2LeEYlvvOpetz8XWj8TP5+25r7388drZ7w/VnND44i1Yb3ys/ytz/auybb+
+            VvbNoPeuT9dLz78toaXmvXt7/LvPXy6fLyX8Lerjht5Ti48ee1gldfV4N3dWyLyWU/2bjro9fen2dd/++ytsvB+LzhN77r53UWD9
+            vjsP55/qPnqq4M+9vL3zwsQD7vrPuDX/avftrcntFcVH2Z/Vq63ku7X22F4dz31pq9O2PXrzapPYXh27C3ydAXvf6W19ZvV38c2b
+            lR734uo/2uvs3P9v0reMb8+eFL3sP/88j+8w/9lLWRs2Zu3fcT50667Eac/j697FJKsxjIJRMApGGPggL7nnzHHFf2wLtOZPAAC0
+            4uRi
             """),
         new("no-wres", "no WRES chunk", """
             eNqTYmBgqJjzmfMzZ1JiQoIH+6MPHR0cfGwsDAy2T5iFAZZHCTI=

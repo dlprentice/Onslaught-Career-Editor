@@ -29,8 +29,8 @@ public sealed record LevelWorlds(int BaseLevel, int RealLevel, byte[]? BaseBody,
 /// </summary>
 public static class LevelArchive
 {
-    private const int MaxFileBytes = 64 << 20, MaxInflatedBytes = 128 << 20, MaxMembers = 4096;
-    private const int PackBufferBytes = 0x102927, MaxMemberInflatedBytes = 1 << 20;
+    internal const int MaxFileBytes = 64 << 20, MaxInflatedBytes = 128 << 20, MaxMembers = 4096;
+    internal const int PackBufferBytes = 0x102927, MaxMemberInflatedBytes = 1 << 20;
 
     private static readonly Regex ArchiveName = new("^([0-9]{3})_res_pc\\.aya$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
@@ -104,8 +104,14 @@ public static class LevelArchive
         throw new InvalidDataException("no WRES/WRLD chunk");
     }
 
-    /// <summary>The packed members of a <c>.aya</c> (a u32 length, then one zlib stream), inflated and joined.</summary>
-    private static byte[] Inflate(ReadOnlySpan<byte> file)
+    private static byte[] Inflate(ReadOnlySpan<byte> file) => Inflate(file, MaxInflatedBytes);
+
+    /// <summary>
+    /// The packed members of a <c>.aya</c> (a u32 length, then one zlib stream), inflated and joined: each member is exactly one
+    /// complete zlib stream that inflates to at most <see cref="MaxMemberInflatedBytes"/>, and together they inflate to at most
+    /// <paramref name="maxInflatedBytes"/> (a parameter so that a test can lower it).
+    /// </summary>
+    internal static byte[] Inflate(ReadOnlySpan<byte> file, int maxInflatedBytes)
     {
         if (file.IsEmpty || file.Length > MaxFileBytes) throw new InvalidDataException("the archive is empty or larger than the compressed-byte limit");
         using MemoryStream joined = new();
@@ -119,19 +125,17 @@ public static class LevelArchive
                 throw new InvalidDataException($"implausible .aya member length {size} at {at}");
             byte[] member = file.Slice(at + 4, (int)size).ToArray();
             at += 4 + (int)size;
-            int limit = (int)Math.Min(MaxMemberInflatedBytes, MaxInflatedBytes - joined.Length);
-            using MemoryStream compressed = new(member);
-            using ZLibStream zlib = new(compressed, CompressionMode.Decompress);
+            int limit = (int)Math.Min(MaxMemberInflatedBytes, maxInflatedBytes - joined.Length);
+            MemberFeed feed = new(member);
+            using ZLibStream zlib = new(feed, CompressionMode.Decompress);
             byte[] buffer = new byte[81920];
             int inflated = 0, read;
-            uint adler = 1;
             try
             {
                 while ((read = zlib.Read(buffer)) > 0)
                 {
                     inflated += read;
                     if (inflated > limit) throw new InvalidDataException($"inflated archive/member limit at member {members - 1}");
-                    adler = Adler32(adler, buffer.AsSpan(0, read));
                     joined.Write(buffer, 0, read);
                 }
             }
@@ -139,30 +143,49 @@ public static class LevelArchive
             {
                 throw new InvalidDataException($"invalid zlib data in member {members - 1}");
             }
-            // The stream reader accepts a stream that ends early and bytes after its end; a member is exactly one complete
-            // zlib stream, which ends with the Adler-32 of what it inflates to.
-            if (member.Length < 6 || BinaryPrimitives.ReadUInt32BigEndian(member.AsSpan(member.Length - 4)) != adler)
-                throw new InvalidDataException($"truncated zlib stream, or data after it, in member {members - 1}");
+            // ZLibStream accepts a stream that ends early and ignores the bytes after its end; a member is exactly one complete zlib stream.
+            if (!feed.EndedWithTheStream) throw new InvalidDataException($"truncated zlib stream, or data after it, in member {members - 1}");
         }
         return joined.ToArray();
     }
 
-    private static uint Adler32(uint adler, ReadOnlySpan<byte> data)
+    /// <summary>
+    /// A member as the stream under the inflater, served in blocks except for its last byte, which comes alone. The inflater asks for
+    /// input only while its zlib stream is not complete: asking for the last byte means no complete stream ended before it, and asking
+    /// again after it means the stream was cut short. The stream checks its own Adler-32 trailer.
+    /// </summary>
+    private sealed class MemberFeed(byte[] member) : Stream
     {
-        uint a = adler & 0xFFFF, b = adler >> 16;
-        while (!data.IsEmpty)
+        private int _at;
+        private bool _starved;
+
+        /// <summary>The member is one complete zlib stream: its last byte was needed and nothing was asked for after it.</summary>
+        public bool EndedWithTheStream => _at == member.Length && !_starved;
+
+        public override int Read(byte[] buffer, int offset, int count) => Read(buffer.AsSpan(offset, count));
+
+        public override int Read(Span<byte> destination)
         {
-            int block = Math.Min(data.Length, 5552);  // the most bytes whose sums fit 32 bits before the modulus
-            foreach (byte x in data[..block])
+            if (_at == member.Length)
             {
-                a += x;
-                b += a;
+                _starved = true;
+                return 0;
             }
-            a %= 65521;
-            b %= 65521;
-            data = data[block..];
+            int served = Math.Min(destination.Length, Math.Max(member.Length - 1 - _at, 1));
+            member.AsSpan(_at, served).CopyTo(destination);
+            _at += served;
+            return served;
         }
-        return (b << 16) | a;
+
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override void Flush() { }
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
     }
 
     /// <summary>(tag, payload offset, size) for each chunk of a tag stream; read lazily, as the game's chunk reader reads.</summary>
