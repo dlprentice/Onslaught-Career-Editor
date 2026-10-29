@@ -199,7 +199,7 @@ public sealed class EditSession
         return WorldBody.Read(_baselineBytes).Scripts[index];
     }
 
-    private bool SameScripts() => Body.Scripts.Count == _baseline.Scripts.Count &&
+    internal bool SameScripts() => Body.Scripts.Count == _baseline.Scripts.Count &&
         Body.Scripts.Zip(_baseline.Scripts).All(pair => pair.First is not null && pair.First.Name == pair.Second.Name);
 
     /// <summary>

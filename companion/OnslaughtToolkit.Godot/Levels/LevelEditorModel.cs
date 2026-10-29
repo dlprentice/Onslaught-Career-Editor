@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
+using OnslaughtToolkit.Companion.Missions;
 
 namespace OnslaughtToolkit.Companion.Levels;
 
@@ -44,6 +45,35 @@ public sealed record SaveOutcome(StagedMod? Staged, string Message)
 {
     public bool Ok => Staged is not null;
 }
+
+/// <summary>What compiling a script's source came to: the compiled script, or why there is none, and what the compiler noticed on the way.</summary>
+/// <param name="Script">The compiled script (named as the one it would replace), or null.</param>
+/// <param name="Message">A sentence for the player: what was made, or the compiler's message (which starts "line N: " when it is about a line).</param>
+/// <param name="Line">The 0-based line the refusal is about, or null.</param>
+/// <param name="Notes">What the compiler noticed (how a mixed chain of operators was grouped, a handler the game never calls, a variable declared twice).</param>
+public sealed record ScriptCompileOutcome(MissionScript? Script, string Message, int? Line, IReadOnlyList<CompileNote> Notes)
+{
+    public bool Ok => Script is not null;
+}
+
+/// <summary>What replacing a script from its source (or putting the shipped one back) did.</summary>
+public enum ScriptEditResult
+{
+    /// <summary>The script was replaced; the edit can be taken back.</summary>
+    Replaced,
+
+    /// <summary>Nothing needed to change: the script is already what the source compiles to.</summary>
+    Unchanged,
+
+    /// <summary>The source did not compile, or the replacement cannot be made; nothing changed.</summary>
+    Refused,
+}
+
+/// <param name="Result">What happened.</param>
+/// <param name="Message">A sentence for the player.</param>
+/// <param name="Line">The 0-based line a refusal is about, or null.</param>
+/// <param name="Notes">What the compiler noticed (empty when the source was not compiled).</param>
+public sealed record ScriptEditOutcome(ScriptEditResult Result, string Message, int? Line, IReadOnlyList<CompileNote> Notes);
 
 /// <summary>
 /// The state behind the Level editor page, with no interface in it: the levels a game has, the open level's own world as an
@@ -138,6 +168,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         Terrain = null;
         TerrainProblem = null;
         Scripts = [];
+        _listedScripts = [];
         BaseWorld = null;
         LevelArchiveFile? file = Levels.FirstOrDefault(archive => archive.Level == level);
         if (file is null) return Refuse($"This game has no archive for level {level}.");
@@ -149,9 +180,14 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
             if (worlds.RealLevel != level)
                 return Refuse($"Level {level}'s archive names level {worlds.RealLevel} as its world's level, so a mod for it would not be read as level {level}'s world. This editor does not change it.");
             EditSession session = new(worlds.RealBody);
-            session.Changed += () => Changed?.Invoke();
+            session.Changed += () =>
+            {
+                RefreshScripts();
+                Changed?.Invoke();
+            };
             Session = session;
             Scripts = ListScripts(session.Body, worlds);
+            _listedScripts = [.. session.Body.Scripts];
             BaseWorld = ReadBaseWorld(worlds);
             if (worlds.Terrain is null)
             {
@@ -175,6 +211,18 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         }
         Changed?.Invoke();
         return true;
+    }
+
+    private MissionScript[] _listedScripts = [];
+
+    /// <summary>Lists the scripts again when the world's list holds other script objects than the ones last listed (a replacement, or taking one back).</summary>
+    private void RefreshScripts()
+    {
+        if (Session is not { } session || Worlds is not { } worlds) return;
+        MissionScript[] now = [.. session.Body.Scripts];
+        if (now.AsSpan().SequenceEqual(_listedScripts)) return;
+        _listedScripts = now;
+        Scripts = ListScripts(session.Body, worlds);
     }
 
     /// <summary>The scripts of a level's own world and of its base world, as <see cref="Scripts"/> lists them (the retail gate calls this too).</summary>
@@ -330,6 +378,103 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         }
         if (sentences.Count == 0 && HasUnsavedChanges) return "This level has changes this editor cannot describe or save.";
         return sentences.Count == 0 ? null : string.Join(" ", sentences);
+    }
+
+    /// <summary>The place of a script entry in the open level's own world, or null for an entry of the base world (which is shown, not edited) or one this model does not list.</summary>
+    public int? OwnScriptIndex(ScriptEntry entry)
+    {
+        if (entry.FromBaseWorld) return null;
+        for (int i = 0; i < Scripts.Count; i++)
+            if (ReferenceEquals(Scripts[i], entry)) return i;
+        return null;
+    }
+
+    /// <summary>
+    /// Compiles source text as the replacement for one of the open level's own scripts: headers come from the game folder, and the compile session's two
+    /// counters start where the shipped script's do, so that what the edit did not touch keeps its names and the result differs from the shipped script
+    /// where the source does. Nothing is replaced; see <see cref="ReplaceScriptFromSource"/>.
+    /// </summary>
+    public ScriptCompileOutcome CompileScript(int scriptIndex, string source, string gameRoot)
+    {
+        if (Session is null) return new ScriptCompileOutcome(null, "Open a level first.", null, []);
+        if (scriptIndex < 0 || scriptIndex >= Session.Body.Scripts.Count) return new ScriptCompileOutcome(null, $"There is no script {scriptIndex} in this world.", null, []);
+        if (!Session.SameScripts()) return new ScriptCompileOutcome(null, "The script list has changed and cannot be edited here.", null, []);
+        if (!ScriptsAreInspectable(Session)) return new ScriptCompileOutcome(null, "The level's scripts cannot be inspected or edited safely.", null, []);
+        MissionScript shipped = Session.ShippedScript(scriptIndex);
+        List<CompileNote> notes = [];
+        try
+        {
+            MissionScript script = ScriptCompiler.Compile(shipped.Name, source, ScriptCompiler.IncludesFrom(gameRoot), ScriptCompiler.ConstStartOf(shipped), ScriptCompiler.DoOnceStartOf(shipped), null, notes);
+            return new ScriptCompileOutcome(script, $"Compiled {script.Name}: {script.Code.Instructions.Count} instructions.", null, notes);
+        }
+        catch (MissingInclude error)
+        {
+            return new ScriptCompileOutcome(null, $"{error.Message}, so this script cannot be compiled here.", null, notes);
+        }
+        catch (CompileError error)
+        {
+            return new ScriptCompileOutcome(null, error.Message, error.Line, notes);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            return new ScriptCompileOutcome(null, "A file the script includes could not be read.", null, notes);
+        }
+    }
+
+    /// <summary>Compiles source text and, when it compiles, replaces the script with the result as one edit that can be taken back. A source that does not compile changes nothing.</summary>
+    public ScriptEditOutcome ReplaceScriptFromSource(int scriptIndex, string source, string gameRoot)
+    {
+        ScriptCompileOutcome compiled = CompileScript(scriptIndex, source, gameRoot);
+        if (compiled.Script is not { } script) return new ScriptEditOutcome(ScriptEditResult.Refused, compiled.Message, compiled.Line, compiled.Notes);
+        try
+        {
+            if (Same(Session!.Body.Scripts[scriptIndex], script)) return new ScriptEditOutcome(ScriptEditResult.Unchanged, $"{script.Name} is already what this source compiles to.", null, compiled.Notes);
+        }
+        catch (Exception error) when (EditSession.IsUnstorable(error))
+        {
+            return new ScriptEditOutcome(ScriptEditResult.Refused, "This script cannot be inspected or replaced safely.", null, compiled.Notes);
+        }
+        return ApplyScript(new ReplaceScript(scriptIndex, script), $"Replaced {script.Name}.", compiled.Notes);
+    }
+
+    /// <summary>Puts a script back as the level has it (an edit that can be undone).</summary>
+    public ScriptEditOutcome ResetScript(int scriptIndex)
+    {
+        if (Session is null) return new ScriptEditOutcome(ScriptEditResult.Refused, "Open a level first.", null, []);
+        if (scriptIndex < 0 || scriptIndex >= Session.Body.Scripts.Count) return new ScriptEditOutcome(ScriptEditResult.Refused, $"There is no script {scriptIndex} in this world.", null, []);
+        if (!Session.SameScripts()) return new ScriptEditOutcome(ScriptEditResult.Refused, "The script list has changed and cannot be edited here.", null, []);
+        if (!ScriptsAreInspectable(Session)) return new ScriptEditOutcome(ScriptEditResult.Refused, "The level's scripts cannot be inspected or edited safely.", null, []);
+        MissionScript shipped = Session.ShippedScript(scriptIndex);
+        try
+        {
+            if (Same(Session.Body.Scripts[scriptIndex], shipped)) return new ScriptEditOutcome(ScriptEditResult.Unchanged, $"{shipped.Name} has not been replaced.", null, []);
+        }
+        catch (Exception error) when (EditSession.IsUnstorable(error))
+        {
+            return new ScriptEditOutcome(ScriptEditResult.Refused, "This script cannot be inspected or replaced safely.", null, []);
+        }
+        return ApplyScript(new ReplaceScript(scriptIndex, shipped), $"{shipped.Name} is back as the level has it.", []);
+    }
+
+    private ScriptEditOutcome ApplyScript(ReplaceScript command, string done, IReadOnlyList<CompileNote> notes)
+    {
+        try
+        {
+            Session!.Apply(command);
+        }
+        catch (InvalidOperationException error)
+        {
+            return new ScriptEditOutcome(ScriptEditResult.Refused, error.Message, null, notes);
+        }
+        return new ScriptEditOutcome(ScriptEditResult.Replaced, done, null, notes);
+    }
+
+    private static bool Same(MissionScript a, MissionScript b) => WorldBodyWriter.ScriptBytes(a).AsSpan().SequenceEqual(WorldBodyWriter.ScriptBytes(b));
+
+    private static bool ScriptsAreInspectable(EditSession session)
+    {
+        try { _ = ScriptCatalog.Of(session.Body); return true; }
+        catch (Exception error) when (EditSession.IsUnstorable(error)) { return false; }
     }
 
     /// <summary>"Level 100 edit".</summary>
