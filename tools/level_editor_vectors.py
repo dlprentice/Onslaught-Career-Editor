@@ -52,6 +52,8 @@ sys.path.insert(0, str(TOOLS))
 
 import content_catalog_tests as fixtures  # noqa: E402  the hand-assembled authored body and archive
 import world_mod_stage as stager  # noqa: E402
+import heightfield_lookup as heights  # noqa: E402  the terrain lookup the C# Heightfield is checked against
+import heightfield_lookup_tests as terrain_fixtures  # noqa: E402  the authored terrain chunk
 import world_edit_move as mover  # noqa: E402  the move tool, whose coordinate reader the page's reader is checked against
 import world_resources_decode as wrd  # noqa: E402
 import world_resources_encode as enc  # noqa: E402
@@ -427,10 +429,11 @@ def split(data: bytes, count: int) -> list[bytes]:
     return [data[i:i + 1] for i in range(count - 1)] + [data[count - 1:]]
 
 
-def level_stream(wdat: bytes | None, bodies: list[tuple[bytes, bytes]]) -> bytes:
+def level_stream(wdat: bytes | None, bodies: list[tuple[bytes, bytes]], terrain: bytes | None = None) -> bytes:
+    """The authored level stream; its ERES chunk is 40 zero bytes (not a terrain) unless `terrain` gives one."""
     wrld = (fixtures.chunk(b"WDAT", wdat) if wdat is not None else b"") + b"".join(fixtures.chunk(tag, body) for tag, body in bodies)
     return (fixtures.chunk(b"LVLR", struct.pack("<I", 103)) + fixtures.chunk(b"TARG", struct.pack("<I", 1))
-            + fixtures.chunk(b"AYAD", bytes(24)) + fixtures.chunk(b"ERES", b"\0" * 40)
+            + fixtures.chunk(b"AYAD", bytes(24)) + fixtures.chunk(b"ERES", terrain if terrain is not None else b"\0" * 40)
             + fixtures.chunk(b"WRES", fixtures.chunk(b"WRLD", wrld)) + fixtures.chunk(b"LNDS", b""))
 
 
@@ -495,6 +498,10 @@ def archive_vectors(valid: dict[str, bytes]) -> list[tuple[str, str, bytes, dict
     out.append(("real-only", "one member, the level's own world only", archive_file([one])))
     out.append(("level-100", "a level that names itself as its world's level, as the level editor's tests need",
                 archive_file([level_stream(struct.pack("<ii", -1, 100), [(b"RLWD", real)])])))
+    terrain_stream = level_stream(struct.pack("<ii", -1, 100), [(b"RLWD", real)], terrain=authored_terrain().eres)
+    third = len(terrain_stream) // 3 + 1
+    out.append(("level-100-terrain", "a level 100 whose ERES chunk is the authored terrain, split over three members under the 1 MiB bound",
+                archive_file([terrain_stream[i:i + third] for i in range(0, len(terrain_stream), third)])))
     two = level_stream(struct.pack("<ii", 100, 200), [(b"BSWD", base), (b"RLWD", real)])
     out.append(("base-and-real", "a base world and a real world", archive_file([two])))
     third = len(two) // 3
@@ -569,6 +576,74 @@ def refused_archives(valid: dict[str, bytes]) -> list[tuple[str, str, bytes]]:
         ("wdat-short", "a WDAT chunk shorter than two words", archive_file([short_wdat])),
         ("wdat-missing", "a world with no WDAT chunk", archive_file([no_wdat])),
     ]
+
+
+# ------------------------------------------------------------------------------------------------- terrain vectors
+def xorshift(seed: int):
+    """A stream of numbers that is the same in every Python (xorshift32), for authored data."""
+    state = seed & 0xFFFFFFFF
+    while True:
+        state ^= (state << 13) & 0xFFFFFFFF
+        state ^= state >> 17
+        state ^= (state << 5) & 0xFFFFFFFF
+        yield state
+
+
+class AuthoredTerrain:
+    """An authored terrain chunk and what the Python lookup (tools/heightfield_lookup.py) answers on it."""
+
+    def __init__(self) -> None:
+        draw = xorshift(0x2026_1029).__next__
+        samples = [0] * heights.SAMPLE_COUNT
+        # A hill on every edge of the square and around its middle: tiles of noise and extremes, the rest flat at 0.
+        for tile_x, tile_y in ((0, 0), (63, 0), (0, 63), (63, 63), (31, 31), (31, 32), (32, 31), (32, 32), (10, 50), (50, 10), (5, 2), (2, 5), (1, 0), (0, 1), (62, 62)):
+            for row in range(9):
+                for column in range(9):
+                    samples[terrain_fixtures.at(tile_x, tile_y, row, column)] = draw() % 60001 - 30000
+        samples[terrain_fixtures.at(0, 0, 0, 0)], samples[terrain_fixtures.at(0, 0, 0, 1)] = 32767, -32768  # the extremes of a step
+        samples[terrain_fixtures.at(63, 63, 8, 8)] = -32768
+        self.scale = heights.f32(0.0009155832)
+        self.water = heights.f32(-8.84)
+        self.eres = terrain_fixtures.eres_with_heightfield(samples, self.scale, self.water)
+        self.field = heights.read_heightfield(self.eres)
+
+
+_TERRAIN: AuthoredTerrain | None = None
+
+
+def authored_terrain() -> AuthoredTerrain:
+    global _TERRAIN
+    if _TERRAIN is None:
+        _TERRAIN = AuthoredTerrain()
+    return _TERRAIN
+
+
+TERRAIN_COORDINATES = [-math.inf, -1e30, -600.0, -513.0, -8.0, -1.0, -0.5, -0.002, -0.001953125, -0.0, 0.0, 1e-9, 0.001953125, 0.5, 1.0, 7.998, 8.0, 8.001, 9.0,
+                       63.5, 64.0, 100.25, 255.998, 256.0, 300.5, 504.0, 511.0, 511.99, 511.998, 511.99609375, 512.0, 512.001, 513.0, 1000.0, 16383.99, 16384.0,
+                       20000.0, 3e38, math.inf, math.nan]
+
+
+def float_bits(value: float) -> int:
+    return struct.unpack("<I", struct.pack("<f", value))[0]
+
+
+def terrain_vectors() -> dict:
+    """The authored terrain and what the lookup answers at the edges and at random: every pair of the listed coordinates (the
+    square's edges, tile and sample boundaries, negative and fractional input, far outside it) and 600 positions in and around the
+    square, each as the 32 bits of its coordinates and of the height."""
+    terrain = authored_terrain()
+    draw = xorshift(0x7E57_1029).__next__
+    positions = [(x, y) for x in TERRAIN_COORDINATES for y in TERRAIN_COORDINATES]
+    for _ in range(600):
+        x = (draw() % 540_000) / 1000 - 14.0
+        y = (draw() % 540_000) / 1000 - 14.0
+        positions.append((x, y))
+    records = b""
+    for x, y in positions:
+        x, y = (heights.f32(x) if math.isfinite(x) else x), (heights.f32(y) if math.isfinite(y) else y)
+        records += struct.pack("<III", float_bits(x), float_bits(y), heights.height_bits(terrain.field, x, y))
+    return {"eres": terrain.eres, "samplesSha256": terrain.field.samples_sha256(), "scaleBits": float_bits(terrain.scale),
+            "waterBits": float_bits(terrain.water), "probes": records, "count": len(positions)}
 
 
 # ----------------------------------------------------------------------------------------------- coordinate vectors
@@ -832,7 +907,7 @@ def build() -> dict:
     edited = {e["name"]: e["body"] for e in edits}
     stages, bad_stages = stage_vectors(valid_bodies, edited)
     return {"valids": valids, "refused": refused, "edits": edits, "archives": archives, "badArchives": bad_archives,
-            "stages": stages, "badStages": bad_stages, "coordinates": coordinate_vectors()}
+            "stages": stages, "badStages": bad_stages, "coordinates": coordinate_vectors(), "terrain": terrain_vectors()}
 
 
 def render(data: dict) -> str:
@@ -869,6 +944,8 @@ def render(data: dict) -> str:
            "    }", "",
            "    /// <summary>A coordinate text and what the move tool makes of it; Grammar says whether the text is in the form the page's reader accepts.</summary>",
            "    internal sealed record CoordinateVector(string Text, bool Ok, string Hex, bool Rounded, string Exact, bool Grammar);", "",
+           "    /// <summary>An authored terrain chunk (ERES), what the reference reads in it, and what its lookup answers at each probe: the 32 bits of X, of Y and of the height (little-endian, in a zlib stream).</summary>",
+           "    internal sealed record TerrainVector(string Eres, string SamplesSha256, uint ScaleBits, uint WaterBits, int Count, string Probes);", "",
            "    internal static readonly WorldVector[] Valid =", "    ["]
     for v in data["valids"]:
         out.append(f"        new({cs_text(v['name'])}, {cs_text(v['note'])},")
@@ -924,7 +1001,10 @@ def render(data: dict) -> str:
     for v in data["coordinates"]:
         out.append(f"        new({cs_text(v['text'])}, {'true' if v['ok'] else 'false'}, {cs_text(v['hex'])}, {'true' if v['rounded'] else 'false'}, "
                    f"{cs_text(v['exact'])}, {'true' if v['grammar'] else 'false'}),")
-    out += ["    ];", "}", ""]
+    terrain = data["terrain"]
+    out += ["    ];", "", "    internal static readonly TerrainVector Terrain =",
+            f"        new({cs_raw(deflate_b64(terrain['eres']), pad)}, {cs_text(terrain['samplesSha256'])}, 0x{terrain['scaleBits']:08X}u, 0x{terrain['waterBits']:08X}u, {terrain['count']},",
+            f"            {cs_raw(deflate_b64(terrain['probes']), pad)});", "}", ""]
     return "\n".join(out)
 
 
@@ -934,16 +1014,31 @@ def cmd_gate_table(args) -> int:
         raise SystemExit("choose --stdout explicitly")
     game = enc.selected_game_root(args.game)
     rows = ["level\ttag\tbytes\tsha256\tdumpLines\tdumpSha256"]
-    bodies = 0
+    bodies = terrains = 0
     for level, path in enc.level_archives(game).items():
-        worlds = enc.level_worlds(b"".join(enc.inflate(enc.read_members(enc.read_retail(path)))))
+        stream = b"".join(enc.inflate(enc.read_members(enc.read_retail(path))))
+        worlds = enc.level_worlds(stream)
         for tag, body in sorted(worlds["bodies"].items()):
             lines = dump_lines(enc.read_world_model(body))
             rows.append(f"{level:03d}\t{tag}\t{len(body)}\t{hashlib.sha256(body).hexdigest()}\t{len(lines)}\t{dump_hash(lines)}")
             bodies += 1
+        # The terrain: the heightfield's samples, scale and water, and the lookup's heights at a grid and at every thing of the level's own world.
+        eres = next((stream[at:at + size] for tag, at, size in enc.chunks(stream) if tag == "ERES"), None)
+        if eres is not None and "RLWD" in worlds["bodies"]:
+            field = heights.read_heightfield(eres)
+            positions = terrain_gate_positions(enc.read_world_model(worlds["bodies"]["RLWD"]))
+            digest = hashlib.sha256(b"".join(struct.pack("<I", heights.height_bits(field, x, y)) for x, y in positions)).hexdigest()
+            rows.append(f"{level:03d}\tTERRAIN\t{float_bits(field.scale):08x}:{float_bits(field.water):08x}\t{field.samples_sha256()}\t{len(positions)}\t{digest}")
+            terrains += 1
     print("\n".join(rows))
-    print(f"world bodies: {bodies}", file=sys.stderr)
+    print(f"world bodies: {bodies}; terrains: {terrains}", file=sys.stderr)
     return 0 if bodies else 1
+
+
+def terrain_gate_positions(model: dict) -> list[tuple[float, float]]:
+    """The positions the retail terrain gate asks the lookup about: a 33 x 33 grid reaching past the square, then every thing's X and Y."""
+    grid = [(heights.f32(i * 16 + 0.37), heights.f32(j * 16 + 0.71)) for j in range(33) for i in range(33)]
+    return grid + [(thing["init"]["position"][0], thing["init"]["position"][1]) for thing in model["things"]]
 
 
 def shown(path: Path) -> str:

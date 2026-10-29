@@ -12,11 +12,11 @@ public sealed record LevelArchiveFile(int Level, string Path);
 
 /// <summary>
 /// The world bodies a level archive holds (<c>WRES</c>, <c>WRLD</c>: the base world <c>BSWD</c> and the level's own
-/// world <c>RLWD</c>) and the two level numbers its <c>WDAT</c> chunk names. When the archive's WDAT does not name a
+/// world <c>RLWD</c>) and the two level numbers its <c>WDAT</c> chunk names, and the archive's <c>ERES</c> chunk (the terrain: <see cref="Heightfield"/>). When the archive's WDAT does not name a
 /// level, <c>CWorld::Load</c> reads that level's world from <c>data\worlds\worldNNN.wrd</c> instead of the archive, which is
 /// the file a mod supplies.
 /// </summary>
-public sealed record LevelWorlds(int BaseLevel, int RealLevel, byte[]? BaseBody, byte[]? RealBody)
+public sealed record LevelWorlds(int BaseLevel, int RealLevel, byte[]? BaseBody, byte[]? RealBody, byte[]? Terrain = null)
 {
     /// <summary>The loose file <c>CWorld::Load</c> reads a level's world from (<c>world%03d.wrd</c>).</summary>
     public static string WorldFileName(int level) => $"data/worlds/world{level:D3}.wrd";
@@ -72,8 +72,10 @@ public static class LevelArchive
     public static LevelWorlds Read(ReadOnlySpan<byte> file)
     {
         byte[] stream = Inflate(file);
+        byte[]? terrain = null;
         foreach ((string tag, int at, int size) in Chunks(stream, 0, stream.Length))
         {
+            if (tag == "ERES" && terrain is null) terrain = stream.AsSpan(at, size).ToArray();
             if (tag != "WRES") continue;
             foreach ((string worldTag, int worldAt, int worldSize) in Chunks(stream, at, at + size))
             {
@@ -98,7 +100,7 @@ public static class LevelArchive
                     }
                 }
                 if (baseLevel is null || realLevel is null) throw new InvalidDataException("the world has no WDAT chunk naming its levels");
-                return new LevelWorlds(baseLevel.Value, realLevel.Value, baseBody, realBody);
+                return new LevelWorlds(baseLevel.Value, realLevel.Value, baseBody, realBody, terrain);
             }
         }
         throw new InvalidDataException("no WRES/WRLD chunk");

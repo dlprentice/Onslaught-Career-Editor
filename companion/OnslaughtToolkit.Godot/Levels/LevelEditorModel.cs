@@ -5,7 +5,7 @@ using System.Text;
 namespace OnslaughtToolkit.Companion.Levels;
 
 /// <summary>One row of the object table: a stored thing record, where it stands now and where the level has it.</summary>
-public sealed record ObjectRow(int Index, string Kind, string Name, string Definition, Vector3 Position, Vector3 Stock)
+public sealed record ObjectRow(int Index, string Kind, string Name, string Definition, Vector3 Position, Vector3 Stock, float Radius = 0f)
 {
     /// <summary>The name the player sees: the record's own name, else the definition it names (a Target Tank), else its kind.</summary>
     public string Label => Name.Length > 0 ? Name : Definition.Length > 0 ? Definition : Kind;
@@ -100,6 +100,12 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     /// <summary>Why the level asked for last cannot be edited, or null.</summary>
     public string? Problem { get; private set; }
 
+    /// <summary>The open level's terrain (its archive's ERES chunk), or null when it has none or it cannot be read (see <see cref="TerrainProblem"/>). Editing does not need it.</summary>
+    public Heightfield? Terrain { get; private set; }
+
+    /// <summary>Why the terrain could not be read, or null.</summary>
+    public string? TerrainProblem { get; private set; }
+
     /// <summary>The level whose world the archive also carries as a base world, or null. It is shown, not edited.</summary>
     public int? BaseLevel => Worlds is { BaseBody: not null } worlds && worlds.BaseLevel >= 0 ? worlds.BaseLevel : null;
 
@@ -114,6 +120,8 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         Session = null;
         _savedSignature = null;
         Problem = null;
+        Terrain = null;
+        TerrainProblem = null;
         LevelArchiveFile? file = Levels.FirstOrDefault(archive => archive.Level == level);
         if (file is null) return Refuse($"This game has no archive for level {level}.");
         try
@@ -126,6 +134,21 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
             EditSession session = new(worlds.RealBody);
             session.Changed += () => Changed?.Invoke();
             Session = session;
+            if (worlds.Terrain is null)
+            {
+                TerrainProblem = "This level's archive holds no terrain.";
+            }
+            else
+            {
+                try
+                {
+                    Terrain = Heightfield.Read(worlds.Terrain);
+                }
+                catch (InvalidDataException error)
+                {
+                    TerrainProblem = $"The terrain could not be read: {error.Message}";
+                }
+            }
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidDataException)
         {
@@ -152,7 +175,8 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         for (int i = 0; i < Session.Body.Things.Count; i++)
         {
             PlacedObject thing = Session.Body.Things[i];
-            ObjectRow row = new(i, thing.Kind, thing.Init.Name, thing.Definition ?? "", thing.Init.Position, stock.TryGetValue(i, out Vector3 from) ? from : thing.Init.Position);
+            ObjectRow row = new(i, thing.Kind, thing.Init.Name, thing.Definition ?? "", thing.Init.Position, stock.TryGetValue(i, out Vector3 from) ? from : thing.Init.Position,
+                thing.Init.SphereTrigger?.Radius ?? 0f);
             if (needle.Length == 0 || Matches(row, thing.Init.Script, needle)) rows.Add(row);
         }
         return rows;
@@ -196,6 +220,18 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         if (SameBits(target, current)) return new MoveOutcome(MoveResult.Unchanged, "That is where it already stands.");
         string note = rounded.Count == 0 ? "" : $" Stored as {string.Join(", ", rounded)} (the nearest {(rounded.Count == 1 ? "value" : "values")} the game can hold).";
         return Apply(new MoveObject(row, target), $"{Session.Body.Things[row].Label} (row {row}) now stands at {Describe(target)}.{note}");
+    }
+
+    /// <summary>Moves a row to X and Y (a drag on the map), keeping its stored Z bit for bit. A move that refuses changes nothing.</summary>
+    public MoveOutcome MoveTo(int row, float x, float y)
+    {
+        if (Session is null) return new MoveOutcome(MoveResult.Refused, "Open a level first.");
+        if (row < 0 || row >= Session.Body.Things.Count) return new MoveOutcome(MoveResult.Refused, $"There is no row {row} in this world.");
+        if (!float.IsFinite(x) || !float.IsFinite(y)) return new MoveOutcome(MoveResult.Refused, "A position must be finite numbers.");
+        Vector3 current = Session.Body.Things[row].Init.Position;
+        Vector3 target = new(x, y, current.Z);
+        if (SameBits(target, current)) return new MoveOutcome(MoveResult.Unchanged, "That is where it already stands.");
+        return Apply(new MoveObject(row, target), $"{Session.Body.Things[row].Label} (row {row}) now stands at {Describe(target)}.");
     }
 
     /// <summary>Puts a row back where the level has it (an edit that can be undone).</summary>
