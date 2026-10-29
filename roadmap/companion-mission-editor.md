@@ -1,8 +1,8 @@
 # Companion Mission Editor: Design Addendum
 
-Status: design; the reference compiler and its retail gate (MS1, section 11) are built, the rest is plan. It extends the
+Status: design; the reference compiler and its retail gate (MS1, section 11) and the read-only scripts view (MS0, section 12) are built, the rest is plan. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-10-29 (CE 0.1.11, the first to take a world file from a mod, stated as published; earlier: the spike's result and the operator-grouping decision; the lead's earlier decisions; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
+Last updated: 2026-10-29 (MS0, the read-only scripts view, built; earlier: CE 0.1.11, the first to take a world file from a mod, stated as published; earlier: the spike's result and the operator-grouping decision; the lead's earlier decisions; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours that is proved against every script the game
 shipped (byte for byte), and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -104,7 +104,7 @@ recompiled, so a mod differs from the game only where the player edited.
 
 | Milestone | Scope | Done when | Estimate |
 | --- | --- | --- | --- |
-| MS0 scripts beside the map (read-only) | the Level editor page lists the open level's compiled scripts (name, the events handled, the things that run it, the natives it calls) next to the map, shows the selected script's installed `.msl` source with line numbers, and links names in it (thing names, waypoint paths, scripts, text ids) to the table and the map; selecting a thing shows its script and the other way round; waypoint paths are drawn on the map | on every installed level the list equals the world body's scripts, every one finds its source (670 of 670), the capture at three sizes looked at, nothing written | 4 to 5 days |
+| MS0 scripts beside the map (read-only; built, section 12; names and paths: MS0.1) | the Level editor page lists the open level's compiled scripts (name, the events handled, the things that run it, the natives it calls) next to the map, shows the selected script's installed `.msl` source with line numbers, and links names in it (thing names, waypoint paths, scripts, text ids) to the table and the map; selecting a thing shows its script and the other way round; waypoint paths are drawn on the map | on every installed level the list equals the world body's scripts, every one finds its source (670 of 670), the capture at three sizes looked at, nothing written | 4 to 5 days |
 | MS1 reference compiler and the byte-exact gate | `tools/msl_compile.py` (preprocess, lex, parse, generate, write the record as the world file stores it) and `tools/msl_gate.py --game GAME`, section 5 | every shipped script compiles to its shipped record, or each difference is explained (built; section 11) | built 2026-10-29 (the spike ran on every script) |
 | MS2 the C# compiler | `Missions/` with the same stages, authored vectors from the Python reference in Git, and a local retail gate (`Development/ScriptsGate.cs`) that must match the Python gate on all scripts | the vectors and the retail gate pass; the C# refuses what the Python refuses | 1 week |
 | MS3 first editable thing | the page edits the selected script's source (a text area with line numbers), compiles it (errors by line and column, a summary of what changed), replaces the script in the session as one undoable command, and saves through Save as mod | the acceptance in section 6 | 1 week |
@@ -250,3 +250,27 @@ the game folder and writes nothing.
 - **What is still unproven.** Constructs no shipped script uses (the compiler refuses them; `!=`, which one source of a level the
   install lacks writes, compiles to the VM's `OP_CMPNEB` and is grouped only with arithmetic), the sources of the levels this install
   lacks, and the game running any script this compiler wrote.
+
+## 12. MS0: the read-only scripts view (2026-10-29)
+
+The Level editor page has a Scripts switch beside its Map switch. On, it shows the open level's compiled scripts in place of the table
+and the map: the level's own world first, then its base world's (dimmed), each with the number of objects that name it and the events it
+handles; the selected script's installed source, read only, with line numbers and coloured keywords; and a card that says what the
+script handles, which game functions it calls, and which objects name it (each a button that shows the object on the table and the
+map). An object that names a script offers a button for it, and the page says when the level has no script of that name. The search
+narrows the list by name, event or function. Nothing is written.
+
+- **What it reads.** Events come from the compiled script (the 13 fixed events' entry points, then each named handler's event name),
+  functions from its CALL instructions (the names are generated from the Toolkit's table, `tools/script_tables.py`), and the objects that
+  name it from each object's script, spawn script and, for a spawner, its spawner spawn script, matched by exact name. A source is found
+  at `data/MissionScripts/level<NNN>/<name>.msl` in any case (the real level's folder for the level's own scripts, the base level's for
+  its base world's), ignoring links and files over 1 MiB.
+- **Checked.** The Toolkit's gate table has a SCRIPTS row per level archive, worked out in Python separately from the C#: the catalog's
+  lines (name, instructions, events, functions with counts, users) and the text of every source found, hashed. The Companion's local
+  retail gate (`Development/LevelsGate.cs`) compares the C# catalog and finder with it on every level of an installed game: every list
+  equals the reference's and every script of every world body, base worlds included, finds its source.
+- **Limits.** The page was driven by events in tests and looked at in offscreen captures at 1920 by 1080, 1280 by 800 and 1024 by 700
+  (the smallest window is cramped: the list shows two or three rows and the source about ten lines); nobody has used it by hand. A source
+  may differ from the compiled script it sits beside (the gate says which installed ones do: section 11). Base-world scripts name
+  base-world objects, which the table does not list, so they show no users. What a name in a source refers to, and the paths on the map,
+  are MS0.1.
