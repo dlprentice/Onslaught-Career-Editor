@@ -79,13 +79,14 @@ publish, sign, or install anything by themselves.
   outer name does not by itself mean an empty internal name. A malformed anonymous
   embedded mesh, such as one with an invalid part name, stops the whole census,
   because that path has no per-row refusal. A malformed loose mesh is recorded as
-  unparsed in `modelMetadataCoverage`; the part, frame-map, bone and camera counts
-  in `meshSummary` cover parsed meshes only, while its `meshes` count includes
-  every selected file. The model-metadata v1 record
-  remains available with its existing fields. Census v4 is an output format
-  identifier; there is no separate machine-readable schema for the census.
-  Its JSON output is
-  restricted to ignored `local-lab` or `.artifacts` paths. It distinguishes
+  unparsed in `modelMetadataCoverage` and has no part, frame-map, bone or camera rows
+  at all, so those counts in `meshSummary` (`parts`, `meshesWithNontrivialFrameMaps`,
+  `partsWithNontrivialFrameMaps`, `boneMeshes`, `boneCarriers`, `hfovMeshes`, `hfovParts`)
+  cover parsed meshes only; its `meshes` count still includes every selected file.
+  The model-metadata v1 record remains available with its existing fields. Census v4
+  is an output format identifier; there is no separate machine-readable schema for the
+  census. Its JSON output is restricted to ignored `local-lab` or `.artifacts` paths.
+  It distinguishes
   the loose mesh's direct `PMS2` child from the embedded resource's
   `PMSH`/`PMS2` plus 309-byte header, and keeps a mismatched or unknown reader
   context unresolved. A recognized child is a serialized next-in-chain; it is
