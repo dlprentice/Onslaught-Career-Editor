@@ -74,37 +74,23 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
 
     private string? _savedSignature;
 
-    /// <summary>The moved objects and changed scripts, bit for bit. A script that cannot be stored has no saveable signature.</summary>
-    private static string? Signature(EditSession session)
-    {
-        IReadOnlyList<ScriptChange> scripts = session.ScriptChanges();
-        if (scripts.Any(change => change.StorageError is not null)) return null;
-        try
-        {
-            return string.Join(';', session.Changes().Select(change =>
-                $"{change.Index}:{BitConverter.SingleToUInt32Bits(change.To.X):x8}:{BitConverter.SingleToUInt32Bits(change.To.Y):x8}:{BitConverter.SingleToUInt32Bits(change.To.Z):x8}")
-                .Concat(scripts.Select(change => $"script {change.Index}:{Convert.ToHexStringLower(SHA256.HashData(WorldBodyWriter.ScriptBytes(session.Body.Scripts[change.Index])))}")));
-        }
-        catch (InvalidDataException)
-        {
-            // The working body is mutable; if it became unwritable while computing the signature, it remains unsaved.
-            return null;
-        }
-    }
+    private static string Signature(ReadOnlySpan<byte> bytes) => Convert.ToHexStringLower(SHA256.HashData(bytes));
 
     /// <summary>
     /// How many objects or scripts differ from the level and no Save as mod has written that state yet (0 when there is nothing to lose).
-    /// An unstorable script always remains unsaved. An edit that was saved and then undone, or saved and left as it is, holds nothing unsaved.
+    /// An unstorable body or an unsupported change counts as at least one, so it cannot be silently discarded. An edit that was saved and
+    /// then undone, or saved and left as it is, holds nothing unsaved.
     /// </summary>
     public int UnsavedChangeCount
     {
         get
         {
             if (Session is not { } session) return 0;
-            int changed = session.Changes().Count + session.ScriptChanges().Count;
-            if (changed == 0) return 0;
-            string? signature = Signature(session);
-            return signature is null || signature != _savedSignature ? changed : 0;
+            byte[]? bytes;
+            try { bytes = session.ToBytes(); }
+            catch (InvalidDataException) { bytes = null; }
+            if (bytes is not null && (session.IsBaseline(bytes) || Signature(bytes) == _savedSignature)) return 0;
+            return Math.Max(1, session.Changes().Count + session.ScriptChanges().Count);
         }
     }
 
@@ -335,6 +321,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
             string list = string.Join("; ", scripts.Take(3).Select(change => $"{change.Name} ({change.Describe()})"));
             sentences.Add($"{(scripts.Count == 1 ? "1 script replaced" : $"{scripts.Count} scripts replaced")}: {list}{(scripts.Count > 3 ? $" and {scripts.Count - 3} more" : "")}.");
         }
+        if (sentences.Count == 0 && HasUnsavedChanges) return "This level has changes this editor cannot describe or save.";
         return sentences.Count == 0 ? null : string.Join(" ", sentences);
     }
 
@@ -364,8 +351,9 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         if (!report.CanSave) return new SaveOutcome(null, report.Errors[0].Message);
         try
         {
-            StagedMod staged = ModStager.Stage(parent, info, new Dictionary<int, byte[]> { [level] = Session.ToBytes() }, protectedFolders);
-            _savedSignature = Signature(Session);
+            byte[] bytes = Session.ToBytes();
+            StagedMod staged = ModStager.Stage(parent, info, new Dictionary<int, byte[]> { [level] = bytes }, protectedFolders);
+            _savedSignature = Signature(bytes);
             return new SaveOutcome(staged, $"Saved the mod to {staged.Root}.");
         }
         catch (Exception error) when (error is ModStageException or InvalidDataException)

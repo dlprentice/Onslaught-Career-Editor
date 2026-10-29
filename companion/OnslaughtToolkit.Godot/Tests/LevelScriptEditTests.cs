@@ -315,6 +315,39 @@ internal static class LevelScriptEditTests
             $"a later same-size script edit is unsaved even though the number of changed scripts is the same: {model.HasUnsavedChanges}, {model.UnsavedChangeCount}, {model.ChangeSummary()}");
         check.That(session.Undo() && !model.HasUnsavedChanges && session.Redo() && model.HasUnsavedChanges,
             "undoing to the saved script clears the flag and redoing the later edit sets it again");
+
+        check.That(session.Undo() && !model.HasUnsavedChanges, "the saved script state is restored before structural changes");
+        session.Body.Scripts[0].Name = "renamed";
+        check.That(model.HasUnsavedChanges && model.UnsavedChangeCount >= 1 && session.Validate().Errors.Any(error => error.Code == "scripts-changed"),
+            "renaming a saved script remains unsaved even when the script list no longer matches");
+        session.Body.Scripts[0].Name = "main";
+        check.That(!model.HasUnsavedChanges, "restoring the saved script name restores the saved state");
+
+        foreach ((string what, Action<EditSession> change, string errorCode) in new (string, Action<EditSession>, string)[]
+        {
+            ("renamed", edit => edit.Body.Scripts[0].Name = "renamed", "scripts-changed"),
+            ("removed", edit => edit.Body.Scripts.RemoveAt(0), "scripts-changed"),
+            ("added", edit => edit.Body.Scripts.Add(edit.ShippedScript(0)), "scripts-changed"),
+            ("missing", edit => edit.Body.Scripts[0] = null!, "cannot-write"),
+        })
+        {
+            check.That(model.Open(100) && model.Session is not null, $"a fresh authored level opens before the {what} script test");
+            session = model.Session!;
+            MissionScript replacement = session.ShippedScript(0);
+            replacement.Trailer[0]++;
+            session.Apply(new ReplaceScript(0, replacement));
+            change(session);
+            SaveOutcome blocked = model.SaveAsMod(Path.Combine(folder, "unsupported-" + what), new ModInfo("invalid", "Invalid"), [game]);
+            check.That(model.HasUnsavedChanges && model.UnsavedChangeCount >= 1 && session.Validate().Errors.Any(error => error.Code == errorCode) &&
+                       model.ChangeSummary() is { Length: > 0 } && !blocked.Ok && !Directory.Exists(Path.Combine(folder, "unsupported-" + what)),
+                $"a {what} script list retains unsaved state and cannot be published, even with a previous replacement");
+        }
+
+        check.That(model.Open(100) && model.Session is not null, "a fresh authored level opens before an unsupported field change");
+        session = model.Session!;
+        session.Body.MapNumber++;
+        check.That(model.HasUnsavedChanges && model.UnsavedChangeCount == 1 && model.ChangeSummary() is { Length: > 0 } &&
+                   session.Validate().Errors.Any(error => error.Code == "other-change"), "an unsupported non-list field change is unsaved and cannot be written as a mod");
     }
 
     private static void Validation(Checks check)

@@ -84,21 +84,24 @@ public sealed class EditSession
 
     private readonly Stack<IEditCommand> _undo = new(), _redo = new();
     private readonly WorldBody _baseline;
+    private readonly byte[] _baselineBytes;
 
     /// <param name="baseline">The body as the game has it (an archive's body, or a mod's world file).</param>
     /// <param name="isBaseWorld">True for a level's base world: careers remember which of its buildings still stand.</param>
     /// <exception cref="InvalidDataException">The bytes are not a world body, or do not write back to the same bytes.</exception>
     public EditSession(byte[] baseline, bool isBaseWorld = false)
     {
-        Baseline = baseline.ToArray();
-        _baseline = WorldBody.Read(Baseline);
-        if (!_baseline.Write().AsSpan().SequenceEqual(Baseline)) throw new InvalidDataException("This world body does not write back to the same bytes, so it cannot be edited safely.");
-        Body = WorldBody.Read(Baseline);
+        _baselineBytes = baseline.ToArray();
+        _baseline = WorldBody.Read(_baselineBytes);
+        if (!_baseline.Write().AsSpan().SequenceEqual(_baselineBytes)) throw new InvalidDataException("This world body does not write back to the same bytes, so it cannot be edited safely.");
+        Body = WorldBody.Read(_baselineBytes);
         IsBaseWorld = isBaseWorld;
     }
 
-    /// <summary>The bytes the session started from.</summary>
-    public byte[] Baseline { get; }
+    /// <summary>A copy of the bytes the session started from; callers cannot mutate the session's baseline.</summary>
+    public byte[] Baseline => _baselineBytes.ToArray();
+
+    internal bool IsBaseline(ReadOnlySpan<byte> bytes) => bytes.SequenceEqual(_baselineBytes);
 
     /// <summary>The working body. Edit it through <see cref="Apply"/> so that the change can be undone.</summary>
     public WorldBody Body { get; }
@@ -189,7 +192,7 @@ public sealed class EditSession
     public MissionScript ShippedScript(int index)
     {
         if (index < 0 || index >= _baseline.Scripts.Count) throw new ArgumentOutOfRangeException(nameof(index), $"The world has {_baseline.Scripts.Count} scripts.");
-        return WorldBody.Read(Baseline).Scripts[index];
+        return WorldBody.Read(_baselineBytes).Scripts[index];
     }
 
     private bool SameScripts() => Body.Scripts.Count == _baseline.Scripts.Count &&
@@ -216,7 +219,7 @@ public sealed class EditSession
             if (errors.Count == 0) errors.Add(new Finding("cannot-write", $"This world cannot be saved: {error.Message}"));
             return new ValidationReport(errors, warnings);
         }
-        if (bytes.AsSpan().SequenceEqual(Baseline))
+        if (IsBaseline(bytes))
         {
             errors.Add(new Finding("no-change", "Nothing has changed, so there is nothing to save."));
             return new ValidationReport(errors, warnings);
@@ -231,7 +234,7 @@ public sealed class EditSession
             WorldBody check = WorldBody.Read(bytes);
             for (int i = 0; i < check.Things.Count; i++) check.Things[i].Init.Position = _baseline.Things[i].Init.Position;
             for (int i = 0; i < check.Scripts.Count; i++) check.Scripts[i] = _baseline.Scripts[i];
-            if (!check.Write().AsSpan().SequenceEqual(Baseline))
+            if (!IsBaseline(check.Write()))
                 errors.Add(new Finding("other-change", "Something other than a position or a script's code differs from the world as it was loaded."));
         }
         IReadOnlyList<ScriptChange> scriptChanges = ScriptChanges();

@@ -179,6 +179,24 @@ internal static class LevelEditorPageTests
         app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
         app.DiscardDialog.Hide();
         check.That(scriptSession.Undo() && !page.HasChanges, "undoing the unstorable script leaves nothing to discard");
+
+        // A caller can mutate the public working body into a state the editor refuses to save. Every exit must still protect it.
+        MissionScript replacement = scriptSession.ShippedScript(0);
+        replacement.Trailer[0]++;
+        scriptSession.Apply(new ReplaceScript(0, replacement));
+        scriptSession.Body.Scripts[0].Name = "renamed";
+        check.That(page.HasChanges && !app.RequestClose() && app.DiscardDialog.Visible, "closing asks before dropping a renamed script list");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+        Choose(page, 200);
+        check.That(app.DiscardDialog.Visible && page.Model?.Level == 100, "the level picker asks before dropping a renamed script list");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+        await app.Home.ChooseAsync(install.Game);
+        check.That(app.DiscardDialog.Visible && page.HasChanges, "changing the game folder asks before dropping a renamed script list");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+        check.That(scriptSession.Undo() && !page.HasChanges, "undo restores the baseline after a refused script-list change");
         app.Navigate("home");
         await Frame(tree);
     }
