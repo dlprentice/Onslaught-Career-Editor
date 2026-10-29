@@ -36,6 +36,7 @@ if __name__ == "__main__":
 import argparse
 import base64
 import copy
+from decimal import Decimal, localcontext
 import hashlib
 import json
 import math
@@ -51,6 +52,7 @@ sys.path.insert(0, str(TOOLS))
 
 import content_catalog_tests as fixtures  # noqa: E402  the hand-assembled authored body and archive
 import world_mod_stage as stager  # noqa: E402
+import world_edit_move as mover  # noqa: E402  the move tool, whose coordinate reader the page's reader is checked against
 import world_resources_decode as wrd  # noqa: E402
 import world_resources_encode as enc  # noqa: E402
 
@@ -491,6 +493,8 @@ def archive_vectors(valid: dict[str, bytes]) -> list[tuple[str, str, bytes, dict
     out: list[tuple[str, str, bytes, dict]] = []
     one = level_stream(struct.pack("<ii", -1, 200), [(b"RLWD", real)])
     out.append(("real-only", "one member, the level's own world only", archive_file([one])))
+    out.append(("level-100", "a level that names itself as its world's level, as the level editor's tests need",
+                archive_file([level_stream(struct.pack("<ii", -1, 100), [(b"RLWD", real)])])))
     two = level_stream(struct.pack("<ii", 100, 200), [(b"BSWD", base), (b"RLWD", real)])
     out.append(("base-and-real", "a base world and a real world", archive_file([two])))
     third = len(two) // 3
@@ -567,6 +571,72 @@ def refused_archives(valid: dict[str, bytes]) -> list[tuple[str, str, bytes]]:
     ]
 
 
+# ----------------------------------------------------------------------------------------------- coordinate vectors
+def double_rounding_texts() -> list[str]:
+    """Decimals just beside the midpoint of two neighbouring float32 values, close enough that the nearest double is the midpoint
+    itself: the move tool rounds to the double first and then (to even) to float32, so it goes to the even neighbour, where
+    rounding the decimal to float32 in one step would go to the other. Reading with a one-step float32 parser fails these."""
+    texts = []
+    for low_bits in (0x3F800000, 0x3F800001, 0x42FA0000, 0x00800001, 0x7F7FFFFE):
+        low, high = (struct.unpack("<f", struct.pack("<I", bits))[0] for bits in (low_bits, low_bits + 1))
+        with localcontext() as context:
+            context.prec = 400
+            midpoint = (Decimal(low) + Decimal(high)) / 2  # exact: a float32 midpoint has 25 significant bits
+            unit = Decimal(1).scaleb(midpoint.adjusted() - 25)  # a relative 1e-25 beside it, far inside half a double's spacing
+            for value in (midpoint + unit, midpoint - unit):
+                text = format(value, "E") if midpoint < Decimal("1E-5") else format(value, "f")
+                if float(Decimal(text)) != float(midpoint):
+                    raise AssertionError(f"{text} does not round to the midpoint as a double")
+                texts.append(text)
+    return texts
+
+
+COORDINATE_TEXTS = [
+    # ordinary numbers, the acceptance edit's among them
+    "276.49", "265.07", "-12.1", "0", "-0", "+0", "0.0", "-0.0", "0e5", "-0e5", "1", "-1", "+1.5", "512", "511.99997", "0.1", "-0.1", "0.5", "16777216", "16777217", "-16777217",
+    "123456789", "1e3", "1E3", "1e+3", "1e-3", "-.5e1", "5.", ".5", "+.5", "00012", "0.000001", "1e-10", "1e0", "1e-0", "1e+0000000000000000000005",
+    # the edges of float32: largest, the halfway to infinity, denormals, underflow to zero
+    "3.4028234663852886e38", "3.4028235e38", "3.4028235677973362e38", "3.4028235677973366e38", "3.5e38", "1e39", "-3.4028235e38", "-3.4028235677973366e38", "-1e39",
+    "1.1754943508222875e-38", "1.401298464324817e-45", "1e-45", "7e-46", "7.1e-46", "1e-46", "-1e-46", "1e-50", "-1e-50", "1e-60", "-1e-60", "1e-400", "-1e-400", "0.000000000000000000000000000000000000000000001",
+    # exponents the tool's decimal reader takes or refuses
+    "0e999999999999999999", "1e999999999999999999", "1e1000000000000000000", "1e-999999999999999999", "0e1000000000000000000", "1e-1000000000000000000",
+    # length (the tool refuses text over 128 characters, spaces included)
+    "1" * 127, "1" * 128, "1" * 129, "0." + "0" * 120 + "1", "1" + "0" * 126, "7" + " " * 127, " " * 127 + "7", " " * 128 + "7", "  7  ", " 7", "7 ",
+    # what is not a number
+    "", " ", "-", "+", ".", "e5", "1e", "1e+", "1e-", "--1", "1-", "1.2.3", "1,5", "0x10", "1 2", "inf", "-inf", "Infinity", "-Infinity", "NaN", "nan", "sNaN", "1e5.5", "(1)",
+    # what the tool's decimal reader takes and the page's does not: digit separators, other digits, other whitespace
+    "1_000", "1_0.5_5", "\u0663", "\u0661\u0662\u0663", "\uff11\uff12", "\t7", "\u00a07", "7\n", "\n7", "7\r", "\u20077", "\x0b7",
+]
+
+
+def in_page_grammar(text: str) -> bool:
+    """Whether the text is in the form the page's reader (CoordinateInput) accepts: at most 128 characters, a sign, ASCII digits
+    with a point, an exponent of at most 18 digits once leading zeros are dropped, and ASCII spaces around it."""
+    if len(text) > 128:
+        return False
+    match = re.fullmatch(r"[+-]?([0-9]*)(?:\.([0-9]*))?(?:[eE][+-]?([0-9]+))?", text.strip(" "), flags=re.ASCII)
+    if not match or len(match.group(1) or "") + len(match.group(2) or "") == 0:
+        return False
+    return match.group(3) is None or len(match.group(3).lstrip("0")) <= 18
+
+
+def coordinate_vectors() -> list[dict]:
+    """Each text with what the move tool (world_edit_move._coordinates) makes of it: refused, or the float32 it stores (the four
+    bytes in hex), whether that is not exactly the decimal typed, and its exact decimal value. The page's reader is stricter in
+    what text it takes (grammar says whether the text is in its form) and must match the tool in everything it does take."""
+    out = []
+    for text in [*COORDINATE_TEXTS, *double_rounding_texts()]:
+        try:
+            _, details = mover._coordinates([text, "0", "0"], True)
+        except mover.MoveError:
+            out.append({"text": text, "ok": False, "hex": "", "rounded": False, "exact": "", "grammar": in_page_grammar(text)})
+            continue
+        stored = details[0]["stored"]
+        out.append({"text": text, "ok": True, "hex": details[0]["float32LittleEndianHex"], "rounded": details[0]["rounded"],
+                    "exact": format(Decimal(stored), "f"), "grammar": in_page_grammar(text)})
+    return out
+
+
 # ---------------------------------------------------------------------------------------------------- stage vectors
 BIG_WORLD = 4 << 20
 
@@ -596,6 +666,7 @@ def stage_specs() -> list[dict]:
         spec("world-of-one-byte", "tiny-world", "Tiny", [repeat(0, 0x01, 1)]),
         spec("levels-zero-and-999", "ends", "Ends", [from_(0, "authored-v50"), from_(999, "authored-v43")]),
         spec("moved-twice", "moved-twice", "Moved twice", [edit(200, "move-two-v50"), edit(201, "move-v47")]),
+        spec("editor-save", "level-100-edit", "Level 100 edit", [edit(100, "move-v50")], author="Test Pilot", description="Moved by typing coordinates."),
     ]
 
 
@@ -761,7 +832,7 @@ def build() -> dict:
     edited = {e["name"]: e["body"] for e in edits}
     stages, bad_stages = stage_vectors(valid_bodies, edited)
     return {"valids": valids, "refused": refused, "edits": edits, "archives": archives, "badArchives": bad_archives,
-            "stages": stages, "badStages": bad_stages}
+            "stages": stages, "badStages": bad_stages, "coordinates": coordinate_vectors()}
 
 
 def render(data: dict) -> str:
@@ -796,6 +867,8 @@ def render(data: dict) -> str:
            f"        internal const int MaxFileBytes = {enc.MAX_ARCHIVE_BYTES}, MaxInflatedBytes = {enc.MAX_ARCHIVE_INFLATED_BYTES}, MaxMembers = {enc.MAX_ARCHIVE_MEMBERS},",
            f"            PackBufferBytes = {enc.PACK_BUFFER_SIZE}, MaxMemberInflatedBytes = {enc.MAX_INFLATED_MEMBER_BYTES};",
            "    }", "",
+           "    /// <summary>A coordinate text and what the move tool makes of it; Grammar says whether the text is in the form the page's reader accepts.</summary>",
+           "    internal sealed record CoordinateVector(string Text, bool Ok, string Hex, bool Rounded, string Exact, bool Grammar);", "",
            "    internal static readonly WorldVector[] Valid =", "    ["]
     for v in data["valids"]:
         out.append(f"        new({cs_text(v['name'])}, {cs_text(v['note'])},")
@@ -847,6 +920,10 @@ def render(data: dict) -> str:
     for v in data["badStages"]:
         out.append(f"        new({cs_text(v['name'])}, {cs_text(v['why'])}, {cs_text(v['id'])}, {cs_text(v['modName'])}, {cs_text(v['version'])}, {cs_text(v['author'])}, {cs_text(v['description'])},")
         out.append(f"            {opt(v['ceMin'])}, {opt(v['ceMax'])}, {worlds_cs(v['worlds'])}),")
+    out += ["    ];", "", "    internal static readonly CoordinateVector[] Coordinates =", "    ["]
+    for v in data["coordinates"]:
+        out.append(f"        new({cs_text(v['text'])}, {'true' if v['ok'] else 'false'}, {cs_text(v['hex'])}, {'true' if v['rounded'] else 'false'}, "
+                   f"{cs_text(v['exact'])}, {'true' if v['grammar'] else 'false'}),")
     out += ["    ];", "}", ""]
     return "\n".join(out)
 

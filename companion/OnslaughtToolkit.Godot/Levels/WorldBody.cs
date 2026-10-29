@@ -136,6 +136,9 @@ public sealed class PlacedObject
     /// <summary>The kind name the loader's object-id table gives (<c>unit</c>, <c>waypoint</c>, ...).</summary>
     public string Kind => ObjectKinds.NameOf(ObjectId);
 
+    /// <summary>What a player would call it: the record's own name, else the definition it names (a Target Tank), else its kind.</summary>
+    public string Label => Init.Name.Length > 0 ? Init.Name : Definition is { Length: > 0 } definition ? definition : Kind;
+
     public ObjectInit Init { get; set; } = new();
 
     /// <summary>Units, buildings, squads, features and hazards name a definition; other kinds have none.</summary>

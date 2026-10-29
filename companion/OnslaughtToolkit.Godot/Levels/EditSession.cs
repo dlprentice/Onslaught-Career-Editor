@@ -43,8 +43,7 @@ public sealed class MoveObject(int thingIndex, Vector3 position) : IEditCommand
         _previous = thing.Init.Position;
         thing.Init.Position = position;
         _made = true;
-        string name = thing.Init.Name.Length > 0 ? thing.Init.Name : thing.Kind;
-        _description = $"Move {name} (row {thingIndex})";
+        _description = $"Move {thing.Label} (row {thingIndex})";
     }
 
     public void Undo(WorldBody body)
@@ -166,7 +165,7 @@ public sealed class EditSession
         for (int i = 0; i < Math.Min(_baseline.Things.Count, Body.Things.Count); i++)
         {
             Vector3 from = _baseline.Things[i].Init.Position, to = Body.Things[i].Init.Position;
-            if (!SameBits(from, to)) changes.Add(new ObjectChange(i, _baseline.Things[i].Kind, Label(_baseline.Things[i]), from, to));
+            if (!SameBits(from, to)) changes.Add(new ObjectChange(i, _baseline.Things[i].Kind, _baseline.Things[i].Label, from, to));
         }
         return changes;
     }
@@ -222,5 +221,4 @@ public sealed class EditSession
         BitConverter.SingleToUInt32Bits(a.Y) == BitConverter.SingleToUInt32Bits(b.Y) &&
         BitConverter.SingleToUInt32Bits(a.Z) == BitConverter.SingleToUInt32Bits(b.Z);
 
-    private static string Label(PlacedObject thing) => thing.Init.Name.Length > 0 ? thing.Init.Name : thing.Kind;
 }

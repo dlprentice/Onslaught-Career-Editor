@@ -42,6 +42,9 @@ internal static class LevelVectors
             PackBufferBytes = 1059111, MaxMemberInflatedBytes = 1048576;
     }
 
+    /// <summary>A coordinate text and what the move tool makes of it; Grammar says whether the text is in the form the page's reader accepts.</summary>
+    internal sealed record CoordinateVector(string Text, bool Ok, string Hex, bool Rounded, string Exact, bool Grammar);
+
     internal static readonly WorldVector[] Valid =
     [
         new("authored-v50", "the hand-assembled authored body, as the reference reads it",
@@ -1663,6 +1666,15 @@ internal static class LevelVectors
             F/0DDwhQ/9rFMOdHk2KxBHKvefE/Sg6bl3hJcTdbV168zG2N4EEZVRe3rh/22aSZEV/zFPAb8eidIf9Bqfg=
             """,
             -1, 200, null, "be13f933b6263efeaafce4bedd50a9e55da6472013e2387c1dd5d19cf3978da4"),
+        new("level-100", "a level that names itself as its world's level, as the level editor's tests need",
+            """
+            eNoBXQGi/lkBAAB4nJ1RTUvDQBDdZJM2WlDwUg8eAl482vp960JKLouUJFg8LlZsqSbFFvw7/jJ/hgcPtjubWVmyqRgHlpd9b2by
+            Zpbf8cQjhDzJk7Ekhm9HHnbPokOyPYbJMD35Ra/GWOZ/U0AefQJGLAskv5YxkZjwcfQh+T6hRhU4aY/Es5jM8mpHqAQdHL+IWb4v
+            0UfNx1pAFxH6wkTUK+8e8vq0UD+i5b2NfIA8NALsIr+D/J5TemkaHfS2PKXoJhP53JxQqT2KXtKFeMsfX62EvoPDWsqZbgzrsdRz
+            vSBLuQDlS1q0lEtXfQ8GlnJFcYULsZqGwtKvqw5/lBtdCeOHPVOnagFqP5AaF6bYMcYG3K35QfkyRA0aqHvICHlndZkOZqtlaS/6
+            Bx4QoP61i2HOj6fFcgXkQfPif5QcNy/xkuJhvq68eJnbGsGDMqoubl0/7LNNM4PfRingBmdRnL2g9qST
+            """,
+            -1, 100, null, "be13f933b6263efeaafce4bedd50a9e55da6472013e2387c1dd5d19cf3978da4"),
         new("base-and-real", "a base world and a real world",
             """
             eNoBfgSB+3oEAAB4nO2WTWwbVRCAJ7ETJw1t0vQXKCJSCy1CD2XXdmxf0jhylR4CipKIwPEl3sarOmuzu6aFU4VAIAQXxAlxQIgD
@@ -2185,6 +2197,15 @@ internal static class LevelVectors
             cNFa9RNvq5/NvfkGRPhpvA==
             """,
             "7a6d4cc3d5374b83dedfd1cdddfbe2e7262726cafd433fd18c0e23cea41a09bb", [new("data/worlds/world200.wrd", 990, "cb5b3b8e7683594eee68d3833ea10add97df39086e12859b27e8d091ca37b842"), new("data/worlds/world201.wrd", 41986, "388f70f6656ed71dc83f44e4c4a303d17bf892e23ebe35e95c0e15468796a551")]),
+        new("editor-save", "level-100-edit", "Level 100 edit", "1", "Test Pilot", "Moved by typing coordinates.",
+            null, null, [new(100, "", "move-v50", 0, 0)],
+            """
+            eNpFjsFuwyAMhu95CivntYMwSLJn2KQddpt2cMAsSGmIgKXqqr77IKnUi8H/9/+2rxVAHfVIJ6xfgT+V1pn8rSdaaTpwxg5kXKo3
+            MuOJCnsrDDKDB1spROfngvmu4G8afSjCJ8UEH27yd6+hqINb0t3/7lcyMFwgXRY3/4D2Phg3Y6J43APWTRSz9Ss3ANetZnnBNJYB
+            BhM+n32YTNyffNrxHMwW3pzR/ZXL+549pBEbqUqc+v5FdgM2uifdWpKcC0uWyVYyo0TX8caqlndGMRSkcWg7rvIOJYUYeCPrbeQt
+            1+/qVv0D4iFalg==
+            """,
+            "2ae28d3314556b4ea1e397dd375cb9981953b72248d68e3edc64c70f37ef2513", [new("data/worlds/world100.wrd", 990, "e99458ba2c9ec7fe5113fef05750d638812f6718d60a3ecab7816d106533b125")]),
     ];
 
     internal static readonly RefusedStage[] RefusedStages =
@@ -2279,5 +2300,131 @@ internal static class LevelVectors
             null, null, [new(100, "", "", 119, 0)]),
         new("world-over-4-mib", "a world file of 4 MiB and one byte", "ce-edit", "Edit", "1", "", "",
             null, null, [new(100, "", "", 119, 4194305)]),
+    ];
+
+    internal static readonly CoordinateVector[] Coordinates =
+    [
+        new("276.49", true, "b83e8a43", true, "276.489990234375", true),
+        new("265.07", true, "f6888443", true, "265.07000732421875", true),
+        new("-12.1", true, "9a9941c1", true, "-12.1000003814697265625", true),
+        new("0", true, "00000000", false, "0", true),
+        new("-0", true, "00000080", false, "-0", true),
+        new("+0", true, "00000000", false, "0", true),
+        new("0.0", true, "00000000", false, "0", true),
+        new("-0.0", true, "00000080", false, "-0", true),
+        new("0e5", true, "00000000", false, "0", true),
+        new("-0e5", true, "00000080", false, "-0", true),
+        new("1", true, "0000803f", false, "1", true),
+        new("-1", true, "000080bf", false, "-1", true),
+        new("+1.5", true, "0000c03f", false, "1.5", true),
+        new("512", true, "00000044", false, "512", true),
+        new("511.99997", true, "ffffff43", true, "511.999969482421875", true),
+        new("0.1", true, "cdcccc3d", true, "0.100000001490116119384765625", true),
+        new("-0.1", true, "cdccccbd", true, "-0.100000001490116119384765625", true),
+        new("0.5", true, "0000003f", false, "0.5", true),
+        new("16777216", true, "0000804b", false, "16777216", true),
+        new("16777217", true, "0000804b", true, "16777216", true),
+        new("-16777217", true, "000080cb", true, "-16777216", true),
+        new("123456789", true, "a379eb4c", true, "123456792", true),
+        new("1e3", true, "00007a44", false, "1000", true),
+        new("1E3", true, "00007a44", false, "1000", true),
+        new("1e+3", true, "00007a44", false, "1000", true),
+        new("1e-3", true, "6f12833a", true, "0.001000000047497451305389404296875", true),
+        new("-.5e1", true, "0000a0c0", false, "-5", true),
+        new("5.", true, "0000a040", false, "5", true),
+        new(".5", true, "0000003f", false, "0.5", true),
+        new("+.5", true, "0000003f", false, "0.5", true),
+        new("00012", true, "00004041", false, "12", true),
+        new("0.000001", true, "bd378635", true, "0.0000009999999974752427078783512115478515625", true),
+        new("1e-10", true, "ffe6db2e", true, "0.000000000100000001335143196001808973960578441619873046875", true),
+        new("1e0", true, "0000803f", false, "1", true),
+        new("1e-0", true, "0000803f", false, "1", true),
+        new("1e+0000000000000000000005", true, "0050c347", false, "100000", true),
+        new("3.4028234663852886e38", true, "ffff7f7f", true, "340282346638528859811704183484516925440", true),
+        new("3.4028235e38", true, "ffff7f7f", true, "340282346638528859811704183484516925440", true),
+        new("3.4028235677973362e38", true, "ffff7f7f", true, "340282346638528859811704183484516925440", true),
+        new("3.4028235677973366e38", false, "", false, "", true),
+        new("3.5e38", false, "", false, "", true),
+        new("1e39", false, "", false, "", true),
+        new("-3.4028235e38", true, "ffff7fff", true, "-340282346638528859811704183484516925440", true),
+        new("-3.4028235677973366e38", false, "", false, "", true),
+        new("-1e39", false, "", false, "", true),
+        new("1.1754943508222875e-38", true, "00008000", true, "0.000000000000000000000000000000000000011754943508222875079687365372222456778186655567720875215087517062784172594547271728515625", true),
+        new("1.401298464324817e-45", true, "01000000", true, "0.00000000000000000000000000000000000000000000140129846432481707092372958328991613128026194187651577175706828388979108268586060148663818836212158203125", true),
+        new("1e-45", true, "01000000", true, "0.00000000000000000000000000000000000000000000140129846432481707092372958328991613128026194187651577175706828388979108268586060148663818836212158203125", true),
+        new("7e-46", true, "00000000", true, "0", true),
+        new("7.1e-46", true, "01000000", true, "0.00000000000000000000000000000000000000000000140129846432481707092372958328991613128026194187651577175706828388979108268586060148663818836212158203125", true),
+        new("1e-46", true, "00000000", true, "0", true),
+        new("-1e-46", true, "00000080", true, "-0", true),
+        new("1e-50", true, "00000000", true, "0", true),
+        new("-1e-50", true, "00000080", true, "-0", true),
+        new("1e-60", true, "00000000", true, "0", true),
+        new("-1e-60", true, "00000080", true, "-0", true),
+        new("1e-400", true, "00000000", true, "0", true),
+        new("-1e-400", true, "00000080", true, "-0", true),
+        new("0.000000000000000000000000000000000000000000001", true, "01000000", true, "0.00000000000000000000000000000000000000000000140129846432481707092372958328991613128026194187651577175706828388979108268586060148663818836212158203125", true),
+        new("0e999999999999999999", true, "00000000", false, "0", true),
+        new("1e999999999999999999", false, "", false, "", true),
+        new("1e1000000000000000000", false, "", false, "", false),
+        new("1e-999999999999999999", true, "00000000", true, "0", true),
+        new("0e1000000000000000000", false, "", false, "", false),
+        new("1e-1000000000000000000", true, "00000000", true, "0", false),
+        new("1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111", false, "", false, "", true),
+        new("11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111", false, "", false, "", true),
+        new("111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111", false, "", false, "", false),
+        new("0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001", true, "00000000", true, "0", true),
+        new("1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", false, "", false, "", true),
+        new("7                                                                                                                               ", true, "0000e040", false, "7", true),
+        new("                                                                                                                               7", true, "0000e040", false, "7", true),
+        new("                                                                                                                                7", false, "", false, "", false),
+        new("  7  ", true, "0000e040", false, "7", true),
+        new(" 7", true, "0000e040", false, "7", true),
+        new("7 ", true, "0000e040", false, "7", true),
+        new("", false, "", false, "", false),
+        new(" ", false, "", false, "", false),
+        new("-", false, "", false, "", false),
+        new("+", false, "", false, "", false),
+        new(".", false, "", false, "", false),
+        new("e5", false, "", false, "", false),
+        new("1e", false, "", false, "", false),
+        new("1e+", false, "", false, "", false),
+        new("1e-", false, "", false, "", false),
+        new("--1", false, "", false, "", false),
+        new("1-", false, "", false, "", false),
+        new("1.2.3", false, "", false, "", false),
+        new("1,5", false, "", false, "", false),
+        new("0x10", false, "", false, "", false),
+        new("1 2", false, "", false, "", false),
+        new("inf", false, "", false, "", false),
+        new("-inf", false, "", false, "", false),
+        new("Infinity", false, "", false, "", false),
+        new("-Infinity", false, "", false, "", false),
+        new("NaN", false, "", false, "", false),
+        new("nan", false, "", false, "", false),
+        new("sNaN", false, "", false, "", false),
+        new("1e5.5", false, "", false, "", false),
+        new("(1)", false, "", false, "", false),
+        new("1_000", true, "00007a44", false, "1000", false),
+        new("1_0.5_5", true, "cdcc2841", true, "10.55000019073486328125", false),
+        new("\u0663", true, "00004040", false, "3", false),
+        new("\u0661\u0662\u0663", true, "0000f642", false, "123", false),
+        new("\uff11\uff12", true, "00004041", false, "12", false),
+        new("\u00097", true, "0000e040", false, "7", false),
+        new("\u00a07", true, "0000e040", false, "7", false),
+        new("7\u000a", true, "0000e040", false, "7", false),
+        new("\u000a7", true, "0000e040", false, "7", false),
+        new("7\u000d", true, "0000e040", false, "7", false),
+        new("\u20077", true, "0000e040", false, "7", false),
+        new("\u000b7", true, "0000e040", false, "7", false),
+        new("1.0000000596046447753906251", true, "0000803f", true, "1", true),
+        new("1.0000000596046447753906249", true, "0000803f", true, "1", true),
+        new("1.0000001788139343261718751", true, "0200803f", true, "1.0000002384185791015625", true),
+        new("1.0000001788139343261718749", true, "0200803f", true, "1.0000002384185791015625", true),
+        new("125.00000381469726562500001", true, "0000fa42", true, "125", true),
+        new("125.00000381469726562499999", true, "0000fa42", true, "125", true),
+        new("1.1754945610170571566912972757816831713060852488113788029861174698386598429233895757306527229957282543182373046875E-38", true, "02008000", true, "0.0000000000000000000000000000000000000117549463108198037293215072196816233580189181282447589681190605769207403741294371002368279732763767242431640625", true),
+        new("1.1754945610170571566912970757816831713060852488113788029861174698386598429233895757306527229957282543182373046875E-38", true, "02008000", true, "0.0000000000000000000000000000000000000117549463108198037293215072196816233580189181282447589681190605769207403741294371002368279732763767242431640625", true),
+        new("340282336497324057985868981510891282432", true, "feff7f7f", true, "340282326356119256160033759537265639424", true),
+        new("340282336497324057985868961510891282432", true, "feff7f7f", true, "340282326356119256160033759537265639424", true),
     ];
 }

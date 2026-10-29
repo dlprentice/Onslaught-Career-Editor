@@ -396,8 +396,11 @@ internal static class LevelEditTests
         session.Undo();
         session.Apply(new MoveObject(2, new Vector3(1f, 2f, 3f)));
         check.That(!session.CanRedo, "a new edit clears what could be redone");
-        check.That(session.UndoDescription == "Move waypoint (row 2)" && session.Changes().Single().Name == "waypoint", "a thing with no name is called by its kind: " + session.UndoDescription);
+        check.That(session.UndoDescription == "Move waypoint (row 2)" && session.Changes().Single().Name == "waypoint", "a thing with no name and no definition is called by its kind: " + session.UndoDescription);
         check.That(changed == 5, $"every edit, undo and redo that happens raises Changed ({changed} of 5)");
+        session.Undo();
+        session.Apply(new MoveObject(1, new Vector3(4f, 5f, 6f)));
+        check.That(session.UndoDescription == "Move Ghost (row 1)" && session.Changes().Single().Name == "Ghost" && session.Changes().Single().Kind == "unit", "a thing with no name is called by the definition it names: " + session.UndoDescription);
 
         // Moving the same thing twice, then undoing both.
         EditSession twice = new(baseline);

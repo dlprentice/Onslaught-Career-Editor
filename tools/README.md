@@ -258,7 +258,10 @@ publish, sign, or install anything by themselves.
   and undoes it) is tested against: world bodies of every version the loader accepts and every kind of thing record it
   reads, bodies the reference refuses (each valid but for one field), edits with the bytes the reference writes after
   them, authored level archives, each with the reference's dump of the fields it read, and the `mod.json` bytes and
-  files the reference stager writes for a set of inputs (and the inputs it refuses). No game bytes enter it.
+  files the reference stager writes for a set of inputs (and the inputs it refuses), and coordinate texts with what the move tool
+  (`world_edit_move.py`) stores for each, which the page's coordinate reader (`CoordinateInput`, used by the Level editor page) must
+  match: the float32 as four bytes, whether it is not exactly the decimal typed, and its exact value, with the texts the tool reads
+  and the page does not (digit separators, other digits, other whitespace) marked as narrower, never wider. No game bytes enter it.
   `python tools/level_editor_vectors.py --check` fails when the committed file is not what `--write` writes; it compares
   what each compressed blob inflates to, so it does not depend on the zlib that compressed it.
   `level_editor_vectors_tests.py` adds the reference's own round trips and the refusal of every proper prefix of a body.

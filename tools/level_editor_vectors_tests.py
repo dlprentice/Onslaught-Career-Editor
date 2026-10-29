@@ -16,6 +16,8 @@ import struct
 import tempfile
 import unittest
 import zlib
+from decimal import Decimal
+from fractions import Fraction
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
@@ -43,6 +45,7 @@ class VectorTests(unittest.TestCase):
         self.assertGreaterEqual(len(self.data["badArchives"]), 22)
         self.assertGreaterEqual(len(self.data["stages"]), 14)
         self.assertGreaterEqual(len(self.data["badStages"]), 45)
+        self.assertGreaterEqual(len(self.data["coordinates"]), 110)
         names = [v["name"] for v in self.data["valids"]]
         self.assertEqual(len(names), len(set(names)))
         for version in range(43, 51):
@@ -215,6 +218,53 @@ class VectorTests(unittest.TestCase):
         with self.assertRaises(zlib.error):
             zlib.decompressobj().decompress(needy)
         self.assertIn("invalid zlib data", refusal(bad["member-needs-dictionary"]))
+
+    def test_the_coordinate_vectors_are_what_the_move_tool_makes_of_them(self) -> None:
+        vectors = {v["text"]: v for v in self.data["coordinates"]}
+        self.assertEqual(len(vectors), len(self.data["coordinates"]))
+
+        def nearest_float32(text: str) -> bytes:
+            """The float32 nearest the decimal in one step (exact arithmetic, a tie to the even mantissa), as four little-endian bytes."""
+            exact = Fraction(Decimal(text))
+            bits = struct.unpack("<I", struct.pack("<f", float(exact)))[0]
+            candidates = [(abs(Fraction(struct.unpack("<f", struct.pack("<I", b))[0]) - exact), b & 1, b) for b in (bits - 1, bits, bits + 1)
+                          if 0 <= b <= 0xFFFFFFFF and (b & 0x7FFFFFFF) < 0x7F800000]
+            return struct.pack("<I", min(candidates)[2])
+
+        for text, v in vectors.items():
+            with self.subTest(text):
+                if not v["ok"]:
+                    self.assertEqual((v["hex"], v["rounded"], v["exact"]), ("", False, ""))
+                    continue
+                stored = struct.unpack("<f", bytes.fromhex(v["hex"]))[0]
+                self.assertEqual(v["exact"], format(Decimal(stored), "f"))
+                self.assertEqual(v["rounded"], Decimal(stored) != Decimal(text))
+        # The acceptance edit's coordinates, and a negative zero kept as one.
+        for text in ("276.49", "265.07", "-12.1"):
+            self.assertEqual(vectors[text]["hex"], struct.pack("<f", float(text)).hex())
+            self.assertTrue(vectors[text]["rounded"])
+        self.assertEqual((vectors["-0"]["hex"], vectors["-0"]["rounded"], vectors["-0"]["exact"]), ("00000080", False, "-0"))
+        self.assertEqual((vectors["0"]["hex"], vectors["0"]["exact"]), ("00000000", "0"))
+        self.assertEqual(vectors["276.49"]["exact"], "276.489990234375")
+        # The tool rounds to a double and then to float32: the vectors beside float32 midpoints go where a one-step parser would not.
+        beside = [text for text in self.gen_double_rounding() if vectors[text]["ok"]]
+        self.assertGreaterEqual(len(beside), 10)
+        self.assertGreaterEqual(sum(1 for text in beside if vectors[text]["hex"] != nearest_float32(text).hex()), 5)
+        # The page reads a form of text that is narrower than the tool's, never wider.
+        outside = [v for v in vectors.values() if v["ok"] and not v["grammar"]]
+        self.assertGreaterEqual(len(outside), 10)
+        for text in ("1_000", "\u0663", "\uff11\uff12", "\t7", "\u00a07", "7\n", "1e-1000000000000000000"):
+            self.assertTrue(vectors[text]["ok"] and not vectors[text]["grammar"], text)
+        for v in vectors.values():
+            if v["grammar"]:
+                self.assertTrue(v["text"].isascii() and "_" not in v["text"], v["text"])
+        self.assertTrue(all(vectors[text]["grammar"] for text in ("276.49", "  7  ", "-.5e1", "5.", "1e+0000000000000000000005", "0e999999999999999999")))
+        self.assertFalse(vectors["1" * 129]["grammar"] or vectors[" " * 128 + "7"]["grammar"] or vectors["1e1000000000000000000"]["grammar"])
+        self.assertTrue(vectors["1" * 128]["grammar"] and vectors[" " * 127 + "7"]["grammar"])
+
+    @staticmethod
+    def gen_double_rounding() -> list[str]:
+        return gen.double_rounding_texts()
 
     def test_the_staged_mods_are_what_the_reference_stager_wrote(self) -> None:
         bodies = {v["name"]: v["body"] for v in self.data["valids"]}
