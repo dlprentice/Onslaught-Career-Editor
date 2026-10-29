@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-29 (the script gate pins each known stale record pair; `msl_vectors.py`, the vectors for the Companion's C# compiler; the gate table's NAMES and PATHS rows; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-29 (the script gate pins each known stale record pair; descriptor-relative Python mission-source reads and platform limits; `msl_vectors.py`, the vectors for the Companion's C# compiler; the gate table's NAMES and PATHS rows; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -306,7 +306,13 @@ publish, sign, or install anything by themselves.
   script that grows past a million tokens when its `#define` names are replaced, a number that does not fit 32 bits or float32, and
   an `#include` that is a link or passes through one below the selected game folder. It reads at most 128 included headers per script,
   with at most 1,048,576 characters per header and 2,097,152 characters in total, including repeated headers; the file reader also caps
-  a header's bytes. Besides the record it returns notes (how a mixed chain was grouped, a handler the
+  a header's bytes. For game-relative headers and the gate's primary source, the Python reader opens each path component relative to
+  a held directory, refuses symbolic links below the selected root and checks identities around the bounded read. The selected root
+  itself may be reached through a link; regular hard links remain accepted. Detected file changes are refused, but these checks do
+  not create an immutable snapshot and remote-filesystem behavior has not been validated. This Python file reader currently requires
+  Linux descriptor-relative, no-follow support and refuses on other systems, including Windows; the in-memory compiler is unaffected.
+  Its separate `read_source` for an explicitly selected standalone file permits parent links and does not establish a game-root boundary.
+  Besides the record it returns notes (how a mixed chain was grouped, a handler the
   game never calls) for an editor to show.
 - `msl_gate.py --game GAME [--table] [--level N]` is its retail gate: for every compiled script of every world body of an
   installed game it compiles `data/MissionScripts/level<NNN>/<name>.msl` and compares the record field by field and as the bytes
