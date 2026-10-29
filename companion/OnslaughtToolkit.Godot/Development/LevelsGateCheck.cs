@@ -20,22 +20,23 @@ internal static class LevelsGateCheck
             printError("Set BEA_GAME to a game folder with data/resources/NNN_res_PC.aya files.");
             return 2;
         }
-        Dictionary<string, string[]>? table = null, terrainTable = null;
+        Dictionary<string, string[]>? table = null, terrainTable = null, scriptsTable = null;
         if (tablePath.Length > 0)
         {
             table = [];
             terrainTable = [];
+            scriptsTable = [];
             foreach (string line in File.ReadLines(tablePath).Skip(1))
             {
                 string[] cells = line.Split('\t');
                 if (cells.Length != 6) continue;
-                (cells[1] == "TERRAIN" ? terrainTable : table)[cells[0] + "\t" + cells[1]] = cells[2..];
+                (cells[1] == "TERRAIN" ? terrainTable : cells[1] == "SCRIPTS" ? scriptsTable : table)[cells[0] + "\t" + cells[1]] = cells[2..];
             }
         }
 
         List<string> failures = [];
-        HashSet<string> seen = [], seenTerrain = [];
-        int bodies = 0, exact = 0, matched = 0, terrains = 0, terrainsMatched = 0;
+        HashSet<string> seen = [], seenTerrain = [], seenScripts = [];
+        int bodies = 0, exact = 0, matched = 0, terrains = 0, terrainsMatched = 0, scriptLists = 0, scriptListsMatched = 0, scriptsListed = 0, sourcesFound = 0;
         foreach (LevelArchiveFile archive in archives)
         {
             LevelWorlds worlds;
@@ -48,6 +49,7 @@ internal static class LevelsGateCheck
                 failures.Add($"{archive.Level:D3}: archive refused: {error.Message}");
                 continue;
             }
+            if (worlds.RealBody is not null) CheckScripts(game, archive.Level, worlds, scriptsTable, seenScripts, failures, ref scriptLists, ref scriptListsMatched, ref scriptsListed, ref sourcesFound);
             if (worlds.Terrain is not null && worlds.RealBody is not null) CheckTerrain(archive.Level, worlds, terrainTable, seenTerrain, failures, ref terrains, ref terrainsMatched);
             foreach ((string tag, byte[]? body) in new[] { ("BSWD", worlds.BaseBody), ("RLWD", worlds.RealBody) })
             {
@@ -84,11 +86,63 @@ internal static class LevelsGateCheck
             foreach (string key in table.Keys.Except(seen)) failures.Add($"{key.Replace('\t', ' ')}: in the reference table but not read here");
         if (terrainTable is not null)
             foreach (string key in terrainTable.Keys.Except(seenTerrain)) failures.Add($"{key.Replace('\t', ' ')}: in the reference table but not read here");
+        if (scriptsTable is not null)
+            foreach (string key in scriptsTable.Keys.Except(seenScripts)) failures.Add($"{key.Replace('\t', ' ')}: in the reference table but not read here");
         foreach (string failure in failures.Take(25)) printError("FAIL: " + failure);
         print($"LEVELS_GATE: {bodies} world bodies in {archives.Count} level archives; byte-identical round trips {exact}; " +
                  (table is null ? "no reference table given" : $"fields equal to the reference's on {matched} of {table.Count} rows") +
-                 $"; {terrains} terrains" + (terrainTable is null ? "" : $", heights equal to the reference's lookup on {terrainsMatched} of {terrainTable.Count}") + $"; {failures.Count} failures");
+                 $"; {terrains} terrains" + (terrainTable is null ? "" : $", heights equal to the reference's lookup on {terrainsMatched} of {terrainTable.Count}") +
+                 $"; {scriptLists} script lists" + (scriptsTable is null ? "" : $", equal to the reference's on {scriptListsMatched} of {scriptsTable.Count}") +
+                 $", {scriptsListed} scripts of which {sourcesFound} find their source; {failures.Count} failures");
         return failures.Count == 0 && bodies > 0 ? 0 : 1;
+    }
+
+    /// <summary>
+    /// The scripts of one archive as the Level editor lists them (<see cref="LevelEditorModel.ListScripts"/>): their catalog lines and the sources
+    /// the finder reads for them hash as the Toolkit reference's do (<c>level_editor_vectors.py</c>'s SCRIPTS row), and every listed script finds its
+    /// source in an installed game (a game missing sources, as a partial copy may be, fails here by count: the table says how many it found).
+    /// </summary>
+    private static void CheckScripts(string game, int level, LevelWorlds worlds, Dictionary<string, string[]>? table, HashSet<string> seen, List<string> failures,
+        ref int lists, ref int matched, ref int listed, ref int found)
+    {
+        string name = $"{level:D3} SCRIPTS", key = $"{level:D3}\tSCRIPTS";
+        lists++;
+        IReadOnlyList<ScriptEntry> entries;
+        try
+        {
+            entries = LevelEditorModel.ListScripts(WorldBody.Read(worlds.RealBody!), worlds);
+        }
+        catch (InvalidDataException error)
+        {
+            failures.Add($"{name}: the level's own world was refused: {error.Message}");
+            return;
+        }
+        List<string> lines = [], sourceLines = [];
+        int here = 0;
+        foreach (ScriptEntry entry in entries)
+        {
+            string tag = entry.FromBaseWorld ? "base" : "own";
+            ScriptSummary summary = entry.Summary;
+            lines.Add(string.Join('|', tag, summary.Name, summary.Instructions.ToString(System.Globalization.CultureInfo.InvariantCulture), string.Join(',', summary.Events),
+                string.Join(',', summary.Calls.Select(call => $"{call.Name}:{call.Count}")), string.Join(',', summary.Uses.Select(use => $"{use.Row}:{use.Role}"))));
+            if (ScriptSources.Find(game, entry.SourceLevel, summary.Name).Source is { } source)
+            {
+                here++;
+                sourceLines.Add($"{tag}|{summary.Name}|{Convert.ToHexStringLower(SHA256.HashData(System.Text.Encoding.Latin1.GetBytes(source.Text)))}");
+            }
+        }
+        listed += entries.Count;
+        found += here;
+        if (table is null) return;
+        if (!table.TryGetValue(key, out string[]? row))
+        {
+            failures.Add($"{name}: the reference table has no row for it");
+            return;
+        }
+        seen.Add(key);
+        string counts = $"{entries.Count(entry => !entry.FromBaseWorld)}:{entries.Count(entry => entry.FromBaseWorld)}", catalog = WorldDump.Hash(lines), sources = WorldDump.Hash(sourceLines);
+        if (row[0] == counts && row[1] == catalog && row[2] == $"{here}/{entries.Count}" && row[3] == sources) matched++;
+        else failures.Add($"{name}: the table says {row[0]} scripts, catalog {row[1][..12]} and {row[2]} sources hashing to {row[3][..12]}; here {counts}, catalog {catalog[..12]} and {here}/{entries.Count} sources hashing to {sources[..12]}");
     }
 
     /// <summary>

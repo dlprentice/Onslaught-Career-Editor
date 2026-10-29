@@ -183,7 +183,7 @@ internal static class LevelEditorPageTests
         // Choose level 100 again: its own world's objects are the rows.
         Choose(page, 100);
         await Frame(tree);
-        check.That(page.Model?.Level == 100 && page.Problem.Length == 0 && page.Table.GetRoot()?.GetChildCount() == body.Things.Count && app.PageSubtitle.Text == $"Level 100 · {Build.Count(body.Things.Count, "object")}",
+        check.That(page.Model?.Level == 100 && page.Problem.Length == 0 && page.Table.GetRoot()?.GetChildCount() == body.Things.Count && app.PageSubtitle.Text == $"Level 100 · {Build.Count(body.Things.Count, "object")} · {Build.Count(body.Scripts.Count, "script")}",
             $"choosing a level lists its objects: {page.Table.GetRoot()?.GetChildCount()} rows, \"{app.PageSubtitle.Text}\"");
         check.That(Row(page, 0) is { } first && first.GetText(0) == "0" && first.GetText(1) == "unit" && first.GetText(2) == "Tank 1" && first.GetText(3) == "10" && first.GetText(4) == "20" && first.GetText(5) == "0" &&
                    Row(page, 1) is { } ghost && ghost.GetText(2) == "Ghost" && Row(page, 2) is { } waypoint && waypoint.GetText(2) == "—",

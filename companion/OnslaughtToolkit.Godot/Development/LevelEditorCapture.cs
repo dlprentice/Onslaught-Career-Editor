@@ -9,9 +9,9 @@ using OnslaughtToolkit.Companion.Ui;
 namespace OnslaughtToolkit.Companion.Development;
 
 /// <summary>
-/// Draws the Level editor against a Steam-shaped game folder and runs the editor's acceptance on it, in one of three modes. Run on a
+/// Draws the Level editor against a Steam-shaped game folder and runs the editor's acceptance on it, in one of four modes. Run on a
 /// GPU output (godot-offscreen): <c>--script res://Development/LevelEditorCapture.cs -- --output=DIR --fixture=ANY_FILE --steam-root=DIR
-/// [--mode=drag|typed|markers] [--sizes=1920x1080] [--level=100] [--row=12] [--expect-sha256=HEX] [--to=276.49,265.07]</c>.
+/// [--mode=drag|typed|markers|scripts] [--sizes=1920x1080] [--level=100] [--row=12] [--expect-sha256=HEX] [--to=276.49,265.07]</c>.
 /// <list type="bullet">
 /// <item><c>drag</c> (the default): open level 100, click row 12's mark on the map, drag it to the pixel of 276.49, 265.07, let go, save
 /// as a mod into the capture's own output, and compare the saved world file's SHA-256 with the one the Toolkit's pipeline gives for the same
@@ -22,6 +22,10 @@ namespace OnslaughtToolkit.Companion.Development;
 /// straight ahead, one 25 degrees to the map's left of it), saves the mod, and writes what was placed to <c>markers.txt</c> beside the
 /// frames, which hold the game's data and stay in local-data. Look at them in Onslaught CE to see whether the left of the map is the left
 /// of the cockpit.</item>
+/// <item><c>scripts</c>: the read-only scripts view. Counts the open level's scripts and how many find their source, selects an object that
+/// names a script, follows its script button into the Scripts view, looks at a script that calls the most game functions and at a base
+/// world's script if the level has one, and follows a script's object button back to the map. The frames hold the game's script text and
+/// stay in local-data.</item>
 /// </list>
 /// The game folder is only read; every file this writes stays inside the output directory. Development builds only.
 /// </summary>
@@ -66,9 +70,9 @@ public partial class LevelEditorCapture : SceneTree
                 }
             }
             if (_expected.Length == 0) _expected = _mode == "typed" ? TypedSha256 : DragSha256;
-            if (_output.Length == 0 || _steamRoot.Length == 0 || !Directory.Exists(_steamRoot) || _mode is not ("drag" or "typed" or "markers"))
+            if (_output.Length == 0 || _steamRoot.Length == 0 || !Directory.Exists(_steamRoot) || _mode is not ("drag" or "typed" or "markers" or "scripts"))
             {
-                GD.PrintErr("--output=DIR and --steam-root=DIR (a Steam-shaped folder holding the game) are required; --mode is drag, typed or markers.");
+                GD.PrintErr("--output=DIR and --steam-root=DIR (a Steam-shaped folder holding the game) are required; --mode is drag, typed, markers or scripts.");
                 return;
             }
             Directory.CreateDirectory(_output);
@@ -167,9 +171,58 @@ public partial class LevelEditorCapture : SceneTree
         string mods = Path.Combine(_output, "mods-" + label);
         if (_mode == "typed") await TypedAcceptance(viewport, app, page, label, mods);
         else if (_mode == "drag") await DragAcceptance(viewport, app, page, label, mods);
+        else if (_mode == "scripts") await ScriptsView(viewport, app, page, label);
         else await Markers(viewport, app, page, label, mods);
         viewport.QueueFree();
         await Settle();
+    }
+
+    /// <summary>The scripts view: the list and the source beside it, and the links between scripts and the objects that name them. Writes nothing.</summary>
+    private async Task ScriptsView(SubViewport viewport, CompanionApp app, LevelEditorPage page, string label)
+    {
+        LevelEditorModel model = page.Model!;
+        string root = app.Game.Folder!.AssetRoot;
+        int own = model.Scripts.Count(entry => !entry.FromBaseWorld), baseScripts = model.Scripts.Count - own;
+        List<string> missing = [.. model.Scripts.Where(entry => ScriptSources.Find(root, entry.SourceLevel, entry.Summary.Name).Source is null)
+            .Select(entry => $"{(entry.FromBaseWorld ? "base " : "")}{entry.Summary.Name}")];
+        Report(own > 0, $"level {_level} has {own} scripts of its own and {baseScripts} of its base world");
+        Report(missing.Count == 0, $"{model.Scripts.Count - missing.Count} of {model.Scripts.Count} scripts find their source" + (missing.Count > 0 ? $"; without: {string.Join(", ", missing)}" : ""));
+
+        // An object that names a script: its row, its script button.
+        ScriptEntry? named = model.Scripts.Where(entry => !entry.FromBaseWorld && entry.Summary.Uses.Count > 0).OrderByDescending(entry => entry.Summary.Uses.Count).FirstOrDefault();
+        Report(named is not null, $"the script named by the most objects is {named?.Summary.Name} ({named?.Summary.Uses.Count} objects)");
+        if (named is null) return;
+        int row = named.Summary.Uses[0].Row;
+        Report(page.SelectIndex(row) && page.ObjectScriptButtons.Count > 0, $"row {row} ({model.Row(row)?.Label}) offers its script: \"{page.ObjectScriptsText}\"");
+        await Shot(viewport, label, "level-editor-3-object-names-a-script");
+
+        // Its script button shows the script in the Scripts view, beside its source.
+        Button button = page.ObjectScriptButtons.First(candidate => candidate.Text.EndsWith(": " + named.Summary.Name, StringComparison.Ordinal));
+        button.EmitSignal(BaseButton.SignalName.Pressed);
+        await Settle();
+        Report(page.ScriptsToggle.ButtonPressed && page.Scripts.Current?.Summary.Name == named.Summary.Name && page.Scripts.Source.Text.Length > 0 && !page.Scripts.Source.Editable,
+            $"the Scripts view shows {page.Scripts.Current?.Summary.Name}: {page.Scripts.Source.GetLineCount()} lines of source, read only. {page.Scripts.Info}");
+        await Shot(viewport, label, "level-editor-4-script-and-source");
+
+        // The script that calls the most game functions, and a base world's script if there is one.
+        ScriptEntry busiest = model.Scripts.Where(entry => !entry.FromBaseWorld).OrderByDescending(entry => entry.Summary.Calls.Sum(call => call.Count)).First();
+        Report(page.Scripts.Select(busiest.Summary.Name), $"the busiest script, {busiest.Summary.Name}: handles {string.Join(", ", busiest.Summary.Events)}; {busiest.Summary.Calls.Count} functions called");
+        await Shot(viewport, label, "level-editor-5-busiest-script");
+        if (model.Scripts.FirstOrDefault(entry => entry.FromBaseWorld) is { } baseEntry)
+        {
+            Report(page.Scripts.Select(baseEntry.Summary.Name, fromBase: true) && page.Scripts.Current!.FromBaseWorld, $"a base world script, {baseEntry.Summary.Name}, is read from level {baseEntry.SourceLevel}'s folder");
+            await Shot(viewport, label, "level-editor-6-base-world-script");
+        }
+
+        // A script's object button goes back to the map.
+        page.Scripts.Select(named.Summary.Name);
+        await Settle();
+        Button use = page.ScriptUseButtons[0];
+        use.EmitSignal(BaseButton.SignalName.Pressed);
+        await Settle();
+        Report(!page.ScriptsToggle.ButtonPressed && page.SelectedRow == named.Summary.Uses[0].Row && page.Map.IsVisibleInTree() && page.Map.Selected == page.SelectedRow,
+            $"the object button shows row {page.SelectedRow} on the table and the map");
+        await Shot(viewport, label, "level-editor-7-object-from-script");
     }
 
     private async Task TypedAcceptance(SubViewport viewport, CompanionApp app, LevelEditorPage page, string label, string mods)

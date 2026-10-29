@@ -7,9 +7,9 @@ using OnslaughtToolkit.Companion.Levels;
 namespace OnslaughtToolkit.Companion.Ui;
 
 /// <summary>
-/// The Level editor: pick one of the game's levels, see the things its world places, move one by typing coordinates, and save the
-/// result as an Onslaught CE mod. The game is only read; the only thing this page writes is a new mod folder, and only when the
-/// player confirms. Everything it decides (what a coordinate means, what an edit changed, what a mod holds) is in
+/// The Level editor: pick one of the game's levels, see the things its world places and the scripts it runs (read only), move a thing by
+/// typing coordinates, and save the result as an Onslaught CE mod. The game is only read; the only thing this page writes is a new mod
+/// folder, and only when the player confirms. Everything it decides (what a coordinate means, what an edit changed, what a mod holds) is in
 /// <see cref="LevelEditorModel"/>; this page lays it out and passes the player's words to it.
 /// </summary>
 internal sealed class LevelEditorPage : Page
@@ -21,6 +21,9 @@ internal sealed class LevelEditorPage : Page
 
     /// <summary>The width of the left column from which the table and the map sit side by side; narrower, the map is below the table.</summary>
     private const float SideBySideFrom = 880;
+
+    // Short, since the line shares its row with two switches in the narrowest window; the tooltips say the rest.
+    private const string ObjectSearchHint = "Name, kind, script, row", ScriptSearchHint = "Script, event, function";
     private readonly AppServices _services;
     private readonly Label _empty, _worldNote, _objectTitle, _objectDetail, _stock, _note, _hint, _summary, _warnings, _problemText, _savedText;
     private readonly PanelContainer _problemPanel, _savedPanel;
@@ -29,6 +32,11 @@ internal sealed class LevelEditorPage : Page
     private readonly Button _copy, _copyFolder;
     private readonly Control _body;
     private readonly Control _mapPanel;
+    private readonly ScriptsPanel _scripts;
+    private readonly PanelContainer _scriptCard;
+    private readonly Label _scriptTitle, _scriptWhere, _scriptHandles, _scriptCalls, _scriptRuns, _scriptSource;
+    private readonly HFlowContainer _scriptUses, _objectScripts;
+    private IReadOnlyList<ScriptEntry>? _shownScripts;
     private LevelEditorModel? _model;
     private string? _root;
     private int? _selected;
@@ -70,12 +78,18 @@ internal sealed class LevelEditorPage : Page
         HBoxContainer searchRow = left.Add(Build.Row(10));
         Search = searchRow.Add(new LineEdit
         {
-            PlaceholderText = "Search by name, kind, script or row", ClearButtonEnabled = true, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            PlaceholderText = ObjectSearchHint, ClearButtonEnabled = true, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
             TooltipText = "Shows the objects whose row number, name, kind or script holds this text.",
         });
         MapToggle = searchRow.Add(new CheckButton { Text = "Map", ButtonPressed = true, TooltipText = "Show or hide the map next to the table." });
         MapToggle.Toggled += on => _mapPanel!.Visible = on;
-        Search.TextChanged += _ => RebuildTable();
+        ScriptsToggle = searchRow.Add(new CheckButton { Text = "Scripts", TooltipText = "Show the level's compiled scripts and their source, read only, instead of the objects." });
+        ScriptsToggle.Toggled += ShowScripts;
+        Search.TextChanged += _ =>
+        {
+            if (_scripts!.Visible) _scripts.Filter(Search.Text);
+            else RebuildTable();
+        };
         _worldNote = left.Add(Build.Text("", "Faint"));
         // The table and the map share the column: side by side when it is wide, the map under the table (which keeps its columns) when it is not.
         _split = left.Add(new SplitContainer { SizeFlagsVertical = Control.SizeFlags.ExpandFill, Vertical = true });
@@ -108,6 +122,10 @@ internal sealed class LevelEditorPage : Page
         foreach (int column in new[] { 1, 2 }) Table.SetColumnTitleAlignment(column, HorizontalAlignment.Left);
         Table.ItemSelected += () => Select(Table.GetSelected());
 
+        // The scripts take the table's and the map's place when the Scripts switch is on.
+        _scripts = left.Add(new ScriptsPanel { Visible = false });
+        _scripts.Selected += OnScriptSelected;
+
         // Right: the selected object, and what the edit has changed so far.
         ScrollContainer side = _side = layout.Add(new ScrollContainer
         {
@@ -117,11 +135,28 @@ internal sealed class LevelEditorPage : Page
         gutter.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         VBoxContainer right = gutter.Add(Build.Column(12));
         right.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        (PanelContainer scriptCard, VBoxContainer scriptInside) = Build.Panel("Card", 8);
+        _scriptCard = right.Add(scriptCard);
+        _scriptCard.Visible = false;
+        scriptInside.Add(Build.Eyebrow("Selected script"));
+        _scriptTitle = scriptInside.Add(Build.Text("Nothing selected", "Section", wrap: false, clip: true));
+        _scriptWhere = scriptInside.Add(Build.Text("", "Muted"));
+        _scriptHandles = scriptInside.Add(Build.Text("", ""));
+        _scriptCalls = scriptInside.Add(Build.Text("", "Muted"));
+        _scriptRuns = scriptInside.Add(Build.Text("", "Strong"));
+        _scriptUses = scriptInside.Add(new HFlowContainer());
+        _scriptUses.AddThemeConstantOverride("h_separation", 6);
+        _scriptUses.AddThemeConstantOverride("v_separation", 6);
+        _scriptSource = scriptInside.Add(Build.Text("", "Faint"));
+
         (PanelContainer inspector, VBoxContainer inside) = Build.Panel("Card", 8);
         right.Add(inspector);
         inside.Add(Build.Eyebrow("Selected object"));
         _objectTitle = inside.Add(Build.Text("Nothing selected", "Section", wrap: false, clip: true));
         _objectDetail = inside.Add(Build.Text("", "Muted"));
+        _objectScripts = inside.Add(new HFlowContainer());
+        _objectScripts.AddThemeConstantOverride("h_separation", 6);
+        _objectScripts.AddThemeConstantOverride("v_separation", 6);
         GridContainer fields = inside.Add(new GridContainer { Columns = 2 });
         fields.AddThemeConstantOverride("h_separation", 10);
         fields.AddThemeConstantOverride("v_separation", 6);
@@ -179,7 +214,7 @@ internal sealed class LevelEditorPage : Page
     internal override Control Root { get; }
 
     internal override string Subtitle => _model?.Level is int level && _model.Session is { } session
-        ? $"Level {level} · {Build.Count(session.Body.Things.Count, "object")}"
+        ? $"Level {level} · {Build.Count(session.Body.Things.Count, "object")} · {Build.Count(_model.Scripts.Count(entry => !entry.FromBaseWorld), "script")}"
         : "Move things in the game's levels, and save the result as an Onslaught CE mod";
 
     internal OptionButton Level { get; }
@@ -187,6 +222,13 @@ internal sealed class LevelEditorPage : Page
     internal Tree Table { get; }
     internal LevelMap Map { get; }
     internal CheckButton MapToggle { get; }
+    internal CheckButton ScriptsToggle { get; }
+    internal ScriptsPanel Scripts => _scripts;
+    internal string ScriptCardTitle => _scriptCard.Visible ? _scriptTitle.Text : "";
+    internal string ScriptCardText => _scriptCard.Visible ? string.Join("\n", new[] { _scriptWhere.Text, _scriptHandles.Text, _scriptCalls.Text, _scriptRuns.Text, _scriptSource.Text }.Where(text => text.Length > 0)) : "";
+    internal IReadOnlyList<Button> ScriptUseButtons => [.. _scriptUses.GetChildren().OfType<Button>()];
+    internal IReadOnlyList<Button> ObjectScriptButtons => [.. _objectScripts.GetChildren().OfType<Button>()];
+    internal string ObjectScriptsText => string.Join("\n", _objectScripts.GetChildren().Select(child => child is Button button ? button.Text : child is Label label ? label.Text : ""));
     internal LineEdit X { get; }
     internal LineEdit Y { get; }
     internal LineEdit Z { get; }
@@ -256,6 +298,8 @@ internal sealed class LevelEditorPage : Page
             FillLevels();
             RebuildTable();
             Map.SetLevel(null, []);
+            _scripts.SetScripts(root, []);
+            _shownScripts = [];
         }
         else if (root is not null && _model.Rescan(root))
         {
@@ -341,6 +385,11 @@ internal sealed class LevelEditorPage : Page
         _problemPanel.Visible = _model?.Problem is not null;
         _problemText.Text = _model?.Problem ?? "";
         _worldNote.Text = _model?.BaseLevel is int baseLevel ? $"This level also loads the base world of level {baseLevel}. This editor does not change it." : "";
+        if (!ReferenceEquals(_shownScripts, _model?.Scripts))  // the scripts change only when a level is opened, not with each move
+        {
+            _shownScripts = _model?.Scripts ?? [];
+            _scripts.SetScripts(_root, _shownScripts);
+        }
         RebuildTable();
         Map.SetLevel(_model?.Terrain, _model?.Rows() ?? []);
         Map.Select(_selected);
@@ -421,6 +470,7 @@ internal sealed class LevelEditorPage : Page
         foreach (LineEdit field in new[] { X, Y, Z }) field.Editable = row is not null;
         Apply.Disabled = row is null;
         Reset.Disabled = row is not { Changed: true };
+        ShowObjectScripts(row);
         if (row is null)
         {
             _objectTitle.Text = "Nothing selected";
@@ -523,6 +573,114 @@ internal sealed class LevelEditorPage : Page
         await _side.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
         await _side.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
         if (GodotObject.IsInstanceValid(_side) && _side.IsInsideTree() && _savedPanel.Visible) _side.EnsureControlVisible(_savedPanel);
+    }
+
+    // ---- scripts -----------------------------------------------------------------------------------------------------------------
+    /// <summary>The Scripts switch: the level's compiled scripts and their source in place of the table and the map.</summary>
+    private void ShowScripts(bool on)
+    {
+        _split.Visible = !on;
+        _scripts.Visible = on;
+        MapToggle.Visible = !on;
+        _scriptCard.Visible = on;
+        Search.PlaceholderText = on ? ScriptSearchHint : ObjectSearchHint;
+        Search.TooltipText = on ? "Shows the scripts whose name, events or functions hold this text."
+            : "Shows the objects whose row number, name, kind or script holds this text.";
+        if (on) _scripts.Filter(Search.Text);
+        else RebuildTable();
+    }
+
+    /// <summary>Shows a script of the open level (the Scripts view, with the search cleared so that nothing hides it). Returns false if there is none of that name.</summary>
+    internal bool ShowScript(string name, bool fromBase = false)
+    {
+        if (_model?.Scripts.Any(entry => entry.FromBaseWorld == fromBase && entry.Summary.Name == name) != true) return false;
+        Search.Text = "";
+        if (!ScriptsToggle.ButtonPressed) ScriptsToggle.ButtonPressed = true;
+        return _scripts.Select(name, fromBase);
+    }
+
+    /// <summary>Shows an object: back to the table and the map, with the row selected.</summary>
+    internal bool ShowObject(int row)
+    {
+        Search.Text = "";
+        if (ScriptsToggle.ButtonPressed) ScriptsToggle.ButtonPressed = false;
+        RebuildTable();
+        return SelectIndex(row);
+    }
+
+    private void OnScriptSelected(ScriptEntry? entry, ScriptSourceResult? source)
+    {
+        foreach (Node child in _scriptUses.GetChildren())
+        {
+            _scriptUses.RemoveChild(child);
+            child.QueueFree();
+        }
+        if (entry is null)
+        {
+            _scriptTitle.Text = "Nothing selected";
+            _scriptWhere.Text = _scriptHandles.Text = _scriptCalls.Text = _scriptRuns.Text = _scriptSource.Text = "";
+            return;
+        }
+        ScriptSummary summary = entry.Summary;
+        _scriptTitle.Text = summary.Name;
+        _scriptWhere.Text = entry.FromBaseWorld
+            ? $"Compiled in the base world of level {entry.SourceLevel}, which this level loads too. This editor does not list that world's objects."
+            : $"Compiled in this level's world · {Build.Count(summary.Instructions, "instruction")}";
+        int shown = 12;
+        _scriptHandles.Text = summary.Events.Count == 0 ? "Handles no event: nothing starts it by itself." :
+            "Handles: " + string.Join(", ", summary.Events.Take(shown)) + (summary.Events.Count > shown ? $" and {summary.Events.Count - shown} more" : "");
+        string calls = string.Join(", ", summary.Calls.OrderByDescending(call => call.Count).ThenBy(call => call.Name, StringComparer.Ordinal).Take(shown)
+            .Select(call => call.Count > 1 ? $"{call.Name} ×{call.Count}" : call.Name));
+        _scriptCalls.Text = summary.Calls.Count == 0 ? "Calls no game function." : $"Calls: {calls}" + (summary.Calls.Count > shown ? $" and {summary.Calls.Count - shown} more" : "");
+        if (entry.FromBaseWorld)
+        {
+            _scriptRuns.Text = "";
+        }
+        else if (summary.Uses.Count == 0)
+        {
+            _scriptRuns.Text = "No object in this level names it.";
+        }
+        else
+        {
+            _scriptRuns.Text = "Named by:";
+            foreach (ScriptUse use in summary.Uses.Take(16))
+            {
+                ObjectRow? row = _model?.Row(use.Row);
+                string label = row is null ? $"row {use.Row}" : $"{use.Row} · {row.Label}";
+                Button button = _scriptUses.Add(Build.Button(label, tooltip: $"{(row?.Kind ?? "object")} row {use.Row} uses it as its {use.Role}. Shows it on the map."));
+                int target = use.Row;
+                button.Pressed += () => ShowObject(target);
+            }
+            if (summary.Uses.Count > 16) _scriptUses.Add(Build.Text($"and {summary.Uses.Count - 16} more", "Faint", wrap: false));
+        }
+        _scriptSource.Text = source?.Source is { } found
+            ? $"Source: {Path.GetFileName(found.Path)}, read only. The game runs the compiled script, which a source in your game folder may differ from."
+            : source?.Problem ?? "";
+    }
+
+    /// <summary>The scripts the selected object names, as buttons that show them (a name this level has no script of is only said).</summary>
+    private void ShowObjectScripts(ObjectRow? row)
+    {
+        foreach (Node child in _objectScripts.GetChildren())
+        {
+            _objectScripts.RemoveChild(child);
+            child.QueueFree();
+        }
+        if (row is null || _model?.Session is not { } session) return;
+        foreach (ScriptReference reference in ScriptCatalog.ReferencesOf(session.Body, row.Index))
+        {
+            string role = char.ToUpperInvariant(reference.Role[0]) + reference.Role[1..];
+            if (reference.Resolved)
+            {
+                Button button = _objectScripts.Add(Build.Button($"{role}: {reference.Name}", tooltip: "Shows the script's source and what it handles."));
+                string name = reference.Name;
+                button.Pressed += () => ShowScript(name);
+            }
+            else
+            {
+                _objectScripts.Add(Build.Text($"{role}: {reference.Name} (this level has no script of that name)", "Faint"));
+            }
+        }
     }
 
     // ---- saving ------------------------------------------------------------------------------------------------------------------

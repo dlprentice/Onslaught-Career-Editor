@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-29 (CE 0.1.11, the first CE to take a world file from a mod, named; earlier: the Level editor's map; what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
+Last updated: 2026-10-29 (the Level editor's read-only Scripts view; earlier: CE 0.1.11, the first CE to take a world file from a mod, named; earlier: the Level editor's map; what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -334,6 +334,17 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   map's left of that, and in a private CE build that loads world files from mods (offscreen, frames looked at) the first stands
   at the crosshair and the second well to its left, so the map is not mirrored. That is one level and one heading, a mod this
   page saved, not played by anyone; there has been no Windows run.
+
+  The **Scripts** switch beside the Map switch shows the level's mission scripts, read only, in place of the table and the map. The
+  list gives each compiled script with what names it (how many objects of the level) and the events it handles, then the base
+  world's scripts, dimmed; the selected script's installed source, the `.msl` file it was compiled from, is shown beside it with line numbers
+  and the keywords coloured, and a card in the right-hand column says what the script handles, which game functions it calls, and
+  which objects name it (each a button that shows the object on the table and the map). Selecting an object that names a script
+  offers a button for it in the same way. The game never reads these source files (it runs the compiled scripts in the level's world),
+  so the page says so, says which file is missing when one is, and says when an object names a script the level does not have; a source
+  may differ from what was compiled, which the Toolkit's `tools/msl_gate.py` checks per script. The list and the objects' links are read
+  from the compiled code and the level's objects, checked against the Toolkit's reference (`tools/level_editor_vectors.py gate-table`, its SCRIPTS
+  rows) on a game install, with the native names generated from the Toolkit's table (`tools/script_tables.py`). Nothing here writes anything.
 
   The page is laid out for a window of about 1366 by 800 or more. In a smaller one, down to the Companion's 1024 by 700
   minimum, the map is a small overview, the table is narrower, the right-hand column scrolls and the notice a save leaves is

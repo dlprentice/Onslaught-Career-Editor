@@ -16,6 +16,9 @@ public sealed record ObjectRow(int Index, string Kind, string Name, string Defin
                            BitConverter.SingleToUInt32Bits(Position.Z) != BitConverter.SingleToUInt32Bits(Stock.Z);
 }
 
+/// <summary>A compiled script of the open level: its summary, and where its source is looked for (a base world's scripts are in the base level's folder).</summary>
+public sealed record ScriptEntry(ScriptSummary Summary, int SourceLevel, bool FromBaseWorld);
+
 /// <summary>What typing coordinates for an object (or putting it back) did.</summary>
 public enum MoveResult
 {
@@ -106,6 +109,12 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     /// <summary>Why the terrain could not be read, or null.</summary>
     public string? TerrainProblem { get; private set; }
 
+    /// <summary>
+    /// The compiled scripts of the open level: its own world's, then its base world's (which the game loads with it). A base world's scripts name
+    /// objects of the base world, which this editor does not list, so they carry no rows. Empty when no level is open.
+    /// </summary>
+    public IReadOnlyList<ScriptEntry> Scripts { get; private set; } = [];
+
     /// <summary>The level whose world the archive also carries as a base world, or null. It is shown, not edited.</summary>
     public int? BaseLevel => Worlds is { BaseBody: not null } worlds && worlds.BaseLevel >= 0 ? worlds.BaseLevel : null;
 
@@ -122,6 +131,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         Problem = null;
         Terrain = null;
         TerrainProblem = null;
+        Scripts = [];
         LevelArchiveFile? file = Levels.FirstOrDefault(archive => archive.Level == level);
         if (file is null) return Refuse($"This game has no archive for level {level}.");
         try
@@ -134,6 +144,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
             EditSession session = new(worlds.RealBody);
             session.Changed += () => Changed?.Invoke();
             Session = session;
+            Scripts = ListScripts(session.Body, worlds);
             if (worlds.Terrain is null)
             {
                 TerrainProblem = "This level's archive holds no terrain.";
@@ -156,6 +167,25 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         }
         Changed?.Invoke();
         return true;
+    }
+
+    /// <summary>The scripts of a level's own world and of its base world, as <see cref="Scripts"/> lists them (the retail gate calls this too).</summary>
+    internal static IReadOnlyList<ScriptEntry> ListScripts(WorldBody own, LevelWorlds worlds)
+    {
+        List<ScriptEntry> entries = [.. ScriptCatalog.Of(own).Select(summary => new ScriptEntry(summary, worlds.RealLevel, FromBaseWorld: false))];
+        if (worlds.BaseBody is { } baseBytes && worlds.BaseLevel >= 0)
+        {
+            try
+            {
+                entries.AddRange(ScriptCatalog.Of(WorldBody.Read(baseBytes)).Select(summary =>
+                    new ScriptEntry(summary with { Uses = [] }, worlds.BaseLevel, FromBaseWorld: true)));
+            }
+            catch (InvalidDataException)
+            {
+                // The base world is only shown: a body that does not read leaves its scripts out, and the level's own are still listed.
+            }
+        }
+        return entries;
     }
 
     private bool Refuse(string problem)
