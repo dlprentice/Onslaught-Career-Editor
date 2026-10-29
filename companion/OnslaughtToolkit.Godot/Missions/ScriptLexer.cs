@@ -76,7 +76,7 @@ internal static class ScriptLexer
             }
             else
             {
-                throw new CompileError(c == '"' ? "a string must end on the line it starts" : $"unexpected character {PythonText.Repr(c)}", line);
+                throw new CompileError(c == '"' ? "a string must end on the line it starts" : $"unexpected character {PythonText.Repr(PythonText.CharacterAt(text, at))}", line);
             }
             tokens.Add(new Token(kind, text[at..end], line, at, end));
             at = end;
