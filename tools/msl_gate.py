@@ -41,8 +41,8 @@ STALE_SOURCES = {
     (201, "EnemyLander2"): "the shipped script has a variable and a started_dying handler where the file has a died handler",
     (201, "LevelScript"): "the shipped script has a variable, different print statements and a different message call",
     (720, "battleline"): "the shipped script has an objective check (a lookup, an Exists call and an objective-complete call) the file lacks",
-    (731, "Fenrir"): "the shipped script makes two more components invulnerable before its waypoint call than the file does",
-    (732, "Fenrir"): "the shipped script makes two more components invulnerable before its waypoint call than the file does",
+    (731, "Fenrir"): "the shipped script makes three more components invulnerable before its waypoint call than the file does (7 against 4), and none after it",
+    (732, "Fenrir"): "the shipped script makes three more components invulnerable before its waypoint call than the file does (7 against 4), and none after it",
     (720, "Level720script"): "one message call names a different speaker than the file does",
 }
 
@@ -146,6 +146,8 @@ def main(argv: list[str] | None = None) -> int:
         rows.append((level, tag, record["name"], status, detail))
         if status not in ("exact", "exact, assisted", "stale source"):
             failures.append(f"{level:03d} {tag} {record['name']}: {status}: {detail}")
+    if not rows:
+        failures.append("no compiled scripts were found to compare: choose a game folder whose data/resources holds level archives")
     if args.level is None:
         for key in sorted(set(STALE_SOURCES) - seen_stale):
             failures.append(f"{key[0]} {key[1]}: listed as a stale source but no such script was met")

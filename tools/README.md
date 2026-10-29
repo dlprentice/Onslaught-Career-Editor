@@ -296,7 +296,9 @@ publish, sign, or install anything by themselves.
   symbols after every other symbol, floats are float32. Two counters belong to the compile session and are the caller's to start
   (`const dataN` and `do-once-N`). Operator grouping is only partly proven by the shipped scripts, so the compiler accepts repeats
   of one operator, `&&` with `==` (one rank, left to right, unlike C) and arithmetic inside comparisons, and refuses any other
-  mix without parentheses, naming both operators. Besides the record it returns notes (how a mixed chain was grouped, a handler the
+  mix without parentheses, naming both operators. It refuses, with a line and a reason, statements nested more than 100 deep, a
+  script that grows past a million tokens when its `#define` names are replaced, a number that does not fit 32 bits or float32, and
+  an `#include` that is a link out of the game folder. Besides the record it returns notes (how a mixed chain was grouped, a handler the
   game never calls) for an editor to show.
 - `msl_gate.py --game GAME [--table] [--level N]` is its retail gate: for every compiled script of every world body of an
   installed game it compiles `data/MissionScripts/level<NNN>/<name>.msl` and compares the record field by field and as the bytes

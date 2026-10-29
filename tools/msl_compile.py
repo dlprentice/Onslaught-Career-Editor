@@ -34,6 +34,7 @@ What the shipped scripts show about the dialect, each verified against every shi
 """
 from __future__ import annotations
 
+import math
 import re
 import struct
 import sys
@@ -57,7 +58,11 @@ TRAILER = "656e645f736372697074"  # "end_script", as the world model shows bytes
 USED = 1 << 16  # a CALL attribute's flag: the result is used (an argument, an assignment, a condition), not dropped
 DT = {"int": 1, "float": 2, "string": 3, "bool": 4, "thing": 5, "position": 6}
 DT_NAME = {value: name for name, value in DT.items()}
-MAX_SOURCE = 1 << 20
+MAX_SOURCE = 1 << 20  # characters of a script, bytes of a header
+MAX_TOKENS = 1 << 20  # tokens of a script after #define names are replaced
+MAX_EXPANSION_STEPS = 4 << 20  # names looked at while replacing them (a define can expand to nothing, so tokens alone do not bound the work)
+MAX_DEPTH = 100  # statements and expressions inside one another (the parser calls itself for each)
+KEYWORDS = frozenset({"if", "else", "while", "for", "switch", "case", "do_once", "vars", "end_vars", "attributes", "end_attributes"})
 
 
 class CompileError(ValueError):
@@ -145,8 +150,12 @@ def preprocess(source: str, read_include: Callable[[str], str]) -> tuple[list[To
             body.append(raw)
     text = "\n".join(body)
     out: list[Token] = []
+    steps = [0]
 
     def expand(token: Token, use: Token, depth: int = 0) -> None:
+        steps[0] += 1
+        if steps[0] > MAX_EXPANSION_STEPS or len(out) >= MAX_TOKENS:
+            raise CompileError(f"replacing the #define names makes the script longer than {MAX_TOKENS:,} tokens", use.line)
         if token.kind == "id" and token.text in defines and depth < 16:
             for inner in defines[token.text]:
                 expand(inner, use, depth + 1)
@@ -176,6 +185,7 @@ class Compiler:
         self.const_next = const_start
         self.has_vars = False
         self.chains: list[set[str]] = []
+        self.depth = 0
 
     # ---- token helpers
     def peek(self, k: int = 0) -> Token | None:
@@ -200,6 +210,13 @@ class Compiler:
         if token.text != text or token.kind not in ("id", "op"):
             raise CompileError(f"expected {text!r}, found {token.text!r}", token.line)
         return token
+
+    def enter(self) -> None:
+        """Called by each statement and expression before it reads on: the parser calls itself for every level of nesting, so the depth is bounded."""
+        self.depth += 1
+        if self.depth > MAX_DEPTH:
+            token = self.peek()
+            raise CompileError(f"statements and expressions are nested more than {MAX_DEPTH} deep", None if token is None else token.line)
 
     def note(self, line: int, kind: str, text: str) -> None:
         if self.notes is not None:
@@ -261,7 +278,7 @@ class Compiler:
             if type_token.text not in DT:
                 raise CompileError(f"unknown type {type_token.text!r}", type_token.line)
             name = self.next()
-            if name.kind != "id":
+            if name.kind != "id" or name.text in KEYWORDS:
                 raise CompileError(f"expected a variable name, found {name.text!r}", name.line)
             if name.text in self.variables:  # a shipped script declares one twice: the second is the same symbol
                 self.note(name.line, "declaration", f"{name.text} is declared more than once; it is one variable")
@@ -292,8 +309,8 @@ class Compiler:
             self.emit("OP_LABEL")
             self.emit("OP_RETURN")
             return
-        if token.kind != "id":
-            raise CompileError(f"expected an event handler, found {token.text!r}", token.line)
+        if token.kind != "id" or token.text in KEYWORDS:
+            raise CompileError(f"expected an event handler such as init() or event(\"name\"), found {token.text!r}", token.line)
         if token.text in self.handlers:
             raise CompileError(f"the {token.text} handler is written twice", token.line)
         self.handlers.add(token.text)
@@ -329,13 +346,17 @@ class Compiler:
         token = self.peek()
         if token is None:
             raise CompileError("the source ends inside a block")
-        if token.kind == "op" and token.text == "{":
-            self.block()
-        elif token.kind == "id" and token.text in self.STATEMENTS:
-            getattr(self, self.STATEMENTS[token.text])()
-        else:
-            self.simple_statement()
-            self.expect(";")
+        self.enter()
+        try:
+            if token.kind == "op" and token.text == "{":
+                self.block()
+            elif token.kind == "id" and token.text in self.STATEMENTS:
+                getattr(self, self.STATEMENTS[token.text])()
+            else:
+                self.simple_statement()
+                self.expect(";")
+        finally:
+            self.depth -= 1
 
     def simple_statement(self) -> None:
         """An expression whose value is dropped."""
@@ -458,19 +479,23 @@ class Compiler:
     def expression(self) -> str:
         """An assignment (its value stays on the stack) or a chain of binary operators. Returns how the chain was grouped, as text."""
         token, nxt = self.peek(), self.peek(1)
-        if token is not None and token.kind == "id" and nxt is not None and nxt.kind == "op" and nxt.text == "=":
-            variable = self.variable(token)
-            self.i += 2
-            value = self.expression()
-            self.emit("OP_GETTOP", variable)
-            return f"{token.text} = {value}"
-        self.chains.append(set())
-        first = self.peek()
-        grouped = self.binary(None)
-        used = self.chains.pop()
-        if len(used) >= 2 and first is not None:
-            self.note(first.line, "grouping", f"{spaced(self.span(first, self.t[self.i - 1]))} is grouped {grouped}")
-        return grouped
+        self.enter()
+        try:
+            if token is not None and token.kind == "id" and nxt is not None and nxt.kind == "op" and nxt.text == "=":
+                variable = self.variable(token)
+                self.i += 2
+                value = self.expression()
+                self.emit("OP_GETTOP", variable)
+                return f"{token.text} = {value}"
+            self.chains.append(set())
+            first = self.peek()
+            grouped = self.binary(None)
+            used = self.chains.pop()
+            if len(used) >= 2 and first is not None:
+                self.note(first.line, "grouping", f"{spaced(self.span(first, self.t[self.i - 1]))} is grouped {grouped}")
+            return grouped
+        finally:
+            self.depth -= 1
 
     def span(self, first: Token, last: Token) -> str:
         return self.text[first.start:last.end]
@@ -516,6 +541,8 @@ class Compiler:
             self.emit("OP_PUSH", self.const("bool", 1 if token.text == "TRUE" else 0, token.line))
         elif token.kind == "id" and self.peek() is not None and self.peek().text == "(" and self.peek().kind == "op":
             self.call(token)
+        elif token.kind == "id" and token.text in KEYWORDS:
+            raise CompileError(f"{token.text!r} is a keyword and cannot be used here", token.line)
         elif token.kind == "id" and token.text in self.variables:
             self.emit("OP_PUSH", self.name_symbol(token.text, token.line))
         elif token.kind == "id":
@@ -543,16 +570,23 @@ class Compiler:
         return value
 
     def number(self, token: Token, sign: int) -> None:
+        shown = token.text if len(token.text) <= 14 else token.text[:12] + "..."
         if token.kind == "int":
-            value = sign * int(token.text)
+            digits = token.text.lstrip("0") or "0"
+            if len(digits) > 10:  # more than any 32-bit number has (and it keeps int() clear of Python's limit on digits)
+                raise CompileError(f"{shown} does not fit in 32 bits", token.line)
+            value = sign * int(digits)
             if not -(1 << 31) <= value < (1 << 31):
-                raise CompileError(f"{value} does not fit in 32 bits", token.line)
+                raise CompileError(f"{sign * int(digits)} does not fit in 32 bits", token.line)
             self.emit("OP_PUSH", self.const("int", value, token.line))
         else:
+            wide = sign * float(token.text.rstrip("f"))
             try:
-                value = struct.unpack("<f", struct.pack("<f", sign * float(token.text.rstrip("f"))))[0]
+                if not math.isfinite(wide):
+                    raise OverflowError
+                value = struct.unpack("<f", struct.pack("<f", wide))[0]
             except OverflowError:
-                raise CompileError(f"{token.text} is too large for a float", token.line) from None
+                raise CompileError(f"{shown} is too large for a float", token.line) from None
             self.emit("OP_PUSH", self.const("float", value, token.line))
 
     def call(self, name: Token) -> None:

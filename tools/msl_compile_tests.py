@@ -7,10 +7,17 @@ compares the compiler with the game's own compiled scripts); the point here is t
 cannot place, and writes records the world-body encoder accepts."""
 from __future__ import annotations
 
+import contextlib
+import io
+import struct
 import tempfile
+import time
 import unittest
+import zlib
 from pathlib import Path
+from unittest import mock
 
+import content_catalog_tests as fixtures
 import msl_compile as mc
 import msl_gate as gate
 import world_resources_decode as wrd
@@ -226,6 +233,11 @@ class Grouping(unittest.TestCase):
         self.assertEqual(self.compile_expression("r = a + 1 == b * 2;"),
                          ["PUSH a", "PUSH 1", "PLUS", "PUSH b", "PUSH 2", "MULTIPLY", "CMPB", "GETTOP r", "REMOVE_TOP"])
 
+    def test_not_equal_compiles_to_the_one_instruction_the_vm_has_for_it(self):
+        self.assertEqual(self.compile_expression("r = a != b;"), ["PUSH a", "PUSH b", "CMPNEB", "GETTOP r", "REMOVE_TOP"])
+        self.assertEqual(self.compile_expression("r = a + 1 != b;"), ["PUSH a", "PUSH 1", "PLUS", "PUSH b", "CMPNEB", "GETTOP r", "REMOVE_TOP"])
+        self.assertEqual(self.compile_expression("r = a != b != c;"), ["PUSH a", "PUSH b", "CMPNEB", "PUSH c", "CMPNEB", "GETTOP r", "REMOVE_TOP"])
+
     def test_repeating_one_operator_groups_left_to_right(self):
         self.assertEqual(self.compile_expression("r = a || b || c;"),
                          ["PUSH a", "PUSH b", "OR", "PUSH c", "OR", "GETTOP r", "REMOVE_TOP"])
@@ -387,6 +399,230 @@ class Judging(unittest.TestCase):
         for (level, name), reason in gate.STALE_SOURCES.items():
             self.assertIsInstance(level, int)
             self.assertTrue(name and len(reason) > 20)
+
+
+class Limits(unittest.TestCase):
+    """What the compiler refuses instead of running out of stack, time or memory, or accepting a number it cannot store."""
+
+    @staticmethod
+    def init(body: str) -> str:
+        return "vars\n\tint a;\n\tint r;\nend_vars\ninit()\n{\n" + body + "\n}\n"
+
+    def refused(self, source: str, message: str = "nested more than") -> None:
+        with self.assertRaisesRegex(mc.CompileError, message):
+            compile_text(source)
+
+    def test_nesting_stops_at_the_limit_with_a_compile_error_not_a_stack_overflow(self):
+        limit = mc.MAX_DEPTH
+        compile_text(self.init("{" * limit + "}" * limit))  # exactly at the limit
+        self.refused(self.init("{" * (limit + 1) + "}" * (limit + 1)))
+        for count in (limit * 3, 1000, 5000):
+            self.refused(self.init("\tr = " + "(" * count + "a" + ")" * count + ";"))
+            self.refused(self.init("{" * count + "}" * count))
+            self.refused(self.init("\tr = " + "Rand(" * count + "1" + ")" * count + ";"))
+            self.refused(self.init("\tr = " + "a = " * count + "a;"))
+        self.refused(self.init("\tif (a) { } " + "else if (a) { } " * 1000))
+        compile_text(self.init("\tif (a) { } " + "else if (a) { } " * 40))  # a long ladder of branches is not the problem
+
+    def test_statements_one_after_another_do_not_add_up_to_a_depth(self):
+        record = compile_text(self.init("\tDie();\n" * (mc.MAX_DEPTH * 3) + "\tr = (a + 1) * (a - 1);\n" * (mc.MAX_DEPTH * 3)))
+        self.assertGreater(len(record["code"]["instructions"]), mc.MAX_DEPTH * 6)
+
+    def test_the_shipped_scripts_are_far_below_the_limit(self):
+        self.assertLessEqual(15, mc.MAX_DEPTH // 6)  # the deepest shipped script nests 15
+
+    def test_a_define_that_grows_without_bound_is_refused_quickly(self):
+        def chain(levels: int, end: str) -> str:
+            return "".join(f"#define D{i} " + " ".join([f"D{i + 1}"] * 10) + "\n" for i in range(levels)) + f"#define D{levels} {end}\n"
+
+        for end in ("1", ""):  # a define that grows into tokens, and one that grows into nothing
+            started = time.perf_counter()
+            with self.assertRaisesRegex(mc.CompileError, "makes the script longer"):
+                compile_text(chain(8, end) + self.init("\tr = D0;"))
+            self.assertLess(time.perf_counter() - started, 10)
+
+    def test_the_expansion_limits_count_tokens_and_steps(self):
+        source = "init()\n{\n\tDie();\n}\n"  # nine tokens
+        with mock.patch.object(mc, "MAX_TOKENS", 9):
+            compile_text(source)
+        with mock.patch.object(mc, "MAX_TOKENS", 8), self.assertRaisesRegex(mc.CompileError, "longer than 8 tokens"):
+            compile_text(source)
+        with mock.patch.object(mc, "MAX_EXPANSION_STEPS", 9):
+            compile_text(source)
+        with mock.patch.object(mc, "MAX_EXPANSION_STEPS", 8), self.assertRaisesRegex(mc.CompileError, "makes the script longer"):
+            compile_text(source)
+
+    def test_a_number_the_game_cannot_store_is_refused(self):
+        for digits in ("9" * 400, "9" * 39, "340282356779733661637539395458142568448"):  # the last is the first value that rounds past float32's largest
+            self.refused(self.init(f"\tr = Pause({digits}.0);"), "too large for a float")
+        top = symbol_table(compile_text(self.init("\tPause(340282346638528859811704183484516925440.0);\n\tPause(-340282346638528859811704183484516925440.0);")))
+        self.assertEqual([entry[2] for entry in top if entry[0].startswith("const")], [3.4028234663852886e+38, -3.4028234663852886e+38])
+        self.refused(self.init("\tPause(-" + "9" * 39 + ".0);"), "too large for a float")
+        for digits in ("9" * 400, "9" * 5000, "99999999999", "2147483648"):
+            self.refused(self.init(f"\tRand({digits});"), "does not fit in 32 bits")
+        constants = [entry[2] for entry in symbol_table(compile_text(self.init("\tRand(00000000000005);\n\tRand(2147483647);\n\tRand(-2147483648);"))) if entry[0].startswith("const")]
+        self.assertEqual(constants, [5, 2147483647, -2147483648])
+        shown = None
+        try:
+            compile_text(self.init("\tRand(" + "9" * 400 + ");"))
+        except mc.CompileError as error:
+            shown = str(error)
+        self.assertLess(len(shown), 80)  # the message does not repeat the whole number
+
+    def test_keywords_are_not_names(self):
+        self.refused("if (1) { }\n", "expected an event handler")
+        self.refused("while()\n{\n}\n", "expected an event handler")
+        self.refused("vars\n\tint if;\nend_vars\n", "expected a variable name")
+        self.refused(self.init("\tr = else;"), "'else' is a keyword and cannot be used here")
+
+    def test_a_script_and_a_header_are_limited_to_a_million(self):
+        compile_text("//" + "x" * (mc.MAX_SOURCE - 2))  # exactly the limit: all comment
+        self.refused("//" + "x" * (mc.MAX_SOURCE - 1), "longer than a million characters")
+        with tempfile.TemporaryDirectory() as folder:
+            big, edge = Path(folder, "big.msl"), Path(folder, "edge.msl")
+            big.write_bytes(bytes(mc.MAX_SOURCE + 1))
+            edge.write_bytes(b" " * mc.MAX_SOURCE)
+            with self.assertRaisesRegex(mc.CompileError, "longer than a million bytes"):
+                mc.read_source(big)
+            self.assertEqual(len(mc.read_source(edge)), mc.MAX_SOURCE)
+            game = Path(folder, "game")
+            (game / "data").mkdir(parents=True)
+            (game / "data" / "huge.msl").write_bytes(bytes(mc.MAX_SOURCE + 1))
+            with self.assertRaisesRegex(mc.CompileError, "longer than a million bytes"):
+                mc.includes_from(game)("data\\huge.msl")
+
+    def test_an_include_that_is_a_link_out_of_the_game_folder_is_refused(self):
+        with tempfile.TemporaryDirectory() as folder:
+            game = Path(folder, "game")
+            (game / "data" / "inc").mkdir(parents=True)
+            outside = Path(folder, "outside")
+            outside.mkdir()
+            (outside / "secret.msl").write_text("#define X 1\n", encoding="latin-1")
+            (game / "data" / "inc" / "real.msl").write_text("#define Y 2\n", encoding="latin-1")
+            (game / "data" / "inc" / "inside.msl").symlink_to(game / "data" / "inc" / "real.msl")
+            (game / "data" / "inc" / "out.msl").symlink_to(outside / "secret.msl")
+            (game / "data" / "linkdir").symlink_to(outside, target_is_directory=True)
+            read = mc.includes_from(game)
+            self.assertEqual(read("data\\inc\\inside.msl"), "#define Y 2\n")  # a link that stays inside is a file inside
+            for path in ("data\\inc\\out.msl", "data\\linkdir\\secret.msl"):
+                with self.assertRaisesRegex(mc.CompileError, "is not a file inside the game folder"):
+                    read(path)
+
+
+class GateMain(unittest.TestCase):
+    """tools/msl_gate.py's main() on an authored game: level archives holding compiled scripts, and the sources beside them."""
+
+    GOOD = "init()\n{\n\tDie();\n}\n"
+    OTHER = "init()\n{\n\tShutdown();\n}\n"
+
+    def setUp(self):
+        self.folder = tempfile.TemporaryDirectory()
+        self.addCleanup(self.folder.cleanup)
+        self.game = Path(self.folder.name, "game")
+        (self.game / "data" / "resources").mkdir(parents=True)
+
+    @staticmethod
+    def record(name: str, source: str) -> dict:
+        return compile_text(source) | {"name": name}
+
+    def archive(self, level: int, real_level: int, base_level: int | None, real: dict[str, str], base: dict[str, str] | None = None) -> None:
+        """A level archive whose own world (the level real_level) holds these scripts compiled from these sources, and whose base world (base_level) holds the base ones."""
+        def body(scripts: dict[str, str]) -> bytes:
+            model = wre.read_world_model(fixtures.world_body())
+            model["scripts"] = [self.record(name, source) for name, source in scripts.items()]
+            return wre.write_world_body(model)
+
+        wrld = fixtures.chunk(b"WDAT", struct.pack("<ii", -1 if base is None else base_level, real_level))
+        if base is not None:
+            wrld += fixtures.chunk(b"BSWD", body(base))
+        wrld += fixtures.chunk(b"RLWD", body(real))
+        stream = (fixtures.chunk(b"LVLR", struct.pack("<I", 103)) + fixtures.chunk(b"TARG", struct.pack("<I", 1)) + fixtures.chunk(b"AYAD", bytes(24)) +
+                  fixtures.chunk(b"ERES", bytes(40)) + fixtures.chunk(b"WRES", fixtures.chunk(b"WRLD", wrld)) + fixtures.chunk(b"LNDS", b""))
+        (self.game / "data" / "resources" / f"{level:03d}_res_PC.aya").write_bytes(fixtures.aya(stream))
+
+    def source(self, level: int, name: str, text: str) -> None:
+        folder = self.game / "data" / "MissionScripts" / f"Level{level}"
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / f"{name}.MSL").write_text(text, encoding="latin-1", newline="")
+
+    def run_gate(self, *arguments: str) -> tuple[int, str]:
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = gate.main(["--game", str(self.game), *arguments])
+        return code, out.getvalue()
+
+    def two_worlds(self) -> None:
+        self.archive(123, 123, 124, {"A": self.GOOD, "B": self.OTHER}, {"C": self.GOOD})
+        self.source(123, "A", self.GOOD)
+        self.source(123, "B", self.OTHER)
+        self.source(124, "C", self.GOOD)
+
+    def test_every_script_of_both_worlds_matching_passes_and_the_base_world_is_not_skipped(self):
+        self.two_worlds()
+        with mock.patch.object(gate, "STALE_SOURCES", {}):
+            code, out = self.run_gate()
+        self.assertEqual((code, out), (0, "3 scripts: 3 exact\n"))
+
+    def test_a_difference_in_the_base_world_fails_and_names_the_body(self):
+        self.two_worlds()
+        self.source(124, "C", self.OTHER)
+        with mock.patch.object(gate, "STALE_SOURCES", {}):
+            code, out = self.run_gate()
+        self.assertEqual(code, 1)
+        self.assertIn("3 scripts: 1 different, 2 exact", out)
+        self.assertRegex(out, r"FAIL 123 BSWD C: different: instructions\[0\]")
+
+    def test_a_pinned_stale_source_passes_and_is_counted_apart(self):
+        self.two_worlds()
+        self.source(123, "A", self.OTHER)
+        with mock.patch.object(gate, "STALE_SOURCES", {(123, "A"): "the shipped script calls another function than the file does"}):
+            code, out = self.run_gate("--table")
+        self.assertEqual(code, 0)
+        self.assertIn("2 exact, 1 stale source", out.splitlines()[-1])
+        self.assertIn("123\tRLWD\tA\tstale source\tthe shipped script calls another function than the file does", out)
+        self.assertIn("123\tBSWD\tC\texact\t", out)
+        self.assertTrue(out.startswith("level\tbody\tscript\tstatus\tdetail\n"))
+
+    def test_a_pin_cannot_rot(self):
+        self.two_worlds()
+        with mock.patch.object(gate, "STALE_SOURCES", {(123, "A"): "a reason that is no longer true"}):
+            code, out = self.run_gate()
+        self.assertEqual(code, 1)
+        self.assertIn("FAIL 123 A: listed as a stale source but it is exact", out)
+        with mock.patch.object(gate, "STALE_SOURCES", {(999, "Nope"): "a script no level has"}):
+            code, out = self.run_gate()
+            self.assertEqual(code, 1)
+            self.assertIn("FAIL 999 Nope: listed as a stale source but no such script was met", out)
+            self.archive(200, 200, None, {"Z": self.GOOD})
+            self.source(200, "Z", self.GOOD)
+            code, out = self.run_gate("--level", "123")  # one level's archive only: the others' pins are not asked about
+            self.assertEqual((code, out), (0, "3 scripts: 3 exact\n"))
+            self.assertEqual(self.run_gate("--level", "200")[1], "1 scripts: 1 exact\n")
+
+    def test_the_failure_classes(self):
+        self.two_worlds()
+        (self.game / "data" / "MissionScripts" / "Level123" / "B.MSL").unlink()
+        self.source(123, "A", "init()\n{\n\tPause();\n}\n")
+        with mock.patch.object(gate, "STALE_SOURCES", {}):
+            code, out = self.run_gate()
+        self.assertEqual(code, 1)
+        self.assertIn("1 exact, 1 no source, 1 refused", out)
+        self.assertIn("FAIL 123 RLWD B: no source: ", out)
+        self.assertRegex(out, r"FAIL 123 RLWD A: refused: line 3: Pause takes 1 argument\(s\), not 0")
+
+    def test_a_header_the_install_lacks_is_bound_from_the_shipped_constants(self):
+        self.archive(123, 123, None, {"A": "// (gone)\ninit()\n{\n\tPause(9);\n}\n"})
+        self.source(123, "A", "#include data\\gone\\text.stf\ninit()\n{\n\tPause(MYSTERY);\n}\n")
+        with mock.patch.object(gate, "STALE_SOURCES", {}):
+            self.assertEqual(self.run_gate(), (0, "1 scripts: 1 exact, assisted\n"))
+
+    def test_a_game_with_no_scripts_to_compare_is_not_a_pass(self):
+        with mock.patch.object(gate, "STALE_SOURCES", {}):
+            code, out = self.run_gate()
+        self.assertEqual(code, 1)
+        self.assertIn("FAIL no compiled scripts were found to compare", out)
+        with self.assertRaises(SystemExit):  # a folder with no data/resources at all
+            gate.main(["--game", self.folder.name])
 
 
 if __name__ == "__main__":

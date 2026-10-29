@@ -35,15 +35,17 @@ over the 66 installed level archives, and the installed `data/MissionScripts` fo
    instructions and about 8,800 native calls, 108 of the 144 natives in `gScriptFunctions`); the world file a mod supplies
    (`data/worlds/worldNNN.wrd`) therefore carries a level's whole mission.
 3. **Every shipped script has its source, by name, in the matching level's folder.** 670 compiled scripts, 670 `.msl` files of
-   the same names (case aside) in the same levels' folders; level 100 has 25 and 25. The install holds 62 more `.msl` files in
-   the folders of levels it has no archive for. That is a source and an object for every script, which is what makes a byte-exact
-   compiler testable (section 5).
+   the same names (case aside) in the same levels' folders; level 100 has 25 and 25. The base worlds the archives carry hold 92
+   more compiled scripts (many shared between archives), whose sources are in the base levels' folders; 16 of those files are used
+   by no level's own world. The install holds 46 more `.msl` files, in the folders of seven levels whose compiled scripts it does
+   not hold (six have no archive; the seventh, level 21, is only a base world that carries none), so there is nothing to compare
+   them with. That is a source and an object for every script, which is what makes a byte-exact compiler testable (section 5).
 4. **The mod loader can replace an `.msl` file and it changes nothing.** The loader replaces any file the game has under `data/`
    (a mod may add only world files), so an `.msl` copy qualifies; but a replacement is read only when the game opens the file,
    and item 1 says it never does. The route for a mission change is the world file, which today's Linux loader serves (CE 0.1.11
    is planned to be the first to take a world file from a mod).
-5. **The object format is small and regular.** The VM has 27 opcodes (23 occur in the shipped scripts; `OP_NOP`, `OP_CMPNEB`,
-   `OP_CALLLOCAL` and `OP_PUSHPC` never do); `CAsmInstruction::Spawn`
+5. **The object format is small and regular.** The VM has 27 opcodes (23 occur in the compiled scripts of the installed levels; `OP_NOP`, `OP_CMPNEB`,
+   `OP_CALLLOCAL` and `OP_PUSHPC` never do, though one source of a level the install lacks writes `!=`, which compiles to `OP_CMPNEB`); `CAsmInstruction::Spawn`
    (`0x0052d3d0`) reads each, `CInstruction*::Execute` (`0x0052e0a0` to `0x0052ec40`) defines what each does, the natives
    are `gScriptFunctions` (`IScript.cpp`, `0x0052ff20`), the event names are the 13 fixed events (`init`, `arrived`, `timer`,
    `died`, `hit`, `started_dying`, `ready`, `shutdown` and five undefined) plus named handlers (`CEventFunction`,
@@ -72,7 +74,7 @@ over the 66 installed level archives, and the installed `data/MissionScripts` fo
    arrive as substitutions where they are used; the constructs are `vars` blocks (one script writes `attributes` ... `end_attributes`),
    the fixed events and `event("name")` handlers, `if`/`else`, `while`, `for`, `switch`/`case`, `do_once` blocks, calls of natives
    (`Name(args)`, or on a thing variable `target.Name(args)`, which sets the receiver), assignment, the operators `&& || == < <= > >=
-   + - * /` (no script outside a string or comment uses `!`, `!=` or `%`), and the types `bool`, `int`, `float`, `thing` and `position`.
+   + - * /` (no source outside a string or comment uses `!` or `%`; one, `level530/hive.msl`, of a level the install has no archive for, uses `!=` twice), and the types `bool`, `int`, `float`, `thing` and `position`.
 9. **Names matter to the VM in one place that matters here.** Beyond `Clone`, a script's symbols are reached by index. `SetVar`
    (`IScript::SetVar`, `0x005348f0`) passes a name and a value to the thing it is called on, and the base class
    (`CComplexThing::SetVar`, `0x004f45e0`) only logs an unknown variable; one subclass keeps a few variables of its own by
@@ -173,8 +175,8 @@ The spawn count and the timer values are the next edits in the same mould.
 - The VM checks little itself: a bad script can hang or crash a level. The checker is static; no check here says a mission can
   be won or that a level plays.
 - Unknown today: how the original compiler grouped any mix of operators the shipped scripts parenthesise (the compiler refuses
-  those, section 11), what it did with a construct no shipped script uses, and the 62 sources with no installed level (nothing to
-  compare them with). Settled by the gate: the trailing words, the line order, and which installed sources are not the revision the
+  those, section 11), what it did with a construct no shipped script uses, and the 46 sources of levels whose compiled scripts the install does not
+  hold (nothing to compare them with). Settled by the gate: the trailing words, the line order, and which installed sources are not the revision the
   game shipped (a pinned list, each with how it differs).
 - Nothing here has been played yet. The retail data (sources, objects, frames) stays local and out of Git.
 
@@ -201,7 +203,8 @@ The spawn count and the timer values are the next edits in the same mould.
    ask-first guard if it drops them.
 5. Operator grouping (after the spike): the compiler accepts what the shipped scripts prove and refuses any other mix without
    parentheses, naming both operators, because the original compiler's grouping there is unknown and a silent guess could change a
-   mission's meaning; the editor shows the grouping used for the proven cases.
+   mission's meaning; the editor shows the grouping used for the proven cases. "`+ - * /` bind tighter than the comparisons" is kept
+   as a generalisation of the seven pairs the shipped scripts show (section 11), not a proven rule.
 
 ## 11. The spike's result (2026-10-29)
 
@@ -230,11 +233,20 @@ the game folder and writes nothing.
   compiled and never entered (some shipped scripts have misspelt ones; the compiler says so in a note); a variable may be declared
   twice (one symbol); the declared types of variables are not in the object code; every shipped call has exactly its native's
   argument count, which the compiler now enforces.
-- **Operator grouping.** The shipped scripts prove only that repeating one operator groups left to right, that `&&` and `==` have one
-  rank and group left to right (so `a && b == c` is `(a && b) == c`, unlike C), and that `+ - * /` bind tighter than the
-  comparisons. They put parentheses round everything else, so the original compiler's grouping there is unknown. The compiler
-  therefore accepts exactly those cases and refuses any other mix without parentheses, naming both operators (decision 5). For a
+- **Operator grouping.** The shipped scripts prove less than a grammar needs. They show that repeating `&&`, `||` or `+` groups left to
+  right; that `&&` and `==` have one rank and group left to right (`a && b == c` is `(a && b) == c`, unlike C; three expressions
+  show it); and, of the 48 ordered pairs of an arithmetic operator and a comparison, 7: a `<` or `<=` followed by `*`, `-` or `/`
+  (six pairs, as in `a < b / 2`: the arithmetic is the comparison's right side) and `+` followed by `==` (as in `a + 1 == b`: the sum
+  ends before the `==`). All seven agree with "arithmetic binds tighter than a comparison". That rule for every one of the 48 pairs
+  is therefore a generalisation of seven observations, kept because it is the near-universal rule in this language family (decision
+  5); the other 41 pairs, `+ - * /` against `+ - * /`, `||` against everything and the comparisons against each other are not shown at
+  all. The shipped scripts put parentheses round everything else, so the original compiler's grouping there is unknown. The compiler
+  accepts exactly the shown cases and the generalisation, and refuses any other mix without parentheses, naming both operators. For a
   mixed chain it does accept it returns a note with the grouping used, which the editor shows.
-- **What is still unproven.** Constructs no shipped script uses (the compiler refuses them; `!=` it compiles to the one instruction
-  the VM has for it and groups only with arithmetic), the sources of the levels this install lacks, and the game running any
-  script this compiler wrote.
+- **Limits the compiler keeps** (so that the C# port can keep the same): statements and expressions nested more than 100 deep, a script
+  of more than a million characters or one that grows past a million tokens when its `#define` names are replaced, a header of more than
+  a million bytes, a number that does not fit 32 bits or float32, and an `#include` that is not a file inside the game folder
+  (a link out of it) are refused with a line and a reason. The deepest shipped script nests 15.
+- **What is still unproven.** Constructs no shipped script uses (the compiler refuses them; `!=`, which one source of a level the
+  install lacks writes, compiles to the VM's `OP_CMPNEB` and is grouped only with arithmetic), the sources of the levels this install
+  lacks, and the game running any script this compiler wrote.
