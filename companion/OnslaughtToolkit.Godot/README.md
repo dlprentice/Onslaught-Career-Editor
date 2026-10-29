@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-29 (the Level editor's read-only Scripts view; earlier: CE 0.1.11, the first CE to take a world file from a mod, named; earlier: the Level editor's map; what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
+Last updated: 2026-10-29 (the mission script compiler, `Missions/`, not yet used by a page; the Level editor's read-only Scripts view; earlier: CE 0.1.11, the first CE to take a world file from a mod, named; earlier: the Level editor's map; what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -147,7 +147,8 @@ editor-authored scene, and `npm run build` refuses to stage one.
 | [Lore](Lore/) | The embedded lore library, its Markdown renderer and the campaign's mission list (`CampaignLoreComposer`) |
 | [Ui](Ui/) | The Flight-deck theme and icons, the shell, career cards, the save-choice dialog, the game's art read from the install (`GameArt`) and one class per page |
 | [Tests](Tests/) | Every behavioral contract, run headlessly inside Godot |
-| [Development](Development/) | Development-only entries: screen captures, export license metadata and the Windows program icon (`IconWriter`) |
+| [Missions](Missions/) | The mission script compiler: a source in the game's script language (`.msl`) to the compiled script a level's world file stores (`ScriptCompiler`), held to the Toolkit's reference compiler by authored vectors and, on an installed game, by every script the game ships. No page uses it yet |
+| [Development](Development/) | Development-only entries: screen captures, the local retail gates (`LevelsGate`, `ScriptsGate`), export license metadata and the Windows program icon (`IconWriter`) |
 
 `Tests/` and `Development/` compile only into development builds; release exports
 exclude them from both the assembly and the package.
