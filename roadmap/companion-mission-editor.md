@@ -2,7 +2,7 @@
 
 Status: design; the reference compiler and its retail gate (MS1, section 11), the read-only scripts view (MS0, section 12) and its name links and map paths (MS0.1, section 13) are built, the rest is plan. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-10-29 (MS0.1, names in the source linked to the level and waypoint paths on the map, built; earlier: MS0, the read-only scripts view, built; CE 0.1.11, the first to take a world file from a mod, stated as published; earlier: the spike's result and the operator-grouping decision; the lead's earlier decisions; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
+Last updated: 2026-10-29 (MS0.1 follow-ups: a path's points are the waypoints the game keeps, path arguments are case-blind, PATHS rows in the gate; MS0.1, names in the source linked to the level and waypoint paths on the map, built; earlier: MS0, the read-only scripts view, built; CE 0.1.11, the first to take a world file from a mod, stated as published; earlier: the spike's result and the operator-grouping decision; the lead's earlier decisions; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours that is proved against every script the game
 shipped (byte for byte), and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -285,7 +285,7 @@ A click in a quoted text of a script's source says what in the open level has th
 object by its own name (the table and the map), a waypoint path (the map), a script (the Scripts view), or the scripts that handle an
 event of that name. An object of the level's base world is named too, with a note and no button, because the page does not list that
 world's objects. A text that names nothing says so; a word or a comment is not a link. The **Paths** switch under the map draws every
-waypoint path faintly through the objects it names. A path button, from a source or from an object that is a point of the path ("Path A
+waypoint path faintly through its points. A path button, from a source or from an object that is a point of the path ("Path A
 · point 2 of 3"), highlights that path, numbered along it with an arrow on each leg, and brings it into view; Hide path stops it.
 Nothing is written.
 
@@ -293,14 +293,26 @@ Nothing is written.
   holds the same texts as string constants with nothing to say which call reads which text as what. So a link goes by the name alone:
   it finds what has that name and does not claim the script uses it as such. Objects match by their exact name (else, if none has it,
   in another letter case, and the button says so), in the level's own world and by the same rule in its base world, each on its own;
-  paths, scripts and event handlers match exactly. A quoted text is closed by the next quote on its line, and `//` outside a quote
-  ends the line's code. A path lists objects by their place in the world's thing list: under that reading the shipped paths run from
-  point to point (the median step between neighbours is about 88 world units; under a shift of one or two places it is 121 to 146),
-  and a slot past the list names nothing and is not drawn.
+  scripts and event handlers match exactly, and so do paths except in one place. The game finds a waypoint path by name ignoring
+  letter case (`CWaypointManager::FindNearest`, which takes the first path of the world's list that matches), so the first argument of
+  a `FollowWaypoint` or `FollowWaypointWait` call, found by looking back along the line from its opening quote over blanks to a `(`
+  and, before it, the whole word of the call's name, names every path of that name in any case (the button says when the case
+  differs, and with two paths that differ only in case both are listed, in the world's order). A quoted text is closed by the next
+  quote on its line, and `//` outside a quote ends the line's code. A path lists objects by their place in the world's thing list:
+  under that reading the shipped paths run from point to point (the median step between neighbours is about 88 world units; under a
+  shift of one or two places it is 121 to 146). The game's loader (`CWaypointPath::Load`) keeps a slot only if it indexes a loaded
+  object that is a waypoint, so a slot past the list, and a slot that names a unit, a spawner, a squad or a start, is not a point:
+  the page does not draw it, number it or count it, "N points" counts the points kept, and an object that only such a slot names is
+  on no path.
 - **Checked.** The gate table has a NAMES row per level archive, worked out in Python separately from the C# (`source_literals`,
   `resolve_name`): every quoted text of the sources of the level's own scripts, outside comments, with its line and what it resolved
   to, hashed, and how many there are and how many name something. The Companion's local retail gate scans the same sources with
-  `TokenAt`, column by column, and resolves with `ScriptNames.Resolve`; the two agree on every level of an installed game. The route's
+  `TokenAt`, column by column, and resolves with `ScriptNames.Resolve` (a path argument is told by `follows_path_call` in Python and
+  `FollowsPathCall` in C#); the two agree on every level of an installed game. A PATHS row per level archive lists each path of the
+  level's own world as `index|name|slots|kept rows` (hashed, with the numbers of paths, points kept and slots): the Python keeps the
+  rows by the kind its own model reads from the object id, the C# with `WaypointCatalog.Rows`, and the two agree on every level. That
+  row exists because a mutation of the path-slot rule passed every authored test (an authored world shows only a few slots) and was
+  found only by checking against the real data; the gate now catches it. The route's
   tests build a level with a path, an object, a handler, a base-world object and a text that names nothing, drive the caret and the
   buttons, and check the highlight, the fit (the map's centre and zoom, with the zoom limit), that choosing another script clears the
   card, and that the tooltips can be reached with the pointer.
@@ -308,7 +320,10 @@ Nothing is written.
   name more than one thing: an event handler and a script, say). Of the rest, about half are arguments of `Print`, and nearly all the
   others arguments of `SpawnThing`, of `PostEvent` (an event nothing handles) and of the functions that take a segment, variable,
   animation or weapon name: none of them an object, path or script of the level. Text ids, which index the game's text table (section
-  6), are not linked. About one path slot in five of the shipped paths names an object that is not a waypoint, and the path is drawn
-  through it all the same. Base-world objects are named, not shown. The page was driven by events in tests and looked at in offscreen
-  captures at 1920 by 1080, 1280 by 800 and 1024 by 700 (the path numbers are drawn over the marks, beside each point; at the
-  smallest size the path line under the map is cut short); nobody has used it by hand.
+  6), are not linked. About one path slot in five of the shipped paths names an object that is not a waypoint, and about half of the
+  paths hold one: those slots are dropped as the game drops them, so a path has fewer points than slots. A path argument is told by the
+  line it is on, so a call whose name and parenthesis end one line and whose first argument begins the next is not recognised (none of
+  the shipped sources does that; a mod's might), and its path is then found by its exact name only. Base-world objects are named, not
+  shown. The page was driven by events in tests and looked at in offscreen captures at 1920 by 1080, 1280 by 800 and 1024 by 700 (the
+  path numbers are drawn over the marks, above and to the left of each point so that a selected object's tag does not cover them; at
+  the smallest size the path line under the map is cut short); nobody has used it by hand.
