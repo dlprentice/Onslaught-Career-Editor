@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-10-29 (the companion's update guidance described as it is; earlier: decompilation concessions and native-port validation scope clarified)
+Last updated: 2026-10-29 (the game documentation here said to be a frozen copy, maintained in onslaught-preservation; earlier: the companion's update guidance described as it is)
 Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
 
 Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
@@ -25,8 +25,9 @@ repository holds it and the project's overview.
   is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot), which keeps its measured parity; `rebuild/` here is a frozen copy,
   not built or tested, and is removed when this repository is split.
 
-This repository holds the companion, documentation of the game (formats, behaviours and findings as prose and
-specs), our own tools and a frozen copy of the Godot rebuild. It holds no game files, Ghidra database, decompiler output or decomp source.
+This repository holds the companion, the lore library, our own tools, and frozen copies of the game documentation (formats,
+behaviours and findings as prose and specs, now maintained in [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation))
+and of the Godot rebuild. It holds no game files, Ghidra database, decompiler output or decomp source.
 
 This is an unofficial community project. It is not affiliated with or endorsed by the game's publishers or rights
 holders. Repository licenses cover their respective project code and documentation; they grant no rights in the
@@ -47,7 +48,7 @@ Its source and downloads are at [Onslaught CE](https://github.com/dlprentice/ons
 
 | Repository | What it holds |
 | --- | --- |
-| This repository | The companion, documentation of the game, lore, our tools, and a frozen copy of the Godot rebuild |
+| This repository | The companion, lore, our tools, and frozen copies of the game documentation (maintained in onslaught-preservation) and of the Godot rebuild |
 | [Onslaught CE](https://github.com/dlprentice/onslaught-ce) | The native source port's source and its Windows and Linux downloads; GPL-3.0-only |
 | [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) | The byte-matching decompilation of the retail executable, for MSVC 6; bring your own game and compiler; GPL-3.0-only |
 | [onslaught-godot](https://github.com/dlprentice/onslaught-godot) | The Godot 4 C# rebuild, checked against the original game Present by Present; GPL-3.0-only |
