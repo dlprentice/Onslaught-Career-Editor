@@ -54,6 +54,9 @@ public sealed record SaveOutcome(StagedMod? Staged, string Message)
 public sealed record ScriptCompileOutcome(MissionScript? Script, string Message, int? Line, IReadOnlyList<CompileNote> Notes)
 {
     public bool Ok => Script is not null;
+
+    /// <summary>What the edit makes the script do that is known to be dangerous in the game as it is (see <see cref="ScriptHazards"/>); empty when nothing is.</summary>
+    public IReadOnlyList<string> Warnings { get; init; } = [];
 }
 
 /// <summary>What replacing a script from its source (or putting the shipped one back) did.</summary>
@@ -73,7 +76,11 @@ public enum ScriptEditResult
 /// <param name="Message">A sentence for the player.</param>
 /// <param name="Line">The 0-based line a refusal is about, or null.</param>
 /// <param name="Notes">What the compiler noticed (empty when the source was not compiled).</param>
-public sealed record ScriptEditOutcome(ScriptEditResult Result, string Message, int? Line, IReadOnlyList<CompileNote> Notes);
+public sealed record ScriptEditOutcome(ScriptEditResult Result, string Message, int? Line, IReadOnlyList<CompileNote> Notes)
+{
+    /// <summary>What the edit makes the script do that is known to be dangerous in the game as it is (empty when nothing is, or the source was not compiled).</summary>
+    public IReadOnlyList<string> Warnings { get; init; } = [];
+}
 
 /// <summary>
 /// The state behind the Level editor page, with no interface in it: the levels a game has, the open level's own world as an
@@ -395,7 +402,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         try
         {
             MissionScript script = ScriptCompiler.Compile(shipped.Name, source, ScriptCompiler.IncludesFrom(gameRoot), ScriptCompiler.ConstStartOf(shipped), ScriptCompiler.DoOnceStartOf(shipped), null, notes);
-            return new ScriptCompileOutcome(script, $"Compiled {script.Name}: {script.Code.Instructions.Count} instructions.", null, notes);
+            return new ScriptCompileOutcome(script, $"Compiled {script.Name}: {script.Code.Instructions.Count} instructions.", null, notes) { Warnings = ScriptHazards.Warnings(shipped, script) };
         }
         catch (MissingInclude error)
         {
@@ -416,8 +423,8 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     {
         ScriptCompileOutcome compiled = CompileScript(scriptIndex, source, gameRoot);
         if (compiled.Script is not { } script) return new ScriptEditOutcome(ScriptEditResult.Refused, compiled.Message, compiled.Line, compiled.Notes);
-        if (Same(Session!.Body.Scripts[scriptIndex], script)) return new ScriptEditOutcome(ScriptEditResult.Unchanged, $"{script.Name} is already what this source compiles to.", null, compiled.Notes);
-        return ApplyScript(new ReplaceScript(scriptIndex, script), $"Replaced {script.Name}.", compiled.Notes);
+        if (Same(Session!.Body.Scripts[scriptIndex], script)) return new ScriptEditOutcome(ScriptEditResult.Unchanged, $"{script.Name} is already what this source compiles to.", null, compiled.Notes) { Warnings = compiled.Warnings };
+        return ApplyScript(new ReplaceScript(scriptIndex, script), $"Replaced {script.Name}.", compiled.Notes) with { Warnings = compiled.Warnings };
     }
 
     /// <summary>Puts a script back as the level has it (an edit that can be undone).</summary>

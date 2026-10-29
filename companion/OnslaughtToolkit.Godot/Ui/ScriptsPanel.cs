@@ -25,6 +25,9 @@ internal sealed partial class ScriptsPanel : VBoxContainer
     private ScriptEntry? _current;
     private ScriptSourceResult? _currentSource;
     private SourceToken? _token;
+    private bool _wantEditing;
+    private readonly Dictionary<string, string> _drafts = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, string> _compiled = new(StringComparer.Ordinal);
 
     internal ScriptsPanel()
     {
@@ -62,6 +65,21 @@ internal sealed partial class ScriptsPanel : VBoxContainer
 
     /// <summary>The quoted text or word the caret is on in the source.</summary>
     internal SourceToken? Token => _token;
+
+    /// <summary>
+    /// Whether the source can be typed in: the Edit switch is on and the selected script is one of the level's own with a source file to start from. The
+    /// text typed is kept for the script (a draft) while another is chosen, and is not what the game runs until it is compiled and used.
+    /// </summary>
+    internal bool Editing => _source.Editable;
+
+    /// <summary>Whether the selected script can be edited at all: one of the level's own, with a source file found.</summary>
+    internal bool CanEditCurrent => _current is { FromBaseWorld: false } && _currentSource?.Source is not null;
+
+    /// <summary>The text in the source view (line ends are \n).</summary>
+    internal string SourceText => _source.Text;
+
+    /// <summary>The text that last compiled and was used for each of the level's own scripts, by name: what a mod keeps as that script's source.</summary>
+    internal IReadOnlyDictionary<string, string> CompiledSources => _compiled;
 
     internal Tree List => _list;
     internal CodeEdit Source => _source;
@@ -111,7 +129,92 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         _root = gameRoot;
         _entries = entries;
         _current = null;
+        _drafts.Clear();
+        _compiled.Clear();
         Fill(keep: null);
+    }
+
+    /// <summary>
+    /// Lists the scripts again after an edit (the same level, new compiled scripts): the same script stays selected, and the text and place in the view stay as
+    /// they were, so that compiling does not take the player's place away.
+    /// </summary>
+    internal void Refresh(IReadOnlyList<ScriptEntry> entries)
+    {
+        ScriptEntry? previous = _current;
+        StoreDraft();
+        int line = _source.GetCaretLine(), column = _source.GetCaretColumn();
+        double scroll = _source.ScrollVertical;
+        _entries = entries;
+        _current = null;
+        ScriptEntry? keep = previous is null ? null : entries.FirstOrDefault(entry => entry.FromBaseWorld == previous.FromBaseWorld && entry.Summary.Name == previous.Summary.Name);
+        Fill(keep);
+        if (keep is null || !ReferenceEquals(_current, keep)) return;
+        _source.SetCaretLine(Math.Min(line, _source.GetLineCount() - 1));
+        _source.SetCaretColumn(Math.Min(column, _source.GetLine(_source.GetCaretLine()).Length));
+        _source.ScrollVertical = Math.Min(scroll, Math.Max(0, _source.GetLineCount() - 1));
+    }
+
+    /// <summary>Turns typing in the source on or off (it stays off for a script that cannot be edited).</summary>
+    internal void SetEditing(bool on)
+    {
+        _wantEditing = on;
+        StoreDraft();
+        ApplyEditable();
+    }
+
+    /// <summary>Records that this text compiled and was used for the script of this name.</summary>
+    internal void MarkCompiled(string name, string text) => _compiled[name] = text;
+
+    /// <summary>Forgets what was typed and compiled for a script and shows its source file's text again.</summary>
+    internal void DiscardEdit(string name)
+    {
+        _drafts.Remove(name);
+        _compiled.Remove(name);
+        if (_current is { FromBaseWorld: false } current && current.Summary.Name == name && _currentSource?.Source is { } source)
+        {
+            SetSourceText(source.Text);
+            UpdateInfo();
+        }
+    }
+
+    /// <summary>Puts the caret at the start of a line (0-based), in view.</summary>
+    internal void GoToLine(int line)
+    {
+        _source.SetCaretLine(Math.Clamp(line, 0, _source.GetLineCount() - 1));
+        _source.SetCaretColumn(0);
+        _source.CenterViewportToCaret();
+    }
+
+    private void ApplyEditable()
+    {
+        bool on = _wantEditing && CanEditCurrent;
+        _source.Editable = on;
+        _source.TooltipText = on ? "Type here, then Compile and use. The game does not read this file: it runs the compiled script."
+            : "The script's source, read only. The game does not read this file.";
+        UpdateInfo();
+    }
+
+    /// <summary>The path, line count and state of the source shown: read only, or what was typed.</summary>
+    private void UpdateInfo()
+    {
+        if (_currentSource?.Source is not { } source) return;
+        string text = _source.Text;
+        int lines = text.Count(c => c == '\n') + (text.Length > 0 && text[^1] != '\n' ? 1 : 0);
+        bool edited = _current is not null && _drafts.ContainsKey(_current.Summary.Name) && !_current.FromBaseWorld;
+        string state = _source.Editable ? "editing, not used until compiled" : edited ? "your edit, read only" : "read only";
+        string relative = Path.GetRelativePath(_root!, source.Path).Replace('\\', '/');
+        const string folder = "data/MissionScripts/";
+        string shown = relative.StartsWith(folder, StringComparison.OrdinalIgnoreCase) ? relative[folder.Length..] : relative;  // the folder is the same for every script
+        _info.Text = $"{shown} · {Build.Count(lines, "line")} · {state}";
+        _info.TooltipText = $"{source.Path}\nThe game runs the compiled script in the level's world, not this file.";
+    }
+
+    /// <summary>Notes what is typed for the script on view: a text that differs from its source file is a draft, one that matches it is not.</summary>
+    private void StoreDraft()
+    {
+        if (_current is not { FromBaseWorld: false } current || _currentSource?.Source is not { } source || !_source.Editable) return;
+        if (_source.Text != source.Text) _drafts[current.Summary.Name] = _source.Text;
+        else _drafts.Remove(current.Summary.Name);
     }
 
     /// <summary>Shows the scripts whose name, events or functions hold this text (all of them when it is empty).</summary>
@@ -181,6 +284,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         if (item is null) return;
         ScriptEntry entry = _entries[item.GetMetadata(0).AsInt32()];
         if (ReferenceEquals(entry, _current)) return;
+        StoreDraft();
         _current = entry;
         if (_root is null)
         {
@@ -192,16 +296,13 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         }
         if (_currentSource.Source is { } source)
         {
-            SetSourceText(source.Text);
-            string relative = Path.GetRelativePath(_root!, source.Path).Replace('\\', '/');
-            const string folder = "data/MissionScripts/";
-            string shown = relative.StartsWith(folder, StringComparison.OrdinalIgnoreCase) ? relative[folder.Length..] : relative;  // the folder is the same for every script
-            _info.Text = $"{shown} · {Build.Count(source.Lines, "line")} · read only";
-            _info.TooltipText = $"{source.Path}\nThe game runs the compiled script in the level's world, not this file.";
+            SetSourceText(!entry.FromBaseWorld && _drafts.TryGetValue(entry.Summary.Name, out string? draft) ? draft : source.Text);
+            ApplyEditable();
         }
         else
         {
             SetSourceText("");
+            ApplyEditable();  // a script with no source file is not typeable, whatever the Edit switch says
             _info.Text = _currentSource.Problem ?? "";
             _info.TooltipText = "";
         }

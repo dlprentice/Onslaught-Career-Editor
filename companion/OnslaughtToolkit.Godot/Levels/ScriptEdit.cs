@@ -60,6 +60,33 @@ public sealed record ScriptChange(int Index, string Name, int InstructionsFrom, 
     }
 }
 
+/// <summary>
+/// The script machine of the game is entered once and is not built to be entered twice: a script that kills a unit which runs a script of its own, from inside a
+/// handler that is running, starts the dying unit's handler at once, which overwrites the running script's code and place and crashes the level
+/// (<c>CVM::CallEvent</c> sets them before <c>CVM::Run</c> refuses to run again; <c>IScript::Arrived</c> and <c>IScript::Hit</c> guard against it, the other entry points do
+/// not). No shipped script does it, an edited one can. These are the natives that kill: an edit that adds calls to them is warned about.
+/// </summary>
+internal static class ScriptHazards
+{
+    internal static readonly string[] Killers = ["Damage", "Die"];
+
+    private const int OpCall = 24;
+
+    /// <summary>The warnings for a script an edit made: for each killing native it calls more often than the shipped script does, one sentence.</summary>
+    internal static IReadOnlyList<string> Warnings(MissionScript shipped, MissionScript edited) =>
+    [
+        .. Killers.Where(native => Calls(edited, native) > Calls(shipped, native)).Select(native =>
+            $"This script calls {native} more often than the shipped one does. In the game as it is, a script that kills a unit which runs a script of its own, from inside a handler that is running, can crash the level: the unit's script starts at once and the game's script machine cannot be entered twice."),
+    ];
+
+    /// <summary>How many times a script's code calls the native of this name.</summary>
+    internal static int Calls(MissionScript script, string native)
+    {
+        int index = Array.FindIndex(ScriptTables.Natives, entry => entry.Name == native);
+        return index < 0 ? 0 : script.Code.Instructions.Count(instruction => instruction.Opcode == OpCall && (instruction.Attribute & 0xFF) == index);
+    }
+}
+
 internal static class ScriptDiff
 {
     /// <summary>What differs between a script as the baseline has it and as it is now, or null when the two are the same record (bit for bit).</summary>

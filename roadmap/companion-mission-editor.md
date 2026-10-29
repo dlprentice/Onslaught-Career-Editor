@@ -178,6 +178,12 @@ The spawn count and the timer values are the next edits in the same mould.
   those, section 11), what it did with a construct no shipped script uses, and the 46 sources of levels whose compiled scripts the install does not
   hold (nothing to compare them with). Settled by the gate: the trailing words, the line order, and which installed sources are not the revision the
   game shipped (a pinned list, each with how it differs).
+- A script can crash a level by killing a unit that runs a script of its own from inside a handler that is running (diagnosed by the level 888 work,
+  verified in the decompilation by function): the unit's death starts its script's handler at once, `CVM::CallEvent` sets the machine's code and place
+  before `CVM::Run` refuses to run a second time, and the running script's next instruction is then read from the wrong place. `IScript::Arrived` and
+  `IScript::Hit` return while the machine is running; the entry points for a dying, dead, ready or shut down unit do not. No shipped script does it; an edited one
+  can. Until the port guards the entry (a design under way), the page warns when an edit adds a call to `Damage` or `Die` to a script, and the checker
+  (section 7) is where a stricter rule belongs.
 - Nothing here has been played yet. The retail data (sources, objects, frames) stays local and out of Git.
 
 ## 9. Risks and the cheapest check for each
@@ -190,6 +196,7 @@ The spawn count and the timer values are the next edits in the same mould.
 | A compiled script is accepted by our checker and crashes the VM | run the edited level in CE offscreen for the length of the script's events and read the log; keep edits small until the checker has been through a few of these |
 | Symbols shared between scripts (a clone) corrupt on a duplicate name | unique names are an error in the checker and a vector in the tests |
 | The mod loader changes what it serves | the acceptance in section 6 is re-run per CE version |
+| A script kills a scripted unit from inside a running handler and crashes the level | the page warns when an edit adds a call to `Damage` or `Die` (`ScriptHazards`); the port is to defer the nested event |
 
 ## 10. Decisions (2026-10-29, the lead)
 

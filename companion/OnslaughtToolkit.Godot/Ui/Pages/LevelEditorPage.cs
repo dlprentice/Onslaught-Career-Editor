@@ -157,12 +157,28 @@ internal sealed class LevelEditorPage : Page
         _scriptUses.AddThemeConstantOverride("h_separation", 6);
         _scriptUses.AddThemeConstantOverride("v_separation", 6);
         _scriptSource = scriptInside.Add(Build.Text("", "Faint"));
+        _scriptEditActions = scriptInside.Add(new HFlowContainer());
+        _scriptEditActions.AddThemeConstantOverride("h_separation", 8);
+        _scriptEditActions.AddThemeConstantOverride("v_separation", 6);
+        _scriptEditActions.Visible = false;
+        EditSource = _scriptEditActions.Add(Build.Button("Edit source", tooltip: "Type in the script's source. Nothing in the level changes until you compile and use it."));
+        EditSource.ToggleMode = true;
+        CompileScriptButton = _scriptEditActions.Add(Build.Button("Compile and use", "Primary", "Compile the source and, if it compiles, make the level use the new script. Undo takes it back.", disabled: true));
+        ShippedScriptButton = _scriptEditActions.Add(Build.Button("Put the shipped script back", tooltip: "Make the level use the script it came with.", disabled: true));
+        _scriptEditNote = scriptInside.Add(Build.Text("", "Muted"));
         _scriptNamesTitle = scriptInside.Add(Build.Text("", "Strong"));
         _scriptNamesTitle.Visible = false;
         _scriptNames = scriptInside.Add(new HFlowContainer());
         _scriptNames.AddThemeConstantOverride("h_separation", 6);
         _scriptNames.AddThemeConstantOverride("v_separation", 6);
         _scripts.NameUnderCaret += OnNameUnderCaret;
+        EditSource.Toggled += on =>
+        {
+            _scripts.SetEditing(on);
+            UpdateScriptEdit();
+        };
+        CompileScriptButton.Pressed += CompileCurrentScript;
+        ShippedScriptButton.Pressed += PutShippedScriptBack;
 
         (PanelContainer inspector, VBoxContainer inside) = Build.Panel("Card", 8);
         right.Add(inspector);
@@ -264,6 +280,23 @@ internal sealed class LevelEditorPage : Page
     internal Button Reset { get; }
     internal Button Save { get; }
     internal SaveAsModDialog SaveDialog { get; }
+
+    private readonly Label _scriptEditNote;
+    private readonly HFlowContainer _scriptEditActions;
+    private EditSession? _shownSession;
+    private string? _editNoteFor;
+
+    /// <summary>The switch that makes the selected script's source editable.</summary>
+    internal Button EditSource { get; }
+
+    /// <summary>Compiles the source and makes the level use the new script.</summary>
+    internal Button CompileScriptButton { get; }
+
+    /// <summary>Makes the level use the script it came with.</summary>
+    internal Button ShippedScriptButton { get; }
+
+    /// <summary>What compiling or putting the shipped script back said, in the script card.</summary>
+    internal string ScriptEditNote => _scriptEditNote.Text;
     internal LevelEditorModel? Model => _model;
     internal string Note => _note.Text;
     internal string Hint => _hint.Text;
@@ -412,10 +445,14 @@ internal sealed class LevelEditorPage : Page
         _problemPanel.Visible = _model?.Problem is not null;
         _problemText.Text = _model?.Problem ?? "";
         _worldNote.Text = _model?.BaseLevel is int baseLevel ? $"This level also loads the base world of level {baseLevel}. This editor does not change it." : "";
-        if (!ReferenceEquals(_shownScripts, _model?.Scripts))  // the scripts change only when a level is opened, not with each move
+        if (!ReferenceEquals(_shownScripts, _model?.Scripts))  // the scripts change when a level is opened and when a script is replaced or taken back, not with each move
         {
-            _shownScripts = _model?.Scripts ?? [];
-            _scripts.SetScripts(_root, _shownScripts);
+            IReadOnlyList<ScriptEntry> scripts = _model?.Scripts ?? [];
+            bool sameEdit = _model?.Session is not null && ReferenceEquals(_shownSession, _model.Session);
+            _shownScripts = scripts;
+            _shownSession = _model?.Session;
+            if (sameEdit) _scripts.Refresh(scripts);
+            else _scripts.SetScripts(_root, scripts);
         }
         RebuildTable();
         Map.SetLevel(_model?.Terrain, _model?.Rows() ?? []);
@@ -684,8 +721,64 @@ internal sealed class LevelEditorPage : Page
             if (summary.Uses.Count > 16) _scriptUses.Add(Build.Text($"and {summary.Uses.Count - 16} more", "Faint", wrap: false));
         }
         _scriptSource.Text = source?.Source is { } found
-            ? $"Source: {Path.GetFileName(found.Path)}, read only. The game runs the compiled script, which a source in your game folder may differ from."
+            ? $"Source: {Path.GetFileName(found.Path)}, {(_scripts.Editing ? "being edited" : "read only")}. The game runs the compiled script, which a source in your game folder may differ from."
             : source?.Problem ?? "";
+        if (_editNoteFor != summary.Name)
+        {
+            _scriptEditNote.Text = "";
+            _editNoteFor = null;
+        }
+        UpdateScriptEdit();
+    }
+
+    /// <summary>The edit controls of the script card for the selected script: what can be done with it now, and why not when it cannot.</summary>
+    private void UpdateScriptEdit()
+    {
+        ScriptEntry? entry = _scripts.Current;
+        int? index = entry is null || _model is null ? null : _model.OwnScriptIndex(entry);
+        bool editable = _scripts.CanEditCurrent && index is not null && _root is not null;
+        _scriptEditActions.Visible = entry is not null;
+        EditSource.Disabled = !editable;
+        EditSource.TooltipText = editable ? "Type in the script's source. Nothing in the level changes until you compile and use it."
+            : entry is null ? "Choose a script."
+            : entry.FromBaseWorld ? "This script belongs to the base world, which this editor shows and does not change."
+            : _root is null ? "Choose your game folder on Home to edit a script."
+            : "There is no source file in your game folder to start from.";
+        CompileScriptButton.Disabled = !(editable && _scripts.Editing);
+        ShippedScriptButton.Disabled = !(index is int place && _model?.Session?.ScriptChanges().Any(change => change.Index == place) == true);
+    }
+
+    /// <summary>Compiles the source in the view and, if it compiles, makes the level use it as the script (one edit that Undo takes back).</summary>
+    private void CompileCurrentScript()
+    {
+        if (_model is null || _root is null || _scripts.Current is not { } entry || _model.OwnScriptIndex(entry) is not int index || !_scripts.Editing) return;
+        string text = _scripts.SourceText;
+        ScriptEditOutcome outcome = _model.ReplaceScriptFromSource(index, text, _root);
+        if (outcome.Result == ScriptEditResult.Replaced) _scripts.MarkCompiled(entry.Summary.Name, text);
+        ShowScriptEdit(entry.Summary.Name, outcome);
+        if (outcome.Line is int line) _scripts.GoToLine(line);
+        UpdateScriptEdit();
+    }
+
+    /// <summary>Makes the level use the script it came with, and shows the source file's text again.</summary>
+    private void PutShippedScriptBack()
+    {
+        if (_model is null || _scripts.Current is not { } entry || _model.OwnScriptIndex(entry) is not int index) return;
+        ScriptEditOutcome outcome = _model.ResetScript(index);
+        if (outcome.Result == ScriptEditResult.Replaced) _scripts.DiscardEdit(entry.Summary.Name);
+        ShowScriptEdit(entry.Summary.Name, outcome);
+        UpdateScriptEdit();
+    }
+
+    private void ShowScriptEdit(string name, ScriptEditOutcome outcome)
+    {
+        List<string> lines = [outcome.Message];
+        lines.AddRange(outcome.Notes.Select(note => $"Line {note.Line + 1}: {note.Text}"));
+        if (outcome.Result == ScriptEditResult.Replaced) lines.Add("Undo takes it back.");
+        lines.AddRange(outcome.Warnings);
+        _scriptEditNote.Text = string.Join("\n", lines);
+        _scriptEditNote.ThemeTypeVariation = outcome.Result == ScriptEditResult.Refused || outcome.Warnings.Count > 0 ? "Warn" : "Muted";
+        _editNoteFor = name;
     }
 
     /// <summary>Highlights a waypoint path of the open level on the map and brings the map to the objects it passes through. Returns false if there is no such path.</summary>

@@ -83,6 +83,8 @@ internal static class ScriptsPageTests
         // Level 130: its own world (scripts alpha, beta and gamma; things naming them) and the base world of level 131 (a script of the same name, and another).
         WorldBody real = LevelScriptTests.Body(LevelScriptTests.Script("alpha", [0, 3], [], ("Pause", 2)), LevelScriptTests.Script("beta", [], ["go"], ("PostEvent", 1)), LevelScriptTests.Script("gamma", [], []),
             LevelScriptTests.Script("delta", [], [.. Enumerable.Range(1, 14).Select(number => $"h{number}")]));
+        real.Scripts[0].Code.Symbols.Add(new ScriptSymbol { Name = "const data40", DataType = 3, Value = new ScriptText("x"), Index = 0, Flag = 1 });  // the shipped alpha's first constant is number 40
+        real.Scripts[0].Code.NextSymbolIndex = 1;
         real.Things[0].Init.Script = "alpha";
         real.Things[1].Init.SpawnScript = "alpha";
         real.Things[2].Init.Script = "ghost";
@@ -304,6 +306,70 @@ internal static class ScriptsPageTests
             check.That(page.ObjectPathButtons.Count == 0, "an object on no path offers none");
             page.OpenLevel(130);
             check.That(page.Map.HighlightedPath is null && page.HidePath.Disabled, "opening a level again drops the highlight");
+
+            // Editing a script's source: the text typed is compiled and used as the script (one edit that Undo takes back); a source that does not compile changes
+            // nothing; what is typed stays with its script while another is chosen; a script with no source file, or the base world's, cannot be edited.
+            const string Alpha = "// alpha, the level's own\ninit()\n{\n\tPause(1);\n}\n";
+            page.ShowScript("alpha");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(!page.EditSource.Disabled && !page.EditSource.ButtonPressed && page.CompileScriptButton.Disabled && page.ShippedScriptButton.Disabled && !page.Scripts.Source.Editable &&
+                       page.Scripts.Info == "level130/alpha.msl · 5 lines · read only", $"a script with a source file can be edited, and starts read only: \"{page.Scripts.Info}\"");
+            page.EditSource.ButtonPressed = true;
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Scripts.Source.Editable && !page.CompileScriptButton.Disabled && page.Scripts.Info == "level130/alpha.msl · 5 lines · editing, not used until compiled", $"the Edit switch makes the view typeable: \"{page.Scripts.Info}\"");
+            const string Typed = "// alpha, edited\ninit()\n{\n\tPause(2);\n}\n";
+            page.Scripts.Source.Text = Typed;
+            page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.ScriptEditNote.StartsWith("Replaced alpha.", StringComparison.Ordinal) && page.Summary.StartsWith("1 script replaced: alpha (", StringComparison.Ordinal) && !page.Undo.Disabled && !page.Save.Disabled &&
+                       !page.ShippedScriptButton.Disabled && page.HasChanges, $"a source that compiles replaces the script, and the page says so: \"{page.ScriptEditNote}\" / \"{page.Summary}\"");
+            check.That(page.Model!.Session!.Body.Scripts[0].Code.Symbols.Any(symbol => symbol.Name == "const data40" && symbol.Value is ScriptInt { Value: 2 }),
+                "the compile session's counter starts where the shipped script's does, so the first new constant is the shipped script's first (const data40)");
+            check.That(page.Scripts.Current?.Summary.Name == "alpha" && page.Scripts.Source.Text == Typed && page.Scripts.CompiledSources.TryGetValue("alpha", out string? kept) && kept == Typed &&
+                       page.ScriptCardText.Contains("Handles: init", StringComparison.Ordinal) && !page.ScriptCardText.Contains("died", StringComparison.Ordinal),
+                $"the script stays selected with the text typed, and its card shows what the new script handles: \"{page.ScriptCardText}\"");
+            page.Scripts.Source.Text = "init()\n{\n\tFrobnicate(1);\n}\n";
+            page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.ScriptEditNote.StartsWith("line 3: ", StringComparison.Ordinal) && page.ScriptEditNote.Contains("Frobnicate", StringComparison.Ordinal) && page.Scripts.Source.GetCaretLine() == 2 &&
+                       page.Summary.StartsWith("1 script replaced: alpha (", StringComparison.Ordinal) && page.Scripts.CompiledSources["alpha"] == Typed,
+                $"a source that does not compile says why and where, puts the caret there and changes nothing: \"{page.ScriptEditNote}\"");
+            page.Scripts.Source.Text = "init()\n{\n\tDie();\n}\n";
+            page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.ScriptEditNote.Contains("calls Die more often", StringComparison.Ordinal) && page.Summary.StartsWith("1 script replaced: alpha (", StringComparison.Ordinal),
+                $"an edit that adds a call to Die is replaced and warned about: \"{page.ScriptEditNote}\"");
+            page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+            page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Summary.StartsWith("No changes yet", StringComparison.Ordinal) && !page.HasChanges && page.ShippedScriptButton.Disabled && page.ScriptCardText.Contains("Handles: init, died", StringComparison.Ordinal) &&
+                       page.Scripts.Source.Text == "init()\n{\n\tDie();\n}\n", "Undo takes the replacements back one by one, and the text typed stays where it is");
+            page.Redo.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Summary.StartsWith("1 script replaced: alpha (", StringComparison.Ordinal) && !page.ShippedScriptButton.Disabled, "and Redo brings one back");
+            page.ShippedScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Summary.StartsWith("No changes yet", StringComparison.Ordinal) && page.ScriptEditNote.StartsWith("alpha is back as the level has it.", StringComparison.Ordinal) && page.Scripts.Source.Text == Alpha &&
+                       page.ShippedScriptButton.Disabled && !page.Scripts.CompiledSources.ContainsKey("alpha"), $"putting the shipped script back shows the source file's text again: \"{page.ScriptEditNote}\"");
+            page.Scripts.Source.Text = "// a draft\n";
+            page.ShowScript("gamma");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Scripts.Source.Text == Gamma.Replace("\r\n", "\n") && page.Scripts.Source.Editable, "another script shows its own text, still typeable");
+            page.ShowScript("alpha");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Scripts.Source.Text == "// a draft\n" && page.Scripts.Info.EndsWith("· editing, not used until compiled", StringComparison.Ordinal) && !page.HasChanges, "what was typed for a script is there when it is chosen again, and is not a change to the level");
+            page.ShowScript("beta");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.EditSource.Disabled && page.CompileScriptButton.Disabled && !page.Scripts.Source.Editable && page.EditSource.TooltipText.Contains("no source file", StringComparison.Ordinal),
+                $"a script with no source file cannot be edited, and says why: \"{page.EditSource.TooltipText}\"");
+            page.ShowScript("alpha", fromBase: true);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.EditSource.Disabled && !page.Scripts.Source.Editable && page.EditSource.TooltipText.Contains("base world", StringComparison.Ordinal), "nor can a script of the base world");
+            page.ShowScript("alpha");
+            page.Scripts.Source.Text = Alpha;
+            page.EditSource.ButtonPressed = false;
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(!page.Scripts.Source.Editable && page.CompileScriptButton.Disabled && !page.HasChanges, "switching Edit off makes the view read only again, with no change made");
 
             // Nothing was written, and the move editor still works on the objects.
             page.ScriptsToggle.ButtonPressed = false;
