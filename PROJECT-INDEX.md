@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-10-23 (the companion owns original-game and CE support; the related repositories and frozen rebuild are linked)
+Last updated: 2026-10-29 (the game documentation routed to onslaught-preservation, with `reverse-engineering/` a frozen copy; earlier: the companion owns original-game and CE support; the related repositories and frozen rebuild are linked)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository: the companion, the game documentation, tools and the
 Godot rebuild.
@@ -9,7 +9,8 @@ Godot rebuild.
 This index answers **where code and responsibility live**. It does not restate
 what is currently proved or working. Use [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md)
 for demonstrated capability, [`GOAL.md`](GOAL.md) for the direction,
-[`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) for the game documentation, and
+[`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) for the frozen copy of the game documentation (maintained in
+[onslaught-preservation](https://github.com/dlprentice/onslaught-preservation)), and
 [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) for the rebuild's evidence and licence boundary. The
 decompilation's public export is [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp); the native port's source and downloads are
 published separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce), never from this repository. The Ghidra checkpoint and campaign machinery are in
@@ -95,7 +96,7 @@ the manual's images from the install. Pages live in
 | Path | Authority |
 | --- | --- |
 | [`companion/`](companion/OnslaughtToolkit.Godot/README.md) | GPL-3.0-only Godot .NET toolkit, a C# application built in code with its in-process file adapter. `tools/companion_godot.py` owns pinned .NET-engine routes (build, test, capture, run, export); `tools/godot_host.py` supplies shared engine discovery and process support. |
-| [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Documentation of the game as prose and specs: formats, mechanics, saves, assets, source notes, function notes and contracts, each bound to its specimen or source. No Ghidra database or decompiler output. |
+| [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | A frozen copy of the documentation of the game as prose and specs: formats, mechanics, saves, assets, source notes, function notes and contracts, each bound to its specimen or source. The maintained documentation is [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation). No Ghidra database or decompiler output. |
 | `local-lab/` | Ignored machine-local evidence: retail safe copies, historical campaign generations, captures, reviewer reports, frozen proof graphs, the retired working Ghidra project and `rebuild-godot/` staging. It is a real directory inside the Archive B checkout; fresh clones and child worktrees lack it. [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) owns canonical absolute-path / `BEA_LOCAL_LAB` routing; consult relevant `local-lab/INDEX.md` sections for the retained corpus. |
 | `local-data/` | The real ignored repository child for `host-attestations/`, current retail/media inputs, operational outputs and grouped `recovered/` packages; its `AGENTS.md` owns the internal map. Unused `windows-vm/` and `vm-media/` staging was retired. `_recovered-worktrees/` and `windows-profile-2026-08-28/` retain protected historical Ghidra material in place. `local-proofs/` remains a reserved ignored/publication-denied name, not a current data owner. |
 | `.artifacts/` | Ignored legacy validation, screenshot and publish output. It may contain unique evidence; preserve coupled tool paths, put new general-purpose output in `local-data/`, and use the migration deletion queue for authorized retirement. |
@@ -128,7 +129,8 @@ wrong — fix the rows, not the document.
 
 ### Lane front doors
 
-- **Game documentation:** [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md)
+- **Game documentation:** [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation); the frozen copy
+  here starts at [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md)
 - **Rebuild:** [`rebuild/README.md`](rebuild/README.md) +
   [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md)
 - **Machine-local evidence lane:** [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md)

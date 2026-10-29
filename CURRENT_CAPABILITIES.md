@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-29 (the companion's update guidance and the published decompilation's score stated as they are; earlier: CE 0.1.5 publishes the redirected-output correction; Linux CE workflow and native Windows backend/load evidence; remaining UI/version and player limits)
+Last updated: 2026-10-29 (findings are written in onslaught-preservation, with `reverse-engineering/` a frozen copy; earlier: the companion's update guidance and the published decompilation's score stated as they are; earlier: CE 0.1.5 publishes the redirected-output correction; Linux CE workflow and native Windows backend/load evidence; remaining UI/version and player limits)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -855,8 +855,8 @@ The byte-matching decompilation matches all 5,482 retail functions in the mainta
 reverse-engineering authority. Its public export, [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp),
 reproduces 5,449 of them (99.40% when this was written; the other 33 are in four DirectX sample files the export leaves
 out), and its README holds the current score, the matched list and the remaining divergences.
-Findings reach this repository as prose and specs in [`reverse-engineering/`](reverse-engineering/RE-INDEX.md),
-citing functions rather than quoting code.
+Findings are written as prose and specs in [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation),
+citing functions rather than quoting code; [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) here is a frozen copy.
 
 The Ghidra-era campaign (generations, contract grades, promotion cohorts, the tracked Ghidra checkpoint and
 `developer_state.json`) ended with that work. Its records moved on 2026-10-15 to the private repository
@@ -864,7 +864,8 @@ The Ghidra-era campaign (generations, contract grades, promotion cohorts, the tr
 
 ## Evidence boundary
 
-[`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) is the front door to the game documentation.
+[`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) is the front door to the frozen copy of the game
+documentation, which is maintained in [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation).
 The decompilation and the retail executable own static released-binary facts; controlled copied-runtime
 observations own measured behaviour. Stuart's GPL source owns architecture and implementation evidence; retail
 static and runtime differences decide where the Steam release diverged.

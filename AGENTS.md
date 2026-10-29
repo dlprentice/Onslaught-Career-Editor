@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-10-29 (the companion described without a signed-update check; the maintainer's storage layout moved out of the tracked text; earlier: retained rebuild and current documentation owners clarified; platform-validation rule no longer assumes Windows is unavailable; companion CE support and public exports)
+Last updated: 2026-10-29 (the game documentation's home stated as onslaught-preservation, with `reverse-engineering/` a frozen copy; earlier: the companion described without a signed-update check; the maintainer's storage layout moved out of the tracked text; earlier: retained rebuild and current documentation owners clarified; platform-validation rule no longer assumes Windows is unavailable; companion CE support and public exports)
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
@@ -20,7 +20,8 @@ A preservation project for *Battle Engine Aquila* (2003). This public repository
 - the **companion** (`companion/`), Onslaught Companion: the Godot .NET app for careers, saves, backups, settings,
   music and lore for the original game and Onslaught CE, including CE launcher settings and the steps for updating CE (the companion contacts nothing). The old AppCore patching
   core is gone; the file-safety and save-layout code the companion uses lives in the companion, and Git keeps the rest;
-- documentation of the game (formats, behaviours, contracts) and our own tools.
+- a frozen copy of the game documentation (`reverse-engineering/`), whose home is
+  https://github.com/dlprentice/onslaught-preservation, where new findings go, and our own tools.
 
 Elsewhere: the byte-matching decompilation, the reverse-engineering authority, is public as
 [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), and the native source port as
