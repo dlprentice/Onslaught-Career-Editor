@@ -49,6 +49,15 @@ public sealed record ScriptChange(int Index, string Name, int InstructionsFrom, 
 {
     /// <summary>True when the instructions differ in more than their number (an instruction's opcode or operand is not the baseline's).</summary>
     public bool CodeDiffers { get; init; }
+
+    /// <summary>What differs, in a few words for the player: "1 symbol differs", "27 to 29 instructions", "its code differs, 2 symbols differ".</summary>
+    public string Describe()
+    {
+        List<string> parts = [];
+        if (CodeDiffers) parts.Add(InstructionsFrom == InstructionsTo ? "its code differs" : $"{InstructionsFrom} to {InstructionsTo} instructions");
+        if (Symbols.Count > 0) parts.Add(Symbols.Count == 1 ? "1 symbol differs" : $"{Symbols.Count} symbols differ");
+        return parts.Count == 0 ? "its record differs" : string.Join(", ", parts);
+    }
 }
 
 internal static class ScriptDiff
