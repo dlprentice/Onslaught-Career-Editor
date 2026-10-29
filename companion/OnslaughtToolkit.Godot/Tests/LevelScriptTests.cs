@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
+using System.Diagnostics;
 using System.Text;
 using OnslaughtToolkit.Companion.Levels;
 
@@ -149,12 +150,136 @@ internal static class LevelScriptTests
         check.That(none.Source is null && none.Problem == "No file named Bar.msl in Level123.", $"a missing file is named: {none.Problem}");
         check.That(ScriptSources.Find(game, 124, "Foo").Problem == "This game has no MissionScripts folder for level 124.", "a level with no folder says so");
         check.That(ScriptSources.Find(Path.Combine(output, "script-sources-empty"), 123, "Foo").Problem == "This game has no data/MissionScripts folder.", "a game with no scripts folder says so");
-        check.That(ScriptSources.Find(game, 123, "Link").Source is null && ScriptSources.Find(game, 200, "Foo").Source is null, "a link to a file or a folder is ignored, as the level archive reader ignores links");
+        check.That(ScriptSources.Find(game, 123, "Link") is { Source: null, Problem: "No file named Link.msl in Level123." } && ScriptSources.Find(game, 200, "Foo").Source is null,
+            "a link to a file or a folder is ignored, as the level archive reader ignores links: to the finder it is not there");
         check.That(new[] { "..\\script-sources-outside", "../script-sources-outside", "../../script-sources-outside", "Foo.MSL/..", "" }.All(name => ScriptSources.Find(game, 123, name).Source is null),
             "a script named like a path finds nothing: the name is matched against the folder's entries, never joined into a path");
         Directory.Delete(game, true);
         Directory.Delete(upper, true);
         File.Delete(Path.Combine(output, "script-sources-outside.msl"));
+        SourcesRefused(output, check);
+    }
+
+    /// <summary>What is not a source and what cannot be listed: each is a reason in the result, and nothing hangs or throws.</summary>
+    private static void SourcesRefused(string output, Checks check)
+    {
+        string game = Path.Combine(output, "script-sources-refused");
+        if (Directory.Exists(game)) Directory.Delete(game, true);
+        string scripts = Path.Combine(game, "data", "MissionScripts");
+        string folder = Path.Combine(scripts, "level123");
+        Directory.CreateDirectory(folder);
+        File.WriteAllText(Path.Combine(folder, "Foo.msl"), "// fine\n");
+        const string UnlistedWords = "could not be looked up";
+        UnixFileMode open = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute;
+
+        // A named pipe named like a script would wait for a writer for ever, so it is not opened: the lookup comes back at once with a reason.
+        if (OperatingSystem.IsLinux())
+        {
+            string pipe = Path.Combine(folder, "Pipe.msl");
+            using (Process make = Process.Start(new ProcessStartInfo("mkfifo", [pipe]) { UseShellExecute = false })!)
+            {
+                make.WaitForExit();
+                check.That(make.ExitCode == 0, $"mkfifo made the named pipe (exit {make.ExitCode})");
+            }
+            Task<ScriptSourceResult> lookup = Task.Run(() => ScriptSources.Find(game, 123, "Pipe"));
+            bool returned = lookup.Wait(TimeSpan.FromSeconds(10));
+            check.That(returned && lookup.Result is { Source: null, Problem: "Pipe.msl is not a regular file, so it is not read." },
+                $"a named pipe is refused with a reason and the lookup does not wait for a writer: {(returned ? lookup.Result.Problem : "it did not return in 10 seconds")}");
+            if (!returned)
+            {
+                using (File.OpenHandle(pipe, FileMode.Open, FileAccess.Write))
+                {
+                    // let the reader that is stuck on the pipe go, so the run can end
+                }
+                lookup.Wait(TimeSpan.FromSeconds(10));
+            }
+            check.That(ScriptSources.Find(game, 123, "Foo").Source?.Text == "// fine\n", "a regular file beside the pipe is still read");
+            check.That(ScriptSources.IsRegularFile(Path.Combine(folder, "Foo.msl")) && !ScriptSources.IsRegularFile(pipe) && !ScriptSources.IsRegularFile(folder),
+                "a regular file is one; a named pipe and a folder are not");
+            bool examined = true;
+            try
+            {
+                ScriptSources.IsRegularFile(Path.Combine(folder, "Gone.msl"));
+            }
+            catch (IOException)
+            {
+                examined = false;
+            }
+            check.That(!examined, "an entry that cannot be examined is an IOException, which the lookup turns into a reason");
+            File.Delete(pipe);
+        }
+
+        // A folder that cannot be listed is a reason, not an exception for the page's signal handler to meet (a root user can list anything).
+        if (!OperatingSystem.IsWindows() && !Environment.IsPrivilegedProcess)
+        {
+            string locked = Path.Combine(scripts, "level125");
+            Directory.CreateDirectory(locked);
+            File.WriteAllText(Path.Combine(locked, "Foo.msl"), "x");
+            File.SetUnixFileMode(locked, UnixFileMode.None);
+            try
+            {
+                ScriptSourceResult denied = Throws(() => ScriptSources.Find(game, 125, "Foo"), out bool threw);
+                check.That(!threw && denied.Source is null && denied.Problem is { } deniedReason && deniedReason.StartsWith("The script sources " + UnlistedWords, StringComparison.Ordinal),
+                    $"a level folder with no permission to list it gives a reason: {(threw ? "it threw" : denied.Problem)}");
+            }
+            finally
+            {
+                File.SetUnixFileMode(locked, open);
+            }
+
+            File.SetUnixFileMode(scripts, UnixFileMode.None);
+            try
+            {
+                ScriptSourceResult denied = Throws(() => ScriptSources.Find(game, 123, "Foo"), out bool threw);
+                check.That(!threw && denied.Source is null && denied.Problem is { } deniedReason && deniedReason.StartsWith("The script sources " + UnlistedWords, StringComparison.Ordinal),
+                    $"a MissionScripts folder with no permission to list it gives a reason: {(threw ? "it threw" : denied.Problem)}");
+            }
+            finally
+            {
+                File.SetUnixFileMode(scripts, open);
+            }
+
+            string data = Path.Combine(game, "data");
+            File.SetUnixFileMode(data, UnixFileMode.None);
+            try
+            {
+                ScriptSourceResult denied = Throws(() => ScriptSources.Find(game, 123, "Foo"), out bool threw);
+                check.That(!threw && denied.Source is null && denied.Problem is { } deniedReason && deniedReason.StartsWith("The script sources " + UnlistedWords, StringComparison.Ordinal),
+                    $"a data folder with no permission to list it gives a reason: {(threw ? "it threw" : denied.Problem)}");
+            }
+            finally
+            {
+                File.SetUnixFileMode(data, open);
+            }
+
+            File.SetUnixFileMode(Path.Combine(folder, "Foo.msl"), UnixFileMode.None);
+            try
+            {
+                ScriptSourceResult denied = Throws(() => ScriptSources.Find(game, 123, "Foo"), out bool threw);
+                check.That(!threw && denied.Source is null && denied.Problem is { } deniedReason && deniedReason.Contains("could not be read", StringComparison.Ordinal),
+                    $"a file with no permission to read it gives a reason: {(threw ? "it threw" : denied.Problem)}");
+            }
+            finally
+            {
+                File.SetUnixFileMode(Path.Combine(folder, "Foo.msl"), UnixFileMode.UserRead | UnixFileMode.UserWrite);
+            }
+            check.That(ScriptSources.Find(game, 123, "Foo").Source?.Text == "// fine\n" && ScriptSources.Find(game, 125, "Foo").Source?.Text == "x", "with the permissions back, every source is read again");
+        }
+        Directory.Delete(game, true);
+    }
+
+    private static ScriptSourceResult Throws(Func<ScriptSourceResult> find, out bool threw)
+    {
+        try
+        {
+            threw = false;
+            return find();
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            threw = true;
+            return new(null, error.Message);
+        }
     }
 
     /// <summary>The model on the vectors' archive that holds a base world and a world of the level's own (levels 100 and 200).</summary>

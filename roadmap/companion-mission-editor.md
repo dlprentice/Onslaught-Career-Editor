@@ -264,7 +264,9 @@ narrows the list by name, event or function. Nothing is written.
   functions from its CALL instructions (the names are generated from the Toolkit's table, `tools/script_tables.py`), and the objects that
   name it from each object's script, spawn script and, for a spawner, its spawner spawn script, matched by exact name. A source is found
   at `data/MissionScripts/level<NNN>/<name>.msl` in any case (the real level's folder for the level's own scripts, the base level's for
-  its base world's), ignoring links and files over 1 MiB.
+  its base world's), ignoring links, anything that is not a regular file (opening a named pipe would wait for a writer for ever, so
+  the file system is asked first, without opening it) and files over 1 MiB. A folder that cannot be listed, or a file that cannot be read,
+  is a sentence on the page.
 - **Checked.** The Toolkit's gate table has a SCRIPTS row per level archive, worked out in Python separately from the C#: the catalog's
   lines (name, instructions, events, functions with counts, users) and the text of every source found, hashed. The Companion's local
   retail gate (`Development/LevelsGate.cs`) compares the C# catalog and finder with it on every level of an installed game: every list
