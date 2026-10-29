@@ -35,6 +35,9 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/check_installed_game_claims.py", "--check"),
     ("tools/check_registered_screenshots.py", "--self-test"),
     ("tools/check_registered_screenshots.py", "--check"),
+    # The publication helper behind twelve writers: its own checks were not part of this gate.
+    ("tools/safe_generated_output.py", "--self-test"),
+    ("tools/safe_generated_output_tests.py",),
     ("tools/aya_archive_inventory_tests.py",),
     ("tools/cmsh_animation_usage_census_tests.py",),
     ("tools/model_transform_catalog_tests.py",),
