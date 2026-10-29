@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import errno
 import hashlib
 import json
 import os
@@ -873,6 +874,23 @@ def _path_has_reparse(path: Path) -> bool:
     return False
 
 
+def _open_held_archive(path: Path):
+    """Open ``path`` for one bounded read without blocking on a special file.
+
+    The caller has just seen a regular file at this name, but the name can be replaced before the open, and a plain
+    open() of a FIFO then waits for a writer that never comes. O_NONBLOCK makes that open return at once so the
+    caller's fstat can refuse it before anything is read; a regular file ignores the flag. O_NOFOLLOW refuses a
+    symlink swapped in at the final component. Flags a platform lacks are 0.
+    """
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+    descriptor = os.open(path, flags)
+    try:
+        return os.fdopen(descriptor, "rb")
+    except BaseException:
+        os.close(descriptor)
+        raise
+
+
 def read_held_archive(path: Path) -> bytes:
     """Read one regular single-link archive once and revalidate its identity."""
 
@@ -886,7 +904,7 @@ def read_held_archive(path: Path) -> bytes:
         if before_path.st_nlink != 1:
             raise ArchiveObservationError("hardlink_input")
 
-        with path.open("rb") as stream:
+        with _open_held_archive(path) as stream:
             before_handle = os.fstat(stream.fileno())
             if not stat.S_ISREG(before_handle.st_mode):
                 raise ArchiveObservationError("not_regular_input")
@@ -911,6 +929,8 @@ def read_held_archive(path: Path) -> bytes:
     except ArchiveObservationError:
         raise
     except OSError as error:
+        if error.errno == errno.ELOOP:      # O_NOFOLLOW refused a symlink that replaced the file after the path check
+            raise ArchiveObservationError("reparse_input") from error
         raise ArchiveObservationError("unavailable_input") from error
 
 

@@ -12,6 +12,7 @@ import os
 import stat
 import struct
 import tempfile
+import threading
 import unittest
 import zlib
 from pathlib import Path
@@ -703,6 +704,79 @@ class AyaArchiveInventoryObservationTests(unittest.TestCase):
 
             with mock.patch.object(inventory.os, "fstat", side_effect=changed_fstat):
                 self._assert_category("changed_held_input", lambda: self._api("read_held_archive")(source))
+
+    def _swap_after_path_check(self, source: Path, replace) -> "mock._patch":
+        """Patch lstat so ``replace()`` runs right after the check that precedes the open: the second lstat of ``source``
+        (the first is the component walk). Simulates the name being replaced between the check and the open."""
+        real_lstat = os.lstat
+        source_calls = 0
+
+        def swapping_lstat(path, *args, **kwargs):
+            nonlocal source_calls
+            metadata = real_lstat(path, *args, **kwargs)
+            if os.path.normcase(os.fspath(path)) == os.path.normcase(os.fspath(source)):
+                source_calls += 1
+                if source_calls == 2:
+                    replace()
+            return metadata
+
+        return mock.patch.object(inventory.os, "lstat", side_effect=swapping_lstat)
+
+    @unittest.skipUnless(hasattr(os, "mkfifo"), "needs POSIX FIFOs")
+    def test_read_held_archive_refuses_a_fifo_without_blocking(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source.aya"
+            os.mkfifo(source)
+            self._assert_category("not_regular_input", lambda: self._api("read_held_archive")(source))
+
+    @unittest.skipUnless(hasattr(os, "mkfifo") and hasattr(os, "O_NONBLOCK"), "needs POSIX FIFOs")
+    def test_read_held_archive_does_not_block_on_a_fifo_swapped_in_after_the_path_check(self) -> None:
+        # A plain open() of a FIFO waits for a writer. The read runs in a worker so that a regression is reported
+        # (and the stuck open released) instead of hanging the suite.
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "source.aya"
+            source.write_bytes(_archive(_chunk(b"AYAD")))
+
+            def replace() -> None:
+                source.unlink()
+                os.mkfifo(source)
+
+            outcome: list[object] = []
+
+            def attempt() -> None:
+                try:
+                    outcome.append(self._api("read_held_archive")(source))
+                except BaseException as error:  # noqa: BLE001 - recorded for the assertions below
+                    outcome.append(error)
+
+            with self._swap_after_path_check(source, replace):
+                worker = threading.Thread(target=attempt, daemon=True)
+                worker.start()
+                worker.join(5)
+                blocked = worker.is_alive()
+                if blocked:
+                    os.close(os.open(source, os.O_WRONLY | os.O_NONBLOCK))   # releases a reader stuck in open()
+                    worker.join(5)
+            self.assertFalse(blocked, "read_held_archive blocked on a FIFO that replaced the file after the path check")
+            self.assertEqual(1, len(outcome))
+            self.assertIsInstance(outcome[0], self._error_type())
+            self.assertEqual("not_regular_input", outcome[0].category)
+
+    @unittest.skipUnless(hasattr(os, "O_NOFOLLOW"), "needs O_NOFOLLOW")
+    def test_read_held_archive_refuses_a_symlink_swapped_in_after_the_path_check(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source.aya"
+            other = root / "other.aya"
+            source.write_bytes(_archive(_chunk(b"AYAD")))
+            other.write_bytes(_archive(_chunk(b"AYAD", b"elsewhere")))
+
+            def replace() -> None:
+                source.unlink()
+                os.symlink(other, source)
+
+            with self._swap_after_path_check(source, replace):
+                self._assert_category("reparse_input", lambda: self._api("read_held_archive")(source))
 
     def test_read_held_archive_rechecks_reparse_components_after_read(self) -> None:
         fixture = _archive(_chunk(b"AYAD"))

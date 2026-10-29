@@ -63,6 +63,11 @@ publish, sign, or install anything by themselves.
   texture census also exposes a bounded `serialized_texture_metadata` API for
   selected held TEXT payloads; external PC mip contents and runtime selection
   remain unknown.
+  Their shared `read_held_archive` opens each input without blocking and without following a final symlink,
+  accepts only a regular single-link file within the size cap, and compares the file's identity before and
+  after the read. A name replaced by a FIFO, device or symlink between its check and its open is refused
+  (`not_regular_input` or `reparse_input`) instead of waited on. It takes no lock: it detects replacement and
+  metadata-visible change, not a rewrite that keeps the size and modification time.
 - `mission_script_inspect.py` inspects one explicitly selected, hash-bound
   compiled-script record or range. Its bounded output describes stored
   structure and unknowns; it does not execute scripts or edit missions.
