@@ -84,21 +84,29 @@ public static class ScriptSources
     internal static bool IsRegularFile(string path)
     {
         if (!OperatingSystem.IsLinux()) return true;
-        const int atCurrentDirectory = -100, noFollow = 0x100;
         const uint typeMask = 0x1;  // STATX_TYPE
-        Stat stat;
-        int failed;
+        (int Failed, int Errno, uint Mask, ushort Mode) answer;
         try
         {
-            failed = StatAt(atCurrentDirectory, path, noFollow, typeMask, out stat);
+            answer = Statx(path);
         }
         catch (Exception error) when (error is EntryPointNotFoundException or DllNotFoundException)
         {
             // Failing open here would bring the wait for a pipe back, so a system that cannot be asked reads nothing.
             throw new IOException("this system's C library has no statx to ask with", error);
         }
-        if (failed != 0) throw new IOException(new Win32Exception(Marshal.GetLastWin32Error()).Message);
-        return (stat.Mask & typeMask) != 0 && (stat.Mode & 0xF000) == 0x8000;
+        if (answer.Failed != 0) throw new IOException(new Win32Exception(answer.Errno).Message);
+        return (answer.Mask & typeMask) != 0 && (answer.Mode & 0xF000) == 0x8000;
+    }
+
+    /// <summary>The call that asks the system what an entry is: (the call's result, its errno, the mask and the mode it filled in). The tests put their own here to make the system refuse or lack the call; it is the native one otherwise.</summary>
+    internal static Func<string, (int Failed, int Errno, uint Mask, ushort Mode)> Statx { get; set; } = NativeStatx;
+
+    private static (int Failed, int Errno, uint Mask, ushort Mode) NativeStatx(string path)
+    {
+        const int atCurrentDirectory = -100, noFollow = 0x100;
+        int failed = StatAt(atCurrentDirectory, path, noFollow, 0x1, out Stat stat);
+        return (failed, failed != 0 ? Marshal.GetLastWin32Error() : 0, stat.Mask, stat.Mode);
     }
 
     /// <summary>The subfolder of <paramref name="parent"/> with this name in any case (the exact spelling first), or null; links are ignored.</summary>

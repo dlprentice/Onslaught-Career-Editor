@@ -16,8 +16,12 @@ namespace OnslaughtToolkit.Companion.Tests;
 /// </summary>
 internal static class ScriptsPageTests
 {
-    /// <summary>Gamma's source: a comment, then calls whose quoted texts name the authored level's path, an object, an event, nothing, and an object of the base world.</summary>
-    private const string Gamma = "// gamma\r\nFollowWaypoint(\"Path A\", 0);\r\nGetThingRef(\"Tank 1\");\r\nPostEvent(\"go\");\r\nGetThingRef(\"ghost\");\r\nGetThingRef(\"Base Hut\");\r\n";
+    /// <summary>
+    /// Gamma's source: a comment, then calls whose quoted texts name the authored level's path, an object, an event, nothing, and an object of the base world;
+    /// then the path in other letter case, as a follow-waypoint call's argument (which the game finds) and as an object's name (which it does not).
+    /// </summary>
+    private const string Gamma = "// gamma\r\nFollowWaypoint(\"Path A\", 0);\r\nGetThingRef(\"Tank 1\");\r\nPostEvent(\"go\");\r\nGetThingRef(\"ghost\");\r\nGetThingRef(\"Base Hut\");\r\n" +
+                                 "FollowWaypointWait(\"path a\", 0, 5);\r\nGetThingRef(\"path a\");\r\n";
 
     private static SignalAwaiter Frame(SceneTree tree) => tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
 
@@ -83,6 +87,14 @@ internal static class ScriptsPageTests
         real.Things[1].Init.SpawnScript = "alpha";
         real.Things[2].Init.Script = "ghost";
         real.Things[3].Init.Script = "beta";
+        // Its path "Path A" names a unit, a waypoint, a unit, a waypoint and a feature (slots 1, 3, 0, 2, 4): the game keeps the waypoints, rows 3 and 2, as its points.
+        real.WaypointPaths[0].Slots.Clear();
+        real.WaypointPaths[0].Slots.AddRange([1, 3, 0, 2, 4]);
+        WaypointPath lone = new() { Name = "Lone" };  // three slots, of which only the waypoint at row 2 is a point: a single point has no line
+        lone.Slots.AddRange([1, 2, 0]);
+        real.WaypointPaths.Add(lone);
+        real.Things[2].Init.Position = new(100f, 20f, 0f);
+        real.Things[3].Init.Position = new(300f, 60f, 0f);
         WorldBody baseWorld = LevelScriptTests.Body(LevelScriptTests.Script("alpha", [1], [], ("Print", 1)), LevelScriptTests.Script("basey", [0], []));
         baseWorld.Things[1].Init.Name = "Base Hut";  // an object the level's table does not list
         File.WriteAllBytes(archive, LevelArchiveBytes(131, 130, baseWorld.Write(), real.Write()));
@@ -186,19 +198,21 @@ internal static class ScriptsPageTests
             page.ShowScript("gamma");
             await Frame(tree);
             await CaretAt(1, 18);
-            check.That(page.Scripts.Token == new SourceToken("Path A", true, 16, 6) && page.NamesTitle == "“Path A” names:" && page.NameButtons.Select(button => button.Text).SequenceEqual(["path Path A · 3 points"]),
-                $"the caret in a quoted text names what it names: \"{page.NamesTitle}\" {string.Join(" | ", page.NameButtons.Select(button => button.Text))}");
+            check.That(page.Scripts.Token == new SourceToken("Path A", true, 16, 6, true) && page.NamesTitle == "“Path A” names:" && page.NameButtons.Select(button => button.Text).SequenceEqual(["path Path A · 2 points"]),
+                $"the caret in a quoted text names what it names, the path's points being the ones the game keeps: \"{page.NamesTitle}\" {string.Join(" | ", page.NameButtons.Select(button => button.Text))}");
+            check.That(page.HidePath.Visible && page.HidePath.Disabled && page.HighlightedPathText == "", "Hide path is in the row from the start, disabled, so that the map keeps its height when a path is shown");
             page.NameButtons[0].EmitSignal(BaseButton.SignalName.Pressed);
             await Frame(tree);
             WorldBody world = model.Session!.Body;
-            int[] pathRows = [.. world.WaypointPaths[0].Slots.Select(slot => (int)slot)];
+            int[] pathRows = [.. WaypointCatalog.Rows(world, world.WaypointPaths[0])];
+            check.That(pathRows.SequenceEqual([3, 2]) && world.WaypointPaths[0].Slots.Count == 5, "the path has five slots and the game keeps two of them as points, rows 3 and 2");
             double expectedLow = pathRows.Min(row => (double)model.Row(row)!.Position.X), expectedHigh = pathRows.Max(row => (double)model.Row(row)!.Position.X);
-            check.That(!page.ScriptsToggle.ButtonPressed && page.Map.HighlightedPath == 0 && page.Map.DrawablePaths == 1 && page.HidePath.Visible && page.HighlightedPathText == "Path Path A · 3 points, numbered along it" &&
+            check.That(!page.ScriptsToggle.ButtonPressed && page.Map.HighlightedPath == 0 && page.Map.DrawablePaths == 1 && page.HidePath.Visible && !page.HidePath.Disabled && page.HighlightedPathText == "Path Path A · 2 points, numbered along it" &&
                        Math.Abs(page.Map.View.CenterX - (expectedLow + expectedHigh) / 2) < 1e-4 && page.Map.View.Scale >= page.Map.View.FitScale,
                 $"the path button shows the path on the map, numbered, and brings the map to it: highlighted {page.Map.HighlightedPath}, \"{page.HighlightedPathText}\", centre {page.Map.View.CenterX} (the points' x run {expectedLow} to {expectedHigh}), scale {page.Map.View.Scale}");
             check.That(page.PathLabel.MouseFilter == Control.MouseFilterEnum.Pass && page.PathLabel.TooltipText == page.HighlightedPathText, "the path line's tooltip, which has the whole text, can be reached with the pointer");
             page.HidePath.EmitSignal(BaseButton.SignalName.Pressed);
-            check.That(page.Map.HighlightedPath is null && !page.HidePath.Visible && page.HighlightedPathText == "", "Hide path stops highlighting it");
+            check.That(page.Map.HighlightedPath is null && page.HidePath.Visible && page.HidePath.Disabled && page.HighlightedPathText == "", "Hide path stops highlighting it, and stays in the row, disabled");
             check.That(!page.Map.ShowAllPaths, "the Paths switch starts off");
             page.PathsToggle.ButtonPressed = true;
             check.That(page.Map.ShowAllPaths && page.Map.DrawablePaths == 1, "the Paths switch draws every path");
@@ -227,6 +241,12 @@ internal static class ScriptsPageTests
             check.That(page.NamesTitle == "“Base Hut” names:" && page.NameButtons.Count == 0 && page.NameLabels.Select(label => label.Text).SequenceEqual(["unit 1 · Base Hut · base world"]) &&
                        page.NameLabels[0].MouseFilter == Control.MouseFilterEnum.Pass && page.NameLabels[0].TooltipText.Contains("level 131", StringComparison.Ordinal),
                 $"a name only an object of the base world has is said, with nothing to go to: \"{page.NamesTitle}\" {string.Join(" | ", page.NameLabels.Select(label => label.Text))} / {page.NameLabels.FirstOrDefault()?.TooltipText}");
+            await CaretAt(6, 24);
+            check.That(page.Scripts.Token == new SourceToken("path a", true, 20, 6, true) && page.NamesTitle == "“path a” names:" && page.NameButtons.Select(button => button.Text).SequenceEqual(["path Path A · 2 points (other letter case)"]),
+                $"the path argument of a follow-waypoint call is found in any letter case, and the button says so: \"{page.NamesTitle}\" {string.Join(" | ", page.NameButtons.Select(button => button.Text))}");
+            await CaretAt(7, 15);
+            check.That(page.Scripts.Token == new SourceToken("path a", true, 13, 6) && page.NamesTitle == "“path a” names nothing in this level." && page.NameButtons.Count == 0,
+                $"the same text anywhere else is not a path, as the game compares those names as they are: \"{page.NamesTitle}\"");
             await CaretAt(1, 3);
             check.That(page.Scripts.Token == new SourceToken("FollowWaypoint", false, 0, 14) && page.NamesTitle == "" && page.NameButtons.Count == 0, "a word is not a name to follow");
             await CaretAt(0, 4);
@@ -238,13 +258,17 @@ internal static class ScriptsPageTests
 
             // From an object to the paths it is a point of.
             page.ShowObject(2);
-            check.That(page.ObjectPathButtons.Select(button => button.Text).SequenceEqual(["Path Path A · point 2 of 3"]), $"an object that a path passes through offers the path: \"{string.Join(" | ", page.ObjectPathButtons.Select(button => button.Text))}\"");
+            check.That(page.ObjectPathButtons.Select(button => button.Text).SequenceEqual(["Path Path A · point 2 of 2", "Path Lone · point 1 of 1"]), $"an object that a path passes through offers each path, numbered among the points the game keeps: \"{string.Join(" | ", page.ObjectPathButtons.Select(button => button.Text))}\"");
             page.ObjectPathButtons[0].EmitSignal(BaseButton.SignalName.Pressed);
             check.That(page.Map.HighlightedPath == 0 && page.SelectedRow == 2 && page.Map.Selected == 2, "and its button shows the path on the map with the object still selected");
+            page.SelectIndex(3);
+            check.That(page.ObjectPathButtons.Select(button => button.Text).SequenceEqual(["Path Path A · point 1 of 2"]), "the other waypoint is the path's first point, though its slot is the second");
+            page.SelectIndex(1);
+            check.That(page.ObjectPathButtons.Count == 0, "a unit that a path names is on no path: the game drops that slot");
             page.SelectIndex(4);
             check.That(page.ObjectPathButtons.Count == 0, "an object on no path offers none");
             page.OpenLevel(130);
-            check.That(page.Map.HighlightedPath is null && !page.HidePath.Visible, "opening a level again drops the highlight");
+            check.That(page.Map.HighlightedPath is null && page.HidePath.Disabled, "opening a level again drops the highlight");
 
             // Nothing was written, and the move editor still works on the objects.
             page.ScriptsToggle.ButtonPressed = false;

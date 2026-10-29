@@ -117,7 +117,7 @@ internal sealed class LevelEditorPage : Page
         _pathText.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         _pathText.MouseFilter = Control.MouseFilterEnum.Pass;  // so that the tooltip, which has the whole text when it is cut short, shows
         HidePath = pathBar.Add(Build.Button("Hide path", tooltip: "Stop highlighting the path."));
-        HidePath.Visible = false;
+        HidePath.Disabled = true;  // always in the row, so that the map above it keeps its height when a path is shown
         HidePath.Pressed += () => HighlightPath(null);
         Map.RowPicked += row => SelectIndex(row);
         Map.MoveRequested += (row, x, y) => Dragged(row, x, y);
@@ -709,9 +709,9 @@ internal sealed class LevelEditorPage : Page
     private void ShowPathState()
     {
         WaypointPath? path = Map.HighlightedPath is int index && _model?.Session?.Body.WaypointPaths is { } paths && index < paths.Count ? paths[index] : null;
-        _pathText.Text = path is null ? "" : $"Path {path.Name} · {Build.Count(path.Slots.Count, "point")}, numbered along it";
+        _pathText.Text = path is null ? "" : $"Path {path.Name} · {Build.Count(WaypointCatalog.Rows(_model!.Session!.Body, path).Count, "point")}, numbered along it";
         _pathText.TooltipText = _pathText.Text;
-        HidePath.Visible = path is not null;
+        HidePath.Disabled = path is null;
     }
 
     /// <summary>Under the caret of a source there is a quoted text: say what in this level has that name, each a button that goes to it.</summary>
@@ -720,7 +720,7 @@ internal sealed class LevelEditorPage : Page
         _scriptNames.Clear();
         _scriptNamesTitle.Visible = false;
         if (token is not { Quoted: true } quoted || _model?.Session is not { } session) return;
-        IReadOnlyList<NameMatch> matches = ScriptNames.Resolve(quoted.Text, session.Body, _model.Scripts, _model.BaseWorld);
+        IReadOnlyList<NameMatch> matches = ScriptNames.Resolve(quoted.Text, session.Body, _model.Scripts, _model.BaseWorld, quoted.PathArgument);
         _scriptNamesTitle.Visible = true;
         _scriptNamesTitle.Text = matches.Count == 0 ? $"“{quoted.Text}” names nothing in this level." : $"“{quoted.Text}” names:";
         foreach (NameMatch match in matches.Take(10))
@@ -744,6 +744,18 @@ internal sealed class LevelEditorPage : Page
             button.Pressed += () => Follow(followed);
         }
         if (matches.Count > 10) _scriptNames.Add(Build.Text($"and {matches.Count - 10} more", "Faint", wrap: false));
+        ScrollNamesIntoView();
+    }
+
+    /// <summary>The names card is the last thing in the script card, below the fold of a short window: scroll the column so that what a click just found is in view.</summary>
+    private async void ScrollNamesIntoView()
+    {
+        SceneTree? tree = _side.GetTree();
+        if (tree is null) return;
+        await _side.ToSignal(tree, SceneTree.SignalName.ProcessFrame);  // the flow of buttons has its height once the column has been laid out
+        await _side.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+        if (GodotObject.IsInstanceValid(_side) && _side.IsInsideTree() && _scriptNamesTitle.IsVisibleInTree())
+            _side.EnsureControlVisible(_scriptNames.GetChildCount() > 0 ? _scriptNames : _scriptNamesTitle);
     }
 
     private void Follow(NameMatch match)
