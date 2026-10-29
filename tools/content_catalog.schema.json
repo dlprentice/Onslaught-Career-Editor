@@ -505,7 +505,7 @@
             "properties": {
               "name": {
                 "type": ["string", "null"],
-                "description": "The 128-byte TEXB name field as stored: the text before the first NUL when the field is terminated and valid UTF-8 (a known-empty name is the empty string and nameStatus empty); null when the field is unterminated or not UTF-8. It is never a lossy decode of an unreadable field. Older v1 records may hold such a decode and lack nameStatus."
+                "description": "The 128-byte TEXB name field as stored: the text before the first NUL when the field is terminated and valid UTF-8 (a known-empty name is the empty string and nameStatus empty); null when the field is unterminated or not UTF-8. It is never a lossy decode of an unreadable field. A catalogue written before this field existed may hold such a decode and lacks nameStatus; it does not validate against this schema, which requires nameStatus."
               },
               "nameStatus": {
                 "enum": [
@@ -856,7 +856,7 @@
             "unknown-name",
             "empty-name"
           ],
-          "description": "unknown-name: the mesh slot's stored name field is unreadable (unterminated or not UTF-8), so nothing was looked up or joined; empty-name: the slot's stored name is known to be empty and nothing was joined; both differ from unresolved, where a readable name was looked up and found nothing. name-match: a stored string equals a file name but no loader joins them; name-match-unloaded: a data observation about content no retail loader reads; code-site: a literal lookup in game code (the evidence names the site); code-rule: a name game code builds with sprintf from a format rule and data (the evidence names the function and the rule). name-match also covers a script argument that equals a thing's name."
+          "description": "unknown-name: the mesh slot's stored name field is unreadable (unterminated or not UTF-8), so nothing was looked up or joined; empty-name: the slot's stored name is known to be empty and nothing was joined; both differ from unresolved, where a readable name matched nothing: it was looked up and found nothing or, for a name shorter than 9 bytes that has no suffix from byte 8 to classify, nothing was looked up or joined (the evidence says which). name-match: a stored string equals a file name but no loader joins them; name-match-unloaded: a data observation about content no retail loader reads; code-site: a literal lookup in game code (the evidence names the site); code-rule: a name game code builds with sprintf from a format rule and data (the evidence names the function and the rule). name-match also covers a script argument that equals a thing's name."
         },
         "targetNameStatus": {
           "enum": [

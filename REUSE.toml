@@ -5,12 +5,13 @@
 # per-file SPDX lines take precedence and the annotation below covers the rest.
 # Not covered here: references/ submodules (their own licences).
 #
-# tests_shared/fixtures/gold_career_save.bin is deliberately unannotated: it is a
-# real career save written by the retail game and contributed by vandal_117 as
-# the one tracked test baseline (reverse-engineering/project-meta/attribution.md;
+# tests_shared/fixtures/gold_career_save.bin is annotated below with
+# LicenseRef-Retail-Save-Fixture, a label for "no licence granted": it is a real
+# career save written by the retail game and contributed by vandal_117 as the one
+# tracked test baseline (reverse-engineering/project-meta/attribution.md;
 # tests_shared/fixtures/README.md). It is game-format data, not project work, and
 # no licence was granted with it, so the project's licences are not claimed for
-# it and `reuse lint` reports it as unlicensed.
+# it (LICENSES/LicenseRef-Retail-Save-Fixture.txt says so in full).
 version = 1
 
 # Project code and build files.
@@ -99,3 +100,9 @@ SPDX-FileCopyrightText = [
     "Stuart Gillam (AYAResourceExtractor, github.com/stuart73/AYAResourceExtractor)",
 ]
 SPDX-License-Identifier = "CC-BY-SA-4.0 AND MIT"
+
+# The one tracked save: game-format data with no licence granted (see the note at the top).
+[[annotations]]
+path = "tests_shared/fixtures/gold_career_save.bin"
+SPDX-FileCopyrightText = "The rights holders of the game's save-file data, contributed by vandal_117"
+SPDX-License-Identifier = "LicenseRef-Retail-Save-Fixture"

@@ -1,0 +1,8 @@
+No licence is granted for this file by this repository.
+
+tests_shared/fixtures/gold_career_save.bin is a career save written by the retail game, Battle Engine Aquila, and contributed
+by a community member as the repository's one regression-test baseline (reverse-engineering/project-meta/attribution.md and
+tests_shared/fixtures/README.md say how it came here and how tests must use it). It is game-format data, not project work, and
+no licence was granted with it. The licences that cover the rest of this repository (GPL-3.0-only for code, CC-BY-SA-4.0 for
+documentation) are therefore not claimed for it, and every right in it stays with its holders. It is kept here only as a test
+fixture that tests read and never modify, and it is not a precedent for tracking any other save, options file or game payload.
