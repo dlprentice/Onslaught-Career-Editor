@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-28 (read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-29 (census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -73,7 +73,15 @@ publish, sign, or install anything by themselves.
   an invalid or unterminated mesh name is null with a status. The shared parser
   instead refuses the whole mesh if a part name is invalid or unterminated.
   Name byte hashes describe terminated field contents; UTF-8 decoding does not
-  establish the game's original display encoding. The model-metadata v1 record
+  establish the game's original display encoding. The anonymous embedded rows are
+  the `MESH` chunks whose outer wrapper name is empty; each row's internal CMSH
+  name is read from its own field and reported with its own status, so an empty
+  outer name does not by itself mean an empty internal name. A malformed anonymous
+  embedded mesh, such as one with an invalid part name, stops the whole census,
+  because that path has no per-row refusal. A malformed loose mesh is recorded as
+  unparsed in `modelMetadataCoverage`; the part, frame-map, bone and camera counts
+  in `meshSummary` cover parsed meshes only, while its `meshes` count includes
+  every selected file. The model-metadata v1 record
   remains available with its existing fields. Census v4 is an output format
   identifier; there is no separate machine-readable schema for the census.
   Its JSON output is

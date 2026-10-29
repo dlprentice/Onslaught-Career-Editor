@@ -3,7 +3,7 @@
 Status: active format contract — complete outer/tag census; most payload schemas
 remain owner-specific or open
 Date: 2026-08-28
-Last updated: 2026-10-16 (Goodie archive names corrected to two digits; GDIE layout in goodie-resources.md)
+Last updated: 2026-10-29 (the 53 empty outer MESH names are not the internal CMSH names; earlier: Goodie archive names corrected to two digits; GDIE layout in goodie-resources.md)
 Verdict: all 301 streams and 23,884 top-level tags are accounted for; the
 numeric WRES Unit/Feature instance join and released PS2 texture-page runtime
 boundary are bounded, while most other payload schemas and world dependencies
@@ -469,11 +469,13 @@ coverage claim.
   metadata and must not be interpreted as arbitrary prose.
 - The [CMSH animation/usage census](cmsh-animation-usage.md) decodes the
   validated `PMSH[/PMS2]` logical name on all 3,485 `MESH` rows in the 66 numeric
-  archives: 3,432 rows join to 205 loose meshes and 53 have an empty name. This
+  archives: 3,432 rows join to 205 loose meshes and 53 have an empty outer name
+  (the `PMSH[/PMS2]` logical name; the stream's internal CMSH name is a separate
+  field, which census v4 reads as empty, not unknown, in all 53). This
   proves numeric-archive membership. The dedicated
   [WRES instance join](wres-instance-join.md) then closes 4,090 type-8/type-35
   definition records through physics mesh fields to one named row and one loose
-  CMSH each. The 53 empty rows each own an anonymous embedded CMSH but retain no
+  CMSH each. The 53 rows with an empty outer name each own an anonymous embedded CMSH but retain no
   exact WRES/name key. The seven additional all-LVLR `MESH` rows are in Goodie
   archives.
 - Level 100/base/frontend retain deeper owner-specific work. All 66 numeric

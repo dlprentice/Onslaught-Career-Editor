@@ -622,6 +622,32 @@ def _world_instance(
     )
 
 
+def _write_census_root(root: Path, *, loose: dict[str, bytes], embedded: dict[int, bytes]) -> dict[Path, bytes]:
+    """Authored data root for build_census: loose meshes by file name, one anonymous embedded MESH body per level."""
+    resources = root / "resources"
+    (resources / "meshes").mkdir(parents=True)
+    (root / "MissionScripts").mkdir()
+    saved: dict[Path, bytes] = {root / "default physics.dat": _physics_fixture()}
+    for file_name, stream in loose.items():
+        compressed = zlib.compress(stream)
+        saved[resources / "meshes" / file_name] = struct.pack("<I", len(compressed)) + compressed
+    for level, stream in embedded.items():
+        mesh = _chunk(b"MESH", _chunk(b"PMSH", _chunk(b"PMS2", bytes(309) + stream)))
+        compressed = zlib.compress(_chunk(b"LVLR", bytes(4)) + _chunk(b"WRES", _chunk(b"WRLD", b"")) + mesh)
+        saved[resources / f"{level}_res_PC.aya"] = struct.pack("<I", len(compressed)) + compressed
+    for path, data in saved.items():
+        path.write_bytes(data)
+    return saved
+
+
+def _with_invalid_part_name(stream: bytes) -> bytes:
+    """The same stream with its first part name set to bytes that are not UTF-8."""
+    bad = bytearray(stream)
+    offset = bad.index(b"CMSP") + 8 + 0xdc
+    bad[offset:offset + 32] = b"bad\xff\0".ljust(32, b"\0")
+    return bytes(bad)
+
+
 class WorldInstanceParsingTests(unittest.TestCase):
     def test_anonymous_mesh_name_unknown_reaches_the_actual_join_summary(self) -> None:
         with tempfile.TemporaryDirectory(prefix="authored-census-") as directory:
@@ -654,6 +680,34 @@ class WorldInstanceParsingTests(unittest.TestCase):
                              [("", "empty"), (None, "unterminated")])
             self.assertEqual(result["summary"]["internalNameCounts"], {"": 1})
             self.assertEqual(result["summary"]["unknownInternalNames"], 1)
+            self.assertTrue(all(path.read_bytes() == data for path, data in saved.items()))
+
+    def test_malformed_anonymous_embedded_mesh_stops_the_whole_census(self) -> None:
+        # The documented limit: the anonymous embedded path has no per-row refusal, so one bad body aborts the report.
+        with tempfile.TemporaryDirectory(prefix="authored-census-") as directory:
+            root = Path(directory)
+            saved = _write_census_root(
+                root, loose={"m_authored.msh.aya": _catalog_stream(name="Loose")},
+                embedded={100: _catalog_stream(name=""), 101: _with_invalid_part_name(_catalog_stream(name=""))})
+            with self.assertRaises(census.CmshProfileError):
+                census.build_census(root)
+            self.assertTrue(all(path.read_bytes() == data for path, data in saved.items()))
+
+    def test_malformed_loose_mesh_is_unparsed_and_left_out_of_the_part_counts(self) -> None:
+        # The documented limit: meshSummary counts every selected file as a mesh but sums parts over parsed meshes only.
+        good = _catalog_stream(name="Good", parts=[_catalog_part(0, name="root", children=(1,)),
+                                                    _catalog_part(1, name="leaf", parent=0)])
+        bad = _with_invalid_part_name(_catalog_stream(name="Bad"))
+        with tempfile.TemporaryDirectory(prefix="authored-census-") as directory:
+            root = Path(directory)
+            saved = _write_census_root(root, loose={"m_good.msh.aya": good, "m_bad.msh.aya": bad}, embedded={})
+            report = census.build_census(root)
+            self.assertEqual(report["meshSummary"]["meshes"], 2)
+            self.assertEqual(report["meshSummary"]["parts"], 2)
+            coverage = report["modelMetadataCoverage"]
+            self.assertEqual(coverage["outcomeCounts"], {"parsed": 1, "unparsed": 1})
+            self.assertEqual(coverage["legacyJoinEligible"], 1)
+            self.assertEqual(len(coverage["unknownOccurrences"]), 1)
             self.assertTrue(all(path.read_bytes() == data for path, data in saved.items()))
 
     def test_physics_unit_and_feature_mesh_fields_keep_their_owners_distinct(self) -> None:

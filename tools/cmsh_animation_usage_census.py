@@ -1531,7 +1531,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(
         "Anonymous embedded CMSH: "
-        f"{world['anonymousEmbedded']['summary']['rows']} empty-name rows, "
+        f"{world['anonymousEmbedded']['summary']['rows']} rows with an empty outer MESH name, "
         f"{world['anonymousEmbedded']['summary']['looseCoreMatches']} loose-core matches"
     )
     print(output)
