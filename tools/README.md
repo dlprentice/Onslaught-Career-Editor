@@ -252,6 +252,17 @@ publish, sign, or install anything by themselves.
   preparation remain separate, and must use the same reviewed identities. No no-overwrite or atomic-write guarantee applies to a
   redirected stream. This CLI has only authored-fixture tests, requires the
   same descriptor-safe input support as the preview, and has no validated Windows workflow.
+- `level_editor_vectors.py` writes `companion/OnslaughtToolkit.Godot/Tests/LevelVectors.g.cs`, the authored vectors the
+  Companion's level data layer (`Levels/`: `WorldBody` and `LevelArchive`, which read and write a world body and read a
+  level archive) is tested against: world bodies of every version the loader accepts and every kind of thing record it
+  reads, bodies the reference refuses (each valid but for one field), edits with the bytes the reference writes after
+  them, and authored level archives, each with the reference's dump of the fields it read. No game bytes enter it.
+  `python tools/level_editor_vectors.py --check` fails when the committed file is not what `--write` writes; it compares
+  what each compressed blob inflates to, so it does not depend on the zlib that compressed it.
+  `level_editor_vectors_tests.py` adds the reference's own round trips and the refusal of every proper prefix of a body.
+  `gate-table --game GAME --stdout` lists the size, SHA-256 and dump hash of each world body of an installed game (hashes
+  only) for the Companion's local retail gate, `Development/LevelsGate.cs`, whose header gives its command; the table is
+  derived from a game, so keep it private.
 - `export_game_assets.py`, `export_asset_catalog.py`,
   `export_language_corpus.py`, and `export_video_manifest.py` operate on
   user-supplied local inputs and write to a separate local output root. The
