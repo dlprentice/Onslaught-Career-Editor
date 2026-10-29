@@ -75,7 +75,7 @@ internal sealed partial class LevelMap : Control
         }
     }
 
-    /// <summary>How many paths have a line to draw: two or more of their points name an object of the level.</summary>
+    /// <summary>How many paths have a line to draw: two or more of their points are waypoints of the level.</summary>
     internal int DrawablePaths => _paths.Count(path => PathPoints(path).Count >= 2);
     internal bool Dragging => _drag is not null;
 
@@ -135,18 +135,21 @@ internal sealed partial class LevelMap : Control
         {
             List<(double X, double Y)> points = [];
             foreach (short slot in _paths[shown].Slots)
-                if (_byIndex.TryGetValue(slot, out ObjectRow? row)) points.Add((row.Position.X, row.Position.Y));
+                if (_byIndex.TryGetValue(slot, out ObjectRow? row) && row.Kind == WaypointCatalog.WaypointKind) points.Add((row.Position.X, row.Position.Y));
             if (points.Count > 0) _view.FitBounds(points.Min(point => point.X), points.Min(point => point.Y), points.Max(point => point.X), points.Max(point => point.Y));
         }
         QueueRedraw();
     }
 
-    /// <summary>The screen positions of a path's points that name an object of the level, in the path's order (a mark being dragged is where it is dragged to).</summary>
+    /// <summary>
+    /// The screen positions of a path's points, in the path's order (a mark being dragged is where it is dragged to): the slots that name a waypoint of
+    /// the level, as the game's loader keeps them (see <see cref="WaypointCatalog"/>).
+    /// </summary>
     private List<Vector2> PathPoints(WaypointPath path)
     {
         List<Vector2> points = [];
         foreach (short slot in path.Slots)
-            if (_byIndex.TryGetValue(slot, out ObjectRow? row))
+            if (_byIndex.TryGetValue(slot, out ObjectRow? row) && row.Kind == WaypointCatalog.WaypointKind)
             {
                 (double x, double y) = MarkAt(row);
                 points.Add(ToScreen(x, y));
@@ -342,7 +345,10 @@ internal sealed partial class LevelMap : Control
     /// <summary>A path longer than this has no numbers, which would only crowd it.</summary>
     internal const int MaxNumberedPoints = 60;
 
-    /// <summary>The highlighted path's point numbers, drawn over the marks (the mark of an object on the path would hide a number drawn under it), beside each point.</summary>
+    /// <summary>
+    /// The highlighted path's point numbers, drawn over the marks (the mark of an object on the path would hide a number drawn under it), above and to the
+    /// left of each point: a selected or hovered mark's tag is drawn above and to its right and would cover them there.
+    /// </summary>
     private void DrawPathNumbers()
     {
         if (_highlightedPath is not int index) return;
@@ -352,7 +358,7 @@ internal sealed partial class LevelMap : Control
         for (int point = 0; point < points.Count; point++)
         {
             string number = (point + 1).ToString(CultureInfo.InvariantCulture);
-            Vector2 at = points[point] + new Vector2(9, -9);
+            Vector2 at = points[point] + new Vector2(-9 - font.GetStringSize(number, HorizontalAlignment.Left, -1, 12).X, -9);
             DrawStringOutline(font, at, number, HorizontalAlignment.Left, -1, 12, 4, new Color(Palette.Background, 0.95f));
             DrawString(font, at, number, HorizontalAlignment.Left, -1, 12, Palette.AccentHover);
         }

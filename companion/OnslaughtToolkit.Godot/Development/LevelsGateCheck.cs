@@ -20,24 +20,25 @@ internal static class LevelsGateCheck
             printError("Set BEA_GAME to a game folder with data/resources/NNN_res_PC.aya files.");
             return 2;
         }
-        Dictionary<string, string[]>? table = null, terrainTable = null, scriptsTable = null, namesTable = null;
+        Dictionary<string, string[]>? table = null, terrainTable = null, scriptsTable = null, namesTable = null, pathsTable = null;
         if (tablePath.Length > 0)
         {
             table = [];
             terrainTable = [];
             scriptsTable = [];
             namesTable = [];
+            pathsTable = [];
             foreach (string line in File.ReadLines(tablePath).Skip(1))
             {
                 string[] cells = line.Split('\t');
                 if (cells.Length != 6) continue;
-                (cells[1] == "TERRAIN" ? terrainTable : cells[1] == "SCRIPTS" ? scriptsTable : cells[1] == "NAMES" ? namesTable : table)[cells[0] + "\t" + cells[1]] = cells[2..];
+                (cells[1] == "TERRAIN" ? terrainTable : cells[1] == "SCRIPTS" ? scriptsTable : cells[1] == "NAMES" ? namesTable : cells[1] == "PATHS" ? pathsTable : table)[cells[0] + "\t" + cells[1]] = cells[2..];
             }
         }
 
         List<string> failures = [];
-        HashSet<string> seen = [], seenTerrain = [], seenScripts = [], seenNames = [];
-        int bodies = 0, exact = 0, matched = 0, terrains = 0, terrainsMatched = 0, scriptLists = 0, scriptListsMatched = 0, scriptsListed = 0, sourcesFound = 0, nameLists = 0, nameListsMatched = 0, quotedTexts = 0, namedTexts = 0;
+        HashSet<string> seen = [], seenTerrain = [], seenScripts = [], seenNames = [], seenPaths = [];
+        int bodies = 0, exact = 0, matched = 0, terrains = 0, terrainsMatched = 0, scriptLists = 0, scriptListsMatched = 0, scriptsListed = 0, sourcesFound = 0, nameLists = 0, nameListsMatched = 0, quotedTexts = 0, namedTexts = 0, pathLists = 0, pathListsMatched = 0, pathsListed = 0, pointsKept = 0;
         foreach (LevelArchiveFile archive in archives)
         {
             LevelWorlds worlds;
@@ -52,6 +53,7 @@ internal static class LevelsGateCheck
             }
             if (worlds.RealBody is not null) CheckScripts(game, archive.Level, worlds, scriptsTable, seenScripts, failures, ref scriptLists, ref scriptListsMatched, ref scriptsListed, ref sourcesFound);
             if (worlds.RealBody is not null) CheckNames(game, archive.Level, worlds, namesTable, seenNames, failures, ref nameLists, ref nameListsMatched, ref quotedTexts, ref namedTexts);
+            if (worlds.RealBody is not null) CheckPaths(archive.Level, worlds, pathsTable, seenPaths, failures, ref pathLists, ref pathListsMatched, ref pathsListed, ref pointsKept);
             if (worlds.Terrain is not null && worlds.RealBody is not null) CheckTerrain(archive.Level, worlds, terrainTable, seenTerrain, failures, ref terrains, ref terrainsMatched);
             foreach ((string tag, byte[]? body) in new[] { ("BSWD", worlds.BaseBody), ("RLWD", worlds.RealBody) })
             {
@@ -92,13 +94,16 @@ internal static class LevelsGateCheck
             foreach (string key in scriptsTable.Keys.Except(seenScripts)) failures.Add($"{key.Replace('\t', ' ')}: in the reference table but not read here");
         if (namesTable is not null)
             foreach (string key in namesTable.Keys.Except(seenNames)) failures.Add($"{key.Replace('\t', ' ')}: in the reference table but not read here");
+        if (pathsTable is not null)
+            foreach (string key in pathsTable.Keys.Except(seenPaths)) failures.Add($"{key.Replace('\t', ' ')}: in the reference table but not read here");
         foreach (string failure in failures.Take(25)) printError("FAIL: " + failure);
         print($"LEVELS_GATE: {bodies} world bodies in {archives.Count} level archives; byte-identical round trips {exact}; " +
                  (table is null ? "no reference table given" : $"fields equal to the reference's on {matched} of {table.Count} rows") +
                  $"; {terrains} terrains" + (terrainTable is null ? "" : $", heights equal to the reference's lookup on {terrainsMatched} of {terrainTable.Count}") +
                  $"; {scriptLists} script lists" + (scriptsTable is null ? "" : $", equal to the reference's on {scriptListsMatched} of {scriptsTable.Count}") +
                  $", {scriptsListed} scripts of which {sourcesFound} find their source; {nameLists} name lists" + (namesTable is null ? "" : $", equal to the reference's on {nameListsMatched} of {namesTable.Count}") +
-                 $", {quotedTexts} quoted texts of which {namedTexts} name something in their level; {failures.Count} failures");
+                 $", {quotedTexts} quoted texts of which {namedTexts} name something in their level; {pathLists} path lists" + (pathsTable is null ? "" : $", equal to the reference's on {pathListsMatched} of {pathsTable.Count}") +
+                 $", {pathsListed} paths with {pointsKept} points kept; {failures.Count} failures");
         return failures.Count == 0 && bodies > 0 ? 0 : 1;
     }
 
@@ -181,12 +186,13 @@ internal static class LevelsGateCheck
             string[] sourceLines = source.Text.Split('\n');
             for (int number = 0; number < sourceLines.Length; number++)
             {
-                SortedDictionary<int, string> texts = [];
+                SortedDictionary<int, SourceToken> texts = [];
                 for (int column = 0; column <= sourceLines[number].Length; column++)
-                    if (ScriptNames.TokenAt(sourceLines[number], column) is { Quoted: true } token) texts[token.Start] = token.Text;
-                foreach (string text in texts.Values)
+                    if (ScriptNames.TokenAt(sourceLines[number], column) is { Quoted: true } token) texts[token.Start] = token;
+                foreach (SourceToken literal in texts.Values)
                 {
-                    IReadOnlyList<NameMatch> matches = ScriptNames.Resolve(text, world, entries, baseWorld);
+                    string text = literal.Text;
+                    IReadOnlyList<NameMatch> matches = ScriptNames.Resolve(text, world, entries, baseWorld, literal.PathArgument);
                     total++;
                     if (matches.Count > 0) found++;
                     lines.Add($"{entry.Summary.Name}|{number}|{text}|{string.Join(',', matches.Select(match => $"{match.Kind.ToString().ToLowerInvariant()}:{match.Index}{(match.ExactCase ? "" : ":case")}"))}");
@@ -205,6 +211,50 @@ internal static class LevelsGateCheck
         string digest = WorldDump.Hash(lines);
         if (row[0] == total.ToString() && row[1] == digest && row[2] == found.ToString()) matched++;
         else failures.Add($"{name}: the table says {row[0]} texts, {row[2]} naming something, lines hashing to {row[1][..12]}; here {total}, {found} and {digest[..12]}");
+    }
+
+    /// <summary>
+    /// The waypoint paths of an archive's own world as the Level editor keeps their points (<see cref="WaypointCatalog.Rows"/>: the slots that index a thing
+    /// that is a waypoint, as the game's loader keeps them): each path's name, slot count and kept rows hash as the Toolkit reference's do (<c>level_editor_vectors.py</c>'s
+    /// PATHS row, which reads the kind from its own model). A path-slot error that no authored fixture shows is caught here, on the shipped levels.
+    /// </summary>
+    private static void CheckPaths(int level, LevelWorlds worlds, Dictionary<string, string[]>? table, HashSet<string> seen, List<string> failures,
+        ref int lists, ref int matched, ref int listed, ref int kept)
+    {
+        string name = $"{level:D3} PATHS", key = $"{level:D3}\tPATHS";
+        lists++;
+        WorldBody world;
+        try
+        {
+            world = WorldBody.Read(worlds.RealBody!);
+        }
+        catch (InvalidDataException error)
+        {
+            failures.Add($"{name}: the level's own world was refused: {error.Message}");
+            return;
+        }
+        List<string> lines = [];
+        int points = 0, slots = 0;
+        for (int index = 0; index < world.WaypointPaths.Count; index++)
+        {
+            WaypointPath path = world.WaypointPaths[index];
+            IReadOnlyList<int> rows = WaypointCatalog.Rows(world, path);
+            lines.Add($"{index}|{path.Name}|{path.Slots.Count}|{string.Join(',', rows)}");
+            points += rows.Count;
+            slots += path.Slots.Count;
+        }
+        listed += world.WaypointPaths.Count;
+        kept += points;
+        if (table is null) return;
+        if (!table.TryGetValue(key, out string[]? row))
+        {
+            failures.Add($"{name}: the reference table has no row for it");
+            return;
+        }
+        seen.Add(key);
+        string digest = WorldDump.Hash(lines);
+        if (row[0] == world.WaypointPaths.Count.ToString() && row[1] == digest && row[2] == points.ToString() && row[3] == slots.ToString()) matched++;
+        else failures.Add($"{name}: the table says {row[0]} paths, lines hashing to {row[1][..12]}, {row[2]} points kept of {row[3]} slots; here {world.WaypointPaths.Count}, {digest[..12]}, {points} of {slots}");
     }
 
     /// <summary>
