@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-29 (content catalogue: the battle engine configurations and `sounds.sfx`; the `VSDS`, `PMIB` and `DMKR` payloads; the registry of named things, so a script's thing name joins the thing the game finds; earlier: the maintainer's storage name removed; earlier: the game documentation is written in onslaught-preservation, not in the frozen `reverse-engineering/`; earlier: the companion's update guidance and the published decompilation's score stated as they are; earlier: content catalogue phase 3: world bodies, compiled scripts, terrain payloads, sprintf texture names; content catalogue survey, schema, generator, levels, placements and usage, Linux CE workflow and native Windows backend/load checks completed)
+Last updated: 2026-10-29 (content catalogue: the battle engine configurations and `sounds.sfx`; the `VSDS`, `PMIB` and `DMKR` payloads; source-modelled named-thing lookups; earlier: the maintainer's storage name removed; earlier: the game documentation is written in onslaught-preservation, not in the frozen `reverse-engineering/`; earlier: the companion's update guidance and the published decompilation's score stated as they are; earlier: content catalogue phase 3: world bodies, compiled scripts, terrain payloads, sprintf texture names; content catalogue survey, schema, generator, levels, placements and usage, Linux CE workflow and native Windows backend/load checks completed)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
@@ -65,7 +65,7 @@ retail-derived and stays in ignored `local-data/`. The `WRES` world bodies (ever
 mission script, with what the scripts' literal arguments name), the `ERES`, `SURF`, `SSHD`, `VSDS`, `PMIB` and `DMKR`
 payloads, the
 `sprintf`-built sky, water, detail and HUD texture names and the registry of named things (`WORLD.mNamedThings`:
-which things join it while a level loads and in which order, so a script's thing name joins the thing the game finds;
+which things are predicted to join on load and in which order, so a script's thing name has a source-modelled lookup;
 `tools/named_things.py`, with the retail gate `tools/content_catalog_gate.py`), the battle engine configurations (with
 the weapons, explosion, cockpit and description each names, and the levels that offer each) and the `sounds.sfx`
 effects (with their chains and the bank samples they play; `tools/game_tables_decode.py`) are decoded in their

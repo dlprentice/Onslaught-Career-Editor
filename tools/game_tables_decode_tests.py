@@ -98,8 +98,9 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual((c["jetWeapons"], c["walkerWeapons"]), (["j2", "j1"], ["w3", "w2", "w1"]))  # each added at the front
         self.assertEqual((c["explosion"], c["cockpit"], c["languageName"], c["stores"]),
                          ("Big Bang", gt.BE_DEFAULT_COCKPIT, 1, None))  # version 4 reads its explosion
-        self.assertEqual(c["defaulted"], ["minAirVelocity", "maxAirVelocity", "minAirEnergyCost", "maxAirEnergyCost",
-                                          "cockpit", "languageName"])
+        self.assertEqual(set(c["defaulted"]), {"minAirVelocity", "maxAirVelocity", "minAirEnergyCost", "maxAirEnergyCost",
+                                               "cockpit", "languageName", "maxWalkVelocity", "walkFriction",
+                                               "rollEnergyCost", "loopEnergyCost", "stores", "augWeapon", "primaryWeapon"})
         [v3] = gt.parse_battle_engine_configurations(configs(config(3)))["records"]
         self.assertEqual((v3["explosion"], v3["defaulted"][0]), (gt.BE_DEFAULT_EXPLOSION, "explosion"))
         [v1] = gt.parse_battle_engine_configurations(configs(config(1)))["records"]
@@ -114,6 +115,42 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual((v11["cockpit"], v11["languageName"], v11["defaulted"]), ("cockpit2b.msh", 1, ["languageName"]))
         [v7] = gt.parse_battle_engine_configurations(configs(config(7)))["records"]
         self.assertEqual((v7["maxWalkVelocity"]["value"] is not None, v7["minAirEnergyCost"]), (True, None))
+
+    def test_effective_values_cover_the_initialiser_and_each_version_boundary(self) -> None:
+        # UBattleEngineDataManager::Load calls Initialise; CBattleEngineData::Load overwrites four floats before v8.
+        f = lambda x: gt.number(f32s(x))
+        for version in range(1, 13):
+            with self.subTest(version=version):
+                raw = bytearray(config(version))
+                struct.pack_into("<f", raw, 16, 0.4)  # stored max air energy cost
+                struct.pack_into("<f", raw, 24, 0.8)  # stored max air velocity
+                [c] = gt.parse_battle_engine_configurations(configs(bytes(raw)))["records"]
+                value = c["effectiveValues"]
+                self.assertEqual(value["shieldEfficiency"], f(90.0 if version <= 1 else 0.5))
+                self.assertEqual(value["stealth"], f(0.0 if version <= 2 else 0.25))
+                self.assertEqual(value["maxWalkVelocity"], f(0.15 if version <= 6 else 0.6))
+                self.assertEqual(value["walkFriction"], f(0.9 if version <= 6 else 0.7))
+                self.assertEqual(value["rollEnergyCost"], f(1.0 if version < 8 else 0.02))
+                self.assertEqual(value["loopEnergyCost"], f(1.0 if version < 8 else 0.03))
+                self.assertEqual(value["minAirVelocity"], f(0.3))
+                self.assertEqual(value["minAirEnergyCost"], f(0.005))
+                self.assertEqual(value["maxAirVelocity"], f(0.9 if version < 8 else 0.8))
+                self.assertEqual(value["maxAirEnergyCost"], f(0.015 if version < 8 else 0.4))
+                self.assertEqual(c["maxAirVelocity"], f(0.8))  # still preserve what the file stored
+                self.assertEqual(c["maxAirEnergyCost"], f(0.4))
+                if version <= 4:
+                    self.assertIsNone(c["stores"])
+                    self.assertEqual(c["effectiveStores"], [{"heat": False, "heatWord": 0, "value": f(1000.0)}] * 6)
+                    self.assertIn("stores", c["defaulted"])
+                else:
+                    self.assertEqual(c["effectiveStores"], c["stores"])
+                    self.assertNotIn("stores", c["defaulted"])
+        # v7 stores a minimum velocity but Load overrides it as well.
+        record = bytearray(config(7))
+        at = record.index(f32s(0.3))
+        struct.pack_into("<f", record, at, 0.6)
+        [v7] = gt.parse_battle_engine_configurations(configs(bytes(record)))["records"]
+        self.assertEqual((v7["minAirVelocity"], v7["effectiveValues"]["minAirVelocity"]), (f(0.6), f(0.3)))
 
     def test_a_value_that_is_not_finite_keeps_its_bits(self) -> None:
         record = bytearray(config())
@@ -181,11 +218,13 @@ class SoundEffectTests(unittest.TestCase):
     def test_a_line_is_read_as_readstring_and_readline_read_it(self) -> None:
         self.assertEqual(gt.read_line(b"abc\nd", 0), ("abc", 4, False))
         self.assertEqual(gt.read_line(b"abc\r\n", 0), ("abc", 5, False))
+        self.assertEqual(gt.read_line(b"AB\rX", 0), ("AB", 4, True))  # penultimate CR, even without LF
         self.assertEqual(gt.read_line(b"abc", 0), ("ab", 3, True))  # no LF at the end: the strip eats the "c"
         self.assertEqual(gt.read_line(b"", 0), (None, 0, True))
         long = b"x" * 300 + b"\n"
         self.assertEqual(gt.read_line(long, 0), ("x" * 254, 255, False))  # 255 bytes, no LF: one char stripped
         self.assertEqual(gt.read_line(b"x" * 255, 0)[2], False)  # exactly 255 left: the loop ends by its count
+        self.assertEqual(gt.read_line(b"x" * 253 + b"\rXextra", 0), ("x" * 253, 255, False))
         self.assertEqual(gt.read_line(b"ab\0cd\n", 0), ("a", 6, False))  # strlen stops at the NUL
 
     def test_older_versions_leave_out_their_flags(self) -> None:
@@ -200,6 +239,14 @@ class SoundEffectTests(unittest.TestCase):
         rows = [(e["head"], e["variant"], e["variants"]) for e in d["effects"]]
         self.assertEqual(rows, [(0, 0, 3), (1, 0, 1), (0, 1, 3), (0, 2, 3), (4, 0, 1), (5, 0, 1)])
         self.assertEqual((d["names"], d["chained"]), (4, 2))  # stricmp folds ASCII letters only
+
+    def test_many_effects_keep_line_numbers_and_chain_order(self) -> None:
+        effects = [("Shot" if n % 2 == 0 else "Other", "sample", n, False, False) for n in range(1000)]
+        data = sfx(effects)
+        decoded = gt.parse_sfx(data)
+        for n, row in enumerate(decoded["effects"]):
+            self.assertEqual(row["line"], data.count(b"\n", 0, row["offset"]) + 1)
+            self.assertEqual((row["head"], row["variant"], row["variants"]), (n % 2, n // 2, 500))
 
     def test_lookup_keys_follow_the_loader(self) -> None:
         self.assertEqual(gt.effect_lookup_key("Impact\\\\Wood"), b"impact\\wood")  # doubled backslashes made single

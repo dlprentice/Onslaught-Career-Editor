@@ -636,6 +636,8 @@ def parse_vsds(payload: bytes) -> dict:
         if consts_ptr:
             if counts is None:
                 raise DecodeError(f"shader {index} has constants but no counts (Load would read through a null table)")
+            if numdecls == 0:
+                raise DecodeError(f"shader {index} has constants with no declaration names (Load writes element 0)")
             r.chunk_header()
             data = r.take(4 * sum(counts))
             row["constants"] = {"words": sum(counts), "declNamesWithConstants": sum(1 for c in counts if c),

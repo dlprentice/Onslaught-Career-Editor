@@ -174,11 +174,13 @@ publish, sign, or install anything by themselves.
   lookups of textures, meshes and sound effects with `--decomp`) are emitted only from a loader rule in
   the public decompilation or from the data, and each names that evidence; unresolved links stay explicit. A script's
   literal thing name (`GetThingRef`, `Teleport`, `PlayCutscene`), and a cutscene's link-to name (`CCutscene::Start`), is
-  joined as `CWorld::FindThingByName` finds it right after the level loads, on the level's registry of named things (`named_things.py`, below): the record found in every
+  joined using a source-modelled prediction of `CWorld::FindThingByName` just after a successful load (`named_things.py`, below): the record predicted to be found in every
   career (`resolved`, with the records of that name it hides), the base-world records of the name in the order the
-  career's keeping decides (`career-dependent`), a name a script of the level gives its own thing with `SetName`
+  career's keeping decides (`career-dependent`), a name a script's literal `SetName` call could give its own thing
   (`runtime-name`), or nothing (`unresolved`). Each named placement and marker says whether and how it joins the list
-  and whether its own name finds it, and each level record lists its registry in joining order. The
+  and whether its own name finds it, and each level record lists the modelled registry in joining order. These are
+  predictions, not observations of runtime names or later changes. A registry requiring over 10,000 entries is
+  refused explicitly before the catalogue is written; the limit is the tool's, not the game's. The
   single-record `mission_script_inspect.py` is the independent check of the compiled-script reader. Output is accepted
   only below the ignored `local-data/`, and every generated file carries a marker that
   `public_allowlist_safety_check.py` refuses, as it refuses any tracked `local-data/` path. The catalogue is published with
@@ -265,24 +267,31 @@ publish, sign, or install anything by themselves.
   preparation remain separate, and must use the same reviewed identities. No no-overwrite or atomic-write guarantee applies to a
   redirected stream. This CLI has only authored-fixture tests, requires the
   same descriptor-safe input support as the preview, and has no validated Windows workflow.
-- `named_things.py` builds the registry of named things a level loads (`WORLD.mNamedThings`) from its decoded world
-  bodies by the loader's rules, each cited by function in the module: a thing joins when `CWorld::LoadWorld`
+- `named_things.py` predicts the registry of named things a level loads (`WORLD.mNamedThings`) from its decoded world
+  bodies by source-derived loader rules, assuming initialization succeeds; it is not a runtime measurement. The rules
+  are cited by function in the module: a thing joins when `CWorld::LoadWorld`
   initialises its slot (the base world's slots before the real world's, and a base-world one only if the career keeps
   it) and its class's `Init` reaches `CComplexThing::Init` with a name. Trees and waypoints never do (their classes
   derive from `CThing`); a unit whose behaviour has a squad, and a squad, hand the name to their member units or keep
   it as `CSquad::Init` decides. Each thing joins at the front, and `CWorld::FindThingByName` returns the first exact
-  (`strcmp`) match from there: the thing named most recently. `find` gives a name's answer right after loading
+  (`strcmp`) match from there: the thing named most recently. `find` predicts a name's answer right after loading
   (`resolved`, `career-dependent` when only base-world things have it, or `unresolved`) with every candidate in lookup
-  order; `find_by_walk` computes the same answer the loader's way, as a cross-check. Names given at run time
+  order; `find_by_walk` computes the same answer using a second source model, as a cross-check, not an independent game
+  run. Names given at run time
   (`SetName`), things spawned in play and things that leave the list are listed, not followed, and which base-world
   things a career keeps is the career's (each base-world entry carries its career bit and dies-on world).
   `named_things_tests.py` checks each rule on authored world bodies, and the gate below on authored game folders
   (`content_catalog_tests.py` checks the payload decoders and the gate's payload checks); no game bytes.
 - `game_tables_decode.py` reads `data/battle engine configurations.dat` in `CBattleEngineData::Load`'s order for each
   record version (`UPhysicsManager::Reload` -> `UBattleEngineDataManager::Load`; each record joins the front of the
-  list, so a name finds the last record of that name and a world header's unknown name gets the last record) and
+  list, so a name finds the last record of that name and a world header's unknown name gets the last record). It
+  preserves stored scalar fields and reports separately the effective values after initialization and the loader's
+  version-specific defaults or overwrites. A catalogue configuration's `values` and `stores` are effective; when
+  defaults occur, `storedValues` and `storedStores` preserve the stored values (null means absent or non-finite for
+  stored scalars, absent for stores). Existing catalogue v1 outputs for versions before 8 can contain incorrect
+  effective values and should be regenerated. It also reads
   `data/sounds/sounds.sfx` as `CEffect::LoadSFXFile` reads its lines (`CDXMemBuffer::ReadString` and `CEffect::ReadLine`:
-  `#` lines skipped, a CR dropped before the LF, each line's last character stripped; a later effect of an earlier one's
+  `#` lines skipped, a CR in the penultimate byte replaced even without a LF, each line's last character stripped; a later effect of an earlier one's
   name, by `stricmp`, joins that effect's chain, of which `PlayEffect` plays one at random). It refuses what the loaders
   would misread (a name past the 256-byte buffer or the 64-byte effect fields, a newer table version, bytes left over
   in the configurations). The catalogue adds a record per configuration and per effect: a configuration's weapons

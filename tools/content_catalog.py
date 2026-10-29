@@ -188,7 +188,7 @@ def fold(value: str) -> str:
 
 
 def read_install_file(path: Path) -> bytes:
-    """Read one regular, single-link install file without following a symlink; refuse a change during the read."""
+    """Read a regular file without following a final symlink; refuse a short read or a size/mtime change."""
     fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     try:
         before = os.fstat(fd)
@@ -1290,7 +1290,7 @@ def named_thing_summary(outcome: dict, entries: list[dict], name: str) -> dict:
 
 
 def level_registry(registry: dict, thing_rid: dict, runtime: list[dict], undecoded: list[str]) -> dict:
-    """The level's WORLD.mNamedThings right after loading, in joining order, with each entry's record id. undecoded
+    """Source-modelled WORLD.mNamedThings just after a successful load, in joining order, with each entry's record id. undecoded
     names the world bodies that did not decode: their things are missing, so the list is incomplete."""
     entries = []
     for e in registry["entries"]:
@@ -1315,8 +1315,8 @@ def level_registry(registry: dict, thing_rid: dict, runtime: list[dict], undecod
 
 def names_thing_relation(name: str, natives: list[str], entries: list[dict], thing_rid: dict,
                          runtime: list[dict], undecoded: list[str], *, link: bool = False) -> dict:
-    """A script's literal thing name (or, with link, a cutscene's link-to name) joined the way CWorld::FindThingByName
-    finds it right after loading. When a world body of the level did not decode, its things are not on the list: the
+    """A source-modelled lookup of a script's literal name (or, with link, a cutscene's link-to name) after a successful
+    load. It is not a runtime observation. When a world body did not decode, its things are missing: the
     answer is marked registryIncomplete."""
     result = named_things.find(entries, name)
     ids: list[str] = []
@@ -1357,8 +1357,9 @@ def names_thing_relation(name: str, natives: list[str], entries: list[dict], thi
         if setters:
             status = "runtime-name"
             extra["setBy"] = [{"script": r["script"], "pc": r["pc"]} for r in setters]
-            ev.append(evidence("loader-code", named_things.L_SCRIPT_SETNAME, "no thing has the name when the level has "
-                               "loaded; a script of this level gives it to the thing that runs it"))
+            ev.append(evidence("loader-code", named_things.L_SCRIPT_SETNAME, "the model finds no thing with this name "
+                               "just after load; a script contains a SetName call with this literal, which can give "
+                               "the name to its own thing if executed"))
     if "PlayCutscene" in natives and target is not None:
         kinds = {e["kind"] for e in result["candidates"][:1]}
         extra["isCutscene"] = kinds == {"cutscene"}
@@ -1380,7 +1381,9 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
     physics = meshcensus._physics_mesh_definitions(physics_bytes)
     names = physics_names(physics_bytes)
     physics_sha = sha256(physics_bytes)
-    unit_shell = {u["definition"]: u for u in physics["unitDefinitions"]}
+    unit_shell = {}
+    for unit in physics["unitDefinitions"]:
+        unit_shell.setdefault(unit["definition"], unit)
     # GetUnitData returns the first unit definition of a name (UPhysicsManager::Reload appends them in file order)
     behaviours = named_things.first_behaviours(physics["unitDefinitions"])
     lookup = {"units": set(names["unit"]), "features": set(names["feature"]), "hazards": set(names["hazard"]),
@@ -1456,8 +1459,11 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
             script_ids_here.append((tag, f"script-code:{level:03d}:{tag.lower()}#{s['ordinal']}", s))
         path_ids_here = [(tag, f"waypoint-path:{level:03d}:{tag.lower()}#{p['ordinal']}", p)
                          for tag, p in world_paths_order(decoded)]
-        # WORLD.mNamedThings as LoadWorld leaves it: which named records join, in which order (tools/named_things.py)
-        registry = named_things.build_registry(decoded, behaviours)
+        # Source model of LoadWorld's registry: which named records join and in which order (tools/named_things.py).
+        try:
+            registry = named_things.build_registry(decoded, behaviours)
+        except named_things.RegistryLimitError as error:
+            raise named_things.RegistryLimitError(f"level {level:03d}: {error}") from error
         thing_rid: dict[tuple[str, int], str] = {}  # (world, ordinal) -> placement/marker id
         cutscene_links: list[tuple[dict, str]] = []  # (cutscene marker, its link-to name)
 
@@ -2368,21 +2374,23 @@ def catalog_configurations(game: Path, files: list[dict], defs_by_name: dict, lo
         rec = base_record(rid, "configuration", c["name"], rel, sha256(data), envelope="battle-engine-configurations",
                           offset=c["offset"], length=c["length"], raw_sha=c["sha256"], sha_scope="the record's bytes",
                           parser="tools/game_tables_decode.py:parse_battle_engine_configurations")
-        rec["provenance"]["loader"] = gtd.L_BE_RELOAD + "; " + gtd.L_BE_LOAD + "; " + gtd.L_BE_MANAGER
+        rec["provenance"]["loader"] = gtd.L_BE_RELOAD + "; " + gtd.L_BE_INIT + "; " + gtd.L_BE_LOAD + "; " + gtd.L_BE_MANAGER
         shown = gtd.find_configuration(parsed["records"], c["name"])
-        values = {k: float_field(c[k]) for k in (*gtd.BE_LEADING, "shieldEfficiency", "stealth", "minAirVelocity",
-                                                 "maxWalkVelocity", "walkFriction", "minAirEnergyCost",
-                                                 "rollEnergyCost", "loopEnergyCost")}
+        values = {k: float_field(c["effectiveValues"][k]) for k in gtd.BE_VALUES}
         rec["configuration"] = {
             "index": c["index"], "listPosition": c["listPosition"], "version": c["version"], "values": values,
             "walkerWeapons": c["walkerWeapons"], "jetWeapons": c["jetWeapons"], "primaryWeapon": c["primaryWeapon"],
             "augWeapon": c["augWeapon"], "explosion": c["explosion"], "cockpit": c["cockpit"],
-            "stores": None if c["stores"] is None else [{"heat": st["heat"], "value": float_field(st["value"])}
-                                                        for st in c["stores"]],
+            "stores": [{"heat": st["heat"], "value": float_field(st["value"])} for st in c["effectiveStores"]],
             "languageName": c["languageName"], "defaulted": c["defaulted"],
             "foundByName": shown is c, "fallback": c["listPosition"] == 0,
             "rule": "each record joins the front of the list: its name finds the last record of that name, and a world "
                     "header's name that matches nothing gets the front (the last record)"}
+        if c["defaulted"]:
+            # Stored None means absent or non-finite; effective None means a non-finite float.
+            rec["configuration"]["storedValues"] = {k: float_field(c[k]) for k in gtd.BE_VALUES}
+            rec["configuration"]["storedStores"] = (None if c["stores"] is None else
+                [{"heat": st["heat"], "value": float_field(st["value"])} for st in c["stores"]])
 
         def definition(rtype: str, kind: str, name: str, rule: str, source: str, **extra) -> dict:
             d = defs_by_name.get(name)
@@ -2884,7 +2892,10 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--out must be a git-ignored directory below this checkout's local-data/")
     if os.path.commonpath((game, out)) == str(game):
         parser.error("--out must not be inside the game folder")
-    catalog = build_catalog(game, Path(os.path.abspath(args.decomp)) if args.decomp else None)
+    try:
+        catalog = build_catalog(game, Path(os.path.abspath(args.decomp)) if args.decomp else None)
+    except named_things.RegistryLimitError as error:
+        parser.error(str(error))
     coverage = build_coverage(catalog)
     for path in write_outputs(out, game, catalog, coverage):
         print(path)

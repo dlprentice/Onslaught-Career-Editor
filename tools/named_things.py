@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""The registry of named things (WORLD.mNamedThings) a level builds while it loads, and the thing a name finds.
+"""A source-modelled registry of named things (WORLD.mNamedThings) and predicted lookups after a level loads.
 
 A mission script finds a thing by name (GetThingRef, Teleport and PlayCutscene in IScript.cpp), and a cutscene the
 thing it follows (CCutscene::Start), through CWorld::FindThingByName, which walks WORLD.mNamedThings. This module works
 out, from a level's decoded world bodies (tools/world_resources_decode.py:parse_world_body), which things join that
-list, in which order, and so which thing a name finds. Every rule is the loader's, as the public decompilation
-(onslaught-decomp src/) describes it, cited by function and never quoted:
+list, in which order, and so which thing a name would find if initialization succeeds. These are predictions from the
+public decompilation (onslaught-decomp src/), cited by function and never quoted, not runtime observations:
 
 - Joining. CComplexThing::Init (thing.cpp @0x004f3fd0) calls CComplexThing::SetName (@0x004f4120), which adds the thing
   to WORLD.mNamedThings when its init's name is not empty. The list's Add (GenericSPtrSet::Add, SPtrSet.cpp
@@ -78,6 +78,12 @@ UB_MECH, UB_INFANTRY, UB_JEEP = 0, 3, 11
 RELAXED_SQUAD = frozenset({UB_MECH, UB_INFANTRY})
 NO_SQUAD = frozenset({4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25})
 CAREER_BASE_BITS = 288                           # BASE_THINGS_EXISTS_SIZE (Career.h)
+# A tool limit, not a claim about the game. Refuse before expanding a malformed or unusually large authored squad.
+MAX_NAMED_REGISTRY_ENTRIES = 10_000
+
+
+class RegistryLimitError(ValueError):
+    """The source-modelled registry exceeds this tool's expansion limit; no partial registry is returned."""
 
 
 def squad_class(behaviour: int | None) -> str | None:
@@ -154,7 +160,7 @@ def thing_outcome(t: dict, behaviours: dict[str, int]) -> dict:
 
 
 def build_registry(worlds: dict[str, dict], behaviours: dict[str, int]) -> dict:
-    """The list as LoadWorld builds it: the base world's (BSWD) joins in slot order, then the real world's (RLWD).
+    """Model LoadWorld's list: the base world's (BSWD) joins in slot order, then the real world's (RLWD).
 
     worlds holds decoded bodies keyed "BSWD"/"RLWD" (either may be absent). Returns {"entries": [...] in joining
     order, "outcomes": {(tag, ordinal): outcome}} for every named record. A base-world entry is conditional: it joins
@@ -179,6 +185,9 @@ def build_registry(worlds: dict[str, dict], behaviours: dict[str, int]) -> dict:
                                    "diesOn": dies[t["ordinal"]]}
             outcome["orders"] = []
             members = outcome["object"] in ("squad-member", "squad-members")
+            if outcome["joins"] > MAX_NAMED_REGISTRY_ENTRIES - len(entries):
+                raise RegistryLimitError(f"{tag} thing {t['ordinal']}: named registry exceeds the tool limit of "
+                                         f"{MAX_NAMED_REGISTRY_ENTRIES} entries")
             for member in range(outcome["joins"]):
                 entry = {"order": len(entries), "name": t["init"]["name"], "world": tag, "ordinal": t["ordinal"],
                          "slot": t["slot"], "oid": t["oid"], "kind": t["kind"], "object": outcome["object"],

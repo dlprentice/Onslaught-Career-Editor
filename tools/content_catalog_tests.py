@@ -15,6 +15,7 @@ import tempfile
 import unittest
 import zlib
 from pathlib import Path
+from unittest.mock import patch
 
 import cmsh_animation_usage_census_tests as mesh_fixtures
 import content_catalog as catalog
@@ -796,6 +797,36 @@ class NamedThingsCatalogueTests(unittest.TestCase):
         self.assertTrue(self.assets["level:201"]["level"]["namedThings"]["complete"])
         self.assertNotIn("registryIncomplete", self.lookups()["Depot"])
 
+    def test_duplicate_unit_metadata_uses_the_same_first_definition_as_the_registry(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            (game / "data/default physics.dat").write_bytes(mesh_fixtures._physics_fixture(
+                (1, "Tank", {8: struct.pack("<I", 1), 9: b"authored.msh\0"}),
+                (1, "Tank", {8: struct.pack("<I", 4), 9: b"second.msh\0"})))
+            assets = catalog.build_catalog(game)["assets"]
+        [tank] = [a for a in assets if a["type"] == "definition" and a["name"] == "Tank"]
+        self.assertEqual((tank["definition"]["behaviour"], tank["definition"]["memberShell"]), (0, "CMech"))
+
+    def test_over_limit_cli_reports_the_level_and_writes_no_partial_catalogue(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            game.mkdir()
+            authored_install(game)
+            (game / "data/resources/201_res_PC.aya").write_bytes(named.level_archive(
+                None, named.body([named.squad("Tank", "Column", amount=3, attach=1)])))
+            out = Path(temp) / "out"
+            with patch.object(named.nt, "MAX_NAMED_REGISTRY_ENTRIES", 2), \
+                    patch.object(catalog, "output_is_ignored_local_data", return_value=True), \
+                    patch.object(catalog, "write_outputs") as write, contextlib.redirect_stderr(io.StringIO()) as err:
+                with self.assertRaises(SystemExit) as raised:
+                    catalog.main(["--game", str(game), "--out", str(out)])
+            self.assertEqual(raised.exception.code, 2)
+            self.assertIn("level 201", err.getvalue())
+            self.assertIn("limit of 2 entries", err.getvalue())
+            write.assert_not_called()
+            self.assertFalse(out.exists())
+
     def test_the_new_fields_match_the_schema_and_name_no_absent_id(self) -> None:
         try:
             import jsonschema
@@ -902,6 +933,8 @@ class PayloadDecoderTests(unittest.TestCase):
         good = vsds_payload(vs_shader(decl=bytes(4)))
         for broken, why in ((good + b"\0", "a byte left over"), (good[:-1], "truncated"),
                             (vsds_payload(vs_shader(constants=bytes(4))), "constants without counts"),
+                            (vsds_payload(vs_shader(counts=[], constants=b""), numdecls=0),
+                             "constants with no declaration-name slots"),
                             (vsds_payload(vs_shader(counts=[-1, 1], constants=b"")), "a negative count"),
                             (vsds_payload(numdecls=-1), "a negative declaration-name count")):
             with self.assertRaises(worlddec.DecodeError, msg=why):
@@ -1133,6 +1166,33 @@ class TablesCatalogueTests(unittest.TestCase):
 
     def rel(self, asset: dict, rtype: str) -> list[dict]:
         return [r for r in asset["relationships"] if r["type"] == rtype]
+
+    def test_old_configuration_catalogue_reports_effective_and_stored_values_separately(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            record = bytearray(tables.config(7, name="Older"))
+            struct.pack_into("<f", record, 16, 0.4)
+            struct.pack_into("<f", record, 24, 0.8)
+            (game / "data/battle engine configurations.dat").write_bytes(tables.configs(
+                tables.config(1, name="Oldest"), bytes(record), tables.config(12, name="Modern")))
+            configs = {a["name"]: a["configuration"] for a in catalog.build_catalog(game)["assets"]
+                       if a["type"] == "configuration"}
+        f = lambda x: struct.unpack("<f", struct.pack("<f", x))[0]
+        old, first, modern = configs["Older"], configs["Oldest"], configs["Modern"]
+        self.assertEqual(old["values"]["maxAirVelocity"], f(0.9))
+        self.assertEqual(old["storedValues"]["maxAirVelocity"], f(0.8))
+        self.assertEqual(old["values"]["maxAirEnergyCost"], f(0.015))
+        self.assertEqual(old["storedValues"]["maxAirEnergyCost"], f(0.4))
+        self.assertIsNone(old["storedValues"]["minAirEnergyCost"])
+        self.assertEqual(old["values"]["minAirEnergyCost"], f(0.005))
+        self.assertEqual(first["values"]["shieldEfficiency"], 90.0)
+        self.assertEqual(first["values"]["stealth"], 0.0)
+        self.assertIsNone(first["storedValues"]["shieldEfficiency"])
+        self.assertIsNone(first["storedStores"])
+        self.assertEqual(first["stores"], [{"heat": False, "value": 1000.0}] * 6)
+        self.assertNotIn("storedValues", modern)  # no defaulted values: stored and effective match
+        self.assertNotIn("storedStores", modern)
 
     def test_each_configuration_names_its_weapons_explosion_cockpit_and_description(self) -> None:
         standard = self.configs["Standard"]

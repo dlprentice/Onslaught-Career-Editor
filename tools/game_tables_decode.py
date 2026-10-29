@@ -11,7 +11,7 @@ by function and never quoted) and refuses input that function would misread or t
   record: the configuration UBattleEngineConfigurations::GetConfiguration falls back on for a world header's name that
   matches nothing.
 - data/sounds/sounds.sfx: CSoundManager::Init has CEffect::LoadSFXFile read it as text lines (CDXMemBuffer::ReadString:
-  up to 255 bytes through a LF, a CR before it dropped; CEffect::ReadLine skips lines starting with '#' and drops each
+  up to 255 bytes through a LF, a CR in the penultimate position replaced; CEffect::ReadLine skips lines starting with '#' and drops each
   line's last character, the LF). A version and an effect count, then per effect its name, sample, low-pass sample,
   volume, falloff and pitch variance, a looping flag (version 101 on), a language flag (version 103 on) and a comment
   line. Each effect joins the front of CEffect's list; one whose name (stricmp) equals an effect already on the list is
@@ -36,6 +36,7 @@ def cite(source: str, function: str, va: str) -> str:
 L_BE_RELOAD = cite("WorldPhysicsManager.cpp", "UPhysicsManager::Reload (opens data\\battle engine configurations.dat)",
                    "0x00510800")
 L_BE_LOAD = cite("BattleEngineDataManager.cpp", "CBattleEngineData::Load", "0x0040f980")
+L_BE_INIT = cite("BattleEngineDataManager.cpp", "CBattleEngineData::Initialise (defaults before Load)", "0x0040f590")
 L_BE_MANAGER = cite("BattleEngineDataManager.h", "UBattleEngineDataManager::Load and GetConfiguration (each record "
                     "joins the front of sData; a name finds the first strcmp match from the front)", "inline")
 L_BE_WORLD = cite("BattleEngineConfigurations.cpp", "UBattleEngineConfigurations::Load and GetConfiguration (a world "
@@ -62,6 +63,8 @@ BE_STORES = 6                                   # kBattleEngineStores (BattleEng
 BE_BUFFER = 256                                 # CBattleEngineData::Load's char temp[256]
 BE_LEADING = ("life", "energy", "groundEnergyIncrease", "maxAirEnergyCost", "minTransformEnergy", "maxAirVelocity",
               "groundVelocity", "airTurnRate", "groundTurnRate")
+BE_VALUES = (*BE_LEADING, "shieldEfficiency", "stealth", "minAirVelocity", "maxWalkVelocity", "walkFriction",
+             "minAirEnergyCost", "rollEnergyCost", "loopEnergyCost")
 # CFEPBEConfig::GetConfigDescription: the record's mLanguageName (1..5) chooses the description's text id.
 BE_DESCRIPTION_TEXT = {1: 0x97D47D6B, 2: 0xE3FCBF7C, 3: 0x3025018D, 4: 0x7C4D439E, 5: 0xC87585AF}
 BE_DEFAULT_EXPLOSION = "Animated Explosion Emitter 2"  # CBattleEngineData::Load before version 4
@@ -110,7 +113,8 @@ class Reader:
 
 def parse_battle_engine_configurations(data: bytes) -> dict:
     """UBattleEngineDataManager::Load: a record count, then CBattleEngineData::Load per record, in the loader's order.
-    Values default as the loader sets them when the record's version leaves them out (marked in defaulted)."""
+    Scalar fields and stores preserve what is stored (None when absent). effectiveValues and effectiveStores model
+    Initialise followed by Load, including the pre-v8 overrides; defaulted names fields receiving those defaults."""
     r = Reader(data)
     count = r.i32()
     if not 0 <= count <= 1 << 16:
@@ -162,6 +166,10 @@ def parse_battle_engine_configurations(data: bytes) -> dict:
             rec["defaulted"] += ["minAirVelocity", "maxAirVelocity", "minAirEnergyCost", "maxAirEnergyCost"]
         rec["augWeapon"] = r.cstring("the aug weapon name") if version > 8 else None
         rec["primaryWeapon"] = r.cstring("the primary weapon name") if version > 9 else None
+        if version <= 8:
+            rec["defaulted"].append("augWeapon")
+        if version <= 9:
+            rec["defaulted"].append("primaryWeapon")
         if version > 10:
             rec["cockpit"] = r.cstring("the cockpit name")
         else:
@@ -172,6 +180,30 @@ def parse_battle_engine_configurations(data: bytes) -> dict:
         else:
             rec["languageName"] = 1
             rec["defaulted"].append("languageName")
+        # The manager calls Initialise before Load. Shutdown in Load clears allocated fields, not these scalars.
+        # Keep stored words separately: before v8 Load even overwrites two values that were present in the file.
+        effective = {key: rec[key] for key in BE_VALUES}
+        defaults = {}
+        if version <= 1:
+            defaults["shieldEfficiency"] = 90.0
+        if version <= 2:
+            defaults["stealth"] = 0.0
+        if version <= 6:
+            defaults.update(maxWalkVelocity=0.15, walkFriction=0.9)
+        if version < 8:
+            defaults.update(minAirVelocity=0.3, maxAirVelocity=0.9, minAirEnergyCost=0.005,
+                            maxAirEnergyCost=0.015, rollEnergyCost=1.0, loopEnergyCost=1.0)
+        for key, value in defaults.items():
+            effective[key] = number(struct.pack("<f", value))
+            if key not in rec["defaulted"]:
+                rec["defaulted"].append(key)
+        rec["effectiveValues"] = effective
+        if stores is None:
+            rec["defaulted"].append("stores")
+            rec["effectiveStores"] = [{"heat": False, "heatWord": 0, "value": number(struct.pack("<f", 1000.0))}
+                                      for _ in range(BE_STORES)]
+        else:
+            rec["effectiveStores"] = stores
         rec["length"] = r.pos - at
         rec["sha256"] = hashlib.sha256(data[at:r.pos]).hexdigest()
         records.append(rec)
@@ -211,7 +243,7 @@ def read_line(data: bytes, pos: int) -> tuple[str | None, int, bool]:
         # the loop stops after 255 bytes, or sets mEOF when it reaches the end of the data before that
         raw = bytearray(data[pos:end])
         nxt, eof = end, len(data) - pos < SFX_READ
-    if len(raw) > 1 and raw[-1] == 0x0A and raw[-2] == 0x0D:
+    if len(raw) > 1 and raw[-2] == 0x0D:
         raw[-2:] = b"\n"
     text = bytes(raw).split(b"\0", 1)[0]
     if not text:
@@ -221,16 +253,17 @@ def read_line(data: bytes, pos: int) -> tuple[str | None, int, bool]:
 
 def parse_sfx(data: bytes) -> dict:
     """CEffect::LoadSFXFile over the file's bytes: the version, the count and each effect's lines, then the chains."""
-    pos, eof, lines_read, last_line, line_start = 0, False, 0, 0, 0
+    pos, eof, lines_read, last_line, line_start, line_no = 0, False, 0, 0, 0, 1
 
     def next_line(what: str) -> str:
-        nonlocal pos, eof, lines_read, last_line, line_start
+        nonlocal pos, eof, lines_read, last_line, line_start, line_no
         line = "#"
         while line.startswith("#"):
             if eof:
-                raise DecodeError(f"the file ends before {what} (ReadLine would hand back its last line again)")
-            last_line, line_start = data.count(b"\n", 0, pos) + 1, pos
+                raise DecodeError(f"the file ends before {what} (ReadLine would not yield another complete field)")
+            last_line, line_start = line_no, pos
             line, pos, eof = read_line(data, pos)
+            line_no += data.count(b"\n", line_start, pos)
             lines_read += 1
             if line is None:
                 raise DecodeError(f"nothing left to read for {what} (ReadLine would write before its buffer)")
@@ -261,18 +294,18 @@ def parse_sfx(data: bytes) -> dict:
         e["sha256"] = hashlib.sha256(data[e["offset"]:pos]).hexdigest()
         effects.append(e)
     # the chains: an effect whose name equals one already on the list joins the end of that effect's chain
-    heads: dict[bytes, dict] = {}
+    heads: dict[bytes, int] = {}
+    sizes: dict[int, int] = {}
     for e in effects:
         key = stricmp_key(e["name"])
-        head = heads.get(key)
-        if head is None:
-            heads[key] = e
-            e["head"], e["variant"] = e["index"], 0
-        else:
-            e["head"] = head["index"]
-            e["variant"] = sum(1 for other in effects[:e["index"]] if other.get("head") == head["index"])
+        if key not in heads:
+            heads[key] = e["index"]
+            sizes[e["index"]] = 0
+        head = heads[key]
+        e["head"], e["variant"] = head, sizes[head]
+        sizes[head] += 1
     for e in effects:
-        e["variants"] = sum(1 for other in effects if other["head"] == e["head"])
+        e["variants"] = sizes[e["head"]]
     return {"version": version, "count": count, "effects": effects, "linesRead": lines_read,
             "bytesRead": pos, "trailingBytes": len(data) - pos, "names": len(heads),
             "chained": sum(1 for e in effects if e["variant"] > 0)}

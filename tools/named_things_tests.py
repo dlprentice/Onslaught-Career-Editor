@@ -12,6 +12,7 @@ import tempfile
 import unittest
 import zlib
 from pathlib import Path
+from unittest.mock import patch
 
 import cmsh_animation_usage_census_tests as mesh_fixtures
 import content_catalog_gate as gate
@@ -279,6 +280,20 @@ class BaseKeepTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             nt.build_registry({"RLWD": world}, BEHAVIOURS)
 
+    def test_registry_limit_counts_expansions_across_both_worlds_and_never_returns_a_partial_result(self) -> None:
+        with patch.object(nt, "MAX_NAMED_REGISTRY_ENTRIES", 3):
+            reg = registry(base=[squad("Trooper", "Base", amount=2)], real=[unit("Turret", "Real")])
+            self.assertEqual([(e["name"], e["member"]) for e in reg["entries"]],
+                             [("Base", 0), ("Base", 1), ("Real", None)])
+            with self.assertRaisesRegex(nt.RegistryLimitError, "RLWD thing 0.*limit of 3"):
+                registry(base=[squad("Trooper", "Base", amount=2)],
+                         real=[squad("Trooper", "Real", amount=2)])
+            with self.assertRaisesRegex(nt.RegistryLimitError, "limit of 3"):
+                registry(real=[squad("Trooper", "Too many", amount=2_000_000_000)])
+            # Nameless and non-joining records do not expand a named registry.
+            self.assertEqual(len(registry(real=[squad("Trooper", "", amount=2_000_000_000),
+                                                marker(18, "Waypoint")])["entries"]), 0)
+
 
 class TableTests(unittest.TestCase):
     def test_squad_class_follows_spawn_squad(self) -> None:
@@ -349,6 +364,14 @@ class GateTests(unittest.TestCase):
         code, out = self.run_gate({201: level_archive(None, body([unit("Jeep")]))})
         self.assertEqual(code, 1)
         self.assertIn("UB_JEEP", out)
+
+    def test_a_registry_over_the_tool_limit_fails_the_gate_explicitly(self) -> None:
+        with patch.object(nt, "MAX_NAMED_REGISTRY_ENTRIES", 2):
+            code, out = self.run_gate({201: level_archive(None, body([squad("Tank", "Column", amount=3, attach=1)]))})
+        self.assertEqual(code, 1)
+        self.assertIn("201: the registry does not build", out)
+        self.assertIn("limit of 2 entries", out)
+        self.assertIn("content catalogue gate: failed", out)
 
     def test_a_named_base_slot_beyond_the_career_bits_fails(self) -> None:
         base = body([marker(18) for _ in range(288)] + [marker(19, "Far")])
