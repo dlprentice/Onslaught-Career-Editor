@@ -75,7 +75,8 @@ public static class ExportFiles
         return Path.TrimEndingDirectorySeparator(current);
     }
 
-    private static bool Inside(string path, string folder)
+    /// <summary>Whether a real path is the folder or lies inside it (compared as the platform compares file names).</summary>
+    internal static bool Inside(string path, string folder)
     {
         StringComparison comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
         folder = Path.TrimEndingDirectorySeparator(folder);

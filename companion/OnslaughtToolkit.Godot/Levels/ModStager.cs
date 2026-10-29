@@ -1,0 +1,224 @@
+// SPDX-License-Identifier: GPL-3.0-only
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
+using OnslaughtToolkit.Companion.Assets;
+using OnslaughtToolkit.Companion.Files;
+
+namespace OnslaughtToolkit.Companion.Levels;
+
+/// <summary>What a mod says about itself in <c>mod.json</c>. Text is printable ASCII only (CE logs mod text as ASCII).</summary>
+/// <param name="Id">1 to 48 lowercase letters, digits, '-' or '_'; also the mod's folder name.</param>
+/// <param name="Name">1 to 64 characters.</param>
+/// <param name="Version">1 to 32 characters.</param>
+/// <param name="Author">Up to 64 characters; left out of <c>mod.json</c> when empty.</param>
+/// <param name="Description">Up to 1024 characters; left out of <c>mod.json</c> when empty.</param>
+/// <param name="CeMin">The oldest CE version that loads it: one to four numbers of up to five digits joined by dots, or null.</param>
+/// <param name="CeMax">The newest CE version that loads it, in the same form, or null.</param>
+public sealed record ModInfo(string Id, string Name, string Version = "1", string Author = "", string Description = "", string? CeMin = null, string? CeMax = null);
+
+/// <summary>One file of a staged mod: its path inside the mod's folder, its size and its SHA-256.</summary>
+public sealed record StagedFile(string Path, long Size, string Sha256);
+
+/// <summary>A mod that was written: its folder, the SHA-256 of its <c>mod.json</c> and every world file, in the order written.</summary>
+public sealed record StagedMod(string Root, string ManifestSha256, IReadOnlyList<StagedFile> Files);
+
+/// <summary>A mod that cannot be made or saved, in a sentence the player can act on.</summary>
+public sealed class ModStageException : Exception
+{
+    public ModStageException(string message) : base(message)
+    {
+    }
+
+    public ModStageException(string message, Exception inner) : base(message, inner)
+    {
+    }
+}
+
+/// <summary>
+/// Packages edited world bodies as an Onslaught CE mod folder, so that CE loads them with no hand editing. A port of the
+/// Toolkit's <c>tools/world_mod_stage.py</c>, which the tests compare it with byte for byte: the same limits CE's mod loader
+/// applies at start-up are checked first, and the folder it writes is
+/// <code>
+/// ID/mod.json                   schema 1, the id, name, version, optional author, description, ce_min and ce_max, and every file with its size and SHA-256
+/// ID/data/worlds/worldNNN.wrd   the bodies, byte for byte
+/// </code>
+/// A mod is always a new folder (an existing empty one is used), never inside a game folder or a protected folder, with the
+/// world files written first and <c>mod.json</c> last (a folder without it is inert). Each file goes through the companion's
+/// new-file-only publisher. When anything fails, what this call created is removed again.
+/// </summary>
+public static class ModStager
+{
+    public const int MaxFilesPerMod = 4096, MaxWorldBytes = 4 << 20, MaxManifestBytes = 256 << 10;
+
+    private static readonly Regex IdPattern = new("\\A[a-z0-9_-]{1,48}\\z", RegexOptions.CultureInvariant);
+    private static readonly Regex VersionPattern = new("\\A[0-9]{1,5}(?:\\.[0-9]{1,5}){0,3}\\z", RegexOptions.CultureInvariant);
+    private static readonly Regex WorldPathPattern = new("\\Adata/worlds/world[0-9]{3}\\.wrd\\z", RegexOptions.CultureInvariant);
+
+    /// <summary>The path CE reads a level's world from inside a mod: <c>data/worlds/worldNNN.wrd</c>.</summary>
+    public static string WorldPath(int level)
+    {
+        if (level is < 0 or > 999) throw new ModStageException($"A world level is a number from 0 to 999, not {level}.");
+        return LevelWorlds.WorldFileName(level);
+    }
+
+    /// <summary>The first thing wrong with what a mod says about itself, or null when CE's loader would accept it.</summary>
+    public static string? Problem(ModInfo info)
+    {
+        if (!IdPattern.IsMatch(info.Id)) return "A mod id is 1 to 48 lowercase letters, digits, '-' or '_' (it is also the folder's name).";
+        foreach ((string label, string value, int low, int high) in new[]
+                 {
+                     ("name", info.Name, 1, 64), ("version", info.Version, 1, 32), ("author", info.Author, 0, 64), ("description", info.Description, 0, 1024),
+                 })
+        {
+            if (value.Length < low || value.Length > high) return $"The {label} must be {low} to {high} characters.";
+            if (value.Any(c => c < 0x20 || c >= 0x7F)) return $"The {label} may hold printable ASCII only (CE logs mod text as ASCII).";
+        }
+        foreach ((string label, string? value) in new[] { ("ce_min", info.CeMin), ("ce_max", info.CeMax) })
+            if (value is not null && !VersionPattern.IsMatch(value))
+                return $"The {label} must be one to four numbers of up to five digits joined by dots, such as 0.1.11.";
+        return null;
+    }
+
+    /// <summary><c>mod.json</c> as CE's loader reads it: strict JSON, schema 1, only the keys it knows, every file with size and SHA-256.</summary>
+    public static byte[] BuildManifest(ModInfo info, IReadOnlyDictionary<string, byte[]> files)
+    {
+        if (Problem(info) is { } problem) throw new ModStageException(problem);
+        if (files.Count == 0) throw new ModStageException("A mod lists at least one file.");
+        if (files.Count > MaxFilesPerMod) throw new ModStageException($"A mod lists at most {MaxFilesPerMod} files.");
+        StringBuilder text = new("{\n  \"schema\": 1,\n");
+        text.Append("  \"id\": ").Append(Json(info.Id)).Append(",\n");
+        text.Append("  \"name\": ").Append(Json(info.Name)).Append(",\n");
+        text.Append("  \"version\": ").Append(Json(info.Version)).Append(",\n");
+        if (info.Author.Length > 0) text.Append("  \"author\": ").Append(Json(info.Author)).Append(",\n");
+        if (info.Description.Length > 0) text.Append("  \"description\": ").Append(Json(info.Description)).Append(",\n");
+        if (info.CeMin is not null) text.Append("  \"ce_min\": ").Append(Json(info.CeMin)).Append(",\n");
+        if (info.CeMax is not null) text.Append("  \"ce_max\": ").Append(Json(info.CeMax)).Append(",\n");
+        text.Append("  \"files\": [\n");
+        string[] paths = [.. files.Keys.Order(StringComparer.Ordinal)];
+        for (int i = 0; i < paths.Length; i++)
+        {
+            byte[] data = files[paths[i]];
+            if (!WorldPathPattern.IsMatch(paths[i])) throw new ModStageException($"{paths[i]}: this stager writes world files only (data/worlds/worldNNN.wrd).");
+            if (data.Length is 0 or > MaxWorldBytes) throw new ModStageException($"{paths[i]}: a world file is 1 byte to {MaxWorldBytes} bytes.");
+            text.Append("    {\n      \"path\": ").Append(Json(paths[i])).Append(",\n      \"size\": ").Append(data.Length)
+                .Append(",\n      \"sha256\": ").Append(Json(Hex(data))).Append("\n    }").Append(i + 1 < paths.Length ? ",\n" : "\n");
+        }
+        text.Append("  ]\n}\n");
+        if (text.Length > MaxManifestBytes) throw new ModStageException("mod.json would be larger than the loader's 256 KiB.");
+        return Encoding.ASCII.GetBytes(text.ToString());
+    }
+
+    /// <summary>
+    /// Writes <c>PARENT/ID</c>: <c>mod.json</c> and <c>data/worlds/worldNNN.wrd</c> for each level in <paramref name="worlds"/>.
+    /// Refuses, with nothing written: what <see cref="BuildManifest"/> refuses, a parent that is not a full path, a mod folder
+    /// inside a game folder or any of <paramref name="protectedFolders"/> (compared after resolving links), and a folder that
+    /// already holds anything.
+    /// </summary>
+    /// <exception cref="ModStageException">The mod cannot be made or saved.</exception>
+    public static StagedMod Stage(string parent, ModInfo info, IReadOnlyDictionary<int, byte[]> worlds, IEnumerable<string?> protectedFolders) =>
+        Stage(parent, info, worlds, protectedFolders, null);
+
+    internal static StagedMod Stage(string parent, ModInfo info, IReadOnlyDictionary<int, byte[]> worlds, IEnumerable<string?> protectedFolders,
+        Action<string>? beforeWrite)
+    {
+        Dictionary<string, byte[]> files = [];
+        foreach ((int level, byte[] body) in worlds) files[WorldPath(level)] = body;
+        byte[] manifest = BuildManifest(info, files);
+
+        if (!Path.IsPathFullyQualified(parent)) throw new ModStageException("Choose a full folder path to save the mod in.");
+        string root = Path.Combine(Path.GetFullPath(parent), info.Id);
+        try
+        {
+            // No link anywhere on the way (the folder, its parents), and not inside a game folder.
+            FileMutationSafety.RejectExistingReparseAncestors(root, "Mod folder");
+            FileMutationSafety.RejectOutputInGameTree(Path.Combine(root, "mod.json"));
+        }
+        catch (InvalidOperationException error)
+        {
+            throw new ModStageException(error.Message, error);
+        }
+        foreach (string? guarded in protectedFolders)
+            if (!string.IsNullOrEmpty(guarded) && Directory.Exists(guarded) && ExportFiles.Inside(root, ExportFiles.RealPath(guarded)))
+                throw new ModStageException("A mod is never saved into your game folder or the companion's backups. Choose another folder.");
+        if (File.Exists(root)) throw new ModStageException($"{root} is a file, not a folder: nothing was written.");
+        if (Directory.Exists(root))
+        {
+            string? existing = Directory.EnumerateFileSystemEntries(root).Select(Path.GetFileName).Order(StringComparer.Ordinal).FirstOrDefault();
+            if (existing is not null) throw new ModStageException($"{root} already holds \"{existing}\": save the mod in a new folder (nothing was written).");
+        }
+
+        List<string> createdFiles = [], createdFolders = [];
+        try
+        {
+            CreateFolder(Path.Combine(root, "data", "worlds"), createdFolders);
+            List<StagedFile> written = [];
+            foreach (string path in files.Keys.Order(StringComparer.Ordinal))
+            {
+                Write(Path.Combine(root, path.Replace('/', Path.DirectorySeparatorChar)), files[path], beforeWrite, createdFiles);
+                written.Add(new StagedFile(path, files[path].Length, Hex(files[path])));
+            }
+            Write(Path.Combine(root, "mod.json"), manifest, beforeWrite, createdFiles);
+            return new StagedMod(root, Hex(manifest), written);
+        }
+        catch (Exception error) when (error is ModStageException or IOException or InvalidOperationException or UnauthorizedAccessException)
+        {
+            string left = Cleanup(createdFiles, createdFolders);
+            throw error is ModStageException ? Rethrow(error, left) : new ModStageException($"The mod was not saved: {error.Message}{left}", error);
+        }
+    }
+
+    private static ModStageException Rethrow(Exception error, string left) =>
+        left.Length == 0 ? (ModStageException)error : new ModStageException(error.Message + left, error);
+
+    private static void Write(string path, byte[] bytes, Action<string>? beforeWrite, List<string> created)
+    {
+        beforeWrite?.Invoke(path);
+        using GuardedFileMutation guard = FileMutationSafety.BeginGeneratedVacant(path);
+        guard.Commit(bytes);
+        created.Add(path);
+    }
+
+    private static void CreateFolder(string path, List<string> created)
+    {
+        if (Directory.Exists(path)) return;
+        string? parent = Path.GetDirectoryName(path);
+        if (parent is not null) CreateFolder(parent, created);
+        Directory.CreateDirectory(path);
+        created.Add(path);
+    }
+
+    /// <summary>Removes what one call created, files then folders, newest first; a folder that is not empty is left. Returns a sentence about anything left.</summary>
+    private static string Cleanup(List<string> files, List<string> folders)
+    {
+        List<string> left = [];
+        foreach (string file in Enumerable.Reverse(files))
+        {
+            try
+            {
+                File.Delete(file);
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            {
+                left.Add(file);
+            }
+        }
+        foreach (string folder in Enumerable.Reverse(folders))
+        {
+            try
+            {
+                Directory.Delete(folder);
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            {
+                left.Add(folder);
+            }
+        }
+        return left.Count == 0 ? "" : $" These could not be removed and may be deleted: {string.Join(", ", left)}.";
+    }
+
+    private static string Hex(byte[] data) => Convert.ToHexStringLower(SHA256.HashData(data));
+
+    /// <summary>A JSON string for printable ASCII (a quotation mark and a backslash are escaped, as Python's json writes them).</summary>
+    private static string Json(string text) => "\"" + text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+}

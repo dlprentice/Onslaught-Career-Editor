@@ -16,7 +16,10 @@ namespace OnslaughtToolkit.Companion.Tests;
 /// </summary>
 internal static class LevelTests
 {
-    private static readonly Dictionary<string, byte[]> Bodies = [];
+    private static readonly Dictionary<string, byte[]> Bodies = LevelVectors.Valid.ToDictionary(v => v.Name, v => Unpack(v.Body));
+
+    /// <summary>The bytes of a valid vector by name.</summary>
+    internal static byte[] Body(string name) => Bodies[name];
 
     internal static void Run(string outputDirectory, Checks check)
     {
@@ -63,8 +66,7 @@ internal static class LevelTests
         check.That(LevelVectors.Valid.Length >= 25, "the vector file holds the authored bodies");
         foreach (LevelVectors.WorldVector vector in LevelVectors.Valid)
         {
-            byte[] body = Unpack(vector.Body);
-            Bodies[vector.Name] = body;
+            byte[] body = Bodies[vector.Name];
             WorldBody model;
             try
             {

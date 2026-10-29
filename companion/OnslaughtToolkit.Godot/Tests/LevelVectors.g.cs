@@ -24,6 +24,17 @@ internal static class LevelVectors
 
     internal sealed record RefusedArchive(string Name, string Why, string File);
 
+    /// <summary>A world file of a staged mod: a body vector, an edit vector's body, or repeated bytes.</summary>
+    internal sealed record StageWorld(int Level, string From, string Edit, int Repeat, int Size);
+
+    internal sealed record StageFile(string Path, long Size, string Sha256);
+
+    /// <summary>Inputs the reference stager accepts, with the bytes of the mod.json and the files it wrote.</summary>
+    internal sealed record StageVector(string Name, string Id, string ModName, string Version, string Author, string Description, string? CeMin, string? CeMax, StageWorld[] Worlds, string Manifest, string ManifestSha256, StageFile[] Files);
+
+    /// <summary>Inputs the reference stager refuses.</summary>
+    internal sealed record RefusedStage(string Name, string Why, string Id, string ModName, string Version, string Author, string Description, string? CeMin, string? CeMax, StageWorld[] Worlds);
+
     internal static readonly WorldVector[] Valid =
     [
         new("authored-v50", "the hand-assembled authored body, as the reference reads it",
@@ -1837,5 +1848,187 @@ internal static class LevelVectors
             lUSHufT1vd93mCuKK5zL5SSUDn9dVrhhbkwljB92bZ7qBej9QGqc22TbGhtwt+KB4meIHrSl/ZAT8sGrMj3M1ssyWswDDALA/rWL
             JS6IJ/liCcGD+sX/KDmuX8JE/jBbl368yG0M4UM51Y5f1Q/7bONsS26jFPAHIMSXBSWiqPA=
             """),
+    ];
+
+    internal static readonly StageVector[] Stages =
+    [
+        new("minimal", "ce-edit", "Edit", "1", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)],
+            """
+            eNpFjUkOwyAMRfc5BWLdAUImuu8pqi4cbBSkDFWIGqlR7l4gUrv59n/2t7eMMe5NRwPwG5OnaB2Glhs6E7qFJzTCQBHef+RNs3fT
+            GKE8iHU9+eAfwTC2JQ34BUsXtxAWuK7T3KM/ihTiss6YwmnTu098orX4ow7ysorxlqSyWqm2yitFlgCsoaIlxFKAprJEqIo6F1JR
+            rprayDBAqY1Vum4QCp5O7kGf2Z59AW2wPtE=
+            """,
+            "48c79db7c72a2647720431d2641255e1ffccabda7ea43038421ad45ba379b95e", [new("data/worlds/world100.wrd", 990, "be13f933b6263efeaafce4bedd50a9e55da6472013e2387c1dd5d19cf3978da4")]),
+        new("full-metadata", "moved-target-tank-1", "Moved Target Tank", "0.1.11", "The Toolkit", "A Target Tank moved with the level editor.",
+            "0.1.11", "1.0", [new(100, "", "move-v50", 0, 0), new(1, "authored-v43", "", 0, 0)],
+            """
+            eNqNT8tOwzAQvPcrrJzbYMfxI9z4AG69IYQ29ppYzaNKTIuo+u/YTiWQ6IHLPmZndmcvG0KKxXQ4QPFI2Da13sayGKYT2l2A+R1D
+            TONhx4o8HmHARHhOBLLPhJjGwzo+4bz4aUwMWrKS3VTwEbppTui+Q7Kfpv7gwzqyuJjZH8NN9fR7J8k2yNmHjoQo7PGEPUHrwzSX
+            q9zg2+D/3EsofCaUlXSFnO9xichLbAi55BjhI4Qu8SwEeDhPc2+XNVHKyvNsszgzF/+VPm9E/QN1UAmZ5LXjvLVGto3Wzsi6ss4q
+            JypJtbS1AhBacqeEZbJytTFGAdXGALRSKt5ikVdet/80xyi9b66hd8xh09RCt1CZBo1yKBjjDh0VSlArudasclIxbSUFjgZapZmM
+            N6SIT7FK3MzF+Lq5br4B0KyV6Q==
+            """,
+            "83b97a6db4d892f63d5deb0cd6311655608d222d20d416fd0e3e87b57acee53d", [new("data/worlds/world001.wrd", 954, "4f33bdc6b988fc642dfd7f526086d47aa5863f75d162f4ccc7a08ccaab6673be"), new("data/worlds/world100.wrd", 990, "e99458ba2c9ec7fe5113fef05750d638812f6718d60a3ecab7816d106533b125")]),
+        new("quotes-and-backslash", "quotes", "Say \"hi\" \\ bye", "1", "O\"Neil", "a \"quoted\" \\path\\ here",
+            null, null, [new(5, "authored-v46", "", 0, 0)],
+            """
+            eNpFjk1uwyAQhfc+BWJdtfwYG3KIdtFl3MVgxgLJiRNwEqVR7l7AkbqZYT7eezOPhhCaRo8HoDvC38oYXH7S82VZMdFKjnDAwr7h
+            Tgbqw0DJMBB7x+37ijGF5VgUfCNwWf0SC/ga6CeGecMO0xjDaX2JIYfVNa4GnmD1OdZjfOVOYc4X7Mg+D4Q8as246IrdwQoftyXO
+            Lm2NMfV+i66aqzKF33K3Me0/8iBUV7e3QgmlheQgxraXdpLMaW3BMsMlx86qVgvL3IRysn1nuBbZqh2CYX2naY185vrTPJs/JV9W
+            Qw==
+            """,
+            "d93de2e4f11710cefb687bd78d15ec36d9e1ccb7fc835eec21c3d57b92e93930", [new("data/worlds/world005.wrd", 994, "a425258231a2c473bf30d88bab09131e6b5482b0dfe3fb7691822568dea90768")]),
+        new("max-lengths", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN", "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+            null, null, [new(100, "authored-v50", "", 0, 0)],
+            """
+            eNrtlLtqAzEQRfv9CqHaONJqH5a7QOqUboKLWc2IFdheI61jsPG/R49AyhBcZk8x0ozmXlTde8UYD2akI/Atk6vUOoxXDn+EZ+0J
+            jpTU709S3D7JBzedkuHuF4oALvM4+bT/+iTFDykY787z9yfeFhYW/i0lFKw7UIhx8BEbxu65xvEZ5jGFBMIML9fJHzCUQwqxvnrM
+            4rwZ3C2FpNbiZzRC3XZJPpBUVis1dHWnyBKANdQMhNgK0NS2CF3T10IqqtWmNzI+oNTGKt1vEBqeLR+x7qtH9QVaBJUl
+            """,
+            "61d6309023c1bf1114ce556cae346c64d3c3f70c2137f62625ee4f9840b01c2d", [new("data/worlds/world100.wrd", 990, "be13f933b6263efeaafce4bedd50a9e55da6472013e2387c1dd5d19cf3978da4")]),
+        new("worlds-sorted-by-path", "three-worlds", "Three", "1", "", "",
+            null, null, [new(999, "authored-v50", "", 0, 0), new(7, "authored-v44", "", 0, 0), new(100, "authored-v45", "", 0, 0)],
+            """
+            eNqVkLtuwzAMRfd8heE5bSnqyX5Ht6IDJVKwgbxgBw3QIP9ePwp08dAulO69JHWg+65p2rF0euT2tTH7WfYyXdtrN6g+3c7DQcZ2
+            8U981Dl5m5PV+tRh7M+n2TWrU/uDjpN+n0TT3Jc62Re+dnOX8JVf1qXrARCfb4Msw0vn2H/Nr5B3v1bH6MM8rhVNzowuckRBg5DQ
+            g6aUfRCxGF0E54SDkqVK2QGy5eBdijlE1nZZ+dj/Ec4AbMPFLTjMqSRgdpWSdxpKTcYkpmAKijBFzdUXhmKKQnTiKRWoFSkzgMH6
+            Tzgi2oYj2IDLamwla3PAYLUqcy3qsop4YFLvp09zEcFYRZtiMVMghkq1FJOw+4Gb6sfusfsGKHGQzA==
+            """,
+            "ce1b326fb9c8a1e372ae88bcb41f240703271c10fcc5863b0e8453dcfa7c991e", [new("data/worlds/world007.wrd", 954, "ef21bba247a72d21208250e88b56dd32747044da6e939f9b402a3a65487b67ae"), new("data/worlds/world100.wrd", 974, "2b8c80aa4f9854e6cf8118a961c2dda97ebf5ca0c1ce074d598c0ff29ba0012f"), new("data/worlds/world999.wrd", 990, "be13f933b6263efeaafce4bedd50a9e55da6472013e2387c1dd5d19cf3978da4")]),
+        new("version-numbers", "ver", "Versions", "1", "", "",
+            "1.2.3.4", "65535.0.0", [new(100, "authored-v50", "", 0, 0)],
+            """
+            eNpFjk2OwjAMhfc9RZT1KCRxk5I5yGxGCLmJo0aigBoEo0Hcnfws2Nh+3/Oz/BwY49kvtCL/ZuqryhTKyO+08SbPuFIFP7TldDnn
+            Tu9dVUN14um4pg6EFiDGD8a/iq0xYIQUshsxnSgX/lsEY89WC77ibanbAW+4e1y2U8i9KSnFYwst3DZz+q+POSc/aEFtbI3PpCA6
+            gNlqCxQJMXoaZwrBSHRkTEA7TloqIA37yatiBOV8BDftA468nXyVehhewxujyUn2
+            """,
+            "e801bf723e1cd151848f066e548edbec5fe3fb76a73b3a1c6d397e3a69608481", [new("data/worlds/world100.wrd", 990, "be13f933b6263efeaafce4bedd50a9e55da6472013e2387c1dd5d19cf3978da4")]),
+        new("edit-one-version-only", "only-min", "Only min", "1", "", "",
+            "0", null, [new(100, "authored-v50", "", 0, 0)],
+            """
+            eNpFjUkOwjAMRfc9RZQ1Q9J0CpfgAAghN3bUSB1Qg0BQ9e4kqQQb2/99f3vJGOPedDQAPzG5i9JhGPk09u/94Eae2AgDRXoOlP3o
+            k2bvpjEaciOGbtENQGzAup580JcgGFtSDfgOjy5uITzg+JrmHv3WpBCH14wpnDa9+8TPWos/6iAvqxhvSSqrlWqrvFJkCcAaKlpC
+            LAVoKkuEqqhzIRXlqqmNDAZKbazSdYNQ8HRyDfWardkXiTJE3A==
+            """,
+            "71c8f0184ec08dcf081af45e3e61999f48b9b1ea4c04f834e13d529caaa922d8", [new("data/worlds/world100.wrd", 990, "be13f933b6263efeaafce4bedd50a9e55da6472013e2387c1dd5d19cf3978da4")]),
+        new("world-of-4-mib", "big-world", "Big", "1", "", "",
+            null, null, [new(100, "", "", 119, 4194304)],
+            """
+            eNpFjcsOwiAQRff9CsLaB5SBFpf+hnExvCyJraYYm9j47wJduJmZe3JzZm0IockOfkR6InxXYnT5pCbe9stjvjta4YSjL/gcbxt4
+            +znFx1QY30iId59yvuRAyFpnxk98DaXl8IXHakzb4owdlnnz12aKn/IDuAbB4I8HbKUqilY52wsFGjS3ba+4l1J31oYAGNAA8wGl
+            AC8QUIBoZe9F57gyxnUiGE2r8pvntfk2P4zQP1k=
+            """,
+            "44ed8921c7812ff8768d324d5cbd2d2dc3c0a16a03e2ea2867b80fd2ac446ddc", [new("data/worlds/world100.wrd", 4194304, "26dc83649491c2861e5597ccff4afab40efa534e3a4a343258e37d16bbd73fb9")]),
+        new("world-of-one-byte", "tiny-world", "Tiny", "1", "", "",
+            null, null, [new(0, "", "", 1, 1)],
+            """
+            eNo1jkkOwjAMRfc9RZQ1Qya3hXOwQyycxFUjQYuaCgSIu5NBbGz/p+9vfxrGeHQj3ZAfmdxkGXwa+Rqm1/Y5L1fPC53wRpmfEq/k
+            QUsM85ShrGQIV4pJn5Ng7FNqwndcx+zyuOK+RMbahBC751IPFGcMb/r/UcGICtq8bOwAUqlBGwNgHGjrSZG1vfPKdqS9bIVA32rp
+            dA8IvnOOlHZd14OBA/IS+U310nybHzfGPy0=
+            """,
+            "4b70e2e22d4813e56b01865db856e980863b297149d9e90efcb413061f3adef1", [new("data/worlds/world000.wrd", 1, "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a")]),
+        new("levels-zero-and-999", "ends", "Ends", "1", "", "",
+            null, null, [new(0, "authored-v50", "", 0, 0), new(999, "authored-v43", "", 0, 0)],
+            """
+            eNqNjrtuwzAMRXd/heE5aPWkpO79iqIDJZKwgTwKK2iABvn3Sk7RLhm6ULpHJHWuwzhOtcx8wOll1LseF2rXiY9Upy0f8cCdvP6S
+            T17rcjp2qO9Elj3Xlt9aGMfrVhv+wPPcuwjP+Hw5rXuq90Mp9XRZaRveOuvy1T9JSf2hGY2HPp5ZW0nWZjBgWRhRCrvMRF5hYu8J
+            wQWjtGVjYyi6PZBORWwKkdBN28rb7p9yKaXHct49kHPSxKhATjFKAWdIKIg3oCKQC4g+gpXQhMCIK6UEVLEUxAwQbOYfuVbfh9vw
+            DSOyZkw=
+            """,
+            "c1f826689008ac7fe7ed6cd81f02d7f7ebc781e98dc0ed54286af6d8d4dcd932", [new("data/worlds/world000.wrd", 990, "be13f933b6263efeaafce4bedd50a9e55da6472013e2387c1dd5d19cf3978da4"), new("data/worlds/world999.wrd", 954, "4f33bdc6b988fc642dfd7f526086d47aa5863f75d162f4ccc7a08ccaab6673be")]),
+        new("moved-twice", "moved-twice", "Moved twice", "1", "", "",
+            null, null, [new(200, "", "move-two-v50", 0, 0), new(201, "", "move-v47", 0, 0)],
+            """
+            eNqNTrtuwzAM3P0Vgue0lUQ9qP5DvqDoIIkUbCCOC9uIgQT591pOgXbI0IXk3fHIuzVCtHPueIjtu1CHCnvaxnYYL0wvy9pnbnf6
+            HAeuwrEK4o9w4Wnux3PV1IMp/YnnDX9sQIjbXjf6Ky5d3aK4xLd1nE40P5qW8nWdaDfvm3N/rb9CkL9UF7V11Z6TTZCQvUOwwTCz
+            QwIE4KhkJAqeCgSJjpVGG5L2jCSDyhF8QqPb/eT98O9w6mk4owK6J/EAsXhZnLOOySvKCMUYNtlEkEDKp4JBswZODJaDzZKVNQ59
+            cNFa9RNvq5/NvfkGRPhpvA==
+            """,
+            "7a6d4cc3d5374b83dedfd1cdddfbe2e7262726cafd433fd18c0e23cea41a09bb", [new("data/worlds/world200.wrd", 990, "cb5b3b8e7683594eee68d3833ea10add97df39086e12859b27e8d091ca37b842"), new("data/worlds/world201.wrd", 41986, "388f70f6656ed71dc83f44e4c4a303d17bf892e23ebe35e95c0e15468796a551")]),
+    ];
+
+    internal static readonly RefusedStage[] RefusedStages =
+    [
+        new("id-empty", "the mod id ''", "", "Edit", "1", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("id-upper", "the mod id 'UPPER'", "UPPER", "Edit", "1", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("id-has-space", "the mod id 'has space'", "has space", "Edit", "1", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("id-49-chars", "the mod id '49 characters'", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "Edit", "1", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("id-caf", "the mod id 'caf\u00e9'", "caf\u00e9", "Edit", "1", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("id-dot-dot", "the mod id 'dot.dot'", "dot.dot", "Edit", "1", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("id-slash-x", "the mod id 'slash/x'", "slash/x", "Edit", "1", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("id-ok", "the mod id 'ok\\n'", "ok\u000a", "Edit", "1", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("id-back-slash", "the mod id 'back\\\\slash'", "back\\slash", "Edit", "1", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("id-tab-id", "the mod id 'tab\\tid'", "tab\u0009id", "Edit", "1", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("name-empty", "the name is empty", "ce-edit", "", "1", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("name-65-chars", "the name is 65-chars", "ce-edit", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", "1", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("name-non-ascii", "the name is non-ascii", "ce-edit", "caf\u00e9", "1", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("name-tab", "the name is tab", "ce-edit", "a\u0009b", "1", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("name-del", "the name is del", "ce-edit", "a\u007fb", "1", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("name-newline", "the name is newline", "ce-edit", "a\u000ab", "1", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("version-empty", "the version is empty", "ce-edit", "Edit", "", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("version-33-chars", "the version is 33-chars", "ce-edit", "Edit", "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("version-non-ascii", "the version is non-ascii", "ce-edit", "Edit", "1\u2013", "", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("author-65-chars", "an author of 65 characters", "ce-edit", "Edit", "1", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("author-non-ascii", "a non-ASCII author", "ce-edit", "Edit", "1", "Ren\u00e9", "",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("description-1025-chars", "a description of 1025 characters", "ce-edit", "Edit", "1", "", "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("description-newline", "a newline in the description", "ce-edit", "Edit", "1", "", "two\u000alines",
+            null, null, [new(100, "authored-v50", "", 0, 0)]),
+        new("ce-min-0", "ce_min '1.2.3.4.5'", "ce-edit", "Edit", "1", "", "",
+            "1.2.3.4.5", null, [new(100, "authored-v50", "", 0, 0)]),
+        new("ce-min-1", "ce_min 'a.b'", "ce-edit", "Edit", "1", "", "",
+            "a.b", null, [new(100, "authored-v50", "", 0, 0)]),
+        new("ce-min-2", "ce_min '123456'", "ce-edit", "Edit", "1", "", "",
+            "123456", null, [new(100, "authored-v50", "", 0, 0)]),
+        new("ce-min-3", "ce_min '1..2'", "ce-edit", "Edit", "1", "", "",
+            "1..2", null, [new(100, "authored-v50", "", 0, 0)]),
+        new("ce-min-4", "ce_min '.1'", "ce-edit", "Edit", "1", "", "",
+            ".1", null, [new(100, "authored-v50", "", 0, 0)]),
+        new("ce-min-5", "ce_min '1.'", "ce-edit", "Edit", "1", "", "",
+            "1.", null, [new(100, "authored-v50", "", 0, 0)]),
+        new("ce-min-6", "ce_min ''", "ce-edit", "Edit", "1", "", "",
+            "", null, [new(100, "authored-v50", "", 0, 0)]),
+        new("ce-min-7", "ce_min ' 1'", "ce-edit", "Edit", "1", "", "",
+            " 1", null, [new(100, "authored-v50", "", 0, 0)]),
+        new("ce-min-8", "ce_min '1.2.3.4.'", "ce-edit", "Edit", "1", "", "",
+            "1.2.3.4.", null, [new(100, "authored-v50", "", 0, 0)]),
+        new("ce-min-9", "ce_min '-1'", "ce-edit", "Edit", "1", "", "",
+            "-1", null, [new(100, "authored-v50", "", 0, 0)]),
+        new("ce-min-10", "ce_min '1e3'", "ce-edit", "Edit", "1", "", "",
+            "1e3", null, [new(100, "authored-v50", "", 0, 0)]),
+        new("ce-max-bad", "ce_max that is not a version", "ce-edit", "Edit", "1", "", "",
+            null, "x", [new(100, "authored-v50", "", 0, 0)]),
+        new("no-worlds", "a mod with no world files", "ce-edit", "Edit", "1", "", "",
+            null, null, []),
+        new("level-minus-one", "a level below 0", "ce-edit", "Edit", "1", "", "",
+            null, null, [new(-1, "authored-v50", "", 0, 0)]),
+        new("level-1000", "a level above 999", "ce-edit", "Edit", "1", "", "",
+            null, null, [new(1000, "authored-v50", "", 0, 0)]),
+        new("empty-world", "a world file of no bytes", "ce-edit", "Edit", "1", "", "",
+            null, null, [new(100, "", "", 119, 0)]),
+        new("world-over-4-mib", "a world file of 4 MiB and one byte", "ce-edit", "Edit", "1", "", "",
+            null, null, [new(100, "", "", 119, 4194305)]),
     ];
 }

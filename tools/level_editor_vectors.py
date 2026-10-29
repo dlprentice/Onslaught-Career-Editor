@@ -11,7 +11,8 @@ companion/OnslaughtToolkit.Godot/Tests/LevelVectors.g.cs:
 - valid bodies, each with the reference dump of every field the reference reader read (a leaf per line, see dump_lines);
 - bodies the reference refuses, each of which the C# reader must refuse;
 - edits (move or rotate or rename a thing) with the bytes the reference writes after making the same edit;
-- authored level archives with the level numbers and bodies the reference finds in them, and archives it refuses.
+- authored level archives with the level numbers and bodies the reference finds in them, and archives it refuses;
+- mods the reference stager (tools/world_mod_stage.py) writes: the bytes of mod.json and the files of each folder, and the inputs it refuses.
 
     python tools/level_editor_vectors.py --check                  fail if the committed C# file is not what --write writes
     python tools/level_editor_vectors.py --write                  rewrite the C# file
@@ -40,6 +41,7 @@ import json
 import math
 import re
 import struct
+import tempfile
 import zlib
 from pathlib import Path
 
@@ -48,6 +50,7 @@ ROOT = TOOLS.parent
 sys.path.insert(0, str(TOOLS))
 
 import content_catalog_tests as fixtures  # noqa: E402  the hand-assembled authored body and archive
+import world_mod_stage as stager  # noqa: E402
 import world_resources_decode as wrd  # noqa: E402
 import world_resources_encode as enc  # noqa: E402
 
@@ -480,13 +483,135 @@ def refused_archives(valid: dict[str, bytes]) -> list[tuple[str, str, bytes]]:
     ]
 
 
+# ---------------------------------------------------------------------------------------------------- stage vectors
+BIG_WORLD = 4 << 20
+
+
+def stage_specs() -> list[dict]:
+    """Inputs for the reference stager. A world is a body vector (from), an edit vector's body (edit) or repeated bytes."""
+    def spec(name, mod_id, mod_name, worlds, **extra):
+        return {"name": name, "id": mod_id, "modName": mod_name, "version": "1", "author": "", "description": "", "ceMin": None,
+                "ceMax": None, "worlds": worlds, **extra}
+
+    from_ = lambda level, source: {"level": level, "from": source}
+    edit = lambda level, source: {"level": level, "edit": source}
+    repeat = lambda level, byte, size: {"level": level, "repeat": byte, "size": size}
+    return [
+        spec("minimal", "ce-edit", "Edit", [from_(100, "authored-v50")]),
+        spec("full-metadata", "moved-target-tank-1", "Moved Target Tank", [edit(100, "move-v50"), from_(1, "authored-v43")],
+             version="0.1.11", author="The Toolkit", description="A Target Tank moved with the level editor.", ceMin="0.1.11", ceMax="1.0"),
+        spec("quotes-and-backslash", "quotes", 'Say "hi" \\ bye', [from_(5, "authored-v46")], description='a "quoted" \\path\\ here', author='O"Neil'),
+        spec("max-lengths", "a" * 48, "N" * 64, [from_(100, "authored-v50")], version="V" * 32, author="A" * 64, description="D" * 1024),
+        spec("worlds-sorted-by-path", "three-worlds", "Three", [from_(999, "authored-v50"), from_(7, "authored-v44"), from_(100, "authored-v45")]),
+        spec("version-numbers", "ver", "Versions", [from_(100, "authored-v50")], ceMin="1.2.3.4", ceMax="65535.0.0"),
+        spec("edit-one-version-only", "only-min", "Only min", [from_(100, "authored-v50")], ceMin="0"),
+        spec("world-of-4-mib", "big-world", "Big", [repeat(100, 0x77, BIG_WORLD)]),
+        spec("world-of-one-byte", "tiny-world", "Tiny", [repeat(0, 0x01, 1)]),
+        spec("levels-zero-and-999", "ends", "Ends", [from_(0, "authored-v50"), from_(999, "authored-v43")]),
+        spec("moved-twice", "moved-twice", "Moved twice", [edit(200, "move-two-v50"), edit(201, "move-v47")]),
+    ]
+
+
+def refused_stage_specs() -> list[dict]:
+    base = stage_specs()[0]
+    out = []
+
+    def bad(name, why, **change):
+        out.append({**{k: v for k, v in base.items() if k != "name"}, "name": name, "why": why, **change})
+
+    def slug(text: str) -> str:
+        return f"{len(text)}-chars" if len(text) > 12 else (re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-") or "empty")
+
+    for text in ("", "UPPER", "has space", "x" * 49, "caf\u00e9", "dot.dot", "slash/x", "ok\n", "back\\slash", "tab\tid"):
+        bad("id-" + slug(text), f"the mod id {text if len(text) <= 12 else str(len(text)) + ' characters'!r}", id=text)
+    for label, text in (("empty", ""), ("65-chars", "x" * 65), ("non-ascii", "caf\u00e9"), ("tab", "a\tb"), ("del", "a\x7fb"), ("newline", "a\nb")):
+        bad("name-" + label, f"the name is {label}", modName=text)
+    for label, text in (("empty", ""), ("33-chars", "v" * 33), ("non-ascii", "1\u2013")):
+        bad("version-" + label, f"the version is {label}", version=text)
+    bad("author-65-chars", "an author of 65 characters", author="A" * 65)
+    bad("author-non-ascii", "a non-ASCII author", author="Ren\u00e9")
+    bad("description-1025-chars", "a description of 1025 characters", description="D" * 1025)
+    bad("description-newline", "a newline in the description", description="two\nlines")
+    for index, text in enumerate(("1.2.3.4.5", "a.b", "123456", "1..2", ".1", "1.", "", " 1", "1.2.3.4.", "-1", "1e3")):
+        bad(f"ce-min-{index}", f"ce_min {text!r}", ceMin=text)
+    bad("ce-max-bad", "ce_max that is not a version", ceMax="x")
+    bad("no-worlds", "a mod with no world files", worlds=[])
+    bad("level-minus-one", "a level below 0", worlds=[{"level": -1, "from": "authored-v50"}])
+    bad("level-1000", "a level above 999", worlds=[{"level": 1000, "from": "authored-v50"}])
+    bad("empty-world", "a world file of no bytes", worlds=[{"level": 100, "repeat": 0x77, "size": 0}])
+    bad("world-over-4-mib", "a world file of 4 MiB and one byte", worlds=[{"level": 100, "repeat": 0x77, "size": BIG_WORLD + 1}])
+    return out
+
+
+def spec_worlds(spec: dict, bodies: dict[str, bytes], edited: dict[str, bytes]) -> dict[int, bytes]:
+    out = {}
+    for world in spec["worlds"]:
+        if "from" in world:
+            out[world["level"]] = bodies[world["from"]]
+        elif "edit" in world:
+            out[world["level"]] = edited[world["edit"]]
+        else:
+            out[world["level"]] = bytes([world["repeat"]]) * world["size"]
+    return out
+
+
+def stage_vectors(bodies: dict[str, bytes], edited: dict[str, bytes]) -> tuple[list[dict], list[dict]]:
+    """Runs the reference stager on every spec, into a scratch folder, and reads the folder back."""
+    stages, refused = [], []
+    for spec in stage_specs():
+        worlds = spec_worlds(spec, bodies, edited)
+        with tempfile.TemporaryDirectory() as tmp:
+            parent, game = Path(tmp) / "mods", Path(tmp) / "game"
+            parent.mkdir()
+            game.mkdir()
+            stager.stage_mod(parent, game, spec["id"], worlds, name=spec["modName"], version=spec["version"], author=spec["author"],
+                             description=spec["description"], ce_min=spec["ceMin"], ce_max=spec["ceMax"])
+            root = parent / spec["id"]
+            manifest = (root / "mod.json").read_bytes()
+            files = sorted((p.relative_to(root).as_posix(), p.stat().st_size, hashlib.sha256(p.read_bytes()).hexdigest())
+                           for p in root.rglob("*") if p.is_file() and p.name != "mod.json")
+            expected = {stager.world_path(level): body for level, body in worlds.items()}
+            if [f[0] for f in files] != sorted(expected) or any(hashlib.sha256(expected[f[0]]).hexdigest() != f[2] for f in files):
+                raise AssertionError(f"{spec['name']}: the reference stager wrote other files than its input")
+            if manifest != stager.build_manifest(spec["id"], spec["modName"], spec["version"], expected, author=spec["author"],
+                                                  description=spec["description"], ce_min=spec["ceMin"], ce_max=spec["ceMax"]):
+                raise AssertionError(f"{spec['name']}: mod.json is not what build_manifest returns")
+            json.loads(manifest)
+            stages.append({**spec, "manifest": manifest, "manifestSha256": hashlib.sha256(manifest).hexdigest(), "files": files})
+    for spec in refused_stage_specs():
+        with tempfile.TemporaryDirectory() as tmp:
+            parent, game = Path(tmp) / "mods", Path(tmp) / "game"
+            parent.mkdir()
+            game.mkdir()
+            try:
+                stager.stage_mod(parent, game, spec["id"], spec_worlds(spec, bodies, edited), name=spec["modName"], version=spec["version"],
+                                 author=spec["author"], description=spec["description"], ce_min=spec["ceMin"], ce_max=spec["ceMax"])
+            except stager.ModStageError:
+                if list(parent.iterdir()):
+                    raise AssertionError(f"{spec['name']}: the reference stager wrote something before refusing")
+                refused.append(spec)
+            else:
+                raise AssertionError(f"{spec['name']}: the reference stager accepts an input that must be refused")
+    return stages, refused
+
+
 # ------------------------------------------------------------------------------------------------------ rendering
 def deflate_b64(data: bytes) -> str:
     return base64.b64encode(zlib.compress(data, 9)).decode("ascii")
 
 
 def cs_text(text: str) -> str:
-    return '"' + text.replace("\\", "\\\\").replace('"', '\\"') + '"'
+    out = ['"']
+    for char in text:
+        code = ord(char)
+        if char in '\\"':
+            out.append("\\" + char)
+        elif 0x20 <= code < 0x7F:
+            out.append(char)
+        else:
+            out.append(f"\\u{code:04x}")
+    out.append('"')
+    return "".join(out)
 
 
 def cs_raw(text: str, indent: str) -> str:
@@ -544,7 +669,10 @@ def build() -> dict:
             if "baseLevel" in worlds:  # a world with no WDAT is the one vector the reference returns without level numbers
                 raise AssertionError(f"{name}: the reference accepts an archive that must be refused")
         bad_archives.append({"name": name, "why": why, "file": data})
-    return {"valids": valids, "refused": refused, "edits": edits, "archives": archives, "badArchives": bad_archives}
+    edited = {e["name"]: e["body"] for e in edits}
+    stages, bad_stages = stage_vectors(valid_bodies, edited)
+    return {"valids": valids, "refused": refused, "edits": edits, "archives": archives, "badArchives": bad_archives,
+            "stages": stages, "badStages": bad_stages}
 
 
 def render(data: dict) -> str:
@@ -567,6 +695,13 @@ def render(data: dict) -> str:
            "    /// <summary>A level archive file and what the reference finds in it.</summary>",
            "    internal sealed record ArchiveVector(string Name, string Note, string File, int BaseLevel, int RealLevel, string? BaseSha256, string? RealSha256);", "",
            "    internal sealed record RefusedArchive(string Name, string Why, string File);", "",
+           "    /// <summary>A world file of a staged mod: a body vector, an edit vector's body, or repeated bytes.</summary>",
+           "    internal sealed record StageWorld(int Level, string From, string Edit, int Repeat, int Size);", "",
+           "    internal sealed record StageFile(string Path, long Size, string Sha256);", "",
+           "    /// <summary>Inputs the reference stager accepts, with the bytes of the mod.json and the files it wrote.</summary>",
+           "    internal sealed record StageVector(string Name, string Id, string ModName, string Version, string Author, string Description, string? CeMin, string? CeMax, StageWorld[] Worlds, string Manifest, string ManifestSha256, StageFile[] Files);", "",
+           "    /// <summary>Inputs the reference stager refuses.</summary>",
+           "    internal sealed record RefusedStage(string Name, string Why, string Id, string ModName, string Version, string Author, string Description, string? CeMin, string? CeMax, StageWorld[] Worlds);", "",
            "    internal static readonly WorldVector[] Valid =", "    ["]
     for v in data["valids"]:
         out.append(f"        new({cs_text(v['name'])}, {cs_text(v['note'])},")
@@ -599,6 +734,25 @@ def render(data: dict) -> str:
     for v in data["badArchives"]:
         file = cs_raw(deflate_b64(v["file"]), pad) if v["file"] else '""'
         out.append(f"        new({cs_text(v['name'])}, {cs_text(v['why'])}, {file}),")
+    out += ["    ];", "", "    internal static readonly StageVector[] Stages =", "    ["]
+
+    def worlds_cs(worlds: list[dict]) -> str:
+        return "[" + ", ".join(f'new({w["level"]}, {cs_text(w.get("from", ""))}, {cs_text(w.get("edit", ""))}, {w.get("repeat", 0)}, {w.get("size", 0)})'
+                              for w in worlds) + "]"
+
+    def opt(value) -> str:
+        return "null" if value is None else cs_text(value)
+
+    for v in data["stages"]:
+        out.append(f"        new({cs_text(v['name'])}, {cs_text(v['id'])}, {cs_text(v['modName'])}, {cs_text(v['version'])}, {cs_text(v['author'])}, {cs_text(v['description'])},")
+        out.append(f"            {opt(v['ceMin'])}, {opt(v['ceMax'])}, {worlds_cs(v['worlds'])},")
+        out.append(f"            {cs_raw(deflate_b64(v['manifest']), pad)},")
+        files = ", ".join(f"new({cs_text(f[0])}, {f[1]}, {cs_text(f[2])})" for f in v["files"])
+        out.append(f"            {cs_text(v['manifestSha256'])}, [{files}]),")
+    out += ["    ];", "", "    internal static readonly RefusedStage[] RefusedStages =", "    ["]
+    for v in data["badStages"]:
+        out.append(f"        new({cs_text(v['name'])}, {cs_text(v['why'])}, {cs_text(v['id'])}, {cs_text(v['modName'])}, {cs_text(v['version'])}, {cs_text(v['author'])}, {cs_text(v['description'])},")
+        out.append(f"            {opt(v['ceMin'])}, {opt(v['ceMax'])}, {worlds_cs(v['worlds'])}),")
     out += ["    ];", "}", ""]
     return "\n".join(out)
 

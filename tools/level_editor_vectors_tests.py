@@ -10,6 +10,7 @@ import base64
 import contextlib
 import hashlib
 import io
+import json
 import re
 import struct
 import tempfile
@@ -40,6 +41,8 @@ class VectorTests(unittest.TestCase):
         self.assertGreaterEqual(len(self.data["edits"]), 8)
         self.assertGreaterEqual(len(self.data["archives"]), 7)
         self.assertGreaterEqual(len(self.data["badArchives"]), 15)
+        self.assertGreaterEqual(len(self.data["stages"]), 11)
+        self.assertGreaterEqual(len(self.data["badStages"]), 40)
         names = [v["name"] for v in self.data["valids"]]
         self.assertEqual(len(names), len(set(names)))
         for version in range(43, 51):
@@ -166,6 +169,43 @@ class VectorTests(unittest.TestCase):
                 except (enc.EncodeError, struct.error):
                     continue
                 self.assertNotIn("baseLevel", worlds)  # the one the reference accepts without level numbers
+
+    def test_the_staged_mods_are_what_the_reference_stager_wrote(self) -> None:
+        bodies = {v["name"]: v["body"] for v in self.data["valids"]}
+        edited = {e["name"]: e["body"] for e in self.data["edits"]}
+        for v in self.data["stages"]:
+            with self.subTest(v["name"]):
+                worlds = gen.spec_worlds(v, bodies, edited)
+                files = {gen.stager.world_path(level): body for level, body in worlds.items()}
+                self.assertEqual(v["manifest"], gen.stager.build_manifest(v["id"], v["modName"], v["version"], files, author=v["author"],
+                                                                         description=v["description"], ce_min=v["ceMin"], ce_max=v["ceMax"]))
+                manifest = json.loads(v["manifest"])
+                self.assertEqual((manifest["schema"], manifest["id"], manifest["name"], manifest["version"]), (1, v["id"], v["modName"], v["version"]))
+                self.assertEqual([f["path"] for f in manifest["files"]], sorted(files))
+                self.assertEqual([(f["path"], f["size"], f["sha256"]) for f in manifest["files"]], [tuple(f) for f in v["files"]])
+                self.assertEqual("author" in manifest, bool(v["author"]))
+                self.assertEqual("description" in manifest, bool(v["description"]))
+                self.assertEqual(("ce_min" in manifest, "ce_max" in manifest), (v["ceMin"] is not None, v["ceMax"] is not None))
+                self.assertTrue(v["manifest"].endswith(b"\n") and v["manifest"].isascii())
+        by_name = {v["name"]: v for v in self.data["stages"]}
+        self.assertEqual(json.loads(by_name["quotes-and-backslash"]["manifest"])["name"], 'Say "hi" \\ bye')
+        self.assertEqual(len(json.loads(by_name["max-lengths"]["manifest"])["description"]), 1024)
+        self.assertEqual(by_name["world-of-4-mib"]["files"][0][1], 4 << 20)
+        self.assertEqual([f[0] for f in by_name["worlds-sorted-by-path"]["files"]],
+                         ["data/worlds/world007.wrd", "data/worlds/world100.wrd", "data/worlds/world999.wrd"])
+
+    def test_every_refused_staging_is_refused_before_anything_is_written(self) -> None:
+        bodies = {v["name"]: v["body"] for v in self.data["valids"]}
+        edited = {e["name"]: e["body"] for e in self.data["edits"]}
+        for v in self.data["badStages"]:
+            with self.subTest(v["name"]), tempfile.TemporaryDirectory() as tmp:
+                parent, game = Path(tmp) / "mods", Path(tmp) / "game"
+                parent.mkdir()
+                game.mkdir()
+                with self.assertRaises(gen.stager.ModStageError):
+                    gen.stager.stage_mod(parent, game, v["id"], gen.spec_worlds(v, bodies, edited), name=v["modName"], version=v["version"],
+                                         author=v["author"], description=v["description"], ce_min=v["ceMin"], ce_max=v["ceMax"])
+                self.assertEqual(list(parent.iterdir()), [])
 
     def test_canonical_does_not_depend_on_the_compressor_and_notices_a_change(self) -> None:
         text = gen.render(self.data)
