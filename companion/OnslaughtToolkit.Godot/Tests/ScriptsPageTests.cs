@@ -16,6 +16,13 @@ namespace OnslaughtToolkit.Companion.Tests;
 /// </summary>
 internal static class ScriptsPageTests
 {
+    /// <summary>
+    /// Gamma's source: a comment, then calls whose quoted texts name the authored level's path, an object, an event, nothing, and an object of the base world;
+    /// then the path in other letter case, as a follow-waypoint call's argument (which the game finds) and as an object's name (which it does not).
+    /// </summary>
+    private const string Gamma = "// gamma\r\nFollowWaypoint(\"Path A\", 0);\r\nGetThingRef(\"Tank 1\");\r\nPostEvent(\"go\");\r\nGetThingRef(\"ghost\");\r\nGetThingRef(\"Base Hut\");\r\n" +
+                                 "FollowWaypointWait(\"path a\", 0, 5);\r\nGetThingRef(\"path a\");\r\nFollowWaypoint(\"base path\", 0);\r\n";
+
     private static SignalAwaiter Frame(SceneTree tree) => tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
 
     private static string[] Snapshot(string root) => [.. Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal)
@@ -80,10 +87,25 @@ internal static class ScriptsPageTests
         real.Things[1].Init.SpawnScript = "alpha";
         real.Things[2].Init.Script = "ghost";
         real.Things[3].Init.Script = "beta";
+        // Its path "Path A" names a unit, a waypoint, a unit, a waypoint and a feature (slots 1, 3, 0, 2, 4): the game keeps the waypoints, rows 3 and 2, as its points.
+        real.WaypointPaths[0].Slots.Clear();
+        real.WaypointPaths[0].Slots.AddRange([1, 3, 0, 2, 4]);
+        WaypointPath lone = new() { Name = "Lone" };  // three slots, of which only the waypoint at row 2 is a point: a single point has no line
+        lone.Slots.AddRange([1, 2, 0]);
+        real.WaypointPaths.Add(lone);
+        real.Things[2].Init.Position = new(100f, 20f, 0f);
+        real.Things[3].Init.Position = new(300f, 60f, 0f);
         WorldBody baseWorld = LevelScriptTests.Body(LevelScriptTests.Script("alpha", [1], [], ("Print", 1)), LevelScriptTests.Script("basey", [0], []));
+        baseWorld.Things[1].Init.Name = "Base Hut";  // an object the level's table does not list
+        baseWorld.WaypointPaths[0].Name = "Base Path";  // a path of the base world (the game finds those before the level's own paths of the same name); its name differs from the level's "Path A"
         File.WriteAllBytes(archive, LevelArchiveBytes(131, 130, baseWorld.Write(), real.Write()));
+        // A second level with one short script: what the view shows after the level is changed (the base world slot of its archive is left empty: no base level).
+        WorldBody shortWorld = LevelScriptTests.Body(LevelScriptTests.Script("shorty", [0], []));
+        File.WriteAllBytes(Path.Combine(resources, "140_res_PC.aya"), LevelArchiveBytes(-1, 140, shortWorld.Write(), shortWorld.Write()));
+        Source(install.Game, 140, "shorty", "// shorty\r\ninit()\r\n{\r\n}\r\n");
         Source(install.Game, 130, "alpha", "// alpha, the level's own\r\ninit()\r\n{\r\n\tPause(1);\r\n}\r\n");
-        Source(install.Game, 130, "gamma", "// gamma\r\n");
+        Source(install.Game, 130, "gamma", Gamma);
+        Source(install.Game, 130, "delta", string.Concat(Enumerable.Range(0, 300).Select(line => $"// line {line}\r\n")));  // long enough to scroll far down
         Source(install.Game, 131, "alpha", "// alpha, the base world's\r\narrived()\r\n{\r\n}\r\n");
         Source(install.Game, 131, "basey", "// basey\r\ninit()\r\n{\r\n}\r\n");
         string[] gameBefore = Snapshot(install.Game);
@@ -114,9 +136,40 @@ internal static class ScriptsPageTests
             check.That(page.Scripts.Source.Text == "// alpha, the level's own\ninit()\n{\n\tPause(1);\n}\n" && !page.Scripts.Source.Editable && page.Scripts.Source.GuttersDrawLineNumbers &&
                        page.Scripts.Info == "level130/alpha.msl · 5 lines · read only",
                 $"the source is shown read only with line numbers, and the line says where it is from: \"{page.Scripts.Info}\"");
+            check.That(page.Scripts.InfoLabel.MouseFilter == Control.MouseFilterEnum.Pass && page.Scripts.InfoLabel.TooltipText.StartsWith(Path.Combine(install.Game, "data", "MissionScripts", "level130", "alpha.msl"), StringComparison.Ordinal),
+                $"the line's tooltip, which has the whole path, can be reached with the pointer: {page.Scripts.InfoLabel.MouseFilter} \"{page.Scripts.InfoLabel.TooltipText}\"");
             check.That(page.ScriptCardText.Contains("Handles: init, died", StringComparison.Ordinal) && page.ScriptCardText.Contains("Calls: Pause ×2", StringComparison.Ordinal) &&
                        page.ScriptCardText.Contains("Named by:", StringComparison.Ordinal) && page.ScriptUseButtons.Select(button => button.Text).SequenceEqual([$"0 · {model.Row(0)!.Label}", $"1 · {model.Row(1)!.Label}"]),
                 $"the card says what the script handles and calls, and offers the objects that name it: \"{page.ScriptCardText}\"");
+
+            // The view scrolled or its caret left far down a long source, then another script chosen: the shorter text must never be asked for a line past its end
+            // (Godot reports those as engine errors, which fail the run).
+            check.That(page.Scripts.Select("delta") && page.Scripts.Source.GetLineCount() == 301, "a long source is shown whole");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            page.Scripts.Source.ScrollVertical = 250;
+            page.Scripts.Source.SetCaretLine(290);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            foreach (string next in new[] { "alpha", "delta", "beta", "delta", "gamma" })
+            {
+                page.Scripts.Source.ScrollVertical = 250;
+                page.Scripts.Source.SetCaretLine(Math.Min(290, page.Scripts.Source.GetLineCount() - 1));
+                check.That(page.Scripts.Select(next), $"{next} is chosen after the view was left far down");
+                for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            }
+            check.That(page.Scripts.Source.GetCaretLine() == 0 && page.Scripts.Source.ScrollVertical == 0, "and a script chosen starts at its first line");
+            check.That(page.Scripts.Select("delta"), "the long script is chosen again");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            page.Scripts.Source.ScrollVertical = 250;
+            page.Scripts.Source.SetCaretLine(290);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            page.Search.Text = "zzz";  // nothing matches: the source is emptied while the view is far down
+            page.Search.EmitSignal(LineEdit.SignalName.TextChanged, "zzz");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Scripts.Source.Text == "" && page.Scripts.Source.ScrollVertical == 0,
+                $"a search nothing matches empties the view from its top: {page.Scripts.Source.Text.Length} characters, scroll {page.Scripts.Source.ScrollVertical}, {page.Scripts.ShownCount} scripts shown");
+            page.Search.Text = "";
+            page.Search.EmitSignal(LineEdit.SignalName.TextChanged, "");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
 
             // A long list of events is cut after twelve, as the list of functions is.
             check.That(page.Scripts.Select("delta") && page.ScriptCardText.Contains("Handles: " + string.Join(", ", Enumerable.Range(1, 12).Select(number => $"event \"h{number}\"")) + " and 2 more", StringComparison.Ordinal),
@@ -126,7 +179,7 @@ internal static class ScriptsPageTests
             check.That(page.Scripts.Select("beta") && page.Scripts.Source.Text == "" && page.Scripts.Info == "No file named beta.msl in level130." && page.ScriptCardTitle == "beta" &&
                        page.ScriptCardText.Contains("Handles: event \"go\"", StringComparison.Ordinal) && page.ScriptCardText.Contains("No file named beta.msl", StringComparison.Ordinal),
                 $"a script with no source file says which file is missing: \"{page.Scripts.Info}\"");
-            check.That(page.Scripts.Select("gamma") && page.Scripts.Source.Text == "// gamma\n" && page.ScriptCardText.Contains("Handles no event", StringComparison.Ordinal) &&
+            check.That(page.Scripts.Select("gamma") && page.Scripts.Source.Text == Gamma.Replace("\r\n", "\n") && page.ScriptCardText.Contains("Handles no event", StringComparison.Ordinal) &&
                        page.ScriptCardText.Contains("Calls no game function", StringComparison.Ordinal) && page.ScriptCardText.Contains("No object in this level names it", StringComparison.Ordinal) && page.ScriptUseButtons.Count == 0,
                 "a script that handles, calls and is named by nothing says each");
             check.That(page.Scripts.Select("alpha", fromBase: true) && page.Scripts.Source.Text == "// alpha, the base world's\narrived()\n{\n}\n" && page.ScriptCardText.Contains("base world of level 131", StringComparison.Ordinal) &&
@@ -167,6 +220,113 @@ internal static class ScriptsPageTests
             await Frame(tree);
             check.That(page.ScriptsToggle.ButtonPressed && page.Scripts.Current?.Summary.Name == "beta" && !page.Scripts.Current.FromBaseWorld && page.ScriptCardTitle == "beta",
                 "pressing a script button shows that script, the level's own");
+
+            // The caret in a quoted text of the source says what in the level has that name, each a button that goes to it.
+            async Task<bool> CaretAt(int line, int column)
+            {
+                page.Scripts.Source.SetCaretLine(line);
+                page.Scripts.Source.SetCaretColumn(column);
+                for (int frame = 0; frame < 3; frame++) await Frame(tree);
+                return true;
+            }
+
+            page.ShowScript("gamma");
+            await Frame(tree);
+            await CaretAt(1, 18);
+            check.That(page.Scripts.Token == new SourceToken("Path A", true, 16, 6, true) && page.NamesTitle == "“Path A” names:" && page.NameButtons.Select(button => button.Text).SequenceEqual(["path Path A · 2 points"]),
+                $"the caret in a quoted text names what it names, the path's points being the ones the game keeps: \"{page.NamesTitle}\" {string.Join(" | ", page.NameButtons.Select(button => button.Text))}");
+            check.That(page.HidePath.Visible && page.HidePath.Disabled && page.HighlightedPathText == "", "Hide path is in the row from the start, disabled, so that the map keeps its height when a path is shown");
+            page.NameButtons[0].EmitSignal(BaseButton.SignalName.Pressed);
+            await Frame(tree);
+            WorldBody world = model.Session!.Body;
+            int[] pathRows = [.. WaypointCatalog.Rows(world, world.WaypointPaths[0])];
+            check.That(pathRows.SequenceEqual([3, 2]) && world.WaypointPaths[0].Slots.Count == 5, "the path has five slots and the game keeps two of them as points, rows 3 and 2");
+            double expectedLow = pathRows.Min(row => (double)model.Row(row)!.Position.X), expectedHigh = pathRows.Max(row => (double)model.Row(row)!.Position.X);
+            check.That(!page.ScriptsToggle.ButtonPressed && page.Map.HighlightedPath == 0 && page.Map.DrawablePaths == 1 && page.HidePath.Visible && !page.HidePath.Disabled && page.HighlightedPathText == "Path Path A · 2 points, numbered along it" &&
+                       Math.Abs(page.Map.View.CenterX - (expectedLow + expectedHigh) / 2) < 1e-4 && page.Map.View.Scale >= page.Map.View.FitScale,
+                $"the path button shows the path on the map, numbered, and brings the map to it: highlighted {page.Map.HighlightedPath}, \"{page.HighlightedPathText}\", centre {page.Map.View.CenterX} (the points' x run {expectedLow} to {expectedHigh}), scale {page.Map.View.Scale}");
+            check.That(page.PathLabel.MouseFilter == Control.MouseFilterEnum.Pass && page.PathLabel.TooltipText == page.HighlightedPathText, "the path line's tooltip, which has the whole text, can be reached with the pointer");
+            page.HidePath.EmitSignal(BaseButton.SignalName.Pressed);
+            check.That(page.Map.HighlightedPath is null && page.HidePath.Visible && page.HidePath.Disabled && page.HighlightedPathText == "", "Hide path stops highlighting it, and stays in the row, disabled");
+            check.That(!page.Map.ShowAllPaths, "the Paths switch starts off");
+            page.PathsToggle.ButtonPressed = true;
+            check.That(page.Map.ShowAllPaths && page.Map.DrawablePaths == 1, "the Paths switch draws every path");
+            page.PathsToggle.ButtonPressed = false;
+
+            page.ShowScript("gamma");
+            await Frame(tree);
+            await CaretAt(2, 15);
+            check.That(page.NamesTitle == "“Tank 1” names:" && page.NameButtons.Select(button => button.Text).SequenceEqual(["unit 0 · Tank 1"]), $"a quoted text that is an object's name offers the object: \"{page.NamesTitle}\" {string.Join(" | ", page.NameButtons.Select(button => button.Text))}");
+            check.That(page.NameLabels.Select(label => label.Text).SequenceEqual(["unit 0 · Tank 1 · base world"]), $"and says the base world has an object of that name too, beside the button: {string.Join(" | ", page.NameLabels.Select(label => label.Text))}");
+            page.NameButtons[0].EmitSignal(BaseButton.SignalName.Pressed);
+            await Frame(tree);
+            check.That(!page.ScriptsToggle.ButtonPressed && page.SelectedRow == 0 && page.Map.Selected == 0, "and its button shows the object on the table and the map");
+            page.ShowScript("gamma");
+            await Frame(tree);
+            await CaretAt(3, 12);
+            check.That(page.NamesTitle == "“go” names:" && page.NameButtons.Select(button => button.Text).SequenceEqual(["event handled by beta"]), $"a text that is an event a script handles offers that script: {string.Join(" | ", page.NameButtons.Select(button => button.Text))}");
+            page.NameButtons[0].EmitSignal(BaseButton.SignalName.Pressed);
+            await Frame(tree);
+            check.That(page.Scripts.Current?.Summary.Name == "beta" && page.ScriptsToggle.ButtonPressed, "and its button shows that script");
+            page.ShowScript("gamma");
+            await Frame(tree);
+            await CaretAt(4, 18);
+            check.That(page.NamesTitle == "“ghost” names nothing in this level." && page.NameButtons.Count == 0 && page.NameLabels.Count == 0, $"a quoted text that names nothing says so: \"{page.NamesTitle}\"");
+            await CaretAt(5, 18);
+            check.That(page.NamesTitle == "“Base Hut” names:" && page.NameButtons.Count == 0 && page.NameLabels.Select(label => label.Text).SequenceEqual(["unit 1 · Base Hut · base world"]) &&
+                       page.NameLabels[0].MouseFilter == Control.MouseFilterEnum.Pass && page.NameLabels[0].TooltipText.Contains("level 131", StringComparison.Ordinal),
+                $"a name only an object of the base world has is said, with nothing to go to: \"{page.NamesTitle}\" {string.Join(" | ", page.NameLabels.Select(label => label.Text))} / {page.NameLabels.FirstOrDefault()?.TooltipText}");
+            await CaretAt(6, 24);
+            check.That(page.Scripts.Token == new SourceToken("path a", true, 20, 6, true) && page.NamesTitle == "“path a” names:" && page.NameButtons.Select(button => button.Text).SequenceEqual(["path Path A · 2 points (other letter case)"]),
+                $"the path argument of a follow-waypoint call is found in any letter case, and the button says so: \"{page.NamesTitle}\" {string.Join(" | ", page.NameButtons.Select(button => button.Text))}");
+            await CaretAt(7, 15);
+            check.That(page.Scripts.Token == new SourceToken("path a", true, 13, 6) && page.NamesTitle == "“path a” names nothing in this level." && page.NameButtons.Count == 0,
+                $"the same text anywhere else is not a path, as the game compares those names as they are: \"{page.NamesTitle}\"");
+            await CaretAt(8, 20);
+            check.That(page.Scripts.Token == new SourceToken("base path", true, 16, 9, true) && page.NamesTitle == "“base path” names:" && page.NameButtons.Count == 0 &&
+                       page.NameLabels.Select(label => label.Text).SequenceEqual(["path Base Path · 1 point (other letter case) · base world"]) && page.NameLabels[0].TooltipText.Contains("first path of that name", StringComparison.Ordinal),
+                $"a path argument that names a path of the base world is said with nothing to go to, as the game finds that path first: \"{page.NamesTitle}\" {string.Join(" | ", page.NameLabels.Select(label => label.Text))}");
+            await CaretAt(1, 3);
+            check.That(page.Scripts.Token == new SourceToken("FollowWaypoint", false, 0, 14) && page.NamesTitle == "" && page.NameButtons.Count == 0, "a word is not a name to follow");
+            await CaretAt(0, 4);
+            check.That(page.Scripts.Token is null && page.NamesTitle == "", "nor is a comment");
+            await CaretAt(1, 18);
+            page.Scripts.Select("beta");
+            await Frame(tree);
+            check.That(page.NamesTitle == "" && page.NameButtons.Count == 0, "choosing another script clears what was under the caret");
+
+            // From an object to the paths it is a point of.
+            page.ShowObject(2);
+            check.That(page.ObjectPathButtons.Select(button => button.Text).SequenceEqual(["Path Path A · point 2 of 2", "Path Lone · point 1 of 1"]), $"an object that a path passes through offers each path, numbered among the points the game keeps: \"{string.Join(" | ", page.ObjectPathButtons.Select(button => button.Text))}\"");
+            page.ObjectPathButtons[0].EmitSignal(BaseButton.SignalName.Pressed);
+            check.That(page.Map.HighlightedPath == 0 && page.SelectedRow == 2 && page.Map.Selected == 2, "and its button shows the path on the map with the object still selected");
+            page.SelectIndex(3);
+            check.That(page.ObjectPathButtons.Select(button => button.Text).SequenceEqual(["Path Path A · point 1 of 2"]), "the other waypoint is the path's first point, though its slot is the second");
+            page.SelectIndex(1);
+            check.That(page.ObjectPathButtons.Count == 0, "a unit that a path names is on no path: the game drops that slot");
+            page.SelectIndex(4);
+            check.That(page.ObjectPathButtons.Count == 0, "an object on no path offers none");
+            page.OpenLevel(130);
+            check.That(page.Map.HighlightedPath is null && page.HidePath.Disabled, "opening a level again drops the highlight");
+
+            // The engine keeps the view's first visible line and refreshes it only while the view is shown: a long source scrolled to its end, the Scripts switch turned off,
+            // another level opened and the switch turned on again must show the new level's first script from its top, with no engine error (the run fails on one).
+            check.That(page.ShowScript("delta") && page.Scripts.Source.GetLineCount() == 301, "a long source is on view");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            page.Scripts.Source.ScrollVertical = page.Scripts.Source.GetLineCount() - 5;
+            page.Scripts.Source.SetCaretLine(page.Scripts.Source.GetLineCount() - 1);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            page.ScriptsToggle.ButtonPressed = false;
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.OpenLevel(140), "another level opens while the Scripts switch is off");
+            for (int frame = 0; frame < 4; frame++) await Frame(tree);
+            page.ScriptsToggle.ButtonPressed = true;
+            for (int frame = 0; frame < 4; frame++) await Frame(tree);
+            check.That(page.Scripts.Current?.Summary.Name == "shorty" && page.Scripts.Source.GetFirstVisibleLine() == 0 && page.Scripts.Source.GetCaretLine() == 0 && page.Scripts.Source.ScrollVertical == 0,
+                $"the first script of the new level opens at its top: {page.Scripts.Current?.Summary.Name}, first visible line {page.Scripts.Source.GetFirstVisibleLine()}, caret line {page.Scripts.Source.GetCaretLine()}, scroll {page.Scripts.Source.ScrollVertical}");
+            page.ScriptsToggle.ButtonPressed = false;
+            check.That(page.OpenLevel(130), "the first level opens again");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
 
             // Nothing was written, and the move editor still works on the objects.
             page.ScriptsToggle.ButtonPressed = false;

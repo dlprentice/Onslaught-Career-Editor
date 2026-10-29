@@ -270,6 +270,7 @@ public partial class CompanionApp : Control
     {
         if (!_pages.TryGetValue(key, out Page? page)) return;
         if (Current is not null && Current != page) Status.Clear();
+        if (Current is not null && Current != page) Current.Leave();
         if (Current is not null) Current.Root.Visible = false;
         Current = page;
         page.Root.Visible = true;

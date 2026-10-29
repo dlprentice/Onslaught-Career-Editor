@@ -1,8 +1,8 @@
 # Companion Mission Editor: Design Addendum
 
-Status: design; the reference compiler and its retail gate (MS1, section 11) and the read-only scripts view (MS0, section 12) are built, the rest is plan. It extends the
+Status: design; the reference compiler and its retail gate (MS1, section 11), the read-only scripts view (MS0, section 12) and its name links and map paths (MS0.1, section 13) are built, the rest is plan. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-10-29 (MS0, the read-only scripts view, built; earlier: CE 0.1.11, the first to take a world file from a mod, stated as published; earlier: the spike's result and the operator-grouping decision; the lead's earlier decisions; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
+Last updated: 2026-10-29 (MS0.1 follow-ups: a path's points are the waypoints the game keeps, path arguments are case-blind, PATHS rows in the gate; MS0.1, names in the source linked to the level and waypoint paths on the map, built; earlier: MS0, the read-only scripts view, built; CE 0.1.11, the first to take a world file from a mod, stated as published; earlier: the spike's result and the operator-grouping decision; the lead's earlier decisions; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours that is proved against every script the game
 shipped (byte for byte), and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -104,7 +104,7 @@ recompiled, so a mod differs from the game only where the player edited.
 
 | Milestone | Scope | Done when | Estimate |
 | --- | --- | --- | --- |
-| MS0 scripts beside the map (read-only; built, section 12; names and paths: MS0.1) | the Level editor page lists the open level's compiled scripts (name, the events handled, the things that run it, the natives it calls) next to the map, shows the selected script's installed `.msl` source with line numbers, and links names in it (thing names, waypoint paths, scripts, text ids) to the table and the map; selecting a thing shows its script and the other way round; waypoint paths are drawn on the map | on every installed level the list equals the world body's scripts, every one finds its source (670 of 670), the capture at three sizes looked at, nothing written | 4 to 5 days |
+| MS0 scripts beside the map (read-only; built, section 12) and MS0.1 names and paths (built, section 13) | the Level editor page lists the open level's compiled scripts (name, the events handled, the things that run it, the natives it calls) next to the map, shows the selected script's installed `.msl` source with line numbers, and links names in it (thing names, waypoint paths, scripts and event handlers; text ids are not linked yet) to the table and the map; selecting a thing shows its script and the other way round; waypoint paths are drawn on the map | on every installed level the list equals the world body's scripts, every one finds its source (670 of 670), the capture at three sizes looked at, nothing written | 4 to 5 days |
 | MS1 reference compiler and the byte-exact gate | `tools/msl_compile.py` (preprocess, lex, parse, generate, write the record as the world file stores it) and `tools/msl_gate.py --game GAME`, section 5 | every shipped script compiles to its shipped record, or each difference is explained (built; section 11) | built 2026-10-29 (the spike ran on every script) |
 | MS2 the C# compiler | `Missions/` with the same stages, authored vectors from the Python reference in Git, and a local retail gate (`Development/ScriptsGate.cs`) that must match the Python gate on all scripts | the vectors and the retail gate pass; the C# refuses what the Python refuses | 1 week |
 | MS3 first editable thing | the page edits the selected script's source (a text area with line numbers), compiles it (errors by line and column, a summary of what changed), replaces the script in the session as one undoable command, and saves through Save as mod | the acceptance in section 6 | 1 week |
@@ -266,7 +266,8 @@ narrows the list by name, event or function. Nothing is written.
   at `data/MissionScripts/level<NNN>/<name>.msl` in any case (the real level's folder for the level's own scripts, the base level's for
   its base world's), ignoring links, anything that is not a regular file (opening a named pipe would wait for a writer for ever, so
   the file system is asked first, without opening it) and files over 1 MiB. A folder that cannot be listed, or a file that cannot be read,
-  is a sentence on the page.
+  is a sentence on the page, and so is an entry the system cannot be asked about (a sandbox that refuses, or a C library without
+  `statx`): nothing is read then.
 - **Checked.** The Toolkit's gate table has a SCRIPTS row per level archive, worked out in Python separately from the C#: the catalog's
   lines (name, instructions, events, functions with counts, users) and the text of every source found, hashed. The Companion's local
   retail gate (`Development/LevelsGate.cs`) compares the C# catalog and finder with it on every level of an installed game: every list
@@ -274,5 +275,63 @@ narrows the list by name, event or function. Nothing is written.
 - **Limits.** The page was driven by events in tests and looked at in offscreen captures at 1920 by 1080, 1280 by 800 and 1024 by 700
   (the smallest window is cramped: the list shows two or three rows and the source about ten lines); nobody has used it by hand. A source
   may differ from the compiled script it sits beside (the gate says which installed ones do: section 11). Base-world scripts name
-  base-world objects, which the table does not list, so they show no users. What a name in a source refers to, and the paths on the map,
-  are MS0.1.
+  base-world objects, which the table does not list, so they show no users. The regular-file check is made at one moment and the read
+  comes after it, so an entry swapped for a pipe in between is not guarded against (that takes someone who can already change the
+  game folder). What a name in a source refers to, and the paths on the map, are MS0.1 (section 13).
+
+## 13. MS0.1: names in the source, and waypoint paths on the map (2026-10-29)
+
+A click in a quoted text of a script's source says what in the open level has that name, with a button for each that goes to it: an
+object by its own name (the table and the map), a waypoint path (the map), a script (the Scripts view), or the scripts that handle an
+event of that name. An object of the level's base world is named too, with a note and no button, because the page does not list that
+world's objects. A text that names nothing says so; a word or a comment is not a link. The **Paths** switch under the map draws every
+waypoint path faintly through its points. A path button, from a source or from an object that is a point of the path ("Path A
+· point 2 of 3"), highlights that path, numbered along it with an arrow on each leg, and brings it into view; Hide path stops it.
+Nothing is written.
+
+- **What it reads.** The scripts take names as quoted texts (a thing, a waypoint path, an event, a script), and the compiled script
+  holds the same texts as string constants with nothing to say which call reads which text as what. So a link goes by the name alone:
+  it finds what has that name and does not claim the script uses it as such. Objects match by their exact name (else, if none has it,
+  in another letter case, and the button says so), in the level's own world and by the same rule in its base world, each on its own;
+  scripts and event handlers match exactly, and so do paths except in one place. The game takes the first matching waypoint path
+  (`CWaypointManager::FindNearest`) from one list, and that list holds the base
+  world's paths before the level's own (`CWorld::LoadWorld` loads the base world before the rest of the level's world, and
+  `CWaypointManager::Load` appends each path to the list). So the first argument of a `FollowWaypoint` or `FollowWaypointWait` call,
+  found by looking back along the line from its opening quote over blanks to a `(` and, before it, the whole word of the call's name,
+  names the first of the base world's paths then the level's own whose name matches under the modeled C-locale byte comparison:
+  ASCII letters match in either case, other bytes match exactly, and NUL ends the name. Other process locales and native Windows
+  comparison remain unverified. The level's own path gets a button (marked when the compared case differs); a base world's path is
+  said, with no button, because the page does not draw that world's paths. The game returns no waypoint if the first matching path
+  has no usable points, rather than trying a later path. The page does not resolve an empty quoted name. A quoted text is closed by the next
+  quote on its line, and `//` outside a quote ends the line's code. A path lists objects by their place in the world's thing list:
+  under that reading the shipped paths run from point to point (the median step between neighbours is about 88 world units; under a
+  shift of one or two places it is 121 to 146). The game's loader (`CWaypointPath::Load`) keeps a slot only if it indexes a loaded
+  object that is a waypoint, so a slot past the list, and a slot that names a unit, a spawner, a squad or a start, is not a point:
+  the page does not draw it, number it or count it, "N points" counts the points kept, and an object that only such a slot names is
+  on no path.
+- **Checked.** The gate table has a NAMES row per level archive, worked out in Python separately from the C# (`source_literals`,
+  `resolve_name`): every quoted text of the sources of the level's own scripts, outside comments, with its line and what it resolved
+  to, hashed, and how many there are and how many name something. The Companion's local retail gate scans the same sources with
+  `TokenAt`, column by column, and resolves with `ScriptNames.Resolve` (a path argument is told by `follows_path_call` in Python and
+  `FollowsPathCall` in C#); the two agree on every level of an installed game. A PATHS row per level archive lists each path of the
+  level's own world as `index|name|slots|kept rows` (hashed, with the numbers of paths, points kept and slots): the Python keeps the
+  rows by the kind its own model reads from the object id, the C# with `WaypointCatalog.Rows`, and the two agree on every level. That
+  row exists because a mutation of the path-slot rule passed every authored test (an authored world shows only a few slots) and was
+  found only by checking against the real data; the gate now catches it. The route's
+  tests build a level with a path, an object, a handler, a base-world object and a text that names nothing, drive the caret and the
+  buttons, and check the highlight, the fit (the map's centre and zoom, with the zoom limit), that choosing another script clears the
+  card, and that the tooltips can be reached with the pointer.
+- **Limits.** Over the shipped sources about three quarters of the quoted texts name something in their level or its base world (many
+  name more than one thing: an event handler and a script, say). Of the rest, about half are arguments of `Print`, and nearly all the
+  others arguments of `SpawnThing`, of `PostEvent` (an event nothing handles) and of the functions that take a segment, variable,
+  animation or weapon name: none of them an object, path or script of the level. Text ids, which index the game's text table (section
+  6), are not linked. About one path slot in five of the shipped paths names an object that is not a waypoint, and about half of the
+  paths hold one: those slots are dropped as the game drops them, so a path has fewer points than slots. A path argument is told by the
+  line it is on, so a call whose name and parenthesis end one line and whose first argument begins the next is not recognised (none of
+  the shipped sources does that; a mod's might), and its path is then found by its exact name only. Unverified: whether the slot a path names
+  counts the file's order of records or the order in which they spawned (`CWorld::LoadWorld` advances its index only for records that
+  spawned, so a record that failed to spawn would shift every later slot); the page reads slots as file order, which is the reading under
+  which the shipped paths run from point to point. Base-world objects are named, not
+  shown. The page was driven by events in tests and looked at in offscreen captures at 1920 by 1080, 1280 by 800 and 1024 by 700 (the
+  path numbers are drawn over the marks, above and to the left of each point so that a selected object's tag does not cover them; at
+  the smallest size the path line under the map is cut short); nobody has used it by hand.

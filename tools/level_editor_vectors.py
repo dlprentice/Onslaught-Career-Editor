@@ -19,7 +19,7 @@ companion/OnslaughtToolkit.Godot/Tests/LevelVectors.g.cs:
     python tools/level_editor_vectors.py gate-table --game DIR --stdout
                                                                    one line per world body of an installed game: its size, its
                                                                    SHA-256 and the SHA-256 of its reference dump; a TERRAIN row
-                                                                   and a SCRIPTS row per level archive (hashes and counts only;
+                                                                   and a SCRIPTS row, a NAMES row and a PATHS row per level archive (hashes and counts only;
                                                                    the local retail conformance gate reads it)
 
 The dump is one `path = value` line per leaf of the reference model: integers in decimal, floats as the four stored bytes
@@ -1030,6 +1030,8 @@ def cmd_gate_table(args) -> int:
             bodies += 1
         if "RLWD" in worlds["bodies"]:
             rows.append(scripts_gate_row(game, level, worlds))
+            rows.append(names_gate_row(game, level, worlds))
+            rows.append(paths_gate_row(level, enc.read_world_model(worlds["bodies"]["RLWD"])))
         # The terrain: the heightfield's samples, scale and water, and the lookup's heights at a grid and at every thing of the level's own world.
         eres = next((stream[at:at + size] for tag, at, size in enc.chunks(stream) if tag == "ERES"), None)
         if eres is not None and "RLWD" in worlds["bodies"]:
@@ -1052,6 +1054,17 @@ def cmd_gate_table(args) -> int:
 SCRIPT_ROLES = (("script", "script"), ("spawnScript", "spawn script"))
 
 
+def script_events(code: dict) -> list[str]:
+    """The events a compiled script handles, as the Companion lists them: each fixed event it has an entry point for, then each named
+    handler as `event "name"` (or `event #n` when its name symbol is not text)."""
+    events = [wrd.SCRIPT_EVENT_NAMES[i] for i, pc in enumerate(code["eventPCs"]) if pc >= 0]
+    for number, function in enumerate(code["eventFunctions"], 1):
+        params = function["params"]
+        symbol = code["symbols"][params[0]] if params and 0 <= params[0] < len(code["symbols"]) else None
+        events.append(f'event "{symbol["value"]}"' if symbol is not None and symbol["dataType"] == 3 else f"event #{number}")
+    return events
+
+
 def script_catalog_lines(model: dict, base: bool) -> list[str]:
     """What the Companion's script catalog reads from a world body, one line per script (the C# gate builds the same lines from
     its own catalog): where it is (own world or base), its name, its instruction count, the events it handles (each fixed event it
@@ -1070,11 +1083,7 @@ def script_catalog_lines(model: dict, base: bool) -> list[str]:
     lines = []
     for script in model["scripts"]:
         code = script["code"]
-        events = [wrd.SCRIPT_EVENT_NAMES[i] for i, pc in enumerate(code["eventPCs"]) if pc >= 0]
-        for number, function in enumerate(code["eventFunctions"], 1):
-            params = function["params"]
-            symbol = code["symbols"][params[0]] if params and 0 <= params[0] < len(code["symbols"]) else None
-            events.append(f'event "{symbol["value"]}"' if symbol is not None and symbol["dataType"] == 3 else f"event #{number}")
+        events = script_events(code)
         calls: dict[str, int] = {}
         for op, attr in code["instructions"]:
             if op == 24:
@@ -1123,6 +1132,121 @@ def scripts_gate_row(game: Path, level: int, worlds: dict) -> str:
                 source_lines.append(f"{tag}|{name}|{hashlib.sha256(text.encode('latin-1')).hexdigest()}")
     counts = f"{len(entries[0][0])}:{len(entries[1][0]) if len(entries) > 1 else 0}"
     return f"{level:03d}\tSCRIPTS\t{counts}\t{dump_hash(lines)}\t{found}/{total}\t{dump_hash(source_lines)}"
+
+
+NAME_LITERAL = re.compile(r'//|"[^"]*"?')
+
+
+def source_literal_sites(text: str) -> list[tuple[int, str, str, int]]:
+    """The quoted texts of a source outside comments, as (0-based line, text, the line, the index of the quote that opens it): a quote is
+    closed by the next quote on its line (never closed, it runs to the end of the line), and `//` outside a quote ends the line's code."""
+    found = []
+    for number, line in enumerate(text.split("\n")):
+        for match in NAME_LITERAL.finditer(line):
+            if match.group() == "//":
+                break
+            shown = match.group()[1:-1] if match.group().endswith('"') and len(match.group()) > 1 else match.group()[1:]
+            found.append((number, shown, line, match.start()))
+    return found
+
+
+def source_literals(text: str) -> list[tuple[int, str]]:
+    """The quoted texts of a source outside comments, as (0-based line, text)."""
+    return [(number, shown) for number, shown, _line, _quote in source_literal_sites(text)]
+
+
+FOLLOW_CALL = re.compile(r"(?<![A-Za-z0-9_])FollowWaypoint(?:Wait)?[ \t\r\f\v]*\([ \t\r\f\v]*$")
+
+
+def follows_path_call(line: str, quote: int) -> bool:
+    """Whether the quote at this index of the line opens the first argument of a call to FollowWaypoint or FollowWaypointWait, where the game
+    compares a waypoint path's name ignoring letter case (CWaypointManager's lookup uses a case-blind comparison) and nowhere else."""
+    return FOLLOW_CALL.search(line[:quote]) is not None
+
+
+def object_matches(text: str, model: dict, kind: str) -> list[str]:
+    """The objects of a world that have this name exactly, or, if none has, those that have it in another letter case: `kind:row[:case]`."""
+    names = [thing["init"]["name"] for thing in model["things"]]
+    exact = [row for row, name in enumerate(names) if name == text]
+    return [f"{kind}:{row}" for row in exact] if exact else [f"{kind}:{row}:case" for row, name in enumerate(names) if name.lower() == text.lower()]
+
+
+def path_prefix(text: str) -> str:
+    """The portion of a stored name seen by a C-string comparison, without changing the stored value."""
+    return text.split("\0", 1)[0]
+
+
+def path_c_locale_key(text: str) -> str:
+    """Fold ASCII capitals only, as the tested C-locale byte comparison does on Latin-1 decoded names."""
+    return "".join(chr(ord(c) + 32) if "A" <= c <= "Z" else c for c in path_prefix(text))
+
+
+def resolve_name(text: str, model: dict, scripts: list[tuple[str, bool, list[str]]], base_model: dict | None = None, paths_ignore_case: bool = False) -> list[str]:
+    """What a quoted text names in a level, as the Companion's ScriptNames.Resolve finds it (written separately): the objects that have it
+    as their name exactly (else in another letter case), the base world's objects by the same rule (`baseobject`; the Level editor does not
+    list them, so they are said and not offered), the waypoint paths of that name (exactly; or, when the text is the path argument of a
+    follow-waypoint call, the first of the base world's paths then the level's own matching under the modeled C-locale byte comparison, marked
+    when its compared spelling differs in case, `basepath` when it is the base world's), the scripts of that name (the list is the own world's scripts then the
+    base world's) and the scripts that handle an event of that name. One `kind:index[:case]` per match."""
+    if not text:
+        return []
+    found = object_matches(text, model, "object")
+    if base_model is not None:
+        found += object_matches(text, base_model, "baseobject")
+    if paths_ignore_case:
+        # The game keeps one list of paths, the base world's before the level's own (CWorld::LoadWorld loads the base world first, and
+        # CWaypointManager::Load appends). FindNearest's C-string comparison in the tested C locale folds ASCII, not other Latin-1 bytes.
+        for kind, world in (("basepath", base_model), ("path", model)):
+            hit = next((index for index, path in enumerate(world["waypointPaths"]) if path_c_locale_key(path["name"]) == path_c_locale_key(text)), None) if world is not None else None
+            if hit is not None:
+                found.append(f"{kind}:{hit}" + ("" if path_prefix(world["waypointPaths"][hit]["name"]) == path_prefix(text) else ":case"))
+                break
+    else:
+        found += [f"path:{index}" for index, path in enumerate(model["waypointPaths"]) if path["name"] == text]
+    found += [f"script:{index}" for index, (name, _base, _events) in enumerate(scripts) if name == text]
+    found += [f"handler:{index}" for index, (_name, _base, events) in enumerate(scripts) if f'event "{text}"' in events]
+    return found
+
+
+def names_gate_row(game: Path, level: int, worlds: dict) -> str:
+    """The NAMES row of a level archive: every quoted text of the sources of the level's own scripts, resolved against the level, as lines
+    `script|line|text|matches` (hashed), with how many texts there are and how many name something. The C# gate scans the same sources
+    with TokenAt (a column at a time) and resolves with ScriptNames.Resolve."""
+    own = enc.read_world_model(worlds["bodies"]["RLWD"])
+    scripts = [(script["name"], False, script_events(script["code"])) for script in own["scripts"]]
+    base = enc.read_world_model(worlds["bodies"]["BSWD"]) if "BSWD" in worlds["bodies"] and worlds["baseLevel"] >= 0 else None
+    if base is not None:
+        scripts += [(script["name"], True, script_events(script["code"])) for script in base["scripts"]]
+    lines, total, named = [], 0, 0
+    for script in own["scripts"]:
+        text = source_text(game, worlds["realLevel"], script["name"])
+        if text is None:
+            continue
+        for number, literal, line, quote in source_literal_sites(text):
+            found = resolve_name(literal, own, scripts, base, follows_path_call(line, quote))
+            total += 1
+            named += bool(found)
+            lines.append(f"{script['name']}|{number}|{literal}|{','.join(found)}")
+    return f"{level:03d}\tNAMES\t{total}\t{dump_hash(lines)}\t{named}\t-"
+
+
+def kept_path_rows(model: dict, path: dict) -> list[int]:
+    """The points of a path the game's loader keeps (CWaypointPath::Load): its slots that index a thing of the world that is a waypoint."""
+    things = model["things"]
+    return [slot for slot in path["slots"] if 0 <= slot < len(things) and things[slot]["kind"] == "waypoint"]
+
+
+def paths_gate_row(level: int, own: dict) -> str:
+    """The PATHS row of a level archive: each waypoint path of the level's own world as a line `index|name|slots|kept rows` (hashed), how many
+    paths there are, how many points the game keeps in all and how many slots they were read from. The C# gate keeps the same points with
+    WaypointCatalog.Rows."""
+    lines, kept_total, slots_total = [], 0, 0
+    for index, path in enumerate(own["waypointPaths"]):
+        kept = kept_path_rows(own, path)
+        lines.append(f"{index}|{path['name']}|{len(path['slots'])}|{','.join(str(row) for row in kept)}")
+        kept_total += len(kept)
+        slots_total += len(path["slots"])
+    return f"{level:03d}\tPATHS\t{len(own['waypointPaths'])}\t{dump_hash(lines)}\t{kept_total}\t{slots_total}"
 
 
 def terrain_gate_positions(model: dict) -> list[tuple[float, float]]:

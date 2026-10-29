@@ -28,6 +28,10 @@ import world_resources_decode as wrd
 import world_resources_encode as enc
 
 
+MAIN_SOURCE = ('FollowWaypoint("Path A", 0);\r\nGetThingRef("Tank 1");  // "skipped" text\r\nPostEvent("Go"); Print("nothing" \r\n"unterminated\r\n'
+               'GetThingRef("unit-2"); GetThingRef("UNIT-2");\r\nFollowWaypointWait( "path a" ); GetThingRef("path a"); FollowWaypointX("path a");')
+
+
 class VectorTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -335,7 +339,7 @@ class VectorTests(unittest.TestCase):
             (resources / "goodie_03_res_PC.aya").write_bytes(b"not a level")
             # Script sources: the real world of 100's archive (and of 200's) is level 200's, 100's base world is level 100's, 300's own world is level 100's.
             (Path(tmp) / "data" / "MissionScripts" / "Level200").mkdir(parents=True)
-            (Path(tmp) / "data" / "MissionScripts" / "Level200" / "Main.MSL").write_bytes(b"a\r\nb")
+            (Path(tmp) / "data" / "MissionScripts" / "Level200" / "Main.MSL").write_bytes(MAIN_SOURCE.encode("latin-1"))
             (Path(tmp) / "data" / "MissionScripts" / "level100").mkdir()
             (Path(tmp) / "data" / "MissionScripts" / "level100" / "main.msl").write_bytes(b"c")
             out = io.StringIO()
@@ -343,26 +347,120 @@ class VectorTests(unittest.TestCase):
                 self.assertEqual(gen.cmd_gate_table(SimpleNamespace(stdout=True, game=Path(tmp))), 0)
             rows = [line.split("\t") for line in out.getvalue().splitlines()]
         self.assertEqual(rows[0], ["level", "tag", "bytes", "sha256", "dumpLines", "dumpSha256"])
-        self.assertEqual([(r[0], r[1]) for r in rows[1:]], [("100", "BSWD"), ("100", "RLWD"), ("100", "SCRIPTS"), ("100", "TERRAIN"), ("200", "RLWD"), ("200", "SCRIPTS"), ("200", "TERRAIN"),
-                                                             ("300", "RLWD"), ("300", "SCRIPTS"), ("300", "TERRAIN")])
+        self.assertEqual([(r[0], r[1]) for r in rows[1:]], [("100", "BSWD"), ("100", "RLWD"), ("100", "SCRIPTS"), ("100", "NAMES"), ("100", "PATHS"), ("100", "TERRAIN"),
+                                                             ("200", "RLWD"), ("200", "SCRIPTS"), ("200", "NAMES"), ("200", "PATHS"), ("200", "TERRAIN"),
+                                                             ("300", "RLWD"), ("300", "SCRIPTS"), ("300", "NAMES"), ("300", "PATHS"), ("300", "TERRAIN")])
         real = self.by_name["authored-v50"]
         self.assertEqual(rows[2][2:], [str(len(real["body"])), hashlib.sha256(real["body"]).hexdigest(), str(real["lines"]), real["hash"]])
         # The terrain rows: an ERES chunk the reader refuses says "refused" (the C# gate must refuse it too), a readable one lists its scale and water bits, samples digest and probe digest.
-        self.assertEqual([r[2] for r in (rows[4], rows[7])], ["refused", "refused"])
+        self.assertEqual([r[2] for r in (rows[6], rows[11])], ["refused", "refused"])
         terrain = gen.authored_terrain()
         field = gen.heights.read_heightfield(terrain.eres)
-        self.assertEqual(rows[10][2:4], [f"{gen.float_bits(field.scale):08x}:{gen.float_bits(field.water):08x}", field.samples_sha256()])
-        self.assertEqual(int(rows[10][4]), 33 * 33 + len(gen.enc.read_world_model(real["body"])["things"]))  # the grid, then every thing's position
+        self.assertEqual(rows[16][2:4], [f"{gen.float_bits(field.scale):08x}:{gen.float_bits(field.water):08x}", field.samples_sha256()])
+        self.assertEqual(int(rows[16][4]), 33 * 33 + len(gen.enc.read_world_model(real["body"])["things"]))  # the grid, then every thing's position
         # The SCRIPTS rows: the authored body's one script, worked out here by hand (15 instructions, one named handler "Go", five natives called once
         # each in this order, named by the object in row 0), as the own world and as the base world (whose objects are not listed, so no users).
         own = 'own|main|15|event "Go"|SpawnThing:1,PlayCharMessage:1,FollowWaypoint:1,SetObjective:1,GetThingRef:1|0:script'
         base = 'base|main|15|event "Go"|SpawnThing:1,PlayCharMessage:1,FollowWaypoint:1,SetObjective:1,GetThingRef:1|'
         sha = lambda text: hashlib.sha256(text.encode("latin-1")).hexdigest()
-        self.assertEqual(rows[3][2:], ["1:1", gen.dump_hash([own, base]), "2/2", gen.dump_hash([f"own|main|{sha('a\nb')}", f"base|main|{sha('c')}"])])
-        self.assertEqual(rows[6][2:], ["1:0", gen.dump_hash([own]), "1/1", gen.dump_hash([f"own|main|{sha('a\nb')}"])])
-        self.assertEqual(rows[9][2:], ["1:0", gen.dump_hash([own]), "1/1", gen.dump_hash([f"own|main|{sha('c')}"])])
+        normal = MAIN_SOURCE.replace("\r\n", "\n")
+        self.assertEqual(rows[3][2:], ["1:1", gen.dump_hash([own, base]), "2/2", gen.dump_hash([f"own|main|{sha(normal)}", f"base|main|{sha('c')}"])])
+        self.assertEqual(rows[8][2:], ["1:0", gen.dump_hash([own]), "1/1", gen.dump_hash([f"own|main|{sha(normal)}"])])
+        self.assertEqual(rows[13][2:], ["1:0", gen.dump_hash([own]), "1/1", gen.dump_hash([f"own|main|{sha('c')}"])])
+        # The NAMES rows: the nine quoted texts of the authored source (outside the comment, one never closed) resolved by hand against the authored world: the path
+        # "Path A" is path 0, the object named "Tank 1" is row 0, "Go" is the event the authored script handles (twice over for archive 100, whose base world has the
+        # same script), "unit-2" is the third object of archive 100's base world (exactly, then in another letter case) and of no world of the others, two texts name
+        # nothing, "path a" is path 0 in another letter case where it is the argument of FollowWaypointWait (blanks around it do not matter) and nothing as an
+        # argument of GetThingRef or of FollowWaypointX. A path argument takes the game's first match: archive 100's base world has the same path "Path A", and the
+        # game's one list holds the base world's paths first, so there both path arguments name the base world's path (`basepath:0`).
+        self.assertEqual(rows[4][2:], ["10", gen.dump_hash(["main|0|Path A|basepath:0", "main|1|Tank 1|object:0", "main|2|Go|handler:0,handler:1", "main|2|nothing|", "main|3|unterminated|",
+                                                            "main|4|unit-2|baseobject:2", "main|4|UNIT-2|baseobject:2:case", "main|5|path a|basepath:0:case", "main|5|path a|", "main|5|path a|"]), "6", "-"])
+        self.assertEqual(rows[9][2:], ["10", gen.dump_hash(["main|0|Path A|path:0", "main|1|Tank 1|object:0", "main|2|Go|handler:0", "main|2|nothing|", "main|3|unterminated|",
+                                                             "main|4|unit-2|", "main|4|UNIT-2|", "main|5|path a|path:0:case", "main|5|path a|", "main|5|path a|"]), "4", "-"])
+        self.assertEqual(rows[14][2:], ["0", gen.dump_hash([]), "0", "-"])
+        # The PATHS rows: the authored world's one path "Path A" names slots 1, 2 and 0: a unit, a waypoint and a unit. The loader keeps only the waypoint, row 2.
+        kept = ["0|Path A|3|2"]
+        for index in (5, 10, 15):
+            self.assertEqual(rows[index][2:], ["1", gen.dump_hash(kept), "1", "3"], rows[index][0])
         with self.assertRaises(SystemExit):
             gen.cmd_gate_table(SimpleNamespace(stdout=False, game=Path(".")))
+
+    def test_the_loader_keeps_only_the_slots_that_are_waypoints(self) -> None:
+        """kept_path_rows is CWaypointPath::Load's test on each slot: in range, and a thing that is a waypoint."""
+        things = [{"kind": kind} for kind in ("unit", "waypoint", "spawner", "waypoint", "start", "waypoint")]
+        model = {"things": things, "waypointPaths": [{"name": "A", "slots": [1, 0, 3, 2, 5, 3]}, {"name": "B", "slots": [4, 9, -1, 6, 1]}, {"name": "C", "slots": []}]}
+        self.assertEqual([gen.kept_path_rows(model, path) for path in model["waypointPaths"]], [[1, 3, 5, 3], [1], []])
+        row = gen.paths_gate_row(7, model).split("\t")
+        self.assertEqual(row[:3] + row[4:], ["007", "PATHS", "3", "5", "11"])
+        self.assertEqual(row[3], gen.dump_hash(["0|A|6|1,3,5,3", "1|B|5|1", "2|C|0|"]))
+
+    def test_a_follow_waypoint_argument_is_found_by_what_precedes_its_quote(self) -> None:
+        line = lambda text: gen.follows_path_call(text, text.index('"'))
+        self.assertTrue(line('FollowWaypoint("a", 0);'))
+        self.assertTrue(line('\tFollowWaypointWait( \t"a" );'))
+        self.assertTrue(line('x = FollowWaypoint   ("a");'))
+        self.assertFalse(line('FollowWaypoint(0, "a");'))  # the second argument
+        self.assertFalse(line('FollowWaypoint(GetThingRef("a"));'))  # the argument of another call
+        self.assertFalse(line('FollowWaypointX("a");'))
+        self.assertFalse(line('xFollowWaypoint("a");'))
+        self.assertFalse(line('Follow_Waypoint("a");'))
+        self.assertFalse(line('followwaypoint("a");'))  # the language is case-sensitive about its functions
+        self.assertFalse(line('Print("a");'))
+        self.assertFalse(line('"a"'))
+        sites = gen.source_literal_sites('A("x"); // "no"\nB( "y" "z")')
+        self.assertEqual(sites, [(0, "x", 'A("x"); // "no"', 2), (1, "y", 'B( "y" "z")', 3), (1, "z", 'B( "y" "z")', 7)])
+
+    def test_the_literal_finder_and_the_resolver_follow_the_companions_rules(self) -> None:
+        """source_literals and resolve_name are the reference the C# ScriptNames is held to on a game."""
+        self.assertEqual(gen.source_literals('a("x"); // "no"\n"y" "z"\nb("q""r") "open\n"'), [(0, "x"), (1, "y"), (1, "z"), (2, "q"), (2, "r"), (2, "open"), (3, "")])
+        self.assertEqual(gen.source_literals("// only a comment\n"), [])
+        model = {"things": [{"init": {"name": "Tank 1"}}, {"init": {"name": "tank 1"}}, {"init": {"name": "Tank 1"}}, {"init": {"name": ""}}],
+                 "waypointPaths": [{"name": "Path A"}, {"name": "Path A"}]}
+        scripts = [("alpha", False, ['event "go"']), ("beta", False, ["init"]), ("alpha", True, ['event "go"', 'event "Go"'])]
+        resolve = lambda text: gen.resolve_name(text, model, scripts)
+        base = {"things": [{"init": {"name": "Tank 1"}}, {"init": {"name": "tank 1"}}, {"init": {"name": "Base Hut"}}, {"init": {"name": ""}}], "waypointPaths": [{"name": "Base Path"}]}
+        resolve_with_base = lambda text: gen.resolve_name(text, model, scripts, base)
+        self.assertEqual(resolve("Tank 1"), ["object:0", "object:2"])
+        self.assertEqual(resolve("TANK 1"), ["object:0:case", "object:1:case", "object:2:case"])
+        self.assertEqual(resolve("Path A"), ["path:0", "path:1"])
+        self.assertEqual(resolve("alpha"), ["script:0", "script:2"])
+        self.assertEqual(resolve("go"), ["handler:0", "handler:2"])
+        self.assertEqual(resolve("Go"), ["handler:2"])
+        self.assertEqual((resolve(""), resolve("none")), ([], []))
+        # The base world's objects come right after the level's own, by the same rule, each world on its own (an exact name in one does not
+        # silence the other-case matches of the other); its paths and scripts are not names to follow here.
+        self.assertEqual(resolve_with_base("Tank 1"), ["object:0", "object:2", "baseobject:0"])
+        self.assertEqual(resolve_with_base("TANK 1"), ["object:0:case", "object:1:case", "object:2:case", "baseobject:0:case", "baseobject:1:case"])
+        self.assertEqual(resolve_with_base("Base Hut"), ["baseobject:2"])
+        self.assertEqual(resolve_with_base("base hut"), ["baseobject:2:case"])
+        self.assertEqual(resolve_with_base("tank 1"), ["object:1", "baseobject:1"])
+        self.assertEqual(resolve_with_base("Base Path"), [])
+        self.assertEqual((resolve_with_base(""), resolve("Base Hut")), ([], []))
+        # A waypoint path's name is matched exactly, except where the game compares ignoring letter case: it takes the first path of its one list (the base
+        # world's paths, then the level's own) whose name matches in any case, so one path is named, marked when its case differs.
+        paths = {"things": [], "waypointPaths": [{"name": "Route"}, {"name": "route"}, {"name": "ROUTE 2"}]}
+        self.assertEqual(gen.resolve_name("route", paths, []), ["path:1"])
+        self.assertEqual(gen.resolve_name("route", paths, [], None, True), ["path:0:case"])
+        self.assertEqual(gen.resolve_name("ROUTE", paths, [], None, True), ["path:0:case"])
+        self.assertEqual(gen.resolve_name("Route", paths, [], None, True), ["path:0"])
+        self.assertEqual(gen.resolve_name("Route", paths, []), ["path:0"])
+        self.assertEqual(gen.resolve_name("rout", paths, [], None, True), [])
+        self.assertEqual(gen.resolve_name("route 2", paths, [], None, True), ["path:2:case"])
+        base = {"things": [], "waypointPaths": [{"name": "Shared"}, {"name": "ROUTE"}]}
+        self.assertEqual(gen.resolve_name("route", paths, [], base, True), ["basepath:1:case"])  # the base world's path comes first, whatever the case
+        self.assertEqual(gen.resolve_name("Route", paths, [], base, True), ["basepath:1:case"])  # even when the level's own path is an exact match
+        self.assertEqual(gen.resolve_name("ROUTE", paths, [], base, True), ["basepath:1"])
+        self.assertEqual(gen.resolve_name("shared", paths, [], base, True), ["basepath:0:case"])
+        self.assertEqual(gen.resolve_name("Route 2", paths, [], base, True), ["path:2:case"])  # nothing of that name in the base world: the level's own
+        self.assertEqual(gen.resolve_name("Route", paths, [], base), ["path:0"])  # not a path argument: exact, the level's own paths only
+        self.assertEqual(gen.resolve_name("Shared", paths, [], base), [])
+        accented = {"things": [], "waypointPaths": [{"name": "à-ROUTE"}]}
+        accented_base = {"things": [], "waypointPaths": [{"name": "À-ROUTE"}]}
+        self.assertEqual(gen.resolve_name("à-route", accented, [], accented_base, True), ["path:0:case"])
+        self.assertEqual(gen.resolve_name("À-route", accented, [], accented_base, True), ["basepath:0:case"])
+        accented_base["waypointPaths"][0]["name"] = "Route\0stored suffix"
+        self.assertEqual(gen.resolve_name("route", accented, [], accented_base, True), ["basepath:0:case"])
+        self.assertEqual(gen.resolve_name("Route\0query suffix", accented, [], accented_base, True), ["basepath:0"])
 
     def test_the_source_finder_matches_the_companions(self) -> None:
         """tools/level_editor_vectors.py's source_text is the reference the C# ScriptSources is held to on a game: any case, the exact spelling

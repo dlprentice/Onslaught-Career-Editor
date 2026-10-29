@@ -9,9 +9,9 @@ using OnslaughtToolkit.Companion.Ui;
 namespace OnslaughtToolkit.Companion.Development;
 
 /// <summary>
-/// Draws the Level editor against a Steam-shaped game folder and runs the editor's acceptance on it, in one of four modes. Run on a
+/// Draws the Level editor against a Steam-shaped game folder and runs the editor's acceptance on it, in one of five modes. Run on a
 /// GPU output (godot-offscreen): <c>--script res://Development/LevelEditorCapture.cs -- --output=DIR --fixture=ANY_FILE --steam-root=DIR
-/// [--mode=drag|typed|markers|scripts] [--sizes=1920x1080] [--level=100] [--row=12] [--expect-sha256=HEX] [--to=276.49,265.07]</c>.
+/// [--mode=drag|typed|markers|scripts|names] [--sizes=1920x1080] [--level=100] [--row=12] [--expect-sha256=HEX] [--to=276.49,265.07]</c>.
 /// <list type="bullet">
 /// <item><c>drag</c> (the default): open level 100, click row 12's mark on the map, drag it to the pixel of 276.49, 265.07, let go, save
 /// as a mod into the capture's own output, and compare the saved world file's SHA-256 with the one the Toolkit's pipeline gives for the same
@@ -26,6 +26,10 @@ namespace OnslaughtToolkit.Companion.Development;
 /// names a script, follows its script button into the Scripts view, looks at a script that calls the most game functions and at a base
 /// world's script if the level has one, and follows a script's object button back to the map. The frames hold the game's script text and
 /// stay in local-data.</item>
+/// <item><c>names</c>: the links from a script's source. Finds a quoted text in the sources of the level's scripts that names a waypoint path
+/// of the level and one that names an object, puts the caret in each, follows the buttons that name offers (the path highlighted on the map,
+/// then every path drawn, then the object selected), looks at a text that names only an object of the base world, and at an object that is a point
+/// of a path. The frames hold the game's script text and stay in local-data.</item>
 /// </list>
 /// The game folder is only read; every file this writes stays inside the output directory. Development builds only.
 /// </summary>
@@ -70,9 +74,9 @@ public partial class LevelEditorCapture : SceneTree
                 }
             }
             if (_expected.Length == 0) _expected = _mode == "typed" ? TypedSha256 : DragSha256;
-            if (_output.Length == 0 || _steamRoot.Length == 0 || !Directory.Exists(_steamRoot) || _mode is not ("drag" or "typed" or "markers" or "scripts"))
+            if (_output.Length == 0 || _steamRoot.Length == 0 || !Directory.Exists(_steamRoot) || _mode is not ("drag" or "typed" or "markers" or "scripts" or "names" or "flow"))
             {
-                GD.PrintErr("--output=DIR and --steam-root=DIR (a Steam-shaped folder holding the game) are required; --mode is drag, typed, markers or scripts.");
+                GD.PrintErr("--output=DIR and --steam-root=DIR (a Steam-shaped folder holding the game) are required; --mode is drag, typed, markers, scripts, names or flow.");
                 return;
             }
             Directory.CreateDirectory(_output);
@@ -172,6 +176,8 @@ public partial class LevelEditorCapture : SceneTree
         if (_mode == "typed") await TypedAcceptance(viewport, app, page, label, mods);
         else if (_mode == "drag") await DragAcceptance(viewport, app, page, label, mods);
         else if (_mode == "scripts") await ScriptsView(viewport, app, page, label);
+        else if (_mode == "names") await NamesView(viewport, app, page, label);
+        else if (_mode == "flow") await ScriptsFlow(viewport, app, page, label);
         else await Markers(viewport, app, page, label, mods);
         viewport.QueueFree();
         await Settle();
@@ -223,6 +229,157 @@ public partial class LevelEditorCapture : SceneTree
         Report(!page.ScriptsToggle.ButtonPressed && page.SelectedRow == named.Summary.Uses[0].Row && page.Map.IsVisibleInTree() && page.Map.Selected == page.SelectedRow,
             $"the object button shows row {page.SelectedRow} on the table and the map");
         await Shot(viewport, label, "level-editor-7-object-from-script");
+    }
+
+    /// <summary>The links from a source's quoted texts to what they name, and the waypoint paths on the map. Writes nothing.</summary>
+    /// <summary>
+    /// The Scripts view across level changes, in a real window: the engine keeps a source view's first visible line and refreshes it only while the view is
+    /// shown, so a long source scrolled to its end, the Scripts switch turned off, another level opened and the switch turned on again used to open the new level's
+    /// first script scrolled into its middle or past its end (Godot logged "Index p_line = N is out of bounds"; this run fails on any engine error line). The
+    /// route's headless run cannot show it: the view has no size there. Each step of the chain must open its level's first script at the top.
+    /// </summary>
+    private async Task ScriptsFlow(SubViewport viewport, CompanionApp app, LevelEditorPage page, string label)
+    {
+        string root = app.Game.Folder!.AssetRoot;
+        int[] wanted = [100, 110, 200, 201, 300, 100];
+        int[] levels = [.. wanted.Where(level => page.Model!.Levels.Any(archive => archive.Level == level))];
+        Report(levels.Length >= 2, $"the game has the levels the flow goes through: {string.Join(", ", levels)}");
+        int top = 0, steps = 0;
+        for (int step = 0; step + 1 < levels.Length; step++)
+        {
+            // the level's own script with the longest source: scrolled to its end, with the caret on the last line
+            Report(page.OpenLevel(levels[step]), $"level {levels[step]} opens");
+            await Settle();
+            page.ScriptsToggle.ButtonPressed = true;
+            await Settle();
+            ScriptEntry? longest = page.Model!.Scripts.Where(entry => !entry.FromBaseWorld)
+                .OrderByDescending(entry => ScriptSources.Find(root, entry.SourceLevel, entry.Summary.Name).Source?.Lines ?? 0).FirstOrDefault();
+            if (longest is not null) page.Scripts.Select(longest.Summary.Name);
+            await Settle();
+            int lines = page.Scripts.Source.GetLineCount();
+            page.Scripts.Source.ScrollVertical = Math.Max(0, lines - 5);
+            page.Scripts.Source.SetCaretLine(lines - 1);
+            await Settle();
+            page.ScriptsToggle.ButtonPressed = false;
+            await Settle();
+            Report(page.OpenLevel(levels[step + 1]), $"level {levels[step + 1]} opens with the Scripts switch off (after {longest?.Summary.Name}, {lines} lines, first visible line {page.Scripts.Source.GetFirstVisibleLine()})");
+            await Settle();
+            page.ScriptsToggle.ButtonPressed = true;
+            await Settle();
+            await Settle();
+            int first = page.Scripts.Source.GetFirstVisibleLine(), caret = page.Scripts.Source.GetCaretLine();
+            double scroll = page.Scripts.Source.ScrollVertical;
+            steps++;
+            if (first == 0 && caret == 0 && scroll == 0) top++;
+            Report(first == 0 && caret == 0 && scroll == 0,
+                $"level {levels[step + 1]}'s first script, {page.Scripts.Current?.Summary.Name}, opens at its top: first visible line {first}, caret line {caret}, scroll {scroll} ({page.Scripts.Source.GetLineCount()} lines)");
+        }
+        Report(steps > 0 && top == steps, $"{top} of {steps} level changes opened the first script at its top");
+        // The same with the page left for another (the game folder or the level changed behind it) instead of the Scripts switch turned off.
+        for (int step = 0; step + 1 < levels.Length; step++)
+        {
+            page.OpenLevel(levels[step]);
+            await Settle();
+            page.ScriptsToggle.ButtonPressed = true;
+            await Settle();
+            ScriptEntry? longest = page.Model!.Scripts.Where(entry => !entry.FromBaseWorld)
+                .OrderByDescending(entry => ScriptSources.Find(root, entry.SourceLevel, entry.Summary.Name).Source?.Lines ?? 0).FirstOrDefault();
+            if (longest is not null) page.Scripts.Select(longest.Summary.Name);
+            await Settle();
+            int lines = page.Scripts.Source.GetLineCount();
+            page.Scripts.Source.ScrollVertical = Math.Max(0, lines - 5);
+            page.Scripts.Source.SetCaretLine(lines - 1);
+            await Settle();
+            app.Navigate("home");
+            await Settle();
+            page.OpenLevel(levels[step + 1]);
+            await Settle();
+            app.Navigate("levels");
+            await Settle();
+            await Settle();
+            int first = page.Scripts.Source.GetFirstVisibleLine(), caret = page.Scripts.Source.GetCaretLine();
+            Report(first == 0 && caret == 0 && page.Scripts.Source.ScrollVertical == 0,
+                $"leaving the page: level {levels[step + 1]}'s first script, {page.Scripts.Current?.Summary.Name}, opens at its top: first visible line {first}, caret line {caret} ({page.Scripts.Source.GetLineCount()} lines)");
+        }
+        await Shot(viewport, label, "level-editor-flow");
+    }
+
+    private async Task NamesView(SubViewport viewport, CompanionApp app, LevelEditorPage page, string label)
+    {
+        LevelEditorModel model = page.Model!;
+        WorldBody world = model.Session!.Body;
+        string root = app.Game.Folder!.AssetRoot;
+        // The first quoted text, in the order of the scripts, that names a path of the level, the first that names an object and the first that names only an object of the base world.
+        (string Script, int Line, int Column, string Text)? forPath = null, forObject = null, forBase = null;
+        foreach (ScriptEntry entry in model.Scripts.Where(entry => !entry.FromBaseWorld))
+        {
+            if (ScriptSources.Find(root, entry.SourceLevel, entry.Summary.Name).Source is not { } source) continue;
+            string[] lines = source.Text.Split('\n');
+            for (int line = 0; line < lines.Length && (forPath is null || forObject is null || forBase is null); line++)
+                for (int column = 0; column <= lines[line].Length; column++)
+                    if (ScriptNames.TokenAt(lines[line], column) is { Quoted: true } token)
+                    {
+                        IReadOnlyList<NameMatch> matches = ScriptNames.Resolve(token.Text, world, model.Scripts, model.BaseWorld);
+                        if (forPath is null && matches.Any(match => match.Kind == NameKind.Path)) forPath = (entry.Summary.Name, line, token.Start + 1, token.Text);
+                        if (forObject is null && matches.Any(match => match.Kind == NameKind.Object) && !matches.Any(match => match.Kind == NameKind.Path)) forObject = (entry.Summary.Name, line, token.Start + 1, token.Text);
+                        if (forBase is null && matches.Count > 0 && matches.All(match => match.Kind == NameKind.BaseObject)) forBase = (entry.Summary.Name, line, token.Start + 1, token.Text);
+                        column = token.Start + token.Length + 1;  // past the closing quote (a column just after it is still in the text): on to the rest of the line
+                    }
+            if (forPath is not null && forObject is not null && forBase is not null) break;
+        }
+        Report(forPath is not null && forObject is not null && forBase is not null,
+            $"a quoted text names a path ({forPath?.Text} in {forPath?.Script}), one names an object ({forObject?.Text} in {forObject?.Script}) and one names only an object of the base world ({forBase?.Text} in {forBase?.Script})");
+        if (forPath is null || forObject is null || forBase is null) return;
+
+        async Task Caret((string Script, int Line, int Column, string Text) at)
+        {
+            page.ShowScript(at.Script);
+            await Settle();
+            page.Scripts.Source.SetCaretLine(at.Line);
+            page.Scripts.Source.SetCaretColumn(at.Column);
+            await Settle();
+        }
+
+        await Caret(forPath.Value);
+        Report(page.Scripts.Token is { Quoted: true } && page.NameButtons.Any(button => button.Text.StartsWith("path ", StringComparison.Ordinal)), $"the caret in \"{forPath.Value.Text}\" offers: {page.NamesTitle} {string.Join(" | ", page.NameButtons.Select(button => button.Text))}");
+        await Shot(viewport, label, "level-editor-3-source-names-a-path");
+        page.NameButtons.First(button => button.Text.StartsWith("path ", StringComparison.Ordinal)).EmitSignal(BaseButton.SignalName.Pressed);
+        await Settle();
+        Report(page.Map.HighlightedPath is not null && !page.ScriptsToggle.ButtonPressed && page.Map.DrawablePaths > 0, $"the path button shows the path on the map: \"{page.HighlightedPathText}\"; {page.Map.DrawablePaths} paths have a line");
+        await Shot(viewport, label, "level-editor-4-the-path-on-the-map");
+        page.PathsToggle.ButtonPressed = true;
+        page.Map.FitToLevel();  // the whole level, so that every path is in view
+        await Settle();
+        await Shot(viewport, label, "level-editor-5-every-path");
+        page.PathsToggle.ButtonPressed = false;
+        page.HidePath.EmitSignal(BaseButton.SignalName.Pressed);
+        await Caret(forObject.Value);
+        Report(page.NameButtons.Any(button => button.Text.StartsWith("unit ", StringComparison.Ordinal) || button.Text.Contains(" · ", StringComparison.Ordinal)), $"the caret in \"{forObject.Value.Text}\" offers: {page.NamesTitle} {string.Join(" | ", page.NameButtons.Select(button => button.Text))}");
+        await Shot(viewport, label, "level-editor-6-source-names-an-object");
+        page.NameButtons[0].EmitSignal(BaseButton.SignalName.Pressed);
+        await Settle();
+        Report(!page.ScriptsToggle.ButtonPressed && page.SelectedRow is not null && page.Map.Selected == page.SelectedRow, $"the object button shows row {page.SelectedRow} on the table and the map");
+        await Shot(viewport, label, "level-editor-7-the-object");
+
+        // A name only an object of the base world has is said, with nothing to go to.
+        await Caret(forBase.Value);
+        Report(page.NameButtons.Count == 0 && page.NameLabels.Count > 0 && page.NameLabels.All(label => label.Text.EndsWith(" · base world", StringComparison.Ordinal)),
+            $"the caret in \"{forBase.Value.Text}\" says: {page.NamesTitle} {string.Join(" | ", page.NameLabels.Select(label => label.Text))}");
+        await Shot(viewport, label, "level-editor-8-source-names-a-base-object");
+
+        // An object that is a point of a path offers the path.
+        int onPath = Enumerable.Range(0, world.Things.Count).FirstOrDefault(row => WaypointCatalog.Through(world, row).Count > 0, -1);
+        Report(onPath >= 0, $"row {onPath} is a point of a path");
+        if (onPath >= 0)
+        {
+            page.SelectIndex(onPath);
+            await Settle();
+            Report(page.ObjectPathButtons.Count > 0, $"the object offers: {string.Join(" | ", page.ObjectPathButtons.Select(button => button.Text))}");
+            page.ObjectPathButtons[0].EmitSignal(BaseButton.SignalName.Pressed);
+            await Settle();
+            Report(page.Map.HighlightedPath is not null && page.Map.Selected == onPath, $"its path button shows the path with the object still selected: \"{page.HighlightedPathText}\"");
+            await Shot(viewport, label, "level-editor-9-the-objects-path");
+        }
     }
 
     private async Task TypedAcceptance(SubViewport viewport, CompanionApp app, LevelEditorPage page, string label, string mods)

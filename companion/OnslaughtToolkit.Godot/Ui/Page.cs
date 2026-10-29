@@ -25,4 +25,9 @@ internal abstract class Page(string key, string title, string icon)
     internal virtual void Refresh()
     {
     }
+
+    /// <summary>Called by the shell just before it hides the page to show another, while the page is still shown (a control only updates some state while it is shown).</summary>
+    internal virtual void Leave()
+    {
+    }
 }

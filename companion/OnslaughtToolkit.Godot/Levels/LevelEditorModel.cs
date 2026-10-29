@@ -115,6 +115,9 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     /// </summary>
     public IReadOnlyList<ScriptEntry> Scripts { get; private set; } = [];
 
+    /// <summary>The base world's body, which is shown and not edited: null when the open level has none or it does not read. Its objects are not listed.</summary>
+    public WorldBody? BaseWorld { get; private set; }
+
     /// <summary>The level whose world the archive also carries as a base world, or null. It is shown, not edited.</summary>
     public int? BaseLevel => Worlds is { BaseBody: not null } worlds && worlds.BaseLevel >= 0 ? worlds.BaseLevel : null;
 
@@ -132,6 +135,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         Terrain = null;
         TerrainProblem = null;
         Scripts = [];
+        BaseWorld = null;
         LevelArchiveFile? file = Levels.FirstOrDefault(archive => archive.Level == level);
         if (file is null) return Refuse($"This game has no archive for level {level}.");
         try
@@ -145,6 +149,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
             session.Changed += () => Changed?.Invoke();
             Session = session;
             Scripts = ListScripts(session.Body, worlds);
+            BaseWorld = ReadBaseWorld(worlds);
             if (worlds.Terrain is null)
             {
                 TerrainProblem = "This level's archive holds no terrain.";
@@ -173,19 +178,23 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     internal static IReadOnlyList<ScriptEntry> ListScripts(WorldBody own, LevelWorlds worlds)
     {
         List<ScriptEntry> entries = [.. ScriptCatalog.Of(own).Select(summary => new ScriptEntry(summary, worlds.RealLevel, FromBaseWorld: false))];
-        if (worlds.BaseBody is { } baseBytes && worlds.BaseLevel >= 0)
-        {
-            try
-            {
-                entries.AddRange(ScriptCatalog.Of(WorldBody.Read(baseBytes)).Select(summary =>
-                    new ScriptEntry(summary with { Uses = [] }, worlds.BaseLevel, FromBaseWorld: true)));
-            }
-            catch (InvalidDataException)
-            {
-                // The base world is only shown: a body that does not read leaves its scripts out, and the level's own are still listed.
-            }
-        }
+        if (ReadBaseWorld(worlds) is { } baseWorld)
+            entries.AddRange(ScriptCatalog.Of(baseWorld).Select(summary => new ScriptEntry(summary with { Uses = [] }, worlds.BaseLevel, FromBaseWorld: true)));
         return entries;
+    }
+
+    /// <summary>A level archive's base world, or null when it has none or its body does not read: the base world is only shown, so the level's own world is still listed without it.</summary>
+    internal static WorldBody? ReadBaseWorld(LevelWorlds worlds)
+    {
+        if (worlds.BaseBody is not { } baseBytes || worlds.BaseLevel < 0) return null;
+        try
+        {
+            return WorldBody.Read(baseBytes);
+        }
+        catch (InvalidDataException)
+        {
+            return null;
+        }
     }
 
     private bool Refuse(string problem)

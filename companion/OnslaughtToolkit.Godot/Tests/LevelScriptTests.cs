@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using OnslaughtToolkit.Companion.Levels;
 
@@ -44,6 +44,184 @@ internal static class LevelScriptTests
         Catalog(check);
         Sources(output, check);
         Model(output, check);
+        Names(check);
+        Paths(check);
+    }
+
+    private static void Names(Checks check)
+    {
+        string call = "\tPostEvent(\"go now\");";  // tab 0, PostEvent 1 to 9, ( 10, quote 11, go now 12 to 17, quote 18, ) 19, ; 20
+        check.That(ScriptNames.TokenAt(call, 1) == new SourceToken("PostEvent", false, 1, 9) && ScriptNames.TokenAt(call, 10) == new SourceToken("PostEvent", false, 1, 9),
+            "a caret in a word, or just after it, is on that word");
+        check.That(ScriptNames.TokenAt(call, 11) == new SourceToken("go now", true, 12, 6) && ScriptNames.TokenAt(call, 15) == new SourceToken("go now", true, 12, 6) && ScriptNames.TokenAt(call, 19) == new SourceToken("go now", true, 12, 6),
+            "a caret anywhere from before the opening quote to after the closing one is on the quoted text, which is shown without its quotes");
+        check.That(ScriptNames.TokenAt(call, 20) is null && ScriptNames.TokenAt(call, 21) is null && ScriptNames.TokenAt(call, 0) is null, "and one on a symbol, a space or past the end is on nothing");
+        check.That(ScriptNames.TokenAt(call, -1) is null && ScriptNames.TokenAt(call, call.Length + 1) is null && ScriptNames.TokenAt("", 0) is null, "a column outside the line, and an empty line, are on nothing");
+        check.That(ScriptNames.TokenAt("Die(); // \"go\" says", 12) is null && ScriptNames.TokenAt("Die(); // \"go\" says", 2)?.Text == "Die" && ScriptNames.TokenAt("// only", 3) is null,
+            "a comment says nothing, even a quoted text in it, and the code before it still does");
+        check.That(ScriptNames.TokenAt("Print(\"open", 8) == new SourceToken("open", true, 7, 4), "a quote never closed runs to the end of the line");
+        check.That(ScriptNames.TokenAt("x = foo_bar2 + 10;", 6)?.Text == "foo_bar2" && ScriptNames.TokenAt("x = foo_bar2 + 10;", 16) is null && ScriptNames.TokenAt("a // b \"c\"", 1)?.Text == "a",
+            "a word may hold an underscore and digits, and a number is not a word");
+        check.That(ScriptNames.TokenAt("x = a / b; foo", 12)?.Text == "foo" && ScriptNames.TokenAt("x = a / b; \"q\"", 12)?.Text == "q", "a single slash is not a comment");
+        check.That(ScriptNames.TokenAt("\"a\" \"b\"", 5) == new SourceToken("b", true, 5, 1) && ScriptNames.TokenAt("\"a\" \"b\"", 2) == new SourceToken("a", true, 1, 1),
+            "two quoted texts on a line are told apart");
+        // The path argument of a follow-waypoint call: the first text inside the parentheses of FollowWaypoint or FollowWaypointWait, nothing else.
+        const string follow = "\tFollowWaypoint( \"Path A\" , \"second\" );";  // tab 0, the name 1 to 14, ( 15, blank 16, quote 17, Path A 18 to 23, quote 24, , 26, quote 28, second 29 to 34
+        check.That(ScriptNames.TokenAt(follow, 20) == new SourceToken("Path A", true, 18, 6, true) && ScriptNames.TokenAt(follow, 31) == new SourceToken("second", true, 29, 6) && ScriptNames.TokenAt(follow, 3)?.PathArgument == false,
+            "the first quoted text of a follow-waypoint call is its path argument, blanks around the parenthesis allowed; the second text and the word are not");
+        check.That(ScriptNames.TokenAt("FollowWaypointWait(\"p\", 0, 5);", 20) == new SourceToken("p", true, 20, 1, true) && ScriptNames.TokenAt("FollowWaypoint(\t\"p\");", 16) == new SourceToken("p", true, 17, 1, true) &&
+                   ScriptNames.TokenAt("FollowWaypoint\t(\"p\");", 16) == new SourceToken("p", true, 17, 1, true),
+            "the Wait form counts, and a tab is a blank");
+        string[] notPaths = ["GetThingRef(\"p\");", "Print(\"p\");", "FollowWaypointX(\"p\");", "XFollowWaypoint(\"p\");", "Follow_Waypoint(\"p\");", "followwaypoint(\"p\");", "FollowWaypoint(\"a\" + \"p\");",
+                             "FollowWaypoint(x, \"p\");", "x = \"p\";", "\"p\", 0);", "FollowWaypoint \"p\";", "FollowWaypoint(0, \"p\");", "(\"p\");",
+                             "_FollowWaypoint(\"p\");", "1FollowWaypoint(\"p\");", "FollowWaypoint2(\"p\");", "Wait(\"p\");"];
+        check.That(notPaths.All(line => ScriptNames.TokenAt(line, line.IndexOf("\"p\"", StringComparison.Ordinal) + 1) is { Quoted: true, Text: "p" } token && !token.PathArgument),
+            "a text after another call, another function name, a word that only ends or begins like it, a comma, an operator or no parenthesis is not a path argument");
+        check.That(ScriptNames.FollowsPathCall("FollowWaypoint(\"p\")", 15) && !ScriptNames.FollowsPathCall("FollowWaypoint(\"p\")", 14) && !ScriptNames.FollowsPathCall("", 0) && !ScriptNames.FollowsPathCall("(\"p\")", 1) &&
+                   !ScriptNames.FollowsPathCall("(\"p\")", 0) && ScriptNames.FollowsPathCall("FollowWaypoint \v\r(\f\t\"p\")", 20),
+            "and the test is by the quote's place: the opening quote after the parenthesis, a line that begins with the parenthesis or the quote is not one");
+
+        WorldBody body = Body(Script("alpha", [0], [], ("Pause", 1)), Script("beta", [], ["go"]));
+        body.Things[0].Init.Name = "Tank 1";
+        body.Things[1].Init.Name = "tank 1";
+        body.Things[2].Init.Name = "Tank 1";
+        IReadOnlyList<ScriptEntry> own = [.. ScriptCatalog.Of(body).Select(summary => new ScriptEntry(summary, 100, FromBaseWorld: false))];
+        IReadOnlyList<ScriptEntry> both = [.. own, new ScriptEntry(own[0].Summary with { Uses = [] }, 1, FromBaseWorld: true)];
+        check.That(ScriptNames.Resolve("Tank 1", body, own).SequenceEqual([new NameMatch(NameKind.Object, "unit 0 · Tank 1", 0), new NameMatch(NameKind.Object, "waypoint 2 · Tank 1", 2)]),
+            "a name matches the objects that have it exactly, and not the ones that differ in letter case when some match exactly");
+        check.That(ScriptNames.Resolve("TANK 1", body, own).SequenceEqual([new NameMatch(NameKind.Object, "unit 0 · Tank 1", 0, false), new NameMatch(NameKind.Object, "unit 1 · tank 1", 1, false), new NameMatch(NameKind.Object, "waypoint 2 · Tank 1", 2, false)]),
+            "and with no exact match it falls back to the other letter case, marked so");
+        check.That(ScriptNames.Resolve("Path A", body, own).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0)]) && ScriptNames.Resolve("path a", body, own).Count == 0,
+            "a waypoint path is matched by its exact name, with the count of the points the game keeps (the authored path names a unit, a waypoint and a unit: one point)");
+        check.That(ScriptNames.Resolve("alpha", body, both).SequenceEqual([new NameMatch(NameKind.Script, "script alpha", 0), new NameMatch(NameKind.Script, "script alpha (base world)", 2)]),
+            "a script is matched by its name, the base world's too");
+        check.That(ScriptNames.Resolve("ALPHA", body, both).Count == 0, "a script is matched in its own letter case only");
+        check.That(ScriptNames.Resolve("go", body, own).SequenceEqual([new NameMatch(NameKind.Handler, "event handled by beta", 1)]) && ScriptNames.Resolve("Go", body, own).Count == 0,
+            "a script that handles an event of that name is found, in that case only");
+        check.That(ScriptNames.Resolve("", body, own).Count == 0 && ScriptNames.Resolve("nothing", body, own).Count == 0, "an empty text and an unknown name match nothing");
+        // The base world's objects follow the level's own, by the same rule, each world on its own: they are said, and the page offers nothing to go to.
+        WorldBody baseBody = Body(Script("base", [], []));
+        baseBody.Things[0].Init.Name = "Tank 1";
+        baseBody.Things[1].Init.Name = "tank 1";
+        baseBody.Things[2].Init.Name = "Base Hut";
+        baseBody.Things[3].Init.Name = "DEPOT";
+        body.Things[3].Init.Name = "Depot";
+        check.That(ScriptNames.Resolve("Tank 1", body, own, baseBody).SequenceEqual([new NameMatch(NameKind.Object, "unit 0 · Tank 1", 0), new NameMatch(NameKind.Object, "waypoint 2 · Tank 1", 2),
+                                                                                   new NameMatch(NameKind.BaseObject, "unit 0 · Tank 1", 0)]),
+            "an object of the base world that has the name exactly is listed after the level's own");
+        check.That(ScriptNames.Resolve("TANK 1", body, own, baseBody).SequenceEqual([new NameMatch(NameKind.Object, "unit 0 · Tank 1", 0, false), new NameMatch(NameKind.Object, "unit 1 · tank 1", 1, false),
+                                                                                   new NameMatch(NameKind.Object, "waypoint 2 · Tank 1", 2, false), new NameMatch(NameKind.BaseObject, "unit 0 · Tank 1", 0, false),
+                                                                                   new NameMatch(NameKind.BaseObject, "unit 1 · tank 1", 1, false)]),
+            "and with no exact match the base world falls back to the other letter case too, marked so");
+        check.That(ScriptNames.Resolve("Base Hut", body, own, baseBody).SequenceEqual([new NameMatch(NameKind.BaseObject, "waypoint 2 · Base Hut", 2)]) &&
+                   ScriptNames.Resolve("base hut", body, own, baseBody).SequenceEqual([new NameMatch(NameKind.BaseObject, "waypoint 2 · Base Hut", 2, false)]),
+            "a name only a base-world object has is found there, row and all");
+        check.That(ScriptNames.Resolve("Depot", body, own, baseBody).SequenceEqual([new NameMatch(NameKind.Object, "waypoint 3 · Depot", 3), new NameMatch(NameKind.BaseObject, "waypoint 3 · DEPOT", 3, false)]) &&
+                   ScriptNames.Resolve("DEPOT", body, own, baseBody).SequenceEqual([new NameMatch(NameKind.Object, "waypoint 3 · Depot", 3, false), new NameMatch(NameKind.BaseObject, "waypoint 3 · DEPOT", 3)]),
+            "an exact name in one world does not silence the other-case matches of the other");
+        check.That(ScriptNames.Resolve("Base Hut", body, own).Count == 0 && ScriptNames.Resolve("Base Hut", body, own, null).Count == 0 && ScriptNames.Resolve("", body, own, baseBody).Count == 0 &&
+                   ScriptNames.Resolve("Path A", body, own, baseBody).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0)]),
+            "without a base world there are none, an empty text matches nothing, and the base world's paths are not names to follow here");
+        body.Things[3].Init.Name = "";
+        // The game finds a waypoint path by name ignoring letter case where a script follows one, and compares every other name as it is: only a path argument is case-blind.
+        // It keeps one list of paths, the base world's before the level's own, and takes the first that matches: one path is named.
+        WaypointPath shout = new() { Name = "PATH A" };
+        shout.Slots.AddRange([3, 2]);
+        body.WaypointPaths.Add(shout);
+        check.That(ScriptNames.Resolve("Path A", body, own).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0)]) && ScriptNames.Resolve("path a", body, own).Count == 0 &&
+                   ScriptNames.Resolve("Path A", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0)]) &&
+                   ScriptNames.Resolve("path a", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0, false)]) &&
+                   ScriptNames.Resolve("PATH A", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0, false)]),
+            "a path argument names the first path of that name in any letter case (not the exact one when another comes first), marked when its case differs; anywhere else only the exact name is a path");
+        body.WaypointPaths.Reverse();
+        check.That(ScriptNames.Resolve("Path A", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path PATH A · 2 points", 0, false)]) &&
+                   ScriptNames.Resolve("PATH A", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path PATH A · 2 points", 0)]),
+            "the first in the list wins whatever the case, so with the other order the other path is the one");
+        body.WaypointPaths.Reverse();
+        // The base world's paths come before the level's own: a base world's path of that name is the one a follow call finds, and the level's own is not named.
+        check.That(ScriptNames.Resolve("PATH A", body, own, baseBody, true).SequenceEqual([new NameMatch(NameKind.BasePath, "path Path A · 1 point", 0, false)]) &&
+                   ScriptNames.Resolve("Path A", body, own, baseBody, true).SequenceEqual([new NameMatch(NameKind.BasePath, "path Path A · 1 point", 0)]) &&
+                   ScriptNames.Resolve("Path A", body, own, baseBody).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0)]),
+            "the base world's paths are looked at first, and only for a path argument");
+        baseBody.WaypointPaths[0].Name = "Base Route";
+        check.That(ScriptNames.Resolve("base route", body, own, baseBody, true).SequenceEqual([new NameMatch(NameKind.BasePath, "path Base Route · 1 point", 0, false)]) &&
+                   ScriptNames.Resolve("path a", body, own, baseBody, true).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0, false)]) &&
+                   ScriptNames.Resolve("Base Route", body, own, baseBody).Count == 0 && ScriptNames.Resolve("nothing", body, own, baseBody, true).Count == 0,
+            "a name only the base world's path has is that path, one it lacks goes on to the level's own, and a base world's path is not a name outside a path argument");
+        // C-locale _stricmp folds ASCII bytes but not Latin-1 accented bytes. The loader retains a length-prefixed
+        // name, but the game's comparison stops at its first NUL: neither spelling after that byte affects the match.
+        WorldBody accentOwn = new(), accentBase = new();
+        accentBase.WaypointPaths.Add(new WaypointPath { Name = "À-ROUTE" });
+        accentOwn.WaypointPaths.Add(new WaypointPath { Name = "à-ROUTE" });
+        check.That(ScriptNames.Resolve("à-route", accentOwn, [], accentBase, true)
+                       .SequenceEqual([new NameMatch(NameKind.Path, "path à-ROUTE · 0 points", 0, false)]) &&
+                   ScriptNames.Resolve("À-route", accentOwn, [], accentBase, true)
+                       .SequenceEqual([new NameMatch(NameKind.BasePath, "path À-ROUTE · 0 points", 0, false)]),
+            "C-locale path lookup folds ASCII letters but does not merge differently cased Latin-1 bytes");
+        accentBase.WaypointPaths[0].Name = "Route\0stored suffix";
+        check.That(ScriptNames.Resolve("route", accentOwn, [], accentBase, true)
+                       .SequenceEqual([new NameMatch(NameKind.BasePath, "path Route · 0 points", 0, false)]) &&
+                   ScriptNames.Resolve("Route\0query suffix", accentOwn, [], accentBase, true)
+                       .SequenceEqual([new NameMatch(NameKind.BasePath, "path Route · 0 points", 0)]),
+            "a follow-path comparison and its displayed spelling stop at the first NUL, retaining exact-case status for the compared prefix");
+        check.That(ScriptNames.Resolve("ALPHA", body, both, null, true).Count == 0 && ScriptNames.Resolve("Go", body, own, null, true).Count == 0 &&
+                   ScriptNames.Resolve("TANK 1", body, own, baseBody, true).SequenceEqual(ScriptNames.Resolve("TANK 1", body, own, baseBody)) && ScriptNames.Resolve("nothing", body, own, null, true).Count == 0,
+            "and objects, scripts and events stay exact in a path argument, as the game compares them");
+        body.WaypointPaths.RemoveAt(1);
+        body.WaypointPaths[0].Slots.Clear();
+        check.That(ScriptNames.Resolve("Path A", body, own).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 0 points", 0)]), "a path with no points is still matched");
+        body.WaypointPaths[0].Slots.Add(2);
+        check.That(ScriptNames.Resolve("Path A", body, own)[0].Label == "path Path A · 1 point", "and the count says one point in the singular");
+        body.WaypointPaths[0].Slots.AddRange([0, 4, 1, 99, -1, 5]);
+        check.That(ScriptNames.Resolve("Path A", body, own)[0].Label == "path Path A · 1 point", "the count is of the points the game keeps, not the slots: a unit, a feature, a row past the list and a negative slot are not points");
+    }
+
+    private static void Paths(Checks check)
+    {
+        WorldBody body = Body(Script("alpha", [], []));  // the authored body has one path, "Path A", through rows 1, 2 and 0: a unit, a waypoint and a unit; rows 3 is a waypoint and 4 a feature
+        check.That(body.Things[2].Kind == WaypointCatalog.WaypointKind && body.Things[3].Kind == WaypointCatalog.WaypointKind && body.Things[0].Kind == "unit" && body.Things[1].Kind == "unit" && body.Things[4].Kind == "feature",
+            "the authored objects are the kinds the path tests below rely on");
+        check.That(WaypointCatalog.Rows(body, body.WaypointPaths[0]).SequenceEqual([2]) && WaypointCatalog.Through(body, 2).SequenceEqual([new PathStop(0, "Path A", 1, 1)]) &&
+                   WaypointCatalog.Through(body, 0).Count == 0 && WaypointCatalog.Through(body, 1).Count == 0 && WaypointCatalog.Through(body, 4).Count == 0,
+            "a path's points are its slots that name a waypoint, as the game's loader keeps them: the units it names are not points, and are on no path");
+        body.WaypointPaths[0].Slots.Clear();
+        body.WaypointPaths[0].Slots.AddRange([3, 0, 2, 4, 3]);  // waypoint, unit, waypoint, feature, the first waypoint again
+        check.That(WaypointCatalog.Rows(body, body.WaypointPaths[0]).SequenceEqual([3, 2, 3]) && WaypointCatalog.Through(body, 3).SequenceEqual([new PathStop(0, "Path A", 1, 3), new PathStop(0, "Path A", 3, 3)]) &&
+                   WaypointCatalog.Through(body, 2).SequenceEqual([new PathStop(0, "Path A", 2, 3)]) && WaypointCatalog.Through(body, 0).Count == 0 && WaypointCatalog.Through(body, 4).Count == 0,
+            "an object's place on a path is its point number of the points kept: the slots dropped take no number, and a point passed twice is listed twice");
+        WaypointPath second = new() { Name = "Loop" };
+        second.Slots.AddRange([2, 2, 4]);
+        body.WaypointPaths.Add(second);
+        check.That(WaypointCatalog.Through(body, 2).SequenceEqual([new PathStop(0, "Path A", 2, 3), new PathStop(1, "Loop", 1, 2), new PathStop(1, "Loop", 2, 2)]),
+            "an object that a path passes through twice is listed twice, and paths in the world's order");
+        WaypointPath wild = new() { Name = "Wild" };
+        wild.Slots.AddRange([1, 99, -1, 3, (short)body.Things.Count, (short)(body.Things.Count - 1), 2, short.MinValue, short.MaxValue]);
+        check.That(WaypointCatalog.Rows(body, wild).SequenceEqual([3, 2]), "the slots that name no object, a unit or a feature are left out");
+        WorldBody ends = Body(Script("alpha", [], []));
+        ends.Things[0].ObjectId = ends.Things[2].ObjectId;  // the first and the last objects are waypoints too
+        ends.Things[ends.Things.Count - 1].ObjectId = ends.Things[2].ObjectId;
+        WaypointPath bounds = new() { Name = "Ends" };
+        bounds.Slots.AddRange([0, 1, (short)(ends.Things.Count - 1), -1, (short)ends.Things.Count]);
+        check.That(WaypointCatalog.Rows(ends, bounds).SequenceEqual([0, ends.Things.Count - 1]), "the first and the last objects of the list are points like any other, and the slot past the list is not");
+        MapView view = new();
+        view.Resize(400, 300);
+        view.FitBounds(100, 100, 200, 150);
+        (double leftX, double bottomY) = view.ToScreen(100, 100);
+        (double rightX, double topY) = view.ToScreen(200, 150);
+        check.That(Math.Abs(view.Scale - 3.2) < 1e-9 && Math.Abs(view.CenterX - 150) < 1e-9 && Math.Abs(view.CenterY - 125) < 1e-9 && Math.Abs(leftX - 40) < 1e-9 && Math.Abs(rightX - 360) < 1e-9 && Math.Abs(topY - 70) < 1e-9 && Math.Abs(bottomY - 230) < 1e-9,
+            $"a box is shown as large as will fit with a margin of 40 pixels, centred: scale {view.Scale}, corners {leftX},{bottomY} and {rightX},{topY}");
+        view.Resize(500, 400);
+        check.That(Math.Abs(view.Scale - 3.2) < 1e-9 && Math.Abs(view.CenterX - 150) < 1e-9, "the view is then the player's own: a new size keeps it");
+        view.FitBounds(300, 300, 300, 300);
+        check.That(view.Scale == 8 && MapView.MaxFitScale == 8 && view.CenterX == 300 && view.CenterY == 300, "a single point is not blown up past the fit zoom");
+        view.FitBounds(600, 600, 700, 700);
+        check.That(view.CenterX == 512 && view.CenterY == 512, "a box beyond the square puts the view's centre at the square's edge, as panning does");
+        view.FitBounds(0, 0, 512, 512);
+        check.That(Math.Abs(view.Scale - 0.625) < 1e-9 && view.CenterX == 256 && view.CenterY == 256, "a box as large as the square is fitted with the same margin");
+        MapView tiny = new();
+        tiny.Resize(60, 60);
+        tiny.FitBounds(10, 10, 20, 20);
+        check.That(tiny.Scale == tiny.MinScale, "a view too small for the margin settles on the smallest scale rather than a negative one");
     }
 
     private static void Tables(Checks check)
@@ -176,11 +354,7 @@ internal static class LevelScriptTests
         if (OperatingSystem.IsLinux())
         {
             string pipe = Path.Combine(folder, "Pipe.msl");
-            using (Process make = Process.Start(new ProcessStartInfo("mkfifo", [pipe]) { UseShellExecute = false })!)
-            {
-                make.WaitForExit();
-                check.That(make.ExitCode == 0, $"mkfifo made the named pipe (exit {make.ExitCode})");
-            }
+            check.That(MakeNode(pipe, 0x1000 | 0x180) == 0, $"a named pipe was made (mknod: {Marshal.GetLastPInvokeErrorMessage()})");
             Task<ScriptSourceResult> lookup = Task.Run(() => ScriptSources.Find(game, 123, "Pipe"));
             bool returned = lookup.Wait(TimeSpan.FromSeconds(10));
             check.That(returned && lookup.Result is { Source: null, Problem: "Pipe.msl is not a regular file, so it is not read." },
@@ -196,17 +370,63 @@ internal static class LevelScriptTests
             check.That(ScriptSources.Find(game, 123, "Foo").Source?.Text == "// fine\n", "a regular file beside the pipe is still read");
             check.That(ScriptSources.IsRegularFile(Path.Combine(folder, "Foo.msl")) && !ScriptSources.IsRegularFile(pipe) && !ScriptSources.IsRegularFile(folder),
                 "a regular file is one; a named pipe and a folder are not");
-            bool examined = true;
+            File.Delete(pipe);
+
+            // The other kinds of entry that are not files: a socket, a device and a link (which is asked about itself, not its target).
+            string socket = Path.Combine(folder, "Sock.msl");
+            check.That(MakeNode(socket, 0xC000 | 0x180) == 0, $"a socket node was made (mknod: {Marshal.GetLastPInvokeErrorMessage()})");
+            check.That(ScriptSources.Find(game, 123, "Sock") is { Source: null, Problem: "Sock.msl is not a regular file, so it is not read." } && !ScriptSources.IsRegularFile(socket),
+                "a socket named like a script is refused too");
+            File.Delete(socket);
+            string link = Path.Combine(folder, "Link.msl");
+            File.CreateSymbolicLink(link, Path.Combine(folder, "Foo.msl"));
+            check.That(!ScriptSources.IsRegularFile(link) && !ScriptSources.IsRegularFile("/dev/null") && ScriptSources.IsRegularFile(Path.Combine(folder, "Foo.msl")),
+                "a link and a device are not regular files, though a link's target is");
+            File.Delete(link);
+
+            // A path relative to the working folder is asked about as it is, and an entry that cannot be asked about says why (the system's own words).
+            string relative = Path.GetRelativePath(Environment.CurrentDirectory, game);
+            check.That(!Path.IsPathRooted(relative) && ScriptSources.Find(relative, 123, "Foo").Source?.Text == "// fine\n" && ScriptSources.IsRegularFile(Path.Combine(relative, "data", "MissionScripts", "level123", "Foo.msl")),
+                $"a game folder given relative to the working folder is read as it is: {relative}");
+            // The system cannot be asked what an entry is: nothing is read, and the sentence says why (the system's own words, or that the call is missing).
+            Func<string, (int Failed, int Errno, uint Mask, ushort Mode)> native = ScriptSources.Statx;
+            try
+            {
+                string foo = Path.Combine(folder, "Foo.msl");
+                ScriptSources.Statx = _ => (-1, 1, 0, 0);  // EPERM, as a sandbox that refuses the call answers
+                IOException? refused = null;
+                try { ScriptSources.IsRegularFile(foo); } catch (IOException error) { refused = error; }
+                check.That(refused is { Message: "Operation not permitted", InnerException: null }, $"a refusal of the call is an IOException in the system's words: \"{refused?.Message}\"");
+                check.That(ScriptSources.Find(game, 123, "Foo") is { Source: null, Problem: "Foo.msl could not be examined: Operation not permitted" }, "and the lookup says so and reads nothing");
+                ScriptSources.Statx = _ => throw new EntryPointNotFoundException();
+                refused = null;
+                try { ScriptSources.IsRegularFile(foo); } catch (IOException error) { refused = error; }
+                check.That(refused is { Message: "this system's C library has no statx to ask with", InnerException: EntryPointNotFoundException }, $"a C library without the call fails closed, not open: \"{refused?.Message}\"");
+                check.That(ScriptSources.Find(game, 123, "Foo") is { Source: null, Problem: "Foo.msl could not be examined: this system's C library has no statx to ask with" }, "and the lookup says so and reads nothing");
+                ScriptSources.Statx = _ => throw new DllNotFoundException();
+                check.That(ScriptSources.Find(game, 123, "Foo") is { Source: null, Problem: "Foo.msl could not be examined: this system's C library has no statx to ask with" }, "a missing library is the same");
+                ScriptSources.Statx = _ => (0, 0, 0, 0);  // the call answered but gave no type
+                check.That(!ScriptSources.IsRegularFile(foo), "an answer with no type in it is not a regular file");
+                ScriptSources.Statx = _ => (0, 0, 0, 0x81A4);  // a regular file's mode, but the type was not among what the call filled in
+                check.That(!ScriptSources.IsRegularFile(foo), "a mode the call did not say it filled in is not believed");
+                check.That(Enumerable.Range(0, 5).Select(which => { ScriptSources.Statx = _ => (0, 0, 1, new ushort[] { 0x81A4, 0x41ED, 0x11A4, 0xA1FF, 0xC1FF }[which]); return ScriptSources.IsRegularFile(foo); }).SequenceEqual([true, false, false, false, false]),
+                    "of a regular file, a folder, a pipe, a link and a socket only the regular file is read");
+            }
+            finally
+            {
+                ScriptSources.Statx = native;
+            }
+            check.That(ScriptSources.Find(game, 123, "Foo").Source?.Text == "// fine\n", "with the native call back, the source is read again");
+            string examineFailure = "";
             try
             {
                 ScriptSources.IsRegularFile(Path.Combine(folder, "Gone.msl"));
             }
-            catch (IOException)
+            catch (IOException error)
             {
-                examined = false;
+                examineFailure = error.Message;
             }
-            check.That(!examined, "an entry that cannot be examined is an IOException, which the lookup turns into a reason");
-            File.Delete(pipe);
+            check.That(examineFailure == "No such file or directory", $"an entry that cannot be examined is an IOException that says why: \"{examineFailure}\"");
         }
 
         // A folder that cannot be listed is a reason, not an exception for the page's signal handler to meet (a root user can list anything).
@@ -268,6 +488,12 @@ internal static class LevelScriptTests
         Directory.Delete(game, true);
     }
 
+    // mknod makes a named pipe (0x1000) or a socket node (0xC000), which anyone may make; the mode carries the permission bits.
+    private static int MakeNode(string path, uint mode) => MakeNodeNative(path, mode, 0);
+
+    [DllImport("libc", EntryPoint = "mknod", SetLastError = true)]
+    private static extern int MakeNodeNative([MarshalAs(UnmanagedType.LPUTF8Str)] string path, uint mode, ulong device);
+
     private static ScriptSourceResult Throws(Func<ScriptSourceResult> find, out bool threw)
     {
         try
@@ -308,7 +534,11 @@ internal static class LevelScriptTests
             "a base world of level 0 is listed, its scripts carry no users, and its source is looked for in level 0's folder");
         check.That(LevelEditorModel.ListScripts(ownBody, new LevelWorlds(-1, 9, baseBytes, null)).Count == 1 && LevelEditorModel.ListScripts(ownBody, new LevelWorlds(5, 9, null, null)).Count == 1 &&
                    LevelEditorModel.ListScripts(ownBody, new LevelWorlds(5, 9, [1, 2, 3], null)).Count == 1, "no base world, a base level of -1 and a base body that does not read list the level's own scripts only");
-        check.That(model.Open(300) is false && model.Scripts.Count == 0, "a level that cannot be opened lists no scripts");
+        check.That(LevelEditorModel.ReadBaseWorld(new LevelWorlds(0, 9, baseBytes, null))?.Things.Count == baseBody.Things.Count && LevelEditorModel.ReadBaseWorld(new LevelWorlds(-1, 9, baseBytes, null)) is null &&
+                   LevelEditorModel.ReadBaseWorld(new LevelWorlds(5, 9, null, null)) is null && LevelEditorModel.ReadBaseWorld(new LevelWorlds(5, 9, [1, 2, 3], null)) is null,
+            "the base world is read when the archive has one at a level of 0 or more, and is none when it has none or does not read");
+        check.That(model.BaseWorld is { } openBase && openBase.Things.Count > 0 && model.BaseLevel == 100, "the model keeps the open level's base world");
+        check.That(model.Open(300) is false && model.Scripts.Count == 0 && model.BaseWorld is null, "a level that cannot be opened lists no scripts and has no base world");
         check.That(model.Open(200) && model.Scripts.Count == 2 && model.Session!.Body.Scripts.Count == 1, "and opening one again lists its scripts afresh");
         Directory.Delete(game, true);
     }
