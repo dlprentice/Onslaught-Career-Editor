@@ -63,7 +63,7 @@ public sealed record ObjectChange(int Index, string Kind, string Name, Vector3 F
     public float Distance => Vector3.Distance(From, To);
 }
 
-/// <summary>A reason an edit should not be saved (an error) or should be saved with care (a warning).</summary>
+/// <summary>A reason an edit should not be saved (an error) or should be saved with care (a warning). The index is a row number, or a script's number for the script findings.</summary>
 public sealed record Finding(string Code, string Message, int? Index = null);
 
 /// <summary>What <see cref="EditSession.Validate"/> found. An edit with errors is not saved; warnings are shown.</summary>
@@ -194,9 +194,10 @@ public sealed class EditSession
     private bool SameScripts() => Body.Scripts.Count == _baseline.Scripts.Count && Body.Scripts.Zip(_baseline.Scripts).All(pair => pair.First.Name == pair.Second.Name);
 
     /// <summary>
-    /// Errors that stop a save: nothing changed, the body cannot be written, the row list or the script list changed, or something other than a
-    /// position or the code of a script differs from the baseline. Warnings: a position outside the square the terrain lookup covers, and any change
-    /// to a base world.
+    /// Errors that stop a save: nothing changed, the body cannot be written, the row list or the script list changed, something other than a
+    /// position or the code of a script differs from the baseline, or a replaced script breaks one of the game's rules (<c>script-broken</c>, one
+    /// finding per problem <see cref="ScriptChecker"/> lists; the finding's index is the script's number). Warnings: a position outside the square the
+    /// terrain lookup covers, and any change to a base world.
     /// </summary>
     public ValidationReport Validate()
     {
@@ -229,6 +230,10 @@ public sealed class EditSession
             if (!check.Write().AsSpan().SequenceEqual(Baseline))
                 errors.Add(new Finding("other-change", "Something other than a position or a script's code differs from the world as it was loaded."));
         }
+        IReadOnlyList<ScriptChange> scriptChanges = ScriptChanges();
+        foreach (ScriptChange change in scriptChanges)
+            foreach (ScriptProblem problem in ScriptChecker.Check(Body.Scripts[change.Index]))
+                errors.Add(new Finding("script-broken", problem.Message, change.Index));
         foreach (ObjectChange change in Changes())
         {
             if (!MoveObject.IsFinite(change.To))
@@ -239,7 +244,7 @@ public sealed class EditSession
         }
         if (IsBaseWorld && Changes().Count > 0)
             warnings.Add(new Finding("base-world", "This is a level's base world. Careers remember which of its buildings still stand, so a career may not agree with a base world whose things were moved."));
-        if (IsBaseWorld && ScriptChanges().Count > 0)
+        if (IsBaseWorld && scriptChanges.Count > 0)
             warnings.Add(new Finding("base-world-scripts", "This is a level's base world, and its scripts run in every level that loads it: a replaced script changes them all."));
         return new ValidationReport(errors, warnings);
     }
