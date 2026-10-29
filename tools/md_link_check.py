@@ -271,10 +271,13 @@ def self_test() -> int:
         ("C# notes", "c-notes"), ("1. Numbered", "1-numbered"), ("Under_score kept", "under_score-kept"),
         ("_Emphasised_ words", "emphasised-words"), ("Two  spaces", "two--spaces"), ("Ünïcode ok", "ünïcode-ok"),
         ("Native main menu / (draft)", "native-main-menu--draft"), ("<b>Tags</b> go", "tags-go"), ("Dashes - and – dashes", "dashes---and--dashes"),
+        ("Re\u0301sume\u0301", "re\u0301sume\u0301"), ("Trailing <i>tag</i> ", "trailing-tag"), ("![Alt text](img.png) after", "alt-text-after"),
+        ("[Ref][1] text", "ref-text"), ("snake_case_name", "snake_case_name"),
     ]
     failures += [f"slug of {text!r}: {slugify(text)!r}, expected {want!r}" for text, want in slugs if slugify(text) != want]
-    doc = "# Title\n\n## Same\n\n### Same\n\n## Same\n\n```\n# Not a heading\n```\n\n    # indented code\n\n#### Closed ####\n\n<a id=\"raw-id\"></a>\n"
-    expected = {"title", "same", "same-1", "same-2", "closed", "raw-id"}
+    doc = ("# Title\n\n## Same\n\n### Same\n\n## Same\n\n```\n# Not a heading\n```\n\n    # indented code\n\n#### Closed ####\n\n<a id=\"raw-id\"></a>\n\n"
+           "####### Seven hashes\n\n#NoSpace\n\n## \n\n<a name='old-name'></a> <A NAME=\"Upper-Name\"></A>\n")
+    expected = {"title", "same", "same-1", "same-2", "closed", "raw-id", "old-name", "Upper-Name"}
     if anchors_in(doc) != expected:
         failures.append(f"anchors_in: {sorted(anchors_in(doc))}, expected {sorted(expected)}")
     with tempfile.TemporaryDirectory() as tmp:
@@ -282,17 +285,22 @@ def self_test() -> int:
         (root / "a.md").write_text(
             "# A\n\n## Local heading\n\n[ok](b.md#target-heading) [ok2](b.md#Target-Heading) [ok3](#local-heading) [ok4](b.md)\n"
             "[bad](b.md#missing-heading) [bad2](#nope) [bad3](missing.md#x) [line](b.md#L12) [code](notes.txt#anything) [web](https://x.test/a#b)\n"
-            "[enc](b.md#target%2Dheading) [title](b.md#target-heading \"a title\") `[inline](b.md#not-checked)`\n\n```\n[fenced](b.md#not-checked)\n```\n",
+            "[enc](b.md#target%2Dheading) [title](b.md#target-heading \"a title\") `[inline](b.md#not-checked)`\n\n```\n[fenced](b.md#not-checked)\n```\n"
+            "[ok5](#Local-Heading) [up](b.md#upper-name) [l1](b.md#L12C3) [l2](b.md#L12-L20) [l3](b.md#L12C3-L20C9) [q](b.md#target-heading?plain=1)\n"
+            "[e](b.md#) [e2](#) [qp](b.md?plain=1) [ang](<b.md>) [root](/b.md) [dir](dir.md#x) `x`[after](b.md#bad-after)\n"
+            "an odd ` tick\n[odd](b.md#odd-tick-missing)\nanother ` tick\n",
             encoding="utf-8")
-        (root / "b.md").write_text("# B\n\n## Target heading\n", encoding="utf-8")
+        (root / "b.md").write_text("# B\n\n## Target heading\n\n<A NAME=\"Upper-Name\"></A>\n", encoding="utf-8")
+        (root / "dir.md").mkdir()
         (root / "notes.txt").write_text("text", encoding="utf-8")
         broken, total = check_links([root / "a.md", root / "b.md"], root)
         got = sorted((item["target"], item["kind"]) for item in broken)
-        want = sorted([("b.md#missing-heading", "anchor"), ("#nope", "anchor"), ("missing.md", "path")])
+        want = sorted([("b.md#missing-heading", "anchor"), ("#nope", "anchor"), ("missing.md", "path"),
+                       ("b.md#bad-after", "anchor"), ("b.md#odd-tick-missing", "anchor")])
         if got != want:
             failures.append(f"check_links found {got}, expected {want}")
-        if total != 11:
-            failures.append(f"check_links counted {total} links, expected 11")
+        if total != 25:
+            failures.append(f"check_links counted {total} links, expected 25")
     print("md_link_check self-test: " + ("PASS" if not failures else f"FAIL {failures}"))
     return 0 if not failures else 1
 
