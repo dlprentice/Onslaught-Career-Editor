@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-10-29 (the companion's update guidance described as it is; earlier: decompilation concessions and native-port validation scope clarified)
+Last updated: 2026-10-29 (the game documentation's home stated as onslaught-preservation, with `reverse-engineering/` here a frozen copy; earlier: the companion's update guidance described as it is; earlier: decompilation concessions and native-port validation scope clarified)
 Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
 
 Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
@@ -11,6 +11,10 @@ repository holds it and the project's overview.
   [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), documents matching coverage, excluded code and
   source and build concessions. Matching function sections and relocations is separate from reproducing the
   complete linked executable or proving gameplay parity.
+- **The game documentation lives in [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation).**
+  It is the one home of the findings on the game's file formats, saves, mechanics, levels and engine (prose and specs,
+  CC BY-SA 4.0), and new findings go there. [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) here is a frozen
+  copy that gets no further edits.
 - **Onslaught CE is the native Windows and Linux port.** Its source and downloads are published separately as
   **[Onslaught CE](https://github.com/dlprentice/onslaught-ce)** (GPL-3.0-only, no game files), not from this repository.
   Its [release notes](https://github.com/dlprentice/onslaught-ce/releases/latest) identify the tested routes,
@@ -25,8 +29,8 @@ repository holds it and the project's overview.
   is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot), which keeps its measured parity; `rebuild/` here is a frozen copy,
   not built or tested, and is removed when this repository is split.
 
-This repository holds the companion, documentation of the game (formats, behaviours and findings as prose and
-specs), our own tools and a frozen copy of the Godot rebuild. It holds no game files, Ghidra database, decompiler output or decomp source.
+This repository holds the companion, the lore, our own tools, a frozen copy of the game documentation and a frozen
+copy of the Godot rebuild. It holds no game files, Ghidra database, decompiler output or decomp source.
 
 This is an unofficial community project. It is not affiliated with or endorsed by the game's publishers or rights
 holders. Repository licenses cover their respective project code and documentation; they grant no rights in the
@@ -40,18 +44,19 @@ Its source and downloads are at [Onslaught CE](https://github.com/dlprentice/ons
 ## Report a problem
 
 - The game (Onslaught CE): [Onslaught CE's issues](https://github.com/dlprentice/onslaught-ce/issues).
-- The companion, lore or this repository's documentation: [this repository's issues](https://github.com/dlprentice/Onslaught-Career-Editor/issues).
+- The companion, lore, tools or this repository's own documents: [this repository's issues](https://github.com/dlprentice/Onslaught-Career-Editor/issues).
+- The game documentation (formats, saves, mechanics, levels, engine): [onslaught-preservation's issues](https://github.com/dlprentice/onslaught-preservation/issues).
 - The Godot rebuild: [onslaught-godot's issues](https://github.com/dlprentice/onslaught-godot/issues).
 
 ## Related repositories
 
 | Repository | What it holds |
 | --- | --- |
-| This repository | The companion, documentation of the game, lore, our tools, and a frozen copy of the Godot rebuild |
+| This repository | The companion, lore, our tools, and frozen copies of the game documentation and the Godot rebuild |
 | [Onslaught CE](https://github.com/dlprentice/onslaught-ce) | The native source port's source and its Windows and Linux downloads; GPL-3.0-only |
 | [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) | The byte-matching decompilation of the retail executable, for MSVC 6; bring your own game and compiler; GPL-3.0-only |
 | [onslaught-godot](https://github.com/dlprentice/onslaught-godot) | The Godot 4 C# rebuild, checked against the original game Present by Present; GPL-3.0-only |
-| [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation) | Documentation of the game: file formats, saves, mechanics, levels and engine; CC BY-SA 4.0 |
+| [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation) | The one home of the game documentation: file formats, saves, mechanics, levels and engine; CC BY-SA 4.0 |
 | [`stuart73/Onslaught`](https://github.com/stuart73/Onslaught) | Stuart's partial GPL source release; this repository pins David's fork, [`dlprentice/Onslaught`](https://github.com/dlprentice/Onslaught), as [`references/Onslaught`](references/Onslaught) |
 
 ## Using the companion
@@ -70,7 +75,7 @@ on the companion's Home page, where each can be saved as a copy elsewhere.
 | Path | Owner |
 | --- | --- |
 | [`companion/OnslaughtToolkit.Godot/`](companion/OnslaughtToolkit.Godot/README.md) | The companion for original-game and CE careers, settings and launch, C# built in code on Godot 4.8 beta1 .NET and .NET 10 |
-| [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | Documentation of the game: formats, mechanics, saves, assets, function notes and contracts. Moved: maintained at [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation); this copy is frozen |
+| [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | A frozen copy of the game documentation (formats, mechanics, saves, assets, function notes and contracts) as at commit `fae54b7`. Its home is [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation), where new findings go |
 | [`lore/`](lore/_index.md) | The canonical lore and history library, embedded in the companion |
 | [`tools/`](tools/README.md) | Format decoders, asset exporters, capture analysis and the repository's checks |
 | [`rebuild/`](rebuild/README.md) | A frozen copy of the GPL Godot rebuild, now developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot); not built or tested here |
@@ -132,7 +137,7 @@ the reviewed exception to the no-save rule. See [`SECURITY.md`](SECURITY.md) and
 ## Evidence and provenance
 
 The game documentation moved to [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation), where it is
-maintained; [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) here is a frozen copy.
+maintained and where new findings go; [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) here is a frozen copy.
 Findings name the specimen, capture, test or source line they rest on. Stuart's source release (GitHub `stuart73/Onslaught`) in the
 pinned [`references/Onslaught`](references/Onslaught) submodule is a source reference, not proof of retail behaviour.
 Earlier Ghidra-era records, the tracked Ghidra checkpoint and the campaign machinery are kept privately.

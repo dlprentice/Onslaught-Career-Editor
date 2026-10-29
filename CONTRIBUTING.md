@@ -1,16 +1,18 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-10-23 (the companion supports the original game and CE; companion and lore issues go to this repository's issues; earlier: SPDX prose excluded from REUSE parsing; Onslaught CE and onslaught-godot linked; the retired AppCore patching core removed, inbound = outbound licensing)
+Last updated: 2026-10-29 (game findings go to onslaught-preservation and `reverse-engineering/` here is a frozen copy; earlier: the companion supports the original game and CE; companion and lore issues go to this repository's issues; earlier: SPDX prose excluded from REUSE parsing; Onslaught CE and onslaught-godot linked; the retired AppCore patching core removed, inbound = outbound licensing)
 Summary: what a focused change looks like here, what must never be added to the
 repository, and which checks a change owes.
 
-This public repository holds Onslaught Companion for the original game and Onslaught CE, documentation of
-*Battle Engine Aquila* as prose and specs, our tools and a frozen copy of the Godot
+This public repository holds Onslaught Companion for the original game and Onslaught CE, the lore, our tools, a
+frozen copy of the game documentation (`reverse-engineering/`), whose home is
+[onslaught-preservation](https://github.com/dlprentice/onslaught-preservation), and a frozen copy of the Godot
 rebuild, which is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot). The byte-matching decompilation's public export is
 [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp); its native port is published separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce);
 report port problems in [its issues](https://github.com/dlprentice/onslaught-ce/issues). Report companion, lore and
-documentation problems in [this repository's issues](https://github.com/dlprentice/Onslaught-Career-Editor/issues), and
+tool problems in [this repository's issues](https://github.com/dlprentice/Onslaught-Career-Editor/issues), problems in the game documentation in
+[onslaught-preservation's issues](https://github.com/dlprentice/onslaught-preservation/issues), and
 rebuild problems in [onslaught-godot](https://github.com/dlprentice/onslaught-godot/issues). [GOAL.md](GOAL.md) states the
 direction and [PROGRAM.md](PROGRAM.md) the work queue. Keep changes focused and use existing records and
 validation.
@@ -62,8 +64,9 @@ New code files start with an `SPDX-License-Identifier: GPL-3.0-only` comment.
   process, network or GPU dependency; `OnslaughtRebuild.Host` owns presentation. The earlier
   `OnslaughtRebuild.Core` is reference material.
 - `lore/` is the canonical public lore/history source.
-- `reverse-engineering/` documents the game with provenance-bounded prose and specs. Static,
-  runtime and source-reference claims must remain distinct.
+- `reverse-engineering/` is a frozen copy of the game documentation, which is now maintained in
+  [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation) (see "Game documentation and the
+  rebuild" below). What is written here keeps static, runtime and source-reference claims distinct.
 
 ## Product changes
 
@@ -110,11 +113,15 @@ Exporters must require explicit local inputs and a separate local output root.
 
 ## Game documentation and the rebuild
 
-Use [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) to find the owning document. New
-findings come from the byte-matching decompilation or controlled observation; write them as prose and specs,
-cite the function or capture, and never paste decompiler output. Contract grades follow
-[`CONTRACTS.md`](CONTRACTS.md). Retain raw or bulky proof locally; commit only the smallest public-safe evidence
-a document needs, and state what it does not prove.
+Game findings (file formats, saves, mechanics, levels, engine) are written in
+[onslaught-preservation](https://github.com/dlprentice/onslaught-preservation), the one home of the game
+documentation; read its [CONTRIBUTING.md](https://github.com/dlprentice/onslaught-preservation/blob/main/CONTRIBUTING.md)
+first. Do not add or edit findings in `reverse-engineering/`: it is a frozen copy, and
+[`RE-INDEX.md`](reverse-engineering/RE-INDEX.md) names the commit it is frozen at and the few tool-owned files that
+still change. Documents about this repository's own tools, the companion and the lore stay here. Wherever a document
+is written, new findings come from the byte-matching decompilation or controlled observation; write them as prose and
+specs, cite the function or capture, and never paste decompiler output. Retain raw or bulky proof locally; commit
+only the smallest public-safe evidence a document needs, and state what it does not prove.
 
 `rebuild/` is a frozen copy: rebuild changes belong in [onslaught-godot](https://github.com/dlprentice/onslaught-godot). For the record, read
 [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) and [`rebuild/README.md`](rebuild/README.md): GPL-compatible source adaptation and locally materialized

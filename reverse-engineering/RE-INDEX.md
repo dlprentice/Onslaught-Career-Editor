@@ -1,12 +1,14 @@
 # Reverse-Engineering Index
 
-Status: active — the front door to the game documentation
-Last updated: 2026-10-29 (the decompilation's published score stated as it is; earlier: moved: maintained at onslaught-preservation, this copy frozen; the decompilation cited as onslaught-decomp; retired WinUI/AppCore surfaces named in the past tense; patch recipes: the executable-patch catalog and its contract were retired; removed the tracked retail string table row)
-Summary: where the documentation of Battle Engine Aquila lives, what each store covers, and the rules a claim about the shipped game has to meet before it is written down.
+Status: frozen — a copy of the game documentation as at Toolkit commit `fae54b7`; its home is onslaught-preservation
+Last updated: 2026-10-29 (frozen at fae54b7: onslaught-preservation is the one home of the game documentation and takes new findings; the files tools still read are listed; earlier: the decompilation's published score stated as it is; earlier: moved: maintained at onslaught-preservation, this copy frozen; the decompilation cited as onslaught-decomp; retired WinUI/AppCore surfaces named in the past tense; patch recipes: the executable-patch catalog and its contract were retired; removed the tracked retail string table row)
+Summary: where the frozen copy of the documentation of Battle Engine Aquila lives in this tree, what each store covers, and the rules a claim about the shipped game has to meet before it is written down; new findings go to onslaught-preservation.
 
-> **Moved:** this documentation is maintained at
-> [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation); this copy is frozen and gets no
-> further edits.
+> **Moved and frozen:** the game documentation's one home is
+> [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation), and new findings go there. This copy
+> is frozen at Toolkit commit `fae54b7`, the last commit that changed it, and gets no further edits, apart from the
+> files listed under [What the freeze leaves open](#what-the-freeze-leaves-open). For a document both hold, the one in
+> onslaught-preservation is the maintained one.
 
 This tree documents *Battle Engine Aquila* as prose and specs: file formats, save and options layouts, mechanics,
 assets and mission data, per-function notes and behaviour contracts, patch analyses, and notes on Stuart's pinned
@@ -20,6 +22,24 @@ record and the promotion, boundary and naming records) and the decompiler listin
 moved to the private repository `dlprentice/onslaught-re-archive`, byte-exact at their old paths. Notes that cite
 them say "(private RE archive)". Generation numbers, grade counts and Ghidra database versions quoted in dated
 notes are history.
+
+## What the freeze leaves open
+
+Five files in this tree are inputs or expected outputs of Toolkit tools, so they change when their tool does, not as
+findings:
+
+- [`project-meta/attribution.md`](project-meta/attribution.md): the register of tracked screenshots, which
+  `tools/check_registered_screenshots.py` reads;
+- [`source-code/aya-resource-extractor-contract.tsv`](source-code/aya-resource-extractor-contract.tsv): the contract
+  that `tools/aya_extractor_source_audit.py` reads by default and its tests count;
+- [`asset-formats/cmsh-matrix-normal-deformation.tsv`](asset-formats/cmsh-matrix-normal-deformation.tsv) and
+  [`asset-formats/cmsh-matrix-palette-skinning.tsv`](asset-formats/cmsh-matrix-palette-skinning.tsv): the tables that the
+  tests of `tools/cmsh_matrix_normal_contract.py` and `tools/cmsh_skinning_contract.py` compare, byte for byte, with what
+  each tool generates;
+- [`asset-formats/battle-engine-config-layout.tsv`](asset-formats/battle-engine-config-layout.tsv): the layout whose bytes
+  `tools/battle_engine_config_decode_tests.py` pins.
+
+Everything else here, including the documents those tools cite, stays as it was at the freeze.
 
 ## Evidence rules
 
