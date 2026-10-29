@@ -1,8 +1,8 @@
 # Companion Mission Editor: Design Addendum
 
-Status: design; the reference compiler and read-only scripts view with name links and map paths are built. The C# compiler is a validation candidate; editing scripts remains planned. It extends the
+Status: design; the read-only scripts view, compiler, edit model and source-staging API are built. Player-facing script editing and reopening a staged source remain planned. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-10-29 (script-gate stale record pairs pinned by identity; descriptor-relative Python source reads and platform limits; MS2 compiler and include limits under review; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
+Last updated: 2026-10-29 (source/world agreement checked by the stager; script-gate stale record pairs pinned by identity; descriptor-relative Python source reads and platform limits; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours checked against the shipped scripts with the documented
 missing-header and stale-source cases, and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -87,18 +87,20 @@ script uses, any level not installed here, and anything on Windows.
 ## 3. The approach
 
 Edit the script source (the game's own language), compile it with a compiler of ours, replace the script in the world body, save
-the world file as a mod through the level editor's existing stager. Unchanged scripts are written back as the shipped bytes, never
-recompiled, so a mod differs from the game only where the player edited.
+the world file as a mod through the level editor's stager. Unchanged scripts are written back as the shipped bytes, never
+recompiled. An installed source can already differ from its compiled script, so recompiling an edited source can change behavior
+beyond the text the player changed.
 
 - **The compiler** is C# in the Companion (`Missions/`), with a Python reference (`tools/msl_compile.py`) that the C# is tested
   against on generated vectors, as the other tools are. It is written from the decompilation's description of the VM and its loader,
   cited by function, with no source copied (the original compiler is not in the decompilation and is not needed). It supports
   exactly the constructs the shipped scripts use; anything else is refused with a line and a reason, never guessed.
 - **The checker** applies the game's own rules to the compiled script before anything is saved (section 7).
-- **The mod** carries the world file and the edited sources, each as `data/MissionScripts/levelNNN/NAME.msl`, the path of the file
-  the game already has, so today's loader admits them as replacements of files the game has. The game never reads them; they
-  document the change and let a later session reopen the player's own source, and the mod's notes and the README say so plainly.
-  The stager and the Python reference stager take extra files for this, with the same refusals as before (decided 2026-10-29).
+- **The mod** can carry a world file and edited sources at `data/MissionScripts/levelNNN/NAME.msl`. The stager requires an existing,
+  safely readable game source and checks that the supplied text compiles to the exact named script record in the saved world. It caps
+  source and aggregate header size and count, writes all files before the manifest and preserves the existing destination restrictions. The game runs the
+  compiled world script; the source is for the author. Included headers stay in the game folder and may change. A player-facing way to
+  edit or reopen a staged source is not built, and the source-staging path has not been accepted in a CE release or on native Windows.
 
 ## 4. Milestones
 

@@ -256,6 +256,112 @@ class LoaderRulesControls(Base):
 
 # ---- the staged folder ------------------------------------------------------------------------------------------------
 class StageAsModTests(Base):
+    def world_with_source(self, text: str) -> bytes:
+        model = enc.read_world_model(self.edited_body)
+        model["scripts"] = [stage.mc.compile_script("main", text, stage.mc.includes_from(self.game), 70)]
+        return enc.write_world_body(model)
+
+    def test_a_script_source_is_staged_with_the_world_and_its_game_file_is_unchanged(self) -> None:
+        path = "data/MissionScripts/level200/main.msl"
+        original = self.game / path
+        original.parent.mkdir(parents=True)
+        original.write_bytes(b"// shipped source\n")
+        text = "// my edit\ninit() { Pause(1); }\n"
+        world = self.world_with_source(text)
+        order = []
+        real = safe.SecuredOutputRoot.atomic_write_new_bytes
+
+        def record(self_, name, payload):
+            order.append(Path(name).relative_to(self.out / "with-source").as_posix())
+            return real(self_, name, payload)
+
+        with patch.object(safe.SecuredOutputRoot, "atomic_write_new_bytes", record):
+            result = stage.stage_mod(self.out, self.game, "with-source", {200: world}, name="n", sources={path: text})
+        mod = self.out / "with-source"
+        self.assertEqual(text.encode("latin-1"), (mod / path).read_bytes())
+        self.assertEqual(b"// shipped source\n", original.read_bytes())
+        self.assertEqual(world, (mod / "data/worlds/world200.wrd").read_bytes())
+        self.assertEqual([], LoaderRules.problems(mod, self.game))
+        self.assertEqual([path, "data/worlds/world200.wrd", "mod.json"], order)
+        self.assertEqual([path, "data/worlds/world200.wrd"], [f["path"] for f in result["files"]])
+        self.assert_game_unchanged()
+
+    def test_source_refusals_write_nothing(self) -> None:
+        path = "data/MissionScripts/level200/main.msl"
+        original = self.game / path
+        original.parent.mkdir(parents=True)
+        original.write_bytes(b"// original\n")
+        text = "init() { Pause(1); }\n"
+        world = self.world_with_source(text)
+        cases = (
+            {"data/MissionScripts/level200/../other.msl": "x"},
+            {"data/MissionScripts/level200/NUL.msl": "x"},
+            {"data/MissionScripts/level200/missing.msl": "x"},
+            {"data/MissionScripts/level201/main.msl": text},
+            {path: "\N{EURO SIGN}"},
+            {path: "x" * (stage.MAX_SOURCE_BYTES + 1)},
+            {path: "init() { Pause(2); }\n"},
+            {path: text, "data/MissionScripts/level200/MAIN.msl": text},
+            {f"data/MissionScripts/level200/s{i}.msl": text for i in range(stage.MAX_SOURCE_FILES + 1)},
+        )
+        for sources in cases:
+            with self.subTest(paths=list(sources)), self.assertRaises(stage.ModStageError):
+                stage.stage_mod(self.out, self.game, "refused", {200: world}, name="n", sources=sources)
+            self.assertFalse(self.out.exists())
+            self.assertEqual(b"// original\n", original.read_bytes())
+        self.assert_game_unchanged()
+        with self.assertRaisesRegex(stage.ModStageError, "listed twice"):
+            stage.build_manifest("a", "n", "1", {"data/worlds/world200.wrd": world, path: b"x", path.replace("main", "MAIN"): b"x"})
+
+    def test_a_source_cannot_be_attached_to_invalid_or_ambiguous_worlds(self) -> None:
+        path = "data/MissionScripts/level200/main.msl"
+        original = self.game / path
+        original.parent.mkdir(parents=True)
+        original.write_bytes(b"// original\n")
+        text = "init() { Pause(1); }\n"
+        world = self.world_with_source(text)
+        model = enc.read_world_model(world)
+        model["scripts"].append(model["scripts"][0])
+        for body in (b"broken world", world + b"extra", enc.write_world_body(model)):
+            with self.subTest(size=len(body)), self.assertRaises(stage.ModStageError):
+                stage.stage_mod(self.out, self.game, "refused", {200: body}, name="n", sources={path: text})
+            self.assertFalse(self.out.exists())
+        self.assertEqual(b"// original\n", original.read_bytes())
+
+    def test_changed_included_header_refuses_the_stale_source_world_pair(self) -> None:
+        path = "data/MissionScripts/level200/main.msl"
+        original, header = self.game / path, self.game / "data/inc/defs.msl"
+        original.parent.mkdir(parents=True)
+        header.parent.mkdir(parents=True)
+        original.write_text("// original\n", encoding="latin-1")
+        header.write_text("#define DELAY 1\n", encoding="latin-1")
+        text = "#include data\\inc\\defs.msl\ninit() { Pause(DELAY); }\n"
+        world = self.world_with_source(text)
+        header.write_text("#define DELAY 2\n", encoding="latin-1")
+        with self.assertRaisesRegex(stage.ModStageError, "does not compile to the script"):
+            stage.stage_mod(self.out, self.game, "refused", {200: world}, name="n", sources={path: text})
+        self.assertFalse(self.out.exists())
+        self.assertEqual("#define DELAY 2\n", header.read_text(encoding="latin-1"))
+
+    def test_include_budget_covers_all_sources_before_any_output(self) -> None:
+        main = "data/MissionScripts/level200/main.msl"
+        other = "data/MissionScripts/level200/second.msl"
+        header = self.game / "data/inc/defs.msl"
+        header.parent.mkdir(parents=True)
+        header_text = "#define DELAY 1\n"
+        header.write_text(header_text, encoding="latin-1")
+        for path in (main, other):
+            (self.game / path).parent.mkdir(parents=True, exist_ok=True)
+            (self.game / path).write_text("// original\n", encoding="latin-1")
+        text = "#include data\\inc\\defs.msl\ninit() { Pause(DELAY); }\n"
+        model = enc.read_world_model(self.world_with_source(text))
+        model["scripts"].append(stage.mc.compile_script("second", text, stage.mc.includes_from(self.game), 70))
+        world = enc.write_world_body(model)
+        for limit, value, words in (("MAX_STAGE_INCLUDES", 1, "included files"), ("MAX_STAGE_INCLUDE_CHARS", len(header_text), "characters of included text")):
+            with self.subTest(limit=limit), patch.object(stage, limit, value), self.assertRaisesRegex(stage.ModStageError, words):
+                stage.stage_mod(self.out, self.game, "refused", {200: world}, name="n", sources={main: text, other: text})
+            self.assertFalse(self.out.exists())
+
     def test_the_staged_folder_is_exactly_what_the_loader_admits(self) -> None:
         result = self.cli(*self.stage_args("--world", str(self.model_file), "--version", "0.1", "--author", "tests",
                                            "--description", "Moves the first unit.", "--ce-min", "0.1.11"))
@@ -536,8 +642,8 @@ class StageAsModTests(Base):
     def test_the_manifest_builder_holds_the_same_limits_as_the_loader(self) -> None:
         body = self.edited_body
         stage.build_manifest("a", "n", "1", {"data/worlds/world001.wrd": body})
-        for files, words in (({}, "at least one file"), ({"data/worlds/world1.wrd": body}, "world files only"),
-                             ({"data/other.bin": body}, "world files only"), ({"data/worlds/world001.wrd": b""}, "1 byte"),
+        for files, words in (({}, "at least one file"), ({"data/worlds/world1.wrd": body}, "world files and mission sources only"),
+                             ({"data/other.bin": body}, "world files and mission sources only"), ({"data/worlds/world001.wrd": b""}, "1 byte"),
                              ({"data/worlds/world001.wrd": bytes((4 << 20) + 1)}, "1 byte")):
             with self.subTest(words=words), self.assertRaisesRegex(stage.ModStageError, words):
                 stage.build_manifest("a", "n", "1", files)
@@ -547,6 +653,8 @@ class StageAsModTests(Base):
             with self.subTest(level=level), self.assertRaises(stage.ModStageError):
                 stage.world_path(level)
         self.assertEqual("data/worlds/world007.wrd", stage.world_path(7))
+        with patch.object(stage, "MAX_TOTAL_BYTES", 3), self.assertRaisesRegex(stage.ModStageError, "total at most"):
+            stage.build_manifest("a", "n", "1", {"data/worlds/world001.wrd": b"ab", "data/MissionScripts/level001/a.msl": b"cd"})
 
     def test_stream_commands_still_refuse_every_output_path(self) -> None:
         for args in (["extract", "--game", str(self.game), "--level", "200", "--stdout", "--out", str(self.out)],

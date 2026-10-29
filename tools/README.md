@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-29 (the script gate pins each known stale record pair; descriptor-relative Python mission-source reads and platform limits; `msl_vectors.py`, the vectors for the Companion's C# compiler; the gate table's NAMES and PATHS rows; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-29 (source/world agreement checked by the programmatic stager; the script gate pins each known stale record pair; descriptor-relative Python mission-source reads and platform limits; `msl_vectors.py`, the vectors for the Companion's C# compiler; the gate table's NAMES and PATHS rows; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -192,7 +192,7 @@ publish, sign, or install anything by themselves.
   `stage --as-mod --out PARENT --id ID --name TEXT [--world MODEL.json] [--base-world MODEL.json]` is the one command that
   writes files. It packages the edited world(s) as a CE mod folder `PARENT/ID` (`mod.json` plus `data/worlds/worldNNN.wrd`,
   the one kind of file a CE mod may add) through `world_mod_stage.py`, held to the loader's own limits (the id, the text
-  lengths, the version format, at most 4 MiB per world file), so CE loads it with no hand editing. It is the step after
+  lengths, the version format, at most 4 MiB per world file), for CE to load when its other checks pass. It is the step after
   `world_edit_move.py --emit-model`: pass that preview's `--baseline-sha256` and `--model-sha256` (and the `--base-*`
   pair for a base world) to pin the same two identities. It refuses a no-op edit, an edited world that names a base world
   the archive does not hold unless `--base-world` supplies it, a destination inside the selected game folder (or any game
@@ -205,6 +205,10 @@ publish, sign, or install anything by themselves.
   are off in replays, recordings, probes, virtual clocks, pilots and network sessions, so a staged mod cannot change
   any of those runs. `world_mod_stage_tests.py` checks the staged folder against an independent
   restatement of the loader's start-up rules on authored data only.
+  The programmatic `world_mod_stage.stage_mod` API can also retain edited single-byte mission sources alongside a world. It requires
+  each game source to exist, bounds the number and total size of sources and header reads, and recompiles each source against the selected game's headers to check
+  the exact script record in the staged world. Headers are not copied. The CLI does not expose this option, and reopening a staged
+  source and acceptance in a CE release remain open; the Python source reader fails closed on unsupported systems, including Windows.
   `world_edit_preview.py BASELINE.wrd EDITED.json` is a read-only step before encoding or preparing a stage bundle. It reports input
   hashes, byte and field changes, changes to opaque groups and slot-sensitive structures, and bounded compiled-script
   inspection findings. It also identifies model fields the encoder would silently omit. An omitted field, truncated

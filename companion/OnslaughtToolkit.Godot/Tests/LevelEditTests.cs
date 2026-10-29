@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Security.Cryptography;
 using OnslaughtToolkit.Companion.Levels;
+using OnslaughtToolkit.Companion.Missions;
 
 namespace OnslaughtToolkit.Companion.Tests;
 
@@ -17,6 +18,7 @@ internal static class LevelEditTests
     {
         check.Suite("level edits");
         Stage(check, "the stage vectors", () => StageVectors(Path.Combine(outputDirectory, "level-stage"), check));
+        Stage(check, "mission-source staging", () => StageSources(Path.Combine(outputDirectory, "level-stage-sources"), check));
         Stage(check, "the refused stage vectors", () => RefusedStageVectors(Path.Combine(outputDirectory, "level-stage-refused"), check));
         Stage(check, "the destination rules", () => DestinationRules(Path.Combine(outputDirectory, "level-stage-rules"), check));
         Stage(check, "the failure rules", () => FailureRules(Path.Combine(outputDirectory, "level-stage-failures"), check));
@@ -112,6 +114,109 @@ internal static class LevelEditTests
         .Select(path => Path.GetRelativePath(root, path).Replace(Path.DirectorySeparatorChar, '/')).Order(StringComparer.Ordinal)];
 
     // ---- the stager against the reference ------------------------------------------------------------------------------------
+    private static void StageSources(string folder, Checks check)
+    {
+        string game = Path.Combine(folder, "game"), parent = Path.Combine(folder, "mods");
+        const string path = "data/MissionScripts/level200/main.msl", source = "// my edit\ninit() { Pause(1); }\n";
+        string original = Path.Combine(game, path.Replace('/', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(Path.GetDirectoryName(original)!);
+        File.WriteAllText(original, "// shipped source\n");
+        ModInfo info = new("with-source", "n");
+        WorldBody body = WorldBody.Read(LevelTests.Body("authored-v50"));
+        body.Scripts[0] = ScriptCompiler.Compile("main", source, ScriptCompiler.IncludesFrom(game), 70);
+        Dictionary<int, byte[]> worlds = new() { [200] = body.Write() };
+        byte[] expectedWorld = worlds[200].ToArray();
+        Dictionary<string, string> sources = new() { [path] = source };
+        List<string> order = [];
+        bool changedCallerBuffer = false;
+        StagedMod staged = ModStager.StageWithSources(parent, info, worlds, sources, game, [], beforeWrite: file =>
+        {
+            if (!changedCallerBuffer) { worlds[200][0] ^= 1; changedCallerBuffer = true; }
+            order.Add(Path.GetRelativePath(Path.Combine(parent, info.Id), file).Replace(Path.DirectorySeparatorChar, '/'));
+        });
+        string stagedSource = Path.Combine(staged.Root, path.Replace('/', Path.DirectorySeparatorChar));
+        check.That(File.ReadAllBytes(stagedSource).AsSpan().SequenceEqual(System.Text.Encoding.Latin1.GetBytes(source)) &&
+                   File.ReadAllText(original) == "// shipped source\n" && changedCallerBuffer &&
+                   File.ReadAllBytes(Path.Combine(staged.Root, "data", "worlds", "world200.wrd")).AsSpan().SequenceEqual(expectedWorld),
+            "the edited source and a snapshot of the world are staged while the game's original source remains unchanged");
+        worlds[200] = expectedWorld;
+        check.That(order.SequenceEqual([path, "data/worlds/world200.wrd", "mod.json"]) && staged.Files.Select(file => file.Path).SequenceEqual([path, "data/worlds/world200.wrd"]),
+            "source and world are published before the manifest and the receipt lists both");
+        // Generated independently by tools/world_mod_stage.py on these authored bytes.
+        const string expected = "{\n  \"schema\": 1,\n  \"id\": \"with-source\",\n  \"name\": \"n\",\n  \"version\": \"1\",\n  \"files\": [\n" +
+            "    {\n      \"path\": \"data/MissionScripts/level200/main.msl\",\n      \"size\": 32,\n      \"sha256\": \"bf86a9cd09dbac3779f202bc6c914314ba730cc2e37704b52ba80aa38c0d7af3\"\n    },\n" +
+            "    {\n      \"path\": \"data/worlds/world200.wrd\",\n      \"size\": 659,\n      \"sha256\": \"da84aab0a0d90cd5af9b60e2ff223b8846edd97a96f0889477d10a97861e63f0\"\n    }\n  ]\n}\n";
+        check.That(File.ReadAllBytes(Path.Combine(staged.Root, "mod.json")).AsSpan().SequenceEqual(System.Text.Encoding.ASCII.GetBytes(expected)),
+            "the manifest matches the independent Python reference for the authored world and source");
+
+        Dictionary<string, string>[] bad =
+        [
+            new() { ["data/MissionScripts/level200/../other.msl"] = "x" },
+            new() { ["data/MissionScripts/level200/NUL.msl"] = "x" },
+            new() { ["data/MissionScripts/level200/missing.msl"] = "x" },
+            new() { ["data/MissionScripts/level201/main.msl"] = source },
+            new() { [path] = "\u20ac" },
+            new() { [path] = new string('x', ModStager.MaxSourceBytes + 1) },
+            new() { [path] = "init() { Pause(2); }\n" },
+            new() { [path] = source, ["data/MissionScripts/level200/MAIN.msl"] = source },
+            Enumerable.Range(0, ModStager.MaxSourceFiles + 1).ToDictionary(i => $"data/MissionScripts/level200/s{i}.msl", _ => source),
+        ];
+        for (int i = 0; i < bad.Length; i++)
+        {
+            string target = Path.Combine(folder, $"refused-{i}");
+            Exception? refused = Captured(() => ModStager.StageWithSources(target, new ModInfo("refused", "n"), worlds, bad[i], game, []));
+            check.That(refused is ModStageException && !Directory.Exists(target) && File.ReadAllText(original) == "// shipped source\n",
+                $"invalid, missing, duplicate or unrepresentable source {i} is refused before output is created");
+        }
+        Exception? duplicate = Captured(() => ModStager.BuildManifest(info, new Dictionary<string, byte[]>
+            { ["data/worlds/world200.wrd"] = worlds[200], [path] = [1], ["data/MissionScripts/level200/MAIN.msl"] = [2] }));
+        check.That(duplicate is ModStageException && duplicate.Message.Contains("listed twice", StringComparison.Ordinal), "the manifest refuses source paths that differ only by case");
+        WorldBody ambiguous = WorldBody.Read(worlds[200]);
+        ambiguous.Scripts.Add(ambiguous.Scripts[0]);
+        foreach (byte[] invalid in new[] { new byte[] { 1, 2, 3 }, worlds[200].Concat(new byte[] { 42 }).ToArray(), ambiguous.Write() })
+        {
+            string target = Path.Combine(folder, $"invalid-world-{invalid.Length}");
+            Exception? refused = Captured(() => ModStager.StageWithSources(target, new ModInfo("invalid", "n"), new Dictionary<int, byte[]> { [200] = invalid }, sources, game, []));
+            check.That(refused is ModStageException && !Directory.Exists(target), "invalid or ambiguous world scripts are refused before output is created");
+        }
+        Exception? inside = Captured(() => ModStager.StageWithSources(game, new ModInfo("inside", "n"), worlds, sources, game, []));
+        check.That(inside is ModStageException && !Directory.Exists(Path.Combine(game, "inside")), "the selected game folder is protected even when no other protected folders are supplied");
+        Exception? failed = Captured(() => ModStager.StageWithSources(Path.Combine(folder, "failure"), new ModInfo("failure", "n"), worlds, sources, game, [],
+            beforeWrite: file => { if (Path.GetFileName(file) == "mod.json") throw new IOException("test failure"); }));
+        check.That(failed is ModStageException && !File.Exists(Path.Combine(folder, "failure", "failure", "mod.json")) &&
+                   !File.Exists(Path.Combine(folder, "failure", "failure", path.Replace('/', Path.DirectorySeparatorChar))),
+            "a failed manifest leaves no active mod or newly staged source");
+
+        string header = Path.Combine(game, "data", "inc", "defs.msl");
+        Directory.CreateDirectory(Path.GetDirectoryName(header)!);
+        File.WriteAllText(header, "#define DELAY 1\n");
+        const string included = "#include data\\inc\\defs.msl\ninit() { Pause(DELAY); }\n";
+        body.Scripts[0] = ScriptCompiler.Compile("main", included, ScriptCompiler.IncludesFrom(game), 70);
+        byte[] includedWorld = body.Write();
+        File.WriteAllText(header, "#define DELAY 2\n");
+        string changedParent = Path.Combine(folder, "changed-header");
+        Exception? changedHeader = Captured(() => ModStager.StageWithSources(changedParent, new ModInfo("refused", "n"),
+            new Dictionary<int, byte[]> { [200] = includedWorld }, new Dictionary<string, string> { [path] = included }, game, []));
+        check.That(changedHeader is ModStageException && !Directory.Exists(changedParent) && File.ReadAllText(header) == "#define DELAY 2\n",
+            "a changed included header refuses the stale source/world pair before output is created");
+
+        const string headerText = "#define DELAY 1\n";
+        File.WriteAllText(header, headerText);
+        string otherPath = "data/MissionScripts/level200/second.msl";
+        File.WriteAllText(Path.Combine(game, otherPath.Replace('/', Path.DirectorySeparatorChar)), "// original\n");
+        body.Scripts.Add(ScriptCompiler.Compile("second", included, ScriptCompiler.IncludesFrom(game), 70));
+        Dictionary<int, byte[]> twoScripts = new() { [200] = body.Write() };
+        Dictionary<string, string> twoSources = new() { [path] = included, [otherPath] = included };
+        string countParent = Path.Combine(folder, "include-count"), sizeParent = Path.Combine(folder, "include-size");
+        Exception? count = Captured(() => ModStager.StageWithSources(countParent, new ModInfo("refused", "n"), twoScripts, twoSources, game, [],
+            beforeWrite: null, maxStageIncludes: 1));
+        Exception? size = Captured(() => ModStager.StageWithSources(sizeParent, new ModInfo("refused", "n"), twoScripts, twoSources, game, [],
+            beforeWrite: null, maxStageIncludeChars: headerText.Length));
+        check.That(count is ModStageException && count.Message.Contains("included files", StringComparison.Ordinal) && !Directory.Exists(countParent) &&
+                   size is ModStageException && size.Message.Contains("characters of included text", StringComparison.Ordinal) && !Directory.Exists(sizeParent),
+            "include count and text budgets cover every source in the stage before output is created");
+    }
+
     private static void StageVectors(string folder, Checks check)
     {
         check.That(LevelVectors.Stages.Length >= 14, "the vector file holds the staged mods");
