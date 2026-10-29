@@ -8,6 +8,16 @@ outputs, and obvious secret files. File extensions alone do not establish
 provenance, so ordinary project-authored or separately provided asset formats
 remain reviewable. This is intentionally not a portable-app ZIP manifest; the
 WinUI package has its own stricter payload boundary.
+
+It also guards the one thing file types cannot show: original-game bytes and private machine paths quoted in
+tracked text. Three rules fail any live text file (comments, docs and code alike): a run of four or more
+space-separated hex byte tokens, a contiguous hex string of sixteen or more digits that is not a SHA-1 or SHA-256
+identity, and the private path markers ``local-lab/``, ``/srv/archive``, ``~/Projects/`` and ``/home/<user>``.
+The frozen copies (``reverse-engineering/`` and ``rebuild/``) keep the text they were frozen with: the three rules
+do not read them, and every other rule still does. Reviewed exceptions are RETAIL_TEXT_ALLOW (an exact token in an
+exact file), RETAIL_TEXT_ALLOW_PREFIX (a ``local-lab/`` prefix in a document that names the lab folder) and
+RETAIL_TEXT_ALLOW_RULE (one rule in a generated file), each with a reason; an entry that no longer matches anything
+fails as stale, so the lists cannot outlive the text they excuse.
 """
 
 from __future__ import annotations
@@ -198,6 +208,211 @@ EMBEDDED_JPEG_RE = re.compile(r"(?:\\xff\\xd8\\xff|/9j/4AAQSkZJRgABAQ)", re.IGNO
 # local-data/ and is never published (the tool, its schema and its tests carry no generated record).
 GENERATED_CATALOGUE_RE = re.compile(r'"generatedRetailDerived"\s*:\s*true')
 BASE64_TOKEN_RE = re.compile(r"(?<![A-Za-z0-9+/=])[A-Za-z0-9+/=]{512,}(?![A-Za-z0-9+/=])")
+
+# --- original-game bytes and private paths in tracked text -----------------------------------------------------------
+#
+# (a) Four or more space-separated two-digit hex tokens (an optional 0x on each): a byte dump or an instruction
+#     encoding. Three tokens or fewer are not flagged: they cannot be told from short prose such as "be it" or "10 20".
+RETAIL_BYTE_RUN_RE = re.compile(
+    r"(?<![0-9A-Za-z_])(?:0x)?[0-9A-Fa-f]{2}(?:[ \t]+(?:0x)?[0-9A-Fa-f]{2}){3,}(?![0-9A-Za-z_])"
+)
+# (b) A contiguous run of sixteen or more hex digits holding at least one a-f letter (so long decimal numbers pass).
+#     Exactly 40 (SHA-1) and exactly 64 (SHA-256) digits are identities and pass. A 0x literal up to 64 bits (16
+#     digits) is a number, not a dump; wider than that it is not a number any code uses and is flagged. A run that
+#     follows a "." is the fraction of a decimal such as 9.2233720368547758e18 and is skipped.
+LONG_HEX_RE = re.compile(r"(?<![0-9A-Za-z_.])(0[xX])?([0-9A-Fa-f]{16,})(?![0-9A-Za-z_])")
+LONG_HEX_ALLOWED_LENGTHS = (40, 64)
+# (c) Private machine paths. The first is this project's ignored lab folder; the others are the maintainers' layout.
+PRIVATE_PATH_RE = re.compile(
+    r"(?<![A-Za-z0-9_-])local-lab/[^\s\"'`<>()\[\]|,;]*|/srv/archive[^\s\"'`<>()\[\]|,;]*"
+    r"|~/Projects/[^\s\"'`<>()\[\]|,;]*|/home/[A-Za-z0-9_.][A-Za-z0-9_.-]*[^\s\"'`<>()\[\]|,;]*"
+)
+
+# Reviewed exceptions: the exact matched token in the exact file, with the reason. A token that is not listed for that
+# file fails, and a listed token fails in every other file. The hex alphabets are the only global entries.
+RETAIL_TEXT_ALLOW_ANY_FILE: dict[str, str] = {
+    "0123456789abcdef": "the lower-case hex digit alphabet, a constant string in hex-validation code",
+    "0123456789ABCDEF": "the upper-case hex digit alphabet",
+    "0123456789abcdefABCDEF": "the mixed-case hex digit alphabet",
+}
+# The frozen copies keep the text they were frozen with (the reverse-engineering notes quote bytes by design, the retired
+# rebuild quotes probe rows): the three rules do not read them. Every other rule (payload roots, secrets, size) still does.
+RETAIL_TEXT_FROZEN_PREFIXES = ("reverse-engineering/", "rebuild/")
+
+# A token is named by its text; a hex token that could be game bytes is named by "sha256:" and the SHA-256 of the token
+# (see token_digest), so that this list does not quote it.
+RETAIL_TEXT_ALLOW: dict[str, dict[str, str]] = {
+    'companion/OnslaughtToolkit.Godot/Careers/CheatCodeCatalog.cs': {
+        'local-lab/safe-copy-bea-pristine/BEA.exe.original.backup':
+            "a comment names the pristine specimen, in the ignored lab folder, that the table's offsets were measured on",
+    },
+    'companion/OnslaughtToolkit.Godot/Tests/CeUpdateFeedTests.cs': {
+        'e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555f':
+            'half of the empty-message signature of RFC 8032 section 7.1 TEST 1: a published test vector, never a release credential',
+        'b8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b':
+            'half of the empty-message signature of RFC 8032 section 7.1 TEST 1: a published test vector, never a release credential',
+    },
+    'companion/OnslaughtToolkit.Godot/Tests/FakeInstall.cs': {
+        '4f67675300020000':
+            'the Ogg page header bytes (OggS, version, flags) of a fake audio file made up in the test',
+    },
+    'companion/OnslaughtToolkit.Godot/Tests/GameFolderTests.cs': {
+        '/home/player/.local/share/Steam\\':
+            'a synthetic Steam library path in a test; no real account',
+        '/home/player/.local/share/Steam':
+            'a synthetic Steam library path in a test; no real account',
+    },
+    'companion/OnslaughtToolkit.Godot/Tests/InstallTests.cs': {
+        '/home/player':
+            'a synthetic home folder in a test; no real account',
+        '/home/player/.local/share/onslaught-ce':
+            'a synthetic home folder in a test; no real account',
+    },
+    'companion/OnslaughtToolkit.Godot/Tests/LevelEditorTests.cs': {
+        '1e1000000000000000000':
+            'a coordinate with a 19-digit exponent (decimal digits and an e) the parser must refuse: not bytes',
+        '/home/someone/projects/onslaught/mods/a-folder-with-a-rather-long-name/level-100-edit':
+            'a synthetic mod folder path, and its elided form, in a path-display test; no real account',
+        '/home/someone/pro…-a-rather-long-name/level-100-edit':
+            'a synthetic mod folder path, and its elided form, in a path-display test; no real account',
+    },
+    'tools/aya_texture_fidelity_census_tests.py': {
+        '/home/player/data.aya':
+            'a synthetic path in a unit test; no real account',
+    },
+    'tools/check_installed_game_claims.py': {
+        'local-lab/':
+            'SKIP_PREFIXES: the ignored lab folder is not scanned',
+    },
+    'tools/cmsh_animation_usage_census_tests.py': {
+        'local-lab/run/census.json':
+            "a path the census's output-is-ignored check is tested with (the ignored lab folder)",
+        'local-lab/census.json':
+            "a path the census's output-is-ignored check is tested with (the ignored lab folder)",
+        'local-lab/inputs/asset-mirror/INDEX.jsonl':
+            "a path the census's output-is-ignored check is tested with (the ignored lab folder)",
+    },
+    'tools/cmsh_matrix_normal_contract.py': {
+        'local-lab/PUZZLE-SKIN-WEIGHTS-2026-07-31.md':
+            'an evidence file in the ignored lab folder that the contract records with its SHA-256',
+        'local-lab/ghidra-fullpass-2026-07-23/exports/W010/decompile/00549570_CMeshRenderer__RenderMeshCore.c':
+            'an evidence file in the ignored lab folder that the contract records with its SHA-256',
+        'local-lab/ds-deep-review/bundles/shard-0210/00549570/disasm.tsv':
+            'an evidence file in the ignored lab folder that the contract records with its SHA-256',
+    },
+    'tools/cmsh_skinning_contract.py': {
+        'sha256:9a0e2295f1848c1c1b81ffd85550d714b4cc6bea1c1faeb11b452c4b3f5d64e9':
+            'instruction-byte pin: bytes of renderer code the contract checks the pristine executable against, kept by digest so this file does not quote them',
+        'sha256:329305c72f53020115720d4d3cd89d3c804e185031e21699f6b0ca622c8b1bc4':
+            'instruction-byte pin: bytes of renderer code the contract checks the pristine executable against, kept by digest so this file does not quote them',
+        'sha256:753f28945605fd9e65cd3ebe18942c5db64d67bb33b05fe047006204a22320d1':
+            'instruction-byte pin: bytes of renderer code the contract checks the pristine executable against, kept by digest so this file does not quote them',
+    },
+    'tools/cockpit_intersection_mask_probe.py': {
+        'local-lab/COCKPIT-DISPLACEMENT-EVIDENCE-2026-07-26.md':
+            'cites the lab evidence note (in the ignored lab folder) the finding was read from',
+        'local-lab/COCKPIT-NORMAL-SIGN-2026-07-26.md':
+            'cites the lab evidence note (in the ignored lab folder) the finding was read from',
+        'local-lab/COCKPIT-WORLD-MATRIX-RUNTIME-2026-07-26.md':
+            'cites the lab evidence note (in the ignored lab folder) the finding was read from',
+    },
+    'tools/doc_header_check.py': {
+        'local-lab/':
+            'the rule that excludes the ignored lab folder, and the self-test case that checks it',
+        'local-lab/safe-copy-bea-pristine/':
+            'self-test fixture text for the header check, naming paths in the ignored lab folder',
+        'local-lab/ghidra-fullpass-2026-07-23/exports/W001/':
+            'self-test fixture text for the header check, naming paths in the ignored lab folder',
+        'local-lab/safe-copy-bea-pristine/BEA.exe.original.backup':
+            'self-test fixture text for the header check, naming paths in the ignored lab folder',
+        'local-lab/NOTES.md':
+            'self-test fixture text for the header check, naming paths in the ignored lab folder',
+    },
+    'tools/export_asset_catalog_tests.py': {
+        '/home/player/private.aya':
+            'a synthetic path in a unit test; no real account',
+    },
+    'tools/frontend_arc_bracket_fit.py': {
+        'local-lab/STARTUP-FLOW-FINDINGS-2026-07-25.md':
+            'cites the lab evidence note (in the ignored lab folder) the finding was read from',
+        'local-lab/retail-reference-pristine/select-level/04-select-level-640x480.png':
+            'default reference image for the fit, read from the ignored lab folder',
+        'local-lab/retail-reference-pristine/choose-game-name/choose-game-name-640x480.png':
+            'default reference image for the fit, read from the ignored lab folder',
+    },
+    'tools/level_editor_vectors.py': {
+        '0e999999999999999999':
+            'a coordinate with an exponent of 18 or 19 digits (decimal digits and an e) the grammar must refuse: not bytes',
+        '1e999999999999999999':
+            'a coordinate with an exponent of 18 or 19 digits (decimal digits and an e) the grammar must refuse: not bytes',
+        '1e1000000000000000000':
+            'a coordinate with an exponent of 18 or 19 digits (decimal digits and an e) the grammar must refuse: not bytes',
+        '0e1000000000000000000':
+            'a coordinate with an exponent of 18 or 19 digits (decimal digits and an e) the grammar must refuse: not bytes',
+    },
+    'tools/level_editor_vectors_tests.py': {
+        '0e999999999999999999':
+            'a coordinate with an exponent of 18 or 19 digits (decimal digits and an e) the grammar must refuse: not bytes',
+        '1e1000000000000000000':
+            'a coordinate with an exponent of 18 or 19 digits (decimal digits and an e) the grammar must refuse: not bytes',
+    },
+    'tools/md_link_check.py': {
+        'local-lab/':
+            'the scope note it prints says the ignored lab folder is invisible to the check',
+    },
+    'tools/msl_compile.py': {
+        '656e645f736372697074':
+            'the ASCII bytes of the text end_script that ends every script record: a format constant the compiler writes, not game data',
+    },
+    'tools/msl_compile_tests.py': {
+        '656e645f736372697074':
+            'the ASCII bytes of the text end_script that ends every script record: a format constant the compiler writes, not game data',
+    },
+    'tools/score_frontend_capture.py': {
+        'local-lab/STARTUP-NOFMV-BASELINE-2026-07-26.md':
+            'cites the lab evidence note (in the ignored lab folder) the finding was read from',
+    },
+    'tools/terrain_macro_inversion_probe.py': {
+        'local-lab/godot-captures/inv-probe':
+            'an example value in an argparse help string',
+    },
+    'tools/world_edit_preview_tests.py': {
+        '0102030405060708090a':
+            'synthetic trailer bytes counting 01 to 0a, made up in the test',
+    },
+    'tools/world_mesh_normal_probe.py': {
+        'local-lab/TERRAIN-LIGHT-STATE-RUNTIME-2026-07-26.md':
+            'cites the lab evidence note (in the ignored lab folder) the finding was read from',
+    },
+    'tools/worldheaders_decode_tests.py': {
+        '/home/player/secret.dat':
+            'a synthetic path in a unit test; no real account',
+    },
+}
+
+# A document whose job is to name the ignored lab folder may carry any ``local-lab/`` token: the prefix, in that file only
+# (a hex run, another private path or the same token in another file still fails).
+RETAIL_TEXT_ALLOW_PREFIX: dict[str, dict[str, str]] = {
+    "AGENTS.md": {"local-lab/": "the repository guide names the ignored lab folder and the files it holds"},
+    "DOCUMENTATION.md": {"local-lab/": "the documentation guide says the ignored lab folder is outside the header and link checks"},
+    "LOCAL_LAB_OVERLAY.md": {"local-lab/": "this document describes the ignored lab folder and how a clone is pointed at it"},
+    "PROGRAM.md": {"local-lab/": "the work queue names lab inputs and evidence in the ignored folder"},
+    "PROJECT-INDEX.md": {"local-lab/": "the project index says what the ignored lab folder holds"},
+    "VALIDATION.md": {
+        "local-lab/": "the dated validation receipts name the ignored lab folders their evidence lives in; kept as written (lead, 2026-10-29)"
+    },
+    "lore/units-and-mechs.md": {"local-lab/": "cites the lab tables and mining folders its figures were read from (the ignored lab folder)"},
+    "lore/weapons.md": {"local-lab/": "cites the lab table its figures were read from (the ignored lab folder)"},
+    "lore/worlds.md": {"local-lab/": "cites the lab report its figures were read from (the ignored lab folder)"},
+}
+
+# A generated file that holds only authored synthetic data may carry every finding of one rule, in that file only.
+RETAIL_TEXT_ALLOW_RULE: dict[str, dict[str, str]] = {
+    "companion/OnslaughtToolkit.Godot/Tests/LevelVectors.g.cs": {
+        "deny-long-hex-string": "base64 of deflated authored vectors, written by tools/level_editor_vectors.py (--check keeps the file equal to the "
+                                "generator, which reads no game file); a run of the letter A is base64 for zero bytes",
+    },
+}
 
 MAGIC_DENY_SIGNATURES = (
     ("deny-magic-executable", b"MZ"),
@@ -450,10 +665,96 @@ def text_binary_findings(root: Path, path: str) -> list[Finding]:
     return []
 
 
-def content_signature_findings(path: str, text: str) -> list[Finding]:
+def token_digest(token: str) -> str:
+    """How RETAIL_TEXT_ALLOW names a hex token without quoting it."""
+    return "sha256:" + hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def retail_text_findings(path: str, text: str, used: set[tuple[str, str, str]] | None = None) -> list[Finding]:
+    """The three retail-text rules. Details give line numbers and counts, never the bytes themselves. ``used`` collects
+    the allowances that excused something, as (path, kind, key), so that a stale one can be found."""
+    allowed_here = RETAIL_TEXT_ALLOW.get(path, {})
+    prefixes_here = RETAIL_TEXT_ALLOW_PREFIX.get(path, {})
+    rules_here = RETAIL_TEXT_ALLOW_RULE.get(path, {})
+
+    def note(kind: str, key: str) -> None:
+        if used is not None:
+            used.add((path, kind, key))
+
+    def allowed(token: str, *, marker: bool = False) -> bool:
+        for key in (token, token_digest(token)):
+            if key in allowed_here:
+                note("token", key)
+                return True
+        if token in RETAIL_TEXT_ALLOW_ANY_FILE:
+            return True
+        if marker:
+            for prefix in prefixes_here:
+                if token.startswith(prefix):
+                    note("prefix", prefix)
+                    return True
+        return False
+
+    def line_of(match: re.Match) -> int:
+        return text.count("\n", 0, match.start()) + 1
+
+    findings: list[Finding] = []
+    for match in RETAIL_BYTE_RUN_RE.finditer(text):
+        run = match.group(0)
+        if allowed(run):
+            continue
+        tokens = len(run.split())
+        findings.append(Finding(path, "deny-retail-byte-run", f"line {line_of(match)}: {tokens} space-separated hex byte tokens"))
+    for match in LONG_HEX_RE.finditer(text):
+        prefix, digits = match.group(1), match.group(2)
+        if not re.search(r"[A-Fa-f]", digits):
+            continue  # a long decimal number
+        if len(digits) in LONG_HEX_ALLOWED_LENGTHS:
+            continue  # a SHA-1 or SHA-256 identity
+        if prefix and len(digits) == 16:
+            continue  # a 64-bit numeric literal such as an IEEE-754 double pattern
+        if allowed(digits) or allowed(match.group(0)):
+            continue
+        findings.append(Finding(path, "deny-long-hex-string", f"line {line_of(match)}: {len(digits)} contiguous hex digits"))
+    for match in PRIVATE_PATH_RE.finditer(text):
+        token = match.group(0).rstrip(".:")
+        if allowed(token, marker=True):
+            continue
+        findings.append(Finding(path, "deny-private-path-marker", f"line {line_of(match)}: {token}"))
+    kept: list[Finding] = []
+    for finding in findings:
+        if finding.label in rules_here:
+            note("rule", finding.label)
+            continue
+        kept.append(finding)
+    return kept
+
+
+def stale_allowance_findings(used: set[tuple[str, str, str]]) -> list[Finding]:
+    """An allowance that excused nothing in this scan is stale (the text it named is gone or changed): it fails, naming
+    its reason, so that the lists shrink with the text."""
+    findings: list[Finding] = []
+    for path, tokens in RETAIL_TEXT_ALLOW.items():
+        for key, reason in tokens.items():
+            if (path, "token", key) not in used:
+                findings.append(Finding(path, "deny-stale-text-allowance", f"a token allowance matches nothing now: {reason}"))
+    for path, prefixes in RETAIL_TEXT_ALLOW_PREFIX.items():
+        for prefix, reason in prefixes.items():
+            if (path, "prefix", prefix) not in used:
+                findings.append(Finding(path, "deny-stale-text-allowance", f"a prefix allowance matches nothing now: {reason}"))
+    for path, rules in RETAIL_TEXT_ALLOW_RULE.items():
+        for rule, reason in rules.items():
+            if (path, "rule", rule) not in used:
+                findings.append(Finding(path, "deny-stale-text-allowance", f"a rule allowance matches nothing now: {reason}"))
+    return findings
+
+
+def content_signature_findings(path: str, text: str, *, retail_rules: bool = True, used: set[tuple[str, str, str]] | None = None) -> list[Finding]:
     findings: list[Finding] = []
     if path in PAYLOAD_TEXT_ALLOW_EXACT:
         return findings
+    if retail_rules:
+        findings.extend(retail_text_findings(path, text, used))
     cdb_prompt_count = len(CDB_PROMPT_RE.findall(text))
     register_count = len(REGISTER_DUMP_RE.findall(text))
     stack_trace_count = len(STACK_TRACE_RE.findall(text))
@@ -488,7 +789,7 @@ def content_signature_findings(path: str, text: str) -> list[Finding]:
     return findings
 
 
-def text_findings(root: Path, path: str) -> list[Finding]:
+def text_findings(root: Path, path: str, *, retail_rules: bool = True, used: set[tuple[str, str, str]] | None = None) -> list[Finding]:
     if path == SELF_REL or path in TEXT_ALLOW_EXACT:
         return []
     if not is_text_file(path):
@@ -507,7 +808,7 @@ def text_findings(root: Path, path: str) -> list[Finding]:
             if len(snippet) > 120:
                 snippet = snippet[:117] + "..."
             findings.append(Finding(path, label, snippet))
-    findings.extend(content_signature_findings(path, text))
+    findings.extend(content_signature_findings(path, text, retail_rules=retail_rules, used=used))
     return findings
 
 
@@ -531,23 +832,33 @@ def find_text_payload_errors(path: str, text: str, require_private_text_guard: b
     return errors
 
 
-def check_repo(root: Path, *, include_submodules: bool = False) -> list[Finding]:
+def check_repo(root: Path, *, include_submodules: bool = False, stale_allowances: bool = True) -> list[Finding]:
     findings: list[Finding] = []
+    used: set[tuple[str, str, str]] = set()
     try:
         paths = public_candidate_files(root, include_submodules=include_submodules)
     except RuntimeError as exc:
         return [Finding(".", "deny-public-candidate-enumeration-failed", str(exc))]
     if not paths:
         return [Finding(".", "deny-empty-public-candidate-set", "git candidate enumeration returned zero files")]
+    submodule_prefixes: tuple[str, ...] = ()
     if include_submodules:
         findings.extend(submodule_scan_findings(root))
+        try:
+            submodule_prefixes = tuple(f"{item}/" for item in submodule_paths(root))
+        except RuntimeError:
+            submodule_prefixes = ()
     for path in paths:
         findings.extend(path_findings(path))
         findings.extend(exact_allow_hash_findings(root, path))
         findings.extend(size_findings(root, path))
         findings.extend(magic_findings(root, path))
         findings.extend(text_binary_findings(root, path))
-        findings.extend(text_findings(root, path))
+        # A submodule's files are another project's published text and the frozen copies keep the text they were frozen with;
+        # the retail-text rules cover this repository's own live text.
+        findings.extend(text_findings(root, path, retail_rules=not path.startswith(RETAIL_TEXT_FROZEN_PREFIXES + submodule_prefixes), used=used))
+    if stale_allowances:
+        findings.extend(stale_allowance_findings(used))
     return findings
 
 
@@ -567,6 +878,247 @@ def check_payload_root(root: Path) -> list[Finding]:
         findings.extend(text_binary_findings(root, path))
         findings.extend(text_findings(root, path))
     return findings
+
+
+def retail_text_self_test() -> list[str]:
+    """Fixtures and mutants for the three retail-text rules; returns the failures (empty when all pass)."""
+    failures: list[str] = []
+
+    def labels(path: str, text: str) -> set[str]:
+        return {finding.label for finding in retail_text_findings(path, text)}
+
+    def must_fail(rule: str, name: str, text: str, path: str = "doc.md") -> None:
+        if rule not in labels(path, text):
+            failures.append(f"{rule} did not fire: {name}")
+
+    def must_pass(name: str, text: str, path: str = "doc.md") -> None:
+        found = labels(path, text)
+        if found:
+            failures.append(f"false positive ({', '.join(sorted(found))}): {name}")
+
+    run, long_hex, path_rule = "deny-retail-byte-run", "deny-long-hex-string", "deny-private-path-marker"
+
+    # (a) four or more space-separated hex byte tokens (synthetic bytes, not game bytes)
+    must_fail(run, "four tokens", "Body ab cd ef 01.\n")
+    must_fail(run, "upper case", "Body AB CD EF 01.\n")
+    must_fail(run, "tab separated", "ab\tcd\tef\t01\n")
+    must_fail(run, "several spaces", "ab  cd   ef 01\n")
+    must_fail(run, "0x on each token", "0xab 0xcd 0xef 0x01\n")
+    must_fail(run, "inside an XML doc tag", "/// <c>ab cd ef 01 23</c>\n", "Doc.cs")
+    must_fail(run, "an ellipsis in the middle", "<c>ab cd ef 01 23 45 ... 67 89</c>\n")
+    must_fail(run, "twenty tokens", "bytes " + " ".join(["ab"] * 20) + "\n")
+    must_fail(run, "in a Python comment", "x = 1  # ab cd ef 01\n", "tool.py")
+    must_fail(run, "in a JSON string", '{"note": "ab cd ef 01"}\n', "plan.json")
+    must_fail(run, "start of the file", "ab cd ef 01")
+    must_pass("three tokens", "Body ab cd ef.\n")
+    must_pass("comma separated array initialiser", "var a = new byte[] { 0xab, 0xcd, 0xef, 0x01 };\n", "Code.cs")
+    must_pass("eight digits without separators", "abcdef01\n")
+    must_pass("a run broken by a word", "ab cd of ef 01 23\n")
+    must_pass("three-digit tokens", "abc def 012 345\n")
+    must_pass("prose", "to be or not to be a fine ad\n")
+
+    # (b) contiguous hex of 16 or more digits other than a SHA-1 or SHA-256 identity
+    digits = "8b4910f64134087405e8328cedffc20c00a1b2c3d4e5f60718293a4b5c6d7e8f9a0b1c2d3e4f5061728394a5b6c7d8e9f"
+    for length in (16, 17, 24, 33, 34, 39, 41, 63, 65, 100):
+        must_fail(long_hex, f"{length} digits", f"body {digits[:length]} on specimen\n")
+    must_fail(long_hex, "upper case", "body " + digits[:20].upper() + "\n")
+    must_fail(long_hex, "SHA-256 glued to its digits", "SHA-256" + digits[:64] + ".\n")
+    must_fail(long_hex, "0x wider than 64 bits", "0x" + digits[:18] + "\n")
+    must_fail(long_hex, "in a code string", 'const string s = "' + digits[:24] + '";\n', "Code.cs")
+    must_pass("15 digits", f"body {digits[:15]}\n")
+    must_pass("a SHA-1 identity", f"sha1 {digits[:40]}\n")
+    must_pass("a SHA-256 identity", f"sha256 {digits[:64]}\n")
+    must_pass("a SHA-256 identity after a space", f"SHA-256 {digits[:64]}\n")
+    must_pass("a long decimal number", "count 12345678901234567890\n")
+    must_pass("a decimal fraction", "x = 0.19999998807907104;\n")
+    must_pass("a decimal in exponent form", "x = 9.2233720368547758e18;\n")
+    must_pass("a 64-bit 0x literal", "const ulong a = 0x4075E00000000000UL; // bits 0x4075E00000000000\n", "Code.cs")
+    must_fail(long_hex, "the same 16 digits without 0x", "bits 4075E00000000000\n", "Code.cs")
+    must_pass("0x with 40 digits", "0x" + digits[:40] + "\n")
+    must_pass("part of an identifier", "foo_" + digits[:20] + "\n")
+    must_pass("the hex digit alphabet", 'c in "0123456789abcdef"\n', "tool.py")
+
+    # (c) private path markers
+    must_fail(path_rule, "the lab folder", "see local-lab/notes.md\n")
+    must_fail(path_rule, "the lab folder in backticks", "`local-lab/`\n")
+    must_fail(path_rule, "an archive mount", "copy to /srv/archive-a/data\n")
+    must_fail(path_rule, "the bare archive mount", "mounted at /srv/archive\n")
+    must_fail(path_rule, "a home-relative project path", "cd ~/Projects/game-dev/x\n")
+    must_fail(path_rule, "a home folder", "see /home/alice/work\n")
+    must_fail(path_rule, "after a drive path", "C:/x/local-lab/y\n")
+    must_fail(path_rule, "in a C# string", 'var p = "local-lab/startup-media";\n', "Code.cs")
+    must_pass("the word without a slash", "the local-lab folder\n")
+    must_pass("a longer name", "local-labs/x and locallab/x\n")
+    must_pass("a different prefix", "my-local-lab/x\n")
+    must_pass("projects without the slash", "~/Projects\n")
+    must_pass("another mount", "/srv/other/x\n")
+    must_pass("a bare home", "/home/\n")
+
+    # reviewed exceptions: exact token, exact file
+    saved = dict(RETAIL_TEXT_ALLOW)
+    try:
+        RETAIL_TEXT_ALLOW["listed.md"] = {"local-lab/x": "test", "abcdef0123456789": "test"}
+        must_pass("an allowed token in its file", "see local-lab/x and abcdef0123456789\n", "listed.md")
+        must_fail(path_rule, "the same token in another file", "see local-lab/x\n", "other.md")
+        must_fail(long_hex, "the same digits in another file", "abcdef0123456789\n", "other.md")
+        must_fail(path_rule, "another token in the listed file", "see local-lab/y\n", "listed.md")
+        must_fail(long_hex, "other digits in the listed file", "abcdef0123456780\n", "listed.md")
+        must_fail(long_hex, "the listed digits in upper case", "ABCDEF0123456789\n", "listed.md")
+        must_fail(run, "a byte run in the listed file", "ab cd ef 01\n", "listed.md")
+    finally:
+        RETAIL_TEXT_ALLOW.clear()
+        RETAIL_TEXT_ALLOW.update(saved)
+
+    # a lab-folder prefix for a document that names the lab, a rule for a generated file, a digest for a token that may be game bytes
+    def restore_tables(saved_tables: tuple[dict, dict, dict]) -> None:
+        for table, kept in zip((RETAIL_TEXT_ALLOW, RETAIL_TEXT_ALLOW_PREFIX, RETAIL_TEXT_ALLOW_RULE), saved_tables):
+            table.clear()
+            table.update(kept)
+
+    saved_tables = (dict(RETAIL_TEXT_ALLOW), dict(RETAIL_TEXT_ALLOW_PREFIX), dict(RETAIL_TEXT_ALLOW_RULE))
+    try:
+        RETAIL_TEXT_ALLOW_PREFIX["guide.md"] = {"local-lab/": "test"}
+        must_pass("any lab path in the document that names the lab", "see local-lab/a/b.md and local-lab/\n", "guide.md")
+        must_fail(path_rule, "the same lab path in another document", "see local-lab/a/b.md\n", "other.md")
+        must_fail(path_rule, "an archive mount in the document with the prefix", "see /srv/archive-a/x\n", "guide.md")
+        must_fail(path_rule, "a home folder in the document with the prefix", "see /home/alice/x\n", "guide.md")
+        must_fail(path_rule, "a longer folder name in the document with the prefix", "see local-labs/x and my-local-lab/x and ~/Projects/y\n", "guide.md")
+        must_fail(path_rule, "a path that holds the prefix later, not first", "see /home/alice/local-lab/x\n", "guide.md")
+        must_fail(long_hex, "a long hex string in the document with the prefix", "abcdef0123456789\n", "guide.md")
+        must_fail(run, "a byte run in the document with the prefix", "ab cd ef 01\n", "guide.md")
+        RETAIL_TEXT_ALLOW_PREFIX["odd.md"] = {"abcdef": "test"}
+        must_fail(long_hex, "a prefix allowance does not excuse a hex token that starts with it", "abcdef0123456789\n", "odd.md")
+        RETAIL_TEXT_ALLOW_RULE["gen.cs"] = {long_hex: "test"}
+        must_pass("long hex in a generated file that has that rule allowed", "AAAAAAAAAAAAAAAAAAAA 0123456789abcdef0123\n", "gen.cs")
+        must_fail(run, "a byte run in that generated file", "ab cd ef 01\n", "gen.cs")
+        must_fail(path_rule, "a private path in that generated file", "local-lab/x\n", "gen.cs")
+        must_fail(long_hex, "the same long hex in another file", "0123456789abcdef0123\n", "other.cs")
+        RETAIL_TEXT_ALLOW["hashed.py"] = {token_digest("abcdef0123456789"): "test"}
+        must_pass("a hex token allowed by its digest", "x = 'abcdef0123456789'\n", "hashed.py")
+        must_fail(long_hex, "another token in the file with a digest", "x = 'abcdef0123456780'\n", "hashed.py")
+        must_fail(long_hex, "the digested token in another file", "x = 'abcdef0123456789'\n", "other.py")
+    finally:
+        restore_tables(saved_tables)
+
+    # an allowance that excuses nothing is stale
+    try:
+        RETAIL_TEXT_ALLOW.clear()
+        RETAIL_TEXT_ALLOW_PREFIX.clear()
+        RETAIL_TEXT_ALLOW_RULE.clear()
+        RETAIL_TEXT_ALLOW["a.md"] = {"local-lab/x": "used", "abcdef0123456789": "unused token"}
+        RETAIL_TEXT_ALLOW_PREFIX["b.md"] = {"local-lab/": "unused prefix"}
+        RETAIL_TEXT_ALLOW_PREFIX["e.md"] = {"local-lab/": "used prefix"}
+        RETAIL_TEXT_ALLOW_RULE["c.cs"] = {long_hex: "used rule"}
+        RETAIL_TEXT_ALLOW_RULE["d.cs"] = {long_hex: "unused rule"}
+        used: set[tuple[str, str, str]] = set()
+        retail_text_findings("a.md", "see local-lab/x\n", used)
+        retail_text_findings("b.md", "nothing to find here\n", used)
+        retail_text_findings("e.md", "see local-lab/z\n", used)
+        retail_text_findings("c.cs", "0123456789abcdef0123\n", used)
+        retail_text_findings("d.cs", "nothing to find here\n", used)
+        stale = sorted((finding.path, finding.detail.rsplit(": ", 1)[-1]) for finding in stale_allowance_findings(used))
+        if stale != [("a.md", "unused token"), ("b.md", "unused prefix"), ("d.cs", "unused rule")]:
+            failures.append(f"stale allowances were not exactly the unused ones: {stale!r}")
+    finally:
+        restore_tables(saved_tables)
+
+    # the lists themselves: a reason each, nothing for a frozen copy (the rules do not read it), prefixes that are path markers, known rules
+    for table_name, table in (("token", RETAIL_TEXT_ALLOW), ("prefix", RETAIL_TEXT_ALLOW_PREFIX), ("rule", RETAIL_TEXT_ALLOW_RULE)):
+        for path, entries in table.items():
+            if path.startswith(RETAIL_TEXT_FROZEN_PREFIXES):
+                failures.append(f"{table_name} allowance for a frozen copy, which the rules do not read: {path}")
+            for key, reason in entries.items():
+                if not reason.strip():
+                    failures.append(f"{table_name} allowance without a reason: {path}")
+                if key.startswith("sha256:") and not re.fullmatch(r"sha256:[0-9a-f]{64}", key):
+                    failures.append(f"a digest allowance that is not sha256: and 64 hex digits: {path}")
+    for path, prefixes in RETAIL_TEXT_ALLOW_PREFIX.items():
+        for prefix in prefixes:
+            if not PRIVATE_PATH_RE.match(prefix):
+                failures.append(f"a prefix allowance that is not a private path marker: {path}")
+    for path, rules in RETAIL_TEXT_ALLOW_RULE.items():
+        for rule in rules:
+            if rule not in (run, long_hex, path_rule):
+                failures.append(f"a rule allowance for a rule that is not one of the three: {path}: {rule}")
+    if RETAIL_TEXT_FROZEN_PREFIXES != ("reverse-engineering/", "rebuild/"):
+        failures.append(f"the frozen copies are reverse-engineering/ and rebuild/ and nothing else: {RETAIL_TEXT_FROZEN_PREFIXES!r}")
+    if token_digest("abc") != "sha256:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad":
+        failures.append("token_digest is not the SHA-256 of the token")
+
+    # the rules reach every text file type through check_repo, but not a submodule's own files
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        (root / "README.MD").write_text("# OK\n", encoding="utf-8")
+        dump = "ab cd ef 01 23"
+        (root / "doc.md").write_text(f"bytes {dump}\n", encoding="utf-8")
+        (root / "Code.cs").write_text(f"// {dump}\nclass C {{}}\n", encoding="utf-8")
+        (root / "tool.py").write_text(f"# {dump}\n", encoding="utf-8")
+        (root / "data.json").write_text('{"a": "' + dump + '"}\n', encoding="utf-8")
+        (root / "long.md").write_text("body " + digits[:34] + "\n", encoding="utf-8")
+        (root / "paths.md").write_text("see local-lab/x and /home/alice/y\n", encoding="utf-8")
+        for frozen in RETAIL_TEXT_FROZEN_PREFIXES:
+            (root / frozen).mkdir(parents=True)
+            (root / frozen / "notes.md").write_text(f"bytes {dump} local-lab/x {digits[:34]}\n", encoding="utf-8")
+            (root / frozen / "bad.exe").write_bytes(b"MZ")
+        (root / "tools").mkdir()
+        (root / "tools" / "notes.md").write_text(f"bytes {dump} local-lab/x {digits[:34]}\n", encoding="utf-8")
+        submodule = root / "references" / "upstream"
+        submodule.mkdir(parents=True)
+        subprocess.run(["git", "init", "-q"], cwd=submodule, check=True)
+        (submodule / "notes.md").write_text(f"bytes {dump} local-lab/x {digits[:34]}\n", encoding="utf-8")
+        subprocess.run(["git", "add", "."], cwd=submodule, check=True)
+        subprocess.run(
+            ["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-q", "-m", "fixture"],
+            cwd=submodule, check=True,
+        )
+        (root / ".gitmodules").write_text(
+            '[submodule "upstream"]\n\tpath = references/upstream\n\turl = ../upstream.git\n', encoding="utf-8"
+        )
+        subprocess.run(
+            ["git", "-c", "advice.addEmbeddedRepo=false", "add", "."],
+            cwd=root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        found = check_repo(root, include_submodules=True, stale_allowances=False)
+        for name, label in (
+            ("doc.md", run), ("Code.cs", run), ("tool.py", run), ("data.json", run),
+            ("long.md", long_hex), ("paths.md", path_rule),
+        ):
+            if not any(f.path == name and f.label == label for f in found):
+                failures.append(f"check_repo missed {label} in {name}")
+        leaked = [f for f in found if f.path.startswith("references/upstream/")]
+        if leaked:
+            failures.append(f"retail-text rules were applied to a submodule's files: {leaked!r}")
+        # the frozen copies are not read by the three rules (the same text in tools/ is), but every other rule still reads them
+        retail_labels = (run, long_hex, path_rule)
+        frozen_hits = [f for f in found if f.path.startswith(RETAIL_TEXT_FROZEN_PREFIXES) and f.label in retail_labels]
+        if frozen_hits:
+            failures.append(f"retail-text rules were applied to a frozen copy: {frozen_hits!r}")
+        if {f.label for f in found if f.path == "tools/notes.md"} != set(retail_labels):
+            failures.append("the same text outside the frozen copies did not fail all three rules")
+        for frozen in RETAIL_TEXT_FROZEN_PREFIXES:
+            if not any(f.path == f"{frozen}bad.exe" for f in found):
+                failures.append(f"the other rules no longer read the frozen copy {frozen}")
+        # an allowance that matches nothing in the repository fails the whole check, and one that matches does not
+        saved_tables = (dict(RETAIL_TEXT_ALLOW), dict(RETAIL_TEXT_ALLOW_PREFIX), dict(RETAIL_TEXT_ALLOW_RULE))
+        try:
+            RETAIL_TEXT_ALLOW.clear()
+            RETAIL_TEXT_ALLOW_PREFIX.clear()
+            RETAIL_TEXT_ALLOW_RULE.clear()
+            RETAIL_TEXT_ALLOW["paths.md"] = {"local-lab/x": "in use", "/home/alice/y": "in use"}
+            RETAIL_TEXT_ALLOW["gone.md"] = {"local-lab/never": "the file is not in the repository"}
+            with_stale = check_repo(root, include_submodules=True)
+            if [f.path for f in with_stale if f.label == "deny-stale-text-allowance"] != ["gone.md"]:
+                failures.append("check_repo did not report exactly the one stale allowance")
+            if any(f.path == "paths.md" and f.label in retail_labels for f in with_stale):
+                failures.append("allowances that are in use did not excuse their tokens in check_repo")
+        finally:
+            restore_tables(saved_tables)
+        # without --include-submodules the nested files are not scanned at all
+        plain = check_repo(root)
+        if any(f.path.startswith("references/upstream/") for f in plain):
+            failures.append("submodule files were scanned without --include-submodules")
+    return failures
 
 
 def run_self_test() -> int:
@@ -973,6 +1525,12 @@ def run_self_test() -> int:
             print(f"- root findings: {sorted(root_findings, key=lambda item: item.path)!r}")
             print(f"- combined findings: {sorted(combined_findings, key=lambda item: item.path)!r}")
             return 1
+    retail_failures = retail_text_self_test()
+    if retail_failures:
+        print("Public payload safety self-test: FAIL")
+        for item in retail_failures:
+            print(f"- {item}")
+        return 1
     print("Public payload safety self-test: PASS")
     return 0
 
