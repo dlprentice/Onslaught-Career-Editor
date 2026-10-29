@@ -171,8 +171,31 @@ public sealed class EditSession
     }
 
     /// <summary>
-    /// Errors that stop a save: nothing changed, the body cannot be written, the row list changed, or something other than a
-    /// position differs from the baseline. Warnings: a position outside the square the terrain lookup covers, and any change
+    /// The scripts whose record differs from the baseline's, in script order, with what differs said in numbers and values. Empty when the two bodies do not
+    /// have the same scripts by name and order (<see cref="Validate"/> says so): a script is replaced, never added, dropped or renamed here.
+    /// </summary>
+    public IReadOnlyList<ScriptChange> ScriptChanges()
+    {
+        List<ScriptChange> changes = [];
+        if (!SameScripts()) return changes;
+        for (int i = 0; i < Body.Scripts.Count; i++)
+            if (ScriptDiff.Between(i, _baseline.Scripts[i], Body.Scripts[i]) is { } change) changes.Add(change);
+        return changes;
+    }
+
+    /// <summary>A fresh copy of a script as the baseline has it: what "put the shipped script back" replaces an edited one with.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">The baseline has no script with this number.</exception>
+    public MissionScript ShippedScript(int index)
+    {
+        if (index < 0 || index >= _baseline.Scripts.Count) throw new ArgumentOutOfRangeException(nameof(index), $"The world has {_baseline.Scripts.Count} scripts.");
+        return WorldBody.Read(Baseline).Scripts[index];
+    }
+
+    private bool SameScripts() => Body.Scripts.Count == _baseline.Scripts.Count && Body.Scripts.Zip(_baseline.Scripts).All(pair => pair.First.Name == pair.Second.Name);
+
+    /// <summary>
+    /// Errors that stop a save: nothing changed, the body cannot be written, the row list or the script list changed, or something other than a
+    /// position or the code of a script differs from the baseline. Warnings: a position outside the square the terrain lookup covers, and any change
     /// to a base world.
     /// </summary>
     public ValidationReport Validate()
@@ -194,14 +217,17 @@ public sealed class EditSession
             return new ValidationReport(errors, warnings);
         }
         if (!Body.Things.Select(t => t.ObjectId).SequenceEqual(_baseline.Things.Select(t => t.ObjectId)))
-            errors.Add(new Finding("rows-changed", "The number or order of the world's rows changed; this editor only moves things."));
+            errors.Add(new Finding("rows-changed", "The number or order of the world's rows changed; this editor only moves things and replaces scripts."));
+        else if (!SameScripts())
+            errors.Add(new Finding("scripts-changed", "The number, order or names of the world's scripts changed; this editor replaces a script's code and keeps its name."));
         else
         {
-            // Everything but the positions must be what the baseline has: put the baseline's positions back and compare.
+            // Everything but the positions and the scripts' code must be what the baseline has: put the baseline's positions and scripts back and compare.
             WorldBody check = WorldBody.Read(bytes);
             for (int i = 0; i < check.Things.Count; i++) check.Things[i].Init.Position = _baseline.Things[i].Init.Position;
+            for (int i = 0; i < check.Scripts.Count; i++) check.Scripts[i] = _baseline.Scripts[i];
             if (!check.Write().AsSpan().SequenceEqual(Baseline))
-                errors.Add(new Finding("other-change", "Something other than a position differs from the world as it was loaded."));
+                errors.Add(new Finding("other-change", "Something other than a position or a script's code differs from the world as it was loaded."));
         }
         foreach (ObjectChange change in Changes())
         {
@@ -213,6 +239,8 @@ public sealed class EditSession
         }
         if (IsBaseWorld && Changes().Count > 0)
             warnings.Add(new Finding("base-world", "This is a level's base world. Careers remember which of its buildings still stand, so a career may not agree with a base world whose things were moved."));
+        if (IsBaseWorld && ScriptChanges().Count > 0)
+            warnings.Add(new Finding("base-world-scripts", "This is a level's base world, and its scripts run in every level that loads it: a replaced script changes them all."));
         return new ValidationReport(errors, warnings);
     }
 

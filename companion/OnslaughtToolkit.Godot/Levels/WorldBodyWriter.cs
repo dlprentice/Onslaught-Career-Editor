@@ -133,6 +133,17 @@ internal static class WorldBodyWriter
         return w.ToArray();
     }
 
+    /// <summary>The bytes the world stores for one script: its name, its code and its trailer. Two scripts are the same record when these are the same bytes.</summary>
+    /// <exception cref="InvalidDataException">The script holds something the format cannot store.</exception>
+    internal static byte[] ScriptBytes(MissionScript script)
+    {
+        ByteWriter w = new();
+        w.LString(script.Name, LengthKind.Int32);
+        WriteCode(w, script.Code);
+        w.Raw(Fixed(script.Trailer, 10, "a script's trailer"));
+        return w.ToArray();
+    }
+
     private static void WriteCode(ByteWriter w, ScriptCode code)
     {
         w.Int32(code.Instructions.Count);
