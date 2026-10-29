@@ -300,14 +300,6 @@ RETAIL_TEXT_ALLOW: dict[str, dict[str, str]] = {
         'local-lab/ds-deep-review/bundles/shard-0210/00549570/disasm.tsv':
             'an evidence file in the ignored lab folder that the contract records with its SHA-256',
     },
-    'tools/cmsh_skinning_contract.py': {
-        'sha256:9a0e2295f1848c1c1b81ffd85550d714b4cc6bea1c1faeb11b452c4b3f5d64e9':
-            'instruction-byte pin: bytes of renderer code the contract checks the pristine executable against, kept by digest so this file does not quote them',
-        'sha256:329305c72f53020115720d4d3cd89d3c804e185031e21699f6b0ca622c8b1bc4':
-            'instruction-byte pin: bytes of renderer code the contract checks the pristine executable against, kept by digest so this file does not quote them',
-        'sha256:753f28945605fd9e65cd3ebe18942c5db64d67bb33b05fe047006204a22320d1':
-            'instruction-byte pin: bytes of renderer code the contract checks the pristine executable against, kept by digest so this file does not quote them',
-    },
     'tools/cockpit_intersection_mask_probe.py': {
         'local-lab/COCKPIT-DISPLACEMENT-EVIDENCE-2026-07-26.md':
             'cites the lab evidence note (in the ignored lab folder) the finding was read from',

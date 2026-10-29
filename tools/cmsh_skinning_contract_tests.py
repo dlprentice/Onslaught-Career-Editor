@@ -8,6 +8,7 @@ import hashlib
 import os
 import struct
 import unittest
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "rebuild" / "tools"))
@@ -172,21 +173,27 @@ class MeshSummaryTests(unittest.TestCase):
             )
 
 
+def tiny_pe(body: bytes) -> contract.PeImage:
+    """A PE32 image of one section that holds `body` (authored bytes, not game code) at 0x401000, image base 0x400000."""
+    assert len(body) <= 0x100
+    image = bytearray(0x400)
+    struct.pack_into("<I", image, 0x3C, 0x80)
+    image[0x80:0x84] = b"PE\0\0"
+    struct.pack_into("<HHIIIHH", image, 0x84, 0x14C, 1, 0, 0, 0, 0xE0, 0)
+    optional = 0x98
+    struct.pack_into("<H", image, optional, 0x10B)
+    struct.pack_into("<I", image, optional + 28, 0x400000)
+    section = optional + 0xE0
+    image[section:section + 8] = b".text\0\0\0"
+    struct.pack_into("<IIII", image, section + 8, 0x100, 0x1000, 0x100, 0x200)
+    image[0x200:0x200 + len(body)] = body
+    return contract.PeImage(bytes(image))
+
+
 class PeImageTests(unittest.TestCase):
     def test_pe_image_maps_virtual_ranges_and_decodes_rel32_calls(self) -> None:
-        image = bytearray(0x400)
-        struct.pack_into("<I", image, 0x3C, 0x80)
-        image[0x80:0x84] = b"PE\0\0"
-        struct.pack_into("<HHIIIHH", image, 0x84, 0x14C, 1, 0, 0, 0, 0xE0, 0)
-        optional = 0x98
-        struct.pack_into("<H", image, optional, 0x10B)
-        struct.pack_into("<I", image, optional + 28, 0x400000)
-        section = optional + 0xE0
-        image[section:section + 8] = b".text\0\0\0"
-        struct.pack_into("<IIII", image, section + 8, 0x100, 0x1000, 0x100, 0x200)
         body = bytes.fromhex("e8fb00000090")
-        image[0x200:0x200 + len(body)] = body
-        pe = contract.PeImage(bytes(image))
+        pe = tiny_pe(body)
 
         self.assertEqual(body, pe.read_va(0x401000, len(body)))
         self.assertEqual(0x401100, pe.rel32_call_target(0x401000))
@@ -194,6 +201,131 @@ class PeImageTests(unittest.TestCase):
             hashlib.sha256(body).hexdigest(),
             pe.range_sha256(0x401000, len(body)),
         )
+
+
+class CodePinTests(unittest.TestCase):
+    """The contract names code of the pristine executable by address, length and digest. These use authored bytes."""
+
+    BODY = bytes(range(0x20, 0x60))
+
+    def pin(self, offset: int, length: int) -> contract.CodePin:
+        return contract.CodePin("authored", 0x401000 + offset, length, hashlib.sha256(self.BODY[offset:offset + length]).hexdigest())
+
+    def test_a_pin_holds_for_its_bytes_and_for_nothing_else(self) -> None:
+        pin = self.pin(4, 12)
+        self.assertTrue(contract.code_pin_holds(tiny_pe(self.BODY), pin))
+        for at in range(12):  # one byte changed anywhere inside the pin
+            changed = bytearray(self.BODY)
+            changed[4 + at] ^= 0x01
+            self.assertFalse(contract.code_pin_holds(tiny_pe(bytes(changed)), pin), f"byte {at}")
+        for outside in (3, 16):  # a byte changed next to it does not matter
+            changed = bytearray(self.BODY)
+            changed[outside] ^= 0x01
+            self.assertTrue(contract.code_pin_holds(tiny_pe(bytes(changed)), pin), f"byte {outside}")
+        self.assertFalse(contract.code_pin_holds(tiny_pe(self.BODY), pin._replace(va=pin.va + 1)), "another address")
+        self.assertFalse(contract.code_pin_holds(tiny_pe(self.BODY), pin._replace(length=11)), "another length")
+        with self.assertRaisesRegex(ValueError, "outside mapped sections"):
+            contract.code_pin_holds(tiny_pe(self.BODY), pin._replace(va=0x500000))
+
+    def test_windows_are_counted_where_they_overlap(self) -> None:
+        digest = hashlib.sha256(b"abab").hexdigest()
+        self.assertEqual(3, contract.count_hashed_windows(b"abababab", 4, digest))
+        self.assertEqual(1, contract.count_hashed_windows(b"xxabab", 4, digest))
+        self.assertEqual(0, contract.count_hashed_windows(b"abababab", 4, hashlib.sha256(b"cdcd").hexdigest()))
+        self.assertEqual(0, contract.count_hashed_windows(b"aba", 4, digest), "a window longer than the block")
+        self.assertEqual(0, contract.count_hashed_windows(b"", 4, digest))
+
+    def test_a_loop_pin_must_occur_once_and_where_it_says(self) -> None:
+        body = b"wxyz" + bytes(range(0x30, 0x40)) + b"wxyz" + bytes(range(0x50, 0x58))
+        pe = tiny_pe(body)
+        twice = contract.CodePin("authored", 0x401000, 4, hashlib.sha256(b"wxyz").hexdigest())
+        self.assertFalse(contract.loop_pin_holds(pe, body, twice), "the same bytes twice in the block")
+        once = contract.CodePin("authored", 0x401004, 4, hashlib.sha256(body[4:8]).hexdigest())
+        self.assertTrue(contract.loop_pin_holds(pe, body, once))
+        self.assertFalse(contract.loop_pin_holds(pe, body, once._replace(va=0x401005)), "once in the block but not at the address")
+        self.assertFalse(contract.loop_pin_holds(pe, body[:4] + body[8:], once), "not in the block at all")
+
+    def test_the_contracts_pins_are_lengths_and_digests_and_the_tool_quotes_no_bytes(self) -> None:
+        digests = [contract.RENDERER_FMUL_SHA256, contract.DIAG_STORE_PREFIX_SHA256]
+        for pin in (*contract.RENDERER_LOOP_PINS, *contract.OPCODE_PINS):
+            self.assertGreater(pin.length, 0, pin.role)
+            self.assertTrue(0x400000 <= pin.va < 0x700000, pin.role)
+            digests.append(pin.sha256)
+        for digest in digests:
+            self.assertRegex(digest, r"^[0-9a-f]{64}$")
+        self.assertEqual(len(digests), len(set(digests)), "no two pins share a digest")
+        source = Path(contract.__file__).read_text(encoding="utf-8")
+        self.assertNotIn("fromhex(", source, "the tool names code by digest and quotes none of it")
+
+
+@unittest.skipUnless(os.environ.get("ONSLAUGHT_PRISTINE_EXE"), "pristine executable not configured")
+class PristineCodePinTests(unittest.TestCase):
+    """The pins against the pristine executable itself: each holds, and one changed byte inside any of them fails the contract."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.pe = contract.PeImage(contract._read(Path(os.environ["ONSLAUGHT_PRISTINE_EXE"])))
+
+    def drifted(self, target_va: int):
+        pristine = self.pe
+
+        class DriftedPe:
+            def read_va(self, va: int, size: int) -> bytes:
+                payload = bytearray(pristine.read_va(va, size))
+                if va <= target_va < va + size:
+                    payload[target_va - va] ^= 0x01
+                return bytes(payload)
+
+        return DriftedPe()
+
+    def test_the_pins_hold(self) -> None:
+        contract.verify_renderer_palette_scale(self.pe)
+        self.assertEqual(2, len(contract.verify_opcode_pins(self.pe)))
+        contract.verify_diag_stores(self.pe)
+
+    def test_each_pin_notices_a_change_even_when_the_block_hashes_are_made_to_match(self) -> None:
+        # The loop and scale blocks are pinned as a whole first, so a change inside them fails there. With those two digests set to
+        # the changed blocks' own, only the pins inside the blocks are left to notice it: each must.
+        scale_end = contract.RENDERER_PALETTE_SCALE_VA + contract.RENDERER_PALETTE_SCALE_BYTES
+        targets = [(pin.role, pin.va + at) for pin in contract.RENDERER_LOOP_PINS for at in range(pin.length)]
+        scale = self.pe.read_va(contract.RENDERER_PALETTE_SCALE_VA, contract.RENDERER_PALETTE_SCALE_BYTES)
+        targets += [("one-third multiply", contract.RENDERER_PALETTE_SCALE_VA + start + at)
+                    for start in range(len(scale) - contract.RENDERER_FMUL_LENGTH + 1)
+                    if hashlib.sha256(scale[start:start + contract.RENDERER_FMUL_LENGTH]).hexdigest() == contract.RENDERER_FMUL_SHA256
+                    for at in range(contract.RENDERER_FMUL_LENGTH)]
+        self.assertGreater(len(targets), 100)
+        for role, va in targets:
+            drift = self.drifted(va)
+            loop = drift.read_va(contract.RENDERER_PALETTE_LOOP_VA, contract.RENDERER_PALETTE_LOOP_BYTES)
+            changed_scale = drift.read_va(contract.RENDERER_PALETTE_SCALE_VA, contract.RENDERER_PALETTE_SCALE_BYTES)
+            with mock.patch.object(contract, "RENDERER_PALETTE_LOOP_SHA256", hashlib.sha256(loop).hexdigest()), \
+                    mock.patch.object(contract, "RENDERER_PALETTE_SCALE_SHA256", hashlib.sha256(changed_scale).hexdigest()):
+                with self.assertRaisesRegex(ValueError, "renderer palette-scale block", msg=f"{role} at 0x{va:08x} (scale ends 0x{scale_end:08x})"):
+                    contract.verify_renderer_palette_scale(drift)
+
+    def test_one_changed_byte_in_any_pin_fails_the_contract(self) -> None:
+        for pin in contract.RENDERER_LOOP_PINS:
+            for at in range(pin.length):
+                with self.assertRaisesRegex(ValueError, "renderer palette-scale block", msg=f"{pin.role} byte {at}"):
+                    contract.verify_renderer_palette_scale(self.drifted(pin.va + at))
+        scale = self.pe.read_va(contract.RENDERER_PALETTE_SCALE_VA, contract.RENDERER_PALETTE_SCALE_BYTES)
+        multiplies = [start for start in range(len(scale) - contract.RENDERER_FMUL_LENGTH + 1)
+                      if hashlib.sha256(scale[start:start + contract.RENDERER_FMUL_LENGTH]).hexdigest() == contract.RENDERER_FMUL_SHA256]
+        self.assertEqual(16, len(multiplies))
+        for start in multiplies:
+            for at in range(contract.RENDERER_FMUL_LENGTH):
+                with self.assertRaisesRegex(ValueError, "renderer palette-scale", msg=f"multiply at +{start} byte {at}"):
+                    contract.verify_renderer_palette_scale(self.drifted(contract.RENDERER_PALETTE_SCALE_VA + start + at))
+        for pin in contract.OPCODE_PINS:
+            for at in range(pin.length):
+                with self.assertRaisesRegex(ValueError, "opcode mismatch", msg=f"{pin.role} byte {at}"):
+                    contract.verify_opcode_pins(self.drifted(pin.va + at))
+        for va in contract.DIAG_STORE_VAS:
+            for at in (*range(contract.DIAG_STORE_PREFIX_LENGTH), *range(contract.DIAG_STORE_LENGTH - 4, contract.DIAG_STORE_LENGTH)):
+                with self.assertRaisesRegex(ValueError, "diag", msg=f"store 0x{va:08x} byte {at}"):
+                    contract.verify_diag_stores(self.drifted(va + at))
+            # the displacement between them differs from site to site and is not pinned
+            contract.verify_diag_stores(self.drifted(va + contract.DIAG_STORE_PREFIX_LENGTH))
 
 
 class OutputBoundaryTests(unittest.TestCase):

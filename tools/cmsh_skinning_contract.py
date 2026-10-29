@@ -14,7 +14,7 @@ import re
 import struct
 import sys
 from collections import Counter
-from typing import Any
+from typing import Any, NamedTuple
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "rebuild" / "tools"))
@@ -55,6 +55,38 @@ RENDERER_PALETTE_LOOP_SHA256 = "362f12c6af54fcff8a238c5badfee7d5f7794b362af58a65
 RENDERER_PALETTE_SCALE_VA = 0x0054B0C3
 RENDERER_PALETTE_SCALE_BYTES = 340
 RENDERER_PALETTE_SCALE_SHA256 = "bac577a59b294c03e71d6b99ed33b018f8ffc1b6d6b7a20f4e7c15d407876772"
+
+
+class CodePin(NamedTuple):
+    """Code of the pristine executable named by where it is and what it hashes to, so that this file quotes none of it: the
+    `length` bytes at `va` must hash to `sha256`."""
+
+    role: str
+    va: int
+    length: int
+    sha256: str
+
+
+# Inside the palette-scale block: the one-third multiply (sixteen of them in the scale range, found by sliding a window of this
+# length over it) and four pieces that each occur once in the loop (their addresses are where they occur).
+RENDERER_FMUL_LENGTH = 6
+RENDERER_FMUL_SHA256 = "2952f11353fdbc57f416331659c0e7d1517704c597226c874329951ad7b20377"
+RENDERER_LOOP_PINS = (
+    CodePin("global palette base", 0x0054B0AD, 5, "d30703478f54afae73be85ae3e462a971793839269672f00bc07da701a1514c6"),
+    CodePin("scaled matrix copy setup", 0x0054B0E4, 17, "747eb82acea643c573be41a5fd6d4796653e62d8e61bfa4c396ed7a7589a9b09"),
+    CodePin("global palette stride", 0x0054B109, 3, "257a80813e656752bc716b93b6a1659734f896858b82055549cd3d459b0230fc"),
+    CodePin("scaled matrix copy and loop tail", 0x0054B217, 14, "bfd1333cbe6c3422121e8c5a91860592c1e52280b9e679a829cc014b4eea3eaa"),
+)
+OPCODE_PINS = (
+    CodePin("greedy-third-subtract", 0x004B0390, 6, "9efbda1cc000c3703d4f18eaed8d9bcf6b97a64cd69bbca807cec19cd26b182b"),
+    CodePin("slot-index-times-three", 0x0054CBF3, 10, "6bd39bd3cc39e06aef91e2a754c0a7c75a6d8289507e4ee299dd912bfa242b12"),
+)
+# The four 11-byte stores of the diag(1/3) immediate: a three-byte opcode prefix (hashed), a four-byte displacement, and the float32 1/3.
+DIAG_STORE_VAS = (0x00502ECF, 0x00502F06, 0x00502F3D, 0x00502F74)
+DIAG_STORE_LENGTH = 11
+DIAG_STORE_PREFIX_LENGTH = 3
+DIAG_STORE_PREFIX_SHA256 = "cf68c4f951c3b8d7d09b20033552f733d668e3ed892b7bc89afc58a0b6b6a7b5"
+ONE_THIRD_BITS = 0x3EAAAAAB
 EXPECTED_MESH_SUMMARY = {
     "meshesScanned": 213,
     "skinnedMeshes": 7,
@@ -145,6 +177,38 @@ class PeImage:
         return call_va + 5 + displacement
 
 
+def code_pin_holds(pe: PeImage, pin: CodePin) -> bool:
+    """Whether the bytes at the pin's address hash to the pin's digest."""
+    return _sha256_bytes(pe.read_va(pin.va, pin.length)) == pin.sha256
+
+
+def loop_pin_holds(pe: PeImage, loop: bytes, pin: CodePin) -> bool:
+    """Whether the pin's bytes occur exactly once in `loop`, and at the address the pin names."""
+    return count_hashed_windows(loop, pin.length, pin.sha256) == 1 and code_pin_holds(pe, pin)
+
+
+def count_hashed_windows(block: bytes, length: int, sha256: str) -> int:
+    """How many places in `block` (windows of `length` bytes, overlapping ones included) hash to `sha256`."""
+    return sum(1 for start in range(len(block) - length + 1) if _sha256_bytes(block[start:start + length]) == sha256)
+
+
+def verify_opcode_pins(pe: PeImage) -> list[dict[str, object]]:
+    rows: list[dict[str, object]] = []
+    for pin in OPCODE_PINS:
+        if not code_pin_holds(pe, pin):
+            raise ValueError(f"{pin.role} opcode mismatch at 0x{pin.va:08x}")
+        rows.append({"role": pin.role, "va": f"0x{pin.va:08x}", "bytes": pin.length, "sha256": pin.sha256})
+    return rows
+
+
+def verify_diag_stores(pe: PeImage) -> None:
+    for va in DIAG_STORE_VAS:
+        instruction = pe.read_va(va, DIAG_STORE_LENGTH)
+        prefix = _sha256_bytes(instruction[:DIAG_STORE_PREFIX_LENGTH])
+        if prefix != DIAG_STORE_PREFIX_SHA256 or struct.unpack("<I", instruction[-4:])[0] != ONE_THIRD_BITS:
+            raise ValueError(f"diag(1/3) immediate store mismatch at 0x{va:08x}")
+
+
 def verify_renderer_palette_scale(pe: PeImage) -> dict[str, object]:
     """Pin the renderer-owned 16-element one-third scale and global copy loop."""
 
@@ -164,26 +228,11 @@ def verify_renderer_palette_scale(pe: PeImage) -> dict[str, object]:
     scale_sha256 = _sha256_bytes(scale)
     if scale_sha256 != RENDERER_PALETTE_SCALE_SHA256:
         raise ValueError(f"renderer palette-scale instruction range mismatch: {scale_sha256}")
-    fmul = bytes.fromhex("d80d08865d00")
-    structural_pins = (
-        ("global palette base", bytes.fromhex("bbd4699c00"), 1),
-        (
-            "scaled matrix copy setup",
-            bytes.fromhex("b9100000008db424840100008bfb83c240"),
-            1,
-        ),
-        ("global palette stride", bytes.fromhex("83c340"), 1),
-        (
-            "scaled matrix copy and loop tail",
-            bytes.fromhex("f3a53b85c00000000f8c8dfeffff"),
-            1,
-        ),
-    )
-    if scale.count(fmul) != 16:
+    if count_hashed_windows(scale, RENDERER_FMUL_LENGTH, RENDERER_FMUL_SHA256) != 16:
         raise ValueError("renderer palette-scale block does not contain 16 one-third multiplies")
-    for role, expected, count in structural_pins:
-        if loop.count(expected) != count:
-            raise ValueError(f"renderer palette-scale block {role} mismatch")
+    for pin in RENDERER_LOOP_PINS:
+        if not loop_pin_holds(pe, loop, pin):
+            raise ValueError(f"renderer palette-scale block {pin.role} mismatch")
     return {
         "owner": "CMeshRenderer__RenderMeshCore",
         "constantVa": f"0x{RENDERER_PALETTE_SCALE_CONSTANT_VA:08x}",
@@ -635,16 +684,7 @@ def _verify_executable(path: Path) -> dict[str, object]:
                 "bodySha256": actual,
             }
         )
-    opcode_pins = (
-        ("greedy-third-subtract", 0x004B0390, bytes.fromhex("d82580c65d00")),
-        ("slot-index-times-three", 0x0054CBF3, bytes.fromhex("db4407fcd80dc08c5d00")),
-    )
-    opcodes: list[dict[str, object]] = []
-    for role, va, expected in opcode_pins:
-        actual = pe.read_va(va, len(expected))
-        if actual != expected:
-            raise ValueError(f"{role} opcode mismatch at 0x{va:08x}")
-        opcodes.append({"role": role, "va": f"0x{va:08x}", "bytesHex": actual.hex()})
+    opcodes = verify_opcode_pins(pe)
     constants = (
         ("quantizer-one-third", 0x005DC680, 0x3EAAAAAB),
         ("slot-stride-three", 0x005D8CC0, 0x40400000),
@@ -662,10 +702,7 @@ def _verify_executable(path: Path) -> dict[str, object]:
                 "bits": f"0x{bits:08x}",
             }
         )
-    for va in (0x00502ECF, 0x00502F06, 0x00502F3D, 0x00502F74):
-        instruction = pe.read_va(va, 11)
-        if instruction[:3] != bytes.fromhex("c78424") or instruction[-4:] != bytes.fromhex("abaaaa3e"):
-            raise ValueError(f"diag(1/3) immediate store mismatch at 0x{va:08x}")
+    verify_diag_stores(pe)
     call_pins = (
         ("bind-pose-sample", 0x0054A74E, 0x004B0FB0),
         ("current-pose-sample", 0x0054A786, 0x004B0FB0),
