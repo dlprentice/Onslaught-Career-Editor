@@ -196,11 +196,14 @@ publish, sign, or install anything by themselves.
   `world_edit_move.py --emit-model`: pass that preview's `--baseline-sha256` and `--model-sha256` (and the `--base-*`
   pair for a base world) to pin the same two identities. It refuses a no-op edit, an edited world that names a base world
   the archive does not hold unless `--base-world` supplies it, a destination inside the selected game folder (or any game
-  tree) and a folder that already holds anything. It writes through `safe_generated_output.py`: each file is published
+  tree), a `--ce-min` that is later than `--ce-max` (compared number by number, so 1.10 is after 1.9; no released CE
+  could load such a mod) and a folder that already holds anything. It writes through `safe_generated_output.py`: each file is published
   without replacing anything, the world files first and `mod.json` last, and the helper detects replacement rather than
   locking, so a folder moved by another process during the run is not guaranteed to stay outside the game folder (the
   limit every writer through that helper has). It does not validate placement, slots, scripts or saves, and it needs a CE
-  build whose Mods section lists world files. `world_mod_stage_tests.py` checks the staged folder against an independent
+  build whose Mods section lists world files. CE loads mods on Linux only for now: Windows refuses them, and mods
+  are off in replays, recordings, probes, virtual clocks, pilots and network sessions, so a staged mod cannot change
+  any of those runs. `world_mod_stage_tests.py` checks the staged folder against an independent
   restatement of the loader's start-up rules on authored data only.
   `world_edit_preview.py BASELINE.wrd EDITED.json` is a read-only step before encoding or preparing a stage bundle. It reports input
   hashes, byte and field changes, changes to opaque groups and slot-sensitive structures, and bounded compiled-script

@@ -15,7 +15,10 @@ world-body bytes, so CE loads it with no hand-editing:
 Everything the loader checks at start-up is checked here first, with the loader's own limits (the constants below are kept
 equal to mods.cpp): the folder name is the id (1 to 48 lowercase letters, digits, '-' or '_'); name 1 to 64, version 1 to 32,
 author up to 64 and description up to 1024 characters (printable ASCII only here, because the loader logs mod text as ASCII);
-ce_min and ce_max are one to four numbers of up to five digits joined by dots; a world file is at most 4 MiB.
+ce_min and ce_max are one to four numbers of up to five digits joined by dots, compared as the loader compares them (missing
+numbers are zero) and with ce_min not after ce_max, since no released CE could load such a mod; a world file is at most 4 MiB.
+CE loads mods on Linux only for now (Windows refuses them), and keeps them off in replays, recordings, probes, virtual clocks,
+pilots and network sessions.
 
 Writing goes through safe_generated_output: the destination is opened as a held directory chain, a destination inside the
 selected game folder (or inside any Battle Engine Aquila tree) is refused, every file is written to an exclusive temporary
@@ -74,6 +77,12 @@ def _version(label: str, value: str) -> str:
     return value
 
 
+def version_tuple(text: str) -> tuple[int, ...]:
+    """A version as the loader orders it: four numbers, the missing ones zero (so 1.2 equals 1.2.0.0 and 1.10 is after 1.9)."""
+    parts = [int(part) for part in text.split(".")]
+    return tuple(parts + [0] * (4 - len(parts)))
+
+
 def check_identity(mod_id: str, name: str, version: str, author: str = "", description: str = "",
                    ce_min: str | None = None, ce_max: str | None = None) -> None:
     if not isinstance(mod_id, str) or not ID_RE.fullmatch(mod_id):
@@ -86,6 +95,8 @@ def check_identity(mod_id: str, name: str, version: str, author: str = "", descr
         _version("ce_min", ce_min)
     if ce_max is not None:
         _version("ce_max", ce_max)
+    if ce_min is not None and ce_max is not None and version_tuple(ce_min) > version_tuple(ce_max):
+        raise ModStageError(f"ce_min {ce_min} is after ce_max {ce_max}: no released CE version could load this mod")
 
 
 def build_manifest(mod_id: str, name: str, version: str, files: dict[str, bytes], *, author: str = "",

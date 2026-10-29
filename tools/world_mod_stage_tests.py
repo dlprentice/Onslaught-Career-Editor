@@ -272,6 +272,8 @@ class StageAsModTests(Base):
         self.assertEqual([], LoaderRules.problems(mod, self.game))
         self.assertIn(f"staged CE mod 'tank-move' in {mod}", result.stdout.decode())
         self.assertIn("mods=tank-move", result.stdout.decode())
+        for words in ("refuses mods on Windows", "replays", "recordings", "probes", "virtual clocks", "pilots", "network sessions"):
+            self.assertIn(words, result.stdout.decode(), "the closing message says where CE does not load mods")
         self.assert_game_unchanged()
         for path in mod.rglob("*"):
             self.assertFalse(path.is_symlink())
@@ -348,6 +350,50 @@ class StageAsModTests(Base):
         self.assertEqual(2, result.returncode)
         self.assertIn("byte-identical", result.stderr.decode())
         self.assertFalse((other / "noop").exists())
+
+    def test_a_real_world_that_names_itself_as_its_base_cannot_share_its_file_with_a_base_world(self) -> None:
+        # The real world of level 200 is data/worlds/world200.wrd; if its baseLevel is 200 too, a base-world file would
+        # have the same name and the second would silently replace the first.
+        self.edited["baseLevel"] = 200
+        self.model_file.write_bytes(model_json(self.edited))
+        base_file = self.root / "base.json"
+        base_file.write_bytes(model_json(self.model))
+        result = self.cli(*self.stage_args("--world", str(self.model_file), "--base-world", str(base_file)))
+        self.assertEqual(2, result.returncode, result.stdout)
+        self.assertIn("would both be data/worlds/world200.wrd", result.stderr.decode())
+        self.assert_nothing_written()
+        # without a base-world file the same edit is a plain world and stages (the archive holds no base world, and
+        # a base world that is the level itself is the loader's business, not a second file)
+        self.edited["baseLevel"] = -1
+        self.model_file.write_bytes(model_json(self.edited))
+        result = self.cli(*self.stage_args("--world", str(self.model_file)))
+        self.assertEqual(0, result.returncode, result.stderr)
+
+    def test_ce_min_after_ce_max_is_refused_and_a_range_of_one_version_is_not(self) -> None:
+        # compared number by number with the missing ones zero, as the loader orders versions: 1.10 is after 1.9
+        for low, high, refused in (("1.2", "1.1", True), ("0.1.11", "0.1.10", True), ("1.10", "1.9", True), ("2", "1.99999", True),
+                                   ("1.2.0.1", "1.2", True), ("1.2", "1.2", False), ("1.2.0", "1.2", False), ("1.2", "1.2.0.0", False),
+                                   ("1.9", "1.10", False), ("0.1.11", "0.1.12", False), ("1", "99999.99999.99999.99999", False)):
+            with self.subTest(ce_min=low, ce_max=high):
+                out = self.root / f"range-{low}-{high}"
+                result = self.cli(*self.stage_args("--world", str(self.model_file), "--ce-min", low, "--ce-max", high, out=out))
+                if refused:
+                    self.assertEqual(2, result.returncode, result.stdout)
+                    self.assertIn(f"ce_min {low} is after ce_max {high}", result.stderr.decode())
+                    self.assertFalse(out.exists(), "a refused range writes nothing")
+                else:
+                    self.assertEqual(0, result.returncode, result.stderr)
+                    self.assertEqual([], LoaderRules.problems(out / "tank-move", self.game))
+        # one bound alone is never a range to compare
+        for flag, value in (("--ce-min", "99999"), ("--ce-max", "0")):
+            with self.subTest(only=flag):
+                out = self.root / f"one{flag}"
+                result = self.cli(*self.stage_args("--world", str(self.model_file), flag, value, out=out))
+                self.assertEqual(0, result.returncode, result.stderr)
+        for low, high in (("1.2", "1.1"), ("1.10", "1.9")):
+            with self.subTest(builder=(low, high)), self.assertRaisesRegex(stage.ModStageError, "is after ce_max"):
+                stage.build_manifest("a", "n", "1", {"data/worlds/world001.wrd": self.edited_body}, ce_min=low, ce_max=high)
+        stage.build_manifest("a", "n", "1", {"data/worlds/world001.wrd": self.edited_body}, ce_min="1.9", ce_max="1.10")
 
     def test_what_the_loader_would_not_find_is_refused(self) -> None:
         # a different base world than the archive holds needs its own file; a base file needs a base world to be read

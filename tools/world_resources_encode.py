@@ -795,7 +795,9 @@ def cmd_stage_mod(args) -> int:
         print(f"  {entry['path']}  {entry['size']} bytes  sha256 {entry['sha256']}")
     print(f"  mod.json  sha256 {summary['manifestSha256']}")
     print(f"to use it: keep the folder in the CE user folder's mods folder and add mods={args.id} to ce.ini "
-          f"(a list is mods=a,b and the later one wins); the build must list world files in its Mods section.")
+          f"(a list is mods=a,b and the later one wins); the build must list world files in its Mods section. "
+          f"CE refuses mods on Windows for now, and keeps them off in replays, recordings, probes, virtual clocks, pilots "
+          f"and network sessions.")
     return 0
 
 
