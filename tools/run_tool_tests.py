@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """Run every host-supported tools/ test suite and report one summary.
 
-Every supported suite runs, even after a failure. Windows-dependent suites
-are explicitly reported as skipped on other hosts, never counted as passes.
+Every supported suite runs, even after a failure. A suite that cannot run here
+(it needs a Windows host, or a submodule checkout that is absent) is reported as
+a named SKIP with its reason, never counted as a pass and never as a failure.
 Output is streamed as it happens - a summary
 is a navigation aid, not a replacement for the failing suite's own report - and
 the exit code is non-zero when any suite failed, exactly as the chain was.
@@ -39,6 +40,7 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/safe_generated_output.py", "--self-test"),
     ("tools/safe_generated_output_tests.py",),
     ("tools/aya_archive_inventory_tests.py",),
+    ("tools/aya_extractor_source_audit_tests.py",),
     ("tools/cmsh_animation_usage_census_tests.py",),
     ("tools/model_transform_catalog_tests.py",),
     ("tools/level_asset_xref_tests.py",),
@@ -66,6 +68,30 @@ SUITES: tuple[tuple[str, ...], ...] = (
 # future one is reported as skipped rather than counted as a pass.
 WINDOWS_ONLY: dict[str, str] = {}
 
+# Suites that need submodule checkouts, by path. Without one the suite is reported as a named SKIP: the audit compares each
+# checkout with its pinned commit, so there is nothing to compare when the checkout is absent. A checkout that is present at
+# another commit is a real failure and is not skipped here.
+NEEDS_SUBMODULES: dict[str, tuple[str, ...]] = {
+    "tools/aya_extractor_source_audit_tests.py": ("references/AYAResourceExtractor", "references/Onslaught"),
+}
+
+
+def missing_submodules(path: str, root: pathlib.Path = ROOT) -> list[str]:
+    """The submodules a suite needs whose checkout is absent (an initialised submodule has a .git entry)."""
+
+    return [name for name in NEEDS_SUBMODULES.get(path, ()) if not (root / name / ".git").exists()]
+
+
+def skip_reason(command: tuple[str, ...], host_os: str, root: pathlib.Path = ROOT) -> str | None:
+    """Why this suite cannot run on this host and checkout, or None when it can."""
+
+    if host_os != "nt" and command[0] in WINDOWS_ONLY:
+        return "Windows host required: " + WINDOWS_ONLY[command[0]]
+    missing = missing_submodules(command[0], root)
+    if missing:
+        return "submodule not initialised: " + ", ".join(missing) + " (git submodule update --init " + " ".join(missing) + ")"
+    return None
+
 
 def format_summary(results: list[dict[str, object]]) -> str:
     """One line per suite, failures repeated at the end so none can be missed."""
@@ -90,11 +116,14 @@ def format_summary(results: list[dict[str, object]]) -> str:
     lines.append(
         f"{passed} passed, {len(failed)} failed, "
         f"{len(results) - len(skipped)} run"
-        + (f", {len(skipped)} skipped (Windows required)" if skipped else "")
+        + (f", {len(skipped)} skipped" if skipped else "")
     )
     if failed:
         lines.append("failed suites:")
         lines.extend(f"  {row['name']} (exit {row['exitCode']})" for row in failed)
+    if skipped:
+        lines.append("skipped suites (not run, not passed):")
+        lines.extend(f"  {row['name']}: {row['skipReason']}" for row in skipped)
     return "\n".join(lines) + "\n"
 
 
@@ -119,8 +148,8 @@ def run_all(suites: tuple[tuple[str, ...], ...] = SUITES, *, host_os: str | None
             f"\n[{index}/{len(suites)}] {' '.join(command)}",
             flush=True,
         )
-        if host_os != "nt" and command[0] in WINDOWS_ONLY:
-            reason = "Windows host required: " + WINDOWS_ONLY[command[0]]
+        reason = skip_reason(command, host_os)
+        if reason:
             print("SKIP " + reason, flush=True)
             results.append({"name": " ".join(command), "exitCode": None,
                             "seconds": 0.0, "skipReason": reason})
@@ -191,9 +220,50 @@ class RunToolTestsSelfTest(unittest.TestCase):
                 self.assertEqual(0, run_all((*windows, portable), host_os=host))
             self.assertEqual(expected, [call.args[0] for call in run.call_args_list])
             if host == "posix":
-                self.assertIn("1 passed, 0 failed, 1 run, 4 skipped (Windows required)", captured.getvalue())
+                self.assertIn("1 passed, 0 failed, 1 run, 4 skipped", captured.getvalue())
+                named = [line for line in captured.getvalue().splitlines()
+                         if line.startswith("  tools/windows_only_") and line.endswith(": Windows host required: synthetic")]
+                self.assertEqual(4, len(named))                    # each skip is named in the skipped-suites list, with its reason
             else:
                 self.assertIn("5 passed, 0 failed, 5 run", captured.getvalue())
+
+    def test_a_missing_submodule_is_a_named_skip_not_a_pass_or_a_failure(self) -> None:
+        import tempfile
+
+        suite = "tools/aya_extractor_source_audit_tests.py"
+        self.assertIn(suite, {command[0] for command in SUITES})
+        self.assertEqual(("references/AYAResourceExtractor", "references/Onslaught"), NEEDS_SUBMODULES[suite])
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            for name in NEEDS_SUBMODULES[suite]:
+                (root / name).mkdir(parents=True)                      # an empty directory is an uninitialised submodule
+            reason = skip_reason((suite,), "posix", root)
+            self.assertIn("submodule not initialised", reason)
+            for name in NEEDS_SUBMODULES[suite]:
+                self.assertIn(name, reason)
+            (root / "references/Onslaught/.git").write_text("gitdir: elsewhere\n")
+            self.assertEqual(["references/AYAResourceExtractor"], missing_submodules(suite, root))
+            (root / "references/AYAResourceExtractor/.git").write_text("gitdir: elsewhere\n")
+            self.assertIsNone(skip_reason((suite,), "posix", root))    # both present: the suite runs (and may fail)
+        self.assertIsNone(skip_reason(("tools/content_catalog_tests.py",), "posix"))
+
+    def test_skipped_suites_are_counted_and_named_apart_from_passes_and_do_not_fail_the_run(self) -> None:
+        reason = "submodule not initialised: references/AYAResourceExtractor (git submodule update --init references/AYAResourceExtractor)"
+        results = [
+            {"name": "tools/a_tests.py", "exitCode": 0, "seconds": 0.1},
+            {"name": "tools/needs_submodule_tests.py", "exitCode": None, "seconds": 0.0, "skipReason": reason},
+        ]
+        summary = format_summary(results)
+        self.assertIn("1 passed, 0 failed, 1 run, 1 skipped", summary)
+        self.assertIn("SKIP  tools/needs_submodule_tests.py", summary)
+        self.assertIn("skipped suites (not run, not passed):", summary)
+        self.assertIn("  tools/needs_submodule_tests.py: " + reason, summary)
+        self.assertNotIn("PASS  tools/needs_submodule_tests.py", summary)
+        with mock.patch(__name__ + ".run_suite", return_value=results[0]), \
+                mock.patch.dict(NEEDS_SUBMODULES, {"tools/needs_submodule_tests.py": ("references/AYAResourceExtractor",)}), \
+                mock.patch(__name__ + ".missing_submodules", return_value=["references/AYAResourceExtractor"]), \
+                contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0, run_all((("tools/needs_submodule_tests.py",),), host_os="posix"))
 
 
 def main(argv: list[str] | None = None) -> int:
