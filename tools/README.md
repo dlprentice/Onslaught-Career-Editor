@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-29 (`script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-29 (`level888_build.py` and `world_mod_stage.stage_mod(files=...)`: a generated level archive and replaced files as a CE mod; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -205,6 +205,27 @@ publish, sign, or install anything by themselves.
   are off in replays, recordings, probes, virtual clocks, pilots and network sessions, so a staged mod cannot change
   any of those runs. `world_mod_stage_tests.py` checks the staged folder against an independent
   restatement of the loader's start-up rules on authored data only.
+  `world_mod_stage.stage_mod(parent, game, mod_id, worlds=None, *, name, ..., files={path: bytes})` also stages the other files the
+  loader admits, each held to the loader's rules for it: the path rules, at most 4096 files and 1 GiB, 64 MiB a file, a packed
+  `.aya` that the game's block reader can hold, a texture that is a DDS image the game can load, and, for an archive the selected
+  game folder has none of (`data/resources/NNN_res_PC.aya`, NNN from 850 to 899), at most 8 MiB packed and 32 MiB unpacked and the
+  loader's chunk walk (`check_level_archive`: the standard first chunks once, a TEXT of at least 360 bytes, one WRES last that
+  holds WDAT, a BSWD only with a base world, and RLWD, in that order). The world-only call and its messages are unchanged.
+  `level888_build.py build|gate|closure --game DIR` recreates the cut multiplayer level 888, a Fenrir against a Venturer, as a CE
+  mod from the player's own PC game folder: nothing is downloaded and no game byte is kept in this repository. `build --out PARENT
+  --ce-min VERSION` writes `PARENT/flagship-duel/` through `stage_mod(files=...)`: `data/resources/888_res_PC.aya` (level 857's
+  terrain and world, the texture and mesh descriptors the two ships need from the archives 731, 732, 741 and 742, and a new world
+  with a Venturer, a Fenrir and a level script) and a copy of `data/default physics.dat` in which the unit `Fenrir Multiplayer`,
+  which no level uses, names `boss-fenrir.msh` (so the mod conflicts with any other mod that replaces that file). The closure of
+  meshes and textures is computed from the physics file and the loose mesh files, never listed; the three short scripts are
+  authored in the tool and compiled with `msl_compile.py`, so no script text of the game is read; the SHA-256 of the files the
+  recipe was checked against are pinned (another hash is a warning, `--strict-pins` a refusal). `gate` rebuilds twice, compares the
+  bytes, and checks the closure against the finished archive, the archive against the loader's walk, the physics file against the
+  original (one unit definition differs), the world against the player's `worldheaders.dat`, the compiled scripts for strings
+  other than the authored ones, and that the game folder was only read; `closure` prints what the recipe adds. The mod needs a CE
+  build whose Mods section lists added level archives. What the level plays like (the ships' placement, the lives, whether they
+  fight) is judged by playing it, not by this tool. `level888_build_tests.py` runs on an authored game folder; its retail gate
+  runs when `BEA_GAME` names a game folder (read only) and is a named SKIP otherwise.
   `world_edit_preview.py BASELINE.wrd EDITED.json` is a read-only step before encoding or preparing a stage bundle. It reports input
   hashes, byte and field changes, changes to opaque groups and slot-sensitive structures, and bounded compiled-script
   inspection findings. It also identifies model fields the encoder would silently omit. An omitted field, truncated
