@@ -301,28 +301,48 @@ internal static class ScriptCompilerTests
         check.That(missing is { Path: "data\\inc\\nothing.msl" }, "a header the game folder lacks is a MissingInclude naming the path as written");
         check.That(Refuses("#include ..\\outside.msl\n", read, "cannot climb out of the game folder") && Refuses("#include data\\inc\n", read, "is not a file inside the game folder"),
             "a path cannot climb out of the game folder, and a folder is not a header");
+        check.That(Refuses("#include data\\inc\\..\\outside.msl\n", read, "cannot climb out of the game folder") &&
+                   Refuses("#include data\\absent\\..\\outside.msl\n", read, "is not in the game folder") &&
+                   Refuses("#include data\\inc\\defs.msl\\child\n", read, "is not in the game folder"),
+            "a path refuses traversal and reports a missing or non-directory earlier component");
+        check.That(Refuses("#include data\\inc\\defs.msl\n", ScriptCompiler.IncludesFrom(""), "no game folder is given"),
+            "a missing selected game folder has a stable refusal");
+        try { ScriptCompiler.ReadSource(Path.Combine(folder, "missing.msl")); check.Fail("a missing direct source was read"); }
+        catch (CompileError error) { check.That(error.Message == "missing.msl could not be read", "a missing direct source has no raw system error"); }
         check.That(read("data\\.\\inc\\.\\defs.msl").StartsWith("#define LIMIT", StringComparison.Ordinal) && read(".\\data\\\\inc\\defs.msl").StartsWith("#define LIMIT", StringComparison.Ordinal),
             "a dot in a path is the folder itself, and an empty part (a doubled separator) is skipped");
         File.WriteAllBytes(Path.Combine(game, "Data", "huge.msl"), new byte[ScriptCompiler.MaxSource + 1]);
         File.WriteAllBytes(Path.Combine(folder, "edge.msl"), Enumerable.Repeat((byte)' ', ScriptCompiler.MaxSource).ToArray());
         check.That(Refuses("#include data\\huge.msl\n", read, "longer than a million bytes") && ScriptCompiler.ReadSource(Path.Combine(folder, "edge.msl")).Length == ScriptCompiler.MaxSource,
             "a header of a million bytes is read and one byte more is refused");
+        try { ScriptCompiler.ReadSource(Path.Combine(game, "Data", "huge.msl")); check.Fail("an oversized direct source was read"); }
+        catch (CompileError error) { check.That(error.Message == "huge.msl is longer than a million bytes", "direct source reads enforce the same byte limit"); }
         File.WriteAllBytes(Path.Combine(game, "Data", "Inc", "Cafe.msl"), [.. "#define WORD \"caf"u8, 0xE9, (byte)'"', (byte)'\n']);  // a Latin-1 byte, which is not UTF-8
         MissionScript cafe = ScriptCompiler.Compile("t", "#include data\\inc\\cafe.msl\ninit()\n{\n\tPrint(WORD);\n}\n", read);
         check.That(cafe.Code.Symbols.Any(symbol => symbol.Value is ScriptText { Value: "caf\u00e9" }), "a header is single-byte text: a Latin-1 byte is the character with that number");
         Directory.CreateDirectory(Path.Combine(game, "Data", "Dup"));
-        File.WriteAllText(Path.Combine(game, "Data", "Dup", "x.msl"), "#define W 1\n");
-        File.WriteAllText(Path.Combine(game, "Data", "Dup", "X.msl"), "#define W 2\n");
-        check.That(ScriptCompiler.IncludesFrom(game)("data\\dup\\x.msl") == "#define W 1\n" && ScriptCompiler.IncludesFrom(game)("data\\dup\\X.msl") == "#define W 2\n",
-            "when two files differ only by case the exact spelling is the one read");
         if (!OperatingSystem.IsWindows())
         {
+            File.WriteAllText(Path.Combine(game, "Data", "Dup", "DX.msl"), "upper\n");
+            File.WriteAllText(Path.Combine(game, "Data", "Dup", "dX.msl"), "lower\n");
+            File.WriteAllText(Path.Combine(game, "Data", "Dup", "É.msl"), "accent\n");
+            check.That(read("data\\dup\\DX.msl") == "upper\n" && read("data\\dup\\dX.msl") == "lower\n" && read("data\\dup\\dx.msl") == "upper\n",
+                "case lookup chooses an exact spelling first, otherwise the ordinal first ASCII case match");
+            check.That(Refuses("#include data\\dup\\é.msl\n", read, "is not in the game folder"), "ASCII case matching does not fold non-ASCII names");
             File.CreateSymbolicLink(Path.Combine(game, "Data", "Inc", "inside.msl"), Path.Combine(game, "Data", "Inc", "Defs.MSL"));
             File.CreateSymbolicLink(Path.Combine(game, "Data", "Inc", "out.msl"), Path.Combine(outside, "secret.msl"));
+            File.CreateSymbolicLink(Path.Combine(game, "Data", "Inc", "dangling.msl"), Path.Combine(folder, "absent.msl"));
+            File.CreateSymbolicLink(Path.Combine(game, "Data", "Inc", "loop.msl"), Path.Combine(game, "Data", "Inc", "loop.msl"));
             Directory.CreateSymbolicLink(Path.Combine(game, "Data", "linkdir"), outside);
-            check.That(read("data\\inc\\inside.msl").StartsWith("#define LIMIT", StringComparison.Ordinal), "a link that stays inside the game folder is a file inside it");
-            check.That(Refuses("#include data\\inc\\out.msl\n", read, "is not a file inside the game folder") && Refuses("#include data\\linkdir\\secret.msl\n", read, "is not a file inside the game folder"),
-                "a link out of the game folder, or through a folder that is one, is refused");
+            Directory.CreateSymbolicLink(Path.Combine(folder, "selected-game"), game);
+            check.That(ScriptCompiler.IncludesFrom(Path.Combine(folder, "selected-game"))("data\\inc\\defs.msl").StartsWith("#define LIMIT", StringComparison.Ordinal),
+                "the user-selected game folder itself may be reached through a link");
+            check.That(new[] { "inside.msl", "out.msl", "dangling.msl", "loop.msl" }.All(name => Refuses($"#include data\\inc\\{name}\n", read, "is a link or goes through one")) &&
+                       Refuses("#include data\\linkdir\\secret.msl\n", read, "is a link or goes through one") &&
+                       Refuses("#include data\\linkdir\\..\\inc\\defs.msl\n", read, "is a link or goes through one"),
+                "links below the selected folder are refused, including inside, outside, dangling, loop and directory links");
+            try { ScriptCompiler.ReadSource(Path.Combine(game, "Data", "Inc", "inside.msl")); check.Fail("a source link was followed"); }
+            catch (CompileError error) { check.That(error.Message.Contains("is a link or goes through one", StringComparison.Ordinal), "direct source reads refuse a final link too"); }
         }
         if (OperatingSystem.IsLinux())
         {

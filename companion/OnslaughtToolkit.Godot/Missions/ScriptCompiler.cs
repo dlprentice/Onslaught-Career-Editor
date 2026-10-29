@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-only
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Globalization;
 using OnslaughtToolkit.Companion.Levels;
@@ -78,60 +77,20 @@ public static class ScriptCompiler
     private static readonly Regex ConstNamePattern = new("\\Aconst data([0-9]+)\\z", RegexOptions.CultureInvariant);
     private static readonly Regex DoOnceNamePattern = new("\\Ado-once-([0-9]+)\\z", RegexOptions.CultureInvariant);
 
-    /// <summary>A script or header as text: the game's files are single-byte text.</summary>
-    /// <exception cref="CompileError">The file is longer than a million bytes.</exception>
-    public static string ReadSource(string path)
-    {
-        FileInfo info = new(path);
-        if (info.Length > MaxSource) throw new CompileError($"{info.Name} is longer than a million bytes");
-        return Encoding.Latin1.GetString(File.ReadAllBytes(path));
-    }
+    /// <summary>A script or header as single-byte text, read from a regular file without following its final entry.</summary>
+    /// <exception cref="CompileError">The file cannot be safely read, or is longer than a million bytes.</exception>
+    public static string ReadSource(string path) => ScriptSourceReader.ReadPath(path);
 
     /// <summary>Reads an included file by the game-relative path the source names (backslashes, any case: the game's files are named for Windows), only inside the game folder.</summary>
-    public static Func<string, string> IncludesFrom(string gameRoot) => path => ReadSource(GameFile(gameRoot, path));
+    public static Func<string, string> IncludesFrom(string gameRoot) => path => ReadGameSource(gameRoot, path);
 
-    /// <summary>The file a game-relative path names, found entry by entry in any case (the exact spelling first), never through a path that leaves the game folder.</summary>
+    /// <summary>Reads a game-relative source while holding the selected directories and file open; links below the game folder are refused.</summary>
+    public static string ReadGameSource(string gameRoot, string path) => ScriptSourceReader.ReadInGame(gameRoot, path);
+
+    /// <summary>
+    /// Looks up a game-relative path for display. A later open may see a changed path; use <see cref="ReadGameSource"/> for reading.
+    /// </summary>
     /// <exception cref="MissingInclude">An entry on the path is not there.</exception>
     /// <exception cref="CompileError">The path climbs out of the game folder, or does not end at a regular file inside it.</exception>
-    public static string GameFile(string gameRoot, string path)
-    {
-        string root = Path.GetFullPath(gameRoot);
-        string at = root;
-        foreach (string part in path.Replace('\\', '/').Split('/'))
-        {
-            if (part.Length == 0 || part == ".") continue;
-            if (part == "..") throw new CompileError($"a path cannot climb out of the game folder: {path}");
-            string? match = Directory.Exists(at) ? EntryNamed(at, part) : null;
-            at = match ?? throw new MissingInclude(path);
-        }
-        // A link that stays inside the game folder is a file inside it; one that leaves it (the file's own, or a folder's on the way) is not.
-        string real = RealPath(at), realRoot = RealPath(root);
-        string relative = Path.GetRelativePath(realRoot, real);
-        if (relative == ".." || relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal) || Path.IsPathRooted(relative) ||
-            !File.Exists(real) || !ScriptSources.IsRegularFile(real))
-            throw new CompileError($"{path} is not a file inside the game folder");
-        return at;
-    }
-
-    private static string? EntryNamed(string folder, string name)
-    {
-        string? found = new DirectoryInfo(folder).EnumerateFileSystemInfos().Select(entry => entry.Name)
-            .Where(entry => string.Equals(entry, name, StringComparison.OrdinalIgnoreCase))
-            .OrderBy(entry => entry != name).ThenBy(entry => entry, StringComparer.Ordinal).FirstOrDefault();
-        return found is null ? null : Path.Combine(folder, found);
-    }
-
-    /// <summary>The path with every link on it followed (as <c>realpath</c> does).</summary>
-    private static string RealPath(string path)
-    {
-        string full = Path.GetFullPath(path);
-        string current = Path.GetPathRoot(full) ?? "";
-        foreach (string part in full[current.Length..].Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries))
-        {
-            current = Path.Combine(current, part);
-            FileSystemInfo info = Directory.Exists(current) ? new DirectoryInfo(current) : new FileInfo(current);
-            if (info.LinkTarget is not null && info.ResolveLinkTarget(returnFinalTarget: true) is { } target) current = target.FullName;
-        }
-        return current;
-    }
+    public static string GameFile(string gameRoot, string path) => ScriptSourceReader.Locate(gameRoot, path);
 }

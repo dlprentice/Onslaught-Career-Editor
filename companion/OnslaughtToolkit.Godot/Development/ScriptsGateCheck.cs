@@ -143,7 +143,7 @@ internal static class ScriptsGateCheck
         string source;
         try
         {
-            source = ScriptCompiler.ReadSource(ScriptCompiler.GameFile(game, $"data\\MissionScripts\\level{folderLevel:D3}\\{name}.msl"));
+            source = ScriptCompiler.ReadGameSource(game, $"data\\MissionScripts\\level{folderLevel:D3}\\{name}.msl");
         }
         catch (MissingInclude error)
         {
