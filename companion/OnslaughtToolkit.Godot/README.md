@@ -354,8 +354,10 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   two). The game keeps a slot as a point of the path only if it names a waypoint (`CWaypointPath::Load` in the decompilation), so
   the page draws, numbers and counts only those: about one slot in five names a unit, a spawner or another kind of object and is
   dropped, and an object that only such a slot names is on no path. The game finds a waypoint path by name ignoring letter case
-  (`CWaypointManager::FindNearest`), so a quoted text that is the first argument of `FollowWaypoint` or `FollowWaypointWait` names
-  every path of that name in any case, the button saying when the case differs; every other name is matched as written. The list,
+  (`CWaypointManager::FindNearest`, which takes the first match of one list that holds the base world's paths before the level's own), so a
+  quoted text that is the first argument of `FollowWaypoint` or `FollowWaypointWait` names the one path the game would use: the level's own
+  path gets a button (the button says when the case differs), a base world's path is said with nothing to go to; every other name is
+  matched as written. The list,
   the links and the names are read from the compiled code, the level's objects and the sources, and
   checked against the Toolkit's reference (`tools/level_editor_vectors.py gate-table`, its SCRIPTS, NAMES and PATHS rows) on a game
   install, with the native names generated from the Toolkit's table (`tools/script_tables.py`). Nothing here writes anything.

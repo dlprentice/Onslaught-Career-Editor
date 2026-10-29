@@ -294,10 +294,13 @@ Nothing is written.
   it finds what has that name and does not claim the script uses it as such. Objects match by their exact name (else, if none has it,
   in another letter case, and the button says so), in the level's own world and by the same rule in its base world, each on its own;
   scripts and event handlers match exactly, and so do paths except in one place. The game finds a waypoint path by name ignoring
-  letter case (`CWaypointManager::FindNearest`, which takes the first path of the world's list that matches), so the first argument of
-  a `FollowWaypoint` or `FollowWaypointWait` call, found by looking back along the line from its opening quote over blanks to a `(`
-  and, before it, the whole word of the call's name, names every path of that name in any case (the button says when the case
-  differs, and with two paths that differ only in case both are listed, in the world's order). A quoted text is closed by the next
+  letter case (`CWaypointManager::FindNearest`, which takes the first path of its one list that matches), and that list holds the base
+  world's paths before the level's own (`CWorld::LoadWorld` loads the base world before the rest of the level's world, and
+  `CWaypointManager::Load` appends each path to the list). So the first argument of a `FollowWaypoint` or `FollowWaypointWait` call,
+  found by looking back along the line from its opening quote over blanks to a `(` and, before it, the whole word of the call's name,
+  names the one path the game would use: the first of the base world's paths then the level's own whose name matches in any letter
+  case. The level's own path gets a button (marked when its case differs); a base world's path is said, with no button, because the
+  page does not draw that world's paths, and it hides a level path of the same name, as it does in the game. A quoted text is closed by the next
   quote on its line, and `//` outside a quote ends the line's code. A path lists objects by their place in the world's thing list:
   under that reading the shipped paths run from point to point (the median step between neighbours is about 88 world units; under a
   shift of one or two places it is 121 to 146). The game's loader (`CWaypointPath::Load`) keeps a slot only if it indexes a loaded
@@ -323,7 +326,10 @@ Nothing is written.
   6), are not linked. About one path slot in five of the shipped paths names an object that is not a waypoint, and about half of the
   paths hold one: those slots are dropped as the game drops them, so a path has fewer points than slots. A path argument is told by the
   line it is on, so a call whose name and parenthesis end one line and whose first argument begins the next is not recognised (none of
-  the shipped sources does that; a mod's might), and its path is then found by its exact name only. Base-world objects are named, not
+  the shipped sources does that; a mod's might), and its path is then found by its exact name only. Unverified: whether the slot a path names
+  counts the file's order of records or the order in which they spawned (`CWorld::LoadWorld` advances its index only for records that
+  spawned, so a record that failed to spawn would shift every later slot); the page reads slots as file order, which is the reading under
+  which the shipped paths run from point to point. Base-world objects are named, not
   shown. The page was driven by events in tests and looked at in offscreen captures at 1920 by 1080, 1280 by 800 and 1024 by 700 (the
   path numbers are drawn over the marks, above and to the left of each point so that a selected object's tag does not cover them; at
   the smallest size the path line under the map is cut short); nobody has used it by hand.
