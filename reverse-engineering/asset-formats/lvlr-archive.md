@@ -3,7 +3,7 @@
 Status: active format contract — complete outer/tag census; most payload schemas
 remain owner-specific or open
 Date: 2026-08-28
-Last updated: 2026-10-29 (the 53 empty outer MESH names are not the internal CMSH names; earlier: Goodie archive names corrected to two digits; GDIE layout in goodie-resources.md)
+Last updated: 2026-10-29 (the 53 empty outer MESH names are separate from the internal CMSH names, which census v4 also reads as empty; earlier: Goodie archive names corrected to two digits; GDIE layout in goodie-resources.md)
 Verdict: all 301 streams and 23,884 top-level tags are accounted for; the
 numeric WRES Unit/Feature instance join and released PS2 texture-page runtime
 boundary are bounded, while most other payload schemas and world dependencies
