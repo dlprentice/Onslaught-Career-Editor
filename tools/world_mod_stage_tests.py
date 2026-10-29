@@ -1154,10 +1154,15 @@ class StageFilesTests(FilesBase):
         mod = self.out / "caps"
         self.assertEqual([], LoaderRules.problems(mod, self.game))
         self.assertTrue((mod / "DATA/RESOURCES/888_RES_PC.AYA").is_file())
-        with self.assertRaisesRegex(stage.ModStageError, "listed twice"):
-            stage.stage_mod(self.root / "dup", self.game, "dup", None, name="n",
-                            files={"data/default physics.dat": b"a", "Data/Default Physics.dat": b"b"})
-        self.assertFalse((self.root / "dup").exists())
+        # two spellings of one path are one path whichever sorts first: capitals sort before lower case, so the pair with a
+        # lower-case member and the pair of two mixed spellings are different cases
+        for first, second in (("data/default physics.dat", "Data/Default Physics.dat"),
+                              ("DATA/DEFAULT PHYSICS.DAT", "Data/Default Physics.dat"),
+                              ("Data/Default Physics.dat", "data/DEFAULT physics.dat")):
+            with self.subTest(first=first, second=second):
+                with self.assertRaisesRegex(stage.ModStageError, "listed twice"):
+                    stage.stage_mod(self.root / "dup", self.game, "dup", None, name="n", files={first: b"a", second: b"b"})
+                self.assertFalse((self.root / "dup").exists())
 
     def test_what_the_loader_refuses_is_refused_and_nothing_is_written(self) -> None:
         big_archive = level_stream(level_chunks()[:-1] + [(b"ERES", os.urandom(8 << 20)), level_chunks()[-1]])

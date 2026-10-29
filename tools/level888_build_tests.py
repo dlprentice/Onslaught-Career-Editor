@@ -257,13 +257,16 @@ class PhysicsTests(unittest.TestCase):
 
     def test_based_on_applies_where_it_stands_among_the_nodes(self) -> None:
         def mesh_of(*nodes):
-            data = physics_file((1, "Base", [(9, s("base.msh"))]), (1, "Mid", [(39, s("Base")), (9, s("mid.msh"))]), (1, "Late", list(nodes)))
+            data = physics_file((1, "Base", [(9, s("base.msh"))]), (1, "Mid", [(39, s("Base")), (9, s("mid.msh"))]),
+                                (1, "Bare", [(8, struct.pack("<I", 2))]), (1, "Late", list(nodes)))
             return lvl.Physics(data).values(1, "Late")[0]
         self.assertEqual("base.msh", mesh_of((39, s("Base"))))
         self.assertEqual("mid.msh", mesh_of((39, s("Base")), (39, s("Mid"))), "the later base wins")
         self.assertEqual("own.msh", mesh_of((39, s("Mid")), (9, s("own.msh"))), "an own mesh after the base overrides it")
         self.assertEqual("mid.msh", mesh_of((9, s("own.msh")), (39, s("Mid"))), "a base after the own mesh overrides it")
         self.assertEqual("base.msh", mesh_of((9, s("own.msh")), (39, s("Base"))))
+        self.assertEqual("own.msh", mesh_of((9, s("own.msh")), (39, s("Bare"))), "a base with no mesh leaves the own mesh")
+        self.assertIsNone(mesh_of((39, s("Bare"))), "and gives none when there is none")
 
     def test_what_cannot_be_followed_is_refused(self) -> None:
         for label, unit, statements, words in (
@@ -344,6 +347,10 @@ class MeshTests(unittest.TestCase):
         self.assertEqual(names, lvl.texture_names(cmsh_stream("m.msh", names)))
         self.assertEqual([], lvl.texture_names(cmsh_stream("m.msh", [])))
         self.assertEqual(["x" * 127], lvl.texture_names(cmsh_stream("m.msh", ["x" * 127])))
+        many = [f"t{i}.tga" for i in range(1025)]
+        self.assertEqual(many[:1024], lvl.texture_names(cmsh_stream("m.msh", many[:1024])), "1024 textures are read")
+        with self.assertRaisesRegex(lvl.BuildError, "texture count"):
+            lvl.texture_names(cmsh_stream("m.msh", many))   # bindings and records agree; only the count is over the limit
 
     def test_the_reader_agrees_with_the_toolkits_own_mesh_probe(self) -> None:
         import aya_archive_inventory as inventory
@@ -626,6 +633,17 @@ class BuildTests(FolderTest):
         Folder(root, physics=statements)
         with self.assertRaisesRegex(lvl.BuildError, "names the mesh 'another-name.msh', not 'fenrir-multiplayer.msh'"):
             lvl.build(lvl.Install(root))
+
+    def test_a_donor_the_loader_would_not_walk_is_refused_before_anything_is_written(self) -> None:
+        # a donor built for other structure sizes passes every check the recipe makes on the donor; the finished archive then
+        # fails the loader's walk, and build() says so instead of returning it
+        path = self.game / "data/resources/857_res_PC.aya"
+        stream = b"".join(enc.inflate(enc.read_members(path.read_bytes())))
+        good_guards, bad_guards = struct.pack("<6I", *stager_tests.GUARDS, 1), struct.pack("<6I", 344, 372, 316, 5085, 92, 1)
+        self.assertEqual(1, stream.count(good_guards))
+        path.write_bytes(stager_tests.packed(stream.replace(good_guards, bad_guards)))
+        with self.assertRaisesRegex(lvl.BuildError, "would not pass the loader's walk: a level archive built for other structure sizes"):
+            self.build()
 
     def test_a_texture_no_archive_holds_is_refused(self) -> None:
         root = self.root / "notexture"
