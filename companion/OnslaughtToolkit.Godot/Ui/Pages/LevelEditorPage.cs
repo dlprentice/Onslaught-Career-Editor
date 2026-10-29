@@ -726,12 +726,15 @@ internal sealed class LevelEditorPage : Page
         foreach (NameMatch match in matches.Take(10))
         {
             string text = match.Label + (match.ExactCase ? "" : " (other letter case)");
-            if (match.Kind == NameKind.BaseObject)
+            if (match.Kind is NameKind.BaseObject or NameKind.BasePath)
             {
-                // This page does not list the base world's objects, so there is nothing to go to: the object is said, not offered.
+                // This page does not list the base world's objects or draw its paths, so there is nothing to go to: it is said, not offered.
+                bool isPath = match.Kind == NameKind.BasePath;
                 Label note = _scriptNames.Add(Build.Text($"{text} · base world", "Muted", wrap: false));
                 note.MouseFilter = Control.MouseFilterEnum.Pass;  // so that the tooltip shows
-                note.TooltipText = $"An object of the base world (level {_model.BaseLevel}), which the game loads with this level. This page does not list that world's objects.";
+                note.TooltipText = isPath
+                    ? $"A path of the base world (level {_model.BaseLevel}), which the game loads with this level before the level's own paths: it takes the first path of that name, so this is the one it follows. This page does not draw that world's paths."
+                    : $"An object of the base world (level {_model.BaseLevel}), which the game loads with this level. This page does not list that world's objects.";
                 continue;
             }
             Button button = _scriptNames.Add(Build.Button(text, tooltip: match.Kind switch

@@ -21,7 +21,7 @@ internal static class ScriptsPageTests
     /// then the path in other letter case, as a follow-waypoint call's argument (which the game finds) and as an object's name (which it does not).
     /// </summary>
     private const string Gamma = "// gamma\r\nFollowWaypoint(\"Path A\", 0);\r\nGetThingRef(\"Tank 1\");\r\nPostEvent(\"go\");\r\nGetThingRef(\"ghost\");\r\nGetThingRef(\"Base Hut\");\r\n" +
-                                 "FollowWaypointWait(\"path a\", 0, 5);\r\nGetThingRef(\"path a\");\r\n";
+                                 "FollowWaypointWait(\"path a\", 0, 5);\r\nGetThingRef(\"path a\");\r\nFollowWaypoint(\"base path\", 0);\r\n";
 
     private static SignalAwaiter Frame(SceneTree tree) => tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
 
@@ -97,9 +97,11 @@ internal static class ScriptsPageTests
         real.Things[3].Init.Position = new(300f, 60f, 0f);
         WorldBody baseWorld = LevelScriptTests.Body(LevelScriptTests.Script("alpha", [1], [], ("Print", 1)), LevelScriptTests.Script("basey", [0], []));
         baseWorld.Things[1].Init.Name = "Base Hut";  // an object the level's table does not list
+        baseWorld.WaypointPaths[0].Name = "Base Path";  // a path of the base world (the game finds those before the level's own paths of the same name); its name differs from the level's "Path A"
         File.WriteAllBytes(archive, LevelArchiveBytes(131, 130, baseWorld.Write(), real.Write()));
         Source(install.Game, 130, "alpha", "// alpha, the level's own\r\ninit()\r\n{\r\n\tPause(1);\r\n}\r\n");
         Source(install.Game, 130, "gamma", Gamma);
+        Source(install.Game, 130, "delta", string.Concat(Enumerable.Range(0, 300).Select(line => $"// line {line}\r\n")));  // long enough to scroll far down
         Source(install.Game, 131, "alpha", "// alpha, the base world's\r\narrived()\r\n{\r\n}\r\n");
         Source(install.Game, 131, "basey", "// basey\r\ninit()\r\n{\r\n}\r\n");
         string[] gameBefore = Snapshot(install.Game);
@@ -135,6 +137,35 @@ internal static class ScriptsPageTests
             check.That(page.ScriptCardText.Contains("Handles: init, died", StringComparison.Ordinal) && page.ScriptCardText.Contains("Calls: Pause ×2", StringComparison.Ordinal) &&
                        page.ScriptCardText.Contains("Named by:", StringComparison.Ordinal) && page.ScriptUseButtons.Select(button => button.Text).SequenceEqual([$"0 · {model.Row(0)!.Label}", $"1 · {model.Row(1)!.Label}"]),
                 $"the card says what the script handles and calls, and offers the objects that name it: \"{page.ScriptCardText}\"");
+
+            // The view scrolled or its caret left far down a long source, then another script chosen: the shorter text must never be asked for a line past its end
+            // (Godot reports those as engine errors, which fail the run).
+            check.That(page.Scripts.Select("delta") && page.Scripts.Source.GetLineCount() == 301, "a long source is shown whole");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            page.Scripts.Source.ScrollVertical = 250;
+            page.Scripts.Source.SetCaretLine(290);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            foreach (string next in new[] { "alpha", "delta", "beta", "delta", "gamma" })
+            {
+                page.Scripts.Source.ScrollVertical = 250;
+                page.Scripts.Source.SetCaretLine(Math.Min(290, page.Scripts.Source.GetLineCount() - 1));
+                check.That(page.Scripts.Select(next), $"{next} is chosen after the view was left far down");
+                for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            }
+            check.That(page.Scripts.Source.GetCaretLine() == 0 && page.Scripts.Source.ScrollVertical == 0, "and a script chosen starts at its first line");
+            check.That(page.Scripts.Select("delta"), "the long script is chosen again");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            page.Scripts.Source.ScrollVertical = 250;
+            page.Scripts.Source.SetCaretLine(290);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            page.Search.Text = "zzz";  // nothing matches: the source is emptied while the view is far down
+            page.Search.EmitSignal(LineEdit.SignalName.TextChanged, "zzz");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Scripts.Source.Text == "" && page.Scripts.Source.ScrollVertical == 0,
+                $"a search nothing matches empties the view from its top: {page.Scripts.Source.Text.Length} characters, scroll {page.Scripts.Source.ScrollVertical}, {page.Scripts.ShownCount} scripts shown");
+            page.Search.Text = "";
+            page.Search.EmitSignal(LineEdit.SignalName.TextChanged, "");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
 
             // A long list of events is cut after twelve, as the list of functions is.
             check.That(page.Scripts.Select("delta") && page.ScriptCardText.Contains("Handles: " + string.Join(", ", Enumerable.Range(1, 12).Select(number => $"event \"h{number}\"")) + " and 2 more", StringComparison.Ordinal),
@@ -247,6 +278,10 @@ internal static class ScriptsPageTests
             await CaretAt(7, 15);
             check.That(page.Scripts.Token == new SourceToken("path a", true, 13, 6) && page.NamesTitle == "“path a” names nothing in this level." && page.NameButtons.Count == 0,
                 $"the same text anywhere else is not a path, as the game compares those names as they are: \"{page.NamesTitle}\"");
+            await CaretAt(8, 20);
+            check.That(page.Scripts.Token == new SourceToken("base path", true, 16, 9, true) && page.NamesTitle == "“base path” names:" && page.NameButtons.Count == 0 &&
+                       page.NameLabels.Select(label => label.Text).SequenceEqual(["path Base Path · 1 point (other letter case) · base world"]) && page.NameLabels[0].TooltipText.Contains("first path of that name", StringComparison.Ordinal),
+                $"a path argument that names a path of the base world is said with nothing to go to, as the game finds that path first: \"{page.NamesTitle}\" {string.Join(" | ", page.NameLabels.Select(label => label.Text))}");
             await CaretAt(1, 3);
             check.That(page.Scripts.Token == new SourceToken("FollowWaypoint", false, 0, 14) && page.NamesTitle == "" && page.NameButtons.Count == 0, "a word is not a name to follow");
             await CaretAt(0, 4);
