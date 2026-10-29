@@ -2,7 +2,7 @@
 
 Status: design; the reference compiler and its retail gate (MS1, section 11), the read-only scripts view (MS0, section 12) and its name links and map paths (MS0.1, section 13) are built, the rest is plan. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-10-29 (MS0.1 follow-ups: a path's points are the waypoints the game keeps, path arguments are case-blind, PATHS rows in the gate; MS0.1, names in the source linked to the level and waypoint paths on the map, built; earlier: MS0, the read-only scripts view, built; CE 0.1.11, the first to take a world file from a mod, stated as published; earlier: the spike's result and the operator-grouping decision; the lead's earlier decisions; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
+Last updated: 2026-10-29 (held, bounded script-source reads and platform limits; MS0.1 follow-ups: a path's points are the waypoints the game keeps, path arguments are case-blind, PATHS rows in the gate; MS0.1, names in the source linked to the level and waypoint paths on the map, built; earlier: MS0, the read-only scripts view, built; CE 0.1.11, the first to take a world file from a mod, stated as published; earlier: the spike's result and the operator-grouping decision; the lead's earlier decisions; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours that is proved against every script the game
 shipped (byte for byte), and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -264,10 +264,12 @@ narrows the list by name, event or function. Nothing is written.
   functions from its CALL instructions (the names are generated from the Toolkit's table, `tools/script_tables.py`), and the objects that
   name it from each object's script, spawn script and, for a spawner, its spawner spawn script, matched by exact name. A source is found
   at `data/MissionScripts/level<NNN>/<name>.msl` in any case (the real level's folder for the level's own scripts, the base level's for
-  its base world's), ignoring links, anything that is not a regular file (opening a named pipe would wait for a writer for ever, so
-  the file system is asked first, without opening it) and files over 1 MiB. A folder that cannot be listed, or a file that cannot be read,
-  is a sentence on the page, and so is an entry the system cannot be asked about (a sandbox that refuses, or a C library without
-  `statx`): nothing is read then.
+  its base world's), ignoring symbolic links below the selected root, anything that is not a regular file and files over 1 MiB. On Linux
+  x64 with procfs the reader holds directory handles and a no-follow path handle, checks identities and metadata around a bounded read, and refuses
+  detected changes. On Windows it uses the existing local-directory locks and a no-follow file handle; native Windows behavior has not
+  yet been checked. Other operating systems and Linux architectures fail closed. The selected root itself may be reached through a link;
+  regular hard links remain accepted. Remote Linux filesystem behavior is unverified, Windows network roots are refused, and these checks
+  do not create an immutable snapshot. A folder that cannot be listed or a file that cannot be read is a sentence on the page.
 - **Checked.** The Toolkit's gate table has a SCRIPTS row per level archive, worked out in Python separately from the C#: the catalog's
   lines (name, instructions, events, functions with counts, users) and the text of every source found, hashed. The Companion's local
   retail gate (`Development/LevelsGate.cs`) compares the C# catalog and finder with it on every level of an installed game: every list
@@ -275,9 +277,8 @@ narrows the list by name, event or function. Nothing is written.
 - **Limits.** The page was driven by events in tests and looked at in offscreen captures at 1920 by 1080, 1280 by 800 and 1024 by 700
   (the smallest window is cramped: the list shows two or three rows and the source about ten lines); nobody has used it by hand. A source
   may differ from the compiled script it sits beside (the gate says which installed ones do: section 11). Base-world scripts name
-  base-world objects, which the table does not list, so they show no users. The regular-file check is made at one moment and the read
-  comes after it, so an entry swapped for a pipe in between is not guarded against (that takes someone who can already change the
-  game folder). What a name in a source refers to, and the paths on the map, are MS0.1 (section 13).
+  base-world objects, which the table does not list, so they show no users. What a name in a source refers to, and the paths on the map,
+  are MS0.1 (section 13).
 
 ## 13. MS0.1: names in the source, and waypoint paths on the map (2026-10-29)
 

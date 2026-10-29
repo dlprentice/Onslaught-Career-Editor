@@ -486,6 +486,178 @@ internal static class LevelScriptTests
             check.That(ScriptSources.Find(game, 123, "Foo").Source?.Text == "// fine\n" && ScriptSources.Find(game, 125, "Foo").Source?.Text == "x", "with the permissions back, every source is read again");
         }
         Directory.Delete(game, true);
+        SourcesReplacementChecks(output, check);
+    }
+
+    private static void SourcesReplacementChecks(string output, Checks check)
+    {
+        if (!OperatingSystem.IsLinux() || RuntimeInformation.ProcessArchitecture != Architecture.X64) return;
+        string game = Path.Combine(output, "script-source-replacement-game");
+        string other = Path.Combine(output, "script-source-replacement-other");
+        string folder = Path.Combine(game, "data", "MissionScripts", "level123");
+        Directory.CreateDirectory(folder);
+        Directory.CreateDirectory(other);
+        string file = Path.Combine(folder, "Race.msl");
+        string otherFile = Path.Combine(other, "Race.msl");
+        File.WriteAllText(file, "// selected\n");
+        File.WriteAllText(otherFile, "// other\n");
+        Func<string, (int Failed, int Errno, uint Mask, ushort Mode)> native = ScriptSources.Statx;
+        bool changed = false;
+        try
+        {
+            ScriptSources.Statx = path =>
+            {
+                var answer = native(path);
+                if (!changed && Path.GetFileName(path) == "Race.msl")
+                {
+                    changed = true;
+                    File.Move(file, Path.Combine(folder, "original.msl"));
+                    File.CreateSymbolicLink(file, otherFile);
+                }
+                return answer;
+            };
+            ScriptSourceResult result = ScriptSources.Find(game, 123, "Race");
+            check.That(changed && result.Source is null && result.Problem is not null,
+                "a source replaced by a link after its first type check is refused");
+        }
+        finally { ScriptSources.Statx = native; }
+        File.Delete(file);
+        File.Move(Path.Combine(folder, "original.msl"), file);
+        changed = false;
+        try
+        {
+            ScriptSources.Statx = path =>
+            {
+                var answer = native(path);
+                if (!changed && Path.GetFileName(path) == "Race.msl")
+                {
+                    changed = true;
+                    Directory.Move(folder, folder + "-original");
+                    Directory.CreateSymbolicLink(folder, other);
+                }
+                return answer;
+            };
+            ScriptSourceResult result = ScriptSources.Find(game, 123, "Race");
+            check.That(changed && result.Source is null && result.Problem is not null,
+                "a source directory replaced by a link after its first type check is refused");
+        }
+        finally { ScriptSources.Statx = native; }
+        Directory.Delete(folder);
+        Directory.Move(folder + "-original", folder);
+
+        string replacement = Path.Combine(other, "Replacement.msl");
+        File.WriteAllText(replacement, "// replacement\n");
+        changed = false;
+        try
+        {
+            ScriptSources.Statx = path =>
+            {
+                var answer = native(path);
+                if (!changed && Path.GetFileName(path) == "Race.msl")
+                {
+                    changed = true;
+                    File.Move(file, file + ".prior");
+                    File.Move(replacement, file);
+                }
+                return answer;
+            };
+            ScriptSourceResult result = ScriptSources.Find(game, 123, "Race");
+            check.That(changed && result.Source is null && result.Problem is not null,
+                "a different regular source substituted after the type check is refused");
+        }
+        finally { ScriptSources.Statx = native; }
+        File.Delete(file);
+        File.Move(file + ".prior", file);
+
+        string alias = Path.Combine(output, "script-source-replacement-root-link");
+        Directory.CreateSymbolicLink(alias, game);
+        check.That(ScriptSources.Find(alias, 123, "Race").Source?.Text == "// selected\n",
+            "a selected game root reached through a link still works");
+        changed = false;
+        try
+        {
+            ScriptSources.Statx = path =>
+            {
+                var answer = native(path);
+                if (!changed && Path.GetFileName(path) == "Race.msl")
+                {
+                    changed = true;
+                    Directory.Delete(alias);
+                    Directory.CreateSymbolicLink(alias, other);
+                }
+                return answer;
+            };
+            ScriptSourceResult result = ScriptSources.Find(alias, 123, "Race");
+            check.That(changed && result.Source is null && result.Problem is not null,
+                "a selected-root link changed during lookup is refused");
+        }
+        finally { ScriptSources.Statx = native; }
+        Directory.Delete(alias);
+
+        bool grew = false;
+        try
+        {
+            ScriptSources.BeforeReadForTest = () =>
+            {
+                grew = true;
+                using FileStream append = new(file, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+                append.Write(new byte[ScriptSources.MaxBytes]);
+            };
+            ScriptSourceResult result = ScriptSources.Find(game, 123, "Race");
+            check.That(grew && result.Source is null && result.Problem is { } problem && problem.Contains("larger than", StringComparison.Ordinal),
+                "a source that grows past the byte limit after opening is refused");
+        }
+        finally { ScriptSources.BeforeReadForTest = null; }
+        File.WriteAllText(file, "// selected\n");
+
+        bool modified = false;
+        try
+        {
+            ScriptSources.BeforeReadForTest = () => { modified = true; File.WriteAllText(file, "// replaced\n"); };
+            ScriptSourceResult result = ScriptSources.Find(game, 123, "Race");
+            check.That(modified && result.Source is null && result.Problem is not null,
+                "a source modified in place during the read is refused");
+        }
+        finally { ScriptSources.BeforeReadForTest = null; }
+        File.WriteAllText(file, "// selected\n");
+
+        changed = false;
+        try
+        {
+            ScriptSources.Statx = path =>
+            {
+                var answer = native(path);
+                if (!changed && Path.GetFileName(path) == "Race.msl")
+                {
+                    changed = true;
+                    File.Move(file, file + ".prior");
+                    if (MakeNode(file, 0x1000 | 0x180) != 0) throw new IOException("Could not make authored test pipe.");
+                }
+                return answer;
+            };
+            Task<ScriptSourceResult> lookup = Task.Run(() => ScriptSources.Find(game, 123, "Race"));
+            bool returned = lookup.Wait(TimeSpan.FromSeconds(5));
+            check.That(changed && returned && lookup.Result.Source is null && lookup.Result.Problem is not null,
+                "a source replaced by a named pipe is refused without waiting for a writer");
+            if (!returned)
+            {
+                using (File.OpenHandle(file, FileMode.Open, FileAccess.Write)) { }
+                lookup.Wait(TimeSpan.FromSeconds(5));
+            }
+        }
+        finally { ScriptSources.Statx = native; }
+        File.Delete(file);
+        File.Move(file + ".prior", file);
+
+        int before = Directory.GetFiles("/proc/self/fd").Length;
+        bool repeated = true;
+        for (int i = 0; i < 100; i++)
+            repeated &= ScriptSources.Find(game, 123, "Race").Source?.Text == "// selected\n" &&
+                        ScriptSources.Find(game, 123, "Absent").Source is null;
+        int after = Directory.GetFiles("/proc/self/fd").Length;
+        check.That(repeated && after <= before, "successful and missing source lookups release their descriptors");
+        Directory.Delete(game, true);
+        Directory.Delete(other, true);
     }
 
     // mknod makes a named pipe (0x1000) or a socket node (0xC000), which anyone may make; the mode carries the permission bits.
