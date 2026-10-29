@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-10-29 (what `npm run test:tools` covers; earlier: selected native Windows development UI acceptance; real Linux CE integration; each dated section keeps its own date).
+Last updated: 2026-10-29 (what `npm run test:tools` covers and that its PASS can hide skipped tests; a link anchor that named no heading removed; earlier: selected native Windows development UI acceptance; real Linux CE integration; each dated section keeps its own date).
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -41,7 +41,7 @@ companion's tests); dated entries below that name them are history.
 | Public payload/provenance boundary | `npm run test:safety` |
 | The Godot rebuild | Developed and gated in its own repository (onslaught-godot) since 2026-10-22. The frozen `rebuild/` copy here is not built or tested and is removed when this repository is split. |
 | Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. `build:companion-godot` refuses GDScript, saved resources and multi-node scenes, then builds the C# companion; `export:companion-godot` produces normal Godot .NET Linux/Windows exports. Builds are headless. |
-| Tools | The affected `tools/<name>_tests.py`; `npm run test:tools` runs every registered suite (`worldheaders_decode --self-test` needs the retail `worldheaders.dat`). Its self-test fails for any `*_tests.py` that is neither registered nor excluded with a reason in `tools/run_tool_tests.py`, so a new test file cannot fall outside it. It covers, besides the earlier ones, `dds_census`, `mission_script_inspect`, `worldheaders_decode`, the skinning and matrix contracts, `battle_engine_config_decode`, `gltf_pose_check`, `goodie_resource_walk`, `xap_bank_walk`, `safe_generated_output` and the extractor source audit. A suite that cannot run (a Windows-only one on another host, or the audit when the `AYAResourceExtractor` or `Onslaught` submodule is not initialised: `git submodule update --init`) is a named SKIP in the summary, never a pass. The companion, Godot host and rebuild launcher suites run under their own npm scripts. |
+| Tools | The affected `tools/<name>_tests.py`; `npm run test:tools` runs every registered suite (`worldheaders_decode --self-test` needs the retail `worldheaders.dat`). Its self-test fails for any `*_tests.py` that is neither registered nor excluded with a reason in `tools/run_tool_tests.py`, so a new test file cannot fall outside it. It covers, besides the earlier ones, `dds_census`, `mission_script_inspect`, `worldheaders_decode`, the skinning and matrix contracts, `battle_engine_config_decode`, `gltf_pose_check`, `goodie_resource_walk`, `xap_bank_walk`, `safe_generated_output` and the extractor source audit. A suite that cannot run (a Windows-only one on another host, or the audit when the `AYAResourceExtractor` or `Onslaught` submodule is not initialised: `git submodule update --init`) is a named SKIP in the summary, never a pass. A suite that runs is reported as passed even when some of its tests skipped themselves (tests that need the retail data or a specimen skip one by one): on 2026-10-29 the skipped tests numbered 27 without the retail environment variables and 17 with the retail view and the pinned asset index, so read each suite's own skip lines before citing the summary as evidence for a retail claim. The companion, Godot host and rebuild launcher suites run under their own npm scripts. |
 | Game documentation claim | Cite the decompiled function, capture, byte comparison or source line; never paste decompiler output (`reverse-engineering/REVIEW-PROTOCOL.md` for optional reviews). |
 
 ## Companion native Windows development UI — October 25
@@ -2807,7 +2807,8 @@ scope.
 The three weapon foundations had only parsed at the September 20 checkpoint;
 their subsequent comparison results are recorded below. They have no live
 consumers yet.
-Current component guidance is in [`rebuild/README.md`](rebuild/README.md#native-main-menu).
+Component guidance for the rebuild is in [`rebuild/README.md`](rebuild/README.md), a frozen copy; current development is in
+[onslaught-godot](https://github.com/dlprentice/onslaught-godot).
 
 #### Native Main Menu — September 22
 
