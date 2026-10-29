@@ -61,7 +61,59 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/check_region_overlap.py",),
     # Name-align plates (Gen34–38): keep regression guards in the sweep (Opus).
     ("tools/worldheaders_decode.py", "--self-test"),
+    # Format, contract and decoder suites.
+    ("tools/dds_census_tests.py",),
+    ("tools/mission_script_inspect_tests.py",),
+    ("tools/worldheaders_decode_tests.py",),
+    ("tools/cmsh_skinning_contract_tests.py",),
+    ("tools/cmsh_matrix_normal_contract_tests.py",),
+    ("tools/battle_engine_config_decode_tests.py",),
+    ("tools/gltf_pose_check_tests.py",),
+    ("tools/goodie_resource_walk_tests.py",),
+    ("tools/xap_bank_walk_tests.py",),
 )
+
+# Test files that are deliberately not in SUITES, each with why and where they run instead. The registry self-test fails for any
+# *_tests.py (or test_*.py) file that is in neither place, so a new test file cannot silently fall outside the gate.
+NOT_IN_THIS_GATE: dict[str, str] = {
+    "tools/run_tool_tests.py": "this runner itself: npm run test:tools runs its --self-test before any suite",
+    "tools/companion_godot_tests.py": "fake-tool checks of the companion's Godot routes; run by npm run test:companion-tools (part of npm test)",
+    "tools/godot_host_tests.py": "engine discovery and process cleanup with fake tools; run by npm run test:godot-host",
+    "rebuild/tools/first_flight_tests.py": "the rebuild launcher with fake tools; run by npm run test:godot-host",
+    "rebuild/tools/aya_battleengine_identity_analyzer_tests.py":
+        "frozen rebuild copy, not built or tested here (its gate is onslaught-godot's); no Toolkit tool imports its module",
+    "rebuild/tools/materialize_films_tests.py":
+        "frozen rebuild copy, not built or tested here; no Toolkit tool imports its module, and it needs numpy",
+    "rebuild/tools/rebuild_gate_tests.py":
+        "frozen rebuild copy, not built or tested here; it tests the rebuild gate's report readers, and that gate is not run here",
+}
+
+# Directories that hold other checkouts, private data or build output, never this repository's own test files.
+_NOT_REPOSITORY_SOURCE = frozenset({
+    ".git", ".worktrees", ".claude", "local-data", "local-lab", ".artifacts", "references", "node_modules", "__pycache__",
+})
+
+
+def find_test_files(root: pathlib.Path = ROOT) -> set[str]:
+    """Every *_tests.py and test_*.py file below root, repository-relative with forward slashes."""
+
+    found: set[str] = set()
+    for directory, names, files in os.walk(root):
+        names[:] = [name for name in names if name not in _NOT_REPOSITORY_SOURCE]
+        for name in files:
+            if name.endswith("_tests.py") or (name.startswith("test_") and name.endswith(".py")):
+                found.add(pathlib.Path(directory, name).relative_to(root).as_posix())
+    return found
+
+
+def unregistered_test_files(
+    root: pathlib.Path = ROOT, registered: set[str] | None = None, excluded: set[str] | None = None
+) -> list[str]:
+    """Test files that are neither registered in SUITES nor excluded with a reason."""
+
+    registered = {command[0] for command in SUITES} if registered is None else registered
+    excluded = set(NOT_IN_THIS_GATE) if excluded is None else excluded
+    return sorted(find_test_files(root) - registered - excluded)
 
 # Suites that need a Windows host, by path, with the reason. None remain since the
 # Windows runtime-probe lab moved to the private RE archive; the mechanism stays so a
@@ -205,6 +257,36 @@ class RunToolTestsSelfTest(unittest.TestCase):
             with self.subTest(suite=command[0]):
                 self.assertTrue((ROOT / command[0]).is_file(), command[0])
         self.assertTrue(set(WINDOWS_ONLY) <= {command[0] for command in SUITES})
+
+    def test_every_test_file_is_registered_or_excluded_with_a_reason(self) -> None:
+        # The converse of the check above: a gate also fails when a suite that exists is silently outside it.
+        self.assertEqual([], unregistered_test_files(),
+                         "a test file is outside the gate: register it in SUITES, or list it in NOT_IN_THIS_GATE with a reason")
+        self.assertEqual(set(), {command[0] for command in SUITES} & set(NOT_IN_THIS_GATE), "both registered and excluded")
+        self.assertEqual(set(), set(NOT_IN_THIS_GATE) - find_test_files(), "an exclusion names a file that does not exist")
+        for path, reason in NOT_IN_THIS_GATE.items():
+            with self.subTest(path=path):
+                self.assertGreaterEqual(len(reason.split()), 5, "an exclusion needs a reason, not a placeholder")
+
+    def test_a_stray_test_file_is_found_and_other_checkouts_are_not_scanned(self) -> None:
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            for relative in (
+                "tools/known_tests.py", "tools/new_tests.py", "rebuild/tools/stray_tests.py", "tools/test_pytest_style.py",
+                "local-data/scratch_tests.py", ".worktrees/other/x_tests.py", "references/Onslaught/y_tests.py",
+            ):
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("")
+            self.assertEqual(
+                ["rebuild/tools/stray_tests.py", "tools/new_tests.py", "tools/test_pytest_style.py"],
+                unregistered_test_files(root, registered={"tools/known_tests.py"}, excluded=set()),
+            )
+            self.assertEqual([], unregistered_test_files(
+                root, registered={"tools/known_tests.py", "tools/new_tests.py", "tools/test_pytest_style.py"},
+                excluded={"rebuild/tools/stray_tests.py"}))
 
     @mock.patch.dict(WINDOWS_ONLY, {f"tools/windows_only_{n}.py": "synthetic" for n in range(4)})
     def test_windows_suites_are_reported_without_launching_on_linux(self) -> None:
