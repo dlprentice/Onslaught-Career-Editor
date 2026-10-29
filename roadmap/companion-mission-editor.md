@@ -1,8 +1,8 @@
 # Companion Mission Editor: Design Addendum
 
-Status: design proposal; nothing in it is built. It extends the [Companion level editor](companion-level-editor.md), which is on main
-through its map (M3).
-Last updated: 2026-10-29 (the lead's decisions recorded; first draft; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
+Status: design; the reference compiler and its retail gate (MS1, section 11) are built, the rest is plan. It extends the
+[Companion level editor](companion-level-editor.md), which is on main through its map (M3).
+Last updated: 2026-10-29 (the spike's result and the operator-grouping decision; the lead's earlier decisions; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours that is proved against every script the game
 shipped (byte for byte), and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -51,16 +51,17 @@ over the 66 installed level archives, and the installed `data/MissionScripts` fo
    trailing words, and a constant trailer. Read on one small script, the shape is plain: the variable initialisers compile to
    a block that ends in a return; each fixed event starts at its entry point and ends in a return; an expression statement
    ends by removing its value from the stack; a `switch` is a chain of compare and jump-if-not-equal with labels; a named
-   handler starts with a jump-if-false over its body. (INFERRED from reading one script against its source; the gate in
-   section 5 is what tests it.)
+   handler starts with a jump-if-false over its body. (First read off one script; MEASURED since by the gate of section 5, which
+   compiles every installed source to its shipped record: section 11.)
 6. **The symbol table records things a byte-exact compiler must reproduce.** Each symbol has a name, a type, a value, an
-   index, a flag and one more integer that is the 0-based line of the source where the symbol first appeared (checked by
-   hand on one script; in 611 of 670 scripts it never decreases, and the other 59 are for the compiler's work to explain).
+   index, a flag and one more integer that is the 0-based line of the source where the symbol first appeared (it never
+   decreases except in the 59 scripts with `do_once` blocks, whose two boolean symbols per block come after every other symbol
+   with line 0: section 11).
    Constants are named `const dataN` from one counter that runs consecutively inside a script, carries on from one script to the
    next in a level's order (583 of 583 boundaries), and carries on across levels (level 100's first script starts at 716, level
    110's at 1744): it is the state of one compile session over the whole build. The flag is 1 on all 22,311 symbols; the
-   trailer is the same ten bytes in all 670; the two trailing words are (0, 1) in 652 scripts and (0, 0) in 18 (what they
-   mean is not known yet; no obvious correlation with the events a script has).
+   trailer is the same ten bytes in all 670; the first trailing word is 0 in all of them and the second is 1 in 652 scripts and
+   0 in 18: it is 1 exactly when the script has a `vars` block (section 11).
 7. **The game's own rules the symbol table must keep.** `CSymbolTable::Clone` (`0x005395b0`), which makes the copy a thing
    runs, copies a symbol only if no symbol of that name is there yet: two symbols with one name would shift every index after
    them and corrupt the script. The shipped counter keeps every name in a script unique; ours must too. Instruction operands
@@ -68,9 +69,10 @@ over the 66 installed level archives, and the installed `data/MissionScripts` fo
 8. **The language is small.** The 732 sources are ASCII, 727 with CRLF line ends, 824,000 bytes in all (largest 13 KB), no block
    comments, one directive in the scripts (`#include`, of the shared files `onsldef.msl` and `text.stf`, which hold only
    `#define`s and comments: the defines and the text ids), so a compiler needs `#include` and plain `#define`, and constants
-   arrive as substitutions where they are used; the constructs are `vars` blocks, the fixed events and `event("name")` handlers, `if`/`else`, `while`,
-   `for`, `switch`/`case`, calls of natives (`Name(args)`, or on a thing variable `target.Name(args)`, which sets the receiver),
-   assignment, the operators `&& || < > + - * /` and `!`, and the types `bool`, `int`, `float`, `thing` and `position`.
+   arrive as substitutions where they are used; the constructs are `vars` blocks (one script writes `attributes` ... `end_attributes`),
+   the fixed events and `event("name")` handlers, `if`/`else`, `while`, `for`, `switch`/`case`, `do_once` blocks, calls of natives
+   (`Name(args)`, or on a thing variable `target.Name(args)`, which sets the receiver), assignment, the operators `&& || == < <= > >=
+   + - * /` (no script outside a string or comment uses `!`, `!=` or `%`), and the types `bool`, `int`, `float`, `thing` and `position`.
 9. **Names matter to the VM in one place that matters here.** Beyond `Clone`, a script's symbols are reached by index. `SetVar`
    (`IScript::SetVar`, `0x005348f0`) passes a name and a value to the thing it is called on, and the base class
    (`CComplexThing::SetVar`, `0x004f45e0`) only logs an unknown variable; one subclass keeps a few variables of its own by
@@ -101,7 +103,7 @@ recompiled, so a mod differs from the game only where the player edited.
 | Milestone | Scope | Done when | Estimate |
 | --- | --- | --- | --- |
 | MS0 scripts beside the map (read-only) | the Level editor page lists the open level's compiled scripts (name, the events handled, the things that run it, the natives it calls) next to the map, shows the selected script's installed `.msl` source with line numbers, and links names in it (thing names, waypoint paths, scripts, text ids) to the table and the map; selecting a thing shows its script and the other way round; waypoint paths are drawn on the map | on every installed level the list equals the world body's scripts, every one finds its source (670 of 670), the capture at three sizes looked at, nothing written | 4 to 5 days |
-| MS1 reference compiler and the byte-exact gate | `tools/msl_compile.py` (preprocess, lex, parse, generate, write the record as the world file stores it) and `tools/msl_gate.py --game GAME`, section 5 | every shipped script compiles to its shipped record, or each difference is explained and the compiler reproduces it | 1 to 2 weeks (a 2-day spike on the 20 smallest scripts first) |
+| MS1 reference compiler and the byte-exact gate | `tools/msl_compile.py` (preprocess, lex, parse, generate, write the record as the world file stores it) and `tools/msl_gate.py --game GAME`, section 5 | every shipped script compiles to its shipped record, or each difference is explained (built; section 11) | built 2026-10-29 (the spike ran on every script) |
 | MS2 the C# compiler | `Missions/` with the same stages, authored vectors from the Python reference in Git, and a local retail gate (`Development/ScriptsGate.cs`) that must match the Python gate on all scripts | the vectors and the retail gate pass; the C# refuses what the Python refuses | 1 week |
 | MS3 first editable thing | the page edits the selected script's source (a text area with line numbers), compiles it (errors by line and column, a summary of what changed), replaces the script in the session as one undoable command, and saves through Save as mod | the acceptance in section 6 | 1 week |
 | MS4 structured helpers | forms for common edits (a count, a delay, a message id), the event graph (who posts, who handles), checks against the level (names exist), path membership and order on the map, spawner and trigger parameters (these are world-body data and need no compiler) | each helper has a test and a message a player can act on | 2 weeks |
@@ -124,9 +126,9 @@ For every level and every script, compile the installed source and compare with 
 - **Where the gate runs.** The gate needs the game, so it is local and its table is private; Git holds authored sources and
   their expected bytes (small, made for the purpose) so the suites run without the game.
 
-The cheapest falsifier of the whole approach is the spike in MS1: the 20 smallest scripts. If their instruction streams, symbol
-tables and lines cannot be made to match within a few days, the approach is wrong and the fallback is the data-level helpers of MS4
-plus literal edits in compiled scripts.
+The cheapest falsifier of the whole approach was the spike in MS1: the 20 smallest scripts. If their instruction streams, symbol
+tables and lines could not be made to match within a few days, the approach was wrong and the fallback was the data-level helpers of
+MS4 plus literal edits in compiled scripts. They matched on the first draft, and the spike then went on to every script (section 11).
 
 ## 6. The first editable thing, and its acceptance
 
@@ -170,16 +172,18 @@ The spawn count and the timer values are the next edits in the same mould.
   the compiler refuses it.
 - The VM checks little itself: a bad script can hang or crash a level. The checker is static; no check here says a mission can
   be won or that a level plays.
-- Unknown today: the two trailing words, the 59 scripts whose symbol lines do not rise, whether a script compiled from the
-  install's source is the revision the game shipped (the gate answers it per script), the 62 sources with no installed level.
+- Unknown today: how the original compiler grouped any mix of operators the shipped scripts parenthesise (the compiler refuses
+  those, section 11), what it did with a construct no shipped script uses, and the 62 sources with no installed level (nothing to
+  compare them with). Settled by the gate: the trailing words, the line order, and which installed sources are not the revision the
+  game shipped (a pinned list, each with how it differs).
 - Nothing here has been played yet. The retail data (sources, objects, frames) stays local and out of Git.
 
 ## 9. Risks and the cheapest check for each
 
 | Risk | Check |
 | --- | --- |
-| The shipped sources are not the sources of the shipped objects | the gate's first run: how many of 670 are identical in free mode |
-| The original compiler's output depends on something the source does not say | the spike on the 20 smallest scripts; the explained-differences list |
+| The shipped sources are not the sources of the shipped objects | answered by the gate's first run: a short list of installed sources is another revision, pinned by name with how each differs; the rest are identical |
+| The original compiler's output depends on something the source does not say | answered for the shipped scripts: the compile session's two counters (a caller's input), the call result flag, `do_once`'s trailing symbols, and the rest are in the source; operator grouping the shipped scripts leave open is refused |
 | A constant name or an index is used at run time in a way we have not found | the handlers named in item 9 were read; an edit that renames nothing is the first acceptance |
 | A compiled script is accepted by our checker and crashes the VM | run the edited level in CE offscreen for the length of the script's events and read the log; keep edits small until the checker has been through a few of these |
 | Symbols shared between scripts (a clone) corrupt on a duplicate name | unique names are an error in the checker and a vector in the tests |
@@ -195,3 +199,42 @@ The spawn count and the timer values are the next edits in the same mould.
 3. Raw source text before forms (MS3 before MS4).
 4. Beside MS0: Home's "Change folder" is examined against unsaved Edit career and Settings changes, and gets the Level editor's
    ask-first guard if it drops them.
+5. Operator grouping (after the spike): the compiler accepts what the shipped scripts prove and refuses any other mix without
+   parentheses, naming both operators, because the original compiler's grouping there is unknown and a silent guess could change a
+   mission's meaning; the editor shows the grouping used for the proven cases.
+
+## 11. The spike's result (2026-10-29)
+
+`tools/msl_compile.py` (the reference compiler), `tools/msl_gate.py` (the retail gate of section 5) and `tools/msl_compile_tests.py`
+(authored sources only) exist, and the gate was run over the whole installation, the base worlds as well as the real ones. It reads
+the game folder and writes nothing.
+
+- **Result.** Every installed source compiles to its shipped record, field by field and as the bytes the world encoder writes,
+  with two kinds of exception the gate names per script. Some sources include a header the install does not hold
+  (`data\text\extra2\...\text.stf`, names only the developers had): the gate treats it as empty, takes each name it would have
+  defined from the shipped constant at that position, and the rest of the record is then identical (reported as assisted). And a
+  short list of installed sources is another revision than the one compiled into the world file (the shipped script has
+  statements, a variable or a handler the file lacks, or the reverse): the gate pins each by level and name with how it differs, and
+  fails when a pinned source turns out to compile exactly, so the list cannot rot. Nothing is unexplained.
+- **The trailing words.** The first is 0 in every script. The second is 1 exactly when the script has a variables block.
+- **The line order.** A symbol's line is the 0-based line of its first appearance in the main source, counting newline
+  characters only (so mixed line ends are no problem); an `#include` or `#define` line leaves a blank line so later lines keep
+  their numbers, and a name that comes from a header carries the line of its use. A name is entered once and a constant every
+  time. The lines never fall except in scripts with `do_once` blocks: their two boolean symbols per block (`do-once-N`, a flag that is
+  true and a false constant, numbered from a second compile-session counter) come after every other symbol with line 0.
+- **What the first reading missed**, each found by the gate and now tested: a call's attribute carries bit 16 when its result is
+  used (clear when the call is a whole statement); an assignment is an expression whose value stays on the stack, so `if (x = TRUE)`
+  compiles; a `for` loop's step is read before its body (its constants are numbered first) and emitted after it; an `event("x")`
+  handler's parameter is the first string constant with that value in the script; floats are stored as float32 and a negative number
+  is one constant; `attributes` ... `end_attributes` compiles like `vars` ... `end_vars`; a handler named otherwise than the 13 events is
+  compiled and never entered (some shipped scripts have misspelt ones; the compiler says so in a note); a variable may be declared
+  twice (one symbol); the declared types of variables are not in the object code; every shipped call has exactly its native's
+  argument count, which the compiler now enforces.
+- **Operator grouping.** The shipped scripts prove only that repeating one operator groups left to right, that `&&` and `==` have one
+  rank and group left to right (so `a && b == c` is `(a && b) == c`, unlike C), and that `+ - * /` bind tighter than the
+  comparisons. They put parentheses round everything else, so the original compiler's grouping there is unknown. The compiler
+  therefore accepts exactly those cases and refuses any other mix without parentheses, naming both operators (decision 5). For a
+  mixed chain it does accept it returns a note with the grouping used, which the editor shows.
+- **What is still unproven.** Constructs no shipped script uses (the compiler refuses them; `!=` it compiles to the one instruction
+  the VM has for it and groups only with arithmetic), the sources of the levels this install lacks, and the game running any
+  script this compiler wrote.

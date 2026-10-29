@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-29 (`heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-29 (`msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -285,6 +285,29 @@ publish, sign, or install anything by themselves.
   heights `heightfield_lookup.py` gives on a fixed grid and at every thing's position (hashes only) for the Companion's local
   retail gate, `Development/LevelsGate.cs`, whose header gives its command; the table is derived from a game, so keep it
   private.
+- `msl_compile.py` compiles a mission script source (`.msl`) to the record a level's world file ships for it. The game never reads
+  `.msl` files: it runs the compiled scripts inside each world body (`CWorld::LoadScripts`, `0x0050ac70`, and
+  `CMissionScriptObjectCode`'s file constructor, `0x00538ec0`), so the sources are the original compiler's input and the
+  compiler is written from the decompilation's description of the script VM and its loader (cited by function, no source
+  copied) and checked against what the game shipped. The output is the record `world_resources_encode.read_world_model` gives for a
+  script (instructions, the 13 event entry points, the symbol table with each symbol's source line, the named handlers, two
+  trailing words), ready for `write_world_body`. The module's docstring lists the dialect as the shipped scripts show it: a call's
+  attribute has a result-used bit, an assignment is an expression, a `for` step is read before the body, `do_once` blocks add boolean
+  symbols after every other symbol, floats are float32. Two counters belong to the compile session and are the caller's to start
+  (`const dataN` and `do-once-N`). Operator grouping is only partly proven by the shipped scripts, so the compiler accepts repeats
+  of one operator, `&&` with `==` (one rank, left to right, unlike C) and arithmetic inside comparisons, and refuses any other
+  mix without parentheses, naming both operators. Besides the record it returns notes (how a mixed chain was grouped, a handler the
+  game never calls) for an editor to show.
+- `msl_gate.py --game GAME [--table] [--level N]` is its retail gate: for every compiled script of every world body of an
+  installed game it compiles `data/MissionScripts/level<NNN>/<name>.msl` and compares the record field by field and as the bytes
+  the world encoder writes. A script is exact; exact with an `#include` the install lacks (a few sources name files only the
+  developers had, so the gate treats the header as empty and takes each name it would have defined from the shipped constants);
+  or one of a pinned list of installed sources that are another revision than the one compiled into the world file, each with
+  how it differs. Anything else fails, and so does a pinned entry that has become exact. It reads the game folder, writes nothing,
+  and needs an installed game; `--table` lists one row per script (private, derived from a game).
+  `msl_compile_tests.py` runs on authored sources only (the shape of every statement, the call flag, the counters, the grouping
+  rules and the refusals, the header search, a record's round trip through the world encoder, and the gate's verdicts on an
+  authored game folder).
 - `export_game_assets.py`, `export_asset_catalog.py`,
   `export_language_corpus.py`, and `export_video_manifest.py` operate on
   user-supplied local inputs and write to a separate local output root. The
