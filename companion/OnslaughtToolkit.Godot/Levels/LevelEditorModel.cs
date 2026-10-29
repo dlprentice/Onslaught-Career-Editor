@@ -86,11 +86,12 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         get
         {
             if (Session is not { } session) return 0;
-            byte[]? bytes;
+            byte[] bytes;
             try { bytes = session.ToBytes(); }
-            catch (InvalidDataException) { bytes = null; }
-            if (bytes is not null && (session.IsBaseline(bytes) || Signature(bytes) == _savedSignature)) return 0;
-            return Math.Max(1, session.Changes().Count + session.ScriptChanges().Count);
+            catch (Exception error) when (EditSession.IsUnstorable(error)) { return 1; }
+            if (session.IsBaseline(bytes) || Signature(bytes) == _savedSignature) return 0;
+            try { return Math.Max(1, session.Changes().Count + session.ScriptChanges().Count); }
+            catch (Exception error) when (EditSession.IsUnstorable(error)) { return 1; }
         }
     }
 
@@ -307,6 +308,12 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
 
     /// <summary>A sentence about moved objects and changed scripts, or null when there are none.</summary>
     public string? ChangeSummary()
+    {
+        try { return ChangeSummaryCore(); }
+        catch (Exception error) when (EditSession.IsUnstorable(error)) { return "This level has changes this editor cannot describe or save."; }
+    }
+
+    private string? ChangeSummaryCore()
     {
         IReadOnlyList<ObjectChange> changes = Session?.Changes() ?? [];
         IReadOnlyList<ScriptChange> scripts = Session?.ScriptChanges() ?? [];

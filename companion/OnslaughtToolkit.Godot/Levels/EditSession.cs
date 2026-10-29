@@ -103,6 +103,10 @@ public sealed class EditSession
 
     internal bool IsBaseline(ReadOnlySpan<byte> bytes) => bytes.SequenceEqual(_baselineBytes);
 
+    /// <summary>Failures a malformed working body can cause while it is inspected; the editor must refuse it rather than lose it.</summary>
+    internal static bool IsUnstorable(Exception error) => error is InvalidDataException or NullReferenceException or ArgumentException or
+        InvalidOperationException or IndexOutOfRangeException or OverflowException;
+
     /// <summary>The working body. Edit it through <see cref="Apply"/> so that the change can be undone.</summary>
     public WorldBody Body { get; }
 
@@ -212,11 +216,16 @@ public sealed class EditSession
         {
             bytes = Body.Write();
         }
-        catch (InvalidDataException error)
+        catch (Exception error) when (IsUnstorable(error))
         {
-            foreach (ScriptChange change in ScriptChanges().Where(change => change.StorageError is not null))
-                errors.Add(new Finding("script-unstorable", $"Script {change.Name} cannot be saved: {change.StorageError}", change.Index));
-            if (errors.Count == 0) errors.Add(new Finding("cannot-write", $"This world cannot be saved: {error.Message}"));
+            try
+            {
+                foreach (ScriptChange change in ScriptChanges().Where(change => change.StorageError is not null))
+                    errors.Add(new Finding("script-unstorable", $"Script {change.Name} cannot be saved: {change.StorageError}", change.Index));
+            }
+            catch (Exception detailError) when (IsUnstorable(detailError)) { }
+            string reason = error is InvalidDataException ? error.Message : "the working level contains a missing or invalid record";
+            if (errors.Count == 0) errors.Add(new Finding("cannot-write", $"This world cannot be saved: {reason}"));
             return new ValidationReport(errors, warnings);
         }
         if (IsBaseline(bytes))

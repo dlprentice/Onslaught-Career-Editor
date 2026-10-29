@@ -329,6 +329,8 @@ internal static class LevelScriptEditTests
             ("removed", edit => edit.Body.Scripts.RemoveAt(0), "scripts-changed"),
             ("added", edit => edit.Body.Scripts.Add(edit.ShippedScript(0)), "scripts-changed"),
             ("missing", edit => edit.Body.Scripts[0] = null!, "cannot-write"),
+            ("missing row", edit => edit.Body.Things[0] = null!, "cannot-write"),
+            ("missing header", edit => edit.Body.Header = null!, "cannot-write"),
         })
         {
             check.That(model.Open(100) && model.Session is not null, $"a fresh authored level opens before the {what} script test");
