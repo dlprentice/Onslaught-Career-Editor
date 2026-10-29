@@ -284,7 +284,7 @@ publish, sign, or install anything by themselves.
   each level archive a SCRIPTS row (how many scripts its own world and its base world hold, a hash of the lines the Level editor's script
   catalog reads from them, how many of their sources the finder reads and a hash of those sources' text), a NAMES row (every quoted text of
   the level's own sources, found outside comments and resolved against the level's objects and its base world's, its paths, scripts and event handlers, hashed;
-  the first argument of a `FollowWaypoint` or `FollowWaypointWait` call also matches paths in other letter case, as the game finds them), a PATHS row (each waypoint
+  the first argument of a `FollowWaypoint` or `FollowWaypointWait` call names the one path the game uses: the first of the base world's paths and then the level's own whose name matches in any letter case), a PATHS row (each waypoint
   path of the level's own world with the rows of the points the game keeps, the slots that name a waypoint, hashed, and how many points are kept of how many slots)
   and for
   each level archive with a terrain the digest of its samples, the bits of its scale and water level, and a digest of the
