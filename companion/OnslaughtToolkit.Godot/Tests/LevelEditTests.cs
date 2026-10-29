@@ -14,6 +14,22 @@ namespace OnslaughtToolkit.Companion.Tests;
 /// </summary>
 internal static class LevelEditTests
 {
+    // Lets a test change the caller's world map after StageWithSources has copied it, before it enumerates sources.
+    private sealed class SourcesOnEnumerate : IReadOnlyDictionary<string, string>
+    {
+        private readonly IReadOnlyDictionary<string, string> _values;
+        private readonly Action _onEnumerate;
+        internal SourcesOnEnumerate(IReadOnlyDictionary<string, string> values, Action onEnumerate) => (_values, _onEnumerate) = (values, onEnumerate);
+        public string this[string key] => _values[key];
+        public IEnumerable<string> Keys => _values.Keys;
+        public IEnumerable<string> Values => _values.Values;
+        public int Count => _values.Count;
+        public bool ContainsKey(string key) => _values.ContainsKey(key);
+        public bool TryGetValue(string key, out string value) => _values.TryGetValue(key, out value!);
+        public IEnumerator<KeyValuePair<string, string>> GetEnumerator() { _onEnumerate(); return _values.GetEnumerator(); }
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
     internal static void Run(string outputDirectory, Checks check)
     {
         check.Suite("level edits");
@@ -148,6 +164,25 @@ internal static class LevelEditTests
             "    {\n      \"path\": \"data/worlds/world200.wrd\",\n      \"size\": 659,\n      \"sha256\": \"da84aab0a0d90cd5af9b60e2ff223b8846edd97a96f0889477d10a97861e63f0\"\n    }\n  ]\n}\n";
         check.That(File.ReadAllBytes(Path.Combine(staged.Root, "mod.json")).AsSpan().SequenceEqual(System.Text.Encoding.ASCII.GetBytes(expected)),
             "the manifest matches the independent Python reference for the authored world and source");
+
+        Dictionary<int, byte[]> removedWorlds = new() { [200] = expectedWorld.ToArray() };
+        StagedMod? afterRemoval = null;
+        Exception? removed = Captured(() => afterRemoval = ModStager.StageWithSources(Path.Combine(folder, "removed-world"),
+            new ModInfo("kept", "n"), removedWorlds, new SourcesOnEnumerate(sources, () => removedWorlds.Remove(200)), game, []));
+        check.That(removed is null && afterRemoval is not null &&
+                   File.ReadAllBytes(Path.Combine(afterRemoval.Root, "data", "worlds", "world200.wrd")).AsSpan().SequenceEqual(expectedWorld),
+            "removing a caller world after the snapshot does not change which world is validated and staged");
+
+        const string addedPath = "data/MissionScripts/level201/main.msl";
+        string addedOriginal = Path.Combine(game, addedPath.Replace('/', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(Path.GetDirectoryName(addedOriginal)!);
+        File.WriteAllText(addedOriginal, "// original\n");
+        Dictionary<int, byte[]> addedWorlds = new() { [200] = expectedWorld.ToArray() };
+        string addedParent = Path.Combine(folder, "added-world");
+        Exception? added = Captured(() => ModStager.StageWithSources(addedParent, new ModInfo("refused", "n"), addedWorlds,
+            new SourcesOnEnumerate(new Dictionary<string, string> { [addedPath] = source }, () => addedWorlds[201] = expectedWorld.ToArray()), game, []));
+        check.That(added is ModStageException && added.Message.Contains("world being staged", StringComparison.Ordinal) && !Directory.Exists(addedParent),
+            "a world added to the caller's mapping after the snapshot cannot admit a new source");
 
         Dictionary<string, string>[] bad =
         [

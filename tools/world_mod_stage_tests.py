@@ -313,6 +313,48 @@ class StageAsModTests(Base):
         with self.assertRaisesRegex(stage.ModStageError, "listed twice"):
             stage.build_manifest("a", "n", "1", {"data/worlds/world200.wrd": world, path: b"x", path.replace("main", "MAIN"): b"x"})
 
+    def test_source_validation_uses_the_world_snapshot_when_the_caller_changes_its_mapping(self) -> None:
+        path = "data/MissionScripts/level200/main.msl"
+        original = self.game / path
+        original.parent.mkdir(parents=True)
+        original.write_bytes(b"// original\n")
+        source_a, source_b = "init() { Pause(1); }\n", "init() { Pause(2); }\n"
+        world_a, world_b = self.world_with_source(source_a), self.world_with_source(source_b)
+        real = stage.mc.read_game_source
+
+        def swap(game, requested):
+            result = real(game, requested)
+            worlds[200] = world_b
+            return result
+
+        worlds = {200: world_a}
+        with patch.object(stage.mc, "read_game_source", side_effect=swap):
+            with self.assertRaisesRegex(stage.ModStageError, "does not compile to the script"):
+                stage.stage_mod(self.out, self.game, "mismatch", worlds, name="n", sources={path: source_b})
+        self.assertFalse(self.out.exists())
+
+        worlds = {200: world_a}
+        with patch.object(stage.mc, "read_game_source", side_effect=swap):
+            stage.stage_mod(self.out, self.game, "matches", worlds, name="n", sources={path: source_a})
+        self.assertEqual(world_a, (self.out / "matches/data/worlds/world200.wrd").read_bytes())
+        self.assertEqual(source_a.encode("latin-1"), (self.out / "matches" / path).read_bytes())
+
+        extra = "data/MissionScripts/level201/main.msl"
+        (self.game / extra).parent.mkdir(parents=True)
+        (self.game / extra).write_bytes(b"// original\n")
+        worlds = {200: world_a}
+
+        def add_level(game, requested):
+            result = real(game, requested)
+            worlds[201] = world_b
+            return result
+
+        with patch.object(stage.mc, "read_game_source", side_effect=add_level):
+            with self.assertRaisesRegex(stage.ModStageError, "world being staged"):
+                stage.stage_mod(self.out, self.game, "added", worlds, name="n", sources={path: source_a, extra: source_b})
+        self.assertFalse((self.out / "added").exists())
+        self.assertEqual(b"// original\n", original.read_bytes())
+
     def test_a_source_cannot_be_attached_to_invalid_or_ambiguous_worlds(self) -> None:
         path = "data/MissionScripts/level200/main.msl"
         original = self.game / path
@@ -635,9 +677,20 @@ class StageAsModTests(Base):
                 raise OSError("disk full")
             return real(self_, path, payload)
         with patch.object(safe.SecuredOutputRoot, "atomic_write_new_bytes", fail_on_manifest):
-            with self.assertRaisesRegex(stage.ModStageError, "could not write the mod"):
+            with self.assertRaisesRegex(stage.ModStageError, "including mod.json"):
                 stage.stage_mod(self.out, self.game, "half", {200: self.edited_body}, name="n")
         self.assertFalse((self.out / "half" / "mod.json").exists())
+
+        def fail_after_manifest(self_, path, payload):
+            real(self_, path, payload)
+            if Path(path).name == "mod.json":
+                raise OSError("failed after publication")
+        with patch.object(safe.SecuredOutputRoot, "atomic_write_new_bytes", fail_after_manifest):
+            with self.assertRaisesRegex(stage.ModStageError, "including mod.json") as raised:
+                stage.stage_mod(self.out, self.game, "published", {200: self.edited_body}, name="n")
+        self.assertIn(str(self.out / "published"), str(raised.exception))
+        self.assertIn("may be active on the next game launch", str(raised.exception))
+        self.assertTrue((self.out / "published/mod.json").exists())
 
     def test_the_manifest_builder_holds_the_same_limits_as_the_loader(self) -> None:
         body = self.edited_body

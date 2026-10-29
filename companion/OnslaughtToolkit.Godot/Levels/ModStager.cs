@@ -225,7 +225,7 @@ public static class ModStager
         StageIncludeBudget includes = new(ScriptCompiler.IncludesFrom(gameRoot), maxStageIncludes, maxStageIncludeChars);
         foreach ((string path, string source) in sources)
         {
-            if (SourceLevel(path) is not int level || !worlds.ContainsKey(level))
+            if (SourceLevel(path) is not int level || !files.ContainsKey(WorldPath(level)))
                 throw new ModStageException($"{path}: a mission source must name a safe path for a world being staged.");
             if (source is null || source.Length > MaxSourceBytes || source.Any(c => c > 255))
                 throw new ModStageException($"{path}: source must be at most {MaxSourceBytes} single-byte characters.");

@@ -28,9 +28,10 @@ pilots and network sessions. The loader remains the authority on the files and o
 
 Writing goes through safe_generated_output: the destination is opened as a held directory chain, a destination inside the
 selected game folder (or inside any Battle Engine Aquila tree) is refused, every file is written to an exclusive temporary
-name and published without replacing anything, the world files are written first and mod.json last (a folder without
-mod.json is inert), and a folder that already holds anything is refused. The helper detects replacement; it does not lock: a
-directory moved by another process during the run is not guaranteed to stay outside the game folder (tools/README.md).
+name and published without replacing anything, every payload is written before mod.json, and a folder that already holds
+anything is refused. A failure can leave files, including mod.json, which might enable the mod on the next launch. The helper
+detects replacement; it does not lock: a directory moved by another process during the run is not guaranteed to stay outside
+the game folder (tools/README.md).
 """
 from __future__ import annotations
 
@@ -218,7 +219,7 @@ def stage_mod(parent: Path, game: Path, mod_id: str, worlds: dict[int, bytes], *
     read_include = _StageIncludes(game)
     for path, text in (sources or {}).items():
         level = source_level(path)
-        if level is None or level not in worlds:
+        if level is None or world_path(level) not in files:
             raise ModStageError(f"{path}: a mission source must name a safe path for a world being staged")
         if not isinstance(text, str) or len(text) > MAX_SOURCE_BYTES:
             raise ModStageError(f"{path}: a mission source is at most {MAX_SOURCE_BYTES} single-byte characters")
@@ -235,7 +236,7 @@ def stage_mod(parent: Path, game: Path, mod_id: str, worlds: dict[int, bytes], *
             mc.read_game_source(game, path)
         except mc.CompileError:
             raise ModStageError(f"{path}: the game's original source could not be read safely") from None
-        check_source_matches_world(path, text, worlds[level], read_include)
+        check_source_matches_world(path, text, files[world_path(level)], read_include)
     manifest = build_manifest(mod_id, name, version, files, author=author, description=description,
                               ce_min=ce_min, ce_max=ce_max)
     root = Path(os.path.abspath(parent)) / mod_id
@@ -250,9 +251,9 @@ def stage_mod(parent: Path, game: Path, mod_id: str, worlds: dict[int, bytes], *
                 secured.atomic_write_new_bytes(root / path, files[path])
             secured.atomic_write_new_bytes(root / "mod.json", manifest)
     except UnsafeGeneratedOutputError as error:
-        raise ModStageError(f"refused: {error}") from error
+        raise ModStageError(f"refused: {error} The folder {root} may contain files, including mod.json. The mod may be active on the next game launch. Check the folder before using or removing it.") from error
     except OSError as error:
-        raise ModStageError(f"could not write the mod: {error}") from error
+        raise ModStageError(f"could not write the mod: {error} The folder {root} may contain files, including mod.json. The mod may be active on the next game launch. Check the folder before using or removing it.") from error
     return {"root": str(root), "manifestSha256": hashlib.sha256(manifest).hexdigest(),
             "files": [{"path": path, "size": len(files[path]), "sha256": hashlib.sha256(files[path]).hexdigest()}
                       for path in sorted(files)]}
