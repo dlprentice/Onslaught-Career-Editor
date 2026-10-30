@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-30 (one script edit staged by the Level editor was played in CE on Linux; the Level editor edits a script's source; earlier: live rebuild ownership and catalogue routes clarified)
+Last updated: 2026-10-30 (one script edit staged by the Level editor was run in CE on Linux; the Level editor edits a script's source; earlier: live rebuild ownership and catalogue routes clarified)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -217,8 +217,8 @@ Its sidebar:
   level's own with an installed source it can also edit the source, compile it and make the open level use the result (undoable,
   with a warning when an edit adds calls to `Damage`); Save as mod then writes the world file with the replaced script. The page is
   covered by event-driven tests and offscreen captures on Linux, and one edit of one script (a tutorial message of level 100) was staged by
-  it and played in CE on Linux, offscreen and live, with the edited subtitle on screen beside control runs (the [mission editor design](roadmap/companion-mission-editor.md)'s
-  section 16, which also says what that does not show). Nobody has used the page by hand, no other edit has been played, the mod holds the world file only (the
+  it and run in CE on Linux, offscreen and live, with the edited subtitle on screen beside control runs (the [mission editor design](roadmap/companion-mission-editor.md)'s
+  section 16, which also says what that does not show). Nobody has used the page by hand, no other edit has been run, the mod holds the world file only (the
   edited source is not kept beside it) and there has been no native Windows run. The documented CE world-mod loader is Linux-only. See the [level editor description](companion/OnslaughtToolkit.Godot/README.md#what-it-does),
   [level editor plan](roadmap/companion-level-editor.md) and [mission editor design](roadmap/companion-mission-editor.md).
 - **Advanced**, folded away: Career bytes (the open career's stored values, or the bytes that

@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-30 (one script edit staged by the Level editor was played in CE on Linux; content catalogue: the battle engine configurations and `sounds.sfx`; the `VSDS`, `PMIB` and `DMKR` payloads; source-modelled named-thing lookups; the Level editor edits a script's source; cross-project progress chart, current priorities and completion criteria; earlier: the maintainer's storage name removed; earlier: the game documentation is written in onslaught-preservation, not in the frozen `reverse-engineering/`; earlier: the companion's update guidance and the published decompilation's score stated as they are; earlier: content catalogue phase 3: world bodies, compiled scripts, terrain payloads, sprintf texture names; content catalogue survey, schema, generator, levels, placements and usage, Linux CE workflow and native Windows backend/load checks completed)
+Last updated: 2026-10-30 (one script edit staged by the Level editor was run in CE on Linux; content catalogue: the battle engine configurations and `sounds.sfx`; the `VSDS`, `PMIB` and `DMKR` payloads; source-modelled named-thing lookups; the Level editor edits a script's source; cross-project progress chart, current priorities and completion criteria; earlier: the maintainer's storage name removed; earlier: the game documentation is written in onslaught-preservation, not in the frozen `reverse-engineering/`; earlier: the companion's update guidance and the published decompilation's score stated as they are; earlier: content catalogue phase 3: world bodies, compiled scripts, terrain payloads, sprintf texture names; content catalogue survey, schema, generator, levels, placements and usage, Linux CE workflow and native Windows backend/load checks completed)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
@@ -105,7 +105,7 @@ separate historical route, not a statement that CE already has online play.
 
 The Companion's Level editor can inspect and move placed objects, show a map and mission scripts, and edit a script's
 source (compile it, make the level use it, undo it); it saves changed world files as new CE mods. The page is covered by
-tests and offscreen captures on Linux, and one edit of one script was staged by it and played in CE on Linux (section 16 of the mission
+tests and offscreen captures on Linux, and one edit of one script was staged by it and run in CE on Linux (section 16 of the mission
 editor design); nobody has used it by hand, and the mod does not preserve the edited source beside the world file. The [level editor plan](roadmap/companion-level-editor.md)
 and [mission editor design](roadmap/companion-mission-editor.md) own their remaining gates, including source-preserving
 staging, hand use and gameplay acceptance. CE's documented world-mod loader is currently Linux-only.
