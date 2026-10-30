@@ -827,6 +827,19 @@ class NamedThingsCatalogueTests(unittest.TestCase):
         self.assertTrue(self.assets["level:201"]["level"]["namedThings"]["complete"])
         self.assertNotIn("registryIncomplete", self.lookups()["Depot"])
 
+    def test_a_partial_registry_keeps_its_candidates_most_recent_first(self) -> None:
+        """An incomplete answer asserts no target, but the candidates it lists stay in the order FindThingByName meets
+        them (every fixture above has a single candidate, so only two entries of one name show the order)."""
+        entries = [{"name": "Gun", "world": "RLWD", "ordinal": 0, "order": 0, "conditional": False},
+                   {"name": "Gun", "world": "RLWD", "ordinal": 1, "order": 1, "conditional": False}]
+        rid = {("RLWD", 0): "placement:first", ("RLWD", 1): "placement:second"}
+        relation = catalog.names_thing_relation("Gun", ["GetThingRef"], entries, rid, [], ["BSWD"])
+        self.assertEqual((relation["status"], relation["target"], relation["registryIncomplete"]),
+                         ("incomplete", None, ["BSWD"]))
+        self.assertEqual(relation["candidates"], ["placement:second", "placement:first"])
+        nothing = catalog.names_thing_relation("Other", ["GetThingRef"], entries, rid, [], ["BSWD"])
+        self.assertNotIn("candidates", nothing)
+
     def test_a_missing_required_world_does_not_claim_a_complete_or_resolved_registry(self) -> None:
         reg = self.assets["level:203"]["level"]["namedThings"]
         self.assertEqual((reg["complete"], reg["undecodedWorlds"]), (False, ["BSWD"]))
