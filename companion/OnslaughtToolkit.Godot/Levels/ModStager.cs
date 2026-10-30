@@ -58,7 +58,8 @@ public sealed class ModStageException : Exception
 /// </summary>
 public static class ModStager
 {
-    public const int MaxFilesPerMod = 4096, MaxWorldBytes = 4 << 20, MaxManifestBytes = 256 << 10;
+    public const int MaxFilesPerMod = 4096, MaxWorldFiles = 1000, MaxWorldBytes = 4 << 20, MaxManifestBytes = 256 << 10;
+    public const long MaxTotalBytes = 1L << 30;
 
     private static readonly Regex IdPattern = new("\\A[a-z0-9_-]{1,48}\\z", RegexOptions.CultureInvariant);
     private static readonly Regex VersionPattern = new("\\A[0-9]{1,5}(?:\\.[0-9]{1,5}){0,3}\\z", RegexOptions.CultureInvariant);
@@ -140,7 +141,8 @@ public static class ModStager
     /// Writes <c>PARENT/ID</c>: <c>mod.json</c> and <c>data/worlds/worldNNN.wrd</c> for each level in <paramref name="worlds"/>.
     /// Refuses, with nothing written: what <see cref="BuildManifest"/> refuses, a parent that is not a full path, a mod folder
     /// inside a game folder or any of <paramref name="protectedFolders"/> (compared after resolving links), and a folder that
-    /// already holds anything.
+    /// already holds anything, more than 1,000 worlds, or more than 1 GiB of world bytes. The level numbers allow at most
+    /// 1,000 distinct worlds, and CE's mod loader has the same aggregate byte limit. Inputs are copied after these checks.
     /// </summary>
     /// <exception cref="ModStageException">The mod cannot be made or saved.</exception>
     public static StagedMod Stage(string parent, ModInfo info, IReadOnlyDictionary<int, byte[]> worlds, IEnumerable<string?> protectedFolders) =>
@@ -152,13 +154,21 @@ public static class ModStager
     internal static StagedMod Stage(string parent, ModInfo info, IReadOnlyDictionary<int, byte[]> worlds, IEnumerable<string?> protectedFolders,
         Action<string>? beforeWrite, Action<string>? beforeCommittedOpen = null, Action<string>? beforePublish = null)
     {
-        Dictionary<string, byte[]> files = [];
+        if (Problem(info) is { } problem) throw new ModStageException(problem);
+        if (worlds.Count > MaxWorldFiles) throw new ModStageException($"A mod stages at most {MaxWorldFiles} world files.");
+        Dictionary<string, byte[]> inputs = [];
+        long total = 0;
+        int count = 0;
         foreach ((int level, byte[] body) in worlds)
         {
+            if (++count > MaxWorldFiles) throw new ModStageException($"A mod stages at most {MaxWorldFiles} world files.");
             string path = WorldPath(level);
             if (body is null || body.Length is 0 or > MaxWorldBytes) throw new ModStageException($"{path}: a world file is 1 byte to {MaxWorldBytes} bytes.");
-            files[path] = body.ToArray();
+            total += body.Length;
+            if (total > MaxTotalBytes) throw new ModStageException($"A mod's files total at most {MaxTotalBytes} bytes.");
+            inputs[path] = body;
         }
+        Dictionary<string, byte[]> files = inputs.ToDictionary(entry => entry.Key, entry => entry.Value.ToArray());
         byte[] manifest = BuildManifest(info, files);
 
         string root = CheckDestination(parent, info.Id, protectedFolders);

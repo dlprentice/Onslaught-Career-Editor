@@ -444,6 +444,33 @@ internal static class LevelEditTests
         byte[] saved = File.ReadAllBytes(worldPath);
         check.That(changed && saved.AsSpan().SequenceEqual(original) && manifestHash == Sha256(saved) && staged.Files[0].Sha256 == manifestHash,
             "the saved world, manifest and receipt use a private copy when the caller changes its buffer");
+
+        // Reuse a single authored buffer so a refusal beyond CE's limit does not itself allocate a gigabyte.
+        byte[] largest = new byte[ModStager.MaxWorldBytes];
+        Dictionary<int, byte[]> overBytes = Enumerable.Range(0, (int)(ModStager.MaxTotalBytes / largest.Length) + 1)
+            .ToDictionary(level => level, _ => largest);
+        string tooLarge = Path.Combine(folder, "too-large");
+        long before = GC.GetAllocatedBytesForCurrentThread();
+        Exception? byteError = Captured(() => ModStager.Stage(tooLarge, new ModInfo("refused", "n"), overBytes, []));
+        long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+        check.That(byteError is ModStageException && byteError.Message.Contains("files total", StringComparison.Ordinal) &&
+                   !Directory.Exists(tooLarge) && allocated < 2L * ModStager.MaxWorldBytes,
+            "over-budget world inputs are refused before output or large copies");
+
+        string badMetadata = Path.Combine(folder, "bad-metadata");
+        before = GC.GetAllocatedBytesForCurrentThread();
+        Exception? infoError = Captured(() => ModStager.Stage(badMetadata, new ModInfo("not a valid id", "n"),
+            new Dictionary<int, byte[]> { [7] = largest }, []));
+        allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+        check.That(infoError is ModStageException && infoError.Message.Contains("mod id", StringComparison.OrdinalIgnoreCase) &&
+                   !Directory.Exists(badMetadata) && allocated < ModStager.MaxWorldBytes,
+            "invalid metadata is refused before output or a world copy");
+
+        Dictionary<int, byte[]> overCount = Enumerable.Range(0, ModStager.MaxWorldFiles + 1).ToDictionary(level => level, _ => original);
+        string tooMany = Path.Combine(folder, "too-many");
+        Exception? countError = Captured(() => ModStager.Stage(tooMany, new ModInfo("refused", "n"), overCount, []));
+        check.That(countError is ModStageException && countError.Message.Contains("world files", StringComparison.Ordinal) && !Directory.Exists(tooMany),
+            "more world files than valid level numbers are refused before output");
     }
 
     // ---- the edit session ----------------------------------------------------------------------------------------------------
