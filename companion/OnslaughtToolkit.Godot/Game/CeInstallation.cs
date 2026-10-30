@@ -313,6 +313,21 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
         return Compare(newer, baseVersion) > 0;
     }
 
+    /// <summary>
+    /// Whether the release version <paramref name="version"/> ("0.1.12") is <paramref name="minimum"/> ("0.1.11") or later, by its numeric core: a leading v and a label after a
+    /// hyphen or a plus ("0.2.0-rc0", "v0.1.12", "0.1.12+build5") are set aside. False for anything whose core is not numeric.
+    /// </summary>
+    public static bool IsAtLeast(string version, string minimum) =>
+        TryNumericVersion(NumericCore(version), out int[] have) && TryNumericVersion(NumericCore(minimum), out int[] want) && Compare(have, want) >= 0;
+
+    private static string NumericCore(string version)
+    {
+        string text = version.Trim();
+        if (text.Length > 0 && text[0] is 'v' or 'V') text = text[1..];
+        int label = text.IndexOfAny(['-', '+', ' ']);
+        return label < 0 ? text : text[..label];
+    }
+
     private static bool TryNumericVersion(string version, out int[] numbers)
     {
         string[] parts = version.Split('.');

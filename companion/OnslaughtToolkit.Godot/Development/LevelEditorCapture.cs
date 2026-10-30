@@ -1,19 +1,21 @@
 // SPDX-License-Identifier: GPL-3.0-only
+using System.Diagnostics;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Godot;
 using OnslaughtToolkit.Companion.Files;
+using OnslaughtToolkit.Companion.Game;
 using OnslaughtToolkit.Companion.Levels;
 using OnslaughtToolkit.Companion.Ui;
 
 namespace OnslaughtToolkit.Companion.Development;
 
 /// <summary>
-/// Draws the Level editor against a Steam-shaped game folder and runs the editor's acceptance on it, in one of eight modes. Run on a
+/// Draws the Level editor against a Steam-shaped game folder and runs the editor's acceptance on it, in one of nine modes. Run on a
 /// GPU output (godot-offscreen): <c>--script res://Development/LevelEditorCapture.cs -- --output=DIR --fixture=ANY_FILE --steam-root=DIR
-/// [--mode=drag|typed|markers|scripts|names|flow|edit|scriptmod] [--sizes=1920x1080] [--level=100] [--row=12] [--expect-sha256=HEX] [--to=276.49,265.07]
-/// [--script=LevelScript] [--edit=message|comment]</c>.
+/// [--mode=drag|typed|markers|scripts|names|flow|edit|scriptmod|play] [--sizes=1920x1080] [--level=100] [--row=12] [--expect-sha256=HEX] [--to=276.49,265.07]
+/// [--script=LevelScript] [--edit=message|comment] [--ce-package=DIR]</c>.
 /// <list type="bullet">
 /// <item><c>drag</c> (the default): open level 100, click row 12's mark on the map, drag it to the pixel of 276.49, 265.07, let go, save
 /// as a mod into the capture's own output, and compare the saved world file's SHA-256 with the one the Toolkit's pipeline gives for the same
@@ -44,6 +46,13 @@ namespace OnslaughtToolkit.Companion.Development;
 /// (the default): the tutorial's first <c>PlayCharMessageWait</c> call plays the second call's message, so another subtitle shows in the cockpit while it plays (one symbol of
 /// the compiled script differs). <c>--edit=comment</c>: a comment line above the first line, which the compiled script keeps as line numbers (every symbol that holds one
 /// differs) and which behaves the same: the control for "the game runs what the page made". The frames hold the game's script text and stay in local-data.</item>
+/// <item><c>play</c>: the page's Play button end to end (the design document's section 17). The same edit as <c>scriptmod</c> (<c>--edit</c>), then "Play this level with the changes"
+/// pressed with the released Onslaught CE package in <c>--ce-package</c> (a folder holding <c>onslaught-ce</c>) as the launcher, which starts the real launcher in a temporary
+/// folder of its own, offscreen (the play hooks set the guards of port/tools/run.py, the key presses and a frame limit by environment). It waits for CE to close, then checks that the
+/// player's own CE folder (a scratch one with a ce.ini, a stand-in career and a tape) is byte for byte as it was, that the game folder has the same files, that the temporary folder
+/// is gone, that CE's log says it served the mod's world file and that the edit still counts as unsaved; it keeps the temporary folder's listing, ce.ini and marker, CE's log, the
+/// mod and CE's own screenshots in <c>play-kept-SIZE</c>, and writes <c>play-SIZE.txt</c>. Run it with <c>--beside-gpu-jobs</c>: CE renders on the Intel GPU under the capture's lock. The
+/// frames and screenshots hold the game's text and stay in local-data.</item>
 /// </list>
 /// The game folder is only read; every file this writes stays inside the output directory. Development builds only.
 /// </summary>
@@ -58,7 +67,7 @@ public partial class LevelEditorCapture : SceneTree
     /// </summary>
     private const string DragSha256 = "5f40f82f08e058a39458f9807b710318dbc00dccc0ecbd3d9a2d921ffac6d48a";
 
-    private string _output = "", _steamRoot = "", _expected = "", _mode = "drag", _script = "LevelScript", _edit = "message";
+    private string _output = "", _steamRoot = "", _expected = "", _mode = "drag", _script = "LevelScript", _edit = "message", _cePackage = "", _playUser = "", _playParent = "", _playKeep = "";
     private int _shots, _level = 100, _row = 12;
     private double _toX = 276.49, _toY = 265.07;
     private bool _passed = true;
@@ -81,6 +90,7 @@ public partial class LevelEditorCapture : SceneTree
                 if (argument.StartsWith("--mode=", StringComparison.Ordinal)) _mode = argument["--mode=".Length..];
                 if (argument.StartsWith("--script=", StringComparison.Ordinal)) _script = argument["--script=".Length..];
                 if (argument.StartsWith("--edit=", StringComparison.Ordinal)) _edit = argument["--edit=".Length..];
+                if (argument.StartsWith("--ce-package=", StringComparison.Ordinal)) _cePackage = argument["--ce-package=".Length..];
                 if (argument.StartsWith("--expect-sha256=", StringComparison.Ordinal)) _expected = argument["--expect-sha256=".Length..].ToLowerInvariant();
                 if (argument.StartsWith("--to=", StringComparison.Ordinal))
                 {
@@ -90,8 +100,8 @@ public partial class LevelEditorCapture : SceneTree
                 }
             }
             if (_expected.Length == 0) _expected = _mode == "typed" ? TypedSha256 : DragSha256;
-            if (_output.Length == 0 || _steamRoot.Length == 0 || !Directory.Exists(_steamRoot) || _mode is not ("drag" or "typed" or "markers" or "scripts" or "names" or "flow" or "edit" or "scriptmod") ||
-                _edit is not ("message" or "comment"))
+            if (_output.Length == 0 || _steamRoot.Length == 0 || !Directory.Exists(_steamRoot) || _mode is not ("drag" or "typed" or "markers" or "scripts" or "names" or "flow" or "edit" or "scriptmod" or "play") ||
+                _edit is not ("message" or "comment") || _mode == "play" && !File.Exists(Path.Combine(_cePackage, "onslaught-ce")))
             {
                 GD.PrintErr("--output=DIR and --steam-root=DIR (a Steam-shaped folder holding the game) are required; --mode is drag, typed, markers, scripts, names, flow, edit or scriptmod (--edit message or comment, --script the script's name).");
                 return;
@@ -170,7 +180,7 @@ public partial class LevelEditorCapture : SceneTree
         Directory.CreateDirectory(work);
         SubViewport viewport = new() { Size = size, RenderTargetUpdateMode = SubViewport.UpdateMode.Always, TransparentBg = false, GuiEmbedSubwindows = true };
         Root.AddChild(viewport);
-        CompanionEnvironment environment = new([_steamRoot], Path.Combine(work, "settings", "settings.json"), () => false, _ => { }, Path.Combine(work, "backups"));
+        CompanionEnvironment environment = _mode == "play" ? PlayEnvironment(work) : new([_steamRoot], Path.Combine(work, "settings", "settings.json"), () => false, _ => { }, Path.Combine(work, "backups"));
         CompanionApp app = new(new ProtectedSaveFiles(), managesWindow: false, environment);
         viewport.AddChild(app);
         await Settle();
@@ -197,6 +207,7 @@ public partial class LevelEditorCapture : SceneTree
         else if (_mode == "flow") await ScriptsFlow(viewport, app, page, label);
         else if (_mode == "edit") await EditView(viewport, app, page, label);
         else if (_mode == "scriptmod") await ScriptMod(viewport, app, page, label, mods);
+        else if (_mode == "play") await PlayRun(viewport, app, page, label);
         else await Markers(viewport, app, page, label, mods);
         viewport.QueueFree();
         await Settle();
@@ -643,12 +654,28 @@ public partial class LevelEditorCapture : SceneTree
     /// </summary>
     private async Task ScriptMod(SubViewport viewport, CompanionApp app, LevelEditorPage page, string label, string mods)
     {
+        string? what = await EditScript(viewport, page, label, "scriptmod");
+        if (what is null) return;
+        await SaveAndCompare(viewport, page, label, mods, 3, compare: false);
+
+        string folder = Path.Combine(mods, page.SaveDialog.Id.Text);
+        List<string> lines = [$"scriptmod: level {_level}, script {_script}, edit {_edit} ({what})", $"page: {page.ScriptEditNote.Replace('\n', ' ')} | {page.Summary}", $"mod id {page.SaveDialog.Id.Text}, folder {folder}"];
+        if (Directory.Exists(folder))
+            foreach (string file in Directory.GetFiles(folder, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal))
+                lines.Add($"{Path.GetRelativePath(folder, file)} | {new FileInfo(file).Length} bytes | SHA-256 {Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(file)))}");
+        File.WriteAllLines(Path.Combine(_output, $"scriptmod-{label}.txt"), lines);
+        GD.Print("SCRIPTMOD " + string.Join(" || ", lines));
+    }
+
+    /// <summary>Selects the script, turns Edit source on, makes the one small change (see <c>--edit</c>), compiles and uses it. Returns what the change was, or null if it could not be made.</summary>
+    private async Task<string?> EditScript(SubViewport viewport, LevelEditorPage page, string label, string shotPrefix)
+    {
         page.ScriptsToggle.ButtonPressed = true;
         await Settle();
         Report(page.Scripts.Select(_script) && page.Scripts.Current?.Summary.Name == _script, $"{_script} is a script of level {_level}");
         await Settle();
         Report(!page.EditSource.Disabled, $"{_script} has an installed source to start from: {page.Scripts.Info}");
-        await Shot(viewport, label, "scriptmod-1-script");
+        await Shot(viewport, label, shotPrefix + "-1-script");
         page.EditSource.ButtonPressed = true;
         await Settle();
         string shipped = page.Scripts.SourceText, edited, what;
@@ -663,7 +690,7 @@ public partial class LevelEditorCapture : SceneTree
             MatchCollection calls = Regex.Matches(shipped, @"PlayCharMessageWait\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*,\s*([A-Za-z_][A-Za-z0-9_]*)\s*,");
             bool shape = calls.Count >= 2 && calls[0].Groups[2].Value != calls[1].Groups[2].Value;
             Report(shape, "the source's first two PlayCharMessageWait calls play different messages");
-            if (!shape) return;
+            if (!shape) return null;
             Group first = calls[0].Groups[2];
             edited = shipped[..first.Index] + calls[1].Groups[2].Value + shipped[(first.Index + first.Length)..];
             what = "the first PlayCharMessageWait call plays the second call's message";
@@ -673,16 +700,120 @@ public partial class LevelEditorCapture : SceneTree
         await Settle();
         Report(page.ScriptEditNote.StartsWith($"Replaced {_script}.", StringComparison.Ordinal) && page.Summary.StartsWith($"1 script replaced: {_script} (", StringComparison.Ordinal),
             $"Compile and use replaced {_script} ({what}): \"{page.ScriptEditNote.Split('\n')[0]}\" / \"{page.Summary}\"");
-        await Shot(viewport, label, "scriptmod-2-compiled-and-used");
-        await SaveAndCompare(viewport, page, label, mods, 3, compare: false);
+        await Shot(viewport, label, shotPrefix + "-2-compiled-and-used");
+        return what;
+    }
 
-        string folder = Path.Combine(mods, page.SaveDialog.Id.Text);
-        List<string> lines = [$"scriptmod: level {_level}, script {_script}, edit {_edit} ({what})", $"page: {page.ScriptEditNote.Replace('\n', ' ')} | {page.Summary}", $"mod id {page.SaveDialog.Id.Text}, folder {folder}"];
-        if (Directory.Exists(folder))
-            foreach (string file in Directory.GetFiles(folder, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal))
-                lines.Add($"{Path.GetRelativePath(folder, file)} | {new FileInfo(file).Length} bytes | SHA-256 {Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(file)))}");
-        File.WriteAllLines(Path.Combine(_output, $"scriptmod-{label}.txt"), lines);
-        GD.Print("SCRIPTMOD " + string.Join(" || ", lines));
+
+    /// <summary>
+    /// An environment for the <c>play</c> mode: a scratch CE user folder that stands for the player's own (a ce.ini with other ideas, a stand-in career and a tape, which the
+    /// capture checks are the same afterwards), the released CE package in <c>--ce-package</c> remembered as the launcher, and the play hooks that make the real launcher run
+    /// offscreen: the guards port/tools/run.py sets, a space press at Presents 250 and 290 to skip the intro, F12 (CE's own screenshot) every 70 Presents from 450, and a frame limit.
+    /// </summary>
+    private CompanionEnvironment PlayEnvironment(string work)
+    {
+        _playUser = Path.Combine(work, "ce-user");
+        Directory.CreateDirectory(Path.Combine(_playUser, "savegames"));
+        Directory.CreateDirectory(Path.Combine(_playUser, "tapes"));
+        File.WriteAllText(Path.Combine(_playUser, "ce.ini"), "# the player's own settings\nupdate_check=1\nrecord_sessions=1\nmods=some-other-mod\nunknown_key=kept\n");
+        File.WriteAllText(Path.Combine(_playUser, "savegames", "stand-in.bes"), "a stand-in career: never read, never copied");
+        File.WriteAllText(Path.Combine(_playUser, "tapes", "old.tape"), "a stand-in tape");
+        string settingsPath = Path.Combine(work, "settings", "settings.json");
+        new SettingsStore(settingsPath).Save(new CompanionSettings { Target = GameTarget.Original, AutoBackup = false, CeLauncher = Path.Combine(_cePackage, "onslaught-ce") });
+        string runtime = Path.Combine(work, "ce-runtime"), dxvk = Path.Combine(work, "ce-dxvk");
+        Directory.CreateDirectory(runtime);
+        Directory.CreateDirectory(dxvk);
+        if (OperatingSystem.IsLinux()) File.SetUnixFileMode(runtime, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        List<string> keys = ["250:44:39:d", "251:44:39:u", "290:44:39:d", "291:44:39:u"];
+        for (int present = 450; present <= 870; present += 70) keys.AddRange([$"{present}:69:58:d", $"{present + 1}:69:58:u"]);
+        Dictionary<string, string?> offscreen = new()
+        {
+            ["SDL_VIDEO_DRIVER"] = "offscreen", ["BEA_PORT_REQUIRE_OFFSCREEN"] = "1", ["DXVK_WSI_DRIVER"] = "SDL3", ["DXVK_FILTER_DEVICE_NAME"] = "Intel", ["DXVK_LOG_PATH"] = dxvk,
+            ["SDL_AUDIO_DRIVER"] = "dummy", ["BEA_PORT_REQUIRE_DUMMY_AUDIO"] = "1", ["BEA_REPORT_NO_OPEN"] = "1", ["BROWSER"] = "/bin/true", ["XDG_RUNTIME_DIR"] = runtime,
+            ["DISPLAY"] = null, ["WAYLAND_DISPLAY"] = null, ["DBUS_SESSION_BUS_ADDRESS"] = null, ["DBUS_SYSTEM_BUS_ADDRESS"] = null, ["LD_LIBRARY_PATH"] = null,
+            ["BEA_PORT_FAKE_KEYS"] = string.Join(",", keys), ["BEA_PORT_REPLAY_MAX"] = "950",
+        };
+        _playParent = Path.Combine(work, "ce-play");
+        _playKeep = Path.Combine(_output, "play-kept-" + Path.GetFileName(work)["work-".Length..]);
+        CePlayHooks hooks = new(Parent: _playParent, Environment: offscreen, BeforeRemoval: KeepPlay, OnStart: RecordStart);
+        return new CompanionEnvironment([_steamRoot], settingsPath, () => false, _ => { }, Path.Combine(work, "backups"), CeUserFolder: _playUser, CePlay: hooks);
+    }
+
+    private readonly List<string> _started = [];
+
+    /// <summary>What CE is given, for the receipt: the arguments and the variables the companion set or removed (the values of paths are named, not listed).</summary>
+    private void RecordStart(ProcessStartInfo start)
+    {
+        _started.Add($"launcher {Path.GetFileName(start.FileName)} in {Path.GetFileName(start.WorkingDirectory)}; arguments: {string.Join(" ", start.ArgumentList)}");
+        foreach (string name in new[] { "BEA_USER_DIR", "BEA_GAME_DIR" }) _started.Add($"{name} = {(start.Environment.TryGetValue(name, out string? value) ? value : "(not set)")}");
+        foreach (string name in CePlay.FenceVariables) _started.Add($"{name}: {(start.Environment.ContainsKey(name) ? "SET" : "not set")}");
+    }
+
+    /// <summary>Before the temporary folder goes: its listing, its ce.ini and marker, CE's log, the mod it was given and CE's own screenshots, kept for the receipt (local only).</summary>
+    private void KeepPlay(string folder)
+    {
+        Directory.CreateDirectory(_playKeep);
+        List<string> lines = [];
+        foreach (string path in Directory.EnumerateFileSystemEntries(folder, "*", new EnumerationOptions { RecurseSubdirectories = true, AttributesToSkip = 0 }).Order(StringComparer.Ordinal))
+            lines.Add(Path.GetRelativePath(folder, path) + (Directory.Exists(path) ? "/" : $" | {new FileInfo(path).Length} bytes"));
+        File.WriteAllLines(Path.Combine(_playKeep, "listing.txt"), lines);
+        foreach ((string name, string kept) in new[] { ("ce.ini", "ce.ini"), ("onslaught-ce.log", "onslaught-ce.log"), (CePlayFolder.MarkerName, "marker.json") })
+            if (File.Exists(Path.Combine(folder, name))) File.Copy(Path.Combine(folder, name), Path.Combine(_playKeep, kept), overwrite: true);
+        foreach ((string sub, string pattern) in new[] { ("screenshots", "*.png"), (Path.Combine("mods", "play-level-" + _level.ToString(CultureInfo.InvariantCulture)), "*") })
+        {
+            string from = Path.Combine(folder, sub);
+            if (!Directory.Exists(from)) continue;
+            string to = Path.Combine(_playKeep, sub);
+            Directory.CreateDirectory(to);
+            foreach (string file in Directory.EnumerateFiles(from, pattern, SearchOption.AllDirectories))
+            {
+                string target = Path.Combine(to, Path.GetRelativePath(from, file));
+                Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                File.Copy(file, target, overwrite: true);
+            }
+        }
+    }
+
+    private static string[] Snapshot(string root) => [.. Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal)
+        .Select(path => Path.GetRelativePath(root, path) + " " + new FileInfo(path).Length + " " + Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(path))))];
+
+    /// <summary>
+    /// The page's Play button, end to end: the script edit (see <c>scriptmod</c>), then "Play this level with the changes" pressed. That starts the real Onslaught CE launcher of the
+    /// package in <c>--ce-package</c> in a temporary folder of its own, offscreen (the play hooks above), and this waits for CE to close, then checks what the player's own folder
+    /// holds (the same as before), that the temporary folder is gone, that CE's log says it served the mod's world file, and that the edit still counts as unsaved.
+    /// </summary>
+    private async Task PlayRun(SubViewport viewport, CompanionApp app, LevelEditorPage page, string label)
+    {
+        string? what = await EditScript(viewport, page, label, "play");
+        if (what is null) return;
+        CePlay play = app.Services.Play;
+        string game = app.Game.Folder!.AssetRoot;
+        string[] userBefore = Snapshot(_playUser), packageBefore = Snapshot(_cePackage), gameBefore = [.. Directory.EnumerateFiles(game, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal).Select(path => Path.GetRelativePath(game, path) + " " + new FileInfo(path).Length)];
+        Report(play.Unavailable() is null && !page.Play.Disabled, $"the button is on for level {_level}: \"{page.Play.TooltipText}\"");
+        await Shot(viewport, label, "play-3-ready");
+        Task playing = page.PlayAsync();
+        await Settle();
+        Report(page.Play.Disabled && play.Running && page.PlayNote.Contains("starting", StringComparison.Ordinal), $"while CE runs the button is off, and the page says: \"{page.PlayNote}\"");
+        await Shot(viewport, label, "play-4-running");
+        Stopwatch watch = Stopwatch.StartNew();
+        while (!playing.IsCompleted && watch.Elapsed < TimeSpan.FromMinutes(6)) await ToSignal(this, SignalName.ProcessFrame);
+        Report(playing.IsCompleted, $"CE closed within {watch.Elapsed.TotalSeconds:0} s");
+        if (!playing.IsCompleted) return;
+        await playing;
+        await Settle();
+        CePlayReport report = play.Last!;
+        Report(report is { Started: true, ExitCode: 0, ModServed: true } && report.Left.Count == 0, $"CE ran and its log says it served the mod's world file: exit {report.ExitCode}, {report.ModLines.Count} lines about mods, served {report.ModServed}");
+        Report(Snapshot(_playUser).SequenceEqual(userBefore), "the player's own CE folder (ce.ini, careers, tapes) is byte for byte as it was");
+        Report(Snapshot(_cePackage).SequenceEqual(packageBefore), $"the Onslaught CE package folder the launcher ran from is byte for byte as it was ({packageBefore.Length} files)");
+        Report(Directory.EnumerateFiles(game, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal).Select(path => Path.GetRelativePath(game, path) + " " + new FileInfo(path).Length).SequenceEqual(gameBefore), "the game folder has the same files and sizes");
+        Report(Directory.GetDirectories(_playParent, "play-*").Length == 0 && File.Exists(play.LastLog), $"the temporary folder is gone and CE's log is kept in {play.LastLog}");
+        Report(page.HasChanges && page.ChangeCount == 1 && !page.Play.Disabled, $"the edit still counts as unsaved and the button is on again: \"{page.PlayNote.Split('\n')[0]}\"");
+        int frames = Directory.Exists(Path.Combine(_playKeep, "screenshots")) ? Directory.GetFiles(Path.Combine(_playKeep, "screenshots")).Length : 0;
+        Report(frames > 0, $"CE's own screenshots were kept for the receipt: {frames}");
+        await Shot(viewport, label, "play-5-after");
+        List<string> lines = [$"play: level {_level}, script {_script}, edit {_edit} ({what})", .. _started, $"page note: {page.PlayNote.Replace('\n', ' ')}", $"report: started {report.Started}, exit {report.ExitCode}, served {report.ModServed}, log {report.LogCopy}", .. report.ModLines.Select(line => "mods line: " + line)];
+        File.WriteAllLines(Path.Combine(_output, $"play-{label}.txt"), lines);
+        GD.Print("PLAY " + string.Join(" || ", lines));
     }
 
     private async Task SaveAndCompare(SubViewport viewport, LevelEditorPage page, string label, string mods, int number, bool compare = true)

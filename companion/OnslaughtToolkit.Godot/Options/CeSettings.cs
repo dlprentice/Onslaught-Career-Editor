@@ -75,13 +75,18 @@ public sealed class CeSettings
     }
 
     /// <summary>Only these two exact, case-sensitive keys can change. Duplicate copies of those keys collapse to one.</summary>
-    public Outcome<byte[]> Prepare(bool updateCheck, bool recordSessions)
+    public Outcome<byte[]> Prepare(bool updateCheck, bool recordSessions) =>
+        PrepareValues([("update_check", updateCheck ? "1" : "0"), ("record_sessions", recordSessions ? "1" : "0")]);
+
+    /// <summary>
+    /// The same preparation for any exact, case-sensitive keys, in the order given: a key that is there changes in place, one that is not is
+    /// appended, copies of it collapse to one, and every other line keeps its exact bytes. Nothing is written; this is for a copy that goes
+    /// somewhere else (the temporary folder a test play of a level uses), never for the player's own ce.ini.
+    /// </summary>
+    internal Outcome<byte[]> PrepareValues(IReadOnlyList<(string Key, string Value)> changes)
     {
-        Dictionary<string, string> values = new(StringComparer.Ordinal)
-        {
-            ["update_check"] = updateCheck ? "1" : "0",
-            ["record_sessions"] = recordSessions ? "1" : "0",
-        };
+        Dictionary<string, string> values = new(StringComparer.Ordinal);
+        foreach ((string key, string value) in changes) values[key] = value;
         HashSet<string> written = new(StringComparer.Ordinal);
         StringBuilder output = new();
         foreach ((string line, string ending) in Lines(_text))

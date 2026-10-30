@@ -489,7 +489,15 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     }
 
     /// <summary>Writes the open edit as a CE mod folder <c>PARENT/ID</c>, or says why not (nothing changed, a folder that is not new, a game folder).</summary>
-    public SaveOutcome SaveAsMod(string parent, ModInfo info, IEnumerable<string?> protectedFolders)
+    public SaveOutcome SaveAsMod(string parent, ModInfo info, IEnumerable<string?> protectedFolders) => Stage(parent, info, protectedFolders, markSaved: true);
+
+    /// <summary>
+    /// Writes the open edit as a mod folder the same way, for a test play in Onslaught CE: the folder is a temporary one, so the edit is not counted as saved
+    /// (the unsaved-changes prompts still ask about it).
+    /// </summary>
+    public SaveOutcome StageForPlay(string parent, ModInfo info, IEnumerable<string?> protectedFolders) => Stage(parent, info, protectedFolders, markSaved: false);
+
+    private SaveOutcome Stage(string parent, ModInfo info, IEnumerable<string?> protectedFolders, bool markSaved)
     {
         if (Session is null || Level is not int level) return new SaveOutcome(null, "Open a level first.");
         ValidationReport report = Session.Validate();
@@ -498,8 +506,8 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         {
             byte[] bytes = Session.ToBytes();
             StagedMod staged = ModStager.Stage(parent, info, new Dictionary<int, byte[]> { [level] = bytes }, protectedFolders);
-            _savedSignature = Signature(bytes);
-            return new SaveOutcome(staged, $"Saved the mod to {staged.Root}.");
+            if (markSaved) _savedSignature = Signature(bytes);
+            return new SaveOutcome(staged, markSaved ? $"Saved the mod to {staged.Root}." : $"Made the mod for a test play in {staged.Root}.");
         }
         catch (Exception error) when (error is ModStageException or InvalidDataException)
         {

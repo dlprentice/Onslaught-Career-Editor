@@ -65,12 +65,14 @@ public partial class CompanionTestRunner : SceneTree
                 await CeTargetTests.RunAsync(this, original, output, check);
                 await CeOverlayTests.RunAsync(this, original, output, check);
                 await CePanelTests.RunAsync(this, original, output, check);
+                CePlayTests.Run(output, check);
+                await CePlayTests.RunAsync(this, original, output, check);
                 await FoundationSafetyTests.RunAsync(this, original, output, check);
                 check.That(File.ReadAllBytes(fixture).AsSpan().SequenceEqual(original), "the owned fixture copy is restored");
             }
             foreach (string failure in check.Failures) GD.PrintErr("FAIL: " + failure);
             GD.Print($"COMPANION_TESTS: {check.Failures.Count} failures in {check.Count} checks; career codec, game audio, " +
-                "protected files, publication races, file safety, old toolkit copies, Windows folders, game folder, asset readers and exports, level data, lore, theme contrast and the code-built interface executed.");
+                "protected files, publication races, file safety, old toolkit copies, Windows folders, game folder, asset readers and exports, level data, test plays of a level, lore, theme contrast and the code-built interface executed.");
             exitCode = check.Failures.Count == 0 ? 0 : 1;
         }
         catch (Exception error)
