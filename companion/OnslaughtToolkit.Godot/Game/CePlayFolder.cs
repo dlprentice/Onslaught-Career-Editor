@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Win32.SafeHandles;
 using OnslaughtToolkit.Companion.Careers;
 using OnslaughtToolkit.Companion.Files;
 
@@ -32,6 +33,13 @@ internal sealed class CePlayFolder
     private const int MaxMarkerBytes = 4096;
     private const int FileExists = 17;
     private const uint PrivateFolder = 0x1C0;   // 0700
+    private const int RemoveFolderFlag = 0x200;   // AT_REMOVEDIR
+
+    /// <summary>Test hook: called with an entry's name after its kind was read and before it is opened or removed, so a test can swap it for a link at the worst moment.</summary>
+    internal static Action<string>? AfterKind { get; set; }
+
+    [DllImport("libc", EntryPoint = "unlinkat", SetLastError = true)]
+    private static extern int UnlinkAt(int directory, [MarshalAs(UnmanagedType.LPUTF8Str)] string name, int flags);
 
     // Every entry, the marker and other dot files included (the default skips hidden ones on some paths).
     private static readonly EnumerationOptions AllEntries = new() { AttributesToSkip = 0, IgnoreInaccessible = false, RecurseSubdirectories = false, ReturnSpecialDirectories = false };
@@ -70,6 +78,25 @@ internal sealed class CePlayFolder
         return (stat.Mode & 0xF000) switch { 0x4000 => Kind.Folder, 0x8000 => Kind.File, 0xA000 => Kind.Link, _ => Kind.Other };
     }
 
+    /// <summary>What an entry of an open folder is, by name, without following a link.</summary>
+    private static Kind KindAt(SafeFileHandle folder, string name)
+    {
+        if (LinuxSaveNative.StatAt((int)folder.DangerousGetHandle(), name, LinuxSaveNative.NoFollow, 0x3, out LinuxSaveNative.Stat stat) != 0)
+        {
+            int error = Marshal.GetLastWin32Error();
+            if (error == 2 || error == 20) return Kind.Missing;
+            throw LinuxSaveNative.Failure($"{name} could not be inspected.", error);
+        }
+        return (stat.Mode & 0xF000) switch { 0x4000 => Kind.Folder, 0x8000 => Kind.File, 0xA000 => Kind.Link, _ => Kind.Other };
+    }
+
+    /// <summary>A folder opened without following a link (the open fails if it is one), by name in an open folder or by full path.</summary>
+    private static SafeFileHandle OpenFolder(int directory, string name) => LinuxSaveNative.OpenAt(directory, name, LinuxSaveNative.ReadDirectory, 0);
+
+    /// <summary>The names in an open folder, dot files included. The folder is read through its descriptor, so it is the one that was opened whatever happens to its path.</summary>
+    private static List<string> NamesIn(SafeFileHandle folder) =>
+        [.. Directory.EnumerateFileSystemEntries($"/proc/self/fd/{(int)folder.DangerousGetHandle()}", "*", AllEntries).Select(Path.GetFileName).OfType<string>()];
+
     /// <summary>
     /// Makes a new folder <c>PARENT/play-STAMP-RANDOM</c> (the parent too, if it is not there yet) and writes its marker. Refuses, with nothing
     /// left behind, when the parent is not a full path, is or has a link on the way, or cannot be made.
@@ -103,7 +130,7 @@ internal sealed class CePlayFolder
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or JsonException or InvalidOperationException)
         {
             // (InvalidOperationException is what the link check throws for a folder that is, or lies behind, a link.)
-            if (made.Length > 0) TryRemoveEmptyOrMarkerOnly(made);
+            if (made.Length > 0) TryRemoveJustMade(Path.GetDirectoryName(made)!, Path.GetFileName(made));
             return Outcome<CePlayFolder>.Refusal("The folder for a test play could not be made: " + error.Message);
         }
     }
@@ -235,6 +262,26 @@ internal sealed class CePlayFolder
         }
     }
 
+    /// <summary>The marker of an open folder, read by name in it without following a link: the same checks as <see cref="ReadMarker"/>, on the folder that was opened.</summary>
+    private static CePlayMarker? ReadMarkerIn(SafeFileHandle folder, string folderName)
+    {
+        try
+        {
+            if (KindAt(folder, MarkerName) != Kind.File) return null;
+            using SafeFileHandle file = LinuxSaveNative.OpenAt((int)folder.DangerousGetHandle(), MarkerName, LinuxSaveNative.ReadFile, 0);
+            using FileStream stream = new(file, FileAccess.Read, 1);
+            if (stream.Length is 0 or > MaxMarkerBytes) return null;
+            byte[] bytes = new byte[stream.Length];
+            stream.ReadExactly(bytes);
+            CePlayMarker? marker = JsonSerializer.Deserialize<CePlayMarker>(bytes);
+            return marker is { Format: MarkerFormat } && marker.Folder == folderName && marker.Folder.StartsWith(NamePrefix, StringComparison.Ordinal) ? marker : null;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException or PlatformNotSupportedException)
+        {
+            return null;
+        }
+    }
+
     /// <summary>
     /// Removes this folder and what is inside it. Refuses, leaving everything, unless the folder is a direct child of the play folder, is a real
     /// folder (not a link), and holds this class's marker naming it. Inside, files and folders go; a link or a special file stays, with the
@@ -253,16 +300,30 @@ internal sealed class CePlayFolder
             if (!string.Equals(Path.GetDirectoryName(root), parent, StringComparison.Ordinal) ||
                 !Path.GetFileName(root).StartsWith(NamePrefix, StringComparison.Ordinal))
                 return new CePlayRemoval(false, [root], $"{root} is not a folder of the companion's test plays, so it was left.");
-            if (KindOf(parent) != Kind.Folder || KindOf(root) != Kind.Folder)
+            string name = Path.GetFileName(root);
+            // The play folder is opened without following a link, then the folder by name inside it (the open fails for a link or a file): from here on every step is by name in an open folder.
+            using SafeFileHandle play = OpenFolder(LinuxSaveNative.AtCurrentDirectory, parent);
+            SafeFileHandle made;
+            try
+            {
+                made = OpenFolder((int)play.DangerousGetHandle(), name);
+            }
+            catch (IOException)
+            {
                 return new CePlayRemoval(false, [root], $"{root} is not a plain folder (a link, or gone), so it was left.");
-            if (ReadMarker(root) is null)
-                return new CePlayRemoval(false, [root], $"{root} does not carry the companion's marker, so it was left.");
-            List<string> left = [];
-            Sweep(root, left, Path.Combine(root, MarkerName));
-            return left.Count == 0
-                ? new CePlayRemoval(true, [], "The folder of the test play was removed.")
-                : new CePlayRemoval(false, left, $"The test play's folder was not removed completely; left in place: {string.Join(", ", left.Take(3))}" +
-                    (left.Count > 3 ? $" and {left.Count - 3} more" : "") + ".");
+            }
+            using (made)
+            {
+                if (ReadMarkerIn(made, name) is null)
+                    return new CePlayRemoval(false, [root], $"{root} does not carry the companion's marker, so it was left.");
+                List<string> left = [];
+                Sweep(made, root, left, MarkerName);
+                if (left.Count == 0 && UnlinkAt((int)play.DangerousGetHandle(), name, RemoveFolderFlag) != 0) left.Add(root);
+                return left.Count == 0
+                    ? new CePlayRemoval(true, [], "The folder of the test play was removed.")
+                    : new CePlayRemoval(false, left, $"The test play's folder was not removed completely; left in place: {string.Join(", ", left.Take(3))}" +
+                        (left.Count > 3 ? $" and {left.Count - 3} more" : "") + ".");
+            }
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
         {
@@ -271,52 +332,59 @@ internal sealed class CePlayFolder
     }
 
     /// <summary>
-    /// Removes what is inside <paramref name="folder"/> and then the folder; whatever cannot go (a link, a special file, a folder that is not empty) is added to
-    /// <paramref name="left"/>. The marker (<paramref name="marker"/>, in the outermost folder) goes last, and only when nothing else is left, so a folder that could not be
-    /// removed whole is still known as ours to the next start's sweep.
+    /// Removes what is inside the open folder <paramref name="folder"/> (shown as <paramref name="display"/> in messages), every step by name in an open folder: a file is unlinked, a
+    /// folder is opened without following a link (the open fails if it was swapped for one in the meantime), emptied the same way and then removed; a link, a special file or
+    /// anything that cannot go is added to <paramref name="left"/>. The marker (named by <paramref name="marker"/>, in the outermost folder) goes last, and only when nothing else is left,
+    /// so a folder that could not be removed whole is still known as ours to the next start's sweep. The caller removes the folder itself.
     /// </summary>
-    private static void Sweep(string folder, List<string> left, string? marker = null)
+    private static void Sweep(SafeFileHandle folder, string display, List<string> left, string? marker = null)
     {
+        int descriptor = (int)folder.DangerousGetHandle();
         bool blocked = false;
-        foreach (string entry in Directory.EnumerateFileSystemEntries(folder, "*", AllEntries).ToList())
+        foreach (string name in NamesIn(folder))
         {
-            if (marker is not null && string.Equals(entry, marker, StringComparison.Ordinal)) continue;
-            switch (KindOf(entry))
+            if (marker is not null && string.Equals(name, marker, StringComparison.Ordinal)) continue;
+            string shown = Path.Combine(display, name);
+            Kind kind = KindAt(folder, name);
+            AfterKind?.Invoke(shown);
+            switch (kind)
             {
                 case Kind.Folder:
-                    int before = left.Count;
-                    Sweep(entry, left);
-                    blocked |= left.Count > before;
-                    break;
-                case Kind.File:
+                    SafeFileHandle child;
                     try
                     {
-                        File.Delete(entry);
+                        child = OpenFolder(descriptor, name);
                     }
-                    catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+                    catch (IOException)
                     {
-                        left.Add(entry);
+                        left.Add(shown);   // swapped for a link, or gone, since its kind was read
+                        blocked = true;
+                        break;
+                    }
+                    int before = left.Count;
+                    using (child) Sweep(child, shown, left);
+                    if (left.Count > before || UnlinkAt(descriptor, name, RemoveFolderFlag) != 0)
+                    {
+                        if (left.Count == before) left.Add(shown);
+                        blocked = true;
+                    }
+                    break;
+                case Kind.File:
+                    if (UnlinkAt(descriptor, name, 0) != 0 && Marshal.GetLastWin32Error() != 2)
+                    {
+                        left.Add(shown);
                         blocked = true;
                     }
                     break;
                 case Kind.Missing:
                     break;
                 default:
-                    left.Add(entry);
+                    left.Add(shown);
                     blocked = true;
                     break;
             }
         }
-        if (blocked) return;
-        try
-        {
-            if (marker is not null && KindOf(marker) == Kind.File) File.Delete(marker);
-            if (KindOf(folder) == Kind.Folder) Directory.Delete(folder, recursive: false);
-        }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
-        {
-            left.Add(folder);
-        }
+        if (!blocked && marker is not null && UnlinkAt(descriptor, marker, 0) != 0 && Marshal.GetLastWin32Error() != 2) left.Add(Path.Combine(display, marker));
     }
 
     /// <summary>
@@ -359,15 +427,14 @@ internal sealed class CePlayFolder
         return new CePlaySweep(removed, kept);
     }
 
-    /// <summary>A folder this call just made that failed before it held anything but its marker: removed again, if that is all it holds.</summary>
-    private static void TryRemoveEmptyOrMarkerOnly(string made)
+    /// <summary>A folder this call just made that failed before it held anything but its marker: the marker and the folder are removed again, by name in the open play folder; if anything else is in it, it stays.</summary>
+    private static void TryRemoveJustMade(string parent, string name)
     {
         try
         {
-            string marker = Path.Combine(made, MarkerName);
-            foreach (string entry in Directory.EnumerateFileSystemEntries(made, "*", AllEntries).ToList())
-                if (string.Equals(entry, marker, StringComparison.Ordinal) && KindOf(entry) == Kind.File) File.Delete(entry);
-            if (KindOf(made) == Kind.Folder && !Directory.EnumerateFileSystemEntries(made, "*", AllEntries).Any()) Directory.Delete(made, recursive: false);
+            using SafeFileHandle play = OpenFolder(LinuxSaveNative.AtCurrentDirectory, parent);
+            using (SafeFileHandle made = OpenFolder((int)play.DangerousGetHandle(), name)) UnlinkAt((int)made.DangerousGetHandle(), MarkerName, 0);
+            UnlinkAt((int)play.DangerousGetHandle(), name, RemoveFolderFlag);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {
