@@ -315,7 +315,7 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
 
     /// <summary>
     /// Whether the release version <paramref name="version"/> ("0.1.12") is <paramref name="minimum"/> ("0.1.11") or later, by its numeric core: a leading v and a label after a
-    /// hyphen or a plus ("0.2.0-rc0", "v0.1.12", "0.1.12+build5") are set aside. False for anything whose core is not numeric.
+    /// hyphen, a plus or a space ("0.2.0-rc0", "v0.1.12", "0.1.12+build5", "0.1.12 build 5") are set aside. False for anything whose core is not numeric.
     /// </summary>
     public static bool IsAtLeast(string version, string minimum) =>
         TryNumericVersion(NumericCore(version), out int[] have) && TryNumericVersion(NumericCore(minimum), out int[] want) && Compare(have, want) >= 0;
