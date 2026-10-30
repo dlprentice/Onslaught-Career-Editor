@@ -123,6 +123,38 @@ public sealed record ScriptChange(int Index, string Name, int InstructionsFrom, 
     private static string Brief(string text) => text.Length <= 80 ? text : text[..77] + "...";
 }
 
+/// <summary>
+/// The script machine of the game is entered once and is not built to be entered twice: a script that damages a unit that runs a script of its own, from inside a
+/// handler that is running, can start that unit's death handler at once, which overwrites the running script's code and place and can crash the level
+/// (<c>IScript::Damage</c> calls the thing's damage routine, which starts the death; <c>CVM::CallEvent</c> sets the code and place before <c>CVM::Run</c> refuses to run
+/// again; <c>IScript::Arrived</c> and <c>IScript::Hit</c> guard against it, the other entry points do not). It was diagnosed with a test-only level script and followed in the decompilation; a shipped script
+/// that damages a unit with a death handler from inside a handler is known to run through in the retail game, so the hazard is a shape that can fail, not a certainty.
+/// The only native warned about is <c>Damage</c>, the one whose path was followed: <c>Die</c> posts its event for the next frame, outside the handler, and
+/// <c>SetHealth</c>, <c>SetSegmentHealth</c> and <c>SetAllSegmentsHealth</c> only store values. <c>HalfDestroy</c> is not warned about and is not cleared either: by the names of
+/// the functions it calls it reaches the same damage path (it damages parts of a unit at random), and whether it can finish a unit and start its death handler at once is not
+/// established. The cheapest falsifier is a test-only level script that calls it on a unit with a death handler from inside a handler, run under the port with a debugger.
+/// </summary>
+internal static class ScriptHazards
+{
+    internal static readonly string[] Killers = ["Damage"];
+
+    private const int OpCall = 24;
+
+    /// <summary>The warnings for the script a level uses, against the one it shipped with: for each native in <see cref="Killers"/> that it calls more often than the shipped script does, one sentence.</summary>
+    internal static IReadOnlyList<string> Warnings(MissionScript shipped, MissionScript edited) =>
+    [
+        .. Killers.Where(native => Calls(edited, native) > Calls(shipped, native)).Select(native =>
+            $"This script calls {native} more often than the shipped one does. In the game as it is, a script that damages a unit that runs a script of its own, from inside a handler that is running, can start that unit's death handler at once and crash the level: the game's script machine cannot be entered twice."),
+    ];
+
+    /// <summary>How many times a script's code calls the native of this name.</summary>
+    internal static int Calls(MissionScript script, string native)
+    {
+        int index = Array.FindIndex(ScriptTables.Natives, entry => entry.Name == native);
+        return index < 0 || script.Code is null ? 0 : script.Code.Instructions.Count(instruction => instruction.Opcode == OpCall && (instruction.Attribute & 0xFF) == index);
+    }
+}
+
 internal static class ScriptDiff
 {
     /// <summary>What differs between a script as the baseline has it and as it is now, or null when the two are the same record (bit for bit).</summary>

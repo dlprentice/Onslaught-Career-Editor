@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-29 (cross-project progress chart, current priorities and completion criteria)
+Last updated: 2026-10-30 (the Level editor edits a script's source; earlier: cross-project progress chart, current priorities and completion criteria)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
@@ -103,11 +103,12 @@ separate historical route, not a statement that CE already has online play.
 
 ### Level and mission tools
 
-The Companion's Level editor can inspect and move placed objects, show a map and read mission scripts; it saves changed
-world files as new CE mods. The mission compiler and undoable script-edit model are in the source, but the page does not
-yet offer mission editing or preserve edited source in a mod. The [level editor plan](roadmap/companion-level-editor.md)
+The Companion's Level editor can inspect and move placed objects, show a map and mission scripts, and edit a script's
+source (compile it, make the level use it, undo it); it saves changed world files as new CE mods. The page is covered by
+tests and offscreen captures on Linux; nobody has used it by hand, no edited level has been played in CE, and the mod does
+not preserve the edited source beside the world file. The [level editor plan](roadmap/companion-level-editor.md)
 and [mission editor design](roadmap/companion-mission-editor.md) own their remaining gates, including source-preserving
-staging, player-facing editing and gameplay acceptance. CE's documented world-mod loader is currently Linux-only.
+staging, hand use and gameplay acceptance. CE's documented world-mod loader is currently Linux-only.
 
 ### Game documentation — ongoing
 

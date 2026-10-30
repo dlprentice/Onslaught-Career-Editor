@@ -40,12 +40,37 @@ internal static class LevelScriptEditTests
         Unstorable(check);
         Validation(check);
         BrokenScripts(check);
+        Hazards(check);
         Model(output, check);
         EditableModel(output, check);
     }
 
     /// <summary>The replacement the checks that save use: the shape of the authored alpha, as a program the checker accepts (the authored one is a stand-in that is never run).</summary>
     private static MissionScript Saveable() => LevelScriptCheckerTests.WellFormed("alpha", [0, 3], ["go2"], ("PostEvent", 1));
+
+    /// <summary>The warning for an edit that adds calls to the natives that kill: against what the shipped script does, not against nothing.</summary>
+    private static void Hazards(Checks check)
+    {
+        MissionScript Script(params (string Native, int Times)[] calls) => LevelScriptTests.Script("a", [], [], calls);
+        check.That(ScriptHazards.Warnings(Script(), Script()).Count == 0 && ScriptHazards.Warnings(Script(("Damage", 2)), Script(("Damage", 2))).Count == 0, "a script that calls no more often than the shipped one does is not warned about");
+        check.That(ScriptHazards.Warnings(Script(("Damage", 2)), Script(("Damage", 1))).Count == 0 && ScriptHazards.Warnings(Script(("Damage", 1)), Script()).Count == 0, "and fewer calls are no warning");
+        check.That(ScriptHazards.Warnings(Script(("Damage", 2)), Script(("Damage", 3))) is [{ } one] && one.Contains("calls Damage more often", StringComparison.Ordinal) && one.Contains("script machine cannot be entered twice", StringComparison.Ordinal) &&
+                   ScriptHazards.Warnings(Script(("Pause", 1), ("Damage", 1)), Script(("Pause", 1), ("Damage", 2))) is [{ } two] && two.Contains("calls Damage more often", StringComparison.Ordinal), "one more call to Damage is one warning, naming it");
+        check.That(ScriptHazards.Warnings(Script(), Script(("Die", 4), ("SetHealth", 2), ("HalfDestroy", 1), ("SetSegmentHealth", 1))).Count == 0 && ScriptHazards.Warnings(Script(("Pause", 1)), Script(("Pause", 5), ("PostEvent", 2))).Count == 0,
+            "Die posts its event for the next frame and the health setters only store values, so they are no concern; HalfDestroy is not warned about while whether it can start a death at once is unproven, and nor are the other natives");
+        int die = Array.FindIndex(ScriptTables.Natives, native => native.Name == "Die"), damage = Array.FindIndex(ScriptTables.Natives, native => native.Name == "Damage");
+        MissionScript pushes = Script();
+        pushes.Code.Instructions.Insert(0, new ScriptInstruction(5, die));  // an instruction that is not a call, whose operand is the number of Die
+        pushes.Code.Instructions.Insert(0, new ScriptInstruction(5, damage | (1 << 8)));
+        check.That(ScriptHazards.Calls(pushes, "Die") == 0 && ScriptHazards.Calls(pushes, "Damage") == 0 && ScriptHazards.Warnings(Script(), pushes).Count == 0, "only a call instruction is a call, whatever another instruction's operand is");
+        check.That(ScriptHazards.Killers.SequenceEqual(["Damage"]), "the natives warned about are the ones whose path was followed");
+        MissionScript calls = Script();
+        calls.Code.Instructions.Insert(0, new ScriptInstruction(24, die | (1 << 16)));
+        calls.Code.Instructions.Insert(0, new ScriptInstruction(24, damage | (1 << 8)));
+        check.That(ScriptHazards.Calls(calls, "Die") == 1 && ScriptHazards.Calls(calls, "Damage") == 1 && ScriptHazards.Calls(calls, "Nothing") == 0, "a call is counted by the native its low byte names, whatever flags are above it");
+        MissionScript noCode = new() { Name = "a", Code = null!, Trailer = [] };  // a script a damaged world can hold: nothing to count, and nothing to throw about
+        check.That(ScriptHazards.Calls(noCode, "Damage") == 0 && ScriptHazards.Warnings(Script(("Damage", 1)), noCode).Count == 0, "a script with no code has no calls");
+    }
 
     private static WorldBody Authored() => LevelScriptTests.Body(LevelScriptTests.Script("alpha", [0, 3], ["go"], ("PostEvent", 1)), LevelScriptTests.Script("beta", [], []));
 
@@ -122,18 +147,26 @@ internal static class LevelScriptEditTests
         check.That(report.CanSave && report.Warnings.Count == 0, $"a replaced script is a change that can be saved: {string.Join(", ", report.Errors.Select(finding => finding.Code))}");
         session.Undo();
 
+        check.That(changes[0].Describe() == "1 symbol differs", $"a changed constant is said in words: {changes[0].Describe()}");
+        session.Apply(new ReplaceScript(0, LevelScriptTests.Script("alpha", [0, 3], ["go"], ("Pause", 1))));
+        check.That(session.ScriptChanges().Single().Describe() == "its code differs", $"a different call with as many instructions says only that the code differs: {session.ScriptChanges().Single().Describe()}");
         session.Apply(new ReplaceScript(0, LevelScriptTests.Script("alpha", [0, 3], ["go2"], ("PostEvent", 2), ("Pause", 1))));
         ScriptChange longer = session.ScriptChanges().Single();
+        check.That(longer.Describe() == "2 to 4 instructions, 1 symbol differs", $"more instructions are counted, then the symbols: {longer.Describe()}");
         check.That(longer.CodeDiffers && longer.InstructionsFrom == 2 && longer.InstructionsTo == 4, $"a script with more calls says its instruction count and that its code differs: {longer.InstructionsFrom} to {longer.InstructionsTo}");
 
         session.Apply(new ReplaceScript(0, LevelScriptTests.Script("alpha", [0, 3], ["go", "more"], ("PostEvent", 1))));
         ScriptChange extra = session.ScriptChanges().Single();
         check.That(extra.SymbolsFrom == 1 && extra.SymbolsTo == 2 && extra.Symbols.Count == 1 && extra.Symbols[0].Index == 1 && extra.Symbols[0].From == "(none)" && extra.Symbols[0].To.EndsWith("\"more\"", StringComparison.Ordinal),
             $"a symbol the baseline lacks is said to be new: {string.Join("; ", extra.Symbols.Select(symbol => $"{symbol.Index}: {symbol.From} -> {symbol.To}"))}");
+        session.Apply(new ReplaceScript(0, LevelScriptTests.Script("alpha", [0, 3], ["a", "b", "c"], ("PostEvent", 1))));
+        check.That(session.ScriptChanges().Single().Describe().StartsWith("3 symbols differ", StringComparison.Ordinal),
+            $"symbols are counted in the plural, ahead of the other stored fields that differ: {session.ScriptChanges().Single().Describe()}");
         MissionScript marked = LevelScriptTests.Script("alpha", [0, 3], ["go"], ("PostEvent", 1));
         marked.Trailer[9] = 1;
         session.Apply(new ReplaceScript(0, marked));
         ScriptChange trailer = session.ScriptChanges().Single();
+        check.That(trailer.Describe() == "trailer: 00000000000000000000 to 00000000000000000001", $"a trailer alone is a difference of the record, said with its bytes: {trailer.Describe()}");
         check.That(trailer.Symbols.Count == 0 && !trailer.CodeDiffers && trailer.InstructionsFrom == trailer.InstructionsTo, "a record that differs in its trailer alone is still a change");
 
         session.UndoAll();
@@ -506,6 +539,20 @@ internal static class LevelScriptEditTests
             $"a header the game folder lacks is named: {missing.Message}");
         ScriptCompileOutcome included = model.CompileScript(0, "#include data\\inc\\defs.msl\ninit()\n{\n\tPause(DELAY);\n}\n", game);
         check.That(included.Ok && included.Script!.Code.Symbols.Any(symbol => symbol.Value is ScriptInt { Value: 7 }), "a header the game folder has is read");
+        const string Killer = "init()\n{\n\tDie();\n\tGetThingRef(\"Tank 1\").Damage(100.0);\n}\n";
+        ScriptCompileOutcome killing = model.CompileScript(0, Killer, game);
+        MissionScript shippedScript = session.ShippedScript(0);
+        check.That(killing.Ok && ScriptHazards.Warnings(shippedScript, killing.Script!) is [{ } killer] && killer.Contains("calls Damage more often", StringComparison.Ordinal) &&
+                   killer.Contains("script machine cannot be entered twice", StringComparison.Ordinal) && ScriptHazards.Warnings(shippedScript, compiled.Script!).Count == 0 && ScriptHazards.Warnings(shippedScript, included.Script!).Count == 0 &&
+                   ScriptHazards.Calls(killing.Script!, "Die") == 1 && ScriptHazards.Calls(killing.Script!, "Damage") == 1 && ScriptHazards.Calls(killing.Script!, "Pause") == 0,
+            "an edit that adds a call to Damage is warned about (Die is not), as the game's script machine cannot be entered twice");
+        check.That(model.ScriptWarnings(0).Count == 0 && model.ScriptWarnings(-1).Count == 0 && model.ScriptWarnings(1).Count == 0, "a script as it shipped has no warning, and a place the world lacks has none");
+        check.That(model.ReplaceScriptFromSource(0, Killer, game).Result == ScriptEditResult.Replaced && model.ScriptWarnings(0) is [{ } held] && held.Contains("calls Damage more often", StringComparison.Ordinal),
+            "the warning is about the script the level has: it is there once the script that calls Damage is in");
+        check.That(model.ReplaceScriptFromSource(0, "init()\n{\n\tFrobnicate(1);\n}\n", game).Result == ScriptEditResult.Refused && model.ScriptWarnings(0).Count == 1,
+            "a source that does not compile leaves the level's script, and so the warning, as it was");
+        check.That(session.Undo() && model.ScriptWarnings(0).Count == 0 && session.Redo() && model.ScriptWarnings(0).Count == 1 && session.Undo() && !session.CanUndo && model.ScriptWarnings(0).Count == 0,
+            "Undo takes the warning back with the script and Redo brings it back");
         check.That(!model.CompileScript(-1, Source, game).Ok && !model.CompileScript(1, Source, game).Ok && model.CompileScript(1, Source, game).Message == "There is no script 1 in this world.", "a script number the world lacks is refused");
         check.That(model.ReplaceScriptFromSource(0, "init()\n{\n\tFrobnicate(1);\n}\n", game) is { Result: ScriptEditResult.Refused, Line: 2 } && !session.CanUndo && model.Scripts[0].Summary.Instructions == shippedInstructions,
             "a source that does not compile replaces nothing");
@@ -523,7 +570,8 @@ internal static class LevelScriptEditTests
 
         check.That(model.ResetScript(0) is { Result: ScriptEditResult.Replaced, Message: "main is back as the level has it." } && model.Scripts[0].Summary.Instructions == shippedInstructions && model.ChangeSummary() is null,
             "putting the shipped script back is an edit, and leaves the level as it was loaded");
-        check.That(model.ResetScript(0) is { Result: ScriptEditResult.Unchanged, Message: "main has not been replaced." } && model.ResetScript(3).Result == ScriptEditResult.Refused, "a script that was not replaced has nothing to put back");
+        check.That(model.ResetScript(0) is { Result: ScriptEditResult.Unchanged, Message: "main has not been replaced." } && model.ResetScript(1).Result == ScriptEditResult.Refused && model.ResetScript(-1).Result == ScriptEditResult.Refused &&
+                   model.ResetScript(3) is { Result: ScriptEditResult.Refused, Message: "There is no script 3 in this world." }, "a script that was not replaced has nothing to put back, and a script number the world lacks is refused");
 
         model.ReplaceScriptFromSource(0, Source, game);
         string parent = Path.Combine(folder, "mods");

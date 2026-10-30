@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-29 (live rebuild ownership and catalogue routes clarified)
+Last updated: 2026-10-30 (the Level editor edits a script's source; earlier: live rebuild ownership and catalogue routes clarified)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -213,9 +213,12 @@ Its sidebar:
   offline with search, the map of Allium from the player's manual and the manual itself;
   Art & sound lists the install's models, textures and bank sound effects, previews them and
   saves copies (models as glTF, textures as PNG, sounds as WAV). The Level editor shows placed objects and a map,
-  lets the player move objects and save the changed world as a new CE mod, and displays mission scripts read-only.
-  The documented CE world-mod loader is Linux-only. The compiler and undoable script-edit model are in the source,
-  but the page does not offer mission editing or save edited source in a mod. See the [level editor description](companion/OnslaughtToolkit.Godot/README.md#what-it-does),
+  lets the player move objects and save the changed world as a new CE mod, and shows mission scripts. For a script of the
+  level's own with an installed source it can also edit the source, compile it and make the open level use the result (undoable,
+  with a warning when an edit adds calls to `Damage`); Save as mod then writes the world file with the replaced script. The page is
+  covered by event-driven tests and offscreen captures on Linux; nobody has used it by hand, no edited level has been played in CE,
+  the mod holds the world file only (the edited source is not kept beside it) and there has been no native Windows run. The
+  documented CE world-mod loader is Linux-only. See the [level editor description](companion/OnslaughtToolkit.Godot/README.md#what-it-does),
   [level editor plan](roadmap/companion-level-editor.md) and [mission editor design](roadmap/companion-mission-editor.md).
 - **Advanced**, folded away: Career bytes (the open career's stored values, or the bytes that
   differ from another career).
