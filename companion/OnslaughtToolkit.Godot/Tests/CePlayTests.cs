@@ -79,7 +79,8 @@ internal static partial class CePlayTests
             "versions compare as numbers (0.1.10 is before 0.1.11, 0.2 after), and what is not a number is never enough");
         check.That(CeInstallation.IsAtLeast("0.2.0-rc0", "0.1.11") && CeInstallation.IsAtLeast("v0.1.12", "0.1.11") && CeInstallation.IsAtLeast("V0.1.12", "0.1.11") && CeInstallation.IsAtLeast("0.1.12+build5", "0.1.11") &&
                    CeInstallation.IsAtLeast("0.1.11-rc1", "0.1.11") && !CeInstallation.IsAtLeast("0.1.10-rc9", "0.1.11") && !CeInstallation.IsAtLeast("v", "0.1.11") && !CeInstallation.IsAtLeast("-rc1", "0.1.11") &&
-                   !CeInstallation.IsAtLeast("0.1.x-rc1", "0.1.11"), "a version with a label is compared by its numeric core, a leading v and a label after a hyphen or a plus set aside, so a release candidate of a later version is not refused");
+                   !CeInstallation.IsAtLeast("0.1.x-rc1", "0.1.11") && CeInstallation.IsAtLeast("0.1.12 build 5", "0.1.11") && !CeInstallation.IsAtLeast("0.1.10 build 5", "0.1.11") && !CeInstallation.IsAtLeast(" build 5", "0.1.11"),
+            "a version with a label is compared by its numeric core, a leading v and a label after a hyphen, a plus or a space set aside, so a release candidate of a later version is not refused");
     }
 
     // ---- the temporary folder -----------------------------------------------------------------------------------------------------
