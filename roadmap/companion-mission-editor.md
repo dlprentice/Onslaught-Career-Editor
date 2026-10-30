@@ -469,7 +469,7 @@ control, a comment line above the first line, which the compiled script keeps as
   1f036553.... CE's log has the same four mods lines in the mod run (the world file served once, with the receipt's SHA-256) and none in the control. **The pair is not
   time-matched:** the control's frames are 0.88 to 3.43 s after the skip (6.0 ms per Present) and the mod run's 1.36 to 4.82 s (8.3 ms), so the text can only be compared at
   comparable moments, and the release adds a second binary to the claim, not a second sample of the comparison. Counted without reading (pixels of the 350 by 90 subtitle
-  band that differ by more than 48 grey levels, out of 31,500): at the last frame the three runs with the edit (two builds of main, one release) are identical to one another
+  band that differ by more than 48 grey levels, out of 31,500): at the last frame the three runs with the edit (two runs of the build of main, one run of the release) are identical to one another
   (0), the three time-matched controls (the second control, the comment control, the release control) are identical to one another (0), and every edit frame differs from
   every one of those controls by 2,740 to 2,770; the release pair differs at all seven frames (2,100 to 2,800). The package's mod loader is Linux-only, as the build's.
 - **What was tried first.** The `Weather` script's starting snow density (one symbol, 0.1 to 0.8). The mod loaded and the log named it, but no frame difference rose above
