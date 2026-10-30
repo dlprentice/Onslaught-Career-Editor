@@ -161,18 +161,20 @@ internal static class LevelTests
 
     private static void Edits(Checks check)
     {
-        check.That(LevelVectors.Edits.Length >= 8, "the vector file holds the edits");
+        check.That(LevelVectors.Edits.Length >= 8 && LevelVectors.Edits.Count(edit => edit.Steps.Any(step => step.Op == "copy")) >= 6, "the vector file holds the edits, the copies among them");
         foreach (LevelVectors.EditVector edit in LevelVectors.Edits)
         {
             WorldBody model = WorldBody.Read(Bodies[edit.From]);
             foreach (LevelVectors.EditStep step in edit.Steps)
             {
-                ObjectInit init = model.Things[step.Thing].Init;
+                int row = step.Thing < 0 ? model.Things.Count + step.Thing : step.Thing;   // -1 is the last row, which a copy before it may have made
+                ObjectInit init = model.Things[row].Init;
                 switch (step.Op)
                 {
                     case "move": init.Position = new Vector3(step.X, step.Y, step.Z); break;
                     case "rotate": init.Orientation = new Vector3(step.X, step.Y, step.Z); break;
                     case "rename": init.Name = step.Text; break;
+                    case "copy": new DuplicateObject(row, new Vector3(step.X, step.Y, step.Z), step.Text).Do(model); break;
                     default: check.Fail($"{edit.Name}: unknown step {step.Op}"); break;
                 }
             }

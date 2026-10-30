@@ -12,9 +12,9 @@ using OnslaughtToolkit.Companion.Ui;
 namespace OnslaughtToolkit.Companion.Development;
 
 /// <summary>
-/// Draws the Level editor against a Steam-shaped game folder and runs the editor's acceptance on it, in one of nine modes. Run on a
+/// Draws the Level editor against a Steam-shaped game folder and runs the editor's acceptance on it, in one of ten modes. Run on a
 /// GPU output (godot-offscreen): <c>--script res://Development/LevelEditorCapture.cs -- --output=DIR --fixture=ANY_FILE --steam-root=DIR
-/// [--mode=drag|typed|markers|scripts|names|flow|edit|scriptmod|play] [--sizes=1920x1080] [--level=100] [--row=12] [--expect-sha256=HEX] [--to=276.49,265.07]
+/// [--mode=drag|typed|markers|scripts|names|flow|edit|scriptmod|play|copyplay] [--sizes=1920x1080] [--level=100] [--row=12] [--expect-sha256=HEX] [--to=276.49,265.07]
 /// [--script=LevelScript] [--edit=message|comment] [--ce-package=DIR]</c>.
 /// <list type="bullet">
 /// <item><c>drag</c> (the default): open level 100, click row 12's mark on the map, drag it to the pixel of 276.49, 265.07, let go, save
@@ -53,6 +53,11 @@ namespace OnslaughtToolkit.Companion.Development;
 /// is gone, that CE's log says it served the mod's world file and that the edit still counts as unsaved; it keeps the temporary folder's listing, ce.ini and marker, CE's log, the
 /// mod and CE's own screenshots in <c>play-kept-SIZE</c>, and writes <c>play-SIZE.txt</c>. Run it with <c>--beside-gpu-jobs</c>: CE renders on the Intel GPU under the capture's lock. The
 /// frames and screenshots hold the game's text and stay in local-data.</item>
+/// <item><c>copyplay</c>: the Level editor's "Copy this unit" end to end in Onslaught CE (the level editor plan's M5 acceptance). Selects row <c>--row</c> (a Target Tank of level 100), copies
+/// it, types the copy to 276.49, 265.07, -12.1 (the typed acceptance's place straight ahead of the player's start, where a tank stands at the cockpit's crosshair), then presses
+/// "Play this level with the changes" as <c>play</c> does, and afterwards saves the edit as a mod and checks the saved file: one more thing than the level has, the original row as it
+/// was, the last row a copy of it at the typed place, and the same bytes as the temporary mod CE was given. It writes <c>play-SIZE.txt</c> and <c>play-kept-SIZE</c> as <c>play</c>
+/// does; the frames show whether a second tank stands at the crosshair, to be compared with a control run.</item>
 /// </list>
 /// The game folder is only read; every file this writes stays inside the output directory. Development builds only.
 /// </summary>
@@ -100,10 +105,10 @@ public partial class LevelEditorCapture : SceneTree
                 }
             }
             if (_expected.Length == 0) _expected = _mode == "typed" ? TypedSha256 : DragSha256;
-            if (_output.Length == 0 || _steamRoot.Length == 0 || !Directory.Exists(_steamRoot) || _mode is not ("drag" or "typed" or "markers" or "scripts" or "names" or "flow" or "edit" or "scriptmod" or "play") ||
-                _edit is not ("message" or "comment") || _mode == "play" && !File.Exists(Path.Combine(_cePackage, "onslaught-ce")))
+            if (_output.Length == 0 || _steamRoot.Length == 0 || !Directory.Exists(_steamRoot) || _mode is not ("drag" or "typed" or "markers" or "scripts" or "names" or "flow" or "edit" or "scriptmod" or "play" or "copyplay") ||
+                _edit is not ("message" or "comment") || _mode is "play" or "copyplay" && !File.Exists(Path.Combine(_cePackage, "onslaught-ce")))
             {
-                GD.PrintErr("--output=DIR and --steam-root=DIR (a Steam-shaped folder holding the game) are required; --mode is drag, typed, markers, scripts, names, flow, edit or scriptmod (--edit message or comment, --script the script's name).");
+                GD.PrintErr("--output=DIR and --steam-root=DIR (a Steam-shaped folder holding the game) are required; --mode is drag, typed, markers, scripts, names, flow, edit, scriptmod, play or copyplay (--edit message or comment, --script the script's name, --ce-package the CE package for play and copyplay).");
                 return;
             }
             Directory.CreateDirectory(_output);
@@ -180,7 +185,7 @@ public partial class LevelEditorCapture : SceneTree
         Directory.CreateDirectory(work);
         SubViewport viewport = new() { Size = size, RenderTargetUpdateMode = SubViewport.UpdateMode.Always, TransparentBg = false, GuiEmbedSubwindows = true };
         Root.AddChild(viewport);
-        CompanionEnvironment environment = _mode == "play" ? PlayEnvironment(work) : new([_steamRoot], Path.Combine(work, "settings", "settings.json"), () => false, _ => { }, Path.Combine(work, "backups"));
+        CompanionEnvironment environment = (_mode is "play" or "copyplay") ? PlayEnvironment(work) : new([_steamRoot], Path.Combine(work, "settings", "settings.json"), () => false, _ => { }, Path.Combine(work, "backups"));
         CompanionApp app = new(new ProtectedSaveFiles(), managesWindow: false, environment);
         viewport.AddChild(app);
         await Settle();
@@ -208,6 +213,7 @@ public partial class LevelEditorCapture : SceneTree
         else if (_mode == "edit") await EditView(viewport, app, page, label);
         else if (_mode == "scriptmod") await ScriptMod(viewport, app, page, label, mods);
         else if (_mode == "play") await PlayRun(viewport, app, page, label);
+        else if (_mode == "copyplay") await CopyPlay(viewport, app, page, label, mods);
         else await Markers(viewport, app, page, label, mods);
         viewport.QueueFree();
         await Settle();
@@ -786,6 +792,12 @@ public partial class LevelEditorCapture : SceneTree
     {
         string? what = await EditScript(viewport, page, label, "play");
         if (what is null) return;
+        await PlayThrough(viewport, app, page, label, $"script {_script}, edit {_edit} ({what})");
+    }
+
+    /// <summary>The button pressed and CE run to its end, with everything checked afterwards (see <see cref="PlayRun"/>); <paramref name="what"/> says what the edit was, for the receipt.</summary>
+    private async Task PlayThrough(SubViewport viewport, CompanionApp app, LevelEditorPage page, string label, string what)
+    {
         CePlay play = app.Services.Play;
         string game = app.Game.Folder!.AssetRoot;
         string[] userBefore = Snapshot(_playUser), packageBefore = Snapshot(_cePackage), gameBefore = [.. Directory.EnumerateFiles(game, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal).Select(path => Path.GetRelativePath(game, path) + " " + new FileInfo(path).Length)];
@@ -811,9 +823,65 @@ public partial class LevelEditorCapture : SceneTree
         int frames = Directory.Exists(Path.Combine(_playKeep, "screenshots")) ? Directory.GetFiles(Path.Combine(_playKeep, "screenshots")).Length : 0;
         Report(frames > 0, $"CE's own screenshots were kept for the receipt: {frames}");
         await Shot(viewport, label, "play-5-after");
-        List<string> lines = [$"play: level {_level}, script {_script}, edit {_edit} ({what})", .. _started, $"page note: {page.PlayNote.Replace('\n', ' ')}", $"report: started {report.Started}, exit {report.ExitCode}, served {report.ModServed}, log {report.LogCopy}", .. report.ModLines.Select(line => "mods line: " + line)];
+        List<string> lines = [$"play: level {_level}, {what}", .. _started, $"page note: {page.PlayNote.Replace('\n', ' ')}", $"report: started {report.Started}, exit {report.ExitCode}, served {report.ModServed}, log {report.LogCopy}", .. report.ModLines.Select(line => "mods line: " + line)];
         File.WriteAllLines(Path.Combine(_output, $"play-{label}.txt"), lines);
         GD.Print("PLAY " + string.Join(" || ", lines));
+    }
+
+    /// <summary>
+    /// The copy acceptance (see the class comment): row <c>--row</c> is copied on the page, the copy is typed to the place straight ahead of the player's start, the Play button runs the
+    /// level in the real launcher, and then the edit is saved as a mod and the saved file is checked against the page and against what CE was given.
+    /// </summary>
+    private async Task CopyPlay(SubViewport viewport, CompanionApp app, LevelEditorPage page, string label, string mods)
+    {
+        LevelEditorModel model = page.Model!;
+        int count = model.Rows().Count;
+        bool selected = page.SelectRow(_row);
+        await Settle();
+        ObjectRow? source = model.Row(_row);
+        Report(selected && source is not null && source.Label.StartsWith("Target Tank", StringComparison.Ordinal) && !page.Duplicate.Disabled,
+            $"row {_row} is \"{source?.Label}\" at {page.X.Text}, {page.Y.Text}, {page.Z.Text} and the copy button is on: \"{page.Duplicate.TooltipText}\"");
+        if (source is null) return;
+        System.Numerics.Vector3 stored = source.Position;
+        await Shot(viewport, label, "copy-3-original-selected");
+
+        page.Duplicate.EmitSignal(BaseButton.SignalName.Pressed);
+        await Settle();
+        int added = count;
+        Report(model.Row(added) is { Added: true } && page.SelectedRow == added && model.Rows().Count == count + 1 && page.Note.StartsWith($"{source.Label} (row {_row}) copied as row {added}", StringComparison.Ordinal),
+            $"the copy is row {added}, selected, listed and an addition: \"{page.Note}\"");
+        Report(page.Summary.StartsWith("1 unit copied", StringComparison.Ordinal) && page.ChangeCount == 1, $"summary: \"{page.Summary}\"");
+        await Shot(viewport, label, "copy-4-copied");
+
+        // Straight ahead of the player's start, the place where the typed acceptance's tank stood at the cockpit's crosshair.
+        page.X.Text = "276.49";
+        page.Y.Text = "265.07";
+        page.Z.Text = "-12.1";
+        page.X.EmitSignal(LineEdit.SignalName.TextSubmitted, page.X.Text);
+        await Settle();
+        System.Numerics.Vector3 at = model.Row(added)!.Position;
+        Report(page.Note.Contains("now stands at 276.49, 265.07, -12.1", StringComparison.Ordinal) && at == new System.Numerics.Vector3(276.49f, 265.07f, -12.1f) && model.Row(_row)!.Position == stored && page.ChangeCount == 1,
+            $"typing moved the copy and not the original: \"{page.Note}\"; the original stays at {CoordinateInput.Format(stored.X)}, {CoordinateInput.Format(stored.Y)}, {CoordinateInput.Format(stored.Z)}");
+        await Shot(viewport, label, "copy-5-copy-moved");
+
+        await PlayThrough(viewport, app, page, label, $"a copy of row {_row} ({source.Label}) as row {added}, typed to 276.49, 265.07, -12.1");
+
+        // The edit saved as a mod: the file the page's note describes, and the bytes CE was given.
+        await SaveAndCompare(viewport, page, label, mods, 7, compare: false);
+        string world = Path.Combine(mods, page.SaveDialog.Id.Text, "data", "worlds", $"world{_level:D3}.wrd");
+        if (!File.Exists(world)) return;
+        byte[] bytes = File.ReadAllBytes(world);
+        WorldBody saved = WorldBody.Read(bytes);
+        Report(saved.Write().AsSpan().SequenceEqual(bytes) && saved.Things.Count == count + 1, $"the saved file reads back strictly and writes back the same bytes; it holds {saved.Things.Count} things, the level has {count}");
+        Report(BitConverter.SingleToUInt32Bits(saved.Things[_row].Init.Position.X) == BitConverter.SingleToUInt32Bits(stored.X) &&
+               BitConverter.SingleToUInt32Bits(saved.Things[_row].Init.Position.Y) == BitConverter.SingleToUInt32Bits(stored.Y) && BitConverter.SingleToUInt32Bits(saved.Things[_row].Init.Position.Z) == BitConverter.SingleToUInt32Bits(stored.Z),
+            $"the original row {_row} is where the level has it, bit for bit");
+        PlacedObject last = saved.Things[^1];
+        Report(last.SameExceptPlace(saved.Things[_row]) && last.Init.Position == new System.Numerics.Vector3(276.49f, 265.07f, -12.1f) && last.Init.Name == model.Row(added)!.Name,
+            $"the last row is a copy of row {_row} at 276.49, 265.07, -12.1 under the name \"{last.Init.Name}\"");
+        string kept = Path.Combine(_playKeep, "mods", "play-level-" + _level.ToString(CultureInfo.InvariantCulture), "data", "worlds", $"world{_level:D3}.wrd");
+        bool sameAsCe = File.Exists(kept) && File.ReadAllBytes(kept).AsSpan().SequenceEqual(bytes);
+        Report(sameAsCe, $"the world file Save as mod wrote is the one CE was given by the Play button ({bytes.Length:N0} bytes, SHA-256 {Convert.ToHexStringLower(SHA256.HashData(bytes))})");
     }
 
     private async Task SaveAndCompare(SubViewport viewport, LevelEditorPage page, string label, string mods, int number, bool compare = true)

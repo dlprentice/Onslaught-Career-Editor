@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-30 (the Level editor's arrow-key nudges and its list of only the moved objects; the Level editor's Play button starts CE at the open level with the changes in a temporary CE folder; one script edit staged by the Level editor was run in CE on Linux; the Level editor edits a script's source; earlier: live rebuild ownership and catalogue routes clarified)
+Last updated: 2026-10-30 (the Level editor copies a unit, appended after every row, and a level with a copy ran in CE on Linux; the Level editor's arrow-key nudges and its list of only the moved objects; the Level editor's Play button starts CE at the open level with the changes in a temporary CE folder; one script edit staged by the Level editor was run in CE on Linux; the Level editor edits a script's source; earlier: live rebuild ownership and catalogue routes clarified)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -213,14 +213,15 @@ Its sidebar:
   offline with search, the map of Allium from the player's manual and the manual itself;
   Art & sound lists the install's models, textures and bank sound effects, previews them and
   saves copies (models as glTF, textures as PNG, sounds as WAV). The Level editor shows placed objects and a map,
-  lets the player move objects (by typing, dragging on the map or the arrow keys, with undo and a list of only the moved ones) and save the changed world as a new CE mod, and shows mission scripts. For a script of the
+  lets the player move objects (by typing, dragging on the map or the arrow keys, with undo and a list of only the moved ones), copy a unit (the copy is appended after every row, so no other row, path or target changes; only units, only as copies, undoable) and save the changed world as a new CE mod, and shows mission scripts. For a script of the
   level's own with an installed source it can also edit the source, compile it and make the open level use the result (undoable,
   with a warning when an edit adds calls to `Damage`); Save as mod then writes the world file with the replaced script, and a Play button starts Onslaught CE (Linux, CE 0.1.11 or later) at the open level
   with the changes as they are, in a temporary CE folder of its own, so the player's own CE folder, ce.ini and careers are never written (the button ran once offscreen through the released 0.1.12
   launcher: section 17 of the mission editor design). The page is
   covered by event-driven tests and offscreen captures on Linux, and one edit of one script (a tutorial message of level 100) was staged by
   it and run in CE on Linux, offscreen and live, with the edited subtitle on screen beside control runs (the [mission editor design](roadmap/companion-mission-editor.md)'s
-  section 16, which also says what that does not show). Nobody has used the page or its Play button by hand, no other edit has been run, the mod holds the world file only (the
+  section 16, which also says what that does not show); one copy of one Target Tank of level 100 was staged by it and run in CE on Linux, offscreen, through the Play button, and a second tank stood at the crosshair
+  (the [level editor plan](roadmap/companion-level-editor.md)'s M5 acceptance). Nobody has used the page or its Play button by hand, no other kind of edit has been run (nothing is added from nothing and nothing is deleted), the mod holds the world file only (the
   edited source is not kept beside it) and there has been no native Windows run. The documented CE world-mod loader is Linux-only. See the [level editor description](companion/OnslaughtToolkit.Godot/README.md#what-it-does),
   [level editor plan](roadmap/companion-level-editor.md) and [mission editor design](roadmap/companion-mission-editor.md).
 - **Advanced**, folded away: Career bytes (the open career's stored values, or the bytes that

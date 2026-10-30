@@ -56,6 +56,54 @@ public sealed class MoveObject(int thingIndex, Vector3 position) : IEditCommand
     internal static bool IsFinite(Vector3 value) => float.IsFinite(value.X) && float.IsFinite(value.Y) && float.IsFinite(value.Z);
 }
 
+/// <summary>
+/// Appends a copy of one stored unit at the end of the thing list, at a given position and under a given name. Nothing before it changes, so every row number, every waypoint path's slot
+/// and every career's index into a base world stays as it is. Only units can be copied: other kinds carry rules this editor does not know (a start, a trigger, a path point, a spawner, a
+/// building the game's grids may remember). One instance is one copy: it is made, taken back and made again in turn, and it can only be taken back while it is the last row.
+/// </summary>
+public sealed class DuplicateObject(int sourceIndex, Vector3 position, string name) : IEditCommand
+{
+    private PlacedObject? _added;
+    private string _description = $"Copy row {sourceIndex}";
+
+    public int SourceIndex => sourceIndex;
+    public Vector3 Position => position;
+    public string Name => name;
+
+    /// <summary>The row the copy took, while it is made.</summary>
+    public int? AddedIndex { get; private set; }
+
+    public string Description => _description;
+
+    /// <summary>Whether a record can be copied here.</summary>
+    public static bool CanCopy(PlacedObject thing) => thing.ObjectId == ObjectKinds.Unit;
+
+    public void Do(WorldBody body)
+    {
+        if (AddedIndex is not null) throw new InvalidOperationException("This copy has already been made. Take it back first, or make a new copy.");
+        if (sourceIndex < 0 || sourceIndex >= body.Things.Count) throw new InvalidOperationException($"There is no row {sourceIndex}: this world has {body.Things.Count}.");
+        PlacedObject source = body.Things[sourceIndex];
+        if (!CanCopy(source)) throw new InvalidOperationException($"Only units can be copied here, and {source.Label} (row {sourceIndex}) is a {source.Kind}.");
+        if (!MoveObject.IsFinite(position)) throw new InvalidOperationException("A position must be three finite numbers.");
+        if (body.Things.Count >= WorldBody.MaxThings) throw new InvalidOperationException($"The game's world holds at most {WorldBody.MaxThings} things, and this one has them all.");
+        _added = source.Clone();
+        _added.Init.Position = position;
+        _added.Init.Name = name;
+        body.Things.Add(_added);
+        AddedIndex = body.Things.Count - 1;
+        _description = $"Copy {source.Label} (row {sourceIndex}) as row {AddedIndex}";
+    }
+
+    public void Undo(WorldBody body)
+    {
+        if (AddedIndex is null || _added is null) throw new InvalidOperationException("This copy has not been made, so there is nothing to take back.");
+        if (body.Things.Count == 0 || !ReferenceEquals(body.Things[^1], _added))
+            throw new InvalidOperationException("The copy is not the last row any more, so it cannot be taken back.");
+        body.Things.RemoveAt(body.Things.Count - 1);
+        AddedIndex = null;
+    }
+}
+
 /// <summary>One thing record whose stored position differs from the baseline's.</summary>
 public sealed record ObjectChange(int Index, string Kind, string Name, Vector3 From, Vector3 To)
 {
@@ -191,6 +239,13 @@ public sealed class EditSession
     /// <exception cref="InvalidDataException">The body holds something the format cannot store.</exception>
     public byte[] ToBytes() => Body.Write();
 
+    /// <summary>How many rows the world had when it was loaded; rows from this number on were added by copies.</summary>
+    public int BaselineThingCount => _baseline.Things.Count;
+
+    /// <summary>The rows added since the baseline (copies of units), in row order.</summary>
+    public IReadOnlyList<(int Index, string Kind, string Name)> Additions() =>
+        [.. Enumerable.Range(_baseline.Things.Count, Math.Max(0, Body.Things.Count - _baseline.Things.Count)).Select(i => (i, Body.Things[i].Kind, Body.Things[i].Label))];
+
     /// <summary>The records whose stored position differs from the baseline's, in row order (compared bit for bit).</summary>
     public IReadOnlyList<ObjectChange> Changes()
     {
@@ -259,14 +314,26 @@ public sealed class EditSession
             errors.Add(new Finding("no-change", "Nothing has changed, so there is nothing to save."));
             return new ValidationReport(errors, warnings);
         }
-        if (!Body.Things.Select(t => t.ObjectId).SequenceEqual(_baseline.Things.Select(t => t.ObjectId)))
-            errors.Add(new Finding("rows-changed", "The number or order of the world's rows changed; this editor only moves things and replaces scripts."));
+        int kept = _baseline.Things.Count;
+        bool appendedOnly = Body.Things.Count >= kept && Body.Things.Take(kept).Select(t => t.ObjectId).SequenceEqual(_baseline.Things.Select(t => t.ObjectId));
+        if (!appendedOnly)
+            errors.Add(new Finding("rows-changed", "The order of the world's rows changed or a row was taken away; this editor only moves things, copies units to the end and replaces scripts."));
+        else if (Body.Things.Count > kept && IsBaseWorld)
+            errors.Add(new Finding("base-world-rows", "A level's base world is never given more things here: careers remember which of its buildings stand by their row."));
         else if (!SameScripts())
             errors.Add(new Finding("scripts-changed", "The number, order or names of the world's scripts changed; this editor replaces a script's code and keeps its name."));
         else
         {
             // Everything but the positions and the scripts' code must be what the baseline has: put the baseline's positions and scripts back and compare.
             WorldBody check = WorldBody.Read(bytes);
+            for (int i = kept; i < Body.Things.Count; i++)
+            {
+                PlacedObject added = Body.Things[i];
+                // A copy of a copy is equal to the unit the level has, apart from place and name, so each added row is held to the level's own units: one that is not a copy of one of them is named.
+                if (!DuplicateObject.CanCopy(added) || !MoveObject.IsFinite(added.Init.Position) || !Body.Things.Take(kept).Any(original => original.SameExceptPlace(added)))
+                    errors.Add(new Finding("added-row", $"Row {i} ({added.Label}) is not a copy of a unit the level has, so it cannot be saved.", i));
+            }
+            check.Things.RemoveRange(kept, check.Things.Count - kept);
             for (int i = 0; i < check.Things.Count; i++) check.Things[i].Init.Position = _baseline.Things[i].Init.Position;
             for (int i = 0; i < check.Scripts.Count; i++) check.Scripts[i] = _baseline.Scripts[i];
             if (!IsBaseline(check.Write()))

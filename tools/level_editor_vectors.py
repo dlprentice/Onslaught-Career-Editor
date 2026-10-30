@@ -390,6 +390,13 @@ def edit_vectors(models: dict[str, dict]) -> list[tuple[str, str, list[tuple], d
         ("move-v47", "authored-v47", [("move", 3, 1.0, 2.0, 3.0)]),
         ("move-kinds-v50", "kinds-v50", [("move", 5, -1.5, 2.5, -3.5), ("rename", 9, ""), ("rotate", 17, 1.0, 2.0, 3.0)]),
         ("move-negative-zero", "authored-v50", [("move", 0, -0.0, -0.0, -0.0)]),
+        # A copy is a unit's record appended at the end under a new name and place (-1 is the last row, which a later step may move or copy).
+        ("copy-v50", "authored-v50", [("copy", 0, 20.0, 20.0, 0.0, "Tank 1 copy")]),
+        ("copy-then-move-v50", "authored-v50", [("copy", 0, 20.0, 20.0, 0.0, "Tank 1 copy"), ("move", -1, 33.0, 20.0, 0.0)]),
+        ("copy-of-copy-v50", "authored-v50", [("copy", 0, 20.0, 20.0, 0.0, "Tank 1 copy"), ("copy", -1, 30.0, 20.0, 0.0, "Tank 1 copy copy")]),
+        ("copy-unnamed-v50", "authored-v50", [("copy", 1, 15.0, -5.5, 2.0, "")]),
+        ("copy-v43", "authored-v43", [("copy", 0, 20.0, 20.0, 0.0, "Tank 1 copy")]),
+        ("copy-kinds-v50", "kinds-v50", [("copy", 2, 7.25, 8.5, -9.75, "unit-2 copy")]),
     ]
     out = []
     for name, source, steps in specs:
@@ -403,6 +410,11 @@ def edit_vectors(models: dict[str, dict]) -> list[tuple[str, str, list[tuple], d
                 init["orientation"] = [step[2], step[3], step[4]]
             elif op == "rename":
                 init["name"] = step[2]
+            elif op == "copy":
+                clone = copy.deepcopy(model["things"][index])
+                clone["init"]["position"] = [step[2], step[3], step[4]]
+                clone["init"]["name"] = step[5]
+                model["things"].append(clone)
             else:
                 raise AssertionError(op)
         out.append((name, source, steps, model))
@@ -969,6 +981,8 @@ def render(data: dict) -> str:
         for step in v["steps"]:
             if step[0] == "rename":
                 steps.append(f'new("rename", {step[1]}, {cs_text(step[2])}, 0f, 0f, 0f)')
+            elif step[0] == "copy":
+                steps.append(f'new("copy", {step[1]}, {cs_text(step[5])}, {cs_float(step[2])}, {cs_float(step[3])}, {cs_float(step[4])})')
             else:
                 steps.append(f'new("{step[0]}", {step[1]}, "", {cs_float(step[2])}, {cs_float(step[3])}, {cs_float(step[4])})')
         out.append(f"        new({cs_text(v['name'])}, {cs_text(v['from'])}, [{', '.join(steps)}],")
