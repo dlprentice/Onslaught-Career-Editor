@@ -154,7 +154,7 @@ reading guide.
 | Code: `companion/`, `tools/` and `tests_shared/` scripts, build files | GPL-3.0-only ([`LICENSE`](LICENSE)) |
 | `rebuild/` | GPL-3.0-only ([`rebuild/LICENSE`](rebuild/LICENSE), [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md)) |
 | Documentation (`*.md`, `reverse-engineering/`, `roadmap/`, data tables) and `lore/`, `lore-book/` | CC BY-SA 4.0 ([`LICENSES/CC-BY-SA-4.0.txt`](LICENSES/CC-BY-SA-4.0.txt)) |
-| `reverse-engineering/source-code/`: notes quoting Stuart Gillam's published source | CC BY-SA 4.0 and GPL-3.0-only (the quoted source keeps its licence and credit) |
+| `reverse-engineering/source-code/`: notes quoting the upstream GPL Onslaught source by Stuart Gillam | CC BY-SA 4.0 and GPL-3.0-only (the quoted source keeps its licence and credit) |
 | `reverse-engineering/source-code/aya-*`: notes quoting Stuart Gillam's AYAResourceExtractor | CC BY-SA 4.0 and MIT (the quoted extractor keeps its licence and credit) |
 | ExuberantParrot's PR #1 passages in two function notes | CC BY-SA 4.0 and MIT ([`LICENSES/MIT.txt`](LICENSES/MIT.txt)) |
 | `references/` submodules | their own licences |
