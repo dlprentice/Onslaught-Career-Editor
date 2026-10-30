@@ -25,7 +25,7 @@ internal sealed class LevelEditorPage : Page
     // Short, since the line shares its row with two switches in the narrowest window; the tooltips say the rest.
     private const string ObjectSearchHint = "Name, kind, script, row", ScriptSearchHint = "Script, event, function";
     private readonly AppServices _services;
-    private readonly Label _empty, _worldNote, _objectTitle, _objectDetail, _stock, _note, _hint, _summary, _draftNote, _warnings, _problemText, _savedText, _playNote;
+    private readonly Label _empty, _worldNote, _objectTitle, _objectDetail, _stock, _note, _hint, _summary, _draftNote, _warnings, _problemText, _savedText, _playNote, _filterNote;
     private readonly PanelContainer _problemPanel, _savedPanel;
     private readonly SplitContainer _split;
     private readonly ScrollContainer _side;
@@ -91,6 +91,8 @@ internal sealed class LevelEditorPage : Page
             else RebuildTable();
         };
         _worldNote = left.Add(Build.Text("", "Faint"));
+        _filterNote = left.Add(Build.Text("", "Faint"));
+        _filterNote.Visible = false;
         // The table and the map share the column: side by side when it is wide, the map under the table (which keeps its columns) when it is not.
         _split = left.Add(new SplitContainer { SizeFlagsVertical = Control.SizeFlags.ExpandFill, Vertical = true });
         _split.Resized += () =>
@@ -215,6 +217,9 @@ internal sealed class LevelEditorPage : Page
         right.Add(changes);
         changesBody.Add(Build.Eyebrow("Your changes"));
         _summary = changesBody.Add(Build.Text("", "Strong"));
+        ChangedOnly = changesBody.Add(new CheckButton { Text = "List only the moved objects", Disabled = true,
+            TooltipText = "Show only the objects you have moved in the table, so a long session can be looked over." });
+        ChangedOnly.Toggled += _ => RebuildTable();
         _draftNote = changesBody.Add(Build.Text("", "Warn"));  // the typed text that is not in use: what the prompts count as a change beside the level's own
         _draftNote.Visible = false;
         _warnings = changesBody.Add(Build.Text("", "Warn"));
@@ -291,6 +296,12 @@ internal sealed class LevelEditorPage : Page
     internal Button Apply { get; }
     internal Button Reset { get; }
     internal Button Save { get; }
+
+    /// <summary>Whether the table lists only the objects that have been moved.</summary>
+    internal CheckButton ChangedOnly { get; }
+
+    /// <summary>What the page says under the world note when the filters leave the table empty (empty when it says nothing).</summary>
+    internal string FilterNote => _filterNote.Visible ? _filterNote.Text : "";
     internal Button Play { get; }
 
     /// <summary>What the page says under the Play button: that CE is starting, or how the test play went (empty when it says nothing).</summary>
@@ -454,6 +465,7 @@ internal sealed class LevelEditorPage : Page
         _selected = null;
         _savedPanel.Visible = false;
         ShowNote("", refusal: false);
+        ChangedOnly.SetPressedNoSignal(false);
         bool opened = _model.Open(level);
         ShowInPicker(level);
         RebuildTable();
@@ -501,7 +513,10 @@ internal sealed class LevelEditorPage : Page
     {
         Table.Clear();
         TreeItem root = Table.CreateItem();
-        IReadOnlyList<ObjectRow> rows = _model?.Rows(Search.Text) ?? [];
+        IReadOnlyList<ObjectRow> rows = _model?.Rows(Search.Text, ChangedOnly.ButtonPressed) ?? [];
+        _filterNote.Text = rows.Count > 0 || _model?.Session is null ? "" : ChangedOnly.ButtonPressed
+            ? Search.Text.Trim().Length > 0 ? "No moved object matches the search." : "No object is moved yet. Move one and it is listed here." : "";
+        _filterNote.Visible = _filterNote.Text.Length > 0;
         TreeItem? selected = null;
         foreach (ObjectRow row in rows)
         {
@@ -590,7 +605,7 @@ internal sealed class LevelEditorPage : Page
         (string sx, string sy, string sz) = LevelEditorModel.Shown(row.Stock);
         _stock.Text = row.Changed ? $"In the level: {sx}, {sy}, {sz}" : "Where the level has it.";
         bool negativeZero = new[] { _shown.X, _shown.Y, _shown.Z }.Contains("-0");
-        _hint.Text = "Type a number such as 276.49 or -12.1 and press Enter." +
+        _hint.Text = "Type a number such as 276.49 or -12.1 and press Enter, or click the map and press the arrow keys (0.5 a press, Shift 5, Ctrl 0.05)." +
             (negativeZero ? " A stored -0 is shown as -0 and kept as it is unless you type another value." : "");
         _hint.Visible = true;
     }
@@ -609,12 +624,14 @@ internal sealed class LevelEditorPage : Page
             _warnings.Visible = false;
             Save.Disabled = true;
             Save.TooltipText = "Choose a level first.";
+            ChangedOnly.Disabled = true;
             Play.Disabled = true;
             Play.TooltipText = "Choose a level first.";
             return;
         }
         string? summary = _model!.ChangeSummary();
         _summary.Text = summary ?? "No changes yet. Choose an object and type new coordinates.";
+        ChangedOnly.Disabled = false;
         ValidationReport report = session.Validate();
         List<string> lines = [];
         if (summary is not null) lines.AddRange(report.Errors.Select(finding => "Cannot save: " + finding.Message));

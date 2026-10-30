@@ -212,6 +212,10 @@ internal sealed partial class LevelMap : Control
                 _pressedRow = null;
                 QueueRedraw();
                 break;
+            case InputEventKey { Pressed: true, Keycode: Key.Left or Key.Right or Key.Up or Key.Down } nudge:
+                // During a drag the key does nothing, but it is kept from the focus navigation (which would take the focus, and Esc, away); with nothing selected it is the navigation's.
+                if (_drag is null && !Nudge(nudge)) return;
+                break;
             case InputEventKey { Pressed: true, Keycode: Key.Home }:
                 FitToLevel();
                 break;
@@ -225,6 +229,19 @@ internal sealed partial class LevelMap : Control
                 return;
         }
         AcceptEvent();
+    }
+
+    /// <summary>
+    /// An arrow key nudges the selected mark: 0.5 a press (+Y is up on the map), 5 with Shift, 0.05 with Ctrl, asked for the way a drop is, to a hundredth, so each press is one
+    /// undo step. Returns whether it did: with no selected mark the key is not taken.
+    /// </summary>
+    private bool Nudge(InputEventKey key)
+    {
+        if (_selected is not int selected || _rows.FirstOrDefault(row => row.Index == selected) is not { } row) return false;
+        double step = key.ShiftPressed ? 5 : key.CtrlPressed ? 0.05 : 0.5;
+        (double dx, double dy) = key.Keycode switch { Key.Left => (-step, 0.0), Key.Right => (step, 0.0), Key.Up => (0.0, step), _ => (0.0, -step) };
+        MoveRequested?.Invoke(selected, MapView.ToHundredths(row.Position.X + dx), MapView.ToHundredths(row.Position.Y + dy));
+        return true;
     }
 
     private void Zoom(Vector2 about, double factor)
