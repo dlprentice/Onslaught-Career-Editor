@@ -302,8 +302,8 @@ internal static class LevelCopyTests
         string mods = Path.Combine(folder, "mods");
         SaveOutcome saved = model.SaveAsMod(mods, new ModInfo("copy-test", "Copy test"), []);
         byte[] world = saved.Staged is null ? [] : File.ReadAllBytes(Path.Combine(saved.Staged.Root, "data", "worlds", "world100.wrd"));
-        WorldBody written = WorldBody.Read(world);
-        check.That(saved.Ok && world.AsSpan().SequenceEqual(model.Session.ToBytes()) && written.Things.Count == count + 5 && written.Write().AsSpan().SequenceEqual(world) && model.UnsavedChangeCount == 0,
+        WorldBody? written = world.Length > 0 ? WorldBody.Read(world) : null;
+        check.That(saved.Ok && world.AsSpan().SequenceEqual(model.Session.ToBytes()) && written?.Things.Count == count + 5 && written.Write().AsSpan().SequenceEqual(world) && model.UnsavedChangeCount == 0,
             $"Save as mod writes the level with its copies, which reads back strictly, and the edit counts as saved: {saved.Message}");
         model.Session.Undo();
         check.That(model.Rows().Count == count + 4 && model.UnsavedChangeCount > 0, "taking the last copy back (or the move before it) leaves something unsaved again");
