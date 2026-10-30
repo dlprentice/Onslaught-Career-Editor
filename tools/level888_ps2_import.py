@@ -11,8 +11,9 @@ shipped or sent anywhere: the mod is written to a folder the player names, and `
     level888_ps2_import.py inspect SOURCE                           counts about the member and its world (never names or bytes)
     level888_ps2_import.py build SOURCE --game GAME --out PARENT --ce-min 0.1.13 [--id flagship-duel-ps2] [--strict-pins]
                                                                      PARENT/<id>/ (mod.json, data/resources/888_res_PC.aya, data/default physics.dat)
-    level888_ps2_import.py stage MODDIR [--ce-user DIR] [--replace] [--dry-run]
-                                                                     copy the mod into the CE user folder's mods folder and add it to ce.ini's mods= line
+    level888_ps2_import.py stage MODDIR [--user-dir DIR] [--into-my-real-folder] [--replace] [--dry-run]
+                                                                     copy the mod into a FRESH CE user folder (your careers and settings stay where they are)
+                                                                     and print the one line that starts the level in it
 
 SOURCE is the image (a plain ISO, or a Redump zip whose one member is the ISO) or the extracted member itself (a file that starts with the tag LVLR).
 What the build does not take from the disc: the one mesh the PS2 copy names and the PC game has no file for (the multiplayer Fenrir) is replaced by the
@@ -20,14 +21,18 @@ PC game's own Fenrir mesh through a one-field edit of data/default physics.dat, 
 is the PC game's level 857 (the disc's own terrain has the same height field and mixer map); and CE adds no entry for the level (start it with -level 888 on
 the game's command line). CE loads mods on Linux only, and keeps them off in replays, recordings, probes, virtual clocks, pilots and network sessions.
 
-`stage` writes only inside the CE user folder: it keeps ce.ini as ce.ini.bak-<time> first, never overwrites a mod folder (--replace moves the old one
-aside), and does nothing while --dry-run is given. Close the game before it runs."""
+`stage` puts the mod in a fresh CE user folder (default: onslaught-ce-level888 beside CE's own) and prints the line that starts the level there
+(BEA_USER_DIR=<folder> onslaught-ce -level 888): the level's end screen takes the single-player route and writes a career, until a CE build with the bonus-level
+fence is the one that runs, so it must not run on your own careers. It refuses CE's own user folder (and the one BEA_USER_DIR names) unless --into-my-real-folder
+is given. It keeps an existing ce.ini as ce.ini.bak-<time> first, never overwrites a mod folder (--replace moves the old one aside), and does nothing while
+--dry-run is given. Close the game before it runs."""
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
 import os
+import shlex
 import shutil
 import sys
 import time
@@ -42,6 +47,7 @@ import world_resources_encode as enc  # noqa: E402
 
 MOD_ID = "flagship-duel-ps2"
 MOD_NAME = "Flagship duel (level 888, from your PS2 copy)"
+FRESH_FOLDER = "onslaught-ce-level888"
 STAND_IN_ID = lvl.MOD_ID                 # the generator's own mod, which adds the same archive: only one of the two can be active
 MEMBER_TAG = b"LVLR"
 ID_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789-_")
@@ -138,6 +144,25 @@ def ce_user_folder(env=os.environ) -> Path:
     return Path(base) / "onslaught-ce"
 
 
+def real_folders(env=os.environ) -> list[Path]:
+    """Where the player's careers and settings are: CE's own user folder, and the folder BEA_USER_DIR names when it is set."""
+    folders = [ce_user_folder(env)]
+    if env.get("BEA_USER_DIR"):
+        folders.append(Path(env["BEA_USER_DIR"]))
+    return folders
+
+
+def fresh_user_folder(env=os.environ) -> Path:
+    """The default place for the mod and a career of its own: beside CE's own user folder, never inside it."""
+    return ce_user_folder(env).with_name(FRESH_FOLDER)
+
+
+def is_real_folder(path: Path, env=os.environ) -> bool:
+    """Whether `path`, followed through links, is one of the player's own CE user folders (or lies inside one)."""
+    target = path.resolve()
+    return any(target == real.resolve() or real.resolve() in target.parents for real in real_folders(env))
+
+
 def check_mod_folder(moddir: Path) -> dict:
     """mod.json and every file it lists, as the loader will check them: the folder is the id, each file is there with its size and SHA-256, and nothing else is staged."""
     if moddir.is_symlink() or not moddir.is_dir():
@@ -188,14 +213,22 @@ def with_mod(ini: bytes, mod_id: str) -> tuple[bytes, list[str]]:
     return newline.join(lines).encode("utf-8", "surrogateescape"), before
 
 
-def stage(moddir: Path, ce_user: Path, *, replace: bool = False, dry_run: bool = False, clock=time.gmtime) -> dict:
-    """Put the mod into <ce_user>/mods/<id>/ and name it on ce.ini's mods= line, keeping ce.ini first. Nothing outside the CE user folder is touched."""
+def stage(moddir: Path, user_dir: Path, *, into_real: bool = False, replace: bool = False, dry_run: bool = False, clock=time.gmtime,
+          env=os.environ) -> dict:
+    """Put the mod into <user_dir>/mods/<id>/ and name it on <user_dir>/ce.ini's mods= line. A folder that is not there is made (a fresh CE user folder); the
+    player's own CE folder is refused unless `into_real`. An existing ce.ini is kept first. Nothing outside user_dir is touched."""
     manifest = check_mod_folder(moddir)
     mod_id = manifest["id"]
-    if ce_user.is_symlink() or not ce_user.is_dir():
-        raise ImportFailure(f"{ce_user} is not the CE user folder (start CE once so that it makes it, or name it with --ce-user)")
+    real = is_real_folder(user_dir, env)
+    if real and not into_real:
+        raise ImportFailure(f"{user_dir} is your own CE folder (your careers and settings): stage into a fresh folder (the default is {fresh_user_folder(env)}) "
+                            f"or give --into-my-real-folder")
+    if user_dir.is_symlink() or (user_dir.exists() and not user_dir.is_dir()):
+        raise ImportFailure(f"{user_dir} is not a plain folder")
+    if real and not user_dir.is_dir():
+        raise ImportFailure(f"{user_dir} is not there: start CE once so that it makes its own folder")
     stamp = time.strftime("%Y%m%dT%H%M%SZ", clock())
-    target, ini = ce_user / "mods" / mod_id, ce_user / "ce.ini"
+    target, ini = user_dir / "mods" / mod_id, user_dir / "ce.ini"
     if ini.is_symlink() or (ini.exists() and not ini.is_file()):
         raise ImportFailure(f"{ini} is not a plain file")
     old = ini.read_bytes() if ini.exists() else b""
@@ -204,22 +237,25 @@ def stage(moddir: Path, ce_user: Path, *, replace: bool = False, dry_run: bool =
     if target.exists() and not replace:
         raise ImportFailure(f"{target} exists already; give --replace to move it aside")
     new, before = with_mod(old, mod_id)
-    plan = {"mod": mod_id, "target": str(target), "ini": str(ini), "iniBackup": str(ce_user / f"ce.ini.bak-{stamp}") if ini.exists() else None,
-            "movedAside": str(ce_user / "mods" / f"{mod_id}.old-{stamp}") if target.exists() else None, "modsBefore": before,
-            "standInAlsoNamed": STAND_IN_ID in before and STAND_IN_ID != mod_id, "dryRun": dry_run}
+    plan = {"mod": mod_id, "userDir": str(user_dir), "target": str(target), "ini": str(ini), "created": not user_dir.exists(), "intoRealFolder": real,
+            "iniBackup": str(user_dir / f"ce.ini.bak-{stamp}") if ini.exists() else None,
+            "movedAside": str(user_dir / "mods" / f"{mod_id}.old-{stamp}") if target.exists() else None, "modsBefore": before,
+            "standInAlsoNamed": STAND_IN_ID in before and STAND_IN_ID != mod_id, "dryRun": dry_run,
+            "launch": ("" if real else f"BEA_USER_DIR={shlex.quote(str(user_dir))} ") + "onslaught-ce -level 888"}
     if dry_run:
         return plan
-    (ce_user / "mods").mkdir(exist_ok=True)
+    user_dir.mkdir(parents=True, exist_ok=True)
+    (user_dir / "mods").mkdir(exist_ok=True)
     if plan["iniBackup"]:
         with open(plan["iniBackup"], "xb") as handle:
             handle.write(old)
     if plan["movedAside"]:
         target.rename(plan["movedAside"])
-    staging = ce_user / "mods" / f".stage-{mod_id}-{stamp}"
+    staging = user_dir / "mods" / f".stage-{mod_id}-{stamp}"
     shutil.copytree(moddir, staging)
     staging.rename(target)
     check_mod_folder(target)
-    temporary = ce_user / f".ce.ini.new-{stamp}"
+    temporary = user_dir / f".ce.ini.new-{stamp}"
     with open(temporary, "xb") as handle:
         handle.write(new)
     os.replace(temporary, ini)
@@ -248,21 +284,28 @@ def cmd_build(args) -> int:
     for entry in summary["files"]:
         print(f"  {entry['path']}  {entry['size']} bytes  sha256 {entry['sha256']}")
     print(f"  mod.json  sha256 {summary['manifestSha256']}")
-    print(f"to put it in the CE folder (close the game first; ce.ini is kept as ce.ini.bak-<time>): python3 {Path(__file__).name} stage {summary['root']}")
+    print(f"to stage it in a fresh CE folder of its own (your careers and settings stay untouched; close the game first): "
+          f"python3 {shlex.quote(str(Path(__file__).resolve()))} stage {shlex.quote(str(summary['root']))}")
     return 0
 
 
 def cmd_stage(args) -> int:
-    plan = stage(args.moddir, args.ce_user or ce_user_folder(), replace=args.replace, dry_run=args.dry_run)
-    print(("would stage " if args.dry_run else "staged ") + f"{plan['mod']!r} into {plan['target']}")
+    user_dir = args.user_dir or (ce_user_folder() if args.into_my_real_folder else fresh_user_folder())
+    plan = stage(args.moddir, user_dir, into_real=args.into_my_real_folder, replace=args.replace, dry_run=args.dry_run)
+    print(("would stage " if args.dry_run else "staged ") + f"{plan['mod']!r} into {plan['target']}" + (" (a folder made for it)" if plan["created"] else ""))
     if plan["iniBackup"]:
         print(f"  ce.ini {'would be kept' if args.dry_run else 'kept'} as {plan['iniBackup']}")
     if plan["movedAside"]:
         print(f"  the earlier folder {'would move' if args.dry_run else 'moved'} to {plan['movedAside']}")
-    print(f"  ce.ini now names: {', '.join(plan['modsBefore'] + [plan['mod']]) if plan['mod'] not in plan['modsBefore'] else ', '.join(plan['modsBefore'])}")
+    print(f"  {plan['userDir']}/ce.ini names: {', '.join(plan['modsBefore'] + [plan['mod']] if plan['mod'] not in plan['modsBefore'] else plan['modsBefore'])}")
     if plan["standInAlsoNamed"]:
         print(f"  warning: ce.ini also names {STAND_IN_ID!r}, the generator's stand-in, which adds the same level archive: remove one of them from mods=")
-    print("start the level with -level 888 on the game's command line (onslaught-ce -level 888); mods load on Linux only and are off in replays and network play")
+    if plan["intoRealFolder"]:
+        print("  warning: this is your own CE folder: the level's end screen writes a career there until a CE build with the bonus-level fence runs it")
+    else:
+        print("  your own CE folder, its careers and its settings are not touched; this folder has settings of its own (add the lines of yours that you want to its ce.ini, keeping its mods= line)")
+    print(f"start the level with:  {plan['launch']}")
+    print("mods load on Linux only and are off in replays and network play; close the game before staging")
     return 0
 
 
@@ -284,7 +327,9 @@ def main(argv: list[str] | None = None) -> int:
     build_parser.add_argument("--version", default="1")
     build_parser.add_argument("--author", default="")
     stage_parser.add_argument("moddir", type=option, help="the mod folder that build wrote")
-    stage_parser.add_argument("--ce-user", type=option, default=None, help="CE's user folder (default: $XDG_DATA_HOME/onslaught-ce or ~/.local/share/onslaught-ce)")
+    stage_parser.add_argument("--user-dir", type=option, default=None,
+                              help=f"the CE user folder to put it in (made when missing; default: {FRESH_FOLDER} beside CE's own, which is refused)")
+    stage_parser.add_argument("--into-my-real-folder", action="store_true", help="allow CE's own user folder (careers and settings are there; the level's end screen writes a career)")
     stage_parser.add_argument("--replace", action="store_true", help="move an existing folder of this mod aside instead of refusing")
     stage_parser.add_argument("--dry-run", action="store_true", help="say what would happen and change nothing")
     args = parser.parse_args(argv)

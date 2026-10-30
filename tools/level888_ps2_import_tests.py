@@ -261,14 +261,21 @@ class StageTests(ImportCase):
         super().setUp()
         imp.build(self.member_path, self.game, self.root / "mods", ce_min="0.1.13")
         self.mod = self.root / "mods" / imp.MOD_ID
-        self.ce = self.root / "ce-user"
+        self.ce = self.root / "ce-user"                # an existing folder that is not the player's own
         self.ce.mkdir()
         self.ini = self.ce / "ce.ini"
         self.ini.write_bytes(b"sharp_text=1\nwidescreen=1\n")
+        self.env = {"XDG_DATA_HOME": str(self.root / "xdg")}          # so the player's own folder is root/xdg/onslaught-ce, which no test touches
+        self.real = self.root / "xdg" / "onslaught-ce"
         self.clock = lambda: (2026, 10, 30, 23, 45, 30, 0, 0, 0)
 
     def stage(self, **more) -> dict:
-        return imp.stage(self.mod, self.ce, clock=self.clock, **more)
+        return imp.stage(self.mod, self.ce, clock=self.clock, env=self.env, **more)
+
+    def make_real(self) -> None:
+        (self.real / "savegames").mkdir(parents=True)
+        (self.real / "savegames" / "Career.bes").write_bytes(b"career")
+        (self.real / "ce.ini").write_bytes(b"widescreen=1\n")
 
     def test_the_mod_is_copied_ce_ini_is_kept_and_one_mods_line_is_added(self) -> None:
         plan = self.stage()
@@ -323,11 +330,63 @@ class StageTests(ImportCase):
         self.ini.write_bytes(b"mods=other\n")
         self.assertFalse(self.stage(dry_run=True)["standInAlsoNamed"])
 
-    def test_a_missing_or_linked_ce_folder_and_a_non_file_ce_ini_are_refused_and_nothing_is_made(self) -> None:
-        for label, make in (("missing", lambda: self.root / "nope"),
-                            ("link", lambda: self._link(self.root / "link", self.ce))):
-            with self.subTest(label), self.assertRaises(imp.ImportFailure):
-                imp.stage(self.mod, make(), clock=self.clock)
+    def test_a_folder_that_is_not_there_is_made_as_a_fresh_ce_folder_and_the_launch_line_names_it(self) -> None:
+        fresh = self.root / "a fresh 'folder'"
+        plan = imp.stage(self.mod, fresh, clock=self.clock, env=self.env)
+        self.assertTrue(plan["created"])
+        self.assertFalse(plan["intoRealFolder"])
+        self.assertEqual(sorted(["ce.ini", "mods"]), sorted(p.name for p in fresh.iterdir()))
+        self.assertEqual(b"mods=" + imp.MOD_ID.encode() + b"\n", (fresh / "ce.ini").read_bytes())
+        self.assertEqual(imp.check_mod_folder(self.mod), imp.check_mod_folder(fresh / "mods" / imp.MOD_ID))
+        self.assertEqual("BEA_USER_DIR='" + str(fresh).replace("'", "'\"'\"'") + "' onslaught-ce -level 888", plan["launch"], "quoted for a shell, whatever the folder's name")
+        self.assertFalse(self.real.exists(), "the player's own folder is never made or touched")
+
+    def test_a_dry_run_makes_no_folder_at_all(self) -> None:
+        fresh = self.root / "fresh"
+        plan = imp.stage(self.mod, fresh, dry_run=True, clock=self.clock, env=self.env)
+        self.assertTrue(plan["created"] and plan["dryRun"])
+        self.assertFalse(fresh.exists())
+
+    def test_the_players_own_ce_folder_is_refused_however_it_is_named_and_nothing_is_written(self) -> None:
+        self.make_real()
+        before = sorted(str(p) for p in self.real.rglob("*")), (self.real / "ce.ini").read_bytes()
+        link = self._link(self.root / "link-to-real", self.real)
+        inside = self.real / "somewhere"
+        other = self.root / "other-real"
+        other.mkdir()
+        cases = {"the folder": (self.real, self.env), "a link to it": (link, self.env), "a folder inside it": (inside, self.env),
+                 "the folder BEA_USER_DIR names": (other, self.env | {"BEA_USER_DIR": str(other)})}
+        for label, (folder, env) in cases.items():
+            with self.subTest(label), self.assertRaisesRegex(imp.ImportFailure, "your own CE folder"):
+                imp.stage(self.mod, folder, clock=self.clock, env=env)
+            with self.subTest(label + ", dry run"), self.assertRaisesRegex(imp.ImportFailure, "your own CE folder"):
+                imp.stage(self.mod, folder, clock=self.clock, env=env, dry_run=True)
+        self.assertEqual(before, (sorted(str(p) for p in self.real.rglob("*")), (self.real / "ce.ini").read_bytes()))
+
+    def test_the_players_own_folder_is_used_only_with_the_explicit_flag_and_then_warns_and_has_no_redirect_in_its_launch_line(self) -> None:
+        self.make_real()
+        plan = imp.stage(self.mod, self.real, into_real=True, clock=self.clock, env=self.env)
+        self.assertTrue(plan["intoRealFolder"])
+        self.assertEqual("onslaught-ce -level 888", plan["launch"])
+        self.assertEqual(b"widescreen=1\nmods=" + imp.MOD_ID.encode() + b"\n", (self.real / "ce.ini").read_bytes())
+        self.assertEqual(b"widescreen=1\n", (self.real / "ce.ini.bak-20261030T234530Z").read_bytes())
+        self.assertEqual(b"career", (self.real / "savegames" / "Career.bes").read_bytes(), "a career is never touched")
+        missing_real = self.root / "xdg2" / "onslaught-ce"
+        with self.assertRaisesRegex(imp.ImportFailure, "start CE once"):
+            imp.stage(self.mod, missing_real, into_real=True, clock=self.clock, env={"XDG_DATA_HOME": str(self.root / "xdg2")})
+        self.assertFalse(missing_real.exists())
+
+    def test_the_default_fresh_folder_is_beside_the_players_own_never_inside_it(self) -> None:
+        self.assertEqual(self.root / "xdg" / "onslaught-ce-level888", imp.fresh_user_folder(self.env))
+        self.assertFalse(imp.is_real_folder(imp.fresh_user_folder(self.env), self.env))
+        self.assertTrue(imp.is_real_folder(self.real, self.env))
+
+    def test_a_plain_file_or_a_link_where_the_folder_goes_and_a_non_file_ce_ini_are_refused(self) -> None:
+        plain = self.root / "plain"
+        plain.write_bytes(b"x")
+        for label, folder in (("a file", plain), ("a link", self._link(self.root / "link", self.ce))):
+            with self.subTest(label), self.assertRaisesRegex(imp.ImportFailure, "not a plain folder"):
+                imp.stage(self.mod, folder, clock=self.clock, env=self.env)
         self.ini.unlink()
         self.ini.mkdir()
         with self.assertRaisesRegex(imp.ImportFailure, "plain file"):
@@ -363,7 +422,7 @@ class StageTests(ImportCase):
                 shutil.copytree(self.mod, copy)
                 damage(copy)
                 with self.assertRaises(imp.ImportFailure):
-                    imp.stage(copy, self.ce, clock=self.clock)
+                    imp.stage(copy, self.ce, clock=self.clock, env=self.env)
                 self.assertFalse((self.ce / "mods").exists())
                 self.assertEqual([self.ini], list(self.ce.iterdir()), "no backup, no staging folder, no new ce.ini")
                 self.assertEqual(b"sharp_text=1\nwidescreen=1\n", self.ini.read_bytes())
@@ -372,7 +431,7 @@ class StageTests(ImportCase):
 # ---- the command line --------------------------------------------------------------------------------------------------------
 class CommandLineTests(ImportCase):
     def run_tool(self, *args: str, env: dict | None = None) -> subprocess.CompletedProcess:
-        clean = {k: v for k, v in os.environ.items() if k not in ("BEA_GAME", "BEA_PS2_IMAGE")} | (env or {})
+        clean = {k: v for k, v in os.environ.items() if k not in ("BEA_GAME", "BEA_PS2_IMAGE", "BEA_USER_DIR", "XDG_DATA_HOME")} | (env or {})
         return subprocess.run([sys.executable, "-B", str(TOOL), *args], capture_output=True, text=True, env=clean, timeout=120)
 
     def test_inspect_prints_json_counts_and_exits_zero(self) -> None:
@@ -382,17 +441,36 @@ class CommandLineTests(ImportCase):
         self.assertEqual(22, report["member"]["world"]["things"])
         self.assertEqual("member", report["source"]["from"])
 
-    def test_build_then_stage_through_the_command_line(self) -> None:
-        out, ce = self.root / "cli-mods", self.root / "cli-ce"
-        ce.mkdir()
+    def test_build_then_stage_through_the_command_line_into_a_fresh_folder(self) -> None:
+        out, fresh = self.root / "cli-mods", self.root / "cli-fresh"
         built_ = self.run_tool("build", str(self.member_path), "--game", str(self.game), "--out", str(out), "--ce-min", "0.1.13")
         self.assertEqual(0, built_.returncode, built_.stderr)
         self.assertIn("stage", built_.stdout)
         self.assertNotIn(lvl.VENTURER, built_.stdout + built_.stderr)
-        staged = self.run_tool("stage", str(out / imp.MOD_ID), "--ce-user", str(ce))
+        env = {"XDG_DATA_HOME": str(self.root / "cli-xdg")}
+        staged = self.run_tool("stage", str(out / imp.MOD_ID), "--user-dir", str(fresh), env=env)
         self.assertEqual(0, staged.returncode, staged.stderr)
-        self.assertEqual(f"mods={imp.MOD_ID}\n", (ce / "ce.ini").read_text())
-        self.assertIn("-level 888", staged.stdout)
+        self.assertEqual(f"mods={imp.MOD_ID}\n", (fresh / "ce.ini").read_text())
+        self.assertIn(f"BEA_USER_DIR={fresh} onslaught-ce -level 888", staged.stdout)
+        self.assertIn("not touched", staged.stdout)
+        self.assertFalse((self.root / "cli-xdg").exists(), "the player's own folder is never made")
+
+    def test_the_command_line_stages_into_the_default_fresh_folder_and_refuses_the_players_own_one(self) -> None:
+        out = self.root / "cli-mods2"
+        self.assertEqual(0, self.run_tool("build", str(self.member_path), "--game", str(self.game), "--out", str(out), "--ce-min", "0.1.13").returncode)
+        xdg = self.root / "cli-xdg2"
+        env = {"XDG_DATA_HOME": str(xdg)}
+        done = self.run_tool("stage", str(out / imp.MOD_ID), env=env)
+        self.assertEqual(0, done.returncode, done.stderr)
+        self.assertTrue((xdg / imp.FRESH_FOLDER / "mods" / imp.MOD_ID / "mod.json").is_file())
+        self.assertFalse((xdg / "onslaught-ce").exists())
+        refused = self.run_tool("stage", str(out / imp.MOD_ID), "--user-dir", str(xdg / "onslaught-ce"), env=env)
+        self.assertEqual(2, refused.returncode)
+        self.assertIn("your own CE folder", refused.stderr)
+        self.assertFalse((xdg / "onslaught-ce").exists())
+        no_folder = self.run_tool("stage", str(out / imp.MOD_ID), "--into-my-real-folder", env=env)
+        self.assertEqual(2, no_folder.returncode)
+        self.assertIn("start CE once", no_folder.stderr)
 
     def test_a_refusal_exits_two_with_one_line_and_no_traceback(self) -> None:
         done = self.run_tool("inspect", str(self.root / "missing"))
