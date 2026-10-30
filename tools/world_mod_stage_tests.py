@@ -18,6 +18,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import tracemalloc
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -260,6 +261,46 @@ class StageAsModTests(Base):
         model = enc.read_world_model(self.edited_body)
         model["scripts"] = [stage.mc.compile_script("main", text, stage.mc.includes_from(self.game), 70)]
         return enc.write_world_body(model)
+
+    def test_world_enumeration_is_bounded_before_any_output(self) -> None:
+        class RepeatedWorlds:
+            def __init__(self, count):
+                self.count = count
+                self.yielded = 0
+
+            def __len__(self):
+                return 1
+
+            def items(self):
+                for _ in range(self.count):
+                    self.yielded += 1
+                    yield 200, b"w"
+
+        over = RepeatedWorlds(stage.MAX_WORLD_FILES + 50)
+        was_tracing = tracemalloc.is_tracing()
+        if not was_tracing:
+            tracemalloc.start()
+        try:
+            baseline = tracemalloc.get_traced_memory()[0]
+            tracemalloc.reset_peak()
+            with patch.object(stage, "SecuredOutputRoot") as publication:
+                with self.assertRaisesRegex(stage.ModStageError, "at most 1000 world files"):
+                    stage.stage_mod(self.out, self.game, "refused", over, name="n")
+                publication.assert_not_called()
+            _, peak = tracemalloc.get_traced_memory()
+        finally:
+            if not was_tracing:
+                tracemalloc.stop()
+        self.assertEqual(stage.MAX_WORLD_FILES + 1, over.yielded)
+        self.assertLess(peak - baseline, 8 << 20)
+        self.assertFalse(self.out.exists())
+
+        boundary = RepeatedWorlds(stage.MAX_WORLD_FILES)
+        with patch.object(stage, "SecuredOutputRoot", side_effect=RuntimeError("publication sentinel")):
+            with self.assertRaisesRegex(RuntimeError, "publication sentinel"):
+                stage.stage_mod(self.out, self.game, "boundary", boundary, name="n")
+        self.assertEqual(stage.MAX_WORLD_FILES, boundary.yielded)
+        self.assertFalse(self.out.exists())
 
     def test_a_script_source_is_staged_with_the_world_and_its_game_file_is_unchanged(self) -> None:
         path = "data/MissionScripts/level200/main.msl"

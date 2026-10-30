@@ -64,6 +64,7 @@ MAX_STAGE_INCLUDES = 2048
 MAX_STAGE_INCLUDE_CHARS = 16 << 20
 MAX_TOTAL_BYTES = 1 << 30
 MAX_FILES_PER_MOD = 4096
+MAX_WORLD_FILES = 1000
 MAX_MANIFEST_BYTES = 256 << 10
 
 
@@ -205,14 +206,24 @@ def stage_mod(parent: Path, game: Path, mod_id: str, worlds: dict[int, bytes], *
     check_identity(mod_id, name, version, author, description, ce_min, ce_max)
     if not worlds:
         raise ModStageError("a staged mod needs at least one world file")
-    files = {world_path(level): body for level, body in worlds.items()}
+    if len(worlds) > MAX_WORLD_FILES:
+        raise ModStageError(f"a mod stages at most {MAX_WORLD_FILES} world files")
+    files = {}
     world_total = 0
-    for path, body in files.items():
+    world_count = 0
+    for level, body in worlds.items():
+        world_count += 1
+        if world_count > MAX_WORLD_FILES:
+            raise ModStageError(f"a mod stages at most {MAX_WORLD_FILES} world files")
+        path = world_path(level)
         if type(body) is not bytes or not 0 < len(body) <= MAX_WORLD_BYTES:
             raise ModStageError(f"{path}: a world file is 1 byte to {MAX_WORLD_BYTES} bytes")
         world_total += len(body)
         if world_total > MAX_TOTAL_BYTES:
             raise ModStageError(f"a mod's files total at most {MAX_TOTAL_BYTES} bytes")
+        files[path] = body
+    if not files:
+        raise ModStageError("a staged mod needs at least one world file")
     if sources is not None and len(sources) > MAX_SOURCE_FILES:
         raise ModStageError(f"at most {MAX_SOURCE_FILES} mission sources can be staged at once")
     source_total = 0
