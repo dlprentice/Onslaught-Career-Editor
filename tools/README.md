@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-29 (`game_tables_decode.py`: the battle engine configurations and `sounds.sfx` catalogued with what they name; the `VSDS`, `PMIB` and `DMKR` payloads decoded and checked by the catalogue's retail gate; `named_things.py`, the registry of named things, the catalogue's thing-name joins on it and the catalogue's retail gate `content_catalog_gate.py`; the gate table's NAMES and PATHS rows; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-30 (`game_tables_decode.py`: the battle engine configurations and `sounds.sfx` catalogued with what they name; the `VSDS`, `PMIB` and `DMKR` payloads decoded and checked by the catalogue's retail gate; `named_things.py`, the registry of named things, the catalogue's thing-name joins on it and the catalogue's retail gate `content_catalog_gate.py`; the script gate pins each known stale record pair; descriptor-relative Python mission-source reads and platform limits; `msl_vectors.py`, the vectors for the Companion's C# compiler; the gate table's NAMES and PATHS rows; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -358,7 +358,7 @@ publish, sign, or install anything by themselves.
   each level archive a SCRIPTS row (how many scripts its own world and its base world hold, a hash of the lines the Level editor's script
   catalog reads from them, how many of their sources the finder reads and a hash of those sources' text), a NAMES row (every quoted text of
   the level's own sources, found outside comments and resolved against the level's objects and its base world's, its paths, scripts and event handlers, hashed;
-  the first argument of a `FollowWaypoint` or `FollowWaypointWait` call also matches paths in other letter case, as the game finds them), a PATHS row (each waypoint
+  the nonempty first argument of a `FollowWaypoint` or `FollowWaypointWait` call uses the first matching base or level path under the modeled C-locale byte comparison: ASCII case-insensitive, other bytes exact, NUL-terminated; other locales and native Windows remain unverified), a PATHS row (each waypoint
   path of the level's own world with the rows of the points the game keeps, the slots that name a waypoint, hashed, and how many points are kept of how many slots)
   and for
   each level archive with a terrain the digest of its samples, the bits of its scale and water level, and a digest of the
@@ -378,14 +378,24 @@ publish, sign, or install anything by themselves.
   of one operator, `&&` with `==` (one rank, left to right, unlike C) and arithmetic inside comparisons, and refuses any other
   mix without parentheses, naming both operators. It refuses, with a line and a reason, statements nested more than 100 deep, a
   script that grows past a million tokens when its `#define` names are replaced, a number that does not fit 32 bits or float32, and
-  an `#include` that is a link out of the game folder. Besides the record it returns notes (how a mixed chain was grouped, a handler the
+  an `#include` that is a link or passes through one below the selected game folder. It reads at most 128 included headers per script,
+  with at most 1,048,576 characters per header and 2,097,152 characters in total, including repeated headers; the file reader also caps
+  a header's bytes. For game-relative headers and the gate's primary source, the Python reader opens each path component relative to
+  a held directory, refuses symbolic links below the selected root and checks identities around the bounded read. The selected root
+  itself may be reached through a link; regular hard links remain accepted. Detected file changes are refused, but these checks do
+  not create an immutable snapshot and remote-filesystem behavior has not been validated. This Python file reader currently requires
+  Linux descriptor-relative, no-follow support and refuses on other systems, including Windows; the in-memory compiler is unaffected.
+  Its separate `read_source` for an explicitly selected standalone file permits parent links and does not establish a game-root boundary.
+  Besides the record it returns notes (how a mixed chain was grouped, a handler the
   game never calls) for an editor to show.
 - `msl_gate.py --game GAME [--table] [--level N]` is its retail gate: for every compiled script of every world body of an
   installed game it compiles `data/MissionScripts/level<NNN>/<name>.msl` and compares the record field by field and as the bytes
   the world encoder writes. A script is exact; exact with an `#include` the install lacks (a few sources name files only the
   developers had, so the gate treats the header as empty and takes each name it would have defined from the shipped constants);
-  or one of a pinned list of installed sources that are another revision than the one compiled into the world file, each with
-  how it differs. Anything else fails, and so does a pinned entry that has become exact. It reads the game folder, writes nothing,
+  or one of a pinned list of installed sources that differs from the compiled world-file script. Each pinned entry has a description and a
+  SHA-256 identity of the complete ordered shipped/compiled record pair; a different pair, a missing entry or an entry that has become exact
+  fails. The fingerprint pins the observed pair, not the explanation for its difference; a legitimate different installation may need its
+  own independently verified baseline. It reads the game folder, writes nothing,
   and needs an installed game; `--table` lists one row per script (private, derived from a game).
   `msl_compile_tests.py` runs on authored sources only (the shape of every statement, the call flag, the counters, the grouping
   rules and the refusals, the header search, a record's round trip through the world encoder, and the gate's verdicts on an
@@ -394,7 +404,16 @@ publish, sign, or install anything by themselves.
   script's entry points are indexed by and every native a script can call (name and argument letters, in the order a CALL
   instruction's low byte indexes them), from `world_resources_decode.py`'s tables, for the Level editor's Scripts view.
   `--check` fails when the committed file is not what `--write` writes; `script_tables_tests.py` reads the file itself back against
-  the tables. No game bytes are in it.
+  the tables. No game bytes are in it. The file also holds the VM's opcode names, in the order an instruction's opcode number
+  indexes them, which the compiler in the Companion writes.
+- `msl_vectors.py` writes `companion/OnslaughtToolkit.Godot/Tests/ScriptVectors.g.cs`: authored mission scripts (none is a game
+  script) and what `msl_compile.py` makes of each, as lines (the instructions by opcode name, the entry points, the symbols with their
+  values, the named handlers, the two trailing words), as the notes it gives, or as the message it refuses with, plus the reference's
+  `repr` of some texts (its messages quote tokens with it) and its answer for every pair of operators. The Companion's C# compiler
+  (`Missions/`, which ports `msl_compile.py`) must give the same lines, notes and messages word for word. `--check` fails when the
+  committed file is not what `--write` writes; `msl_vectors_tests.py` works a few vectors out by hand and checks that the set writes
+  every instruction the compiler can and uses every operator. The Companion's local retail gate for that compiler,
+  `Development/ScriptsGate.cs`, takes `msl_gate.py --table` and requires the same status for every script of an installed game.
 - `export_game_assets.py`, `export_asset_catalog.py`,
   `export_language_corpus.py`, and `export_video_manifest.py` operate on
   user-supplied local inputs and write to a separate local output root. The

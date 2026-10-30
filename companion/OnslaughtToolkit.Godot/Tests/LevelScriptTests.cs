@@ -124,14 +124,46 @@ internal static class LevelScriptTests
             "without a base world there are none, an empty text matches nothing, and the base world's paths are not names to follow here");
         body.Things[3].Init.Name = "";
         // The game finds a waypoint path by name ignoring letter case where a script follows one, and compares every other name as it is: only a path argument is case-blind.
+        // It keeps one list of paths, the base world's before the level's own, and takes the first that matches: one path is named.
         WaypointPath shout = new() { Name = "PATH A" };
         shout.Slots.AddRange([3, 2]);
         body.WaypointPaths.Add(shout);
         check.That(ScriptNames.Resolve("Path A", body, own).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0)]) && ScriptNames.Resolve("path a", body, own).Count == 0 &&
-                   ScriptNames.Resolve("Path A", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0), new NameMatch(NameKind.Path, "path PATH A · 2 points", 1, false)]) &&
-                   ScriptNames.Resolve("path a", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0, false), new NameMatch(NameKind.Path, "path PATH A · 2 points", 1, false)]) &&
-                   ScriptNames.Resolve("PATH A", body, own, baseBody, true).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0, false), new NameMatch(NameKind.Path, "path PATH A · 2 points", 1)]),
-            "a path argument names every path of that name in any letter case, each marked when the case differs; anywhere else only the exact name is a path");
+                   ScriptNames.Resolve("Path A", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0)]) &&
+                   ScriptNames.Resolve("path a", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0, false)]) &&
+                   ScriptNames.Resolve("PATH A", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0, false)]),
+            "a path argument names the first path of that name in any letter case (not the exact one when another comes first), marked when its case differs; anywhere else only the exact name is a path");
+        body.WaypointPaths.Reverse();
+        check.That(ScriptNames.Resolve("Path A", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path PATH A · 2 points", 0, false)]) &&
+                   ScriptNames.Resolve("PATH A", body, own, null, true).SequenceEqual([new NameMatch(NameKind.Path, "path PATH A · 2 points", 0)]),
+            "the first in the list wins whatever the case, so with the other order the other path is the one");
+        body.WaypointPaths.Reverse();
+        // The base world's paths come before the level's own: a base world's path of that name is the one a follow call finds, and the level's own is not named.
+        check.That(ScriptNames.Resolve("PATH A", body, own, baseBody, true).SequenceEqual([new NameMatch(NameKind.BasePath, "path Path A · 1 point", 0, false)]) &&
+                   ScriptNames.Resolve("Path A", body, own, baseBody, true).SequenceEqual([new NameMatch(NameKind.BasePath, "path Path A · 1 point", 0)]) &&
+                   ScriptNames.Resolve("Path A", body, own, baseBody).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0)]),
+            "the base world's paths are looked at first, and only for a path argument");
+        baseBody.WaypointPaths[0].Name = "Base Route";
+        check.That(ScriptNames.Resolve("base route", body, own, baseBody, true).SequenceEqual([new NameMatch(NameKind.BasePath, "path Base Route · 1 point", 0, false)]) &&
+                   ScriptNames.Resolve("path a", body, own, baseBody, true).SequenceEqual([new NameMatch(NameKind.Path, "path Path A · 1 point", 0, false)]) &&
+                   ScriptNames.Resolve("Base Route", body, own, baseBody).Count == 0 && ScriptNames.Resolve("nothing", body, own, baseBody, true).Count == 0,
+            "a name only the base world's path has is that path, one it lacks goes on to the level's own, and a base world's path is not a name outside a path argument");
+        // C-locale _stricmp folds ASCII bytes but not Latin-1 accented bytes. The loader retains a length-prefixed
+        // name, but the game's comparison stops at its first NUL: neither spelling after that byte affects the match.
+        WorldBody accentOwn = new(), accentBase = new();
+        accentBase.WaypointPaths.Add(new WaypointPath { Name = "À-ROUTE" });
+        accentOwn.WaypointPaths.Add(new WaypointPath { Name = "à-ROUTE" });
+        check.That(ScriptNames.Resolve("à-route", accentOwn, [], accentBase, true)
+                       .SequenceEqual([new NameMatch(NameKind.Path, "path à-ROUTE · 0 points", 0, false)]) &&
+                   ScriptNames.Resolve("À-route", accentOwn, [], accentBase, true)
+                       .SequenceEqual([new NameMatch(NameKind.BasePath, "path À-ROUTE · 0 points", 0, false)]),
+            "C-locale path lookup folds ASCII letters but does not merge differently cased Latin-1 bytes");
+        accentBase.WaypointPaths[0].Name = "Route\0stored suffix";
+        check.That(ScriptNames.Resolve("route", accentOwn, [], accentBase, true)
+                       .SequenceEqual([new NameMatch(NameKind.BasePath, "path Route · 0 points", 0, false)]) &&
+                   ScriptNames.Resolve("Route\0query suffix", accentOwn, [], accentBase, true)
+                       .SequenceEqual([new NameMatch(NameKind.BasePath, "path Route · 0 points", 0)]),
+            "a follow-path comparison and its displayed spelling stop at the first NUL, retaining exact-case status for the compared prefix");
         check.That(ScriptNames.Resolve("ALPHA", body, both, null, true).Count == 0 && ScriptNames.Resolve("Go", body, own, null, true).Count == 0 &&
                    ScriptNames.Resolve("TANK 1", body, own, baseBody, true).SequenceEqual(ScriptNames.Resolve("TANK 1", body, own, baseBody)) && ScriptNames.Resolve("nothing", body, own, null, true).Count == 0,
             "and objects, scripts and events stay exact in a path argument, as the game compares them");
@@ -454,6 +486,178 @@ internal static class LevelScriptTests
             check.That(ScriptSources.Find(game, 123, "Foo").Source?.Text == "// fine\n" && ScriptSources.Find(game, 125, "Foo").Source?.Text == "x", "with the permissions back, every source is read again");
         }
         Directory.Delete(game, true);
+        SourcesReplacementChecks(output, check);
+    }
+
+    private static void SourcesReplacementChecks(string output, Checks check)
+    {
+        if (!OperatingSystem.IsLinux() || RuntimeInformation.ProcessArchitecture != Architecture.X64) return;
+        string game = Path.Combine(output, "script-source-replacement-game");
+        string other = Path.Combine(output, "script-source-replacement-other");
+        string folder = Path.Combine(game, "data", "MissionScripts", "level123");
+        Directory.CreateDirectory(folder);
+        Directory.CreateDirectory(other);
+        string file = Path.Combine(folder, "Race.msl");
+        string otherFile = Path.Combine(other, "Race.msl");
+        File.WriteAllText(file, "// selected\n");
+        File.WriteAllText(otherFile, "// other\n");
+        Func<string, (int Failed, int Errno, uint Mask, ushort Mode)> native = ScriptSources.Statx;
+        bool changed = false;
+        try
+        {
+            ScriptSources.Statx = path =>
+            {
+                var answer = native(path);
+                if (!changed && Path.GetFileName(path) == "Race.msl")
+                {
+                    changed = true;
+                    File.Move(file, Path.Combine(folder, "original.msl"));
+                    File.CreateSymbolicLink(file, otherFile);
+                }
+                return answer;
+            };
+            ScriptSourceResult result = ScriptSources.Find(game, 123, "Race");
+            check.That(changed && result.Source is null && result.Problem is not null,
+                "a source replaced by a link after its first type check is refused");
+        }
+        finally { ScriptSources.Statx = native; }
+        File.Delete(file);
+        File.Move(Path.Combine(folder, "original.msl"), file);
+        changed = false;
+        try
+        {
+            ScriptSources.Statx = path =>
+            {
+                var answer = native(path);
+                if (!changed && Path.GetFileName(path) == "Race.msl")
+                {
+                    changed = true;
+                    Directory.Move(folder, folder + "-original");
+                    Directory.CreateSymbolicLink(folder, other);
+                }
+                return answer;
+            };
+            ScriptSourceResult result = ScriptSources.Find(game, 123, "Race");
+            check.That(changed && result.Source is null && result.Problem is not null,
+                "a source directory replaced by a link after its first type check is refused");
+        }
+        finally { ScriptSources.Statx = native; }
+        Directory.Delete(folder);
+        Directory.Move(folder + "-original", folder);
+
+        string replacement = Path.Combine(other, "Replacement.msl");
+        File.WriteAllText(replacement, "// replacement\n");
+        changed = false;
+        try
+        {
+            ScriptSources.Statx = path =>
+            {
+                var answer = native(path);
+                if (!changed && Path.GetFileName(path) == "Race.msl")
+                {
+                    changed = true;
+                    File.Move(file, file + ".prior");
+                    File.Move(replacement, file);
+                }
+                return answer;
+            };
+            ScriptSourceResult result = ScriptSources.Find(game, 123, "Race");
+            check.That(changed && result.Source is null && result.Problem is not null,
+                "a different regular source substituted after the type check is refused");
+        }
+        finally { ScriptSources.Statx = native; }
+        File.Delete(file);
+        File.Move(file + ".prior", file);
+
+        string alias = Path.Combine(output, "script-source-replacement-root-link");
+        Directory.CreateSymbolicLink(alias, game);
+        check.That(ScriptSources.Find(alias, 123, "Race").Source?.Text == "// selected\n",
+            "a selected game root reached through a link still works");
+        changed = false;
+        try
+        {
+            ScriptSources.Statx = path =>
+            {
+                var answer = native(path);
+                if (!changed && Path.GetFileName(path) == "Race.msl")
+                {
+                    changed = true;
+                    Directory.Delete(alias);
+                    Directory.CreateSymbolicLink(alias, other);
+                }
+                return answer;
+            };
+            ScriptSourceResult result = ScriptSources.Find(alias, 123, "Race");
+            check.That(changed && result.Source is null && result.Problem is not null,
+                "a selected-root link changed during lookup is refused");
+        }
+        finally { ScriptSources.Statx = native; }
+        Directory.Delete(alias);
+
+        bool grew = false;
+        try
+        {
+            ScriptSources.BeforeReadForTest = () =>
+            {
+                grew = true;
+                using FileStream append = new(file, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+                append.Write(new byte[ScriptSources.MaxBytes]);
+            };
+            ScriptSourceResult result = ScriptSources.Find(game, 123, "Race");
+            check.That(grew && result.Source is null && result.Problem is { } problem && problem.Contains("larger than", StringComparison.Ordinal),
+                "a source that grows past the byte limit after opening is refused");
+        }
+        finally { ScriptSources.BeforeReadForTest = null; }
+        File.WriteAllText(file, "// selected\n");
+
+        bool modified = false;
+        try
+        {
+            ScriptSources.BeforeReadForTest = () => { modified = true; File.WriteAllText(file, "// replaced\n"); };
+            ScriptSourceResult result = ScriptSources.Find(game, 123, "Race");
+            check.That(modified && result.Source is null && result.Problem is not null,
+                "a source modified in place during the read is refused");
+        }
+        finally { ScriptSources.BeforeReadForTest = null; }
+        File.WriteAllText(file, "// selected\n");
+
+        changed = false;
+        try
+        {
+            ScriptSources.Statx = path =>
+            {
+                var answer = native(path);
+                if (!changed && Path.GetFileName(path) == "Race.msl")
+                {
+                    changed = true;
+                    File.Move(file, file + ".prior");
+                    if (MakeNode(file, 0x1000 | 0x180) != 0) throw new IOException("Could not make authored test pipe.");
+                }
+                return answer;
+            };
+            Task<ScriptSourceResult> lookup = Task.Run(() => ScriptSources.Find(game, 123, "Race"));
+            bool returned = lookup.Wait(TimeSpan.FromSeconds(5));
+            check.That(changed && returned && lookup.Result.Source is null && lookup.Result.Problem is not null,
+                "a source replaced by a named pipe is refused without waiting for a writer");
+            if (!returned)
+            {
+                using (File.OpenHandle(file, FileMode.Open, FileAccess.Write)) { }
+                lookup.Wait(TimeSpan.FromSeconds(5));
+            }
+        }
+        finally { ScriptSources.Statx = native; }
+        File.Delete(file);
+        File.Move(file + ".prior", file);
+
+        int before = Directory.GetFiles("/proc/self/fd").Length;
+        bool repeated = true;
+        for (int i = 0; i < 100; i++)
+            repeated &= ScriptSources.Find(game, 123, "Race").Source?.Text == "// selected\n" &&
+                        ScriptSources.Find(game, 123, "Absent").Source is null;
+        int after = Directory.GetFiles("/proc/self/fd").Length;
+        check.That(repeated && after <= before, "successful and missing source lookups release their descriptors");
+        Directory.Delete(game, true);
+        Directory.Delete(other, true);
     }
 
     // mknod makes a named pipe (0x1000) or a socket node (0xC000), which anyone may make; the mode carries the permission bits.

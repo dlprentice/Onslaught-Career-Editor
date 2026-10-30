@@ -289,10 +289,10 @@ internal sealed class LevelEditorPage : Page
     /// <summary>Whether the map sits beside the table (a wide column) rather than below it.</summary>
     internal bool MapBesideTable => !_split.Vertical;
 
-    /// <summary>Whether the open level holds moves that no Save as mod has written: what leaving the level, the game or the companion would drop.</summary>
+    /// <summary>Whether the open level holds changes that no Save as mod has written: what leaving the level, the game or the companion would drop.</summary>
     internal bool HasChanges => _model?.HasUnsavedChanges ?? false;
 
-    /// <summary>How many objects those moves cover.</summary>
+    /// <summary>How many changed level records belong to the unsaved state.</summary>
     internal int ChangeCount => _model?.UnsavedChangeCount ?? 0;
 
     private LineEdit Axis(GridContainer grid, string label)
@@ -371,22 +371,22 @@ internal sealed class LevelEditorPage : Page
 
     /// <summary>
     /// The player chose a level in the picker, the open one again included (it is read afresh). It asks first when the open level holds
-    /// moves that are not saved; the picker keeps showing the open level while the question is up, and the chosen one when the player agrees.
+    /// changes that are not saved; the picker keeps showing the open level while the question is up, and the chosen one when the player agrees.
     /// </summary>
     internal void PickLevel(int level)
     {
-        if (_model?.Level is int open && HasChanges)
+        int changed = ChangeCount;
+        if (_model?.Level is int open && changed > 0)
         {
-            int moved = ChangeCount;
             ShowInPicker(open);
-            _services.AskToDiscard($"{Build.Count(moved, "object")} moved on level {open} {(moved == 1 ? "is" : "are")} not saved. Open level {level} and discard {(moved == 1 ? "it" : "them")}?",
+            _services.AskToDiscard($"{Build.Count(changed, "change")} on level {open} {(changed == 1 ? "is" : "are")} not saved. Open level {level} and discard {(changed == 1 ? "it" : "them")}?",
                 "Discard and open", () => OpenLevel(level));
             return;
         }
         OpenLevel(level);
     }
 
-    /// <summary>Opens a level's own world, dropping what was open (the picker asks first when that holds unsaved moves). Returns false, with the reason shown, if it cannot be edited.</summary>
+    /// <summary>Opens a level's own world, dropping what was open (the picker asks first when it holds unsaved changes). Returns false, with the reason shown, if it cannot be edited.</summary>
     internal bool OpenLevel(int level)
     {
         if (_model is null) return false;
@@ -406,6 +406,9 @@ internal sealed class LevelEditorPage : Page
         HeaderChanged?.Invoke();
         return opened;
     }
+
+    /// <summary>The source view goes to its top while the page is shown: it is hidden with the page, and a hidden view keeps its first visible line (see ScriptsPanel.ScrollToTop).</summary>
+    internal override void Leave() => _scripts.ScrollToTop();
 
     private void OnModelChanged()
     {
@@ -609,6 +612,7 @@ internal sealed class LevelEditorPage : Page
     /// <summary>The Scripts switch: the level's compiled scripts and their source in place of the table and the map.</summary>
     private void ShowScripts(bool on)
     {
+        if (!on) _scripts.ScrollToTop();  // while it is still shown: a hidden view keeps its first visible line (see ScriptsPanel.ScrollToTop)
         _split.Visible = !on;
         _scripts.Visible = on;
         MapToggle.Visible = !on;
@@ -726,12 +730,15 @@ internal sealed class LevelEditorPage : Page
         foreach (NameMatch match in matches.Take(10))
         {
             string text = match.Label + (match.ExactCase ? "" : " (other letter case)");
-            if (match.Kind == NameKind.BaseObject)
+            if (match.Kind is NameKind.BaseObject or NameKind.BasePath)
             {
-                // This page does not list the base world's objects, so there is nothing to go to: the object is said, not offered.
+                // This page does not list the base world's objects or draw its paths, so there is nothing to go to: it is said, not offered.
+                bool isPath = match.Kind == NameKind.BasePath;
                 Label note = _scriptNames.Add(Build.Text($"{text} · base world", "Muted", wrap: false));
                 note.MouseFilter = Control.MouseFilterEnum.Pass;  // so that the tooltip shows
-                note.TooltipText = $"An object of the base world (level {_model.BaseLevel}), which the game loads with this level. This page does not list that world's objects.";
+                note.TooltipText = isPath
+                    ? $"A path of the base world (level {_model.BaseLevel}), which the game loads before the level's own paths. The first path of that name is searched; if it has no usable waypoints, none is found. This page does not draw that world's paths."
+                    : $"An object of the base world (level {_model.BaseLevel}), which the game loads with this level. This page does not list that world's objects.";
                 continue;
             }
             Button button = _scriptNames.Add(Build.Button(text, tooltip: match.Kind switch

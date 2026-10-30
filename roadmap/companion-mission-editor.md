@@ -1,11 +1,11 @@
 # Companion Mission Editor: Design Addendum
 
-Status: design; the reference compiler and its retail gate (MS1, section 11), the read-only scripts view (MS0, section 12) and its name links and map paths (MS0.1, section 13) are built, the rest is plan. It extends the
+Status: design; the reference compiler and read-only scripts view with name links and map paths are built. The C# and Python compiler backends and the script-aware editor model are integrated; native Windows validation remains open; editing scripts remains planned. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-10-29 (MS0.1 follow-ups: a path's points are the waypoints the game keeps, path arguments are case-blind, PATHS rows in the gate; MS0.1, names in the source linked to the level and waypoint paths on the map, built; earlier: MS0, the read-only scripts view, built; CE 0.1.11, the first to take a world file from a mod, stated as published; earlier: the spike's result and the operator-grouping decision; the lead's earlier decisions; every measurement in section 2 was taken on 2026-10-29 on the read-only retail view)
+Last updated: 2026-10-29 (held and bounded viewer reads and platform limits; script-gate stale record pairs pinned by identity; descriptor-relative Python source reads; The C# compiler is integrated on main; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
-source in the game's own script language, compile it with a compiler of ours that is proved against every script the game
-shipped (byte for byte), and save the result as a CE mod, which is the world file the loader already serves. It states what
+source in the game's own script language, compile it with a compiler of ours checked against the shipped scripts with the documented
+missing-header and stale-source cases, and save the result as a CE mod, which is the world file the loader already serves. It states what
 the data says (the game never reads the `.msl` files; it runs the compiled scripts inside each level's world file), the
 milestones with their gates, the first editable thing, the safety rules and the limits.
 Evidence: MEASURED for section 2 (each item names its method and limits), SOURCE for the cited decompilation functions
@@ -95,10 +95,7 @@ recompiled, so a mod differs from the game only where the player edited.
   cited by function, with no source copied (the original compiler is not in the decompilation and is not needed). It supports
   exactly the constructs the shipped scripts use; anything else is refused with a line and a reason, never guessed.
 - **The checker** applies the game's own rules to the compiled script before anything is saved (section 7).
-- **The mod** carries the world file and the edited sources, each as `data/MissionScripts/levelNNN/NAME.msl`, the path of the file
-  the game already has, so today's loader admits them as replacements of files the game has. The game never reads them; they
-  document the change and let a later session reopen the player's own source, and the mod's notes and the README say so plainly.
-  The stager and the Python reference stager take extra files for this, with the same refusals as before (decided 2026-10-29).
+- **Future source-preserving staging.** A future workflow must verify each selected mission source against the compiled script in the exact staged world, refusing unsupported or mismatched inputs. An installed source can already differ from its compiled record, so including a source in a mod is not by itself evidence that a player edited it. The current stager publishes world data only; neither this source-staging workflow nor a player-facing mission source editor is available yet.
 
 ## 4. Milestones
 
@@ -106,8 +103,8 @@ recompiled, so a mod differs from the game only where the player edited.
 | --- | --- | --- | --- |
 | MS0 scripts beside the map (read-only; built, section 12) and MS0.1 names and paths (built, section 13) | the Level editor page lists the open level's compiled scripts (name, the events handled, the things that run it, the natives it calls) next to the map, shows the selected script's installed `.msl` source with line numbers, and links names in it (thing names, waypoint paths, scripts and event handlers; text ids are not linked yet) to the table and the map; selecting a thing shows its script and the other way round; waypoint paths are drawn on the map | on every installed level the list equals the world body's scripts, every one finds its source (670 of 670), the capture at three sizes looked at, nothing written | 4 to 5 days |
 | MS1 reference compiler and the byte-exact gate | `tools/msl_compile.py` (preprocess, lex, parse, generate, write the record as the world file stores it) and `tools/msl_gate.py --game GAME`, section 5 | every shipped script compiles to its shipped record, or each difference is explained (built; section 11) | built 2026-10-29 (the spike ran on every script) |
-| MS2 the C# compiler | `Missions/` with the same stages, authored vectors from the Python reference in Git, and a local retail gate (`Development/ScriptsGate.cs`) that must match the Python gate on all scripts | the vectors and the retail gate pass; the C# refuses what the Python refuses | 1 week |
-| MS3 first editable thing | the page edits the selected script's source (a text area with line numbers), compiles it (errors by line and column, a summary of what changed), replaces the script in the session as one undoable command, and saves through Save as mod | the acceptance in section 6 | 1 week |
+| MS2 the C# compiler (backend, section 14) | `Missions/` with the same stages, authored vectors from the Python reference in Git, and a local retail gate (`Development/ScriptsGate.cs`) that must match the Python gate on all scripts | the vectors and the retail gate pass; the C# refuses what the Python refuses and the supported platforms are checked. The C# and Python backends are integrated; source-preserving staging remains future work. | Native Windows and source-stage validation remain open |
+| MS3 first editable thing | the page edits the selected script's source (a text area with line numbers), compiles it (errors by line and column, a summary of what changed), replaces the script in the session as one undoable command, and saves through Save as mod | the acceptance in section 6. The script-aware model is integrated; player-facing source editing and source staging are not yet available. | 1 week |
 | MS4 structured helpers | forms for common edits (a count, a delay, a message id), the event graph (who posts, who handles), checks against the level (names exist), path membership and order on the map, spawner and trigger parameters (these are world-body data and need no compiler) | each helper has a test and a message a player can act on | 2 weeks |
 | MS5 texts (optional) | the text of a message is in the game's language files, a different mod file; a writer for them | a changed line shows in game | not estimated |
 
@@ -193,7 +190,7 @@ The spawn count and the timer values are the next edits in the same mould.
 
 ## 10. Decisions (2026-10-29, the lead)
 
-1. The mod carries the edited sources as inert `.msl` copies at the game's own paths (section 3), with the stager and its Python
+**Future design, not implemented on main:** 1. The mod carries the edited sources as inert `.msl` copies at the game's own paths (section 3), with the stager and its Python
    reference taking extra files under the same refusals.
 2. The compiler spike on the 20 smallest scripts comes first and MS0, the read-only viewer, runs beside it. The spike's result is
    reported before MS2 (the C# compiler): how many scripts are byte-exact, the first unexplained difference, and what the
@@ -264,10 +261,12 @@ narrows the list by name, event or function. Nothing is written.
   functions from its CALL instructions (the names are generated from the Toolkit's table, `tools/script_tables.py`), and the objects that
   name it from each object's script, spawn script and, for a spawner, its spawner spawn script, matched by exact name. A source is found
   at `data/MissionScripts/level<NNN>/<name>.msl` in any case (the real level's folder for the level's own scripts, the base level's for
-  its base world's), ignoring links, anything that is not a regular file (opening a named pipe would wait for a writer for ever, so
-  the file system is asked first, without opening it) and files over 1 MiB. A folder that cannot be listed, or a file that cannot be read,
-  is a sentence on the page, and so is an entry the system cannot be asked about (a sandbox that refuses, or a C library without
-  `statx`): nothing is read then.
+  its base world's), ignoring symbolic links below the selected root, anything that is not a regular file and files over 1 MiB. On Linux
+  x64 with procfs the reader holds directory handles and a no-follow path handle, checks identities and metadata around a bounded read, and refuses
+  detected changes. On Windows it uses the existing local-directory locks and a no-follow file handle; native Windows behavior has not
+  yet been checked. Other operating systems and Linux architectures fail closed. The selected root itself may be reached through a link;
+  regular hard links remain accepted. Remote Linux filesystem behavior is unverified, Windows network roots are refused, and these checks
+  do not create an immutable snapshot. A folder that cannot be listed or a file that cannot be read is a sentence on the page.
 - **Checked.** The Toolkit's gate table has a SCRIPTS row per level archive, worked out in Python separately from the C#: the catalog's
   lines (name, instructions, events, functions with counts, users) and the text of every source found, hashed. The Companion's local
   retail gate (`Development/LevelsGate.cs`) compares the C# catalog and finder with it on every level of an installed game: every list
@@ -275,9 +274,8 @@ narrows the list by name, event or function. Nothing is written.
 - **Limits.** The page was driven by events in tests and looked at in offscreen captures at 1920 by 1080, 1280 by 800 and 1024 by 700
   (the smallest window is cramped: the list shows two or three rows and the source about ten lines); nobody has used it by hand. A source
   may differ from the compiled script it sits beside (the gate says which installed ones do: section 11). Base-world scripts name
-  base-world objects, which the table does not list, so they show no users. The regular-file check is made at one moment and the read
-  comes after it, so an entry swapped for a pipe in between is not guarded against (that takes someone who can already change the
-  game folder). What a name in a source refers to, and the paths on the map, are MS0.1 (section 13).
+  base-world objects, which the table does not list, so they show no users. What a name in a source refers to, and the paths on the map,
+  are MS0.1 (section 13).
 
 ## 13. MS0.1: names in the source, and waypoint paths on the map (2026-10-29)
 
@@ -293,11 +291,16 @@ Nothing is written.
   holds the same texts as string constants with nothing to say which call reads which text as what. So a link goes by the name alone:
   it finds what has that name and does not claim the script uses it as such. Objects match by their exact name (else, if none has it,
   in another letter case, and the button says so), in the level's own world and by the same rule in its base world, each on its own;
-  scripts and event handlers match exactly, and so do paths except in one place. The game finds a waypoint path by name ignoring
-  letter case (`CWaypointManager::FindNearest`, which takes the first path of the world's list that matches), so the first argument of
-  a `FollowWaypoint` or `FollowWaypointWait` call, found by looking back along the line from its opening quote over blanks to a `(`
-  and, before it, the whole word of the call's name, names every path of that name in any case (the button says when the case
-  differs, and with two paths that differ only in case both are listed, in the world's order). A quoted text is closed by the next
+  scripts and event handlers match exactly, and so do paths except in one place. The game takes the first matching waypoint path
+  (`CWaypointManager::FindNearest`) from one list, and that list holds the base
+  world's paths before the level's own (`CWorld::LoadWorld` loads the base world before the rest of the level's world, and
+  `CWaypointManager::Load` appends each path to the list). So the first argument of a `FollowWaypoint` or `FollowWaypointWait` call,
+  found by looking back along the line from its opening quote over blanks to a `(` and, before it, the whole word of the call's name,
+  names the first of the base world's paths then the level's own whose name matches under the modeled C-locale byte comparison:
+  ASCII letters match in either case, other bytes match exactly, and NUL ends the name. Other process locales and native Windows
+  comparison remain unverified. The level's own path gets a button (marked when the compared case differs); a base world's path is
+  said, with no button, because the page does not draw that world's paths. The game returns no waypoint if the first matching path
+  has no usable points, rather than trying a later path. The page does not resolve an empty quoted name. A quoted text is closed by the next
   quote on its line, and `//` outside a quote ends the line's code. A path lists objects by their place in the world's thing list:
   under that reading the shipped paths run from point to point (the median step between neighbours is about 88 world units; under a
   shift of one or two places it is 121 to 146). The game's loader (`CWaypointPath::Load`) keeps a slot only if it indexes a loaded
@@ -323,7 +326,59 @@ Nothing is written.
   6), are not linked. About one path slot in five of the shipped paths names an object that is not a waypoint, and about half of the
   paths hold one: those slots are dropped as the game drops them, so a path has fewer points than slots. A path argument is told by the
   line it is on, so a call whose name and parenthesis end one line and whose first argument begins the next is not recognised (none of
-  the shipped sources does that; a mod's might), and its path is then found by its exact name only. Base-world objects are named, not
+  the shipped sources does that; a mod's might), and its path is then found by its exact name only. Unverified: whether the slot a path names
+  counts the file's order of records or the order in which they spawned (`CWorld::LoadWorld` advances its index only for records that
+  spawned, so a record that failed to spawn would shift every later slot); the page reads slots as file order, which is the reading under
+  which the shipped paths run from point to point. Base-world objects are named, not
   shown. The page was driven by events in tests and looked at in offscreen captures at 1920 by 1080, 1280 by 800 and 1024 by 700 (the
   path numbers are drawn over the marks, above and to the left of each point so that a selected object's tag does not cover them; at
   the smallest size the path line under the map is cut short); nobody has used it by hand.
+
+## 14. MS2: the C# compiler (2026-10-29)
+
+`Missions/` is the reference compiler (`tools/msl_compile.py`) in C#: a lexer, a preprocessor for `#include` and `#define`, and a parser that
+writes the instructions as it reads, statement for statement and message for message. `ScriptCompiler.Compile(name, source, readInclude,
+constStart, doOnceStart, resolve, notes, limits)` returns the `MissionScript` a world body stores (the same type the Level editor reads).
+It writes no file and delegates header reads to its caller. `ScriptCompiler.IncludesFrom(gameFolder)` finds headers by their game-relative
+paths with ASCII case matching, only inside the game folder. A link below that folder, a pipe or another non-regular file is refused.
+A source that cannot be compiled is a `CompileError`; when its line is known, the error carries the 0-based line and starts "line N: ".
+A header the game folder lacks is a `MissingInclude` naming the path. The notes (how a mixed chain of operators was grouped, a handler the game never calls,
+a variable declared twice) come back in a list for an editor to show. The limits (a million characters or tokens, four million replacement
+steps, 100 levels of nesting) are the reference's and are a parameter, so that the tests put each exactly at its edge.
+
+- **What it is held to.** (1) Authored vectors, written by `tools/msl_vectors.py` from the Python reference: for each source (none is a game
+  script) the compiled record as lines, the notes, or the message it was refused with, which the C# must give word for word, including how a
+  quoted token reads (the messages use Python's `repr`, reproduced in `PythonText`); the reference's answer for every pair of operators; and a
+  few shapes worked out by hand from what the shipped scripts show. (2) The local retail gate, `Development/ScriptsGate.cs`: every compiled
+  script of every world body of an installed game is compared with what the C# makes of the source the game folder holds for it, with the
+  session's counters taken from the shipped script. Every script is exact, exact once an include the install lacks is bound from the shipped
+  constants, or one of the seven pinned stale sources (section 11). A SHA-256 identity of each complete shipped/compiled record pair must
+  match the recorded pair; this pins the observed difference, not its explanation. The status of each equals the Python gate's, script by script
+  (`msl_gate.py --table`); and a world body whose scripts all compile, written with the compiled scripts in the place of the shipped ones,
+  writes back to the bytes it was read from. (3) A mutation sweep over the compiler files and the include lookup (about 170 one-line changes), each of which the vectors, the
+  hand-worked shapes or the file and limit tests must fail. The first pass let nine live (the counter reader's anchors, a named pipe or a dot in
+  an include path, a minus before a variable, the index a resolver is asked for, a dot followed by something that is not a word, leading zeros in a
+  long integer, blanks inside a note's operand) and six did not build; each live one got a vector or a test, the six were rewritten, and all were killed
+  on the second pass. One mutant is equivalent on Linux and was dropped: a folder is refused both by `File.Exists` and by the regular-file type
+  check, and `File.Exists` is the portable test.
+- **Made equal in the Python on the way.** The reference's lexer and directive patterns used Unicode classes (`\d`, `\s`) and `str.split()`;
+  they are ASCII blanks and digits now (a source typed in the editor may hold characters a Latin-1 game file cannot), and the compiler takes its 13
+  event names from the decoder's table instead of a second copy. The gate's result is unchanged.
+- **Limits.** No player-facing Companion page calls it yet: a page that edits a script and saves a mod is MS3. A source holds names, numbers, strings,
+  `TRUE` and `FALSE`: there is no literal for a position or a thing, and a constant of those types exists only when a caller gives one for a name a
+  missing header would have defined. A string is single-byte text (Latin-1). Messages are English and quote the reference's wording. The compile
+  is not incremental, which does not matter at a script's size. The seven stale sources differ from what the game ships, so the gate cannot say
+  whether the C# would have compiled them as the original compiler did.
+- **Review findings, work in progress (2026-10-29).** The independent review of MS2 found defects in the include lookup, the grouping
+  notes, the session counters and the quoting of characters outside the basic plane. They are fixed in the reference (`tools/msl_compile.py`)
+  first: a symbolic link anywhere below the game folder, or the file itself, is refused and never followed; a header that cannot be read, a missing
+  game folder and a counter past 2147483647 are refusals with fixed messages; names match in ASCII letter case only; symbols are looked up
+  in dictionaries; and a grouping note is made from the chain only when it is written, and says it is not written out when its text would
+  repeat more than 5,000 characters. The C# port implements these changes; its reader and header budgets have a focused independent review,
+  while native Windows behavior remains unverified. Both compilers now cap each included text at 1,048,576 characters,
+  and each script at 128 includes and 2,097,152 included characters in total. A supplied reader runs before its result can be checked;
+  the built-in file reader separately bounds the bytes it reads. The Python reader now holds Linux directory descriptors for the primary
+  source and included headers, checks identities around the read and fails closed on other platforms; it allows the selected root itself
+  to be a link. Regular hard links remain accepted, remote-filesystem behavior is unverified and the checks do not create an immutable
+  snapshot. The C# Windows reader is separate; native Windows behavior remains unverified. These are tool limits, not claims about the
+  original compiler.

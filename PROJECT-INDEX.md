@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-10-29 (the maintainer's storage name removed; earlier: the game documentation routed to onslaught-preservation, with `reverse-engineering/` a frozen copy; earlier: the companion owns original-game and CE support; the related repositories and frozen rebuild are linked)
+Last updated: 2026-10-29 (live documentation and rebuild authority routes corrected)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository: the companion, the game documentation, tools and the
 Godot rebuild.
@@ -104,7 +104,7 @@ the manual's images from the install. Pages live in
 | [`tools/`](tools/README.md) | Format decoders, asset export, capture analysis, the companion and Godot launchers, and the documentation and safety gates. Root [`package.json`](package.json) owns commands. |
 | [`tests_shared/`](tests_shared/fixtures/README.md) | Narrow reviewed cross-project fixtures; never a dumping ground for retail saves or assets. |
 | [`lore/`](lore/) and `lore-book/` | Canonical public lore/history library and its entry guide. |
-| [`references/`](references/) | David's forks of Stuart Gillam's GPL `Onslaught` source and `AYAResourceExtractor`, pinned at `c3d8ac4` and `53b10b0` by `ONSLAUGHT_PIN` and `EXTRACTOR_PIN` in [`aya_extractor_source_audit.py`](tools/aya_extractor_source_audit.py). Preserve pins, licences and provenance. These are source references, not proof of retail behavior. |
+| [`references/`](references/) | The pinned GPL `Onslaught` source and `AYAResourceExtractor` references, pinned at `c3d8ac4` and `53b10b0` by `ONSLAUGHT_PIN` and `EXTRACTOR_PIN` in [`aya_extractor_source_audit.py`](tools/aya_extractor_source_audit.py). Preserve pins, licences and provenance. These are source references, not proof of retail behavior. |
 | [`roadmap/`](roadmap/original-binary-online-multiplayer-feasibility.md) | Bounded original-binary multiplayer feasibility, the [Companion level editor plan](roadmap/companion-level-editor.md), and the [mission editor design](roadmap/companion-mission-editor.md). [GOAL.md](GOAL.md) owns the outcomes and [PROGRAM.md](PROGRAM.md) owns remaining work. |
 
 ## Documentation truth owners
@@ -117,22 +117,24 @@ wrong — fix the rows, not the document.
 | What is the contributor contract? | [`AGENTS.md`](AGENTS.md) — restated nowhere |
 | What do we want? | [`GOAL.md`](GOAL.md) |
 | What is the execution work-queue state (done/next/queued, with receipts)? | [`PROGRAM.md`](PROGRAM.md) |
-| What does the product/rebuild currently demonstrate? | [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) |
+| What does the Toolkit currently demonstrate? | [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) |
+| What do CE and the active rebuild demonstrate? | [CE releases](https://github.com/dlprentice/onslaught-ce/releases) and [Godot parity](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md) |
 | Where does our code and responsibility live? | This index |
-| What is known about the retail game? | [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) and its routed documents; the private decompilation is the authority behind them |
+| What is known about the retail game? | [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation); [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) is the frozen copy |
 | How are retail function/behavior contracts graded and located? | [`CONTRACTS.md`](CONTRACTS.md) |
-| What evidence may enter the rebuild? | [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) |
-| What makes the rebuild deterministic, and what is its measured parity? | [the parity core's contract](rebuild/DETERMINISM.md#the-parity-core-onslaughtrebuildparity) (the rest of that page is the earlier Core's), [`rebuild/PARITY.md`](rebuild/PARITY.md) |
+| What evidence may enter the rebuild? | [onslaught-godot provenance](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PROVENANCE.md) |
+| What is the rebuild's determinism contract and measured parity? | [onslaught-godot determinism](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/DETERMINISM.md) and [parity](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md) |
 | Where does ignored machine-local evidence live? | [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md); on this host the canonical checkout's real `local-lab/` directory |
 | Which validation command applies? | [`VALIDATION.md`](VALIDATION.md) and [`package.json`](package.json) |
-| What shipped, per release? | [`CHANGELOG.md`](CHANGELOG.md) (the retired WinUI app's releases) |
+| What shipped in CE? | [Onslaught CE releases](https://github.com/dlprentice/onslaught-ce/releases) |
+| What shipped in the retired WinUI app? | [`CHANGELOG.md`](CHANGELOG.md) |
 
 ### Lane front doors
 
 - **Game documentation:** [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation); the frozen copy
   here starts at [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md)
-- **Rebuild:** [`rebuild/README.md`](rebuild/README.md) +
-  [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md)
+- **Rebuild:** [onslaught-godot](https://github.com/dlprentice/onslaught-godot); [`rebuild/`](rebuild/README.md)
+  here is a frozen reference
 - **Machine-local evidence lane:** [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md)
   + canonical-checkout `local-lab/INDEX.md`
 - **Companion:** [`Godot companion`](companion/OnslaughtToolkit.Godot/README.md) /

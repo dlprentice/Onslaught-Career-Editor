@@ -24,6 +24,38 @@ public static class ScriptTables
         "notdefined8",
     ];
 
+    /// <summary>The VM's instructions, in the order an instruction's opcode number indexes them (<c>OPCODES</c> in tools/world_resources_decode.py).</summary>
+    public static readonly string[] Opcodes =
+    [
+        "OP_NOP",
+        "OP_PLUS",
+        "OP_MINUS",
+        "OP_MULTIPLY",
+        "OP_DIVIDE",
+        "OP_PUSH",
+        "OP_POP",
+        "OP_OR",
+        "OP_AND",
+        "OP_GREAT_THAN",
+        "OP_LESS_THAN",
+        "OP_GREAT_EQ_THAN",
+        "OP_LESS_EQ_THAN",
+        "OP_LABEL",
+        "OP_REMOVE_TOP",
+        "OP_CMP",
+        "OP_CMPB",
+        "OP_CMPNEB",
+        "OP_JMPNE",
+        "OP_JMPFALSE",
+        "OP_JMP",
+        "OP_GETTOP",
+        "OP_POINTER",
+        "OP_RETURN",
+        "OP_CALL",
+        "OP_CALLLOCAL",
+        "OP_PUSHPC",
+    ];
+
     /// <summary>
     /// Every function a script can call, in the order a CALL instruction's low byte indexes them (<c>gScriptFunctions</c>, <c>IScript.cpp</c> 0x0052ff20),
     /// with the letters of its argument types: i int, f float, s string, b bool, t thing, p position, * any.

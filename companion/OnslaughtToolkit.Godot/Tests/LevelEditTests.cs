@@ -446,6 +446,10 @@ internal static class LevelEditTests
         EditSession copied = new(mine);
         mine[10] ^= 0xFF;
         check.That(copied.Baseline.AsSpan().SequenceEqual(baseline) && copied.ToBytes().AsSpan().SequenceEqual(baseline), "the session keeps its own copy of the baseline");
+        byte[] shownBaseline = copied.Baseline;
+        shownBaseline[10] ^= 0xFF;
+        check.That(copied.Baseline.AsSpan().SequenceEqual(baseline) && copied.ToBytes().AsSpan().SequenceEqual(baseline) &&
+                   copied.Validate().Errors.Single().Code == "no-change", "the exposed baseline is a copy, so changing it cannot change the session's reference");
     }
 
     /// <summary>A command that can be made to fail, to see what the history does with a command that throws.</summary>

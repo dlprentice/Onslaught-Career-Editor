@@ -1171,22 +1171,38 @@ def object_matches(text: str, model: dict, kind: str) -> list[str]:
     return [f"{kind}:{row}" for row in exact] if exact else [f"{kind}:{row}:case" for row, name in enumerate(names) if name.lower() == text.lower()]
 
 
+def path_prefix(text: str) -> str:
+    """The portion of a stored name seen by a C-string comparison, without changing the stored value."""
+    return text.split("\0", 1)[0]
+
+
+def path_c_locale_key(text: str) -> str:
+    """Fold ASCII capitals only, as the tested C-locale byte comparison does on Latin-1 decoded names."""
+    return "".join(chr(ord(c) + 32) if "A" <= c <= "Z" else c for c in path_prefix(text))
+
+
 def resolve_name(text: str, model: dict, scripts: list[tuple[str, bool, list[str]]], base_model: dict | None = None, paths_ignore_case: bool = False) -> list[str]:
     """What a quoted text names in a level, as the Companion's ScriptNames.Resolve finds it (written separately): the objects that have it
     as their name exactly (else in another letter case), the base world's objects by the same rule (`baseobject`; the Level editor does not
-    list them, so they are said and not offered), the waypoint paths of that name (exactly; in any case, each other-case one marked, when
-    the text is the path argument of a follow-waypoint call), the scripts of that name (the list is the own world's scripts then the
+    list them, so they are said and not offered), the waypoint paths of that name (exactly; or, when the text is the path argument of a
+    follow-waypoint call, the first of the base world's paths then the level's own matching under the modeled C-locale byte comparison, marked
+    when its compared spelling differs in case, `basepath` when it is the base world's), the scripts of that name (the list is the own world's scripts then the
     base world's) and the scripts that handle an event of that name. One `kind:index[:case]` per match."""
     if not text:
         return []
     found = object_matches(text, model, "object")
     if base_model is not None:
         found += object_matches(text, base_model, "baseobject")
-    for index, path in enumerate(model["waypointPaths"]):
-        if path["name"] == text:
-            found.append(f"path:{index}")
-        elif paths_ignore_case and path["name"].lower() == text.lower():
-            found.append(f"path:{index}:case")
+    if paths_ignore_case:
+        # The game keeps one list of paths, the base world's before the level's own (CWorld::LoadWorld loads the base world first, and
+        # CWaypointManager::Load appends). FindNearest's C-string comparison in the tested C locale folds ASCII, not other Latin-1 bytes.
+        for kind, world in (("basepath", base_model), ("path", model)):
+            hit = next((index for index, path in enumerate(world["waypointPaths"]) if path_c_locale_key(path["name"]) == path_c_locale_key(text)), None) if world is not None else None
+            if hit is not None:
+                found.append(f"{kind}:{hit}" + ("" if path_prefix(world["waypointPaths"][hit]["name"]) == path_prefix(text) else ":case"))
+                break
+    else:
+        found += [f"path:{index}" for index, path in enumerate(model["waypointPaths"]) if path["name"] == text]
     found += [f"script:{index}" for index, (name, _base, _events) in enumerate(scripts) if name == text]
     found += [f"handler:{index}" for index, (_name, _base, events) in enumerate(scripts) if f'event "{text}"' in events]
     return found

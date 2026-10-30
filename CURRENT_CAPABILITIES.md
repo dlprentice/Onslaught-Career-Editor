@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-29 (the maintainer's storage name removed; earlier: findings are written in onslaught-preservation, with `reverse-engineering/` a frozen copy; earlier: the companion's update guidance and the published decompilation's score stated as they are; earlier: CE 0.1.5 publishes the redirected-output correction; Linux CE workflow and native Windows backend/load evidence; remaining UI/version and player limits)
+Last updated: 2026-10-29 (live rebuild ownership and catalogue routes clarified)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -10,9 +10,13 @@ The companion, Onslaught Companion, lets players choose the original game or Ons
 CE's launcher, protected career writes, two launcher settings and the steps for updating CE (the companion
 contacts nothing; CE checks its own signed feed and installs an update only when the player chooses Update).
 See its [README](companion/OnslaughtToolkit.Godot/README.md) for the contract and platform limits.
-The byte-matching decompilation is complete and is the reverse-engineering authority (public export:
-[onslaught-decomp](https://github.com/dlprentice/onslaught-decomp)); its native port is published separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce), and this
-document does not measure it. The Godot rebuild, a scoped proof of concept (level 100, startup to exit), is developed
+The byte-matching decompilation is the reverse-engineering authority. Its private function check matches every mapped
+game function with a guarded one-byte correction to a compiled object; without that correction, one function remains
+unmatched. Its public export, [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), records its own
+coverage and the third-party sample files it leaves out. Function matches do not by themselves establish complete
+behavioural equivalence or a byte-identical linked executable. Its native port is published separately as
+[Onslaught CE](https://github.com/dlprentice/onslaught-ce), and this document does not measure it. The Godot rebuild,
+a scoped proof of concept (level 100, startup to exit), is developed
 in [onslaught-godot](https://github.com/dlprentice/onslaught-godot), which records its measured parity; `rebuild/` here is a frozen copy. Executable patching and copied-install
 safe launch are retired and not planned; their code (the AppCore library and the `patches/` catalog) was removed on
 2026-10-22, and Git keeps it.
@@ -177,7 +181,9 @@ folder selection using owned tiny inputs; these are not a game-content or launch
 [Update tests](companion/OnslaughtToolkit.Godot/Tests/CeUpdateFeedTests.cs) check signature verification and refused
 responses. [Native Windows checks](companion/OnslaughtToolkit.NativeChecks/README.md) now exercise production
 process detection, protected career/settings writes and actual-game running refusals. CE also loads the edited
-Unicode career and writes exactly its bytes as options. The Windows Godot UI has not been exercised. Version
+Unicode career and writes exactly its bytes as options. A separate [native Windows development UI workflow](VALIDATION.md#companion-native-windows-development-ui--october-25)
+exercised selected production-page actions and its screenshots were inspected; ordinary release invocation,
+physical input, file dialogs, hardware rendering and broader UI acceptance remain open. Version
 queries still intermittently time out while Windows opens SDL3.dll during loader startup. Separate native
 launcher checks reproduced CE 0.1.4 sending redirected output to an attached console; Onslaught CE 0.1.5
 publishes that correction, which does not resolve the distinct startup wait. See the
@@ -206,7 +212,11 @@ Its sidebar:
   the game's transcripts (Bink cutscenes are listed only); Lore reads the repository's lore
   offline with search, the map of Allium from the player's manual and the manual itself;
   Art & sound lists the install's models, textures and bank sound effects, previews them and
-  saves copies (models as glTF, textures as PNG, sounds as WAV).
+  saves copies (models as glTF, textures as PNG, sounds as WAV). The Level editor shows placed objects and a map,
+  lets the player move objects and save the changed world as a new CE mod, and displays mission scripts read-only.
+  The documented CE world-mod loader is Linux-only. The compiler and undoable script-edit model are in the source,
+  but the page does not offer mission editing or save edited source in a mod. See the [level editor description](companion/OnslaughtToolkit.Godot/README.md#what-it-does),
+  [level editor plan](roadmap/companion-level-editor.md) and [mission editor design](roadmap/companion-mission-editor.md).
 - **Advanced**, folded away: Career bytes (the open career's stored values, or the bytes that
   differ from another career).
 
@@ -219,7 +229,7 @@ Linux, the `BEA.exe` rule was seen on 2026-09-26 to find the Steam game's own pr
 Proton and nothing else; the CE rule was seen on 2026-10-22 to find a running Onslaught CE 0.1
 on Linux, recorded in the ignored `local-data/companion/evidence/ce-running-check-2026-10-22.log`,
 and the native Windows backend checks on 2026-10-24 also refused writes while the selected CE game
-process was running; Windows Godot UI acceptance remains pending); a
+process was running; general Windows Godot UI acceptance remains pending); a
 file the game saved since it was opened is not replaced; the new file is swapped in (on Linux
 an atomic exchange that swaps back if the displaced file is not the one backed up; elsewhere
 `File.Replace` with the same comparison) and verified. A file is put back from Backups only if it
@@ -254,11 +264,15 @@ in [their validation section](VALIDATION.md#companion-approved-workflows--septem
 the migration's in [its section](VALIDATION.md#companion-c-migration--september-25).
 Art & sound and the Goodies page's "What it shows" are covered by the contract suite on
 synthetic models, textures, a sound bank and Goodie archives; no dated receipt for them is
-recorded here. **The Windows Godot UI, a human click-through and listening to the audio remain pending.**
-The native Windows backend and CE career-load checks described above are narrower executed evidence.
+recorded here. **Ordinary Windows release UI acceptance, a human click-through and listening to the audio remain pending.**
+The selected Windows development UI workflow and native backend and CE career-load checks described above are narrower executed evidence.
 The companion does not patch
 `BEA.exe` and that is not planned; mission, rank and link edits are not offered; no legacy
 feature parity or retail gameplay acceptance is implied.
+
+The [content and model/transform catalogue tools](tools/README.md) cover the families their current readers support.
+They are not a complete asset inventory or an HD conversion; the [programme](PROGRAM.md#content-catalogue) owns the
+remaining catalogue work.
 
 ## Retired WinUI toolkit
 
@@ -280,13 +294,12 @@ test) and have not run on Windows; nobody has looked at the panel on screen.
 
 ## Reconstruction
 
-**Active: the parity-core proof of concept.** David reactivated the rebuild on 2026-10-15 as a scoped proof of
-concept: startup to exit 1:1 with retail, level 100 playable to completion. `OnslaughtRebuild.Parity` (a float-exact
-C# port of the decompilation's simulation) owns the simulation and `OnslaughtRebuild.Host` the presentation, with an
-experimental live mode. What it demonstrates, measured Present by Present against retail and native-port recordings,
-and what remains open are recorded in [rebuild/PARITY.md](rebuild/PARITY.md) rather than repeated here; the Parity
-suite's setup is in [rebuild/README.md](rebuild/README.md#working-lane). Test success there does not establish
-audible audio, visual equality, physical input or a completed tutorial.
+**Current: the parity-core proof of concept.** The rebuild is developed in
+[onslaught-godot](https://github.com/dlprentice/onslaught-godot), not in this repository's frozen `rebuild/` copy.
+`OnslaughtRebuild.Parity` owns the simulation and `OnslaughtRebuild.Host` the presentation. The live
+[parity record](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md) owns the measured bounds;
+its numerical model and portability are not claimed exact beyond those checks. Test success does not establish
+audible audio, visual equality, physical input, whole-game parity or a completed tutorial.
 
 **History: the earlier fixed-point rebuild.** On 2026-10-15 David first parked this fixed-point rebuild in favour of a
 native source port, then restarted the lane around the parity core above. What follows is the fixed-point rebuild's

@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-10-29 (the safety check also reads live text for original-game bytes and private paths; earlier: the game documentation's home stated as onslaught-preservation, with `reverse-engineering/` a frozen copy; earlier: the companion described without a signed-update check; the maintainer's storage layout moved out of the tracked text; earlier: retained rebuild and current documentation owners clarified; platform-validation rule no longer assumes Windows is unavailable; companion CE support and public exports)
+Last updated: 2026-10-29 (project progress, documentation ownership and evidence stages clarified)
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
@@ -48,6 +48,20 @@ current milestones and measured parity. The local [`rebuild/PARITY.md`](rebuild/
   [README](companion/OnslaughtToolkit.Godot/README.md) describes its workflows and validation limits. Which clone and
   reference folders this machine uses is in the ignored `local-data/rebuild-env.sh` and the private notes, never in a
   tracked file.
+
+## Project progress and documentation
+
+[GOAL.md](GOAL.md) owns David's outcomes and the definition of progress; [PROGRAM.md](PROGRAM.md) owns the dated
+cross-project chart and work queue; [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) owns demonstrated Toolkit
+capability and limits. CE and the Godot rebuild own their detailed evidence and release status. A handoff is a dated continuity
+snapshot, not a second roadmap: check current refs, claims and evidence before relying on it.
+
+Report experiments, integrated source, released packages and real-player/platform acceptance separately. A passing
+synthetic test, a branch or a byte match is evidence within its stated scope, not automatic feature completion.
+Update the existing owner when a material milestone changes; preserve historical evidence rather than creating
+competing live status files. Before new work, check applicable prior results and share relevant findings between lanes;
+repeat checks only for changed inputs, failures or unresolved risks. Report failures and open gaps without invented
+percentages, and follow the user's current priorities.
 
 ## Ground rules
 
@@ -120,7 +134,7 @@ current milestones and measured parity. The local [`rebuild/PARITY.md`](rebuild/
 
 1. The smallest gate that could falsify the change passed: docs → `git diff --check` and `npm run test:docs`; added
    files → `npm run test:safety`; tool changes → the affected `_tests.py` cases; rebuild code → the affected Parity
-   tests, then the Parity suite and Host build as `rebuild/README.md` describes; companion → its `npm test`.
+   tests, then the Parity suite and Host build as the [live rebuild guide](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/README.md) describes; companion → its `npm test`.
 2. A new or edited tracked `.md` has `Status:`, `Last updated:` (or `Date:`) and `Summary:` (or `Verdict:`) in its
    header and no volatile counts. `tools/doc_header_backlog.txt` may only shrink.
 3. Stage only the scoped paths, commit plainly and push the working branch.

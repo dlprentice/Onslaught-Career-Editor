@@ -12,8 +12,11 @@ public enum NameKind
     /// <summary>An object of the level's base world (which the game loads with it), by its own name. The Level editor does not list those, so there is nothing to go to.</summary>
     BaseObject,
 
-    /// <summary>A waypoint path.</summary>
+    /// <summary>A waypoint path of the level's own world.</summary>
     Path,
+
+    /// <summary>A waypoint path of the level's base world, which the game finds before the level's own paths of that name. The Level editor does not draw it, so there is nothing to go to.</summary>
+    BasePath,
 
     /// <summary>A script, by name.</summary>
     Script,
@@ -103,9 +106,12 @@ public static partial class ScriptNames
     /// What a quoted text names in the level: the objects whose name it is (exactly, else in other letter case), the objects of the base
     /// world (<paramref name="baseWorld"/>, when the level has one) by the same rule, the waypoint paths of that name, the scripts of that
     /// name and the scripts that handle an event of that name. The scripts are <paramref name="scripts"/> in its order. Paths match exactly,
-    /// except where the text is the path argument of a follow-waypoint call (<paramref name="pathsIgnoreCase"/>): the game compares those names
-    /// ignoring letter case, so every path of that name in any case is named, each marked when its case differs. A path's label counts the points
-    /// the game keeps (see <see cref="WaypointCatalog"/>).
+    /// except where the text is the path argument of a follow-waypoint call (<paramref name="pathsIgnoreCase"/>): the game keeps one list of
+    /// paths, the base world's before the level's own, and takes the first whose name matches. This page models its C-locale byte comparison:
+    /// ASCII letters match in either case, other bytes match exactly, and a NUL ends the name. A base world's path is a
+    /// <see cref="NameKind.BasePath"/>; a match is marked when the compared spelling differs in case. The game's behavior under another
+    /// process locale or native Windows has not been checked. This page does not resolve an empty quoted name. A path's label counts the
+    /// points the game keeps (see <see cref="WaypointCatalog"/>).
     /// </summary>
     public static IReadOnlyList<NameMatch> Resolve(string text, WorldBody world, IReadOnlyList<ScriptEntry> scripts, WorldBody? baseWorld = null, bool pathsIgnoreCase = false)
     {
@@ -113,12 +119,20 @@ public static partial class ScriptNames
         List<NameMatch> matches = [];
         AddObjects(matches, NameKind.Object, text, world);
         if (baseWorld is not null) AddObjects(matches, NameKind.BaseObject, text, baseWorld);
-        for (int index = 0; index < world.WaypointPaths.Count; index++)
+        if (pathsIgnoreCase)
         {
-            WaypointPath path = world.WaypointPaths[index];
-            bool exact = string.Equals(path.Name, text, StringComparison.Ordinal);
-            if (exact || (pathsIgnoreCase && string.Equals(path.Name, text, StringComparison.OrdinalIgnoreCase)))
-                matches.Add(new NameMatch(NameKind.Path, $"path {path.Name} · {PointsText(WaypointCatalog.Rows(world, path).Count)}", index, exact));
+            // The game's one list of paths: the base world's, then the level's own; use the first C-locale byte match.
+            if (FirstPath(text, baseWorld, NameKind.BasePath) is { } inBase) matches.Add(inBase);
+            else if (FirstPath(text, world, NameKind.Path) is { } own) matches.Add(own);
+        }
+        else
+        {
+            for (int index = 0; index < world.WaypointPaths.Count; index++)
+            {
+                WaypointPath path = world.WaypointPaths[index];
+                if (string.Equals(path.Name, text, StringComparison.Ordinal))
+                    matches.Add(new NameMatch(NameKind.Path, $"path {path.Name} · {PointsText(WaypointCatalog.Rows(world, path).Count)}", index));
+            }
         }
         for (int index = 0; index < scripts.Count; index++)
             if (string.Equals(scripts[index].Summary.Name, text, StringComparison.Ordinal))
@@ -128,6 +142,42 @@ public static partial class ScriptNames
             if (scripts[index].Summary.Events.Contains(handler, StringComparer.Ordinal))
                 matches.Add(new NameMatch(NameKind.Handler, $"event handled by {scripts[index].Summary.Name}", index));
         return matches;
+    }
+
+    /// <summary>The first path of a world matching the C-locale byte spelling, as a match of this kind, or null.</summary>
+    private static NameMatch? FirstPath(string text, WorldBody? world, NameKind kind)
+    {
+        if (world is null) return null;
+        string comparedText = PathPrefix(text);
+        for (int index = 0; index < world.WaypointPaths.Count; index++)
+        {
+            WaypointPath path = world.WaypointPaths[index];
+            string comparedName = PathPrefix(path.Name);
+            if (PathEquals(comparedName, comparedText))
+                return new NameMatch(kind, $"path {comparedName} · {PointsText(WaypointCatalog.Rows(world, path).Count)}", index, string.Equals(comparedName, comparedText, StringComparison.Ordinal));
+        }
+        return null;
+    }
+
+    /// <summary>The name seen by the game's C-string comparison; the stored path itself is not changed.</summary>
+    private static string PathPrefix(string text)
+    {
+        int nul = text.IndexOf('\0');
+        return nul < 0 ? text : text[..nul];
+    }
+
+    /// <summary>C-locale comparison of the Latin-1 decoded path bytes: fold ASCII capitals only.</summary>
+    private static bool PathEquals(string left, string right)
+    {
+        if (left.Length != right.Length) return false;
+        for (int i = 0; i < left.Length; i++)
+        {
+            char a = left[i], b = right[i];
+            if (a is >= 'A' and <= 'Z') a = (char)(a + ('a' - 'A'));
+            if (b is >= 'A' and <= 'Z') b = (char)(b + ('a' - 'A'));
+            if (a != b) return false;
+        }
+        return true;
     }
 
     /// <summary>The objects of a world that have this name exactly, or, if none has, those that have it in other letter case.</summary>

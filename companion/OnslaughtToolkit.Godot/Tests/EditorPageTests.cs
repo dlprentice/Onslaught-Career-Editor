@@ -77,7 +77,7 @@ internal static class LevelEditorPageTests
         Set(page.Z, "9");
         Submit(page.X);
         check.That(page.HasChanges && page.ChangeCount == 1 && !page.Undo.Disabled, "a typed move is unsaved");
-        check.That(!app.RequestClose() && app.DiscardDialog.Visible && app.DiscardDialog.DialogText.StartsWith("Not saved yet: 1 object moved on Level editor.", StringComparison.Ordinal) && !quit.On,
+        check.That(!app.RequestClose() && app.DiscardDialog.Visible && app.DiscardDialog.DialogText.StartsWith("Not saved yet: 1 change on Level editor.", StringComparison.Ordinal) && !quit.On,
             $"closing with an unsaved move asks first and does not close: \"{app.DiscardDialog.DialogText}\"");
         app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
         app.DiscardDialog.Hide();
@@ -90,7 +90,7 @@ internal static class LevelEditorPageTests
 
         // Together with the other pages' changes, and from another page (leaving and coming back kept the move already).
         app.Navigate("home");
-        check.That(!app.RequestClose() && app.DiscardDialog.Visible && app.DiscardDialog.DialogText.Contains("1 object moved on Level editor", StringComparison.Ordinal), "closing asks about the Level editor from any page");
+        check.That(!app.RequestClose() && app.DiscardDialog.Visible && app.DiscardDialog.DialogText.Contains("1 change on Level editor", StringComparison.Ordinal), "closing asks about the Level editor from any page");
         app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
         app.DiscardDialog.Hide();
         app.Navigate("levels");
@@ -98,7 +98,7 @@ internal static class LevelEditorPageTests
 
         // The picker asks before it drops the move; the question leaves the picker on the open level, and agreeing opens the other.
         Choose(page, 200);
-        check.That(app.DiscardDialog.Visible && app.DiscardDialog.DialogText.StartsWith("1 object moved on level 100 is not saved. Open level 200 and discard it?", StringComparison.Ordinal) && page.Model?.Level == 100 &&
+        check.That(app.DiscardDialog.Visible && app.DiscardDialog.DialogText.StartsWith("1 change on level 100 is not saved. Open level 200 and discard it?", StringComparison.Ordinal) && page.Model?.Level == 100 &&
                    page.Level.GetItemId(page.Level.Selected) == 100 && page.HasChanges, $"choosing another level asks first, and the picker keeps showing the open one: \"{app.DiscardDialog.DialogText}\"");
         app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
         app.DiscardDialog.Hide();
@@ -126,7 +126,7 @@ internal static class LevelEditorPageTests
 
         // Choosing another game folder starts the page over, so it asks first.
         await app.Home.ChooseAsync(install.Game);
-        check.That(app.DiscardDialog.Visible && app.DiscardDialog.DialogText.StartsWith("1 object moved on the Level editor is not saved. Use ", StringComparison.Ordinal) && app.DiscardDialog.DialogText.EndsWith("as the game folder and discard it?", StringComparison.Ordinal) && page.HasChanges,
+        check.That(app.DiscardDialog.Visible && app.DiscardDialog.DialogText.StartsWith("1 change on the Level editor is not saved. Use ", StringComparison.Ordinal) && app.DiscardDialog.DialogText.EndsWith("as the game folder and discard it?", StringComparison.Ordinal) && page.HasChanges,
             $"choosing a game folder asks first: \"{app.DiscardDialog.DialogText}\"");
         app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
         app.DiscardDialog.Hide();
@@ -145,7 +145,7 @@ internal static class LevelEditorPageTests
         Set(page.Y, "12");
         Set(page.Z, "13");
         Submit(page.X);
-        check.That(page.HasChanges && page.ChangeCount == 2 && !app.RequestClose() && app.DiscardDialog.DialogText.Contains("2 objects moved on Level editor", StringComparison.Ordinal), $"a move made after the save is unsaved, counted with the saved one: \"{app.DiscardDialog.DialogText}\"");
+        check.That(page.HasChanges && page.ChangeCount == 2 && !app.RequestClose() && app.DiscardDialog.DialogText.Contains("2 changes on Level editor", StringComparison.Ordinal), $"a move made after the save is unsaved, counted with the saved one: \"{app.DiscardDialog.DialogText}\"");
         app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
         app.DiscardDialog.Hide();
         Press(page.Undo);
@@ -153,6 +153,50 @@ internal static class LevelEditorPageTests
         quit.On = false;
         Choose(page, 200);
         check.That(!app.DiscardDialog.Visible && page.Model?.Level == 200, "and then another level opens without a question");
+
+        // The same three exit routes must protect an unstorable script edit, without treating it as a moved object.
+        Choose(page, 100);
+        await Frame(tree);
+        EditSession scriptSession = M(page).Session!;
+        MissionScript unstorable = scriptSession.ShippedScript(0);
+        unstorable.Trailer = new byte[9];
+        scriptSession.Apply(new ReplaceScript(0, unstorable));
+        await Frame(tree);
+        check.That(page.HasChanges && page.ChangeCount == 1 && page.Save.Disabled && page.Summary.Contains("cannot be saved:", StringComparison.Ordinal),
+            "an unstorable script is shown as an unsaved change and cannot be saved");
+        check.That(!app.RequestClose() && app.DiscardDialog.DialogText.Contains("1 change on Level editor", StringComparison.Ordinal),
+            "closing asks before dropping an unstorable script edit");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+        Choose(page, 200);
+        check.That(app.DiscardDialog.Visible && app.DiscardDialog.DialogText.Contains("1 change on level 100", StringComparison.Ordinal) && page.Model?.Level == 100,
+            "the level picker asks before dropping an unstorable script edit");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+        await app.Home.ChooseAsync(install.Game);
+        check.That(app.DiscardDialog.Visible && app.DiscardDialog.DialogText.Contains("1 change on the Level editor", StringComparison.Ordinal) && page.HasChanges,
+            "changing the game folder asks before dropping an unstorable script edit");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+        check.That(scriptSession.Undo() && !page.HasChanges, "undoing the unstorable script leaves nothing to discard");
+
+        // A caller can mutate the public working body into a state the editor refuses to save. Every exit must still protect it.
+        MissionScript replacement = scriptSession.ShippedScript(0);
+        replacement.Trailer[0]++;
+        scriptSession.Apply(new ReplaceScript(0, replacement));
+        scriptSession.Body.Scripts[0].Name = "renamed";
+        check.That(page.HasChanges && !app.RequestClose() && app.DiscardDialog.Visible, "closing asks before dropping a renamed script list");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+        Choose(page, 200);
+        check.That(app.DiscardDialog.Visible && page.Model?.Level == 100, "the level picker asks before dropping a renamed script list");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+        await app.Home.ChooseAsync(install.Game);
+        check.That(app.DiscardDialog.Visible && page.HasChanges, "changing the game folder asks before dropping a renamed script list");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+        check.That(scriptSession.Undo() && !page.HasChanges, "undo restores the baseline after a refused script-list change");
         app.Navigate("home");
         await Frame(tree);
     }

@@ -257,13 +257,13 @@ internal sealed class HomePage : Page
 
     internal override void Refresh() => ShowGame();
 
-    internal async Task ChooseAsync(string path, bool discardLevelMoves = false)
+    internal async Task ChooseAsync(string path, bool discardLevelEdits = false)
     {
-        // The Level editor starts over on another game folder, which would drop its unsaved moves: ask first.
-        if (!discardLevelMoves && _app.LevelMovesUnsaved() is int moved and > 0)
+        // The Level editor starts over on another game folder, which would drop its unsaved edits: ask first.
+        if (!discardLevelEdits && _app.LevelEditsUnsaved() is int changed and > 0)
         {
-            _app.AskToDiscard($"{Build.Count(moved, "object")} moved on the Level editor {(moved == 1 ? "is" : "are")} not saved. Use {path} as the game folder and discard {(moved == 1 ? "it" : "them")}?",
-                "Discard and change folder", () => _app.Status.Track(ChooseAsync(path, discardLevelMoves: true)));
+            _app.AskToDiscard($"{Build.Count(changed, "change")} on the Level editor {(changed == 1 ? "is" : "are")} not saved. Use {path} as the game folder and discard {(changed == 1 ? "it" : "them")}?",
+                "Discard and change folder", () => _app.Status.Track(ChooseAsync(path, discardLevelEdits: true)));
             return;
         }
         var chosen = await _app.Game.ChooseAsync(path);

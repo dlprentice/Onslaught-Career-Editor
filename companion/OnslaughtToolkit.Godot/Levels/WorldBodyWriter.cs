@@ -30,12 +30,7 @@ internal static class WorldBodyWriter
         w.Int32(model.BaseLevel);
 
         w.Int32(model.Scripts.Count);
-        foreach (MissionScript script in model.Scripts)
-        {
-            w.LString(script.Name, LengthKind.Int32);
-            WriteCode(w, script.Code);
-            w.Raw(Fixed(script.Trailer, 10, "a script's trailer"));
-        }
+        foreach (MissionScript? script in model.Scripts) WriteScript(w, Need(script, "a script"));
 
         w.Int32(model.MapNumber);
         w.Int32(model.NamedMeshes.Count);
@@ -133,19 +128,36 @@ internal static class WorldBodyWriter
         return w.ToArray();
     }
 
+    /// <summary>The bytes the world stores for one script: its name, its code and its trailer. Two scripts are the same record when these are the same bytes.</summary>
+    /// <exception cref="InvalidDataException">The script holds something the format cannot store.</exception>
+    internal static byte[] ScriptBytes(MissionScript script)
+    {
+        ByteWriter w = new();
+        WriteScript(w, script);
+        return w.ToArray();
+    }
+
+    private static void WriteScript(ByteWriter w, MissionScript script)
+    {
+        w.LString(Need(script.Name, "a script's name"), LengthKind.Int32);
+        WriteCode(w, Need(script.Code, "a script's code"));
+        w.Raw(Fixed(script.Trailer, 10, "a script's trailer"));
+    }
+
     private static void WriteCode(ByteWriter w, ScriptCode code)
     {
-        w.Int32(code.Instructions.Count);
+        ScriptCount(w, code.Instructions.Count, "instructions");
         foreach (ScriptInstruction instruction in code.Instructions)
         {
             w.Int32(instruction.Opcode);
             w.Int32(instruction.Attribute);
         }
         foreach (int pc in Fixed(code.EventPcs, ScriptCode.EventCount, "a script's event entry points")) w.Int32(pc);
-        w.Int32(code.Symbols.Count);
-        foreach (ScriptSymbol symbol in code.Symbols)
+        ScriptCount(w, code.Symbols.Count, "symbols");
+        foreach (ScriptSymbol? item in code.Symbols)
         {
-            w.LString(symbol.Name, LengthKind.Int32);
+            ScriptSymbol symbol = Need(item, "a script symbol");
+            w.LString(Need(symbol.Name, "a script symbol's name"), LengthKind.Int32);
             w.Int32(symbol.DataType);
             if (symbol.DataType != 0) WriteValue(w, symbol.DataType, symbol.Value);
             w.Int32(symbol.SymbolType);
@@ -153,15 +165,23 @@ internal static class WorldBodyWriter
             w.Int32(symbol.Flag);
         }
         w.Int32(code.NextSymbolIndex);
-        w.Int32(code.EventFunctions.Count);
-        foreach (EventFunction function in code.EventFunctions)
+        ScriptCount(w, code.EventFunctions.Count, "handlers");
+        foreach (EventFunction? item in code.EventFunctions)
         {
+            EventFunction function = Need(item, "a script handler");
             w.Int32(function.EntryPc);
-            w.Int32(function.Parameters.Count);
+            ScriptCount(w, function.Parameters.Count, "handler parameters");
             foreach (int parameter in function.Parameters) w.Int32(parameter);
         }
         w.Int32(code.Tail1);
         w.Int32(code.Tail2);
+    }
+
+    /// <summary>A script count the strict reader can read back; larger values cannot form a usable world record.</summary>
+    private static void ScriptCount(ByteWriter w, int count, string what)
+    {
+        if (count > ByteReader.CountLimit) throw new InvalidDataException($"a script has more {what} than the reader's {ByteReader.CountLimit} limit");
+        w.Int32(count);
     }
 
     private static void WriteValue(ByteWriter w, int dataType, ScriptValue? value)
@@ -175,7 +195,7 @@ internal static class WorldBodyWriter
                 w.Single(number.Value);
                 break;
             case (3, ScriptText text):
-                w.LString(text.Value, LengthKind.Int32);
+                w.LString(Need(text.Value, "a script text value"), LengthKind.Int32);
                 break;
             case (6, ScriptVector vector):
                 w.Single(vector.Value.X);

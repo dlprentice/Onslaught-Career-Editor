@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-29 (the toolchain paragraph no longer names the maintainer's private installer or paths; earlier: the Level editor's read-only Scripts view; earlier: CE 0.1.11, the first CE to take a world file from a mod, named; earlier: the Level editor's map; what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
+Last updated: 2026-10-29 (the mission script compiler, `Missions/`, not yet used by a page; the toolchain paragraph no longer names the maintainer's private installer or paths; earlier: the Level editor's read-only Scripts view; earlier: CE 0.1.11, the first CE to take a world file from a mod, named; earlier: the Level editor's map; what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -147,7 +147,8 @@ editor-authored scene, and `npm run build` refuses to stage one.
 | [Lore](Lore/) | The embedded lore library, its Markdown renderer and the campaign's mission list (`CampaignLoreComposer`) |
 | [Ui](Ui/) | The Flight-deck theme and icons, the shell, career cards, the save-choice dialog, the game's art read from the install (`GameArt`) and one class per page |
 | [Tests](Tests/) | Every behavioral contract, run headlessly inside Godot |
-| [Development](Development/) | Development-only entries: screen captures, export license metadata and the Windows program icon (`IconWriter`) |
+| [Missions](Missions/) | The mission script compiler: a source in the game's script language (`.msl`) to the compiled script a level's world file stores (`ScriptCompiler`), held to the Toolkit's reference compiler by authored vectors and a per-script comparison on an installed game, with documented missing-header and stale-source cases. No page uses it yet |
+| [Development](Development/) | Development-only entries: screen captures, the local retail gates (`LevelsGate`, `ScriptsGate`), export license metadata and the Windows program icon (`IconWriter`) |
 
 `Tests/` and `Development/` compile only into development builds; release exports
 exclude them from both the assembly and the package.
@@ -353,9 +354,12 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   thing list, which is the reading under which the shipped paths run from point to point (measured against shifts of one and
   two). The game keeps a slot as a point of the path only if it names a waypoint (`CWaypointPath::Load` in the decompilation), so
   the page draws, numbers and counts only those: about one slot in five names a unit, a spawner or another kind of object and is
-  dropped, and an object that only such a slot names is on no path. The game finds a waypoint path by name ignoring letter case
-  (`CWaypointManager::FindNearest`), so a quoted text that is the first argument of `FollowWaypoint` or `FollowWaypointWait` names
-  every path of that name in any case, the button saying when the case differs; every other name is matched as written. The list,
+  dropped, and an object that only such a slot names is on no path. The game searches the first matching waypoint path in a list
+  with the base world's paths before the level's own (`CWaypointManager::FindNearest`). For a quoted first argument of
+  `FollowWaypoint` or `FollowWaypointWait`, the page models the C-locale byte comparison: ASCII letters match in either case,
+  other bytes match exactly, and a NUL ends the name. The level's own path gets a button (which says when the compared case differs);
+  a base world's path is named with nothing to go to. A matched path with no usable waypoints gives the game no waypoint. Other
+  process locales and native Windows comparison are not verified. Empty quoted names are not resolved by the page. Every other name is matched as written. The list,
   the links and the names are read from the compiled code, the level's objects and the sources, and
   checked against the Toolkit's reference (`tools/level_editor_vectors.py gate-table`, its SCRIPTS, NAMES and PATHS rows) on a game
   install, with the native names generated from the Toolkit's table (`tools/script_tables.py`). Nothing here writes anything.
