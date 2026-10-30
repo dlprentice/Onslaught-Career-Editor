@@ -2,7 +2,7 @@
 
 Status: design; the reference compiler and read-only scripts view with name links and map paths are built. The C# and Python compiler backends and the script-aware editor model are integrated, and the Level editor's Scripts view edits a script's source, compiles it and makes the open level use it (section 15); the acceptance in section 6 was run once on Linux (section 16); source-preserving staging and native Windows validation remain open. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-10-30 (the CE acceptance of an edited script was run on Linux, section 16, timing restated from CE's own log; the Level editor's Scripts view edits a script's source, section 15; earlier: held and bounded viewer reads and platform limits; script-gate stale record pairs pinned by identity; descriptor-relative Python source reads; The C# compiler is integrated on main; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
+Last updated: 2026-10-30 (the CE acceptance of an edited script was run on Linux, section 16, timing restated from CE's own log, repeated once with the released 0.1.12 package; the Level editor's Scripts view edits a script's source, section 15; earlier: held and bounded viewer reads and platform limits; script-gate stale record pairs pinned by identity; descriptor-relative Python source reads; The C# compiler is integrated on main; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours checked against the shipped scripts with the documented
 missing-header and stale-source cases, and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -459,9 +459,19 @@ control, a comment line above the first line, which the compiled script keeps as
   on the two time-matched controls, the second control and the comment control, against both edit runs; the first control agrees with them at its own moment. Runs on the
   real clock cannot be matched to the Present, so the comparison is of the text written, not of pixels: none of the three controls shows the edit.
 - **Fences.** CE switches mods off whenever a deterministic clock (`run.py --virtual`, `BEA_PORT_CLOCK`), a tape, probes, a recording, a pilot or autopilot, or a network host, join or
-  handoff is active (`port/platform/common/mods.cpp`; CE's own README says only "replays, recordings and network play"), and its screenshot key is taken only when no menu or
+  handoff is active (`port/platform/common/mods.cpp`; at 93cac507 CE's own README says only "replays, recordings and network play"), and its screenshot key is taken only when no menu or
   its console has the keyboard. A mod run is therefore live and on the real clock, with no
   pixel-exact comparison between runs.
+- **The released package, repeated.** The same pair (one control, one run with the message edit) was run again with the released Onslaught CE 0.1.12 Linux package's own
+  binary in place of the build of main: the same driver, runner, flags and key schedule, the mod re-staged by the committed capture (byte-identical). The package is the
+  release asset `onslaught-ce-0.1.12-linux-i686.tar.gz`: its size (6,844,827 bytes) and SHA-256 (31f96ae0...) are the `linux-i686` entry of the release's update feed
+  (`ce-update-v2.json`, read from the release's public assets), whose Ed25519 signature was verified against the launcher's pinned public key; its `bea` has SHA-256
+  1f036553.... CE's log has the same four mods lines in the mod run (the world file served once, with the receipt's SHA-256) and none in the control. **The pair is not
+  time-matched:** the control's frames are 0.88 to 3.43 s after the skip (6.0 ms per Present) and the mod run's 1.36 to 4.82 s (8.3 ms), so the text can only be compared at
+  comparable moments, and the release adds a second binary to the claim, not a second sample of the comparison. Counted without reading (pixels of the 350 by 90 subtitle
+  band that differ by more than 48 grey levels, out of 31,500): at the last frame the three runs with the edit (two runs of the build of main, one run of the release) are identical to one another
+  (0), the three time-matched controls (the second control, the comment control, the release control) are identical to one another (0), and every edit frame differs from
+  every one of those controls by 2,740 to 2,770; the release pair differs at all seven frames (2,100 to 2,800). The package's mod loader is Linux-only, as the build's.
 - **What was tried first.** The `Weather` script's starting snow density (one symbol, 0.1 to 0.8). The mod loaded and the log named it, but no frame difference rose above
   the run-to-run noise (two runs with the edit differed from each other by as many pixels as one differed from a control), and the script's text print did not appear in the
   console. That edit is not evidence of a changed behaviour and is not claimed: a mod's log lines alone do not show one.
@@ -470,4 +480,5 @@ control, a comment line above the first line, which the compiled script keeps as
   messages (one run).
 - **What it does not show.** A person using the page by hand. Any behaviour beyond one message in one script of one level: timers, spawns, AI and the `Damage` warning are
   not covered. A Windows run (CE's mod loader is Linux-only; Windows ignores `mods=`). That every installed script recompiles to what the game ran (the stale sources and the
-  sources whose header the install lacks, section 11, are outside it). The sound (the audio driver was the dummy), play past the opening, or a CE release (a build of main).
+  sources whose header the install lacks, section 11, are outside it). The sound (the audio driver was the dummy), play past the opening, or a player starting the released launcher with a mod of their own (the repeat above ran the released
+  package's binary through the runner).
