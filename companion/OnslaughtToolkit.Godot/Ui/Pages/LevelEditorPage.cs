@@ -293,6 +293,9 @@ internal sealed class LevelEditorPage : Page
     internal Button Save { get; }
     internal Button Play { get; }
 
+    /// <summary>What the page says under the Play button: that CE is starting, or how the test play went (empty when it says nothing).</summary>
+    internal string PlayNote => _playNote.Visible ? _playNote.Text : "";
+
     private const string PlayTip = "Start this level in Onslaught CE with your changes, without saving anything. CE runs in a temporary folder of its own: " +
         "your careers and CE settings are not touched. Close CE to come back here.";
     internal SaveAsModDialog SaveDialog { get; }

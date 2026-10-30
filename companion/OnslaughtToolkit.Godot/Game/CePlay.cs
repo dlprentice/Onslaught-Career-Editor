@@ -28,9 +28,10 @@ internal sealed record CePlayReport(bool Started, int? ExitCode, bool ModServed,
 /// <param name="Alive">Whether a process id is running, for the stale sweep.</param>
 /// <param name="OnWindows">Whether to behave as on Windows.</param>
 /// <param name="Now">The clock.</param>
+/// <param name="OnStart">Called with the launcher's start (arguments and environment) just before it is run, so a capture can record what CE was given.</param>
 internal sealed record CePlayHooks(string? Parent = null, Func<ProcessStartInfo, Task<int>>? Run = null,
     Func<ProcessStartInfo, CancellationToken, Task<string>>? ReadVersion = null, IReadOnlyDictionary<string, string?>? Environment = null,
-    Action<string>? BeforeRemoval = null, Func<int, bool>? Alive = null, Func<bool>? OnWindows = null, Func<DateTime>? Now = null);
+    Action<string>? BeforeRemoval = null, Func<int, bool>? Alive = null, Func<bool>? OnWindows = null, Func<DateTime>? Now = null, Action<ProcessStartInfo>? OnStart = null);
 
 /// <summary>
 /// "Play this level with the mod": starts Onslaught CE at a level with the edit being tried, without writing anything of the player's. It makes a
@@ -71,6 +72,9 @@ internal sealed class CePlay
     /// <summary>Whether a test play is running now.</summary>
     internal bool Running { get; private set; }
 
+    /// <summary>What the latest test play (or refused one) came to, or null before the first.</summary>
+    internal CePlayReport? Last { get; private set; }
+
     /// <summary>Raised when a test play starts or ends, so a page can enable and disable its button.</summary>
     internal event Action? Changed;
 
@@ -98,7 +102,7 @@ internal sealed class CePlay
     internal CePlaySweep SweepStale() => CePlayFolder.SweepStale(Parent, Environment.ProcessId, _current,
         _hooks.Alive ?? (pid => OperatingSystem.IsLinux() && Directory.Exists("/proc/" + pid.ToString(CultureInfo.InvariantCulture))));
 
-    private static CePlayReport Refused(string message) => new(false, null, false, [], null, message, []);
+    private CePlayReport Refused(string message) => Last = new CePlayReport(false, null, false, [], null, message, []);
 
     /// <summary>
     /// Starts CE at <paramref name="level"/> with the mod that <paramref name="stage"/> writes into the folder it is given, under the id and name it is given
@@ -145,6 +149,7 @@ internal sealed class CePlay
             string? optionsNote = folder.CopyRegular(Path.Combine(_game.CeUserFolder, "defaultoptions.bea"), "defaultoptions.bea", OptionsLimit);
 
             ProcessStartInfo start = StartInfo(ce, folder.Root, gameFolder, level);
+            _hooks.OnStart?.Invoke(start);
             int? exit;
             if (_hooks.Run is { } run) exit = await run(start);
             else exit = await RunProcessAsync(start, folder, cancellationToken);
@@ -157,7 +162,7 @@ internal sealed class CePlay
             CePlayRemoval removal = folder.Remove();
             settled = true;
             string message = Compose(level, exit.Value, served, kept, settingsNote, optionsNote, removal);
-            return new CePlayReport(true, exit, served, modLines, kept, message, removal.Left);
+            return Last = new CePlayReport(true, exit, served, modLines, kept, message, removal.Left);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception or InvalidOperationException)
         {

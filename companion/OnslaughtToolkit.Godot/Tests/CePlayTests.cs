@@ -249,6 +249,7 @@ internal static partial class CePlayTests
         internal Action<ProcessStartInfo>? Mischief { get; set; }
         internal int Changes { get; set; }
         internal Func<ProcessStartInfo, Task>? Wait { get; set; }
+        internal List<string> Started { get; } = [];
     }
 
     private static async Task<Rig> MakeRigAsync(string root, byte[] career, string packageVersion = "0.1.12", string answer = "Onslaught CE V0.1.12, build abcdef123456", string ini = RealIni,
@@ -276,6 +277,7 @@ internal static partial class CePlayTests
         string parent = Path.Combine(parentUnder ?? root, "play");
         Rig? rig = null;
         CePlayHooks hooks = new(Parent: parent, ReadVersion: (_, _) => Task.FromResult(answer), OnWindows: windows, Now: () => new DateTime(2026, 10, 30, 5, 0, 0, DateTimeKind.Utc),
+            OnStart: start => rig!.Started.Add(string.Join(" ", start.ArgumentList)),
             Run: async start =>
             {
                 Rig self = rig!;
@@ -355,6 +357,8 @@ internal static partial class CePlayTests
                 "the player's CE folder (ce.ini, options, careers, tapes), the game folder and the CE package are byte for byte as they were");
             check.That(changes == 2 && !rig.Play.Running && report.Message.Contains("ran level 100", StringComparison.Ordinal) && report.Message.Contains("loaded the mod", StringComparison.Ordinal),
                 $"the page is told when a play starts and ends: {report.Message}");
+            check.That(ReferenceEquals(rig.Play.Last, report) && rig.Started.Count == 1 && rig.Started[0] == "--no-update-check -level 100 -skipfmv -forcewindowed",
+                "the service keeps the report of the latest play, and a start hook sees the arguments just before the launcher runs");
 
             // A second call while one runs is refused and starts nothing.
             TaskCompletionSource release = new();
@@ -418,7 +422,7 @@ internal static partial class CePlayTests
             string[] userSnapshot = LevelEditorPageTests.Snapshot(rigged.User);
             Func<string, ModInfo, SaveOutcome> chosen = stage is null ? Stage : (parent, _) => stage(parent);
             CePlayReport refusal = await rigged.Play.PlayAsync(100, chosen);
-            check.That(!refusal.Started && rigged.Runs == 0 && refusal.Message.Contains(contains, StringComparison.Ordinal) && PlayFolders(rigged.Parent).Length == 0 &&
+            check.That(!refusal.Started && rigged.Runs == 0 && ReferenceEquals(rigged.Play.Last, refusal) && refusal.Message.Contains(contains, StringComparison.Ordinal) && PlayFolders(rigged.Parent).Length == 0 &&
                        LevelEditorPageTests.Snapshot(rigged.User).SequenceEqual(userSnapshot), $"{what}: nothing started, no folder left, the player's folder as it was: \"{refusal.Message}\"");
         }
         await Refuses("on Windows", await MakeRigAsync(Path.Combine(root, "windows"), original, windows: () => true), "Linux only");
@@ -506,6 +510,7 @@ internal static partial class CePlayTests
             check.That(stagedWorld!.SequenceEqual(page.Model!.Session!.ToBytes()) && page.Model.Row(1)!.Position == new System.Numerics.Vector3(7f, 8f, 9f), "the mod CE is given holds the open level with the move as it is now, saved or not");
             check.That(page.HasChanges && page.ChangeCount == 1 && !page.Save.Disabled, "the move still counts as unsaved afterwards: a test play saves nothing");
             check.That(!page.Play.Disabled && PlayFolders(Path.Combine(root, "app-play")).Length == 0 && page.Play.Visible, "afterwards the button is on again and the temporary folder is gone");
+            check.That(page.PlayNote.Contains("ran level 100 with your changes", StringComparison.Ordinal) && page.PlayNote.Contains("loaded the mod's world file", StringComparison.Ordinal), $"the page's note says how it went: \"{page.PlayNote}\"");
             check.That(app.Status.Label.Text.Contains("Onslaught CE closed after level 100", StringComparison.Ordinal), $"the status line says CE closed: \"{app.Status.Label.Text}\"");
             check.That(LevelEditorPageTests.Snapshot(rig.Install.Game).SequenceEqual(gameBefore) && LevelEditorPageTests.Snapshot(rig.User).SequenceEqual(userBefore), "the game folder and the player's CE folder are untouched by the play");
 
