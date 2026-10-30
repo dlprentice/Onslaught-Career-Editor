@@ -329,7 +329,7 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   on a mark selects it in the table and the fields, and dragging a mark moves it: the mark follows the pointer, Esc puts it
   back, and letting go moves X and Y to the place under the pointer (to a hundredth) and keeps Z as it was, a stored -0
   included, as one move that can be undone. With a mark selected and the map focused, the arrow keys nudge it, 0.5 a press (Shift 5, Ctrl 0.05; up is +Y), each press one
-  move that can be undone. **List only the moved objects** in the changes box makes the table show just the objects that have been moved, to look a long session over. A moved object is amber on the map with a line from where the level has it, and a
+  move that can be undone (a held key's repeats count as presses; nobody has tried a real held key). **List only the moved objects** in the changes box makes the table show just the objects that have been moved, to look a long session over. A moved object is amber on the map with a line from where the level has it, and a
   readout gives the world position and the ground's height under the pointer. The map's mouse paths are tested with events
   pushed into the window; how a drag feels has been tried only by scripted events. The map's orientation was checked in Onslaught CE
   on level 100: two Target Tanks were dragged on the map, one straight ahead of the player's start and one 25 degrees to the
