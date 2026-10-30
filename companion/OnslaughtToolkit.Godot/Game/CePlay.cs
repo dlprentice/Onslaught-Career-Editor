@@ -85,7 +85,7 @@ internal sealed class CePlay
     {
         if (OnWindows) return "Onslaught CE loads a level's world from a mod on Linux only for now.";
         if (Running) return "Onslaught CE is running a test play already.";
-        if (_game.Ce is null) return "Choose the Onslaught CE launcher on Home first: a test play starts CE.";
+        if (_game.Ce is null) return "Choose the Onslaught CE launcher first, because a test play starts CE: on Home, pick Onslaught CE under Game and choose its launcher (or start the companion with CE's folder on PATH).";
         if (_game.CeUserFolder.Length == 0) return "Onslaught CE's user folder is not known, so a test play has no settings to start from.";
         if (_game.Folder?.AssetRoot is not string assets || !Directory.Exists(assets)) return "The companion has no game folder to give Onslaught CE.";
         if (_game.CeVersion is { } version && !CeInstallation.IsAtLeast(version.Version, FirstVersionWithWorldMods)) return TooOld(version.Version);
@@ -131,6 +131,8 @@ internal sealed class CePlay
             }
             if (!CeInstallation.IsAtLeast(versionText, FirstVersionWithWorldMods)) return Refused(TooOld(versionText));
 
+            // Before anything is made: the play folder's real place (links resolved) against every CE user folder there may be. CePlayFolder.Create refuses a link anywhere on the path,
+            // so the folder it makes cannot lie elsewhere than its parent.
             if (SharesAFolderWithTheRealOne(Parent) is string before)
                 return Refused($"The play folder ({Parent}) and {before} are the same place or one is inside the other, so nothing was started.");
             string id = $"play-level-{level.ToString(CultureInfo.InvariantCulture)}";
@@ -138,8 +140,6 @@ internal sealed class CePlay
             if (made.Value is not CePlayFolder created) return Refused(made.Message);
             folder = created;
             _current = folder.Root;
-            if (SharesAFolderWithTheRealOne(folder.Root) is string clash)
-                return Refused($"The folder made for the test play ({folder.Root}) and {clash} are the same place or one is inside the other, so nothing was started.");   // links resolved: the check above is on the names
 
             SaveOutcome staged = stage(Path.Combine(folder.Root, "mods"),
                 new ModInfo(id, $"Test play of level {level.ToString(CultureInfo.InvariantCulture)}", "1", "", "Made by the Onslaught Companion for one test play; it is not kept."));

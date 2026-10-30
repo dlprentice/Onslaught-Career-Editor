@@ -297,7 +297,7 @@ internal sealed class LevelEditorPage : Page
     internal string PlayNote => _playNote.Visible ? _playNote.Text : "";
 
     private const string PlayTip = "Start this level in Onslaught CE with your changes, without saving anything. CE runs in a temporary folder of its own: " +
-        "your careers and CE settings are not touched. Close CE to come back here.";
+        "your careers and CE settings are not touched, and nothing CE saves during the play is kept. Close CE to come back here.";
     internal SaveAsModDialog SaveDialog { get; }
 
     private readonly Label _scriptEditNote, _scriptEditWarnings;
@@ -634,6 +634,7 @@ internal sealed class LevelEditorPage : Page
         _playNote.Text = text;
         _playNote.ThemeTypeVariation = failed ? "Warn" : "Muted";
         _playNote.Visible = text.Length > 0;
+        if (text.Length > 0) BringIntoView(_playNote);
     }
 
     /// <summary>
@@ -694,13 +695,16 @@ internal sealed class LevelEditorPage : Page
     }
 
     /// <summary>Scrolls the right-hand column to the saved notice, once the notice has its place and size (a frame or two after it is shown).</summary>
-    private async void BringNoticeIntoView()
+    private void BringNoticeIntoView() => BringIntoView(_savedPanel);
+
+    /// <summary>Scrolls the right-hand column to <paramref name="target"/> (the saved notice, the test play's note), a frame or two after it is shown, if it still is.</summary>
+    private async void BringIntoView(Control target)
     {
         SceneTree? tree = _side.GetTree();
         if (tree is null) return;
         await _side.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
         await _side.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
-        if (GodotObject.IsInstanceValid(_side) && _side.IsInsideTree() && _savedPanel.Visible) _side.EnsureControlVisible(_savedPanel);
+        if (GodotObject.IsInstanceValid(_side) && _side.IsInsideTree() && GodotObject.IsInstanceValid(target) && target.Visible) _side.EnsureControlVisible(target);
     }
 
     // ---- scripts -----------------------------------------------------------------------------------------------------------------

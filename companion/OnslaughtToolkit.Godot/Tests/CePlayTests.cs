@@ -23,7 +23,7 @@ internal static partial class CePlayTests
     private const string RealIni = "# mine\ngamedir=/somewhere/else\nmods=other-mod\nrecord_sessions=1\nupdate_check=1\nwide_mode_w=1920\n";
     private const string FakeLog = "onslaught-ce: mods: 1 active, 1 game files replaced (experimental)\n" +
         "onslaught-ce: mods: active 1: play-level-100 \"Test play of level 100\" version 1, 1 files\n" +
-        "onslaught-ce: mods: play-level-100 adds data/worlds/world100.wrd (4 bytes, sha256 9f64a747e1b97f13...)\n" +
+        "onslaught-ce: mods: play-level-100 adds data/worlds/world100.wrd (4 bytes, sha256 9f64a747...)\n" +
         "onslaught-ce: session pid=1 t_ms=5 P=0 game: level=100\n" +
         "onslaught-ce: mods: play-level-100 serves data/worlds/world100.wrd to the game\n";
 
@@ -185,7 +185,7 @@ internal static partial class CePlayTests
         File.WriteAllText(Path.Combine(oddMarker, CePlayFolder.MarkerName), "{\"Format\":\"something-else\",\"Folder\":\"play-odd-marker\"}");
         string bigMarker = Path.Combine(parent, "play-big-marker");
         Directory.CreateDirectory(bigMarker);
-        File.WriteAllBytes(Path.Combine(bigMarker, CePlayFolder.MarkerName), new byte[8192]);
+        File.WriteAllText(Path.Combine(bigMarker, CePlayFolder.MarkerName), "{\"Format\":\"" + CePlayFolder.MarkerFormat + "\",\"Folder\":\"play-big-marker\",\"CompanionPid\":1}" + new string(' ', 8192));
         check.That(CePlayFolder.ReadMarker(bare) is null && CePlayFolder.ReadMarker(wrongName) is null && CePlayFolder.ReadMarker(oddMarker) is null && CePlayFolder.ReadMarker(bigMarker) is null,
             "a folder without a marker, with a marker for another folder, of another format or too large has no marker of ours");
 
@@ -252,10 +252,11 @@ internal static partial class CePlayTests
         internal int Changes { get; set; }
         internal Func<ProcessStartInfo, Task>? Wait { get; set; }
         internal List<string> Started { get; } = [];
+        internal int VersionAsked { get; set; }
     }
 
     private static async Task<Rig> MakeRigAsync(string root, byte[] career, string packageVersion = "0.1.12", string answer = "Onslaught CE V0.1.12, build abcdef123456", string ini = RealIni,
-        Func<bool>? windows = null, bool withPackage = true, string? parentUnder = null)
+        Func<bool>? windows = null, bool withPackage = true, string? parentUnder = null, bool executableLauncher = false)
     {
         Directory.CreateDirectory(root);
         FakeInstall install = FakeInstall.Create(Path.Combine(root, "install"), career);
@@ -268,7 +269,8 @@ internal static partial class CePlayTests
         File.WriteAllText(Path.Combine(user, "tapes", "old.tape"), "tape");
         string package = Path.Combine(root, "package");
         Directory.CreateDirectory(package);
-        File.WriteAllText(Path.Combine(package, "onslaught-ce"), "test-only launcher marker; never run");
+        File.WriteAllText(Path.Combine(package, "onslaught-ce"), executableLauncher ? $"#!/bin/sh\necho \"{answer}\"\n" : "test-only launcher marker; never run");   // the one that runs answers --version, nothing more
+        if (executableLauncher && OperatingSystem.IsLinux()) File.SetUnixFileMode(Path.Combine(package, "onslaught-ce"), UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
         File.WriteAllText(Path.Combine(package, OnslaughtCe.LinuxLauncher), "test-only launcher marker; never run");
         File.WriteAllText(Path.Combine(package, "bea"), "test-only game marker");
         File.WriteAllText(Path.Combine(package, "README.txt"), $"Onslaught CE V{packageVersion}\n\nQuick start\n");
@@ -278,7 +280,7 @@ internal static partial class CePlayTests
         await game.DetectAsync();
         string parent = Path.Combine(parentUnder ?? root, "play");
         Rig? rig = null;
-        CePlayHooks hooks = new(Parent: parent, ReadVersion: (_, _) => Task.FromResult(answer), OnWindows: windows, Now: () => new DateTime(2026, 10, 30, 5, 0, 0, DateTimeKind.Utc),
+        CePlayHooks hooks = new(Parent: parent, ReadVersion: (_, _) => { rig!.VersionAsked++; return Task.FromResult(answer); }, OnWindows: windows, Now: () => new DateTime(2026, 10, 30, 5, 0, 0, DateTimeKind.Utc),
             OnStart: start => rig!.Started.Add(string.Join(" ", start.ArgumentList)),
             Run: async start =>
             {
@@ -433,6 +435,17 @@ internal static partial class CePlayTests
         await Refuses("with a package of an affected launcher", await MakeRigAsync(Path.Combine(root, "affected"), original, packageVersion: "0.1.6", answer: "Onslaught CE V0.1.6, build abcdef123456"), "0.1.6");
         await Refuses("with no CE launcher chosen", await MakeRigAsync(Path.Combine(root, "nolauncher"), original, withPackage: false), "Choose the Onslaught CE launcher");
         await Refuses("when the edit cannot be staged", await MakeRigAsync(Path.Combine(root, "nostage"), original), "cannot stage that", _ => new SaveOutcome(null, "The mod cannot stage that edit."));
+
+        // A version that is already known is not asked again, and a package that turns out to be an affected launcher is refused all the same.
+        Rig cached = await MakeRigAsync(Path.Combine(root, "cached"), original, executableLauncher: true);
+        await cached.Game.ChooseCeAsync(Path.Combine(cached.Package, "onslaught-ce"));
+        check.That(cached.Game.CeVersion is { Version: "0.1.12" }, $"the stand-in launcher's answer to --version was read: {cached.Game.CeVersionMessage}");
+        CePlayReport known = await cached.Play.PlayAsync(100, Stage);
+        check.That(known.Started && cached.VersionAsked == 0 && cached.Runs == 1, "when the launcher's version is known already, the play does not ask for it again");
+        File.WriteAllText(Path.Combine(cached.Package, "README.txt"), "Onslaught CE 0.1.6 (preview)\n\nQuick start\n");
+        CePlayReport affectedNow = await cached.Play.PlayAsync(100, Stage);
+        check.That(!affectedNow.Started && cached.Runs == 1 && affectedNow.Message.Contains("0.1.6", StringComparison.Ordinal) && PlayFolders(cached.Parent).Length == 0,
+            $"a package that has become an affected launcher is refused even though its version was known: {affectedNow.Message}");
 
         // The play folder may never be, hold or lie inside the player's own CE folder: refused before a thing is made there.
         Rig inside = await MakeRigAsync(Path.Combine(root, "inside"), original);
