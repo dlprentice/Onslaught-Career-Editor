@@ -58,7 +58,7 @@ Its source and downloads are at [Onslaught CE](https://github.com/dlprentice/ons
 | [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) | The byte-matching decompilation of the retail executable, for MSVC 6; bring your own game and compiler; GPL-3.0-only |
 | [onslaught-godot](https://github.com/dlprentice/onslaught-godot) | The Godot 4 C# rebuild, compared Present by Present with recorded runs of the native port and of the original game; a proof of concept, not yet playable; GPL-3.0-only |
 | [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation) | The one home of the game documentation: file formats, saves, mechanics, levels and engine; CC BY-SA 4.0 |
-| [`stuart73/Onslaught`](https://github.com/stuart73/Onslaught) | Stuart's partial GPL source release; this repository pins David's fork, [`dlprentice/Onslaught`](https://github.com/dlprentice/Onslaught), as [`references/Onslaught`](references/Onslaught) |
+| [`stuart73/Onslaught`](https://github.com/stuart73/Onslaught) | Stuart Gillam's GPL Onslaught project; this repository pins David's fork, [`dlprentice/Onslaught`](https://github.com/dlprentice/Onslaught), as [`references/Onslaught`](references/Onslaught) |
 
 ## Using the companion
 
@@ -140,7 +140,7 @@ the reviewed exception to the no-save rule. See [`SECURITY.md`](SECURITY.md) and
 
 The game documentation moved to [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation), where it is
 maintained and where new findings go; [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) here is a frozen copy.
-Findings name the specimen, capture, test or source line they rest on. Stuart's source release (GitHub `stuart73/Onslaught`) in the
+Findings name the specimen, capture, test or source line they rest on. Stuart Gillam's GPL Onslaught project (GitHub `stuart73/Onslaught`) in the
 pinned [`references/Onslaught`](references/Onslaught) submodule is a source reference, not proof of retail behaviour.
 Earlier Ghidra-era records, the tracked Ghidra checkpoint and the campaign machinery are kept privately.
 
@@ -154,7 +154,7 @@ reading guide.
 | Code: `companion/`, `tools/` and `tests_shared/` scripts, build files | GPL-3.0-only ([`LICENSE`](LICENSE)) |
 | `rebuild/` | GPL-3.0-only ([`rebuild/LICENSE`](rebuild/LICENSE), [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md)) |
 | Documentation (`*.md`, `reverse-engineering/`, `roadmap/`, data tables) and `lore/`, `lore-book/` | CC BY-SA 4.0 ([`LICENSES/CC-BY-SA-4.0.txt`](LICENSES/CC-BY-SA-4.0.txt)) |
-| `reverse-engineering/source-code/`: notes quoting Stuart Gillam's published source | CC BY-SA 4.0 and GPL-3.0-only (the quoted source keeps its licence and credit) |
+| `reverse-engineering/source-code/`: notes quoting the upstream GPL Onslaught source by Stuart Gillam | CC BY-SA 4.0 and GPL-3.0-only (the quoted source keeps its licence and credit) |
 | `reverse-engineering/source-code/aya-*`: notes quoting Stuart Gillam's AYAResourceExtractor | CC BY-SA 4.0 and MIT (the quoted extractor keeps its licence and credit) |
 | ExuberantParrot's PR #1 passages in two function notes | CC BY-SA 4.0 and MIT ([`LICENSES/MIT.txt`](LICENSES/MIT.txt)) |
 | `references/` submodules | their own licences |
