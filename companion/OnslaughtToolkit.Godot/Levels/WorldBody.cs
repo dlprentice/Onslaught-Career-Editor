@@ -146,6 +146,29 @@ public sealed class PlacedObject
 
     /// <summary>The word after the definition (defined kinds only).</summary>
     public int DiesOn { get; set; }
+
+    /// <summary>A deep copy: the same record, sharing nothing with this one.</summary>
+    public PlacedObject Clone() => new() { ObjectId = ObjectId, Definition = Definition, DiesOn = DiesOn, Init = Init.Clone() };
+
+    /// <summary>
+    /// Whether <paramref name="other"/> is the same record but for its position and its name: the same kind, definition, dies-on word, orientation, mesh, allegiance, target, scripts and
+    /// kind-specific block, compared member by member (so a field added to the record later is compared too, not forgotten).
+    /// </summary>
+    internal bool SameExceptPlace(PlacedObject other) =>
+        ObjectId == other.ObjectId && Definition == other.Definition && DiesOn == other.DiesOn && SameMembers(Init, other.Init, nameof(ObjectInit.Position), nameof(ObjectInit.Name));
+
+    private static bool SameMembers(object a, object b, params string[] except)
+    {
+        foreach (System.Reflection.PropertyInfo property in a.GetType().GetProperties())
+        {
+            if (except.Contains(property.Name)) continue;
+            object? left = property.GetValue(a), right = property.GetValue(b);
+            if (left is null || right is null) { if (left is not null || right is not null) return false; continue; }
+            bool value = property.PropertyType.IsValueType || property.PropertyType == typeof(string);
+            if (value ? !left.Equals(right) : !SameMembers(left, right)) return false;
+        }
+        return true;
+    }
 }
 
 /// <summary>The fields every thing record has, then the one extra block its kind adds.</summary>
@@ -170,9 +193,28 @@ public sealed class ObjectInit
     public StartInit? Start { get; set; }
     public TreeInit? Tree { get; set; }
     public SphereTriggerInit? SphereTrigger { get; set; }
+
+    /// <summary>A deep copy: the common fields and a copy of the kind's own block.</summary>
+    public ObjectInit Clone()
+    {
+        ObjectInit copy = (ObjectInit)MemberwiseClone();
+        copy.Spawner = Spawner is null ? null : (SpawnerInit)Spawner.CloneBlock();
+        copy.Squad = Squad is null ? null : (SquadInit)Squad.CloneBlock();
+        copy.Cutscene = Cutscene is null ? null : (CutsceneInit)Cutscene.CloneBlock();
+        copy.Start = Start is null ? null : (StartInit)Start.CloneBlock();
+        copy.Tree = Tree is null ? null : (TreeInit)Tree.CloneBlock();
+        copy.SphereTrigger = SphereTrigger is null ? null : (SphereTriggerInit)SphereTrigger.CloneBlock();
+        return copy;
+    }
 }
 
-public sealed class SpawnerInit
+/// <summary>The blocks a thing record adds after its common fields hold only numbers and texts, so a shallow copy is a deep one.</summary>
+public abstract class InitBlock
+{
+    internal object CloneBlock() => MemberwiseClone();
+}
+
+public sealed class SpawnerInit : InitBlock
 {
     public int Amount { get; set; }
     public float Delay { get; set; }
@@ -185,30 +227,30 @@ public sealed class SpawnerInit
     public string? SpawnerSpawnScript { get; set; }
 }
 
-public sealed class SquadInit
+public sealed class SquadInit : InitBlock
 {
     public int Amount { get; set; }
     public int Mode { get; set; }
 }
 
-public sealed class CutsceneInit
+public sealed class CutsceneInit : InitBlock
 {
     public string File { get; set; } = "";
     public string LinkTo { get; set; } = "";
 }
 
-public sealed class StartInit
+public sealed class StartInit : InitBlock
 {
     public int PlaneMode { get; set; }
     public int PlayerNumber { get; set; }
 }
 
-public sealed class TreeInit
+public sealed class TreeInit : InitBlock
 {
     public string TreeType { get; set; } = "";
 }
 
-public sealed class SphereTriggerInit
+public sealed class SphereTriggerInit : InitBlock
 {
     public float Radius { get; set; }
 }

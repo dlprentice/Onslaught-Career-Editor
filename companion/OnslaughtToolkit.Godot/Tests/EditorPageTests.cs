@@ -201,6 +201,71 @@ internal static class LevelEditorPageTests
         await Frame(tree);
     }
 
+    /// <summary>Copying a unit on the page: the button's states, the copy selected at once and listed, moved like any row, undone, redone and asked about before it is dropped.</summary>
+    internal static async Task CopyAsync(CompanionApp app, SceneTree tree, CompanionUiTests.Flag quit, Checks check)
+    {
+        check.Suite("level editor copying units");
+        LevelEditorPage page = app.LevelEditor;
+        foreach (Window window in app.FindChildren("*", nameof(Window), true, false).OfType<Window>().Where(window => window.Visible)) window.Hide();
+        app.Navigate("levels");
+        await Frame(tree);
+        check.That(page.OpenLevel(100) && !page.HasChanges, "level 100 is open with nothing changed");
+        int count = page.Table.GetRoot()!.GetChildCount();
+        check.That(page.Duplicate.Disabled && page.Duplicate.TooltipText == "Choose an object first.", "with nothing selected the copy button is off and says why");
+        page.SelectRow(2);
+        check.That(page.Duplicate.Disabled && page.Duplicate.TooltipText.StartsWith("Only units can be copied for now", StringComparison.Ordinal), $"a path point cannot be copied, and the button says so: \"{page.Duplicate.TooltipText}\"");
+        check.That(page.DuplicateSelected() is { Row: null } refused && !refused.Message.StartsWith("Open", StringComparison.Ordinal) && !page.HasChanges && page.Table.GetRoot()!.GetChildCount() == count && page.Note.StartsWith("Only units can be copied", StringComparison.Ordinal),
+            "pressing it anyway adds nothing and says why");
+
+        page.SelectRow(0);
+        check.That(!page.Duplicate.Disabled && page.Reset.Disabled && page.Duplicate.TooltipText.StartsWith("Add a copy of this unit", StringComparison.Ordinal), "a unit can be copied");
+        Press(page.Duplicate);
+        await Frame(tree);
+        check.That(page.Table.GetRoot()!.GetChildCount() == count + 1 && page.SelectedRow == count && page.SelectedName == "Tank 1 copy" && page.Map.Selected == count &&
+                   page.X.Text == "20" && page.Y.Text == "20" && page.Z.Text == "0" && page.Reset.Disabled && !page.Duplicate.Disabled && page.Note.StartsWith("Tank 1 (row 0) copied as row ", StringComparison.Ordinal),
+            $"the copy is a new row at the end, selected at once, 10 units to the right of the original: \"{page.Note}\"");
+        check.That(Row(page, count) is { } added && added.GetText(1) == "unit" && added.GetText(2) == "Tank 1 copy" && added.GetText(3) == "20" && page.HasChanges && page.ChangeCount == 1 && !page.Save.Disabled && !page.Undo.Disabled &&
+                   page.Summary.StartsWith("1 unit copied: Tank 1 copy", StringComparison.Ordinal),
+            $"the copy is listed, counts as one unsaved change, can be saved and undone, and the changes box says so: \"{page.Summary}\"");
+
+        // The copy moves like any row, and that is still one change.
+        Set(page.X, "33");
+        Submit(page.X);
+        check.That(M(page).Row(count)!.Position.X == 33f && page.ChangeCount == 1 && page.Summary.StartsWith("1 unit copied", StringComparison.Ordinal) && page.Reset.Disabled, "moving the copy does not add a change, and a copy cannot be reset");
+        page.ChangedOnly.ButtonPressed = true;
+        check.That(page.Table.GetRoot()!.GetChildCount() == 1 && Row(page, count) is not null && page.SelectedRow == count, "the list of changed rows holds the copy");
+        page.ChangedOnly.ButtonPressed = false;
+
+        // Closing asks about it.
+        quit.On = false;
+        check.That(!app.RequestClose() && app.DiscardDialog.Visible && app.DiscardDialog.DialogText.StartsWith("Not saved yet: 1 change on Level editor.", StringComparison.Ordinal) && !quit.On,
+            $"closing with a copy not saved asks first: \"{app.DiscardDialog.DialogText}\"");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+
+        // Undo takes the move and then the copy back; the selection that pointed at the copy goes with it.
+        Press(page.Undo);
+        check.That(M(page).Row(count)!.Position.X == 20f && page.Table.GetRoot()!.GetChildCount() == count + 1, "undo takes the move of the copy back first");
+        Press(page.Undo);
+        await Frame(tree);
+        check.That(page.Table.GetRoot()!.GetChildCount() == count && page.SelectedRow is null && page.Map.Selected is null && page.Duplicate.Disabled && page.X.Editable == false && !page.HasChanges && page.Save.Disabled,
+            "undo then takes the copy away: the row is gone, nothing is selected, nothing is unsaved");
+        Press(page.Redo);
+        Press(page.Redo);
+        await Frame(tree);
+        check.That(page.Table.GetRoot()!.GetChildCount() == count + 1 && M(page).Row(count)!.Position.X == 33f && page.ChangeCount == 1 && page.Summary.StartsWith("1 unit copied", StringComparison.Ordinal), "redo makes the copy and its move again");
+
+        // Starting over (Reset all, if the page has it) or opening another level asks, and agreeing drops the copy.
+        Choose(page, 200);
+        check.That(app.DiscardDialog.Visible && app.DiscardDialog.DialogText.Contains("1 change on level 100", StringComparison.Ordinal) && page.Model?.Level == 100, "the level picker asks before dropping a copy");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
+        app.DiscardDialog.Hide();
+        await Frame(tree);
+        check.That(page.Model?.Level == 200 && !page.HasChanges && page.SelectedRow is null, "agreeing opens the other level with nothing left over");
+        app.Navigate("home");
+        await Frame(tree);
+    }
+
     internal static async Task RunAsync(CompanionApp app, SceneTree tree, FakeInstall install, string outputDirectory, Checks check)
     {
         LevelEditorPage page = app.LevelEditor;

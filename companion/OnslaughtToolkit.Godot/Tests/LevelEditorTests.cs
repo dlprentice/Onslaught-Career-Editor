@@ -107,7 +107,7 @@ internal static class LevelEditorTests
     }
 
     // ---- the model --------------------------------------------------------------------------------------------------------------
-    private static string GameWithLevels(string folder)
+    internal static string GameWithLevels(string folder)
     {
         string game = Path.Combine(folder, "game");
         string resources = Path.Combine(game, "data", "resources");

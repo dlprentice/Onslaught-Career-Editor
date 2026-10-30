@@ -7,13 +7,13 @@ using OnslaughtToolkit.Companion.Missions;
 namespace OnslaughtToolkit.Companion.Levels;
 
 /// <summary>One row of the object table: a stored thing record, where it stands now and where the level has it.</summary>
-public sealed record ObjectRow(int Index, string Kind, string Name, string Definition, Vector3 Position, Vector3 Stock, float Radius = 0f)
+public sealed record ObjectRow(int Index, string Kind, string Name, string Definition, Vector3 Position, Vector3 Stock, float Radius = 0f, bool Added = false)
 {
     /// <summary>The name the player sees: the record's own name, else the definition it names (a Target Tank), else its kind.</summary>
     public string Label => Name.Length > 0 ? Name : Definition.Length > 0 ? Definition : Kind;
 
-    /// <summary>Whether the position differs from the level's own, bit for bit (a zero that became a negative zero is a change).</summary>
-    public bool Changed => BitConverter.SingleToUInt32Bits(Position.X) != BitConverter.SingleToUInt32Bits(Stock.X) ||
+    /// <summary>Whether the row is a change: a copy the level does not have, or a position that differs from the level's own, bit for bit (a zero that became a negative zero is a change).</summary>
+    public bool Changed => Added || BitConverter.SingleToUInt32Bits(Position.X) != BitConverter.SingleToUInt32Bits(Stock.X) ||
                            BitConverter.SingleToUInt32Bits(Position.Y) != BitConverter.SingleToUInt32Bits(Stock.Y) ||
                            BitConverter.SingleToUInt32Bits(Position.Z) != BitConverter.SingleToUInt32Bits(Stock.Z);
 }
@@ -37,6 +37,14 @@ public enum MoveResult
 /// <param name="Result">What happened.</param>
 /// <param name="Message">A sentence for the player: what was done, what was stored if it differs from what was typed, or what to fix.</param>
 public sealed record MoveOutcome(MoveResult Result, string Message);
+
+/// <summary>What copying a unit did.</summary>
+/// <param name="Row">The row the copy took, or null if nothing was copied.</param>
+/// <param name="Message">A sentence for the player: where the copy stands, or why nothing was copied.</param>
+public sealed record DuplicateOutcome(int? Row, string Message)
+{
+    public bool Ok => Row is not null;
+}
 
 /// <summary>What saving the edit as a mod did.</summary>
 /// <param name="Staged">The mod that was written, or null.</param>
@@ -120,7 +128,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
             try { bytes = session.ToBytes(); }
             catch (Exception error) when (EditSession.IsUnstorable(error)) { return 1; }
             if (session.IsBaseline(bytes) || Signature(bytes) == _savedSignature) return 0;
-            try { return Math.Max(1, session.Changes().Count + session.ScriptChanges().Count); }
+            try { return Math.Max(1, session.Changes().Count + session.Additions().Count + session.ScriptChanges().Count); }
             catch (Exception error) when (EditSession.IsUnstorable(error)) { return 1; }
         }
     }
@@ -263,7 +271,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         {
             PlacedObject thing = Session.Body.Things[i];
             ObjectRow row = new(i, thing.Kind, thing.Init.Name, thing.Definition ?? "", thing.Init.Position, stock.TryGetValue(i, out Vector3 from) ? from : thing.Init.Position,
-                thing.Init.SphereTrigger?.Radius ?? 0f);
+                thing.Init.SphereTrigger?.Radius ?? 0f, Added: i >= Session.BaselineThingCount);
             if (changedOnly && !row.Changed) continue;
             if (needle.Length == 0 || Matches(row, thing.Init.Script, needle)) rows.Add(row);
         }
@@ -356,8 +364,14 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     private string? ChangeSummaryCore()
     {
         IReadOnlyList<ObjectChange> changes = Session?.Changes() ?? [];
+        IReadOnlyList<(int Index, string Kind, string Name)> added = Session?.Additions() ?? [];
         IReadOnlyList<ScriptChange> scripts = Session?.ScriptChanges() ?? [];
         List<string> sentences = [];
+        if (added.Count > 0)
+        {
+            string list = string.Join("; ", added.Take(3).Select(row => $"{row.Name} (row {row.Index})"));
+            sentences.Add($"{(added.Count == 1 ? "1 unit copied" : $"{added.Count} units copied")}: {list}{(added.Count > 3 ? $" and {added.Count - 3} more" : "")}.");
+        }
         if (changes.Count > 0)
         {
             string list = string.Join("; ", changes.Take(3).Select(change => $"{change.Name} (row {change.Index}), {change.Distance:0.0} units"));
@@ -490,6 +504,45 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         string text = id.ToString().TrimEnd('-');
         if (text.Length > 48) text = text[..48].TrimEnd('-');
         return text.Length == 0 ? "level-edit" : text;
+    }
+
+    /// <summary>How far to the right of the original a copy stands, in world units, so that it can be seen and picked on the map.</summary>
+    public const float CopyShift = 10f;
+
+    /// <summary>The longest name a copy gets: the original's name and " copy" (and a number if that is taken) are cut to this.</summary>
+    private const int MaxCopyNameLength = 40;
+
+    /// <summary>Whether the row is one that can be copied (a unit) in the open level.</summary>
+    public bool CanDuplicate(int row) => Session is { } session && row >= 0 && row < session.Body.Things.Count && DuplicateObject.CanCopy(session.Body.Things[row]);
+
+    /// <summary>
+    /// Copies a unit to the end of the list, <see cref="CopyShift"/> units to its right (to its left if that would leave the 0 to 512 square the terrain covers), under a name that no
+    /// other row has ("Target Tank copy", "Target Tank copy 2"), with everything else as the original has it. The copy is one change that can be undone. Only units can be copied.
+    /// </summary>
+    public DuplicateOutcome Duplicate(int row)
+    {
+        if (Session is null || Level is not int) return new DuplicateOutcome(null, "Open a level first.");
+        if (row < 0 || row >= Session.Body.Things.Count) return new DuplicateOutcome(null, $"There is no row {row} to copy.");
+        PlacedObject source = Session.Body.Things[row];
+        if (!DuplicateObject.CanCopy(source))
+            return new DuplicateOutcome(null, $"Only units can be copied for now, and {source.Label} (row {row}) is a {source.Kind}: starts, triggers, path points, spawners and buildings have rules this editor does not know.");
+        Vector3 at = source.Init.Position;
+        at.X += at.X + CopyShift < EditSession.TerrainSquare ? CopyShift : -CopyShift;
+        DuplicateObject command = new(row, at, CopyName(source));
+        if (!Session.TryApply(command, out string? refusal)) return new DuplicateOutcome(null, refusal ?? "The copy could not be made.");
+        int added = command.AddedIndex!.Value;
+        string shift = at.X > source.Init.Position.X ? "to its right" : "to its left";
+        return new DuplicateOutcome(added, $"{source.Label} (row {row}) copied as row {added}, {CopyShift:0} units {shift}, at {CoordinateInput.Format(at.X)}, {CoordinateInput.Format(at.Y)}, {CoordinateInput.Format(at.Z)}. Move it where you want it.");
+    }
+
+    private string CopyName(PlacedObject source)
+    {
+        if (source.Init.Name.Length == 0) return "";
+        string stem = source.Init.Name.Length > MaxCopyNameLength - 8 ? source.Init.Name[..(MaxCopyNameLength - 8)] : source.Init.Name;
+        HashSet<string> taken = [.. Session!.Body.Things.Select(thing => thing.Init.Name)];
+        string name = stem + " copy";
+        for (int number = 2; taken.Contains(name); number++) name = $"{stem} copy {number}";
+        return name;
     }
 
     /// <summary>Writes the open edit as a CE mod folder <c>PARENT/ID</c>, or says why not (nothing changed, a folder that is not new, a game folder).</summary>

@@ -208,8 +208,10 @@ internal sealed class LevelEditorPage : Page
         HBoxContainer actions = inside.Add(Build.Row(10));
         Apply = actions.Add(Build.Button("Move", tooltip: "Move the object to these coordinates (Enter does the same).", disabled: true));
         Reset = actions.Add(Build.Button("Reset this object", tooltip: "Put the object back where the level has it.", disabled: true));
+        Duplicate = actions.Add(Build.Button("Copy this unit", tooltip: "Add a copy of this unit at the end of the level, 10 units to its right, to be moved where you want it. Only units can be copied.", disabled: true));
         Apply.Pressed += () => ApplyFields(explicitly: true);
         Reset.Pressed += ResetSelected;
+        Duplicate.Pressed += () => DuplicateSelected();
         _note = inside.Add(Build.Text("", "Muted"));
         _hint = inside.Add(Build.Text("", "Faint"));
 
@@ -295,6 +297,7 @@ internal sealed class LevelEditorPage : Page
     internal Button Redo { get; }
     internal Button Apply { get; }
     internal Button Reset { get; }
+    internal Button Duplicate { get; }
     internal Button Save { get; }
 
     /// <summary>Whether the table lists only the objects that have been moved.</summary>
@@ -500,6 +503,7 @@ internal sealed class LevelEditorPage : Page
             if (sameEdit) _scripts.Refresh(scripts);
             else _scripts.SetScripts(_root, scripts);
         }
+        if (_selected is int selectedRow && _model?.Row(selectedRow) is null) _selected = null;   // the row is gone (Undo took back the copy that was selected)
         RebuildTable();
         Map.SetLevel(_model?.Terrain, _model?.Rows() ?? []);
         Map.SetPaths(_model?.Session?.Body.WaypointPaths ?? []);
@@ -584,7 +588,11 @@ internal sealed class LevelEditorPage : Page
         if (clearNote) ShowNote("", refusal: false);
         foreach (LineEdit field in new[] { X, Y, Z }) field.Editable = row is not null;
         Apply.Disabled = row is null;
-        Reset.Disabled = row is not { Changed: true };
+        Reset.Disabled = row is not { Changed: true, Added: false };
+        Duplicate.Disabled = row is null || _model?.CanDuplicate(row.Index) != true;
+        Duplicate.TooltipText = row is null ? "Choose an object first." : _model?.CanDuplicate(row.Index) == true
+            ? "Add a copy of this unit at the end of the level, 10 units to its right, to be moved where you want it. Only units can be copied."
+            : "Only units can be copied for now: starts, triggers, path points, spawners and buildings have rules this editor does not know.";
         ShowObjectScripts(row);
         ShowObjectPaths(row);
         if (row is null)
@@ -603,7 +611,7 @@ internal sealed class LevelEditorPage : Page
         _shown = LevelEditorModel.Shown(row.Position);
         (X.Text, Y.Text, Z.Text) = _shown;
         (string sx, string sy, string sz) = LevelEditorModel.Shown(row.Stock);
-        _stock.Text = row.Changed ? $"In the level: {sx}, {sy}, {sz}" : "Where the level has it.";
+        _stock.Text = row.Added ? "A copy you made; Undo takes it back." : row.Changed ? $"In the level: {sx}, {sy}, {sz}" : "Where the level has it.";
         bool negativeZero = new[] { _shown.X, _shown.Y, _shown.Z }.Contains("-0");
         _hint.Text = "Type a number such as 276.49 or -12.1 and press Enter, or click the map and press the arrow keys (0.5 a press, Shift 5, Ctrl 0.05)." +
             (negativeZero ? " A stored -0 is shown as -0 and kept as it is unless you type another value." : "");
@@ -684,6 +692,16 @@ internal sealed class LevelEditorPage : Page
         // finds nothing to change, must not wipe out the first one's note.
         if (outcome.Result != MoveResult.Unchanged || (explicitly && _note.Text.Length == 0)) ShowNote(outcome.Message, outcome.Result == MoveResult.Refused);
         if (outcome.Result == MoveResult.Unchanged) UpdateInspector(clearNote: false);
+        return outcome;
+    }
+
+    /// <summary>Copies the selected unit to the end of the list and selects the copy, so it can be moved at once.</summary>
+    internal DuplicateOutcome? DuplicateSelected()
+    {
+        if (_model is null || _selected is not int row) return null;
+        DuplicateOutcome outcome = _model.Duplicate(row);
+        if (outcome.Row is int added) SelectIndex(added);
+        ShowNote(outcome.Message, refusal: !outcome.Ok);
         return outcome;
     }
 
