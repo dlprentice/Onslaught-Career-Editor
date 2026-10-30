@@ -58,7 +58,7 @@ Its source and downloads are at [Onslaught CE](https://github.com/dlprentice/ons
 | [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) | The byte-matching decompilation of the retail executable, for MSVC 6; bring your own game and compiler; GPL-3.0-only |
 | [onslaught-godot](https://github.com/dlprentice/onslaught-godot) | The Godot 4 C# rebuild, compared Present by Present with recorded runs of the native port and of the original game; a proof of concept, not yet playable; GPL-3.0-only |
 | [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation) | The one home of the game documentation: file formats, saves, mechanics, levels and engine; CC BY-SA 4.0 |
-| [`stuart73/Onslaught`](https://github.com/stuart73/Onslaught) | Stuart's partial GPL source release; this repository pins David's fork, [`dlprentice/Onslaught`](https://github.com/dlprentice/Onslaught), as [`references/Onslaught`](references/Onslaught) |
+| [`stuart73/Onslaught`](https://github.com/stuart73/Onslaught) | Stuart Gillam's GPL Onslaught project; this repository pins David's fork, [`dlprentice/Onslaught`](https://github.com/dlprentice/Onslaught), as [`references/Onslaught`](references/Onslaught) |
 
 ## Using the companion
 
@@ -140,7 +140,7 @@ the reviewed exception to the no-save rule. See [`SECURITY.md`](SECURITY.md) and
 
 The game documentation moved to [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation), where it is
 maintained and where new findings go; [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) here is a frozen copy.
-Findings name the specimen, capture, test or source line they rest on. Stuart's source release (GitHub `stuart73/Onslaught`) in the
+Findings name the specimen, capture, test or source line they rest on. Stuart Gillam's GPL Onslaught project (GitHub `stuart73/Onslaught`) in the
 pinned [`references/Onslaught`](references/Onslaught) submodule is a source reference, not proof of retail behaviour.
 Earlier Ghidra-era records, the tracked Ghidra checkpoint and the campaign machinery are kept privately.
 
