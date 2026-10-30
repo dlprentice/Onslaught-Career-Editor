@@ -6,19 +6,30 @@ headers, the schema, and the generated-output boundary."""
 from __future__ import annotations
 
 import collections
+import contextlib
 import hashlib
+import io
 import json
+import os
 import struct
+import subprocess
 import tempfile
 import unittest
 import zlib
 from pathlib import Path
+from unittest.mock import patch
 
 import cmsh_animation_usage_census_tests as mesh_fixtures
 import content_catalog as catalog
+import content_catalog_gate as gate
 from dds_census_tests import dds as authored_dds
 from dds_metadata_tests import rgb_dds as authored_rgb_dds
+import game_tables_decode_tests as tables
 import mission_script_inspect as inspector
+import named_things_tests as named
+import world_resources_encode as worldenc
+import worldheaders_decode_tests as worldheader_fixtures
+import xap_bank_walk_tests as xap_fixtures
 import public_allowlist_safety_check as safety
 import world_resources_decode as worlddec
 
@@ -26,6 +37,12 @@ import world_resources_decode as worlddec
 def aya(data: bytes) -> bytes:
     member = zlib.compress(data)
     return struct.pack("<I", len(member)) + member
+
+
+def authored_language() -> bytes:
+    text = "Hello\0".encode("utf-16le")
+    return (struct.pack("<III", 0xFFFFFFBB, 3, 1) + struct.pack("<III", 123, 0, 0xFFFFFFFF)
+            + struct.pack("<I", len(text)) + text + struct.pack("<I", 0))
 
 
 def chunk(tag: bytes, payload: bytes) -> bytes:
@@ -598,8 +615,12 @@ class AuthoredInstallTests(unittest.TestCase):
                          ("resolved", "script-code:200:rlwd#0"))
         self.assertEqual((rel["follows-path"]["status"], rel["follows-path"]["target"]),
                          ("resolved", "waypoint-path:200:rlwd#0"))  # _stricmp: "path a" finds "Path A"
-        self.assertEqual(rel["names-thing"]["status"], "name-match")
+        self.assertEqual(rel["names-thing"]["status"], "resolved")  # on WORLD.mNamedThings: tools/named_things.py
         self.assertEqual(self.assets[rel["names-thing"]["target"]]["name"], "Tank 1")
+        self.assertEqual(rel["names-thing"]["natives"], ["GetThingRef"])
+        tank = self.assets[rel["names-thing"]["target"]]["placement"]["namedThing"]
+        # Tank's behaviour (UB_GROUND_UNIT) has a squad: LoadWorld makes a squad of one and the member takes the name
+        self.assertEqual((tank["object"], tank["joins"], tank["foundByName"]), ("squad-member", 1, "found"))
         self.assertEqual((rel["compiled-from"]["status"], rel["compiled-from"]["target"]),
                          ("name-match", "script:data/missionscripts/level200/main.msl"))
         texts = [r for r in sc["relationships"] if r["type"] == "uses-text"]
@@ -671,9 +692,1030 @@ class AuthoredInstallTests(unittest.TestCase):
         self.assertEqual(len(report["eventFunctions"]), len(code["eventFunctions"]))
 
 
+# ------------------------------------------------------------------------------------- the named-things registry
+def registry_archive() -> bytes:
+    """Level 201 on base world 10. The base world names a depot twice (the second dies on world 400) and a gun; the
+    real world a gun, a film, a waypoint and a cutscene that follows the gun. Finder looks each up by name; Namer
+    names its own thing at run time."""
+    base = named.body([named.unit("Gun Turret", "Depot"), named.unit("Gun Turret", "Gun"),
+                       named.unit("Gun Turret", "Depot", dies_on=400)])
+    finder = named.script("Finder", [("GetThingRef", ["Depot"]), ("GetThingRef", ["Gun"]), ("PlayCutscene", ["Film"]),
+                                     ("PlayCutscene", ["Gun"]), ("GetThingRef", ["Way"]), ("GetThingRef", ["Later"]),
+                                     ("Teleport", ["Nobody"]), ("GetThingRef", [None]), ("Teleport", [[1.0, 2.0, 3.0]])])
+    namer = named.script("Namer", [("SetName", ["Later"])])
+    chase = {"oid": 26, "init": named.init("Chase", cutscene={"file": "chase", "linkTo": "Gun"})}
+    real = named.body([named.unit("Gun Turret", "Gun"), named.marker(26, "Film"), named.marker(18, "Way"),
+                       named.marker(27, script="Finder"), named.marker(27, script="Namer"), chase],
+                      scripts=(finder, namer), base_level=10)
+    wrld = chunk(b"WDAT", struct.pack("<ii", 10, 201)) + chunk(b"BSWD", base) + chunk(b"RLWD", real)
+    return aya(chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1))
+               + chunk(b"AYAD", bytes(24)) + chunk(b"WRES", chunk(b"WRLD", wrld)))
+
+
+def broken_base_archive() -> bytes:
+    """Level 202 on base world 10 whose base world has a byte too many: the real world's lookup is marked incomplete."""
+    base = named.body([named.unit("Gun Turret", "Depot")]) + b"\0"
+    real = named.body([named.marker(27, script="Finder")],
+                      scripts=(named.script("Finder", [("GetThingRef", ["Depot"])]),), base_level=10)
+    wrld = chunk(b"WDAT", struct.pack("<ii", 10, 202)) + chunk(b"BSWD", base) + chunk(b"RLWD", real)
+    return aya(chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1))
+               + chunk(b"AYAD", bytes(24)) + chunk(b"WRES", chunk(b"WRLD", wrld)))
+
+
+def missing_base_archive() -> bytes:
+    """WDAT requires a base body which is absent; the partial lookup must not assert an answer."""
+    real = named.body([named.unit("Gun Turret", "Gun"), named.marker(27, script="Finder")],
+                      scripts=(named.script("Finder", [("GetThingRef", ["Gun"]), ("GetThingRef", ["Depot"])]),),
+                      base_level=10)
+    wrld = chunk(b"WDAT", struct.pack("<ii", 10, 203)) + chunk(b"RLWD", real)
+    return aya(chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1))
+               + chunk(b"AYAD", bytes(24)) + chunk(b"WRES", chunk(b"WRLD", wrld)))
+
+
+def misordered_worlds_archive() -> bytes:
+    real = named.body([named.unit("Gun Turret", "Gun"), named.marker(27, script="Finder")],
+                      scripts=(named.script("Finder", [("GetThingRef", ["Gun"])]),), base_level=10)
+    base = named.body([named.unit("Gun Turret", "Gun")])
+    wrld = chunk(b"WDAT", struct.pack("<ii", 10, 204)) + chunk(b"RLWD", real) + chunk(b"BSWD", base)
+    return aya(chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1))
+               + chunk(b"AYAD", bytes(24)) + chunk(b"WRES", chunk(b"WRLD", wrld)))
+
+
+class NamedThingsCatalogueTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            (game / "data/resources/201_res_PC.aya").write_bytes(registry_archive())
+            (game / "data/resources/202_res_PC.aya").write_bytes(broken_base_archive())
+            (game / "data/resources/203_res_PC.aya").write_bytes(missing_base_archive())
+            (game / "data/resources/204_res_PC.aya").write_bytes(misordered_worlds_archive())
+            (game / "data/default physics.dat").write_bytes(mesh_fixtures._physics_fixture(
+                (1, "Tank", {8: struct.pack("<I", 3), 9: b"authored.msh\0"}),
+                (1, "Gun Turret", {8: struct.pack("<I", 5), 9: b"authored.msh\0"}),  # UB_TURRET: no squad
+                (8, "Rock", {2: b"authored.msh\0"})))
+            cls.catalog = catalog.build_catalog(game)
+        cls.assets = {asset["id"]: asset for asset in cls.catalog["assets"]}
+        cls.things = {(a[a["type"]]["world"], a[a["type"]]["ordinal"]): a for a in cls.catalog["assets"]
+                      if a["type"] in ("placement", "marker") and a[a["type"]]["level"] == 201}
+
+    def lookups(self) -> dict:
+        return {r["targetName"]: r for r in self.assets["script-code:201:rlwd#0"]["relationships"]
+                if r["type"] == "names-thing"}
+
+    def test_a_name_finds_the_most_recent_real_world_thing_and_shadows_the_base_ones(self) -> None:
+        gun = self.lookups()["Gun"]
+        self.assertEqual((gun["status"], gun["target"]), ("resolved", self.things[("RLWD", 0)]["id"]))
+        self.assertEqual(gun["shadowed"], [self.things[("BSWD", 1)]["id"]])
+        self.assertEqual((gun["natives"], gun["isCutscene"]), (["GetThingRef", "PlayCutscene"], False))
+        self.assertIn("FindThingByName", gun["evidence"][0]["source"])
+
+    def test_a_name_only_the_base_world_has_depends_on_the_career(self) -> None:
+        depot = self.lookups()["Depot"]
+        latest, earlier = self.things[("BSWD", 2)]["id"], self.things[("BSWD", 0)]["id"]
+        self.assertEqual((depot["status"], depot["target"], depot["candidates"]),
+                         ("career-dependent", latest, [latest, earlier]))
+        self.assertIn("DoesBaseThingExist", depot["evidence"][-1]["source"])
+
+    def test_a_waypoint_name_finds_nothing_and_a_set_name_is_a_runtime_name(self) -> None:
+        rows = self.lookups()
+        self.assertEqual((rows["Way"]["status"], rows["Way"]["target"]), ("unresolved", None))
+        self.assertEqual((rows["Nobody"]["status"], rows["Nobody"]["natives"]), ("unresolved", ["Teleport"]))
+        later = rows["Later"]
+        self.assertEqual((later["status"], later["target"]), ("runtime-name", None))
+        self.assertEqual(later["setBy"], [{"script": "script-code:201:rlwd#1", "pc": 1}])
+        self.assertEqual((rows["Film"]["status"], rows["Film"]["isCutscene"]), ("resolved", True))
+        # neither the variable nor the position Teleport also takes is a name
+        self.assertEqual(sorted(rows), ["Depot", "Film", "Gun", "Later", "Nobody", "Way"])
+
+    def test_each_named_record_says_whether_its_name_finds_it(self) -> None:
+        found = {key: (a.get("placement") or a.get("marker"))["namedThing"] for key, a in self.things.items()
+                 if "namedThing" in (a.get("placement") or a.get("marker"))}
+        self.assertEqual({key: row["foundByName"] for key, row in found.items()},
+                         {("BSWD", 0): "found-if-later-not-kept", ("BSWD", 1): "shadowed", ("BSWD", 2): "found-if-kept",
+                          ("RLWD", 0): "found", ("RLWD", 1): "found", ("RLWD", 2): "not-joined", ("RLWD", 5): "found"})
+        self.assertEqual(found[("BSWD", 2)]["keep"], {"careerBit": 2, "careerBitInRange": True, "diesOn": 400})
+        self.assertEqual(found[("RLWD", 2)]["reason"], "not-a-complex-thing")
+        self.assertNotIn("keep", found[("RLWD", 0)])
+
+    def test_the_level_lists_the_registry_in_joining_order(self) -> None:
+        reg = self.assets["level:201"]["level"]["namedThings"]
+        self.assertEqual([(e["name"], e["thing"]) for e in reg["entries"]],
+                         [("Depot", self.things[("BSWD", 0)]["id"]), ("Gun", self.things[("BSWD", 1)]["id"]),
+                          ("Depot", self.things[("BSWD", 2)]["id"]), ("Gun", self.things[("RLWD", 0)]["id"]),
+                          ("Film", self.things[("RLWD", 1)]["id"]), ("Chase", self.things[("RLWD", 5)]["id"])])
+        self.assertEqual((reg["baseEntries"], reg["realEntries"], reg["names"], reg["namesOnSeveralEntries"]),
+                         (3, 3, 4, ["Depot", "Gun"]))
+        self.assertEqual(reg["runtimeNames"], [{"name": "Later", "script": "script-code:201:rlwd#1", "pc": 1}])
+        self.assertEqual(reg["namedRecordsNotJoined"], {"not-a-complex-thing": 1})
+
+    def test_a_cutscene_follows_the_thing_its_link_to_name_finds(self) -> None:
+        [link] = [r for r in self.things[("RLWD", 5)]["relationships"] if r["type"] == "names-thing"]
+        self.assertEqual((link["status"], link["target"], link["via"], link["shadowed"]),
+                         ("resolved", self.things[("RLWD", 0)]["id"], "cutscene-link", [self.things[("BSWD", 1)]["id"]]))
+        self.assertNotIn("natives", link)
+        self.assertIn("CCutscene::Start", link["evidence"][0]["source"])
+        self.assertFalse([r for r in self.things[("RLWD", 1)]["relationships"] if r["type"] == "names-thing"])
+
+    def test_a_world_body_that_does_not_decode_leaves_the_lookup_incomplete(self) -> None:
+        reg = self.assets["level:202"]["level"]["namedThings"]
+        self.assertEqual((reg["complete"], reg["undecodedWorlds"], reg["entries"]), (False, ["BSWD"], []))
+        [depot] = [r for r in self.assets["script-code:202:rlwd#0"]["relationships"] if r["type"] == "names-thing"]
+        self.assertEqual((depot["status"], depot["target"], depot["registryIncomplete"]),
+                         ("incomplete", None, ["BSWD"]))
+        self.assertTrue(self.assets["level:201"]["level"]["namedThings"]["complete"])
+        self.assertNotIn("registryIncomplete", self.lookups()["Depot"])
+
+    def test_a_partial_registry_keeps_its_candidates_most_recent_first(self) -> None:
+        """An incomplete answer asserts no target, but the candidates it lists stay in the order FindThingByName meets
+        them (every fixture above has a single candidate, so only two entries of one name show the order)."""
+        entries = [{"name": "Gun", "world": "RLWD", "ordinal": 0, "order": 0, "conditional": False},
+                   {"name": "Gun", "world": "RLWD", "ordinal": 1, "order": 1, "conditional": False}]
+        rid = {("RLWD", 0): "placement:first", ("RLWD", 1): "placement:second"}
+        relation = catalog.names_thing_relation("Gun", ["GetThingRef"], entries, rid, [], ["BSWD"])
+        self.assertEqual((relation["status"], relation["target"], relation["registryIncomplete"]),
+                         ("incomplete", None, ["BSWD"]))
+        self.assertEqual(relation["candidates"], ["placement:second", "placement:first"])
+        nothing = catalog.names_thing_relation("Other", ["GetThingRef"], entries, rid, [], ["BSWD"])
+        self.assertNotIn("candidates", nothing)
+
+    def test_a_missing_required_world_does_not_claim_a_complete_or_resolved_registry(self) -> None:
+        reg = self.assets["level:203"]["level"]["namedThings"]
+        self.assertEqual((reg["complete"], reg["undecodedWorlds"]), (False, ["BSWD"]))
+        relations = [r for r in self.assets["script-code:203:rlwd#0"]["relationships"]
+                     if r["type"] == "names-thing"]
+        self.assertEqual({r["targetName"]: (r["status"], r["target"], r["registryIncomplete"]) for r in relations},
+                         {"Gun": ("incomplete", None, ["BSWD"]), "Depot": ("incomplete", None, ["BSWD"])})
+        [gun] = [a["placement"]["namedThing"] for a in self.catalog["assets"]
+                 if a["type"] == "placement" and a["placement"]["level"] == 203]
+        self.assertEqual((gun["foundByName"], gun["registryIncomplete"]), ("unknown", ["BSWD"]))
+
+    def test_reordered_world_bodies_do_not_claim_a_complete_or_resolved_registry(self) -> None:
+        reg = self.assets["level:204"]["level"]["namedThings"]
+        self.assertEqual((reg["complete"], reg["undecodedWorlds"]), (False, ["WRLD"]))
+        [gun] = [r for r in self.assets["script-code:204:rlwd#0"]["relationships"] if r["type"] == "names-thing"]
+        self.assertEqual((gun["status"], gun["target"], gun["registryIncomplete"]), ("incomplete", None, ["WRLD"]))
+
+    def test_world_payload_coverage_reports_incomplete_bodies(self) -> None:
+        payloads = {a["source"]["container"]: a["payload"] for a in self.catalog["assets"]
+                    if a["type"] == "level-payload" and a["payload"]["tag"] == "WRES"}
+        self.assertEqual(payloads["data/resources/201_res_PC.aya"]["structure"], "decoded")
+        for level in (202, 203, 204):
+            with self.subTest(level=level):
+                self.assertEqual(payloads[f"data/resources/{level}_res_PC.aya"]["structure"], "incomplete")
+        coverage = catalog.build_coverage(self.catalog)["levelPayloadDecode"]
+        self.assertEqual((coverage["WRES:decoded"], coverage["WRES:incomplete"]), (2, 3))
+
+    def test_world_payload_without_the_physics_input_is_not_counted_as_decoded(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            (game / "data/default physics.dat").unlink()
+            data = catalog.build_catalog(game)
+        [payload] = [a["payload"] for a in data["assets"]
+                     if a["type"] == "level-payload" and a["payload"]["tag"] == "WRES"]
+        self.assertEqual(payload["structure"], "undecoded")
+        self.assertEqual(catalog.build_coverage(data)["levelPayloadDecode"]["WRES:undecoded"], 1)
+
+    def test_duplicate_unit_metadata_uses_the_same_first_definition_as_the_registry(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            (game / "data/default physics.dat").write_bytes(mesh_fixtures._physics_fixture(
+                (1, "Tank", {8: struct.pack("<I", 1), 9: b"authored.msh\0"}),
+                (1, "Tank", {8: struct.pack("<I", 4), 9: b"second.msh\0"})))
+            assets = catalog.build_catalog(game)["assets"]
+        [tank] = [a for a in assets if a["type"] == "definition" and a["name"] == "Tank"]
+        self.assertEqual((tank["definition"]["behaviour"], tank["definition"]["memberShell"]), (0, "CMech"))
+
+    def test_over_limit_cli_reports_the_level_and_writes_no_partial_catalogue(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            game.mkdir()
+            authored_install(game)
+            (game / "data/resources/201_res_PC.aya").write_bytes(named.level_archive(
+                None, named.body([named.squad("Tank", "Column", amount=3, attach=1)])))
+            out = Path(temp) / "out"
+            with patch.object(named.nt, "MAX_NAMED_REGISTRY_ENTRIES", 2), \
+                    patch.object(catalog, "output_is_ignored_local_data", return_value=True), \
+                    patch.object(catalog, "write_outputs") as write, contextlib.redirect_stderr(io.StringIO()) as err:
+                with self.assertRaises(SystemExit) as raised:
+                    catalog.main(["--game", str(game), "--out", str(out)])
+            self.assertEqual(raised.exception.code, 2)
+            self.assertIn("level 201", err.getvalue())
+            self.assertIn("limit of 2 entries", err.getvalue())
+            write.assert_not_called()
+            self.assertFalse(out.exists())
+
+    def test_the_new_fields_match_the_schema_and_name_no_absent_id(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        self.assertEqual(catalog.dangling_targets(self.catalog["assets"]), [])
+        schema = json.loads((catalog.TOOLS / "content_catalog.schema.json").read_text(encoding="utf-8"))
+        validator = jsonschema.Draft202012Validator(schema)
+        for asset in self.catalog["assets"]:
+            errors = sorted(validator.iter_errors({**asset, catalog.GENERATED_MARKER: True}), key=str)
+            self.assertEqual(errors, [], asset["id"])
+        broken = [{"id": "s", "relationships": [{"target": None, "shadowed": ["x"], "candidates": ["y"],
+                                                  "setBy": [{"script": "z", "pc": 0}]}]}]
+        self.assertEqual(catalog.dangling_targets(broken), ["x", "y", "z"])
+        level = [{"id": "level:1", "type": "level", "relationships": [],
+                  "level": {"namedThings": {"entries": [{"thing": "marker:gone"}],
+                                            "runtimeNames": [{"name": "n", "script": "script-code:gone", "pc": 0}]}}}]
+        self.assertEqual(catalog.dangling_targets(level), ["marker:gone", "script-code:gone"])
+
+
+# ------------------------------------------------------------------------------------------- VSDS, PMIB and DMKR
+def vs_shader(*, name: bytes = b"RenderInfo shader", vtype: int = 0, fromdecl: bool = True, decl: bytes | None = None,
+              counts: list[int] | None = None, constants: bytes | None = None, function: bytes | None = None,
+              source: bytes | None = None) -> bytes:
+    """One shader as CVertexShader::Load reads it: two chunk headers, the 0x5c-byte object, then each part whose stored
+    pointer is set, each behind its own chunk header. The pointer values are any nonzero word."""
+    hdr = lambda tag: tag + struct.pack("<I", 0)
+    obj = bytearray(0x5C)
+    obj[0x08:0x08 + len(name)] = name
+    struct.pack_into("<i", obj, 0x2C, vtype)
+    obj[0x34] = int(fromdecl)
+    struct.pack_into("<IIIIIiIi", obj, 0x38, 0x100 if decl is not None else 0, len(decl or b""),
+                     0x200 if constants is not None else 0, 0x300 if counts is not None else 0,
+                     0x400 if source is not None else 0, len(source or b""),
+                     0x500 if function is not None else 0, len(function or b""))
+    out = hdr(b"VSDR") + hdr(b"CVSD") + bytes(obj)
+    if decl is not None:
+        out += hdr(b"DECL") + decl
+    if counts is not None:
+        out += hdr(b"CNTS") + struct.pack(f"<{len(counts)}i", *counts)
+    if constants is not None:
+        out += hdr(b"CNST") + constants
+    if function is not None:
+        out += hdr(b"FUNC") + function
+    if source is not None:
+        out += hdr(b"SRC ") + source
+    return out
+
+
+def vsds_payload(*shaders: bytes, numdecls: int = 2) -> bytes:
+    rows = b"".join(struct.pack("<iIi", int(i % 3 == 0), 0xABC0 + i, i) for i in range(104))
+    return struct.pack("<ii", numdecls, len(shaders)) + rows + b"".join(shaders)
+
+
+def pmib_payload(strips: list[list[int]], offsets: list[int] | None = None) -> bytes:
+    """48 strips in [level * 16 + edges] order; offsets default to where each strip starts."""
+    if offsets is None:
+        offsets, at = [], 0
+        for strip in strips:
+            offsets.append(at)
+            at += len(strip)
+    words = [w for strip in strips for w in strip]
+    return struct.pack("<48i", *offsets) + struct.pack("<i", len(words)) + struct.pack(f"<{len(words)}H", *words)
+
+
+def valid_strips() -> list[list[int]]:
+    """A strip per set whose largest index is its patch's last vertex: (2 << level) + 1 squared, minus one."""
+    return [[0, 1, 2, ((2 << level) + 1) ** 2 - 1] for level in range(3) for _edges in range(16)]
+
+
+def dmkr_payload(levels: int, size: int | None = None) -> bytes:
+    size = (0, 1, 5, 21, 85, 341, 1365, 5461)[levels + 1] if size is None else size
+    return struct.pack("<i", levels) + bytes((20 + n % 13) for n in range(size))
+
+
+class PayloadDecoderTests(unittest.TestCase):
+    def test_vsds_reads_each_part_only_when_its_pointer_is_set(self) -> None:
+        a = vs_shader(decl=bytes(8), counts=[1, 2], constants=bytes(12), source=b"vs.1.1")
+        b = vs_shader(name=b"RenderInfo shader (custom declar", vtype=1, fromdecl=False, function=bytes(6))
+        d = worlddec.parse_vsds(vsds_payload(a, b))
+        self.assertEqual((d["declNames"], d["shaders"], d["fromDeclaration"], d["declNameTable"]["shownRows"]),
+                         (2, 2, 1, 69))  # the rows whose flag is 0 (every third row has flag 1)
+        first, second = d["shaderList"]
+        self.assertEqual((first["name"], first["type"], first["declaration"]["bytes"], first["source"]["bytes"]),
+                         ("RenderInfo shader", 0, 8, 6))
+        self.assertEqual((first["constants"]["words"], first["constants"]["declNamesWithConstants"]), (3, 2))
+        self.assertNotIn("function", first)
+        self.assertEqual(first["declaration"]["sha256"], hashlib.sha256(bytes(8)).hexdigest())
+        # a 32-byte name field with no terminator is no name (strcpy of a longer name fills the field)
+        self.assertEqual((second["name"], second["nameTerminated"], second["function"]["bytes"]), (None, False, 6))
+        self.assertEqual([k for k in ("declaration", "constants", "source") if k in second], [])
+        self.assertEqual((first["length"], second["offset"]), (len(a), 8 + 104 * 12 + len(a)))
+        self.assertEqual(first["chunkTags"], ["VSDR", "CVSD"])
+
+    def test_vsds_counts_declaration_shaders_create_cannot_tell_apart(self) -> None:
+        same = vs_shader(decl=b"abcd")
+        other = vs_shader(decl=b"abcd", vtype=1)
+        self.assertEqual(worlddec.parse_vsds(vsds_payload(same, same, other))["declarationKeysShared"], 1)
+        # Create matches a declaration only among declaration shaders: a function shader's stored declaration is no key
+        plain = vs_shader(decl=b"abcd", fromdecl=False)
+        self.assertEqual(worlddec.parse_vsds(vsds_payload(plain, plain, same))["declarationKeysShared"], 0)
+
+    def test_vsds_refuses_what_load_would_misread(self) -> None:
+        good = vsds_payload(vs_shader(decl=bytes(4)))
+        for broken, why in ((good + b"\0", "a byte left over"), (good[:-1], "truncated"),
+                            (vsds_payload(vs_shader(constants=bytes(4))), "constants without counts"),
+                            (vsds_payload(vs_shader(counts=[], constants=b""), numdecls=0),
+                             "constants with no declaration-name slots"),
+                            (vsds_payload(vs_shader(counts=[-1, 1], constants=b"")), "a negative count"),
+                            (vsds_payload(numdecls=-1), "a negative declaration-name count")):
+            with self.assertRaises(worlddec.DecodeError, msg=why):
+                worlddec.parse_vsds(broken)
+        negative = bytearray(vsds_payload(vs_shader(function=bytes(4))))
+        struct.pack_into("<i", negative, 8 + 104 * 12 + 16 + 0x54, -4)
+        with self.assertRaises(worlddec.DecodeError):
+            worlddec.parse_vsds(bytes(negative))
+
+    def test_pmib_sets_are_the_ranges_between_offsets(self) -> None:
+        d = worlddec.parse_pmib(pmib_payload(valid_strips()))
+        self.assertEqual((d["sets"], d["words"], d["problems"]), (48, 192, []))
+        rows = {(r["level"], r["edges"]): r for r in d["setList"]}
+        self.assertEqual((rows[(0, 0)]["first"], rows[(0, 0)]["words"], rows[(0, 0)]["triangles"]), (0, 4, 2))
+        self.assertEqual((rows[(2, 15)]["first"], rows[(2, 15)]["maxIndex"], rows[(2, 15)]["patchVertices"]),
+                         (188, 80, 81))
+        self.assertEqual(rows[(1, 3)]["patchVertices"], 25)
+
+    def test_pmib_reports_ranges_and_indices_the_index_buffers_would_misread(self) -> None:
+        strips = valid_strips()
+        strips[5] = [0, 1, 9]  # a level-0 patch has 9 vertices: index 9 is past it
+        strips[20] = [0, 1]    # fewer than one triangle
+        problems = worlddec.parse_pmib(pmib_payload(strips))["problems"]
+        self.assertEqual(len(problems), 2)
+        self.assertTrue(any("indexes vertex 9 of a 9-vertex patch" in p for p in problems))
+        offsets = [4 * i for i in range(48)]
+        offsets[10], offsets[11] = offsets[11], offsets[10]
+        problems = worlddec.parse_pmib(pmib_payload(valid_strips(), offsets))["problems"]
+        self.assertIn("set 10 spans 44..40 of 192 words", problems)
+
+    def test_pmib_refuses_unread_bytes_and_a_negative_count(self) -> None:
+        good = pmib_payload(valid_strips())
+        with self.assertRaises(worlddec.DecodeError):
+            worlddec.parse_pmib(good + b"\0\0")
+        with self.assertRaises(worlddec.DecodeError):
+            worlddec.parse_pmib(good[:48 * 4] + struct.pack("<i", -1))
+
+    def test_dmkr_holds_its_mips_smallest_first(self) -> None:
+        d = worlddec.parse_dmkr(dmkr_payload(2))
+        self.assertEqual((d["levels"], d["bytes"]), (2, 21))
+        self.assertEqual([(m["side"], m["offset"], m["bytes"]) for m in d["mips"]], [(1, 0, 1), (2, 1, 4), (4, 5, 16)])
+        self.assertEqual(worlddec.parse_dmkr(dmkr_payload(6))["bytes"], 5461)
+        self.assertEqual((worlddec.parse_dmkr(dmkr_payload(-1))["mips"]), [])
+
+    def test_dmkr_refuses_a_level_count_outside_the_table_and_unread_bytes(self) -> None:
+        for broken in (dmkr_payload(7, size=0), dmkr_payload(-2, size=0), dmkr_payload(2) + b"\0", dmkr_payload(2)[:-1]):
+            with self.assertRaises(worlddec.DecodeError):
+                worlddec.parse_dmkr(broken)
+
+
+def resource_archive(*chunks_: bytes) -> bytes:
+    return aya(chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1)) + chunk(b"AYAD", bytes(24))
+               + b"".join(chunks_))
+
+
+class PayloadCatalogueTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            (game / "data/resources/base_res_PC.aya").write_bytes(resource_archive(
+                chunk(b"VSDS", vsds_payload(vs_shader(decl=bytes(8), counts=[1, 0], constants=bytes(4), source=b"x"))),
+                chunk(b"PMIB", pmib_payload(valid_strips())), chunk(b"DMKR", dmkr_payload(6))))
+            (game / "data/resources/300_res_PC.aya").write_bytes(resource_archive(
+                chunk(b"DMKR", dmkr_payload(1)), chunk(b"PMIB", pmib_payload([[0, 1]] * 48))))
+            cls.catalog = catalog.build_catalog(game)
+        cls.payloads = {(Path(a["source"]["container"]).name, a["payload"]["tag"]): a for a in cls.catalog["assets"]
+                        if a["type"] == "level-payload"}
+        cls.assets = {a["id"]: a for a in cls.catalog["assets"]}
+
+    def test_base_payloads_decode_in_their_loaders_order(self) -> None:
+        vsds = self.payloads[("base_res_PC.aya", "VSDS")]["payload"]
+        self.assertEqual((vsds["structure"], vsds["decoded"]["shaders"]), ("decoded", 1))
+        self.assertIn("CVertexShader::Create", vsds["use"]["loader"])
+        pmib = self.payloads[("base_res_PC.aya", "PMIB")]["payload"]
+        self.assertEqual((pmib["decoded"]["words"], pmib["decoded"]["problems"]), (192, []))
+        self.assertIn("CLandscapeIB::CreateIndexBuffer", pmib["use"]["loader"])
+        self.assertIn("CDXPatchManager::DeserializeAll", self.payloads[("base_res_PC.aya", "PMIB")]["provenance"]["loader"])
+
+    def test_the_base_damage_texture_means_damage0_is_never_read(self) -> None:
+        base = self.payloads[("base_res_PC.aya", "DMKR")]["payload"]
+        self.assertEqual((base["decoded"]["levels"], base["use"]["replacesFile"], base["use"]["fileReadFromDisk"]),
+                         (6, "data\\textures\\mixers\\damage0.tga", False))
+        self.assertIn("CSystem::Init", base["use"]["rule"])
+        level = self.payloads[("300_res_PC.aya", "DMKR")]["payload"]
+        self.assertIsNone(level["use"]["fileReadFromDisk"])  # read with a level, after start-up
+
+    def test_a_level_archive_lists_its_payloads_and_their_problems(self) -> None:
+        terrain = self.assets["level:300"]["level"]["terrain"]
+        self.assertEqual(sorted(terrain["payloads"]), ["damageTexture", "patchStrips"])
+        self.assertEqual(len(self.payloads[("300_res_PC.aya", "PMIB")]["payload"]["decoded"]["problems"]), 48)
+
+    def test_an_undecodable_payload_says_why(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            (game / "data/resources/base_res_PC.aya").write_bytes(resource_archive(chunk(b"DMKR", dmkr_payload(9, 0))))
+            data = catalog.build_catalog(game)
+        [dmkr] = [a for a in data["assets"] if a["type"] == "level-payload" and a["payload"]["tag"] == "DMKR"]
+        self.assertEqual(dmkr["payload"]["decoded"]["status"], "undecoded")
+        self.assertIn("MIP_OFFSETS", dmkr["payload"]["decoded"]["reason"])
+        self.assertNotIn("use", dmkr["payload"])
+
+    def test_the_payload_records_match_the_schema(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        schema = json.loads((catalog.TOOLS / "content_catalog.schema.json").read_text(encoding="utf-8"))
+        validator = jsonschema.Draft202012Validator(schema)
+        for asset in self.catalog["assets"]:
+            self.assertEqual(sorted(validator.iter_errors({**asset, catalog.GENERATED_MARKER: True}), key=str), [],
+                             asset["id"])
+
+
+class PayloadGateTests(unittest.TestCase):
+    def run_gate(self, base: bytes, *, sfx_data: bytes | None = None, headers: bytes | None = None,
+                 config_data: bytes | None = None) -> tuple[int, str]:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            (game / "data" / "resources").mkdir(parents=True)
+            (game / "data" / "default physics.dat").write_bytes(named.GATE_PHYSICS)
+            tables.write_tables(game, sfx_data=sfx_data, config_data=config_data)
+            if headers is not None:
+                (game / "data" / "worldheaders.dat").write_bytes(headers)
+            (game / "data" / "resources" / "201_res_PC.aya").write_bytes(
+                named.level_archive(None, named.body([named.unit("Turret", "Gun")])))
+            (game / "data" / "resources" / "base_res_PC.aya").write_bytes(base)
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = gate.main(["--game", str(game)])
+        return code, out.getvalue()
+
+    def test_every_payload_a_loader_reads_is_decoded(self) -> None:
+        code, out = self.run_gate(resource_archive(
+            chunk(b"VSDS", vsds_payload(vs_shader(decl=bytes(8)), vs_shader(name=b"x" * 32, decl=bytes(8)),
+                                        vs_shader(decl=bytes(8), vtype=1))),
+            chunk(b"PMIB", pmib_payload(valid_strips())), chunk(b"DMKR", dmkr_payload(6))))
+        self.assertEqual(code, 0, out)
+        for line in ("archives read: 2", "payload VSDS decoded: 1", "VSDS shaders: 3", "PMIB sets: 48",
+                     "VSDS shaders whose name field has no terminator: 1", "DMKR with 7 mip levels: 1",
+                     "VSDS declaration keys held by more than one shader: 1"):
+            self.assertIn(line, out)
+
+    def test_a_payload_that_does_not_decode_fails(self) -> None:
+        code, out = self.run_gate(resource_archive(chunk(b"DMKR", dmkr_payload(2) + b"\0")))
+        self.assertEqual(code, 1)
+        self.assertIn("base_res_PC.aya DMKR at", out)
+
+    def test_the_tables_are_decoded_and_what_they_name_is_counted(self) -> None:
+        code, out = self.run_gate(resource_archive(), headers=worldheader_fixtures.fixture(
+            (201, ["Racer"], (0, 0, 0, 0))))
+        self.assertEqual(code, 0, out)
+        for line in ("configurations: 1", "configuration weapon names with no weapon: 4", "sound effects: 1",
+                     "sound effects whose sample sounds_english_pc.xap lacks: 0", "sample banks: 1",
+                     "configuration explosions with no explosion: 1",
+                     "configuration cockpits with no loose mesh: 1", "levels whose two configuration lists differ: 1"):
+            self.assertIn(line, out)
+
+    def test_an_effect_table_the_loader_would_misread_fails(self) -> None:
+        code, out = self.run_gate(resource_archive(), sfx_data=b"104\n0\n")
+        self.assertEqual(code, 1)
+        self.assertIn("sounds.sfx does not decode", out)
+        code, out = self.run_gate(resource_archive(), config_data=tables.configs(tables.config()) + b"\0")
+        self.assertEqual(code, 1)
+        self.assertIn("the battle engine configurations do not decode", out)
+
+    def test_an_effect_whose_sample_a_bank_lacks_is_counted(self) -> None:
+        code, out = self.run_gate(resource_archive(), sfx_data=tables.sfx([("Engine", "Units\\engine", 30, 1, 0),
+                                                                             ("Gone", "Units\\gone", 30, 0, 0)]))
+        self.assertEqual(code, 0, out)
+        self.assertIn("sound effects whose sample sounds_english_pc.xap lacks: 1", out)
+
+    def test_a_patch_strip_outside_its_patch_fails(self) -> None:
+        strips = valid_strips()
+        strips[47] = [0, 1, 81]
+        code, out = self.run_gate(resource_archive(chunk(b"PMIB", pmib_payload(strips))))
+        self.assertEqual(code, 1)
+        self.assertIn("indexes vertex 81 of a 81-vertex patch", out)
+
+
+# ------------------------------------------------------------------- battle engine configurations and sound effects
+def tables_level_archive() -> bytes:
+    """Level 300: its world header offers Standard and a name no record has; Sounds plays two samples by name."""
+    model = named.world_model([named.marker(27, script="Sounds")], scripts=(named.script(
+        "Sounds", [("PlaySample", ["hud\\BEEP"]), ("PlaySample", ["Nope"])]),))
+    model["header"]["battleEngineConfigurations"] = ["Standard", "Paladin"]
+    wrld = chunk(b"WDAT", struct.pack("<ii", -1, 300)) + chunk(b"RLWD", worldenc.write_world_body(model))
+    return resource_archive(chunk(b"WRES", chunk(b"WRLD", wrld)))
+
+
+TABLES_PHYSICS = mesh_fixtures._physics_fixture(
+    (1, "Tank", {8: struct.pack("<I", 3), 9: b"authored.msh\0"}), (8, "Rock", {2: b"authored.msh\0"}),
+    (2, "Gun A", {1: b"\0"}), (2, "Gun B", {1: b"\0"}), (6, "Boom", {1: b"\0"}))
+
+
+class TablesCatalogueTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as decomp_temp:
+            game = Path(temp)
+            authored_install(game)
+            (game / "data/default physics.dat").write_bytes(TABLES_PHYSICS)
+            (game / "data/battle engine configurations.dat").write_bytes(tables.configs(
+                tables.config(name="Racer", walker=("Gun A",), jet=(), primary="Gun A", aug="", explosion="Boom",
+                              cockpit="authored.msh", language=10),
+                tables.config(name="Standard", walker=("Gun A", "Missing Gun", "Tank"), jet=("Gun B",), primary="Gun A",
+                              aug="Gun B", explosion="Boom", cockpit="nothing.msh", language=2)))
+            (game / "data/sounds/sounds.sfx").write_bytes(tables.sfx([
+                ("Engine", "Units\\engine", 30, True, False), ("Shot", "Units\\shot", 50, False, False),
+                ("shot", "Units\\shot", 60, False, False), ("Hello", "Speech\\hello", 80, False, True),
+                ("Lost", "Units\\missing", 10, False, False)]))
+            for lang, extra in (("english", [("Speech\\hello", 4, bytes(1))]), ("french", [])):
+                (game / f"data/sounds/sounds_{lang}_pc.xap").write_bytes(xap_fixtures.bank(
+                    [("Units\\engine", 4, bytes(1)), ("units\\SHOT", 4, bytes(1)), ("Hud\\beep", 4, bytes(1))] + extra))
+            (game / "data/resources/300_res_PC.aya").write_bytes(tables_level_archive())
+            (game / "data/worldheaders.dat").write_bytes(worldheader_fixtures.fixture(
+                (300, ["Standard", "Racer", "Ghost"], (0, 0, 0, 0))))
+            decomp = Path(decomp_temp)
+            (decomp / "src").mkdir()
+            (decomp / "src" / "Engine.cpp").write_text(
+                'void CEngine::Sound()\t// FUNCTION: 0x00401000\n{\n\tSOUND.GetEffectByName("Engine");\n'
+                '\tSOUND.PlayNamedEffect("Gone");\n\tSOUND.GetEffectByName("SHOT");\n}\n', encoding="latin-1")
+            cls.catalog = catalog.build_catalog(game, decomp)
+        cls.assets = {a["id"]: a for a in cls.catalog["assets"]}
+        cls.configs = {a["name"]: a for a in cls.catalog["assets"] if a["type"] == "configuration"}
+        cls.effects = [a for a in cls.catalog["assets"] if a["type"] == "sound-effect"]
+
+    def rel(self, asset: dict, rtype: str) -> list[dict]:
+        return [r for r in asset["relationships"] if r["type"] == rtype]
+
+    def test_old_configuration_catalogue_reports_effective_and_stored_values_separately(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            record = bytearray(tables.config(7, name="Older"))
+            struct.pack_into("<f", record, 16, 0.4)
+            struct.pack_into("<f", record, 24, 0.8)
+            (game / "data/battle engine configurations.dat").write_bytes(tables.configs(
+                tables.config(1, name="Oldest"), bytes(record), tables.config(12, name="Modern")))
+            configs = {a["name"]: a["configuration"] for a in catalog.build_catalog(game)["assets"]
+                       if a["type"] == "configuration"}
+        f = lambda x: struct.unpack("<f", struct.pack("<f", x))[0]
+        old, first, modern = configs["Older"], configs["Oldest"], configs["Modern"]
+        self.assertEqual(old["values"]["maxAirVelocity"], f(0.9))
+        self.assertEqual(old["storedValues"]["maxAirVelocity"], f(0.8))
+        self.assertEqual(old["values"]["maxAirEnergyCost"], f(0.015))
+        self.assertEqual(old["storedValues"]["maxAirEnergyCost"], f(0.4))
+        self.assertIsNone(old["storedValues"]["minAirEnergyCost"])
+        self.assertEqual(old["values"]["minAirEnergyCost"], f(0.005))
+        self.assertEqual(first["values"]["shieldEfficiency"], 90.0)
+        self.assertEqual(first["values"]["stealth"], 0.0)
+        self.assertIsNone(first["storedValues"]["shieldEfficiency"])
+        self.assertIsNone(first["storedStores"])
+        self.assertEqual(first["stores"], [{"heat": False, "value": 1000.0}] * 6)
+        self.assertNotIn("storedValues", modern)  # no defaulted values: stored and effective match
+        self.assertNotIn("storedStores", modern)
+
+    def test_each_configuration_names_its_weapons_explosion_cockpit_and_description(self) -> None:
+        standard = self.configs["Standard"]
+        self.assertEqual((standard["configuration"]["listPosition"], standard["configuration"]["fallback"]), (0, True))
+        weapons = {(r["role"], r["targetName"]): (r["status"], r["target"]) for r in self.rel(standard, "uses-weapon")}
+        self.assertEqual(weapons, {("walker", "Gun A"): ("resolved", "definition:gun a"),
+                                   ("walker", "Missing Gun"): ("unresolved", None),
+                                   ("walker", "Tank"): ("unresolved", None),  # a unit, not a weapon
+                                   ("jet", "Gun B"): ("resolved", "definition:gun b"),
+                                   ("primary", "Gun A"): ("resolved", "definition:gun a"),
+                                   ("aug", "Gun B"): ("resolved", "definition:gun b")})
+        [boom] = self.rel(standard, "uses-explosion")
+        self.assertEqual((boom["status"], boom["target"]), ("resolved", "definition:boom"))
+        self.assertEqual(self.assets["definition:boom"]["definition"]["kinds"], ["explosion"])
+        [cockpit] = self.rel(standard, "uses-mesh")
+        self.assertEqual((cockpit["status"], cockpit["targetName"]), ("unresolved", "nothing.msh"))
+        [racer_cockpit] = self.rel(self.configs["Racer"], "uses-mesh")
+        self.assertEqual(racer_cockpit["target"], "mesh:data/resources/meshes/m_authored.msh.aya")
+        [description] = self.rel(standard, "uses-text")
+        self.assertEqual((description["textId"], description["status"]), (0xE3FCBF7C, "unresolved"))  # no english.dat
+        [racer_text] = self.rel(self.configs["Racer"], "uses-text")
+        self.assertIn("no case 10", racer_text["evidence"][0]["rule"])
+        self.assertEqual([r["role"] for r in self.rel(self.configs["Racer"], "uses-weapon")], ["walker", "primary"])
+
+    def test_a_level_offers_configurations_by_page_and_by_world_header(self) -> None:
+        offers = {(r["role"], r["slot"]): r for r in self.rel(self.assets["level:300"], "offers-configuration")}
+        self.assertEqual({k: (r["targetName"], r["status"], r["target"]) for k, r in offers.items()}, {
+            ("page", 0): ("Standard", "resolved", self.configs["Standard"]["id"]),
+            ("page", 1): ("Racer", "resolved", self.configs["Racer"]["id"]),
+            ("page", 2): ("Ghost", "unresolved", None),  # the page asks by name: no fallback
+            ("world-header", 0): ("Standard", "resolved", self.configs["Standard"]["id"]),
+            ("world-header", 1): ("Paladin", "unresolved", None)})
+        self.assertEqual(offers[("world-header", 1)]["fallback"], self.configs["Standard"]["id"])  # the last record
+        self.assertFalse(self.assets["level:300"]["level"]["configurationListsAgree"])
+        self.assertNotIn("configurationListsAgree", self.assets["level:200"]["level"])  # no worldheaders.dat record
+
+    def test_effects_play_their_bank_samples_and_chain_by_name(self) -> None:
+        by_index = {e["soundEffect"]["index"]: e for e in self.effects}
+        [engine] = self.rel(by_index[0], "plays-sample")
+        self.assertEqual((engine["status"], len(engine["targets"])), ("resolved-per-archive", 2))  # one per bank
+        [hello] = self.rel(by_index[3], "plays-sample")
+        self.assertEqual((hello["status"], hello["target"]), ("resolved", "audio:data/sounds/sounds_english_pc.xap#3"))
+        [lost] = self.rel(by_index[4], "plays-sample")
+        self.assertEqual(lost["status"], "unresolved")
+        [shot] = self.rel(by_index[1], "plays-sample")
+        self.assertEqual(shot["status"], "resolved-per-archive")  # stricmp: Units\\shot finds units\\SHOT
+        [variant] = self.rel(by_index[2], "variant-of")
+        self.assertEqual((variant["target"], by_index[2]["soundEffect"]["variants"]), (by_index[1]["id"], 2))
+        self.assertEqual(by_index[3]["soundEffect"]["languageDependent"], True)
+
+    def test_scripts_play_bank_samples_not_effects(self) -> None:
+        [script] = [a for a in self.catalog["assets"] if a["type"] == "script-code" and a["scriptCode"]["level"] == 300]
+        plays = {r["targetName"]: r for r in self.rel(script, "plays-sample")}
+        self.assertEqual((plays["hud\\BEEP"]["status"], len(plays["hud\\BEEP"]["targets"])), ("resolved-per-archive", 2))
+        self.assertEqual(plays["Nope"]["status"], "unresolved")
+
+    def test_code_looks_effects_up_by_name(self) -> None:
+        engine = next(e for e in self.effects if e["name"] == "Engine")
+        [site] = self.rel(engine, "named-by-code")
+        self.assertIn("src/Engine.cpp:3", site["evidence"][0]["source"])
+        refs = self.catalog["codeReferences"]
+        self.assertEqual((refs["effectSites"], refs["unresolvedEffectNames"]), (3, ["Gone"]))
+        heads = {e["soundEffect"]["index"]: len(self.rel(e, "named-by-code")) for e in self.effects}
+        self.assertEqual((heads[1], heads[2]), (1, 0))  # the chain's head is on the list, its variant is not
+
+    def test_the_new_records_match_the_schema_and_name_no_absent_id(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        self.assertEqual(catalog.dangling_targets(self.catalog["assets"]), [])
+        schema = json.loads((catalog.TOOLS / "content_catalog.schema.json").read_text(encoding="utf-8"))
+        validator = jsonschema.Draft202012Validator(schema)
+        for asset in self.catalog["assets"]:
+            self.assertEqual(sorted(validator.iter_errors({**asset, catalog.GENERATED_MARKER: True}), key=str), [],
+                             asset["id"])
+        coverage = catalog.build_coverage(self.catalog)
+        self.assertEqual(coverage["tables"]["soundEffects"]["chained"], 1)
+        survey = {f["family"]: f for f in self.catalog["survey"]["families"]}
+        self.assertEqual((survey["battle-engine-config-dat"]["status"], survey["sfx-catalog"]["status"]),
+                         ("catalogued", "catalogued"))
+        self.assertIn("CBattleEngineData::Load", survey["battle-engine-config-dat"]["loader"])
+
+
 class BoundaryTests(unittest.TestCase):
     def test_self_test_passes(self) -> None:
         self.assertEqual(catalog.run_self_test(), 0)
+
+    def test_nonstandard_sample_banks_are_catalogued_without_claiming_a_language_or_runtime_lookup(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            sounds = game / "data/sounds"
+            (sounds / "nested").mkdir(parents=True)
+            bank = xap_fixtures.bank([("AuthoredSample", 4, bytes(1))])
+            (sounds / "authored.xap").write_bytes(bank)
+            (sounds / "sounds_english_pc.xap").write_bytes(bank)
+            (sounds / "sounds_authored_pc.xap").write_bytes(bank)
+            (sounds / "nested/sounds_french_pc.xap").write_bytes(bank)
+            records = catalog.catalog_audio(game, catalog.walk_install(game))
+        by_path = {r["source"]["container"]: r for r in records}
+        self.assertEqual(by_path["data/sounds/sounds_english_pc.xap"]["audio"]["languageLane"], "english")
+        for path in ("data/sounds/authored.xap", "data/sounds/sounds_authored_pc.xap",
+                     "data/sounds/nested/sounds_french_pc.xap"):
+            self.assertIsNone(by_path[path]["audio"]["languageLane"])
+            self.assertIn("not established", by_path[path]["provenance"]["loader"])
+        indexed = catalog.sample_index(records)[catalog.gtd.stricmp_key("AuthoredSample")]
+        self.assertEqual([a["source"]["container"] for a in indexed], ["data/sounds/sounds_english_pc.xap"])
+
+    def test_duplicate_samples_in_one_bank_are_candidates_not_resolved_per_archive(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            (game / "data/sounds/sounds_english_pc.xap").write_bytes(xap_fixtures.bank(
+                [("Duplicate", 4, bytes(1)), ("DUPLICATE", 4, bytes(1))]))
+            (game / "data/sounds/sounds_french_pc.xap").write_bytes(xap_fixtures.bank(
+                [("Duplicate", 4, bytes(1))]))
+            (game / "data/sounds/sounds.sfx").write_bytes(tables.sfx([
+                ("Sound", "Duplicate", 30, True, False)]))
+            files = catalog.walk_install(game)
+            samples = catalog.sample_index(catalog.catalog_audio(game, files))
+            stats = collections.Counter()
+            effects, _ = catalog.catalog_sound_effects(game, files, samples, stats)
+            script = {"scriptCode": {"samples": ["duplicate"]}, "relationships": []}
+            catalog.link_script_samples([script], samples, stats)
+        [effect_relation] = [r for r in effects[0]["relationships"] if r["type"] == "plays-sample"]
+        [script_relation] = script["relationships"]
+        for row in (effect_relation, script_relation):
+            self.assertEqual((row["status"], row["target"]), ("incomplete", None))
+            self.assertEqual(len(row["candidates"]), 3)
+            self.assertTrue(any("last successful" in e["rule"] for e in row["evidence"]))
+        self.assertEqual(stats["soundEffectSamplesIncomplete"], 1)
+        self.assertEqual(stats["scriptSamplesIncomplete"], 1)
+        self.assertEqual(stats["soundEffectSamplesResolved"], 0)
+        self.assertEqual(stats["scriptSamplesResolved"], 0)
+
+    def test_loose_mesh_respects_the_archive_expansion_limit_before_parsing(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            # Lower the bound around a normal authored mesh so this verifies the caller without a large fixture.
+            with patch.object(catalog.aai, "MAX_INFLATED_BYTES", len(mesh_stream()) - 1), \
+                    patch.object(catalog, "catalog_mesh", side_effect=RuntimeError("mesh parser reached")):
+                with self.assertRaisesRegex(ValueError, "inflate_limit"):
+                    catalog.build_catalog(game)
+
+    def test_loose_mesh_respects_source_and_member_limits(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            mesh_path = game / "data/resources/meshes/m_authored.msh.aya"
+            with patch.object(catalog.aai, "MAX_COMPRESSED_BYTES", len(mesh_path.read_bytes()) - 1), \
+                    patch.object(catalog, "catalog_mesh", side_effect=RuntimeError("mesh parser reached")):
+                with self.assertRaisesRegex(ValueError, "compressed_limit"):
+                    catalog.build_catalog(game)
+            stream = mesh_stream()
+            middle = len(stream) // 2
+            mesh_path.write_bytes(aya(stream[:middle]) + aya(stream[middle:]))
+            with patch.object(catalog.aai, "MAX_MEMBERS", 1), \
+                    patch.object(catalog, "catalog_mesh", side_effect=RuntimeError("mesh parser reached")):
+                with self.assertRaisesRegex(ValueError, "member_count_limit"):
+                    catalog.build_catalog(game)
+
+    def test_incomplete_loose_mesh_member_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            mesh_path = game / "data/resources/meshes/m_authored.msh.aya"
+            mesh_path.write_bytes(mesh_path.read_bytes()[:-1])
+            with self.assertRaisesRegex(ValueError, "member_overrun"):
+                catalog.build_catalog(game)
+
+    def test_duplicate_world_containers_are_refused_before_publication(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            game.mkdir()
+            authored_install(game)
+            archive = game / "data/resources/200_res_PC.aya"
+            original = zlib.decompress(world_archive()[4:])
+            real = named.body([named.unit("Turret", "Gun")])
+            world = chunk(b"WDAT", struct.pack("<ii", -1, 200)) + chunk(b"RLWD", real)
+            prefix = chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1)) \
+                     + chunk(b"AYAD", bytes(24))
+            cases = {
+                "duplicate WRES": original + chunk(b"WRES", chunk(b"WRLD", b"")),
+                "duplicate WRLD": prefix + chunk(b"WRES", chunk(b"WRLD", world) + chunk(b"WRLD", b"")),
+            }
+            out = Path(temp) / "out"
+            for label, raw in cases.items():
+                with self.subTest(label=label):
+                    archive.write_bytes(aya(raw))
+                    with patch.object(catalog, "output_is_ignored_local_data", return_value=True), \
+                            patch.object(catalog, "write_outputs") as write, contextlib.redirect_stderr(io.StringIO()) as err:
+                        with self.assertRaises(SystemExit) as raised:
+                            catalog.main(["--game", str(game), "--out", str(out)])
+                    self.assertEqual(raised.exception.code, 2)
+                    self.assertIn("world layout", err.getvalue())
+                    write.assert_not_called()
+                    self.assertFalse(out.exists())
+
+    def test_rejected_loose_mesh_reports_the_reason_and_publishes_nothing(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            game.mkdir()
+            authored_install(game)
+            out = Path(temp) / "out"
+            with patch.object(catalog.aai, "MAX_INFLATED_BYTES", len(mesh_stream()) - 1), \
+                    patch.object(catalog, "output_is_ignored_local_data", return_value=True), \
+                    patch.object(catalog, "write_outputs") as write, contextlib.redirect_stderr(io.StringIO()) as err:
+                with self.assertRaises(SystemExit) as raised:
+                    catalog.main(["--game", str(game), "--out", str(out)])
+            self.assertEqual(raised.exception.code, 2)
+            self.assertIn("inflate_limit", err.getvalue())
+            self.assertIn("m_authored.msh.aya", err.getvalue())
+            write.assert_not_called()
+            self.assertFalse(out.exists())
+
+    def test_loose_mesh_multiple_valid_members_keep_the_same_decoded_model(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            mesh_path = game / "data/resources/meshes/m_authored.msh.aya"
+            before = catalog.build_catalog(game)
+            stream = mesh_stream()
+            middle = len(stream) // 2
+            mesh_path.write_bytes(aya(stream[:middle]) + aya(stream[middle:]))
+            after = catalog.build_catalog(game)
+        pick = lambda data: next(row for row in data["assets"]
+                                 if row["id"] == "mesh:data/resources/meshes/m_authored.msh.aya")
+        self.assertEqual(pick(before)["mesh"], pick(after)["mesh"])
+
+    def test_redirected_output_never_creates_a_directory_in_the_selected_game(self) -> None:
+        from safe_generated_output import UnsafeGeneratedOutputError
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            game = root / "authored-game"
+            game.mkdir()
+            redirect = root / "redirect"
+            try:
+                redirect.symlink_to(game, target_is_directory=True)
+            except OSError as error:
+                self.skipTest(f"creating a directory symlink is unavailable: {error}")
+            out = redirect / "unwanted"
+            with self.assertRaises(UnsafeGeneratedOutputError):
+                catalog.write_outputs(out, game, {"files": [], "assets": [], "survey": {}}, {})
+            self.assertFalse((game / "unwanted").exists())
+
+    def test_new_disjoint_output_root_is_created_by_the_secured_writer(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            game = root / "authored-game"
+            game.mkdir()
+            out = root / "generated" / "catalogue"
+            files = catalog.write_outputs(out, game, {"files": [], "assets": [], "survey": {}}, {})
+            self.assertEqual({p.name for p in files}, {"manifest.json", "survey.json", "coverage.json", "assets.jsonl"})
+            self.assertTrue(all(p.is_file() for p in files))
+
+    def test_decomp_input_and_output_are_disjoint_even_through_an_alias(self) -> None:
+        from safe_generated_output import UnsafeGeneratedOutputError
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            game = root / "authored-game"
+            game.mkdir()
+            authored_install(game)
+            source_parent = root / "selected"
+            source = source_parent / "source"
+            (source / "src").mkdir(parents=True)
+            marker = source / "manifest.json"
+            marker.write_text("keep the selected source\n")
+            alias = root / "alias"
+            try:
+                alias.symlink_to(source, target_is_directory=True)
+            except OSError as error:
+                self.skipTest(f"creating a directory symlink is unavailable: {error}")
+            for out in (source, source / "nested", source_parent, alias):
+                with self.subTest(out=out):
+                    with patch.object(catalog, "output_is_ignored_local_data", return_value=True), \
+                            contextlib.redirect_stderr(io.StringIO()):
+                        with self.assertRaises(SystemExit) as raised:
+                            catalog.main(["--game", str(game), "--decomp", str(source), "--out", str(out)])
+                    self.assertEqual(raised.exception.code, 2)
+                    self.assertEqual(marker.read_text(), "keep the selected source\n")
+                    self.assertFalse((source / "nested").exists())
+                    self.assertFalse((source_parent / "manifest.json").exists())
+            with self.assertRaises(UnsafeGeneratedOutputError):
+                catalog.write_outputs(source / "nested", game, {"files": [], "assets": [], "survey": {}}, {},
+                                      decomp=source)
+            self.assertFalse((source / "nested").exists())
+
+    def test_optional_source_identity_never_uses_a_parent_repositories_head(self) -> None:
+        self.assertIsNone(catalog.git_head_of(catalog.ROOT / "tools"))
+        with tempfile.TemporaryDirectory() as temp:
+            source = Path(temp)
+            (source / "src").mkdir()
+            (source / "src" / "example.cpp").write_text('void f() {}\n')
+            subprocess.run(["git", "init", "-q", str(source)], check=True, stdout=subprocess.PIPE)
+            subprocess.run(["git", "-C", str(source), "add", "--", "src/example.cpp"], check=True)
+            subprocess.run(["git", "-C", str(source), "-c", "user.name=fixture", "-c",
+                            "user.email=fixture@example.invalid", "commit", "-qm", "authored fixture"], check=True)
+            head = catalog.git_head_of(source)
+            self.assertIsNotNone(head)
+            self.assertIsNone(catalog.git_head_of(source / "src"))
+            (source / "src" / "example.cpp").write_text('void changed() {}\n')
+            label = catalog.code_references(source)["source"]
+            self.assertIn(head, label)
+            self.assertIn("working tree not verified", label)
+
+    def test_optional_source_without_src_directory_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            with self.assertRaisesRegex(ValueError, "src directory"):
+                catalog.code_references(Path(temp))
+
+    def test_optional_source_files_are_bounded_and_do_not_follow_final_symlinks(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "selected-source"
+            (source / "src").mkdir(parents=True)
+            cpp = source / "src" / "example.cpp"
+            cpp.write_bytes(b" " * 65)
+            with patch.object(catalog, "MAX_FILE_BYTES", 64):
+                with self.assertRaisesRegex(ValueError, "admission limit"):
+                    catalog.code_references(source)
+            cpp.unlink()
+            external = root / "external.cpp"
+            external.write_text('void external() {}\n')
+            try:
+                cpp.symlink_to(external)
+            except OSError as error:
+                self.skipTest(f"creating a symlink is unavailable: {error}")
+            with self.assertRaisesRegex(ValueError, "not a regular file"):
+                catalog.code_references(source)
+
+    def test_language_and_symbols_are_parsed_and_inventoried_from_one_admitted_read(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            language = game / "data/language/english.dat"
+            symbol = game / "data/MissionScripts/text/text.stf"
+            language.parent.mkdir(parents=True)
+            symbol.parent.mkdir(parents=True)
+            language.write_bytes(authored_language())
+            symbol.write_bytes(b"#define HELLO 123\r\n")
+            files = catalog.walk_install(game)
+            with patch.object(catalog, "read_install_file", wraps=catalog.read_install_file) as read, \
+                    patch.object(catalog.language_dat_decode, "parse_lang_dat", side_effect=RuntimeError("reopened")), \
+                    patch.object(catalog.language_dat_decode, "parse_text_stf", side_effect=RuntimeError("reopened")):
+                text = catalog.read_text_tables(game, files)
+                records = catalog.catalog_text_inventory(game, files, text)
+            self.assertEqual(text["symbols"], {"HELLO": 123})
+            self.assertEqual(text["tables"]["english"]["entries"][0]["text"], "Hello")
+            self.assertEqual(sum(call.args[0] == language for call in read.call_args_list), 1)
+            self.assertEqual(sum(call.args[0] == symbol for call in read.call_args_list), 1)
+            self.assertEqual({r["type"] for r in records}, {"text-table", "text-symbols"})
+
+    def test_text_snapshot_parsers_match_their_path_wrappers(self) -> None:
+        decoder = catalog.language_dat_decode
+        with tempfile.TemporaryDirectory() as temp:
+            language = Path(temp) / "authored.dat"
+            language.write_bytes(authored_language())
+            self.assertEqual(decoder.parse_lang_dat(language),
+                             decoder.parse_lang_dat_bytes(language.read_bytes(), path=language))
+            symbol = Path(temp) / "authored.stf"
+            symbol.write_bytes(b"#define FIRST 123\r\n#define SECOND 123\n#define OTHER 99\r")
+            self.assertEqual(decoder.parse_text_stf(symbol), decoder.parse_text_stf_bytes(symbol.read_bytes()))
+            self.assertEqual(decoder.parse_text_stf_bytes(symbol.read_bytes()), {123: "FIRST", 99: "OTHER"})
+
+    def test_symbol_input_over_the_limit_is_refused_before_parse(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            symbol = game / "data/MissionScripts/text/text.stf"
+            symbol.parent.mkdir(parents=True)
+            symbol.write_bytes(b"#" * 65)
+            files = catalog.walk_install(game)
+            with patch.object(catalog, "MAX_FILE_BYTES", 64):
+                with self.assertRaisesRegex(ValueError, "admission limit"):
+                    catalog.read_text_tables(game, files)
+
+    def test_symbol_symlink_is_not_followed(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            game = root / "game"
+            symbol = game / "data/MissionScripts/text/text.stf"
+            symbol.parent.mkdir(parents=True)
+            external = root / "authored-external"
+            external.write_bytes(b"#define OUTSIDE 42\n")
+            try:
+                symbol.symlink_to(external)
+            except OSError as error:
+                self.skipTest(f"creating a symlink is unavailable: {error}")
+            files = catalog.walk_install(game)
+            with self.assertRaisesRegex(ValueError, "not a regular file"):
+                catalog.read_text_tables(game, files)
+
+    def test_case_colliding_text_inputs_are_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            folder = game / "data/MissionScripts/text"
+            folder.mkdir(parents=True)
+            (folder / "text.stf").write_bytes(b"#define FIRST 1\n")
+            if (folder / "TEXT.STF").exists():
+                self.skipTest("filesystem does not allow case-colliding filenames")
+            (folder / "TEXT.STF").write_bytes(b"#define SECOND 2\n")
+            with self.assertRaisesRegex(ValueError, "ambiguous text symbol table"):
+                catalog.read_text_tables(game, catalog.walk_install(game))
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            folder = game / "data/language"
+            folder.mkdir(parents=True)
+            (folder / "english.dat").write_bytes(authored_language())
+            if (folder / "ENGLISH.DAT").exists():
+                self.skipTest("filesystem does not allow case-colliding filenames")
+            (folder / "ENGLISH.DAT").write_bytes(authored_language())
+            with self.assertRaisesRegex(ValueError, "ambiguous language table"):
+                catalog.read_text_tables(game, catalog.walk_install(game))
+
+    def test_admitted_read_refuses_a_path_replaced_during_the_read(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "selected"
+            path.write_bytes(b"before")
+            replacement = Path(temp) / "replacement"
+            replacement.write_bytes(b"after!")
+            actual_read = os.read
+            def swap(fd: int, n: int) -> bytes:
+                data = actual_read(fd, n)
+                os.replace(replacement, path)
+                return data
+            with patch.object(catalog.os, "read", side_effect=swap):
+                with self.assertRaisesRegex(ValueError, "changed while it was read"):
+                    catalog.read_install_file(path)
+
+    def test_admitted_read_refuses_same_size_edits_with_restored_mtime(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "selected"
+            path.write_bytes(b"before")
+            original = path.stat()
+            actual_read = os.read
+            def change(fd: int, n: int) -> bytes:
+                data = actual_read(fd, n)
+                path.write_bytes(b"after!")
+                os.utime(path, ns=(original.st_atime_ns, original.st_mtime_ns))
+                return data
+            with patch.object(catalog.os, "read", side_effect=change):
+                with self.assertRaisesRegex(ValueError, "changed while it was read"):
+                    catalog.read_install_file(path)
 
     def test_generated_output_is_refused_by_the_public_safety_check(self) -> None:
         line = json.dumps({"id": "texture:x", catalog.GENERATED_MARKER: True})

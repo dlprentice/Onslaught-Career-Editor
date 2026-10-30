@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-29 (the script gate pins each known stale record pair; descriptor-relative Python mission-source reads and platform limits; `msl_vectors.py`, the vectors for the Companion's C# compiler; the gate table's NAMES and PATHS rows; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-30 (`game_tables_decode.py`: the battle engine configurations and `sounds.sfx` catalogued with what they name; the `VSDS`, `PMIB` and `DMKR` payloads decoded and checked by the catalogue's retail gate; `named_things.py`, the registry of named things, the catalogue's thing-name joins on it and the catalogue's retail gate `content_catalog_gate.py`; the script gate pins each known stale record pair; descriptor-relative Python mission-source reads and platform limits; `msl_vectors.py`, the vectors for the Companion's C# compiler; the gate table's NAMES and PATHS rows; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -159,13 +159,40 @@ publish, sign, or install anything by themselves.
   `MESH` chunk rather than listing every wrapper; its offset comes from walking those wrappers, not searching bytes.
   `world_resources_decode.py` decodes the level payloads in their loaders' read order and refuses unread bytes: the
   `WRES` world bodies (`CWorld::LoadWorld`: header, compiled scripts, things, trees, influence map, waypoint paths,
-  timings, occupancy), `ERES` (mixer mips, heightfield settings and samples, mixer map), `SURF` and `SSHD`; `LNDS`
-  is skipped by the PC loader. Relationships (archive to mesh, texture record to its DDS file, mesh slot to texture
+  timings, occupancy), `ERES` (mixer mips, heightfield settings and samples, mixer map), `SURF`, `SSHD`, `VSDS` (the
+  vertex shaders `CVertexShader::Load` reads: each one's declaration, constants, compiled code and assembly text as sizes
+  and hashes, read only where the stored object's pointer to it is set; `CVertexShader::Create` finds a declaration
+  shader by its type and declaration bytes, never by name), `PMIB` (the landscape patches' index strips per level and
+  edge mask, each checked against its patch's vertices) and `DMKR` (the damage texture's mip levels; the base archive's,
+  read at start-up, means `data\textures\mixers\damage0.tga` is never read); `LNDS` is skipped by the PC loader.
+  Relationships (archive to mesh, texture record to its DDS file, mesh slot to texture
   record, imposter to mesh, placement to definition and mesh, thing to its compiled script and `.msl` source, path to
-  its waypoints, script to the units, paths, scripts, text ids and thing names its literal call arguments name, level
-  to the sky-cube, water and detail textures its map numbers build with `sprintf`, effect to texture, goodie to
-  texture/mesh/film, voice file to its text line, code lookups with `--decomp`) are emitted only from a loader rule in
-  the public decompilation or from the data, and each names that evidence; unresolved links stay explicit. The
+  its waypoints, script to the units, paths, scripts, text ids, thing names and bank samples its literal call arguments
+  name, level to the sky-cube, water and detail textures its map numbers build with `sprintf` and to the battle engine
+  configurations it offers, configuration to its weapons, explosion, cockpit mesh and description text, sound effect to
+  its bank samples and its chain, effect to texture, goodie to texture/mesh/film, voice file to its text line, code
+  lookups of textures, meshes and sound effects with `--decomp`) are emitted only from a loader rule in
+  the public decompilation or from the data, and each names that evidence; unresolved links stay explicit. Sample joins
+  consider only direct `data/sounds/sounds_<language>_pc.xap` banks for the five names `CText::GetLanguageName` returns;
+  other banks are catalogued without
+  asserting they load. Duplicate sample names within a bank make the join incomplete and list candidates: the last
+  successful initial creation would be found first, but the catalogue does not observe loading or reload outcomes.
+  A script's
+  literal thing name (`GetThingRef`, `Teleport`, `PlayCutscene`), and a cutscene's link-to name (`CCutscene::Start`), is
+  joined using a source-modelled prediction of `CWorld::FindThingByName` just after a successful load (`named_things.py`, below): the record predicted to be found in every
+  career (`resolved`, with the records of that name it hides), the base-world records of the name in the order the
+  career's keeping decides (`career-dependent`), a name a script's literal `SetName` call could give its own thing
+  (`runtime-name`), or nothing (`unresolved`). Each named placement and marker says whether and how it joins the list
+  and whether its own name finds it, and each level record lists the modelled registry in joining order. These are
+  predictions, not observations of runtime names or later changes. Missing, misordered or undecodable world parts mark
+  the registry and its lookups incomplete; a partial list never claims a target. A registry requiring over 10,000 entries is
+  refused explicitly before the catalogue is written; the limit is the tool's, not the game's. The
+  loose-mesh reader uses the bounded archive decoder: at most 64 MiB compressed, 128 MiB expanded and 4,096 members.
+  These are tool limits, not claims about the game format. A refused mesh or ambiguous duplicate world container stops
+  the catalogue before publication. The optional `--decomp` source must contain `src/` and stay disjoint from the output;
+  a reported Git HEAD belongs to the selected repository root, while its working tree remains unverified. Language and
+  symbol tables are selected from the file inventory and parsed from a bounded, identity-checked read; final symlinks
+  and detected file changes are refused. The
   single-record `mission_script_inspect.py` is the independent check of the compiled-script reader. Output is accepted
   only below the ignored `local-data/`, and every generated file carries a marker that
   `public_allowlist_safety_check.py` refuses, as it refuses any tracked `local-data/` path. The catalogue is published with
@@ -252,6 +279,53 @@ publish, sign, or install anything by themselves.
   preparation remain separate, and must use the same reviewed identities. No no-overwrite or atomic-write guarantee applies to a
   redirected stream. This CLI has only authored-fixture tests, requires the
   same descriptor-safe input support as the preview, and has no validated Windows workflow.
+- `named_things.py` predicts the registry of named things a level loads (`WORLD.mNamedThings`) from its decoded world
+  bodies by source-derived loader rules, assuming initialization succeeds; it is not a runtime measurement. The rules
+  are cited by function in the module: a thing joins when `CWorld::LoadWorld`
+  initialises its slot (the base world's slots before the real world's, and a base-world one only if the career keeps
+  it) and its class's `Init` reaches `CComplexThing::Init` with a name. Trees and waypoints never do (their classes
+  derive from `CThing`); a unit whose behaviour has a squad, and a squad, hand the name to their member units or keep
+  it as `CSquad::Init` decides. Each thing joins at the front, and `CWorld::FindThingByName` returns the first exact
+  (`strcmp`) match from there: the thing named most recently. `find` predicts a name's answer right after loading
+  (`resolved`, `career-dependent` when only base-world things have it, or `unresolved`) with every candidate in lookup
+  order; `find_by_walk` computes the same answer using a second source model, as a cross-check, not an independent game
+  run. Names given at run time
+  (`SetName`), things spawned in play and things that leave the list are listed, not followed, and which base-world
+  things a career keeps is the career's (each base-world entry carries its career bit and dies-on world).
+  `named_things_tests.py` checks each rule on authored world bodies, and the gate below on authored game folders
+  (`content_catalog_tests.py` checks the payload decoders and the gate's payload checks); no game bytes.
+- `game_tables_decode.py` reads `data/battle engine configurations.dat` in `CBattleEngineData::Load`'s order for each
+  record version (`UPhysicsManager::Reload` -> `UBattleEngineDataManager::Load`; each record joins the front of the
+  list, so a name finds the last record of that name and a world header's unknown name gets the last record). It
+  preserves stored scalar fields and reports separately the effective values after initialization and the loader's
+  version-specific defaults or overwrites. A catalogue configuration's `values` and `stores` are effective; when
+  defaults occur, `storedValues` and `storedStores` preserve the stored values (null means absent or non-finite for
+  stored scalars, absent for stores). Existing catalogue v1 outputs for versions before 8 can contain incorrect
+  effective values and should be regenerated. It also reads
+  `data/sounds/sounds.sfx` as `CEffect::LoadSFXFile` reads its lines (`CDXMemBuffer::ReadString` and `CEffect::ReadLine`:
+  `#` lines skipped, a CR in the penultimate byte replaced even without a LF, each line's last character stripped; a later effect of an earlier one's
+  name, by `stricmp`, joins that effect's chain, of which `PlayEffect` plays one at random). It refuses what the loaders
+  would misread (a name past the 256-byte buffer or the 64-byte effect fields, an SFX version above 103, bytes left over
+  in the configurations). The catalogue adds a record per configuration and per effect: a configuration's weapons
+  and explosion join the physics definitions of that kind (`strcmp`, the first definition of a name), its cockpit the
+  loose mesh, its description number the text `CFEPBEConfig::GetConfigDescription` shows; a level's configuration
+  names join from `worldheaders.dat` (the configuration page, by name) and from its world header (in game, by the slot
+  chosen, with the fallback); an effect's sample and low-pass sample join the samples of the same name in each
+  language's XAP bank, as a script's `PlaySample` argument does (it names a bank sample, not an effect).
+  `game_tables_decode_tests.py` checks both readers on authored files.
+- `content_catalog_gate.py --game GAME [--table] [--level N]` is the content catalogue's retail gate. Over every level
+  archive of an installed game it checks that exactly one WRES/WRLD is present and that WDAT and its required world bodies are complete, in loader order, and
+  name the selected level; case-colliding resource folders or level archives are refused. It checks that the world
+  bodies decode with the loader's slots, that every registry
+  entry is a slotted record of a class that names itself, under its own name, with the base world's first and every
+  base-world slot inside the career's bits, that no unit takes a slot with nothing made for it, and that `find` and
+  `find_by_walk` agree on every literal thing name of every script, and every cutscene's link-to name, with every, no
+  and every other base-world thing kept. Over every resource archive it decodes every payload a PC loader decodes
+  (`ERES`, `SURF`, `SSHD`, `VSDS`, `PMIB`, `DMKR`) and checks that each consumes exactly its chunk and that every patch
+  strip stays inside its patch. It decodes the configurations and `sounds.sfx` and counts what they name that the
+  install lacks, and the levels whose world header lists other configurations than `worldheaders.dat`. It reads the
+  game folder, writes nothing and prints counts; it checks the archives present, so the counts alone do not prove an
+  installation is complete. `--table` adds a row per level (derived from a game: keep it private).
 - `heightfield_lookup.py ARCHIVE.aya X Y` prints the height under a position of a level archive's terrain, as the game's
   terrain lookup computes it: the archive's `ERES` chunk holds 64 x 64 tiles of 9 x 9 signed 16-bit samples (one per world
   unit; a tile's ninth row and column repeat its neighbour's first) and a height scale, and heights are world units with Z
@@ -434,7 +508,9 @@ writes at all, to ignored local paths. Their findings are documented under
 
 - Formats and corpora: `aya_corpus_chunk_inventory.py` (corpus-wide AYA chunk inventory),
   `aya_extractor_source_audit.py` (source/history audit of the pinned AYAResourceExtractor fork),
-  `battle_engine_config_decode.py` (reads and re-encodes `battle engine configurations.dat` in memory),
+  `battle_engine_config_decode.py` (reads and re-encodes `battle engine configurations.dat` in memory; by
+  `CBattleEngineData::Load` its UNKNOWN spans are the explosion, the walker and jet weapon lists, the aug and primary
+  weapons, the cockpit and the description number, which `game_tables_decode.py` reads by name),
   `worldheaders_decode.py` (decodes `data/worldheaders.dat` byte-exactly; its
   `--metadata-json` option projects bounded level modes and optional
   configuration-name membership, not proof of playable multiplayer),

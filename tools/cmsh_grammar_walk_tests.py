@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """Checks the CMSH grammar walker on small synthetic streams (no game bytes)."""
 import collections
+import os
 import struct
 import unittest
 import zlib
+from unittest.mock import patch
 
 import cmsh_grammar_walk as walker
 
@@ -116,8 +118,12 @@ class WalkTests(unittest.TestCase):
         self.assertEqual(totals["position mismatches"], 1)
 
     def test_the_game_folder_must_be_named(self):
-        with self.assertRaises(SystemExit):
-            walker.main([])
+        # Other suites legitimately select a reference install via BEA_GAME. This case specifically tests the
+        # no-selection path, regardless of the parent process's choice.
+        with patch.dict(os.environ):
+            os.environ.pop("BEA_GAME", None)
+            with self.assertRaises(SystemExit):
+                walker.main([])
 
 
 if __name__ == "__main__":

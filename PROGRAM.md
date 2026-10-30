@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-30 (the Level editor edits a script's source; earlier: cross-project progress chart, current priorities and completion criteria)
+Last updated: 2026-10-30 (content catalogue: the battle engine configurations and `sounds.sfx`; the `VSDS`, `PMIB` and `DMKR` payloads; source-modelled named-thing lookups; the Level editor edits a script's source; cross-project progress chart, current priorities and completion criteria; earlier: the maintainer's storage name removed; earlier: the game documentation is written in onslaught-preservation, not in the frozen `reverse-engineering/`; earlier: the companion's update guidance and the published decompilation's score stated as they are; earlier: content catalogue phase 3: world bodies, compiled scripts, terrain payloads, sprintf texture names; content catalogue survey, schema, generator, levels, placements and usage, Linux CE workflow and native Windows backend/load checks completed)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
@@ -126,11 +126,15 @@ compatibility and the rebuild. `tools/content_catalog.py` (schema `tools/content
 selected install and catalogues the families existing parsers read; every relationship names the loader function or
 data that establishes it, and meshes and textures carry a usage summary for HD prioritisation. Its output is
 retail-derived and stays in ignored `local-data/`. The `WRES` world bodies (every thing, waypoint path and compiled
-mission script, with what the scripts' literal arguments name), the `ERES`, `SURF` and `SSHD` payloads and the
-`sprintf`-built sky, water, detail and HUD texture names are decoded in their loaders' order. Next: the `VSDS`, `PMIB`
-and `DMKR` payloads, the battle engine configurations and `sounds.sfx` tables, and the registry of named things
-(`WORLD.mNamedThings`) that would turn script thing-name matches into loader joins. A catalogue is a foundation, not
-the mod system or an HD conversion.
+mission script, with what the scripts' literal arguments name), the `ERES`, `SURF`, `SSHD`, `VSDS`, `PMIB` and `DMKR`
+payloads, the
+`sprintf`-built sky, water, detail and HUD texture names and the registry of named things (`WORLD.mNamedThings`:
+which things are predicted to join on load and in which order, so a script's thing name has a source-modelled lookup;
+`tools/named_things.py`, with the retail gate `tools/content_catalog_gate.py`), the battle engine configurations (with
+the weapons, explosion, cockpit and description each names, and the levels that offer each) and the `sounds.sfx`
+effects (with their chains and the bank samples they play; `tools/game_tables_decode.py`) are decoded in their
+loaders' order. Next: the physics definitions' other fields (the sound effects, particles and HUD icons they name). A
+catalogue is a foundation, not the mod system or an HD conversion.
 
 ### Decompilation and native port
 

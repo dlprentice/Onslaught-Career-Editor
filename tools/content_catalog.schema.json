@@ -29,8 +29,8 @@
     },
     "id": {
       "type": "string",
-      "pattern": "^(archive|texture|texture-descriptor|mesh|animation|audio|video|level|level-payload|definition|placement|marker|waypoint-path|script-code|goodie|effect|script|mission-text|text-symbols|text-table|sound-table):.+",
-      "description": "Stable id. Files: <type>:<lower-cased install-relative path>; archive members: the container plus #chunk or #ordinal; texture records: name plus a payload-hash prefix; animations: <mesh id>/<ordinal>. Levels: level:NNN; placements: placement:<level>:<world>@<record offset>; definitions: definition:<lower-cased name>; goodies: goodie:NNN; effects: effect:<file>#<ordinal>. Markers: marker:<level>:<world>@<record offset>; waypoint paths: waypoint-path:<level>:<world>#<ordinal>; compiled scripts: script-code:<level>:<world>#<ordinal>."
+      "pattern": "^(archive|texture|texture-descriptor|mesh|animation|audio|video|level|level-payload|definition|placement|marker|waypoint-path|script-code|goodie|effect|script|mission-text|text-symbols|text-table|sound-table|configuration|sound-effect):.+",
+      "description": "Stable id. Files: <type>:<lower-cased install-relative path>; archive members: the container plus #chunk or #ordinal; texture records: name plus a payload-hash prefix; animations: <mesh id>/<ordinal>. Levels: level:NNN; placements: placement:<level>:<world>@<record offset>; definitions: definition:<lower-cased name>; goodies: goodie:NNN; effects: effect:<file>#<ordinal>. Markers: marker:<level>:<world>@<record offset>; waypoint paths: waypoint-path:<level>:<world>#<ordinal>; compiled scripts: script-code:<level>:<world>#<ordinal>; battle engine configurations: configuration:<file>#<record>; sound effects: sound-effect:<file>#<effect>."
     },
     "type": {
       "enum": [
@@ -54,7 +54,9 @@
         "mission-text",
         "text-symbols",
         "text-table",
-        "sound-table"
+        "sound-table",
+        "configuration",
+        "sound-effect"
       ]
     },
     "name": {
@@ -614,6 +616,40 @@
         "terrain": {
           "type": "object",
           "description": "Decoded ERES (heightfield settings and sample summary, mixer mips, mixer map), SURF and SSHD summaries, and the mixer texture file names the map's set implies."
+        },
+        "configurationListsAgree": {
+          "type": "boolean",
+          "description": "Whether worldheaders.dat's configuration names for the level (the configuration page's list) equal its world body's header names (which the chosen slot indexes in game)."
+        },
+        "namedThings": {
+          "type": "object",
+          "description": "Source-modelled WORLD.mNamedThings just after a successful level load (tools/named_things.py): entries in joining order (the base world's slots, then the real world's; CWorld::FindThingByName walks them from the last). A conditional entry is a base-world one, on the list only if the career keeps its slot (keep.careerBit) and its dies-on world (keep.diesOn, -1 for none) is not before the level. runtimeNames lists literal SetName calls in the level's scripts, not proof they execute. No runtime names or later changes were observed by this model.",
+          "required": ["entries", "baseEntries", "realEntries", "names", "runtimeNames", "complete", "loader"],
+          "properties": {
+            "entries": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["order", "name", "thing", "world", "slot", "object", "member", "conditional"],
+                "properties": {
+                  "order": {"type": "integer", "minimum": 0},
+                  "thing": {"type": "string", "description": "The placement or marker record whose init carries the name."},
+                  "world": {"enum": ["BSWD", "RLWD"]},
+                  "object": {"enum": ["thing", "squad", "squad-member", "squad-members"], "description": "What joins: the record's own thing, its squad, or the member unit(s) CSquad::Init spawns (member says which, from 0)."},
+                  "conditional": {"type": "boolean"}
+                }
+              }
+            },
+            "runtimeNames": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "script", "pc"],
+                "properties": {"name": {"type": ["string", "null"], "description": "null when the argument is not a literal."}}
+              }
+            },
+            "complete": {"type": "boolean", "description": "false when the world layout is missing or inconsistent, or a world body did not decode; undecodedWorlds names the affected parts."}
+          }
         }
       }
     },
@@ -636,7 +672,12 @@
         "thingType",
         "slot"
       ],
-      "description": "A WRES thing that names a physics definition (unit, building, squad, feature), decoded in CWorld::LoadWorld's order. slot: its index in LoadWorld's things[] (null when the physics lookup fails and the record takes none)."
+      "description": "A WRES thing that names a physics definition (unit, building, squad, feature), decoded in CWorld::LoadWorld's order. slot: its index in LoadWorld's things[] (null when the physics lookup fails and the record takes none).",
+      "properties": {
+        "namedThing": {
+          "$ref": "#/$defs/namedThing"
+        }
+      }
     },
     "goodie": {
       "type": "object",
@@ -670,6 +711,7 @@
             "status": {
               "enum": [
                 "decoded",
+                "incomplete",
                 "undecoded",
                 "skipped-by-pc-loader"
               ]
@@ -714,8 +756,21 @@
           },
           "minItems": 3,
           "maxItems": 3
+        },
+        "namedThing": {
+          "$ref": "#/$defs/namedThing"
         }
       }
+    },
+    "configuration": {
+      "type": "object",
+      "description": "A battle engine configuration modeled from Initialise and CBattleEngineData::Load (tools/game_tables_decode.py): values and stores are the effective float32 values (null when not finite). defaulted names fields supplied or overwritten by the loader. Where defaults occur, storedValues and storedStores preserve the input: a null stored float can mean absent or non-finite, and null storedStores means no store array was present. When these stored fields are omitted, the effective and stored values agree. Earlier v1 outputs may report incorrect values for versions before 8. listPosition is its place in UBattleEngineDataManager's list (each record joins the front); foundByName says whether its name finds it (a later record of the same name hides it); fallback marks the front of the list, the configuration a world header's unknown name gets.",
+      "required": ["index", "listPosition", "version", "values", "walkerWeapons", "jetWeapons", "explosion", "cockpit", "languageName", "foundByName", "fallback"]
+    },
+    "soundEffect": {
+      "type": "object",
+      "description": "A sound effect as CEffect::LoadSFXFile reads data/sounds/sounds.sfx (tools/game_tables_decode.py): its line, sample and low-pass sample names, volume, falloff, pitch variance and flags. chainHead is the effect the list keeps for its name (stricmp); variant is its place in that chain (0 for the head) and variants the chain's length: PlayEffect plays one of them at random.",
+      "required": ["index", "line", "sample", "lowpassSample", "volume", "falloff", "pitchVariance", "looping", "languageDependent", "chainHead", "variant", "variants"]
     },
     "waypointPath": {
       "type": "object",
@@ -747,6 +802,28 @@
     }
   },
   "$defs": {
+    "namedThing": {
+      "type": "object",
+      "description": "A source-modelled prediction of a named placement or marker and WORLD.mNamedThings (tools/named_things.py), assuming successful initialization: how many objects join under its name (joins, 0 when none), which (object), their entries (orders, indexes into the level's namedThings.entries), whether its own name finds it immediately after loading (foundByName) and, for a base-world record, the career's condition (keep). It is not an observation of runtime names or changes.",
+      "required": ["joins", "object", "orders", "foundByName", "rule", "loader"],
+      "properties": {
+        "joins": {"type": "integer", "minimum": 0},
+        "object": {"enum": ["thing", "squad", "squad-member", "squad-members", null]},
+        "orders": {"type": "array", "items": {"type": "integer", "minimum": 0}},
+        "foundByName": {"enum": ["found", "found-if-kept", "found-if-later-not-kept", "shadowed", "not-joined", "unknown"]},
+        "registryIncomplete": {"type": "array", "items": {"type": "string"}, "description": "World parts missing, inconsistent or undecoded; the partial registry cannot establish the name lookup."},
+        "reason": {"enum": ["no-slot", "not-a-complex-thing", "no-object"], "description": "Why nothing joins: the record took no slot, it is a tree or waypoint (CThing), or its unit is UB_JEEP (SpawnThing makes nothing)."},
+        "keep": {
+          "type": "object",
+          "required": ["careerBit", "careerBitInRange", "diesOn"],
+          "properties": {
+            "careerBit": {"type": "integer", "minimum": 0},
+            "careerBitInRange": {"type": "boolean", "description": "The career holds 288 base-thing bits (BASE_THINGS_EXISTS_SIZE)."},
+            "diesOn": {"type": "integer", "description": "The dies_on[] value at the slot when the start loop reads it: the record's own dies-on world, or what the last record that failed to take the slot wrote (-1 for none)."}
+          }
+        }
+      }
+    },
     "uint32": {"type": "integer", "minimum": 0, "maximum": 4294967295},
     "nullableFloat3": {
       "type": "array",
@@ -824,7 +901,12 @@
             "follows-path",
             "names-thing",
             "path-member",
-            "texture-by-rule"
+            "texture-by-rule",
+            "uses-weapon",
+            "uses-explosion",
+            "plays-sample",
+            "variant-of",
+            "offers-configuration"
           ]
         },
         "target": {
@@ -854,9 +936,12 @@
             "code-site",
             "code-rule",
             "unknown-name",
-            "empty-name"
+            "empty-name",
+            "career-dependent",
+            "runtime-name",
+            "incomplete"
           ],
-          "description": "unknown-name: the mesh slot's stored name field is unreadable (unterminated or not UTF-8), so nothing was looked up or joined; empty-name: the slot's stored name is known to be empty and nothing was joined; both differ from unresolved, where a readable name matched nothing: it was looked up and found nothing or, for a name shorter than 9 bytes that has no suffix from byte 8 to classify, nothing was looked up or joined (the evidence says which). name-match: a stored string equals a file name but no loader joins them; name-match-unloaded: a data observation about content no retail loader reads; code-site: a literal lookup in game code (the evidence names the site); code-rule: a name game code builds with sprintf from a format rule and data (the evidence names the function and the rule). name-match also covers a script argument that equals a thing's name."
+          "description": "unknown-name: the mesh slot's stored name field is unreadable (unterminated or not UTF-8), so nothing was looked up or joined; empty-name: the slot's stored name is known to be empty and nothing was joined; both differ from unresolved, where a readable name matched nothing: it was looked up and found nothing or, for a name shorter than 9 bytes that has no suffix from byte 8 to classify, nothing was looked up or joined (the evidence says which). name-match: a stored string equals a file name but no loader joins them; name-match-unloaded: a data observation about content no retail loader reads; code-site: a literal lookup in game code (the evidence names the site); code-rule: a name game code builds with sprintf from a format rule and data (the evidence names the function and the rule). name-match also covers a script argument that equals a thing's name. For names-thing (a source-modelled lookup of a script's literal name just after a successful load): resolved predicts the target in every career (shadowed lists records of the same name it hides); career-dependent predicts that every matching record is in the base world, so the first one the career keeps is found (candidates lists them in that order, target is the first); runtime-name predicts no match immediately after load but a script contains a literal SetName call that could assign it if executed (setBy names the scripts); unresolved predicts no match; incomplete means a missing, inconsistent or undecoded world part prevents a reliable prediction. These are not runtime observations."
         },
         "targetNameStatus": {
           "enum": [
@@ -866,6 +951,34 @@
             "invalid-utf8"
           ],
           "description": "For uses-texture: the stored-name status of the mesh slot, as in mesh.textures[].nameStatus."
+        },
+        "candidates": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "For names-thing (career-dependent): the records of the name in the order FindThingByName meets them. For incomplete names-thing, candidates are only the matches visible in the partial model. For incomplete plays-sample, candidates contain matching records from standard language banks where a bank has duplicate names; actual load success and selection are unobserved. Neither incomplete case establishes the actual target."
+        },
+        "shadowed": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "For names-thing (resolved): records of the same name that joined earlier, found only after the target leaves the list."
+        },
+        "via": {
+          "enum": ["cutscene-link"],
+          "description": "For names-thing on a cutscene marker: the name is its link-to name, which CCutscene::Start looks up when the cutscene starts (a script's names-thing has natives instead)."
+        },
+        "fallback": {
+          "type": ["string", "null"],
+          "description": "For offers-configuration from a world header: the configuration GetConfiguration(0) gives when the name matches nothing."
+        },
+        "registryIncomplete": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "For names-thing: world parts missing, inconsistent or undecoded, so the partial list cannot establish the answer."
+        },
+        "setBy": {
+          "type": "array",
+          "items": {"type": "object", "required": ["script", "pc"], "properties": {"script": {"type": "string"}, "pc": {"type": "integer"}}},
+          "description": "For names-thing (runtime-name): the script-code records whose SetName call gives the name, and the call's instruction index."
         },
         "evidence": {
           "type": "array",
