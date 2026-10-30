@@ -336,7 +336,7 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   at the crosshair and the second well to its left, so the map is not mirrored. That is one level and one heading, a mod this
   page saved, not played by anyone; there has been no Windows run.
 
-  The **Scripts** switch beside the Map switch shows the level's mission scripts, read only, in place of the table and the map. The
+  The **Scripts** switch beside the Map switch shows the level's mission scripts in place of the table and the map (their source is read only until Edit source is turned on, below). The
   list gives each compiled script with what names it (how many objects of the level) and the events it handles, then the base
   world's scripts, dimmed; the selected script's installed source, the `.msl` file it was compiled from, is shown beside it with line numbers
   and the keywords coloured, and a card in the right-hand column says what the script handles, which game functions it calls, and
