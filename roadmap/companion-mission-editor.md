@@ -1,8 +1,8 @@
 # Companion Mission Editor: Design Addendum
 
-Status: design; the reference compiler and read-only scripts view with name links and map paths are built. The C# and Python compiler backends and the script-aware editor model are integrated; native Windows validation remains open; editing scripts remains planned. It extends the
+Status: design; the reference compiler and read-only scripts view with name links and map paths are built. The C# and Python compiler backends and the script-aware editor model are integrated, and the Level editor's Scripts view edits a script's source, compiles it and makes the open level use it (section 15); the acceptance in section 6, source-preserving staging and native Windows validation remain open. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-10-29 (held and bounded viewer reads and platform limits; script-gate stale record pairs pinned by identity; descriptor-relative Python source reads; The C# compiler is integrated on main; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
+Last updated: 2026-10-30 (the Level editor's Scripts view edits a script's source, section 15; earlier: held and bounded viewer reads and platform limits; script-gate stale record pairs pinned by identity; descriptor-relative Python source reads; The C# compiler is integrated on main; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours checked against the shipped scripts with the documented
 missing-header and stale-source cases, and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -104,7 +104,7 @@ recompiled, so a mod differs from the game only where the player edited.
 | MS0 scripts beside the map (read-only; built, section 12) and MS0.1 names and paths (built, section 13) | the Level editor page lists the open level's compiled scripts (name, the events handled, the things that run it, the natives it calls) next to the map, shows the selected script's installed `.msl` source with line numbers, and links names in it (thing names, waypoint paths, scripts and event handlers; text ids are not linked yet) to the table and the map; selecting a thing shows its script and the other way round; waypoint paths are drawn on the map | on every installed level the list equals the world body's scripts, every one finds its source (670 of 670), the capture at three sizes looked at, nothing written | 4 to 5 days |
 | MS1 reference compiler and the byte-exact gate | `tools/msl_compile.py` (preprocess, lex, parse, generate, write the record as the world file stores it) and `tools/msl_gate.py --game GAME`, section 5 | every shipped script compiles to its shipped record, or each difference is explained (built; section 11) | built 2026-10-29 (the spike ran on every script) |
 | MS2 the C# compiler (backend, section 14) | `Missions/` with the same stages, authored vectors from the Python reference in Git, and a local retail gate (`Development/ScriptsGate.cs`) that must match the Python gate on all scripts | the vectors and the retail gate pass; the C# refuses what the Python refuses and the supported platforms are checked. The C# and Python backends are integrated; source-preserving staging remains future work. | Native Windows and source-stage validation remain open |
-| MS3 first editable thing | the page edits the selected script's source (a text area with line numbers), compiles it (errors by line and column, a summary of what changed), replaces the script in the session as one undoable command, and saves through Save as mod | the acceptance in section 6. The script-aware model is integrated; player-facing source editing and source staging are not yet available. | 1 week |
+| MS3 first editable thing | the page edits the selected script's source (a text area with line numbers), compiles it (errors by line and column, a summary of what changed), replaces the script in the session as one undoable command, and saves through Save as mod | the acceptance in section 6. The script-aware model is integrated and the page edits, compiles and uses a script (section 15); the acceptance has not been run and source staging is not built. | 1 week |
 | MS4 structured helpers | forms for common edits (a count, a delay, a message id), the event graph (who posts, who handles), checks against the level (names exist), path membership and order on the map, spawner and trigger parameters (these are world-body data and need no compiler) | each helper has a test and a message a player can act on | 2 weeks |
 | MS5 texts (optional) | the text of a message is in the game's language files, a different mod file; a writer for them | a changed line shows in game | not estimated |
 
@@ -175,6 +175,15 @@ The spawn count and the timer values are the next edits in the same mould.
   those, section 11), what it did with a construct no shipped script uses, and the 46 sources of levels whose compiled scripts the install does not
   hold (nothing to compare them with). Settled by the gate: the trailing words, the line order, and which installed sources are not the revision the
   game shipped (a pinned list, each with how it differs).
+- A script can crash a level by damaging a unit that runs a script of its own from inside a handler that is running (diagnosed by the level 888 work with a
+  test-only level script, and followed in the decompilation by function): `IScript::Damage` calls the thing's damage routine, which can start the thing's death
+  at once; that starts its death handler, `CVM::CallEvent` sets the machine's code and place before `CVM::Run` refuses to run a second time, and the running script's
+  next instruction is then read from the wrong place. `IScript::Arrived` and `IScript::Hit` return while the machine is running; the entry points for a dying or dead unit
+  do not. It is a shape that can fail, not a certainty: one shipped script damages a unit with a death handler of its own from inside a handler and runs through in the
+  retail game, and the port's planned guard leaves that path as it is. `Die` is not part of it (it posts an event for the next frame), and `SetHealth`,
+  `SetSegmentHealth` and `SetAllSegmentsHealth` only store values; `HalfDestroy` damages at random and was not followed further. Until a CE release guards the entry, the page
+  warns about a replaced script that calls `Damage` more often than the shipped one (`ScriptHazards`: by native, not by target, so it cannot tell a unit that has a script from one that has none), and
+  the checker (section 7) is where a stricter rule belongs.
 - Nothing here has been played yet. The retail data (sources, objects, frames) stays local and out of Git.
 
 ## 9. Risks and the cheapest check for each
@@ -187,6 +196,7 @@ The spawn count and the timer values are the next edits in the same mould.
 | A compiled script is accepted by our checker and crashes the VM | run the edited level in CE offscreen for the length of the script's events and read the log; keep edits small until the checker has been through a few of these |
 | Symbols shared between scripts (a clone) corrupt on a duplicate name | unique names are an error in the checker and a vector in the tests |
 | The mod loader changes what it serves | the acceptance in section 6 is re-run per CE version |
+| A script damages a scripted unit from inside a running handler and crashes the level | the page warns when an edit adds a call to `Damage` (`ScriptHazards`); the port is to defer the nested event |
 
 ## 10. Decisions (2026-10-29, the lead)
 
@@ -364,7 +374,7 @@ steps, 100 levels of nesting) are the reference's and are a parameter, so that t
 - **Made equal in the Python on the way.** The reference's lexer and directive patterns used Unicode classes (`\d`, `\s`) and `str.split()`;
   they are ASCII blanks and digits now (a source typed in the editor may hold characters a Latin-1 game file cannot), and the compiler takes its 13
   event names from the decoder's table instead of a second copy. The gate's result is unchanged.
-- **Limits.** No player-facing Companion page calls it yet: a page that edits a script and saves a mod is MS3. A source holds names, numbers, strings,
+- **Limits.** The Level editor's Scripts view calls it to compile a source the player edits (section 15). A source holds names, numbers, strings,
   `TRUE` and `FALSE`: there is no literal for a position or a thing, and a constant of those types exists only when a caller gives one for a name a
   missing header would have defined. A string is single-byte text (Latin-1). Messages are English and quote the reference's wording. The compile
   is not incremental, which does not matter at a script's size. The seven stale sources differ from what the game ships, so the gate cannot say
@@ -382,3 +392,39 @@ steps, 100 levels of nesting) are the reference's and are a parameter, so that t
   to be a link. Regular hard links remain accepted, remote-filesystem behavior is unverified and the checks do not create an immutable
   snapshot. The C# Windows reader is separate; native Windows behavior remains unverified. These are tool limits, not claims about the
   original compiler.
+
+## 15. MS3b: the page that edits a script's source (2026-10-30)
+
+On the Level editor's Scripts view the script card has **Edit source**, **Compile and use** and **Put the shipped script back**, with a note under
+them. Edit source makes the source view typeable for one of the level's own scripts that has an installed source file (a base world's script is
+shown and not edited, and a script whose file is missing says so on the button). Compile and use compiles the text with the compiler of section 14,
+taking headers from the game folder and starting the compile session's two counters where the shipped script's start, and, if it compiles, replaces
+the script in the open level as one edit that Undo takes back and Redo brings back. Put the shipped script back is an edit too; when the level already
+uses the shipped script it drops the text that was typed instead. Nothing is written until the player chooses Save as mod, which writes a new mod
+folder as before.
+
+- **What the page does with the text.** A source that does not compile changes nothing: the note says "line N: ..." with the compiler's message and the
+  caret goes to that line. A source that compiles shows the compiler's notes (how a mixed chain of operators was grouped, a handler the game never calls,
+  a variable declared twice) beside the result, and "Your changes" says "1 script replaced: NAME (what differs)" beside any objects moved. The text typed
+  stays with its script while another is chosen. A text is **in use** when the level's stored script is exactly what that text compiled to (the page
+  keeps what each compiled text made and compares the stored bytes), so Undo and Redo move that state with the script: after two texts are compiled in
+  turn and the second is taken back, the second is not in use. Text that is typed and not in use counts as unsaved work for the prompts that guard closing
+  the companion, choosing another level and switching games, and is written nowhere; the Your changes card names the scripts it was typed for, Put the
+  shipped script back drops it, and the line above the source says whether the text on view is the file's, in use or not in use. The note under the buttons
+  is about the last compile or reset and goes when it stops being true: when Undo, Redo or another edit changes the level's scripts, when another script
+  or level is chosen and, for a refusal, when the text changes. Compiling the unmodified source of one of the stale sources
+  (section 11) replaces the script with a different record, because those sources are not the revision the game shipped; the summary says what differs.
+- **What is checked before a save.** The structural checker (section 7, `ScriptChecker`) applies the loader's and the script machine's assumptions to every
+  replaced script, and a script that fails it is not saved: "Your changes" says why and Save as mod stays disabled.
+- **The warning.** Under the note the page shows what to take care of in the script the level uses for the selected script: a call to `Damage` beyond
+  what the shipped script has (section 8). It is read from the level as it is now, so Undo takes it away, Redo brings it back and a refused compile leaves
+  it. It goes by native, not by target, so it cannot tell a unit that has a script of its own from one that has none, and a shipped script does something
+  similar in the retail game and runs through; it is a warning, not a refusal.
+- **Checked.** The compile, replace, reset and warning logic has a Godot-free suite and a mutation sweep over the warning rules. The route drives the page:
+  typing, compile, refusal with its line, the warning, Undo and Redo, putting the shipped script back, drafts and the prompts, a script with no source and a
+  base world's script. Two capture modes drive it in a real offscreen window on the retail layout: `edit` (the steps above at 1920 by 1080, 1280 by 800 and
+  1024 by 700, with the frames looked at) and `flow` (the Scripts view across level changes, which must log no engine error).
+- **Limits.** Nobody has used the page by hand. No edited level has been played in CE, so the acceptance in section 6 has not been run, and there has been
+  no native Windows run. The mod holds the edited world file only: the edited source is not kept beside it (source-preserving staging is not built, section 3).
+  A source whose header the install lacks cannot be compiled on the page (the message names the header). Text ids are not linked, and the compiler's
+  limits (section 14) apply to what is typed. Drafts are not saved anywhere.
