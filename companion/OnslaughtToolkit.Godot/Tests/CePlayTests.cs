@@ -201,6 +201,27 @@ internal static partial class CePlayTests
                    File.GetAttributes(Path.Combine(racy.Root, "inner")).HasFlag(FileAttributes.ReparsePoint) && !File.Exists(Path.Combine(racy.Root, "a.txt")) && File.Exists(Path.Combine(racy.Root, CePlayFolder.MarkerName)),
             $"a folder swapped for a link after its kind was read is not followed (the link stays, the target's file is untouched), a file swapped for a link loses the link only, and the marker stays with the folder: {raced.Message}");
 
+        // A blocker deep inside keeps the marker too, so the folder is still known as ours; and a folder whose marker was taken away or replaced (by another folder's) is refused whole.
+        CePlayFolder deep = CePlayFolder.Create(parent, 100, "play-level-100", 4242, now).Value!;
+        Directory.CreateDirectory(Path.Combine(deep.Root, "inner"));
+        File.CreateSymbolicLink(Path.Combine(deep.Root, "inner", "escape"), source);
+        File.WriteAllText(Path.Combine(deep.Root, "plain.txt"), "p");
+        CePlayRemoval deepStuck = deep.Remove();
+        check.That(!deepStuck.Removed && deepStuck.Left.Count == 1 && deepStuck.Left[0].EndsWith("escape", StringComparison.Ordinal) && File.Exists(Path.Combine(deep.Root, CePlayFolder.MarkerName)) &&
+                   !File.Exists(Path.Combine(deep.Root, "plain.txt")) && CePlayFolder.ReadMarker(deep.Root) is not null,
+            $"a link deep inside keeps the marker (the folder is still ours for the next sweep) and is the only thing left: {deepStuck.Message}");
+        CePlayFolder tampered = CePlayFolder.Create(parent, 100, "play-level-100", 4242, now).Value!;
+        tampered.WriteFile("keep.txt", [1]);
+        string tamperedMarker = Path.Combine(tampered.Root, CePlayFolder.MarkerName);
+        byte[] ownMarker = File.ReadAllBytes(tamperedMarker);
+        File.Delete(tamperedMarker);
+        CePlayRemoval noMarker = tampered.Remove();
+        File.WriteAllBytes(tamperedMarker, File.ReadAllBytes(Path.Combine(deep.Root, CePlayFolder.MarkerName)));
+        CePlayRemoval otherMarker = tampered.Remove();
+        File.WriteAllBytes(tamperedMarker, ownMarker);
+        check.That(!noMarker.Removed && !otherMarker.Removed && noMarker.Message.Contains("marker", StringComparison.Ordinal) && otherMarker.Message.Contains("marker", StringComparison.Ordinal) &&
+                   File.Exists(Path.Combine(tampered.Root, "keep.txt")), "a folder whose marker is gone, or names another folder, is not removed, and what is in it stays");
+
         // A folder that is not ours is refused whole: no marker, a marker for another name, a link in its place, not a child of the play folder.
         string bare = Path.Combine(parent, "play-bare");
         Directory.CreateDirectory(bare);
