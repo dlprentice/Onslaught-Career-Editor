@@ -51,6 +51,12 @@ internal sealed class CePlay
         "BEA_PORT_CLOCK", "BEA_PORT_TAPE", "BEA_PORT_PROBES", "BEA_PORT_RECORD", "BEA_PORT_PILOT", "BEA_PORT_AUTOPILOT", "BEA_NET_HOST", "BEA_NET_JOIN", "BEA_NET_HANDOFF",
     ];
 
+    /// <summary>
+    /// The prefixes of the port's test and developer knobs. Every variable that starts with one is removed from a test play's environment, whatever the port reads today: the list above
+    /// lives in another repository and can drift, and none of these is something a player sets. The play hooks add theirs after this, so a capture can still pass its own.
+    /// </summary>
+    private static readonly string[] KnobPrefixes = ["BEA_PORT_", "BEA_NET_"];
+
     private const long LogLimit = 1 << 20, OptionsLimit = 1 << 20;
     private readonly GameLibrary _game;
     private readonly CePlayHooks _hooks;
@@ -188,7 +194,7 @@ internal sealed class CePlay
         }
     }
 
-    /// <summary>The launcher's start: the package folder as the working folder, BEA_USER_DIR and BEA_GAME_DIR set, the variables that switch mods off removed.</summary>
+    /// <summary>The launcher's start: the package folder as the working folder, BEA_USER_DIR and BEA_GAME_DIR set, the variables that switch mods off and every other BEA_PORT_* and BEA_NET_* removed.</summary>
     internal ProcessStartInfo StartInfo(CeInstallation ce, string userFolder, string gameFolder, int level)
     {
         ProcessStartInfo start = new(ce.LauncherPath) { UseShellExecute = false, WorkingDirectory = ce.Folder };
@@ -196,6 +202,7 @@ internal sealed class CePlay
         foreach (string argument in new[] { "--no-update-check", "-level", level.ToString(CultureInfo.InvariantCulture), "-skipfmv", "-forcewindowed" })
             start.ArgumentList.Add(argument);
         foreach (string name in FenceVariables) start.Environment.Remove(name);
+        foreach (string name in start.Environment.Keys.Where(name => KnobPrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.Ordinal))).ToList()) start.Environment.Remove(name);
         start.Environment["BEA_USER_DIR"] = userFolder;
         start.Environment["BEA_GAME_DIR"] = gameFolder;
         if (_hooks.Environment is { } more)
@@ -295,8 +302,14 @@ internal sealed class CePlay
             using FileStream source = new(log, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read, Share = FileShare.ReadWrite });
             byte[] head = new byte[Math.Min(source.Length, LogLimit)];
             source.ReadExactly(head);
+            // A stale file (or a link planted at the name) is removed, never written through, and the new one is made exclusively; then it replaces the log by name.
             string temporary = LastLog + ".new";
-            File.WriteAllBytes(temporary, head);
+            File.Delete(temporary);
+            using (FileStream stream = CePlayFolder.CreateNewPrivate(temporary))
+            {
+                stream.Write(head);
+                stream.Flush(true);
+            }
             File.Move(temporary, LastLog, overwrite: true);
             return LastLog;
         }
@@ -308,7 +321,7 @@ internal sealed class CePlay
 
     private static string Compose(int level, int exit, bool served, string? kept, string settingsNote, string? optionsNote, CePlayRemoval removal)
     {
-        string text = exit == 0 ? $"Onslaught CE ran level {level} with your changes and closed." : $"Onslaught CE closed with exit code {exit}.";
+        string text = exit == 0 ? $"Onslaught CE ran level {level} and closed." : $"Onslaught CE closed with exit code {exit}.";
         text += served ? " Its log says it loaded the mod's world file." :
             " Its log does not say it loaded the mod's world file, so the level may have been the unchanged one" + (kept is null ? " (CE wrote no log)." : $" (see {kept}).");
         if (optionsNote is not null) text += " Your options were not copied (" + optionsNote.TrimEnd('.') + ").";

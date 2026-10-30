@@ -38,6 +38,12 @@ internal sealed class CePlayFolder
     /// <summary>Test hook: called with an entry's name after its kind was read and before it is opened or removed, so a test can swap it for a link at the worst moment.</summary>
     internal static Action<string>? AfterKind { get; set; }
 
+    /// <summary>Test hook: the user id the play folder must belong to; the process's own when null.</summary>
+    internal static Func<uint>? EffectiveUserId { get; set; }
+
+    [DllImport("libc", EntryPoint = "geteuid")]
+    private static extern uint GetEffectiveUserId();
+
     [DllImport("libc", EntryPoint = "unlinkat", SetLastError = true)]
     private static extern int UnlinkAt(int directory, [MarshalAs(UnmanagedType.LPUTF8Str)] string name, int flags);
 
@@ -109,8 +115,12 @@ internal sealed class CePlayFolder
         try
         {
             string full = Path.TrimEndingDirectorySeparator(Path.GetFullPath(parent));
+            if (FirstLink(full) is string link)
+                return Outcome<CePlayFolder>.Refusal($"{link} is a link, and the companion does not make or remove test-play files behind a link (the play folder would be {full}). " +
+                    "The button works once that path is a real folder.");
             FileMutationSafety.RejectExistingReparseAncestors(Path.Combine(full, "x"), "The play folder");
-            if (!MakeParent(full)) return Outcome<CePlayFolder>.Refusal($"{full} is not a folder the companion can keep test plays in.");
+            if (EnsureFolder(full) is string problem) return Outcome<CePlayFolder>.Refusal(problem);
+            if (OwnerProblem(full) is string owner) return Outcome<CePlayFolder>.Refusal(owner);
             string name = "";
             for (int attempt = 0; attempt < 8 && made.Length == 0; attempt++)
             {
@@ -135,20 +145,44 @@ internal sealed class CePlayFolder
         }
     }
 
-    /// <summary>The play folder itself: made (private, one level) if it is missing, and refused if it is a link or not a folder.</summary>
-    private static bool MakeParent(string full)
+    /// <summary>The first path from the root down to <paramref name="path"/>, itself included, that is a link, or null.</summary>
+    private static string? FirstLink(string path)
+    {
+        List<string> chain = [];
+        for (string? current = path; current is not null; current = Path.GetDirectoryName(current)) chain.Add(current);
+        chain.Reverse();
+        return chain.FirstOrDefault(part => KindOf(part) == Kind.Link);
+    }
+
+    /// <summary>
+    /// The folder at <paramref name="full"/>, made if it is missing together with the missing folders above it (the companion owns its settings folder, which may not exist yet; each one is private).
+    /// Returns a sentence for the player, or null when the folder is there. A link or anything that is not a folder is refused, naming it.
+    /// </summary>
+    private static string? EnsureFolder(string full)
     {
         switch (KindOf(full))
         {
-            case Kind.Folder: return true;
+            case Kind.Folder: return null;
             case Kind.Missing:
                 string? above = Path.GetDirectoryName(full);
-                if (above is null || KindOf(above) != Kind.Folder) return false;
+                if (above is null) return $"{full} cannot be made: it has no folder above it.";
+                if (EnsureFolder(above) is string problem) return problem;
                 if (LinuxSaveNative.MakeDirectoryAt(LinuxSaveNative.AtCurrentDirectory, full, PrivateFolder) != 0 && Marshal.GetLastWin32Error() != FileExists)
-                    return false;
-                return KindOf(full) == Kind.Folder;
-            default: return false;
+                    return $"{full} could not be made: {new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message}";
+                return KindOf(full) == Kind.Folder ? null : $"{full} was not made as a plain folder.";
+            case Kind.Link: return $"{full} is a link, and the companion does not make or remove test-play files behind a link. The button works once it is a real folder.";
+            default: return $"{full} is not a folder, so the companion cannot keep test plays in it.";
         }
+    }
+
+    /// <summary>A sentence if the play folder is not the player's own or can be written by others, else null: the temporary folders in it carry copies of their settings.</summary>
+    private static string? OwnerProblem(string folder)
+    {
+        if (LinuxSaveNative.StatAt(LinuxSaveNative.AtCurrentDirectory, folder, LinuxSaveNative.NoFollow, 0xB, out LinuxSaveNative.Stat stat) != 0)
+            return $"{folder} could not be inspected: {new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message}";
+        if (stat.Uid != (EffectiveUserId?.Invoke() ?? GetEffectiveUserId())) return $"{folder} belongs to another user, so the companion keeps no test plays in it.";
+        if ((stat.Mode & 0x12) != 0) return $"{folder} can be written by other people (group or world write), so the companion keeps no test plays in it. Remove that permission: chmod go-w \"{folder}\".";
+        return null;
     }
 
     /// <summary>Writes a file in the folder, which must not exist yet (the open fails if anything, a link included, is there), and records it.</summary>
@@ -165,7 +199,7 @@ internal sealed class CePlayFolder
     }
 
     /// <summary>A new file only the player can read (the open fails if anything, a link included, is already there).</summary>
-    private static FileStream CreateNewPrivate(string path)
+    internal static FileStream CreateNewPrivate(string path)
     {
         FileStreamOptions options = new() { Mode = FileMode.CreateNew, Access = FileAccess.Write, Share = FileShare.None };
         if (OperatingSystem.IsLinux()) options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
@@ -393,7 +427,7 @@ internal sealed class CePlayFolder
     /// running (<paramref name="alive"/> says whether a process id is) and the folder is not the one this companion holds now
     /// (<paramref name="current"/>). Anything else in the play folder is left alone.
     /// </summary>
-    internal static CePlaySweep SweepStale(string parent, int companionPid, string? current, Func<int, bool> alive)
+    internal static CePlaySweep SweepStale(string parent, int companionPid, string? current, Func<int, bool> alive, TimeSpan? emptyGrace = null)
     {
         List<string> removed = [], kept = [];
         try
@@ -406,7 +440,9 @@ internal sealed class CePlayFolder
                 if (!name.StartsWith(NamePrefix, StringComparison.Ordinal) || KindOf(entry) != Kind.Folder) continue;
                 if (ReadMarker(entry) is not CePlayMarker marker)
                 {
-                    kept.Add($"{name}: no marker of ours");
+                    // A folder with no marker is left, unless it is empty and not new (one whose marker went before a failing final removal, say): rmdir by name only succeeds on an empty one.
+                    if (DateTime.UtcNow - Directory.GetLastWriteTimeUtc(entry) >= (emptyGrace ?? TimeSpan.FromMinutes(1)) && RemoveEmpty(full, name)) removed.Add($"{name} (empty, no marker)");
+                    else kept.Add($"{name}: no marker of ours");
                     continue;
                 }
                 if (string.Equals(entry, current, StringComparison.Ordinal)) kept.Add($"{name}: in use by this companion");
@@ -425,6 +461,20 @@ internal sealed class CePlayFolder
             kept.Add($"the play folder could not be read: {error.Message}");
         }
         return new CePlaySweep(removed, kept);
+    }
+
+    /// <summary>Removes the folder <paramref name="name"/> of the open play folder if it is empty (rmdir by name: it fails for one that holds anything), and says whether it did.</summary>
+    private static bool RemoveEmpty(string parent, string name)
+    {
+        try
+        {
+            using SafeFileHandle play = OpenFolder(LinuxSaveNative.AtCurrentDirectory, parent);
+            return UnlinkAt((int)play.DangerousGetHandle(), name, RemoveFolderFlag) == 0;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
     }
 
     /// <summary>A folder this call just made that failed before it held anything but its marker: the marker and the folder are removed again, by name in the open play folder; if anything else is in it, it stays.</summary>

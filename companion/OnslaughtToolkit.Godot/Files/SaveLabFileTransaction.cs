@@ -360,6 +360,7 @@ internal static class LinuxSaveNative
     {
         [FieldOffset(0)] internal uint Mask;
         [FieldOffset(16)] internal uint Links;
+        [FieldOffset(20)] internal uint Uid;
         [FieldOffset(28)] internal ushort Mode;
         [FieldOffset(32)] internal ulong Inode;
         [FieldOffset(40)] internal ulong Size;
