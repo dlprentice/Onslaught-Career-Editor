@@ -58,6 +58,7 @@ public sealed class ModStageException : Exception
 /// </summary>
 public static class ModStager
 {
+    private const string PartialOutputWarningKey = "OnslaughtToolkit.ModStager.PartialOutputWarning";
     public const int MaxFilesPerMod = 4096, MaxWorldFiles = 1000, MaxWorldBytes = 4 << 20, MaxManifestBytes = 256 << 10;
     public const long MaxTotalBytes = 1L << 30;
 
@@ -185,12 +186,24 @@ public static class ModStager
             Write(Path.Combine(root, "mod.json"), manifest, beforeWrite, beforeCommittedOpen, beforePublish);
             return new StagedMod(root, Hex(manifest), written);
         }
-        catch (Exception error)
+        catch (Exception error) when (error is ModStageException or IOException or InvalidOperationException or UnauthorizedAccessException)
         {
             // A name we created may now hold another writer's data. Preserve it instead of deleting by pathname.
-            throw new ModStageException($"The mod could not be saved: {error.Message} The folder {root} may contain files, including mod.json. The mod may be active on the next game launch. Check the folder before using or removing it.", error);
+            throw new ModStageException(FailureMessage(root, error), error);
+        }
+        catch (Exception error)
+        {
+            // Preserve the actual exception, stack and any cancellation token; the UI can still show the partial-output warning.
+            error.Data[PartialOutputWarningKey] = FailureMessage(root, error);
+            throw;
         }
     }
+
+    /// <summary>The possible-output warning attached to a propagated staging exception, or null for unrelated exceptions.</summary>
+    public static string? PartialOutputWarning(Exception error) => error.Data[PartialOutputWarningKey] as string;
+
+    private static string FailureMessage(string root, Exception error) =>
+        $"The mod could not be saved: {error.Message} The folder {root} may contain files, including mod.json. The mod may be active on the next game launch. Check the folder before using or removing it.";
 
     /// <summary>The mod folder's full path, after the checks that need nothing written: nothing is made before they pass.</summary>
     private static string CheckDestination(string parent, string id, IEnumerable<string?> protectedFolders)

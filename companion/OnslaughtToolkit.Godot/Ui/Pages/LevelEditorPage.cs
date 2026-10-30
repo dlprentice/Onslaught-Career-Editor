@@ -843,7 +843,7 @@ internal sealed class LevelEditorPage : Page
     {
         if (_model is null) return new SaveOutcome(null, "Choose a level first.");
         ModInfo info = SaveDialog.Info;
-        SaveOutcome outcome = _model.SaveAsMod(SaveDialog.Destination.Text.Trim(), info, ProtectedFolders());
+        SaveOutcome outcome = SaveWithStageWarning(() => _model.SaveAsMod(SaveDialog.Destination.Text.Trim(), info, ProtectedFolders()));
         _savedPanel.Visible = true;
         _savedPanel.ThemeTypeVariation = outcome.Ok ? "SuccessNotice" : "FailureNotice";
         _copy.Visible = _copyFolder.Visible = outcome.Ok;
@@ -864,5 +864,16 @@ internal sealed class LevelEditorPage : Page
         _services.Status.Show(outcome.Ok ? $"Saved the mod {info.Name}." : outcome.Message, outcome.Ok ? StatusKind.Success : StatusKind.Failure);
         BringNoticeIntoView();
         return outcome;
+    }
+
+    /// <summary>Shows a stager interruption with possible output; unrelated exceptions keep propagating.</summary>
+    internal static SaveOutcome SaveWithStageWarning(Func<SaveOutcome> save)
+    {
+        try { return save(); }
+        catch (Exception error) when (ModStager.PartialOutputWarning(error) is not null)
+        {
+            if (error is not OperationCanceledException) GD.PrintErr($"Unexpected error while saving a mod: {error}");
+            return new SaveOutcome(null, ModStager.PartialOutputWarning(error)!);
+        }
     }
 }

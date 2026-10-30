@@ -316,18 +316,23 @@ internal static class LevelEditTests
         check.That(keptError is ModStageException && Directory.Exists(keptRoot) && Directory.GetFiles(keptRoot, "*.wrd", SearchOption.AllDirectories).Length == 2 &&
                    !File.Exists(Path.Combine(keptRoot, "mod.json")), "an existing empty folder retains both published payloads after a failure");
 
-        // Every exception after creating folders reports the possible leftovers and retains the original exception as its cause.
-        (string Label, Func<Exception> Make, Type Original)[] failures =
+        // Expected filesystem failures are wrapped; cancellation and unexpected failures retain their original type and stack.
+        using CancellationTokenSource cancellation = new();
+        cancellation.Cancel();
+        check.That(ModStager.PartialOutputWarning(new FormatException("unrelated")) is null,
+            "an unrelated exception has no stager output warning");
+        (string Label, Func<Exception> Make)[] failures =
         [
-            ("an IOException", () => new IOException("the disk said no"), typeof(IOException)),
-            ("an InvalidOperationException", () => new InvalidOperationException("not allowed"), typeof(InvalidOperationException)),
-            ("an UnauthorizedAccessException", () => new UnauthorizedAccessException("no access"), typeof(UnauthorizedAccessException)),
-            ("an ArgumentException", () => new ArgumentException("odd argument"), typeof(ArgumentException)),
-            ("a NotSupportedException", () => new NotSupportedException("not supported"), typeof(NotSupportedException)),
-            ("an InvalidDataException", () => new InvalidDataException("bad data"), typeof(InvalidDataException)),
-            ("an OperationCanceledException", () => new OperationCanceledException("cancelled"), typeof(OperationCanceledException)),
+            ("an IOException", () => new IOException("the disk said no")),
+            ("an InvalidOperationException", () => new InvalidOperationException("not allowed")),
+            ("an UnauthorizedAccessException", () => new UnauthorizedAccessException("no access")),
+            ("an ArgumentException", () => new ArgumentException("odd argument")),
+            ("a NotSupportedException", () => new NotSupportedException("not supported")),
+            ("an InvalidDataException", () => new InvalidDataException("bad data")),
+            ("an OperationCanceledException", () => new OperationCanceledException("cancelled", cancellation.Token)),
+            ("a TaskCanceledException", () => new TaskCanceledException("cancelled", null, cancellation.Token)),
         ];
-        foreach ((string label, Func<Exception> make, Type original) in failures)
+        foreach ((string label, Func<Exception> make) in failures)
         {
             for (int failAt = 0; failAt < 3; failAt++)
             {
@@ -335,9 +340,15 @@ internal static class LevelEditTests
                 string root = Path.Combine(where, "made", "twice", "fails");
                 Directory.CreateDirectory(where);
                 int writes = 0, at = failAt;
-                Exception? error = Captured(() => ModStager.Stage(Path.Combine(where, "made", "twice"), info, worlds, [], beforeWrite: _ => { if (writes++ == at) throw make(); }));
-                check.That(error is ModStageException && error.InnerException?.GetType() == original && error.Message.Contains(root, StringComparison.Ordinal),
-                    $"{label} at write {failAt} retains its cause and reports the output folder: {error?.GetType().Name}");
+                Exception injected = make();
+                Exception? error = Captured(() => ModStager.Stage(Path.Combine(where, "made", "twice"), info, worlds, [], beforeWrite: _ => { if (writes++ == at) throw injected; }));
+                bool expected = injected is IOException or InvalidOperationException or UnauthorizedAccessException;
+                string? warning = error is ModStageException ? error.Message : error is null ? null : ModStager.PartialOutputWarning(error);
+                bool same = expected ? error is ModStageException && ReferenceEquals(error.InnerException, injected) : ReferenceEquals(error, injected);
+                bool token = injected is not OperationCanceledException cancelled || error is OperationCanceledException caught && caught.CancellationToken == cancelled.CancellationToken;
+                check.That(same && token && warning is not null && warning.Contains(root, StringComparison.Ordinal) &&
+                           warning.Contains("may be active on the next game launch", StringComparison.Ordinal),
+                    $"{label} at write {failAt} preserves its cause or original exception, token, and output warning: {error?.GetType().Name}");
                 check.That(Directory.GetFiles(root, "*.wrd", SearchOption.AllDirectories).Length == failAt && !File.Exists(Path.Combine(root, "mod.json")),
                     $"{label} at write {failAt} preserves earlier payloads without a manifest");
             }
@@ -362,8 +373,23 @@ internal static class LevelEditTests
         string thrown = Path.Combine(folder, "published-thrown");
         Directory.CreateDirectory(thrown);
         Exception? odd = Captured(() => ModStager.Stage(Path.Combine(thrown, "made"), info, worlds, [], beforeWrite: null, beforeCommittedOpen: _ => throw new InvalidDataException("odd")));
-        check.That(odd is ModStageException { InnerException: InvalidDataException } && Directory.GetFiles(thrown, "*.wrd", SearchOption.AllDirectories).Length == 1,
+        check.That((odd is InvalidDataException || odd is ModStageException { InnerException: InvalidDataException }) &&
+                   (odd is ModStageException ? odd.Message : ModStager.PartialOutputWarning(odd))?.Contains("may be active", StringComparison.Ordinal) == true &&
+                   Directory.GetFiles(thrown, "*.wrd", SearchOption.AllDirectories).Length == 1,
             "an exception after publication retains the file and reports the original exception");
+
+        string cancelledParent = Path.Combine(folder, "cancelled-manifest"), cancelledRoot = Path.Combine(cancelledParent, "fails");
+        OperationCanceledException cancelledLate = new("cancelled late", cancellation.Token);
+        Exception? cancelledResult = Captured(() => ModStager.Stage(cancelledParent, info, worlds, [], beforeWrite: null, beforeCommittedOpen: path =>
+        {
+            if (Path.GetFileName(path) == "mod.json") throw cancelledLate;
+        }));
+        string? cancelledWarning = cancelledResult is null ? null : ModStager.PartialOutputWarning(cancelledResult);
+        check.That(ReferenceEquals(cancelledResult, cancelledLate) && cancelledResult is OperationCanceledException observed &&
+                   observed.CancellationToken == cancellation.Token && observed.StackTrace?.Contains(nameof(FailureRules), StringComparison.Ordinal) == true &&
+                   File.Exists(Path.Combine(cancelledRoot, "mod.json")) && cancelledWarning is not null &&
+                   cancelledWarning.Contains(cancelledRoot, StringComparison.Ordinal) && cancelledWarning.Contains("may be active on the next game launch", StringComparison.Ordinal),
+            "cancellation after manifest publication preserves the exact exception, stack, token and active-mod warning");
 
         // A later writer changes an already published file just before manifest publication; a failure must not remove the newer data.
         string editedRoot = Path.Combine(folder, "edited"), edited = Path.Combine(editedRoot, "made", "fails", "data", "worlds", "world007.wrd");
@@ -406,7 +432,7 @@ internal static class LevelEditTests
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(path)!, "stray.txt"), "not this call's");
             throw new ArgumentException("odd argument");
         }));
-        check.That(strayed is ModStageException { InnerException: ArgumentException } && strayed.Message.Contains("may contain files", StringComparison.Ordinal) &&
+        check.That(strayed is ArgumentException && ModStager.PartialOutputWarning(strayed)?.Contains("may contain files", StringComparison.Ordinal) == true &&
                    File.Exists(Path.Combine(strayRoot, "made", "fails", "data", "worlds", "stray.txt")),
             "an unexpected failure retains another writer's file and reports the cause and folder");
 
