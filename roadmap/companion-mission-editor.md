@@ -2,7 +2,7 @@
 
 Status: design; the reference compiler and read-only scripts view with name links and map paths are built. The C# and Python compiler backends and the script-aware editor model are integrated, and the Level editor's Scripts view edits a script's source, compiles it and makes the open level use it (section 15); the acceptance in section 6 was run once on Linux (section 16); source-preserving staging and native Windows validation remain open. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-10-30 (the CE acceptance of an edited script was run on Linux, section 16, timing restated from CE's own log, repeated once with the released 0.1.12 package; the Level editor's Scripts view edits a script's source, section 15; earlier: held and bounded viewer reads and platform limits; script-gate stale record pairs pinned by identity; descriptor-relative Python source reads; The C# compiler is integrated on main; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
+Last updated: 2026-10-30 (the CE acceptance of an edited script was run on Linux, section 16, timing restated from CE's own log, repeated once with the released 0.1.12 package and once through its launcher; the Level editor's Scripts view edits a script's source, section 15; earlier: held and bounded viewer reads and platform limits; script-gate stale record pairs pinned by identity; descriptor-relative Python source reads; The C# compiler is integrated on main; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours checked against the shipped scripts with the documented
 missing-header and stale-source cases, and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -472,6 +472,18 @@ control, a comment line above the first line, which the compiled script keeps as
   band that differ by more than 48 grey levels, out of 31,500): at the last frame the three runs with the edit (two runs of the build of main, one run of the release) are identical to one another
   (0), the three time-matched controls (the second control, the comment control, the release control) are identical to one another (0), and every edit frame differs from
   every one of those controls by 2,740 to 2,770; the release pair differs at all seven frames (2,100 to 2,800). The package's mod loader is Linux-only, as the build's.
+- **Through the released launcher, one run of each kind.** The package's own launcher, `onslaught-ce`, with the command line the player is told to use (`--no-update-check
+  -level 100 -skipfmv -forcewindowed`), started the game itself, offscreen. What differs from the runner's runs: the user folder is a scratch folder the test script made with
+  plain file writes (for the mod run, the mod folder and a `ce.ini` holding the one line `mods=level-100-edit`) in place of the runner's `--start`; `BEA_USER_DIR` and
+  `BEA_GAME_DIR` are set by the script; the guards the runner sets (offscreen video, dummy audio, the Intel GPU filter, no session bus, the iGPU lock held by the script), the key
+  presses and the frame limit are given by environment, and the runner's own checks (its refusals when the offscreen or dummy-audio driver is missing, its core-dump and timeout
+  handling) are not applied, though both logs show the offscreen driver and the x87 control word 007f. The launcher, not the runner, started the game as its child with its own
+  environment, hashed the game executable before starting it (SHA-256 1f036553..., the package's `bea`) and wrote the game's log into the user folder; that log names the version
+  (Onslaught CE v0.1.12, build 1911463d9d71) and, in the mod run, has the same four mods lines (the world file with SHA-256 1504f7e3..., served once) and none in the control.
+  Timing, from the logs as above: this pair is not time-matched either (the control's frames are 0.52 to 2.15 s after the skip at 3.9 ms per Present, the mod run's 1.20 to
+  4.78 s at 8.5 ms). Counted without reading (the same band): the launcher's mod run differs from the runner's run of the release in at most 78 of 31,500 pixels at every frame
+  (0 at five of the seven; the paces were alike, 8.5 and 8.3 ms per Present), and from the launcher's control at all seven (1,926 to 3,037). One run of each kind; the claim stays
+  the one above.
 - **What was tried first.** The `Weather` script's starting snow density (one symbol, 0.1 to 0.8). The mod loaded and the log named it, but no frame difference rose above
   the run-to-run noise (two runs with the edit differed from each other by as many pixels as one differed from a control), and the script's text print did not appear in the
   console. That edit is not evidence of a changed behaviour and is not claimed: a mod's log lines alone do not show one.
@@ -480,5 +492,5 @@ control, a comment line above the first line, which the compiled script keeps as
   messages (one run).
 - **What it does not show.** A person using the page by hand. Any behaviour beyond one message in one script of one level: timers, spawns, AI and the `Damage` warning are
   not covered. A Windows run (CE's mod loader is Linux-only; Windows ignores `mods=`). That every installed script recompiles to what the game ran (the stale sources and the
-  sources whose header the install lacks, section 11, are outside it). The sound (the audio driver was the dummy), play past the opening, or a player starting the released launcher with a mod of their own (the repeat above ran the released
-  package's binary through the runner).
+  sources whose header the install lacks, section 11, are outside it). The sound (the audio driver was the dummy), play past the opening, or a player at a desktop starting the released launcher with a mod of their own (the launcher was run once, offscreen, from
+  a scratch folder, with the key presses and the frame limit given by environment).
