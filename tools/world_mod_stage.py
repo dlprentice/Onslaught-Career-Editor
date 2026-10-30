@@ -216,8 +216,12 @@ def stage_mod(parent: Path, game: Path, mod_id: str, worlds: dict[int, bytes], *
     if sources is not None and len(sources) > MAX_SOURCE_FILES:
         raise ModStageError(f"at most {MAX_SOURCE_FILES} mission sources can be staged at once")
     source_total = 0
+    source_count = 0
     read_include = _StageIncludes(game)
     for path, text in (sources or {}).items():
+        source_count += 1
+        if source_count > MAX_SOURCE_FILES:
+            raise ModStageError(f"at most {MAX_SOURCE_FILES} mission sources can be staged at once")
         level = source_level(path)
         if level is None or world_path(level) not in files:
             raise ModStageError(f"{path}: a mission source must name a safe path for a world being staged")

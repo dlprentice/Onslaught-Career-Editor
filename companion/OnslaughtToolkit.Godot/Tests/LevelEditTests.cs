@@ -19,11 +19,13 @@ internal static class LevelEditTests
     {
         private readonly IReadOnlyDictionary<string, string> _values;
         private readonly Action _onEnumerate;
-        internal SourcesOnEnumerate(IReadOnlyDictionary<string, string> values, Action onEnumerate) => (_values, _onEnumerate) = (values, onEnumerate);
+        private readonly int? _reportedCount;
+        internal SourcesOnEnumerate(IReadOnlyDictionary<string, string> values, Action onEnumerate, int? reportedCount = null) =>
+            (_values, _onEnumerate, _reportedCount) = (values, onEnumerate, reportedCount);
         public string this[string key] => _values[key];
         public IEnumerable<string> Keys => _values.Keys;
         public IEnumerable<string> Values => _values.Values;
-        public int Count => _values.Count;
+        public int Count => _reportedCount ?? _values.Count;
         public bool ContainsKey(string key) => _values.ContainsKey(key);
         public bool TryGetValue(string key, out string value) => _values.TryGetValue(key, out value!);
         public IEnumerator<KeyValuePair<string, string>> GetEnumerator() { _onEnumerate(); return _values.GetEnumerator(); }
@@ -185,6 +187,14 @@ internal static class LevelEditTests
         check.That(added is ModStageException && added.Message.Contains("world being staged", StringComparison.Ordinal) && !Directory.Exists(addedParent),
             "a world added to the caller's mapping after the snapshot cannot admit a new source");
 
+        string countParent = Path.Combine(folder, "source-count");
+        IReadOnlyDictionary<string, string> deceptivelySmall = new SourcesOnEnumerate(new Dictionary<string, string>
+            { [path] = source, ["data/MissionScripts/level200/unread.msl"] = source }, () => { }, reportedCount: 1);
+        Exception? sourceCount = Captured(() => ModStager.StageWithSources(countParent, new ModInfo("refused", "n"),
+            worlds, deceptivelySmall, game, [], beforeWrite: null, maxStageSources: 1));
+        check.That(sourceCount is ModStageException && sourceCount.Message.Contains("At most 1 mission sources", StringComparison.Ordinal) && !Directory.Exists(countParent),
+            "the enumerated source count is bounded even if the caller reports fewer entries");
+
         Dictionary<string, string>[] bad =
         [
             new() { ["data/MissionScripts/level200/../other.msl"] = "x" },
@@ -249,6 +259,16 @@ internal static class LevelEditTests
                    !Directory.Exists(overParent) && allocated < 2L * ModStager.MaxWorldBytes,
             "source staging refuses excessive world bytes before output or large copies");
 
+        Dictionary<int, byte[]> combinedBudget = Enumerable.Range(0, (int)(ModStager.MaxTotalBytes / maxBody.Length))
+            .ToDictionary(level => level, _ => maxBody);
+        string combinedParent = Path.Combine(folder, "source-combined-over-budget");
+        before = GC.GetAllocatedBytesForCurrentThread();
+        Exception? combined = Captured(() => ModStager.StageWithSources(combinedParent, new ModInfo("refused", "n"), combinedBudget, sources, game, []));
+        allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+        check.That(combined is ModStageException && combined.Message.Contains("files total", StringComparison.Ordinal) &&
+                   !Directory.Exists(combinedParent) && allocated < 2L * ModStager.MaxWorldBytes,
+            "the combined world and source budget is checked before output or large world copies");
+
         string header = Path.Combine(game, "data", "inc", "defs.msl");
         Directory.CreateDirectory(Path.GetDirectoryName(header)!);
         File.WriteAllText(header, "#define DELAY 1\n");
@@ -269,12 +289,12 @@ internal static class LevelEditTests
         body.Scripts.Add(ScriptCompiler.Compile("second", included, ScriptCompiler.IncludesFrom(game), 70));
         Dictionary<int, byte[]> twoScripts = new() { [200] = body.Write() };
         Dictionary<string, string> twoSources = new() { [path] = included, [otherPath] = included };
-        string countParent = Path.Combine(folder, "include-count"), sizeParent = Path.Combine(folder, "include-size");
-        Exception? count = Captured(() => ModStager.StageWithSources(countParent, new ModInfo("refused", "n"), twoScripts, twoSources, game, [],
+        string includeCountParent = Path.Combine(folder, "include-count"), sizeParent = Path.Combine(folder, "include-size");
+        Exception? count = Captured(() => ModStager.StageWithSources(includeCountParent, new ModInfo("refused", "n"), twoScripts, twoSources, game, [],
             beforeWrite: null, maxStageIncludes: 1));
         Exception? size = Captured(() => ModStager.StageWithSources(sizeParent, new ModInfo("refused", "n"), twoScripts, twoSources, game, [],
             beforeWrite: null, maxStageIncludeChars: headerText.Length));
-        check.That(count is ModStageException && count.Message.Contains("included files", StringComparison.Ordinal) && !Directory.Exists(countParent) &&
+        check.That(count is ModStageException && count.Message.Contains("included files", StringComparison.Ordinal) && !Directory.Exists(includeCountParent) &&
                    size is ModStageException && size.Message.Contains("characters of included text", StringComparison.Ordinal) && !Directory.Exists(sizeParent),
             "include count and text budgets cover every source in the stage before output is created");
     }

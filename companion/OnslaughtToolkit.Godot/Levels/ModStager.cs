@@ -189,12 +189,12 @@ public static class ModStager
         Action<string>? beforeWrite, Action<string>? beforeCommittedOpen = null, Action<string>? beforePublish = null)
     {
         if (Problem(info) is { } problem) throw new ModStageException(problem);
-        Dictionary<string, byte[]> files = SnapshotWorlds(worlds, out _);
+        Dictionary<string, byte[]> files = CopyWorlds(ValidateWorlds(worlds, out _));
         return StageFiles(parent, info, files, protectedFolders, beforeWrite, beforeCommittedOpen, beforePublish);
     }
 
-    // Validate every input before allocating copies. The 1,000 possible level numbers and CE's 1 GiB mod limit bound the snapshot.
-    private static Dictionary<string, byte[]> SnapshotWorlds(IReadOnlyDictionary<int, byte[]> worlds, out long total)
+    // Capture the input entries and validate every size before allocating copies.
+    private static Dictionary<string, byte[]> ValidateWorlds(IReadOnlyDictionary<int, byte[]> worlds, out long total)
     {
         if (worlds.Count > MaxWorldFiles) throw new ModStageException($"A mod stages at most {MaxWorldFiles} world files.");
         Dictionary<string, byte[]> inputs = [];
@@ -209,8 +209,11 @@ public static class ModStager
             if (total > MaxTotalBytes) throw new ModStageException($"A mod's files total at most {MaxTotalBytes} bytes.");
             inputs[path] = body;
         }
-        return inputs.ToDictionary(entry => entry.Key, entry => entry.Value.ToArray());
+        return inputs;
     }
+
+    private static Dictionary<string, byte[]> CopyWorlds(Dictionary<string, byte[]> inputs) =>
+        inputs.ToDictionary(entry => entry.Key, entry => entry.Value.ToArray());
 
     /// <summary>
     /// Stages a world together with edited source text. Each source must name a world being staged and a source already in the selected game;
@@ -226,25 +229,33 @@ public static class ModStager
     internal static StagedMod StageWithSources(string parent, ModInfo info, IReadOnlyDictionary<int, byte[]> worlds,
         IReadOnlyDictionary<string, string> sources, string gameRoot, IEnumerable<string?> protectedFolders,
         Action<string>? beforeWrite, Action<string>? beforeCommittedOpen = null, Action<string>? beforePublish = null,
-        int maxStageIncludes = MaxStageIncludes, int maxStageIncludeChars = MaxStageIncludeChars)
+        int maxStageIncludes = MaxStageIncludes, int maxStageIncludeChars = MaxStageIncludeChars, int maxStageSources = MaxSourceFiles)
     {
         if (string.IsNullOrWhiteSpace(gameRoot) || !Path.IsPathFullyQualified(gameRoot)) throw new ModStageException("Choose the game's full folder path first.");
         if (Problem(info) is { } problem) throw new ModStageException(problem);
         if (worlds.Count == 0) throw new ModStageException("A staged mod needs at least one world file.");
-        if (sources.Count > MaxSourceFiles) throw new ModStageException($"At most {MaxSourceFiles} mission sources can be staged at once.");
-        Dictionary<string, byte[]> files = SnapshotWorlds(worlds, out long worldTotal);
-        Dictionary<int, WorldBody> parsedWorlds = [];
-        int sourceTotal = 0;
-        StageIncludeBudget includes = new(ScriptCompiler.IncludesFrom(gameRoot), maxStageIncludes, maxStageIncludeChars);
+        if (sources.Count > maxStageSources) throw new ModStageException($"At most {maxStageSources} mission sources can be staged at once.");
+        Dictionary<string, byte[]> worldInputs = ValidateWorlds(worlds, out long worldTotal);
+        List<KeyValuePair<string, string>> capturedSources = [];
+        int sourceTotal = 0, sourceCount = 0;
         foreach ((string path, string source) in sources)
         {
-            if (SourceLevel(path) is not int level || !files.ContainsKey(WorldPath(level)))
+            if (++sourceCount > maxStageSources) throw new ModStageException($"At most {maxStageSources} mission sources can be staged at once.");
+            if (SourceLevel(path) is not int level || !worldInputs.ContainsKey(WorldPath(level)))
                 throw new ModStageException($"{path}: a mission source must name a safe path for a world being staged.");
             if (source is null || source.Length > MaxSourceBytes || source.Any(c => c > 255))
                 throw new ModStageException($"{path}: source must be at most {MaxSourceBytes} single-byte characters.");
             sourceTotal += source.Length;
             if (sourceTotal > MaxSourceTotal) throw new ModStageException($"Mission sources total at most {MaxSourceTotal} bytes.");
             if (worldTotal + sourceTotal > MaxTotalBytes) throw new ModStageException($"A mod's files total at most {MaxTotalBytes} bytes.");
+            capturedSources.Add(new KeyValuePair<string, string>(path, source));
+        }
+        Dictionary<string, byte[]> files = CopyWorlds(worldInputs);
+        Dictionary<int, WorldBody> parsedWorlds = [];
+        StageIncludeBudget includes = new(ScriptCompiler.IncludesFrom(gameRoot), maxStageIncludes, maxStageIncludeChars);
+        foreach ((string path, string source) in capturedSources)
+        {
+            int level = SourceLevel(path)!.Value;
             try { _ = ScriptSourceReader.ReadInGame(gameRoot, path); }
             catch (CompileError) { throw new ModStageException($"{path}: the game's original source could not be read safely."); }
             CheckSourceMatchesWorld(path, source, level, files[WorldPath(level)], parsedWorlds, includes.Read);

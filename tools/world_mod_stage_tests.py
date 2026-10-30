@@ -370,6 +370,25 @@ class StageAsModTests(Base):
             self.assertFalse(self.out.exists())
         self.assertEqual(b"// original\n", original.read_bytes())
 
+    def test_source_count_is_enforced_while_enumerating(self) -> None:
+        path = "data/MissionScripts/level200/main.msl"
+        original = self.game / path
+        original.parent.mkdir(parents=True)
+        original.write_bytes(b"// original\n")
+        text = "init() { Pause(1); }\n"
+        world = self.world_with_source(text)
+
+        class Underreported(dict):
+            def __len__(self):
+                return 1
+
+        sources = Underreported({path: text, "data/MissionScripts/level200/unread.msl": text})
+        with patch.object(stage, "MAX_SOURCE_FILES", 1):
+            with self.assertRaisesRegex(stage.ModStageError, "at most 1 mission sources"):
+                stage.stage_mod(self.out, self.game, "refused", {200: world}, name="n", sources=sources)
+        self.assertFalse(self.out.exists())
+        self.assertEqual(b"// original\n", original.read_bytes())
+
     def test_changed_included_header_refuses_the_stale_source_world_pair(self) -> None:
         path = "data/MissionScripts/level200/main.msl"
         original, header = self.game / path, self.game / "data/inc/defs.msl"
