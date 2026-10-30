@@ -9,7 +9,7 @@ namespace OnslaughtToolkit.Companion.Ui;
 /// <summary>Where the companion looks for Steam, keeps its settings and puts backups; tests and captures supply their own.</summary>
 internal sealed record CompanionEnvironment(IReadOnlyList<string> SteamRoots, string SettingsPath, Func<bool>? GameRunning = null,
     Action<string>? OpenUrl = null, string? DefaultBackupFolder = null, Action? Quit = null, string? OldCopiesFolder = null,
-    string? CeUserFolder = null, Func<string, bool>? CeInstallSupported = null)
+    string? CeUserFolder = null, Func<string, bool>? CeInstallSupported = null, CePlayHooks? CePlay = null)
 {
     internal const string BackupFolderName = "Battle Engine Aquila Backups";
 
@@ -104,6 +104,9 @@ public partial class CompanionApp : Control
             environment.CeUserFolder ?? (_managesWindow ? null : System.IO.Path.Combine(System.IO.Path.GetDirectoryName(environment.SettingsPath)!, "ce-user")),
             _managesWindow ? null : _ => null, environment.CeInstallSupported);
         Status = new StatusLine();
+        // Test plays of a level (Level editor): their temporary CE folders live beside the settings, and the ones an earlier run left are swept now.
+        CePlay play = new(Game, System.IO.Path.Combine(System.IO.Path.GetDirectoryName(environment.SettingsPath)!, "ce-play"), environment.CePlay);
+        play.SweepStale();
         _gameRunning = environment.GameRunning ?? GameProcess.IsRunning;
         _quit = environment.Quit ?? (() => GetTree().Quit());
         Action<string> openUrl = environment.OpenUrl ?? (url => OS.ShellOpen(url));
@@ -118,7 +121,7 @@ public partial class CompanionApp : Control
             CatchUp = () => CatchUpAsync(force: true, backUp: false),
             OpenCareerFile = () => Home.OpenDialog.PopupCenteredRatio(0.75f),
             AskToDiscard = AskToDiscard, LevelEditsUnsaved = () => LevelEditor.ChangeCount,
-            OldCopiesFolder = environment.OldCopiesFolder ?? OldSafeCopies.DefaultRoot(),
+            OldCopiesFolder = environment.OldCopiesFolder ?? OldSafeCopies.DefaultRoot(), Play = play,
         };
 
         DiscardDialog = this.Add(Build.Confirm("Discard unsaved changes?", "Discard"));

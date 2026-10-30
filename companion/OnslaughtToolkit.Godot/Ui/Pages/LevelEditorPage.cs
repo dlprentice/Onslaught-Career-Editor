@@ -25,7 +25,7 @@ internal sealed class LevelEditorPage : Page
     // Short, since the line shares its row with two switches in the narrowest window; the tooltips say the rest.
     private const string ObjectSearchHint = "Name, kind, script, row", ScriptSearchHint = "Script, event, function";
     private readonly AppServices _services;
-    private readonly Label _empty, _worldNote, _objectTitle, _objectDetail, _stock, _note, _hint, _summary, _draftNote, _warnings, _problemText, _savedText;
+    private readonly Label _empty, _worldNote, _objectTitle, _objectDetail, _stock, _note, _hint, _summary, _draftNote, _warnings, _problemText, _savedText, _playNote;
     private readonly PanelContainer _problemPanel, _savedPanel;
     private readonly SplitContainer _split;
     private readonly ScrollContainer _side;
@@ -219,6 +219,9 @@ internal sealed class LevelEditorPage : Page
         _draftNote.Visible = false;
         _warnings = changesBody.Add(Build.Text("", "Warn"));
         Save = changesBody.Add(Build.Button("Save as mod…", "Primary", "Save the changes as an Onslaught CE mod: a new folder. Nothing in your game changes.", disabled: true));
+        Play = changesBody.Add(Build.Button("Play this level with the changes", tooltip: PlayTip, disabled: true));
+        _playNote = changesBody.Add(Build.Text("", "Muted"));
+        _playNote.Visible = false;
         (_savedPanel, VBoxContainer savedInside) = Build.Panel("SuccessNotice", 6);
         changesBody.Add(_savedPanel);
         _savedPanel.Visible = false;
@@ -247,6 +250,8 @@ internal sealed class LevelEditorPage : Page
         services.Popups.AddChild(SaveDialog);
         Save.Pressed += BeginSave;
         SaveDialog.Confirmed += () => SaveNow();
+        Play.Pressed += () => _services.Status.Track(PlayAsync());
+        services.Play.Changed += UpdateChanges;
 
         services.Game.Changed += Refresh;
         Refresh();
@@ -286,6 +291,10 @@ internal sealed class LevelEditorPage : Page
     internal Button Apply { get; }
     internal Button Reset { get; }
     internal Button Save { get; }
+    internal Button Play { get; }
+
+    private const string PlayTip = "Start this level in Onslaught CE with your changes, without saving anything. CE runs in a temporary folder of its own: " +
+        "your careers and CE settings are not touched. Close CE to come back here.";
     internal SaveAsModDialog SaveDialog { get; }
 
     private readonly Label _scriptEditNote, _scriptEditWarnings;
@@ -597,6 +606,8 @@ internal sealed class LevelEditorPage : Page
             _warnings.Visible = false;
             Save.Disabled = true;
             Save.TooltipText = "Choose a level first.";
+            Play.Disabled = true;
+            Play.TooltipText = "Choose a level first.";
             return;
         }
         string? summary = _model!.ChangeSummary();
@@ -610,6 +621,31 @@ internal sealed class LevelEditorPage : Page
         Save.Disabled = !report.CanSave;
         Save.TooltipText = report.CanSave ? "Save the changes as an Onslaught CE mod: a new folder. Nothing in your game changes."
             : report.Errors[0].Message;
+        string? playBlock = summary is null ? "Make a change first: there is nothing to try yet." : !report.CanSave ? report.Errors[0].Message : _services.Play.Unavailable();
+        Play.Disabled = playBlock is not null;
+        Play.TooltipText = playBlock ?? PlayTip;
+    }
+
+    private void ShowPlayNote(string text, bool failed)
+    {
+        _playNote.Text = text;
+        _playNote.ThemeTypeVariation = failed ? "Warn" : "Muted";
+        _playNote.Visible = text.Length > 0;
+    }
+
+    /// <summary>
+    /// Starts Onslaught CE at the open level with the changes as they are now (nothing is saved, and the player's own CE folder and ce.ini are not
+    /// written: <see cref="CePlay"/> uses a temporary folder), and says what came of it when CE closes.
+    /// </summary>
+    internal async Task PlayAsync()
+    {
+        if (_model is not { Level: int level } model || Play.Disabled) return;
+        ShowPlayNote($"Onslaught CE is starting at level {level} with your changes. Close it to come back here.", failed: false);
+        CePlayReport report = await _services.Play.PlayAsync(level, (parent, info) => model.StageForPlay(parent, info, ProtectedFolders()));
+        bool good = report.Started && report.ModServed && report.Left.Count == 0;
+        ShowPlayNote(report.Message + (report.ModLines.Count > 0 && !report.ModServed ? "\n" + string.Join("\n", report.ModLines) : ""), failed: !good);
+        _services.Status.Show(!report.Started ? report.Message : report.ModServed ? $"Onslaught CE closed after level {level} with your changes." :
+            "Onslaught CE closed, but its log does not say it loaded the mod.", good ? StatusKind.Success : StatusKind.Failure);
     }
 
     /// <summary>Moves the selected object to the coordinates in the fields. Returns what happened, or null if nothing is selected.</summary>

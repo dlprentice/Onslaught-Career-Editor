@@ -313,6 +313,10 @@ public sealed partial record CeInstallation(string LauncherPath, string UserFold
         return Compare(newer, baseVersion) > 0;
     }
 
+    /// <summary>Whether the numeric release version <paramref name="version"/> ("0.1.12") is <paramref name="minimum"/> ("0.1.11") or later; false for anything that is not numeric.</summary>
+    public static bool IsAtLeast(string version, string minimum) =>
+        TryNumericVersion(version, out int[] have) && TryNumericVersion(minimum, out int[] want) && Compare(have, want) >= 0;
+
     private static bool TryNumericVersion(string version, out int[] numbers)
     {
         string[] parts = version.Split('.');
