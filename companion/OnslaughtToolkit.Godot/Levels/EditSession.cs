@@ -287,7 +287,7 @@ public sealed class EditSession
     /// Errors that stop a save: nothing changed, the body cannot be written, a script cannot be stored (<c>script-unstorable</c>), the row list or the script list changed, something other than a
     /// position or the code of a script differs from the baseline, or a replaced script breaks one of the game's rules (<c>script-broken</c>, one
     /// finding per problem <see cref="ScriptChecker"/> lists; the finding's index is the script's number). Warnings: a position outside the square the
-    /// terrain lookup covers, and any change to a base world.
+    /// terrain lookup covers (a moved row, or a copy put or moved there), and any change to a base world.
     /// </summary>
     public ValidationReport Validate()
     {
@@ -347,16 +347,24 @@ public sealed class EditSession
         {
             if (!MoveObject.IsFinite(change.To))
                 errors.Add(new Finding("not-finite", $"{change.Name} (row {change.Index}) has a position that is not three finite numbers.", change.Index));
-            else if (change.To.X < 0 || change.To.X >= TerrainSquare || change.To.Y < 0 || change.To.Y >= TerrainSquare)
-                warnings.Add(new Finding("outside-terrain",
-                    $"{change.Name} (row {change.Index}) is outside the 0 to {TerrainSquare:0} square the terrain covers; the game finds no ground height there.", change.Index));
+            else if (OutsideTerrain(change.To))
+                warnings.Add(OutsideTerrainFinding(change.Name, change.Index));
         }
+        // An added row is held to the same square, where the copy was put or moved to; one whose position is not finite is the "added-row" error above.
+        foreach (var (index, _, name) in Additions())
+            if (MoveObject.IsFinite(Body.Things[index].Init.Position) && OutsideTerrain(Body.Things[index].Init.Position))
+                warnings.Add(OutsideTerrainFinding(name, index));
         if (IsBaseWorld && Changes().Count > 0)
             warnings.Add(new Finding("base-world", "This is a level's base world. Careers remember which of its buildings still stand, so a career may not agree with a base world whose things were moved."));
         if (IsBaseWorld && scriptChanges.Count > 0)
             warnings.Add(new Finding("base-world-scripts", "This is a level's base world, and its scripts run in every level that loads it: a replaced script changes them all."));
         return new ValidationReport(errors, warnings);
     }
+
+    private static bool OutsideTerrain(Vector3 at) => at.X < 0 || at.X >= TerrainSquare || at.Y < 0 || at.Y >= TerrainSquare;
+
+    private static Finding OutsideTerrainFinding(string name, int index) =>
+        new("outside-terrain", $"{name} (row {index}) is outside the 0 to {TerrainSquare:0} square the terrain covers; the game finds no ground height there.", index);
 
     private static bool SameBits(Vector3 a, Vector3 b) =>
         BitConverter.SingleToUInt32Bits(a.X) == BitConverter.SingleToUInt32Bits(b.X) &&
