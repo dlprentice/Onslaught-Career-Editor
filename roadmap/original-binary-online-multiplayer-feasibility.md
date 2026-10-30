@@ -31,5 +31,5 @@ player-ready Internet, cross-platform or campaign co-op. This original-binary re
 showing clearly disabled or coming-soon menu entries; such entries must not claim to start an unfinished feature.
 Local split-screen, synthetic fixtures, loopback and Wine runs do not by themselves establish player-ready online play.
 
-The [CE README](https://github.com/dlprentice/onslaught-ce#readme) describes the current player-facing release.
+The [CE README](https://github.com/dlprentice/onslaught-ce/blob/main/README.md) describes the current player-facing release.
 The project's [goal](../GOAL.md) and [program](../PROGRAM.md) cover the broader CE and multiplayer direction.
