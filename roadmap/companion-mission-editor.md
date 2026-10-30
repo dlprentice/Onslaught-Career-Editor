@@ -526,8 +526,10 @@ player's careers, so the button never writes the player's CE folder at all: it m
   limit given by environment through the play hooks). CE exited 0 after the run; its log, kept from the temporary folder, has the same four mods lines as section 16 (the world file with
   SHA-256 1504f7e3..., the same bytes the page's Save as mod writes, served once) and the temporary `ce.ini` it was given was the scratch player's with `mods=play-level-100`, `record_sessions=0` and
   `update_check=0` (the player's `record_sessions=1` and a stand-in `mods=` line did not reach it, and an unknown key was kept); the scratch player's CE folder (a `ce.ini`, a stand-in
-  career and a tape) was byte for byte as before and the game folder had the same files and sizes; the temporary folder was gone and the edit still counted as unsaved. The frames, looked at, type the
-  second message's text where the control types the first. The frames hold the game's text and stay in local-data.
+  career and a tape) was byte for byte as before and the game folder had the same files and sizes; the temporary folder was gone and the edit still counted as unsaved. The frames, looked at, type the second message's text. They are
+  not time-matched to the section 16 runs (this run drew at 5.3 ms per Present, its frames 0.73 to 2.91 s after the intro skip, against 0.52 to 2.15 s at 3.9 ms for the launcher control and
+  1.20 to 4.78 s at 8.5 ms for the launcher mod run), so the counts need the same care: its subtitle band differs from that control's at all seven frames (1,350 to 2,773 of 31,500 pixels),
+  and its last frame from the last of that mod run by 318, a few letters less typed. A second run, one commit earlier, agrees by reading. The frames hold the game's text and stay in local-data.
 - **What it does not show.** Nobody has used the button by hand. One level (100) and one edit; the `-level N` start of other levels is not tried. The run was offscreen from a capture with the key
   presses and the frame limit given by environment, with dummy audio (nothing was heard), and on one machine. Windows is out. A test play uses the unchanged settings of the player's `ce.ini` apart from
   the three keys, so a setting that changes how CE starts (a resolution, say) applies to it too. Enabling a mod in the player's own `ce.ini` through the settings writer, with its backups, is a separate
