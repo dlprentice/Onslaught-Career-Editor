@@ -427,4 +427,6 @@ folder as before.
 - **Limits.** Nobody has used the page by hand. No edited level has been played in CE, so the acceptance in section 6 has not been run, and there has been
   no native Windows run. The mod holds the edited world file only: the edited source is not kept beside it (source-preserving staging is not built, section 3).
   A source whose header the install lacks cannot be compiled on the page (the message names the header). Text ids are not linked, and the compiler's
-  limits (section 14) apply to what is typed. Drafts are not saved anywhere.
+  limits (section 14) apply to what is typed. Drafts are not saved anywhere. Drafts and what each compiled text made are kept by script name, which no
+  level of the install repeats inside its own world (a level's own script may share a name with one of its base world, and the page keeps the two apart); a
+  world that repeated a name would share a draft between the two scripts.
