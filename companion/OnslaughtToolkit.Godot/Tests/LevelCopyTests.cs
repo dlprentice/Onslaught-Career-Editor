@@ -268,6 +268,38 @@ internal static class LevelCopyTests
         nan.Apply(new DuplicateObject(unit, new Vector3(1f, 1f, 0f), "c"));
         nan.Body.Things[^1].Init.Position = new Vector3(float.NaN, 0, 0);
         check.That(Has(nan, "added-row"), "a copy whose position is not a number is refused");
+
+        // A copy put or moved outside the 0 to 512 square gets the warning a moved original gets, and is saved all the same: the edges are the originals' (512 is outside; 0 and 511.5 are inside).
+        int added = WorldBody.Read(baseline).Things.Count;
+        EditSession inside = new(baseline);
+        inside.Apply(new DuplicateObject(unit, new Vector3(100f, 200f, -5f), "in"));
+        check.That(inside.Validate().CanSave && inside.Validate().Warnings.Count == 0, "a copy inside the square has no findings");
+
+        EditSession edges = new(baseline);
+        Vector3[] places = [new(512f, 10f, 0f), new(10f, -0.5f, 0f), new(0f, 511.5f, 0f), new(511.5f, 0f, 0f), new(10f, 512f, 0f)];
+        for (int i = 0; i < places.Length; i++) edges.Apply(new DuplicateObject(unit, places[i], $"c{i}"));
+        ValidationReport warned = edges.Validate();
+        check.That(warned.CanSave && warned.Warnings.Select(w => w.Index).SequenceEqual([added, added + 1, added + 4]) && warned.Warnings.All(w => w.Code == "outside-terrain"),
+            "copies put at or past the edge of the square warn, and copies in its corners do not");
+        check.That(warned.Warnings.Count > 0 && warned.Warnings[0].Message == $"c0 (row {added}) is outside the 0 to 512 square the terrain covers; the game finds no ground height there.", "the warning names the copy and its row");
+
+        EditSession wanders = new(baseline);
+        wanders.Apply(new DuplicateObject(unit, new Vector3(100f, 200f, 0f), "m"));
+        wanders.Apply(new MoveObject(added, new Vector3(600f, 200f, 0f)));
+        check.That(wanders.Validate().CanSave && wanders.Validate().Warnings.Select(w => (w.Code, w.Index)).SequenceEqual([("outside-terrain", (int?)added)]), "a copy moved past the edge warns");
+        wanders.Apply(new MoveObject(added, new Vector3(300f, 200f, 0f)));
+        check.That(wanders.Validate().CanSave && wanders.Validate().Warnings.Count == 0, "and no longer once it is moved back inside");
+
+        EditSession both = new(baseline);
+        both.Apply(new MoveObject(unit, new Vector3(600f, 20f, 0f)));
+        both.Apply(new DuplicateObject(unit, new Vector3(590f, 20f, 0f), "b"));
+        check.That(both.Validate().CanSave && both.Validate().Warnings.Select(w => w.Index).SequenceEqual([unit, added]), "a moved original and its copy, both past the edge, are both named, the original first");
+
+        // A position that is not finite is the added-row error, not a warning as well (an infinity would pass the square's test).
+        EditSession infinite = new(baseline);
+        infinite.Apply(new DuplicateObject(unit, new Vector3(1f, 1f, 0f), "c"));
+        infinite.Body.Things[^1].Init.Position = new Vector3(float.PositiveInfinity, 0, 0);
+        check.That(Has(infinite, "added-row") && infinite.Validate().Warnings.Count == 0 && nan.Validate().Warnings.Count == 0, "a copy whose position is not finite is refused and not warned about as well");
     }
 
     // ---- the model ------------------------------------------------------------------------------------------------------------------
