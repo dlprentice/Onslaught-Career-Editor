@@ -111,7 +111,7 @@ internal sealed class LevelEditorPage : Page
         mapColumn.SizeFlagsStretchRatio = 1.6f;
         _mapPanel = mapColumn;
         Map = mapColumn.Add(new LevelMap { SizeFlagsVertical = Control.SizeFlags.ExpandFill, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
-        mapColumn.Add(Build.Text("Wheel zooms · drag the background to pan · click or drag a mark to select or move it (Esc cancels) · Home fits the level", "Faint"));
+        mapColumn.Add(Build.Text("Wheel zooms · drag the background to pan · click or drag a mark to select or move it (Esc cancels) · arrow keys nudge the selected mark · Home fits the level", "Faint"));
         HBoxContainer pathBar = mapColumn.Add(Build.Row(8));
         PathsToggle = pathBar.Add(new CheckButton { Text = "Paths", TooltipText = "Draw every waypoint path of the level, faintly, through the objects it names." });
         PathsToggle.Toggled += on => Map.ShowAllPaths = on;
