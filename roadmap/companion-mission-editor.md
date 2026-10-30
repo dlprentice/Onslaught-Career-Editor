@@ -1,8 +1,8 @@
 # Companion Mission Editor: Design Addendum
 
-Status: design; the reference compiler and read-only scripts view with name links and map paths are built. The C# and Python compiler backends and the script-aware editor model are integrated, and the Level editor's Scripts view edits a script's source, compiles it and makes the open level use it (section 15); the acceptance in section 6 was run once on Linux (section 16); source-preserving staging and native Windows validation remain open. It extends the
+Status: design; the reference compiler and read-only scripts view with name links and map paths are built. The C# and Python compiler backends and the script-aware editor model are integrated, and the Level editor's Scripts view edits a script's source, compiles it and makes the open level use it (section 15); the acceptance in section 6 was run once on Linux (section 16) and the Level editor's Play button starts CE at the open level with the changes (section 17); source-preserving staging and native Windows validation remain open. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-10-30 (the CE acceptance of an edited script was run on Linux, section 16, timing restated from CE's own log, repeated once with the released 0.1.12 package and once through its launcher; the Level editor's Scripts view edits a script's source, section 15; earlier: held and bounded viewer reads and platform limits; script-gate stale record pairs pinned by identity; descriptor-relative Python source reads; The C# compiler is integrated on main; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
+Last updated: 2026-10-30 (the Level editor's Play button, section 17; the CE acceptance of an edited script was run on Linux, section 16, timing restated from CE's own log, repeated once with the released 0.1.12 package and once through its launcher; the Level editor's Scripts view edits a script's source, section 15; earlier: held and bounded viewer reads and platform limits; script-gate stale record pairs pinned by identity; descriptor-relative Python source reads; The C# compiler is integrated on main; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours checked against the shipped scripts with the documented
 missing-header and stale-source cases, and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -459,7 +459,7 @@ control, a comment line above the first line, which the compiled script keeps as
   on the two time-matched controls, the second control and the comment control, against both edit runs; the first control agrees with them at its own moment. Runs on the
   real clock cannot be matched to the Present, so the comparison is of the text written, not of pixels: none of the three controls shows the edit.
 - **Fences.** CE switches mods off whenever a deterministic clock (`run.py --virtual`, `BEA_PORT_CLOCK`), a tape, probes, a recording, a pilot or autopilot, or a network host, join or
-  handoff is active (`port/platform/common/mods.cpp`; at 93cac507 CE's own README says only "replays, recordings and network play"), and its screenshot key is taken only when no menu or
+  handoff is active (`port/platform/common/mods.cpp`; at 93cac507 CE's own README says only "replays, recordings and network play"; the launcher's own `--record`, or `record_sessions=1` in `ce.ini`, sets `BEA_PORT_RECORD` and `BEA_PORT_CLOCK`, which is how a player meets this), and its screenshot key is taken only when no menu or
   its console has the keyboard. A mod run is therefore live and on the real clock, with no
   pixel-exact comparison between runs.
 - **The released package, repeated.** The same pair (one control, one run with the message edit) was run again with the released Onslaught CE 0.1.12 Linux package's own
@@ -494,3 +494,41 @@ control, a comment line above the first line, which the compiled script keeps as
   not covered. A Windows run (CE's mod loader is Linux-only; Windows ignores `mods=`). That every installed script recompiles to what the game ran (the stale sources and the
   sources whose header the install lacks, section 11, are outside it). The sound (the audio driver was the dummy), play past the opening, or a player at a desktop starting the released launcher with a mod of their own (the launcher was run once, offscreen, from
   a scratch folder, with the key presses and the frame limit given by environment).
+
+
+## 17. Play this level with the changes (M6, 2026-10-30)
+
+The Level editor's changes box has a button, **Play this level with the changes**, which starts Onslaught CE at the open level with the changes as they are now. It works from the
+open edit (nothing has to be saved first, and nothing is saved by it: the edit still counts as unsaved), on Linux, with a CE of 0.1.11 or later. The first design (the roadmap's)
+was to switch the mod on in the player's own `ce.ini`, start the level and switch it off afterwards. A companion or CE that dies in between would leave a mod switched on in the
+player's careers, so the button never writes the player's CE folder at all: it makes a temporary CE user folder of its own.
+
+- **What it does.** `CePlay` makes a new folder inside the companion's own play folder (`ce-play`, beside its settings) and puts in it a copy of the player's `ce.ini` (their lines kept as
+  they are, through the settings writer's own line handling, with `mods=` naming only this mod, `record_sessions=0` and `update_check=0`), a copy of their options file
+  (`defaultoptions.bea`; never a career, a tape or anything else) and the mod, staged by the same stager as Save as mod. It starts CE's own launcher from its package folder with
+  `--no-update-check -level N -skipfmv -forcewindowed`, `BEA_USER_DIR` set to the temporary folder and `BEA_GAME_DIR` to the game folder the editor read, and the variables that make
+  CE switch mods off removed (section 16). It waits for CE to close, keeps the first megabyte of CE's log as `last-session.log` in the play folder, reads the log's lines about mods
+  (the page shows them when CE did not say it served the mod's world file) and removes the temporary folder.
+- **What it never does.** It never writes the player's CE folder, `ce.ini` or careers, never copies a career, never starts CE in the player's own folder (a play folder that is, holds or lies
+  inside it is refused before anything is made), never records the session, and never leaves a mod enabled. Because mods are off in a session CE records (the launcher's `--record`, or
+  `record_sessions=1` in `ce.ini`, sets `BEA_PORT_RECORD` and `BEA_PORT_CLOCK`), the copy of `ce.ini` turns recording off.
+- **The temporary folder.** Made exclusively (`mkdirat`, so a name that exists is never reused), private to the player, with a marker file only `CePlayFolder` writes (its format, the
+  folder's name, the companion's process, the launcher's process, the level and the mod). It is removed by the one path the companion made, after checking that it is a direct child of the
+  play folder, a real folder (not a link) and carries the marker; a link or a special file inside it (CE writes none) is left where it is, never followed, and reported, and the marker
+  goes last, so a folder that could not be removed whole is still known as the companion's. At the companion's start a sweep removes the folders an earlier run left, only direct children
+  of the play folder that carry the marker, whose companion and CE are no longer running.
+- **When it refuses.** On Windows (CE loads a level's world from a mod on Linux only for now), with no CE launcher chosen, with a CE older than 0.1.11 (it would show the unchanged level),
+  with an affected launcher package (0.1.0 to 0.1.6), with no change made, with a test play running, and when the edit cannot be staged. The reason is the button's tooltip.
+- **Checks.** The route's play suites check the folder, the sweep, the `ce.ini` copy, the launcher's start (arguments, environment, the fence variables), the unchanged player's folder
+  and game folder, the refusals and the button on an authored level; a mutation sweep of the new code found three gaps (an oversized marker, a package that turns into an affected
+  launcher after its version was known, a redundant second comparison with the player's folder) and each is closed. The capture's `play` mode runs the
+  button end to end: the same edit as section 16, then the button pressed with the released Onslaught CE 0.1.12 package as the launcher, offscreen (the guards of `port/tools/run.py`, the key presses and a frame
+  limit given by environment through the play hooks). CE exited 0 after the run; its log, kept from the temporary folder, has the same four mods lines as section 16 (the world file with
+  SHA-256 1504f7e3..., the same bytes the page's Save as mod writes, served once) and the temporary `ce.ini` it was given was the scratch player's with `mods=play-level-100`, `record_sessions=0` and
+  `update_check=0` (the player's `record_sessions=1` and a stand-in `mods=` line did not reach it, and an unknown key was kept); the scratch player's CE folder (a `ce.ini`, a stand-in
+  career and a tape) was byte for byte as before and the game folder had the same files and sizes; the temporary folder was gone and the edit still counted as unsaved. The frames, looked at, type the
+  second message's text where the control types the first. The frames hold the game's text and stay in local-data.
+- **What it does not show.** Nobody has used the button by hand. One level (100) and one edit; the `-level N` start of other levels is not tried. The run was offscreen from a capture with the key
+  presses and the frame limit given by environment, with dummy audio (nothing was heard), and on one machine. Windows is out. A test play uses the unchanged settings of the player's `ce.ini` apart from
+  the three keys, so a setting that changes how CE starts (a resolution, say) applies to it too. Enabling a mod in the player's own `ce.ini` through the settings writer, with its backups, is a separate
+  step that is not built.
