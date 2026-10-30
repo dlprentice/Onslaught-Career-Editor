@@ -425,6 +425,17 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         return ApplyScript(new ReplaceScript(scriptIndex, script), $"Replaced {script.Name}.", compiled.Notes);
     }
 
+    /// <summary>
+    /// What to take care of in the script the open level uses at this place, against the one it shipped with (see <see cref="ScriptHazards"/>): empty for a script that has not
+    /// been replaced, for a place the world lacks, and when the scripts cannot be compared. It describes the level as it is now, not the last edit, so Undo and Redo change it
+    /// with the script, and a source that does not compile leaves it as it was.
+    /// </summary>
+    public IReadOnlyList<string> ScriptWarnings(int scriptIndex)
+    {
+        if (Session is null || scriptIndex < 0 || scriptIndex >= Session.Body.Scripts.Count || !Session.SameScripts()) return [];
+        return Session.Body.Scripts[scriptIndex] is { Code: not null } current ? ScriptHazards.Warnings(Session.ShippedScript(scriptIndex), current) : [];
+    }
+
     /// <summary>Puts a script back as the level has it (an edit that can be undone).</summary>
     public ScriptEditOutcome ResetScript(int scriptIndex)
     {

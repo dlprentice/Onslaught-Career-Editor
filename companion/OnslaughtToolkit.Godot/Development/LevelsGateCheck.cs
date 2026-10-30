@@ -37,6 +37,7 @@ internal static class LevelsGateCheck
         }
 
         List<string> failures = [];
+        int repeatedNames = 0;  // the page keeps typed text, and what each text made, by script name: no world body of the install may use one name twice
         HashSet<string> seen = [], seenTerrain = [], seenScripts = [], seenNames = [], seenPaths = [];
         int bodies = 0, exact = 0, matched = 0, checkedScripts = 0, terrains = 0, terrainsMatched = 0, scriptLists = 0, scriptListsMatched = 0, scriptsListed = 0, sourcesFound = 0, nameLists = 0, nameListsMatched = 0, quotedTexts = 0, namedTexts = 0, pathLists = 0, pathListsMatched = 0, pathsListed = 0, pointsKept = 0;
         foreach (LevelArchiveFile archive in archives)
@@ -79,6 +80,9 @@ internal static class LevelsGateCheck
                     foreach (ScriptProblem problem in ScriptChecker.Check(script))
                         failures.Add($"{name}: {problem.Message}");
                 }
+                int repeated = model.Scripts.GroupBy(script => script.Name, StringComparer.Ordinal).Count(group => group.Count() > 1);
+                repeatedNames += repeated;
+                if (repeated > 0) failures.Add($"{name}: {repeated} script name{(repeated == 1 ? " is" : "s are")} used by more than one script");
                 if (table is null) continue;
                 if (!table.TryGetValue(key, out string[]? row))
                 {
@@ -106,7 +110,7 @@ internal static class LevelsGateCheck
         foreach (string failure in failures.Take(25)) printError("FAIL: " + failure);
         print($"LEVELS_GATE: {bodies} world bodies in {archives.Count} level archives; byte-identical round trips {exact}; " +
                  (table is null ? "no reference table given" : $"fields equal to the reference's on {matched} of {table.Count} rows") +
-                 $"; {checkedScripts} compiled scripts checked" +
+                 $"; {checkedScripts} compiled scripts checked, {repeatedNames} repeated script names" +
                  $"; {terrains} terrains" + (terrainTable is null ? "" : $", heights equal to the reference's lookup on {terrainsMatched} of {terrainTable.Count}") +
                  $"; {scriptLists} script lists" + (scriptsTable is null ? "" : $", equal to the reference's on {scriptListsMatched} of {scriptsTable.Count}") +
                  $", {scriptsListed} scripts of which {sourcesFound} find their source; {nameLists} name lists" + (namesTable is null ? "" : $", equal to the reference's on {nameListsMatched} of {namesTable.Count}") +

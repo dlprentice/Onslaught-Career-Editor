@@ -25,6 +25,8 @@ internal sealed partial class ScriptsPanel : VBoxContainer
     private ScriptEntry? _current;
     private ScriptSourceResult? _currentSource;
     private SourceToken? _token;
+    private bool _wantEditing;
+    private readonly Dictionary<string, string> _drafts = new(StringComparer.Ordinal);
 
     internal ScriptsPanel()
     {
@@ -52,16 +54,71 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         _source = this.Add(NewSourceView());
         _source.SizeFlagsStretchRatio = 2.2f;
         _source.CaretChanged += OnCaret;
+        _source.TextChanged += OnText;  // the line count and what the text is (the file's, typed, in use) follow what is typed...
+        _source.TextSet += OnText;  // ...and what is put in by code (the engine raises a different signal for that)
     }
 
     /// <summary>Raised when the selected script changes (null: none is selected). The source result is what was found for it.</summary>
     internal event Action<ScriptEntry?, ScriptSourceResult?>? Selected;
+
+    /// <summary>Raised when the text on view changes, typed or put in by code: what depends on it (Put the shipped script back, the unsaved-work count) is refreshed by the page.</summary>
+    internal event Action? TextEdited;
 
     /// <summary>Raised when the quoted text or word under the source's caret changes (null: the caret is on none).</summary>
     internal event Action<SourceToken?>? NameUnderCaret;
 
     /// <summary>The quoted text or word the caret is on in the source.</summary>
     internal SourceToken? Token => _token;
+
+    /// <summary>
+    /// Whether the source can be typed in: the Edit switch is on and the selected script is one of the level's own with a source file to start from. The
+    /// text typed is kept for the script (a draft) while another is chosen, and is not what the game runs until it is compiled and used.
+    /// </summary>
+    internal bool Editing => _source.Editable;
+
+    /// <summary>Says whether the open level now uses a replaced script of this name (set by the page, which has the session).</summary>
+    internal Func<string, bool>? IsReplaced { get; set; }
+
+    /// <summary>
+    /// Says whether the open level's script of this name is exactly what this text made when it was compiled and used (set by the page, which has the session and
+    /// what each text made): what "in use" means below. Undo and Redo move the level between scripts without touching the text, so this is asked, never remembered.
+    /// </summary>
+    internal Func<string, string, bool>? IsInUse { get; set; }
+
+    /// <summary>Whether the player turned Edit source on: it stays on while scripts that cannot be edited are chosen, and applies again to the next one that can.</summary>
+    internal bool WantsEditing => _wantEditing;
+
+    /// <summary>Whether the selected script can be edited at all: one of the level's own, with a source file found.</summary>
+    internal bool CanEditCurrent => _current is { FromBaseWorld: false } && _currentSource?.Source is not null;
+
+    /// <summary>The text in the source view (line ends are \n).</summary>
+    internal string SourceText => _source.Text;
+
+    /// <summary>
+    /// The scripts, by name, that hold text that was typed and is neither the source file's nor in use (what the level uses for the script, compiled from exactly that
+    /// text): what leaving the level (or closing the companion) would lose without the level being changed. The text on view counts. Text whose replacement was taken
+    /// back with Undo counts again, because the level no longer uses it.
+    /// </summary>
+    internal IReadOnlyList<string> UnusedDraftNames
+    {
+        get
+        {
+            StoreDraft();
+            return _drafts.Where(draft => !InUse(draft.Key, draft.Value)).Select(draft => draft.Key).OrderBy(name => name, StringComparer.Ordinal).ToList();
+        }
+    }
+
+    /// <summary>How many scripts <see cref="UnusedDraftNames"/> lists.</summary>
+    internal int UnusedDraftCount => UnusedDraftNames.Count;
+
+    /// <summary>Whether text was typed for the script of this name that differs from its source file (the text on view counts): what Put the shipped script back can drop.</summary>
+    internal bool HasDraft(string name)
+    {
+        StoreDraft();
+        return _drafts.ContainsKey(name);
+    }
+
+    private bool InUse(string name, string text) => IsInUse?.Invoke(name, text) == true;
 
     internal Tree List => _list;
     internal CodeEdit Source => _source;
@@ -111,7 +168,99 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         _root = gameRoot;
         _entries = entries;
         _current = null;
+        _drafts.Clear();
         Fill(keep: null);
+    }
+
+    /// <summary>
+    /// Lists the scripts again after an edit (the same level, new compiled scripts): the same script stays selected, and the text and place in the view stay as
+    /// they were, so that compiling does not take the player's place away.
+    /// </summary>
+    internal void Refresh(IReadOnlyList<ScriptEntry> entries)
+    {
+        ScriptEntry? previous = _current;
+        StoreDraft();
+        int line = _source.GetCaretLine(), column = _source.GetCaretColumn();
+        double scroll = _source.ScrollVertical;
+        _entries = entries;
+        _current = null;
+        ScriptEntry? keep = previous is null ? null : entries.FirstOrDefault(entry => entry.FromBaseWorld == previous.FromBaseWorld && entry.Summary.Name == previous.Summary.Name);
+        Fill(keep);
+        if (keep is null || !ReferenceEquals(_current, keep)) return;
+        _source.SetCaretLine(Math.Min(line, _source.GetLineCount() - 1));
+        _source.SetCaretColumn(Math.Min(column, _source.GetLine(_source.GetCaretLine()).Length));
+        _source.ScrollVertical = Math.Min(scroll, Math.Max(0, _source.GetLineCount() - 1));
+    }
+
+    /// <summary>Turns typing in the source on or off (it stays off for a script that cannot be edited).</summary>
+    internal void SetEditing(bool on)
+    {
+        _wantEditing = on;
+        StoreDraft();
+        ApplyEditable();
+    }
+
+    /// <summary>Shows the state of the text on view again: the page calls it when what the level runs changed without the text changing (a compile that was used).</summary>
+    internal void RefreshInfo() => UpdateInfo();
+
+    /// <summary>Forgets what was typed for a script and shows its source file's text again.</summary>
+    internal void DiscardEdit(string name)
+    {
+        _drafts.Remove(name);
+        if (_current is { FromBaseWorld: false } current && current.Summary.Name == name && _currentSource?.Source is { } source)
+        {
+            SetSourceText(source.Text);
+            UpdateInfo();
+        }
+    }
+
+    /// <summary>Puts the caret at the start of a line (0-based), in view.</summary>
+    internal void GoToLine(int line)
+    {
+        _source.SetCaretLine(Math.Clamp(line, 0, _source.GetLineCount() - 1));
+        _source.SetCaretColumn(0);
+        _source.CenterViewportToCaret();
+    }
+
+    private void ApplyEditable()
+    {
+        bool on = _wantEditing && CanEditCurrent;
+        _source.Editable = on;
+        _source.TooltipText = on ? "Type here, then Compile and use. The game does not read this file: it runs the compiled script."
+            : "The script's source, read only. The game does not read this file.";
+        UpdateInfo();
+    }
+
+    private void OnText()
+    {
+        UpdateInfo();
+        TextEdited?.Invoke();
+    }
+
+    /// <summary>The path, line count and state of the source shown: read only, or what was typed.</summary>
+    private void UpdateInfo()
+    {
+        if (_currentSource?.Source is not { } source) return;
+        string text = _source.Text;
+        int lines = text.Count(c => c == '\n') + (text.Length > 0 && text[^1] != '\n' ? 1 : 0);
+        bool own = _current is { FromBaseWorld: false };
+        bool differs = own && text != source.Text, used = own && InUse(_current!.Summary.Name, text);
+        bool notUsed = own && !used && (differs || IsReplaced?.Invoke(_current!.Summary.Name) == true);  // the level runs something else than this text
+        string state = (_source.Editable ? "editing" : "read only") + (used ? " · in use" : notUsed ? " · not in use" : "");  // short: the line is one clipped line, as the column narrows
+        string relative = Path.GetRelativePath(_root!, source.Path).Replace('\\', '/');
+        const string folder = "data/MissionScripts/";
+        string shown = relative.StartsWith(folder, StringComparison.OrdinalIgnoreCase) ? relative[folder.Length..] : relative;  // the folder is the same for every script
+        _info.Text = $"{shown} · {Build.Count(lines, "line")} · {state}";
+        _info.TooltipText = $"{source.Path}\nThe game runs the compiled script in the level's world, not this file." +
+            (used ? "\nIn use: the level runs the script compiled from this text." : notUsed ? "\nNot in use: the level does not run this text. Compile and use makes it run." : "");
+    }
+
+    /// <summary>Notes what is typed for the script on view: a text that differs from its source file is a draft, one that matches it is not.</summary>
+    private void StoreDraft()
+    {
+        if (_current is not { FromBaseWorld: false } current || _currentSource?.Source is not { } source || !_source.Editable) return;
+        if (_source.Text != source.Text) _drafts[current.Summary.Name] = _source.Text;
+        else _drafts.Remove(current.Summary.Name);
     }
 
     /// <summary>Shows the scripts whose name, events or functions hold this text (all of them when it is empty).</summary>
@@ -181,6 +330,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         if (item is null) return;
         ScriptEntry entry = _entries[item.GetMetadata(0).AsInt32()];
         if (ReferenceEquals(entry, _current)) return;
+        StoreDraft();
         _current = entry;
         if (_root is null)
         {
@@ -192,16 +342,13 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         }
         if (_currentSource.Source is { } source)
         {
-            SetSourceText(source.Text);
-            string relative = Path.GetRelativePath(_root!, source.Path).Replace('\\', '/');
-            const string folder = "data/MissionScripts/";
-            string shown = relative.StartsWith(folder, StringComparison.OrdinalIgnoreCase) ? relative[folder.Length..] : relative;  // the folder is the same for every script
-            _info.Text = $"{shown} · {Build.Count(source.Lines, "line")} · read only";
-            _info.TooltipText = $"{source.Path}\nThe game runs the compiled script in the level's world, not this file.";
+            SetSourceText(!entry.FromBaseWorld && _drafts.TryGetValue(entry.Summary.Name, out string? draft) ? draft : source.Text);
+            ApplyEditable();
         }
         else
         {
             SetSourceText("");
+            ApplyEditable();  // a script with no source file is not typeable, whatever the Edit switch says
             _info.Text = _currentSource.Problem ?? "";
             _info.TooltipText = "";
         }

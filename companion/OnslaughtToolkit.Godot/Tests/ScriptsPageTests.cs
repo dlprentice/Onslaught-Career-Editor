@@ -83,6 +83,8 @@ internal static class ScriptsPageTests
         // Level 130: its own world (scripts alpha, beta and gamma; things naming them) and the base world of level 131 (a script of the same name, and another).
         WorldBody real = LevelScriptTests.Body(LevelScriptTests.Script("alpha", [0, 3], [], ("Pause", 2)), LevelScriptTests.Script("beta", [], ["go"], ("PostEvent", 1)), LevelScriptTests.Script("gamma", [], []),
             LevelScriptTests.Script("delta", [], [.. Enumerable.Range(1, 14).Select(number => $"h{number}")]));
+        real.Scripts[0].Code.Symbols.Add(new ScriptSymbol { Name = "const data40", DataType = 3, Value = new ScriptText("x"), Index = 0, Flag = 1 });  // the shipped alpha's first constant is number 40
+        real.Scripts[0].Code.NextSymbolIndex = 1;
         real.Things[0].Init.Script = "alpha";
         real.Things[1].Init.SpawnScript = "alpha";
         real.Things[2].Init.Script = "ghost";
@@ -327,6 +329,214 @@ internal static class ScriptsPageTests
             page.ScriptsToggle.ButtonPressed = false;
             check.That(page.OpenLevel(130), "the first level opens again");
             for (int frame = 0; frame < 3; frame++) await Frame(tree);
+
+            // Editing a script's source: the text typed is compiled and used as the script (one edit that Undo takes back); a source that does not compile changes
+            // nothing; what is typed stays with its script while another is chosen; a script with no source file, or the base world's, cannot be edited.
+            const string Alpha = "// alpha, the level's own\ninit()\n{\n\tPause(1);\n}\n";
+            page.ShowScript("alpha");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(!page.EditSource.Disabled && !page.EditSource.ButtonPressed && page.CompileScriptButton.Disabled && page.ShippedScriptButton.Disabled && !page.Scripts.Source.Editable &&
+                       page.Scripts.Info == "level130/alpha.msl · 5 lines · read only", $"a script with a source file can be edited, and starts read only: \"{page.Scripts.Info}\"");
+            page.EditSource.ButtonPressed = true;
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Scripts.Source.Editable && !page.CompileScriptButton.Disabled && page.Scripts.Info == "level130/alpha.msl · 5 lines · editing", $"the Edit switch makes the view typeable: \"{page.Scripts.Info}\"");
+            const string Typed = "// alpha, edited\ninit()\n{\n\tPause(2);\n}\n";
+            page.Scripts.Source.Text = Typed;
+            page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.ScriptEditNote.StartsWith("Replaced alpha.", StringComparison.Ordinal) && page.Summary.StartsWith("1 script replaced: alpha (", StringComparison.Ordinal) && !page.Undo.Disabled && !page.Save.Disabled &&
+                       !page.ShippedScriptButton.Disabled && page.HasChanges, $"a source that compiles replaces the script, and the page says so: \"{page.ScriptEditNote}\" / \"{page.Summary}\"");
+            check.That(page.Scripts.Info == "level130/alpha.msl · 5 lines · editing · in use" && page.Scripts.UnusedDraftCount == 0 && page.ChangeCount == 1 && page.DraftNote.Length == 0,
+                $"the line above the source says the level uses the text that was compiled, and that text is no unsaved draft: \"{page.Scripts.Info}\", {page.ChangeCount} change");
+            check.That(page.Model!.Session!.Body.Scripts[0].Code.Symbols.Any(symbol => symbol.Name == "const data40" && symbol.Value is ScriptInt { Value: 2 }),
+                "the compile session's counter starts where the shipped script's does, so the first new constant is the shipped script's first (const data40)");
+            check.That(page.Scripts.Current?.Summary.Name == "alpha" && page.Scripts.Source.Text == Typed && page.SourceInUse("alpha") == Typed &&
+                       page.ScriptCardText.Contains("Handles: init", StringComparison.Ordinal) && !page.ScriptCardText.Contains("died", StringComparison.Ordinal),
+                $"the script stays selected with the text typed, and its card shows what the new script handles: \"{page.ScriptCardText}\"");
+            page.Scripts.Source.Text = "init()\n{\n\tFrobnicate(1);\n}\n";
+            check.That(page.Scripts.Info == "level130/alpha.msl · 4 lines · editing · not in use" && page.Scripts.UnusedDraftCount == 1 && page.ChangeCount == 2 &&
+                       page.DraftNote == "Text typed for alpha is not in use yet and is not saved anywhere.",
+                $"typing again makes the text one the level does not use, and the line and the changes card say so as it is typed: \"{page.Scripts.Info}\", {page.ChangeCount} changes, \"{page.DraftNote}\"");
+            page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.ScriptEditNote.StartsWith("line 3: ", StringComparison.Ordinal) && page.ScriptEditNote.Contains("Frobnicate", StringComparison.Ordinal) && page.Scripts.Source.GetCaretLine() == 2 &&
+                       page.Summary.StartsWith("1 script replaced: alpha (", StringComparison.Ordinal) && page.SourceInUse("alpha") == Typed,
+                $"a source that does not compile says why and where, puts the caret there and changes nothing: \"{page.ScriptEditNote}\"");
+            page.Scripts.Source.Text = "init()\n{\n\tDamage(5.0);\n}\n";
+            check.That(page.ScriptEditNote.Length == 0, $"a refusal is about the text as it was, so it goes as soon as the text changes: \"{page.ScriptEditNote}\"");
+            page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.ScriptEditNote.Contains("calls Damage more often", StringComparison.Ordinal) && page.Summary.StartsWith("1 script replaced: alpha (", StringComparison.Ordinal) &&
+                       page.ScriptEditNote.StartsWith("Replaced alpha.\nUndo takes it back.\nThis script calls Damage more often", StringComparison.Ordinal),
+                $"an edit that adds a call to Damage is replaced and warned about, the warning under the message: \"{page.ScriptEditNote}\"");
+            page.Scripts.Source.Text = "init()\n{\n\tFrobnicate(2);\n}\n";
+            page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.ScriptEditNote.StartsWith("line 3: ", StringComparison.Ordinal) && page.ScriptEditNote.Contains("calls Damage more often", StringComparison.Ordinal),
+                $"a refusal changes nothing, so the level still has the script that calls Damage and the warning about it stays beside the refusal: \"{page.ScriptEditNote}\"");
+            page.Scripts.Source.Text = "init()\n{\n\tDamage(5.0);\n}\n";  // back to the text the level runs
+            check.That(!page.ScriptEditNote.Contains("line 3", StringComparison.Ordinal) && page.ScriptEditNote.StartsWith("This script calls Damage more often", StringComparison.Ordinal) &&
+                       page.Scripts.Info == "level130/alpha.msl · 4 lines · editing · in use" && page.Scripts.UnusedDraftCount == 0,
+                $"the refusal goes with the text it was about, the warning stays, and the text the level runs is in use again: \"{page.ScriptEditNote}\" / \"{page.Scripts.Info}\"");
+            page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Summary.StartsWith("1 script replaced: alpha (", StringComparison.Ordinal) && page.ScriptEditNote.Length == 0 && page.Scripts.Info == "level130/alpha.msl · 4 lines · editing · not in use" && page.ChangeCount == 2,
+                $"Undo takes the script that calls Damage back: the level runs the first replacement, which the text on view did not make, and the note and the warning about the script taken back are gone: \"{page.ScriptEditNote}\" / \"{page.Scripts.Info}\" / {page.ChangeCount}");
+            page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Summary.StartsWith("No changes yet", StringComparison.Ordinal) && !page.ShippedScriptButton.Disabled && page.ScriptCardText.Contains("Handles: init, died", StringComparison.Ordinal) &&
+                       page.Scripts.Source.Text == "init()\n{\n\tDamage(5.0);\n}\n", "Undo takes the replacements back one by one, and the text typed stays where it is (and can be dropped, being unused)");
+            check.That(page.Scripts.Info == "level130/alpha.msl · 4 lines · editing · not in use" && page.Scripts.UnusedDraftCount == 1 && page.HasChanges && page.ChangeCount == 1 &&
+                       page.DraftNote == "Text typed for alpha is not in use yet and is not saved anywhere.",
+                $"the text whose replacement was undone is not in use, so it is unsaved typing again, and the changes card says whose: \"{page.Scripts.Info}\", {page.ChangeCount} change, \"{page.DraftNote}\"");
+            page.Redo.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Summary.StartsWith("1 script replaced: alpha (", StringComparison.Ordinal) && !page.ShippedScriptButton.Disabled && page.ScriptEditNote.Length == 0 &&
+                       page.Scripts.Info == "level130/alpha.msl · 4 lines · editing · not in use" && page.ChangeCount == 2,
+                $"Redo brings back the first replacement, which the text on view (the later one) did not make, so that text is still not in use: \"{page.Scripts.Info}\" / {page.ChangeCount}");
+            page.Redo.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Summary.StartsWith("1 script replaced: alpha (", StringComparison.Ordinal) && !page.ShippedScriptButton.Disabled &&
+                       page.Scripts.Info == "level130/alpha.msl · 4 lines · editing · in use" && page.ChangeCount == 1 && page.DraftNote.Length == 0 &&
+                       page.ScriptEditNote.StartsWith("This script calls Damage more often", StringComparison.Ordinal),
+                $"the second Redo brings back the script the text made, with its warning and the text's being in use: \"{page.ScriptEditNote}\" / \"{page.Scripts.Info}\"");
+            // Typing by hand raises text_changed at the end of the frame (the steps above set the text, which raises text_set): the line and the card follow that too.
+            const string Damaging = "init()\n{\n\tDamage(5.0);\n}\n";
+            page.Scripts.Source.SetCaretLine(page.Scripts.Source.GetLineCount() - 1);  // after the last statement: a comment there leaves the compiled script as it was (one above would move its lines)
+            page.Scripts.Source.SetCaretColumn(0);
+            page.Scripts.Source.InsertTextAtCaret("// by hand\n");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Scripts.Info == "level130/alpha.msl · 5 lines · editing · not in use" && page.Scripts.UnusedDraftCount == 1 && page.ChangeCount == 2 &&
+                       page.DraftNote.StartsWith("Text typed for alpha is not in use", StringComparison.Ordinal), $"text typed by hand is noticed as it is typed: \"{page.Scripts.Info}\", {page.ChangeCount} changes");
+            // That text compiles to the script the level already has (a trailing comment adds nothing), so it is in use as well, and compiling it changes nothing.
+            page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.ScriptEditNote.StartsWith("alpha is already what this source compiles to.\nThis script calls Damage more often", StringComparison.Ordinal) &&
+                       page.Scripts.Info == "level130/alpha.msl · 5 lines · editing · in use" && page.Scripts.UnusedDraftCount == 0 && page.ChangeCount == 1,
+                $"a text that compiles to the script the level already has is in use too: \"{page.ScriptEditNote}\" / \"{page.Scripts.Info}\" / {page.ChangeCount}");
+            // The note is about the script the level had: Undo and Redo change the level's scripts, so it goes; the warning is read from the level and comes back with the script.
+            page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Summary.StartsWith("1 script replaced: alpha (", StringComparison.Ordinal) && page.ScriptEditNote.Length == 0 && page.Scripts.Info == "level130/alpha.msl · 5 lines · editing · not in use",
+                $"Undo takes the note about the compile with it: \"{page.ScriptEditNote}\" / \"{page.Scripts.Info}\"");
+            page.Redo.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.ScriptEditNote.StartsWith("This script calls Damage more often", StringComparison.Ordinal) && !page.ScriptEditNote.Contains("already", StringComparison.Ordinal) &&
+                       page.Scripts.Info == "level130/alpha.msl · 5 lines · editing · in use", $"and Redo brings back the warning and the text's being in use, not the note: \"{page.ScriptEditNote}\" / \"{page.Scripts.Info}\"");
+            // A text typed back to the source file's, while the level runs a replacement, is no draft, but it is not what the level runs either.
+            page.Scripts.Source.Text = Alpha;
+            check.That(page.Scripts.Info == "level130/alpha.msl · 5 lines · editing · not in use" && page.Scripts.UnusedDraftCount == 0 && page.ChangeCount == 1 && page.DraftNote.Length == 0,
+                $"the file's text is not what a replaced script runs, and is no draft: \"{page.Scripts.Info}\" / {page.ChangeCount}");
+            page.Scripts.Source.Text = Damaging;
+            check.That(page.Scripts.Info == "level130/alpha.msl · 4 lines · editing · in use" && page.Scripts.UnusedDraftCount == 0, "and the text the level runs is in use again");
+            page.ShippedScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Summary.StartsWith("No changes yet", StringComparison.Ordinal) && page.ScriptEditNote.StartsWith("alpha is back as the level has it.", StringComparison.Ordinal) && page.Scripts.Source.Text == Alpha &&
+                       page.ShippedScriptButton.Disabled && page.SourceInUse("alpha") is null, $"putting the shipped script back shows the source file's text again: \"{page.ScriptEditNote}\"");
+            page.Scripts.Source.Text = "// a draft\n";
+            page.ShowScript("gamma");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Scripts.Source.Text == Gamma.Replace("\r\n", "\n") && page.Scripts.Source.Editable, "another script shows its own text, still typeable");
+            page.ShowScript("alpha");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Scripts.Source.Text == "// a draft\n" && page.Scripts.Info.EndsWith("· editing · not in use", StringComparison.Ordinal) && page.Model!.Session!.ScriptChanges().Count == 0 &&
+                       page.Scripts.UnusedDraftCount == 1 && page.HasChanges && page.ChangeCount == 1 && page.DraftNote.StartsWith("Text typed for alpha is not in use", StringComparison.Ordinal),
+                "what was typed for a script is there when it is chosen again; it is not a change to the level's scripts, but leaving would lose it, so the guards count it and the changes card says so");
+            check.That(LevelEditorPage.DraftNoteText([]).Length == 0 && LevelEditorPage.DraftNoteText(["a"]) == "Text typed for a is not in use yet and is not saved anywhere." &&
+                       LevelEditorPage.DraftNoteText(["a", "b"]).StartsWith("Text typed for a and b is not in use", StringComparison.Ordinal) &&
+                       LevelEditorPage.DraftNoteText(["a", "b", "c"]).StartsWith("Text typed for a, b and 1 more is not in use", StringComparison.Ordinal) &&
+                       LevelEditorPage.DraftNoteText(["a", "b", "c", "d", "e"]).StartsWith("Text typed for a, b and 3 more is not in use", StringComparison.Ordinal), "the note names one or two scripts and counts the rest");
+            check.That(!app.RequestClose() && app.DiscardDialog.Visible && app.DiscardDialog.DialogText.StartsWith("Not saved yet: 1 change on Level editor.", StringComparison.Ordinal),
+                $"closing the companion with a draft asks first: \"{app.DiscardDialog.DialogText}\"");
+            app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+            app.DiscardDialog.Hide();
+            page.Scripts.Source.Text = Alpha;  // the same as the source file again: no draft
+            check.That(page.Scripts.UnusedDraftCount == 0 && !page.HasChanges && page.ChangeCount == 0 && page.ShippedScriptButton.Disabled, "text typed back to the source file's is no draft, and there is nothing to put back");
+            page.Scripts.Source.Text = "// a draft\n";
+            check.That(page.Scripts.HasDraft("alpha") && !page.ShippedScriptButton.Disabled, "a draft is there to be dropped, and the button that drops it is enabled as soon as the text differs from the file's");
+            page.ShippedScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Scripts.Source.Text == Alpha && page.ChangeCount == 0 && !page.HasChanges && page.ScriptEditNote == "The text you typed was dropped; alpha is as the level has it." && page.ShippedScriptButton.Disabled &&
+                       page.SourceInUse("alpha") is null, $"Put the shipped script back drops a draft when the level already uses the shipped script: \"{page.ScriptEditNote}\"");
+            // Two different replacements of one byte length (the number a Pause waits is stored in as many bytes): after an Undo the text of the one the level no longer runs is not in
+            // use, which a comparison of lengths would call in use and only the stored bytes tell apart.
+            const string PauseTwo = "// alpha, waits\ninit()\n{\n\tPause(2);\n}\n", PauseThree = "// alpha, waits\ninit()\n{\n\tPause(3);\n}\n";
+            byte[] storedTwo = WorldBodyWriter.ScriptBytes(page.Model!.CompileScript(0, PauseTwo, install.Game).Script!), storedThree = WorldBodyWriter.ScriptBytes(page.Model.CompileScript(0, PauseThree, install.Game).Script!);
+            check.That(storedTwo.Length == storedThree.Length && !storedTwo.AsSpan().SequenceEqual(storedThree), "the two scripts are the same length and are not the same script");
+            page.Scripts.Source.Text = PauseTwo;
+            page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            page.Scripts.Source.Text = PauseThree;
+            page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Scripts.Info == "level130/alpha.msl · 5 lines · editing · in use" && page.Scripts.UnusedDraftCount == 0 && page.ChangeCount == 1, $"the later text is in use: \"{page.Scripts.Info}\"");
+            page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Summary.StartsWith("1 script replaced: alpha (", StringComparison.Ordinal) && page.Scripts.Info == "level130/alpha.msl · 5 lines · editing · not in use" &&
+                       page.Scripts.UnusedDraftCount == 1 && page.ChangeCount == 2, $"after an Undo the level runs the first of the two, so the text on view is not in use and is a draft: \"{page.Scripts.Info}\" / {page.ChangeCount} changes");
+            page.Redo.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Scripts.Info == "level130/alpha.msl · 5 lines · editing · in use" && page.Scripts.UnusedDraftCount == 0 && page.ChangeCount == 1, "and a Redo makes it the one the level runs again");
+            page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+            page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            page.Scripts.Source.Text = Alpha;
+            check.That(page.Summary.StartsWith("No changes yet", StringComparison.Ordinal) && !page.HasChanges && page.ShippedScriptButton.Disabled, "both Undos take the level back to the shipped script, with the source file's text on view");
+            // The same with the Edit switch off: the typed text stays on view, read only, and can still be dropped.
+            page.Scripts.Source.Text = "// off draft\n";
+            page.EditSource.ButtonPressed = false;
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(!page.Scripts.Source.Editable && page.Scripts.Source.Text == "// off draft\n" && page.Scripts.UnusedDraftCount == 1 && page.HasChanges &&
+                       page.Scripts.Info == "level130/alpha.msl · 1 line · read only · not in use" && !page.ShippedScriptButton.Disabled, $"a draft stays when the switch is turned off: \"{page.Scripts.Info}\"");
+            page.ShippedScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Scripts.Source.Text == Alpha && page.Scripts.UnusedDraftCount == 0 && !page.HasChanges && page.ShippedScriptButton.Disabled, "and Put the shipped script back drops it with the switch off");
+            page.EditSource.ButtonPressed = true;
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            // Another level's opening drops what was typed for this one: it is not carried to a level that has a script of the same name.
+            page.Scripts.Source.Text = "// carried?\n";
+            check.That(page.OpenLevel(140), "another level opens while a draft is typed");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Scripts.UnusedDraftCount == 0 && page.ChangeCount == 0 && page.DraftNote.Length == 0, $"the draft is gone with the level it was typed in: {page.ChangeCount} changes");
+            check.That(page.OpenLevel(130), "the first level opens again");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            page.ShowScript("alpha");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Scripts.Source.Text == Alpha && page.Scripts.UnusedDraftCount == 0 && page.ChangeCount == 0 && page.EditSource.ButtonPressed && page.Scripts.Source.Editable,
+                "and the script shows its source file's text when the level is back");
+            page.Scripts.Source.Text = "// a draft\n";
+            page.ShowScript("beta");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.EditSource.Disabled && !page.EditSource.ButtonPressed && page.CompileScriptButton.Disabled && !page.Scripts.Source.Editable && page.EditSource.TooltipText.Contains("no source file", StringComparison.Ordinal),
+                $"a script with no source file cannot be edited, and says why: \"{page.EditSource.TooltipText}\"");
+            page.ShowScript("alpha", fromBase: true);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.EditSource.Disabled && !page.Scripts.Source.Editable && page.EditSource.TooltipText.Contains("base world", StringComparison.Ordinal), "nor can a script of the base world");
+            page.ShowScript("alpha");
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.EditSource.ButtonPressed && page.Scripts.Source.Editable, "the switch is on again for the next script that can be edited");
+            page.Scripts.Source.Text = Alpha;
+            page.EditSource.ButtonPressed = false;
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(!page.Scripts.Source.Editable && page.CompileScriptButton.Disabled && !page.HasChanges, "switching Edit off makes the view read only again, with no change made");
+
+            // The panel keeps what is typed by itself, whoever listens to its text events (the page's handler stores a draft on every event, which hides these paths): a panel on its own.
+            ScriptsPanel alone = new();
+            tree.Root.AddChild(alone);
+            alone.SetScripts(install.Game, page.Model!.Scripts);
+            check.That(alone.Select("alpha") && alone.Select("gamma") && alone.Select("alpha"), "a panel on its own selects scripts");
+            alone.SetEditing(true);
+            alone.Source.Text = "// kept\n";
+            check.That(alone.Select("gamma") && alone.Select("alpha") && alone.Source.Text == "// kept\n", "what is typed is kept when another script is chosen and this one again");
+            alone.Source.Text = "// kept off\n";
+            alone.SetEditing(false);
+            check.That(alone.Select("gamma") && alone.Select("alpha") && alone.Source.Text == "// kept off\n" && !alone.Source.Editable, "and when the switch is turned off after typing");
+            alone.SetEditing(true);
+            alone.Source.Text = "// kept through a refresh\n";
+            alone.Refresh(page.Model.Scripts);
+            check.That(alone.Source.Text == "// kept through a refresh\n" && alone.UnusedDraftCount == 1 && alone.UnusedDraftNames.SequenceEqual(["alpha"]), "and through a refresh of the scripts");
+            alone.QueueFree();
+            await Frame(tree);
 
             // Nothing was written, and the move editor still works on the objects.
             page.ScriptsToggle.ButtonPressed = false;

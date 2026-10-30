@@ -66,6 +66,17 @@ internal static class LevelScriptCheckerTests
         var badReal = Run(valid, invalid);
         check.That(badReal.Result == 1 && badReal.Errors.Any(error => error.Contains("100 RLWD", StringComparison.Ordinal) && error.Contains("opcode 99", StringComparison.Ordinal)),
             "the archive gate rejects an invalid script in the level's own world");
+        world.Scripts.Clear();
+        world.Scripts.Add(WellFormed("main", [0], []));
+        world.Scripts.Add(WellFormed("main", [0], []));
+        byte[] twice = world.Write();
+        check.That(good.Printed.Single().Contains(", 0 repeated script names", StringComparison.Ordinal), "the archive gate says how many script names repeat, and none does in a valid body");
+        var repeatedBase = Run(twice, valid);
+        check.That(repeatedBase.Result == 1 && repeatedBase.Errors.Any(error => error.Contains("100 BSWD: 1 script name is used by more than one script", StringComparison.Ordinal)),
+            "the archive gate rejects a script name used twice in the base world");
+        var repeatedReal = Run(valid, twice);
+        check.That(repeatedReal.Result == 1 && repeatedReal.Errors.Any(error => error.Contains("100 RLWD: 1 script name is used by more than one script", StringComparison.Ordinal)),
+            "the archive gate rejects a script name used twice in the level's own world");
         var none = Run(empty, empty);
         check.That(none.Result == 1 && none.Errors.Any(error => error.Contains("No compiled scripts", StringComparison.Ordinal)),
             "the archive gate cannot pass with zero scripts checked");

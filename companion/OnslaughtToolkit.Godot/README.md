@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-29 (the mission script compiler, `Missions/`, not yet used by a page; the toolchain paragraph no longer names the maintainer's private installer or paths; earlier: the Level editor's read-only Scripts view; earlier: CE 0.1.11, the first CE to take a world file from a mod, named; earlier: the Level editor's map; what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
+Last updated: 2026-10-30 (the Level editor's Scripts view edits a script's source, compiles it and makes the open level use it, with an Undo, a warning for calls to `Damage` and a count of uncompiled drafts as unsaved work; earlier: the toolchain paragraph no longer names the maintainer's private installer or paths; earlier: the Level editor's read-only Scripts view; earlier: CE 0.1.11, the first CE to take a world file from a mod, named; earlier: the Level editor's map; what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -147,7 +147,7 @@ editor-authored scene, and `npm run build` refuses to stage one.
 | [Lore](Lore/) | The embedded lore library, its Markdown renderer and the campaign's mission list (`CampaignLoreComposer`) |
 | [Ui](Ui/) | The Flight-deck theme and icons, the shell, career cards, the save-choice dialog, the game's art read from the install (`GameArt`) and one class per page |
 | [Tests](Tests/) | Every behavioral contract, run headlessly inside Godot |
-| [Missions](Missions/) | The mission script compiler: a source in the game's script language (`.msl`) to the compiled script a level's world file stores (`ScriptCompiler`), held to the Toolkit's reference compiler by authored vectors and a per-script comparison on an installed game, with documented missing-header and stale-source cases. No page uses it yet |
+| [Missions](Missions/) | The mission script compiler: a source in the game's script language (`.msl`) to the compiled script a level's world file stores (`ScriptCompiler`), held to the Toolkit's reference compiler by authored vectors and a per-script comparison on an installed game, with documented missing-header and stale-source cases. The Level editor's Scripts view uses it to compile a source the player edits |
 | [Development](Development/) | Development-only entries: screen captures, the local retail gates (`LevelsGate`, `ScriptsGate`), export license metadata and the Windows program icon (`IconWriter`) |
 
 `Tests/` and `Development/` compile only into development builds; release exports
@@ -336,7 +336,7 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   at the crosshair and the second well to its left, so the map is not mirrored. That is one level and one heading, a mod this
   page saved, not played by anyone; there has been no Windows run.
 
-  The **Scripts** switch beside the Map switch shows the level's mission scripts, read only, in place of the table and the map. The
+  The **Scripts** switch beside the Map switch shows the level's mission scripts in place of the table and the map (their source is read only until Edit source is turned on, below). The
   list gives each compiled script with what names it (how many objects of the level) and the events it handles, then the base
   world's scripts, dimmed; the selected script's installed source, the `.msl` file it was compiled from, is shown beside it with line numbers
   and the keywords coloured, and a card in the right-hand column says what the script handles, which game functions it calls, and
@@ -362,7 +362,27 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   process locales and native Windows comparison are not verified. Empty quoted names are not resolved by the page. Every other name is matched as written. The list,
   the links and the names are read from the compiled code, the level's objects and the sources, and
   checked against the Toolkit's reference (`tools/level_editor_vectors.py gate-table`, its SCRIPTS, NAMES and PATHS rows) on a game
-  install, with the native names generated from the Toolkit's table (`tools/script_tables.py`). Nothing here writes anything.
+  install, with the native names generated from the Toolkit's table (`tools/script_tables.py`). Reading writes nothing.
+
+  The Scripts view can also **edit a script's source**. **Edit source** makes the source view typeable for one of the level's own
+  scripts that has an installed source file (a base world's script is shown and not edited, and a script whose file is missing says so
+  on the button). **Compile and use** compiles the text with the compiler in `Missions/` (headers from the game folder; the compile
+  session's two counters start where the shipped script's do, so what the edit does not touch keeps its names) and, if it compiles,
+  makes the open level use the new script as one edit: **Undo** takes it back, Redo brings it back, and **Put the shipped script back**
+  is an edit too. A source that does not compile changes nothing, says "line N: ..." and puts the caret on that line. The compiler's
+  notes (how a mixed chain of operators was grouped, a handler the game never calls, a variable declared twice) are shown with the
+  result, and so is one warning about the script the level now uses: a call to `Damage` beyond the shipped script's can crash a level in
+  the game as it is, when the damaged unit has a script of its own and the call is inside a running handler, because the game's script
+  machine cannot be entered twice (the design document's section 8 has what is and is not known; Undo takes the warning away with the
+  script). "Your changes" says "1 script replaced: NAME (what differs)" beside the
+  objects moved. Text that was typed and is not in use (the level's script is not what it compiled to) stays with its script while
+  another is chosen, counts as a change when the companion, the level or the game is left (the page asks first), is named in "Your
+  changes" and is written nowhere. **Save as mod** writes the world
+  file with the replaced script, and only when every replaced script passes the structural check (`ScriptChecker`: the opcodes,
+  operands, jump targets, game functions and their argument counts, entry points, handlers, symbol tables and stack balance the game's
+  loader and script machine assume); the mod holds the world file only, so the edited source is not kept beside it. The page was driven
+  by events in tests and looked at in offscreen captures; nobody has used it by hand, no edited level has been played in CE, and there
+  has been no native Windows run.
 
   The page is laid out for a window of about 1366 by 800 or more. In a smaller one, down to the Companion's 1024 by 700
   minimum, the map is a small overview, the table is narrower, the right-hand column scrolls and the notice a save leaves is
