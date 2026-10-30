@@ -152,7 +152,7 @@ internal sealed class CePlay
             _hooks.OnStart?.Invoke(start);
             int? exit;
             if (_hooks.Run is { } run) exit = await run(start);
-            else exit = await RunProcessAsync(start, folder, cancellationToken);
+            else exit = await RunProcessAsync(start, folder);
             if (exit is null) return Refused("The CE launcher could not be started.");
 
             string log = Path.Combine(folder.Root, "onslaught-ce.log");
@@ -207,12 +207,23 @@ internal sealed class CePlay
         return start;
     }
 
-    private async Task<int?> RunProcessAsync(ProcessStartInfo start, CePlayFolder folder, CancellationToken cancellationToken)
+    /// <summary>
+    /// Starts the launcher and waits for it to exit. Once CE runs, nothing that goes wrong here may take its folder away from under it: the launcher's process id is
+    /// recorded in the marker if that can be done (a sweep would care, nothing else does), and the wait cannot be cancelled.
+    /// </summary>
+    private static async Task<int?> RunProcessAsync(ProcessStartInfo start, CePlayFolder folder)
     {
         using Process? process = Process.Start(start);
         if (process is null) return null;
-        folder.RecordLauncher(process.Id);
-        await process.WaitForExitAsync(cancellationToken);
+        try
+        {
+            folder.RecordLauncher(process.Id);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            // The marker keeps no launcher id; CE runs on, and the folder is removed when it closes.
+        }
+        await process.WaitForExitAsync();
         return process.ExitCode;
     }
 
