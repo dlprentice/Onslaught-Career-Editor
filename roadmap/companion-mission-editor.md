@@ -528,16 +528,22 @@ player's careers, so the button never writes the player's CE folder at all: it m
   belongs to another user or can be written by its group or by others is refused with the path named, before anything is made; the companion's own settings folder is made, private, when it is missing.
 - **Checks.** The route's play suites check the folder, the sweep, the `ce.ini` copy, the launcher's start (arguments, environment, the fence variables), the unchanged player's folder
   and game folder, the refusals and the button on an authored level; a mutation sweep of the new code found three gaps (an oversized marker, a package that turns into an affected
-  launcher after its version was known, a redundant second comparison with the player's folder) and each is closed. The capture's `play` mode runs the
+  launcher after its version was known, a redundant second comparison with the player's folder) and each is closed. The independent review then showed that five one-line mutants of
+  the removal, each putting a path-based step or a link-following open back, passed that suite; its four checks of the removal (a folder that holds an entry swapped for a link, the play
+  folder replaced by a link, swapped late with an empty twin waiting, the temporary folder replaced by a link) are in the route, with a check for each of the review's other requests
+  (the success sentence, the log copy, versions with a label, the refusals, the prefix scrub, the sweep of an empty unmarked folder, the owner and mode of the play folder), and a second sweep
+  of the code added for them (26 mutants, the reviewer's five among them) killed every one. The capture's `play` mode runs the
   button end to end: the same edit as section 16, then the button pressed with the released Onslaught CE 0.1.12 package as the launcher, offscreen (the guards of `port/tools/run.py`, the key presses and a frame
   limit given by environment through the play hooks). CE exited 0 after the run; its log, kept from the temporary folder, has the same four mods lines as section 16 (the world file with
   SHA-256 1504f7e3..., the same bytes the page's Save as mod writes, served once) and the temporary `ce.ini` it was given was the scratch player's with `mods=play-level-100`, `record_sessions=0` and
   `update_check=0` (the player's `record_sessions=1` and a stand-in `mods=` line did not reach it, and an unknown key was kept); the scratch player's CE folder (a `ce.ini`, a stand-in
-  career and a tape) was byte for byte as before and the game folder had the same files and sizes; the temporary folder was gone and the edit still counted as unsaved. The frames, looked at, type the second message's text. They are
-  not time-matched to the section 16 runs (this run drew at 6.0 ms per Present, its frames 0.92 to 3.39 s after the intro skip, against 0.52 to 2.15 s at 3.9 ms for the launcher control and
-  1.20 to 4.78 s at 8.5 ms for the launcher mod run), so the counts need the same care: its subtitle band differs from that control's at all seven frames (1,592 to 3,025 of 31,500 pixels),
-  and its last frame is identical in the band (0 pixels) to the last frame of that mod run, the same message typed out in full. Two earlier runs of the capture, on earlier commits,
-  agree by reading. The frames hold the game's text and stay in local-data.
+  career and a tape) was byte for byte as before and the game folder had the same files and sizes, and so did the Onslaught CE package folder the launcher ran from (35 files, compared by content, which the capture does since the review);
+  the temporary folder was gone and the edit still counted as unsaved. The frames of the earlier Play runs, looked at, type the second message's text. They are
+  not time-matched to the section 16 runs (the last run drew at 6.55 ms per Present, its frames 0.94 to 3.68 s after the intro skip, against 0.52 to 2.15 s at 3.9 ms for the launcher control and
+  1.20 to 4.78 s at 8.5 ms for the launcher mod run), so the counts need the same care: its subtitle band differs from that control's at all seven frames (1,511 to 3,016 of 31,500 pixels),
+  and its last frame is identical in the band (0 pixels) to the last frame of that mod run and of the release mod run, the same message typed out in full; against the previous Play run its
+  frames differ by at most 66 band pixels (counts only: the last run's frames were not looked at again, and the reviewer's own run looked at none). Three earlier runs of the capture, on
+  earlier commits, agree by reading. The frames hold the game's text and stay in local-data.
 - **What it does not show.** Nobody has used the button by hand. One level (100) and one edit; the `-level N` start of other levels is not tried. The run was offscreen from a capture with the key
   presses and the frame limit given by environment, with dummy audio (nothing was heard), and on one machine. Windows is out. A test play uses the unchanged settings of the player's `ce.ini` apart from
   the three keys, so a setting that changes how CE starts (a resolution, say) applies to it too. Enabling a mod in the player's own `ce.ini` through the settings writer, with its backups, is a separate
