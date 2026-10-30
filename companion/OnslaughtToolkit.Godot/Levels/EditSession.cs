@@ -329,8 +329,9 @@ public sealed class EditSession
             for (int i = kept; i < Body.Things.Count; i++)
             {
                 PlacedObject added = Body.Things[i];
-                if (!DuplicateObject.CanCopy(added) || !MoveObject.IsFinite(added.Init.Position) || !Body.Things.Take(i).Any(earlier => earlier.SameExceptPlace(added)))
-                    errors.Add(new Finding("added-row", $"Row {i} ({added.Label}) is not a copy of an earlier unit, so it cannot be saved.", i));
+                // A copy of a copy is equal to the unit the level has, apart from place and name, so each added row is held to the level's own units: one that is not a copy of one of them is named.
+                if (!DuplicateObject.CanCopy(added) || !MoveObject.IsFinite(added.Init.Position) || !Body.Things.Take(kept).Any(original => original.SameExceptPlace(added)))
+                    errors.Add(new Finding("added-row", $"Row {i} ({added.Label}) is not a copy of a unit the level has, so it cannot be saved.", i));
             }
             check.Things.RemoveRange(kept, check.Things.Count - kept);
             for (int i = 0; i < check.Things.Count; i++) check.Things[i].Init.Position = _baseline.Things[i].Init.Position;

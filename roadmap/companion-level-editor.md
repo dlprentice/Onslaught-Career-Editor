@@ -104,8 +104,8 @@ base-world edit against an existing career, and any Windows run (mods are refuse
 - **A copy is appended, and only ever a copy of a unit.** **Copy this unit** adds a record equal to the selected unit's, apart from its place (10 units to its right, or to its left near the edge of
   the 512 square) and its name (`<name> copy`, then `<name> copy 2` if that is taken; a unit with no name gets none), after every stored row, so no row number, waypoint path slot or target index
   changes. Only the unit kind is offered: a start, a trigger, a path point, a spawner or a building carries rules the editor does not know (a path names its points by row, a career indexes a base
-  world's rows, the game's grids may remember a building). The validator accepts rows after the level's own only when each is a unit that is a copy of an earlier row (every member equal but place and
-  name, floats compared bit for bit, so a copy of a copy is fine), a base world is never given more rows, and anything else that differs from the level is still refused. A copy that is moved is still
+  world's rows, the game's grids may remember a building). The validator accepts rows after the level's own only when each is a unit that is a copy of one the level has (every member equal but place and
+  name, floats compared bit for bit; a copy of a copy is equal to the level's unit, so it counts), a base world is never given more rows, and anything else that differs from the level is still refused. A copy that is moved is still
   one change; Undo takes it back, and the table, the map, the changes box and the unsaved-change count all know it. Adding a unit from nothing is not offered: a copy carries every field the game needs.
 - **Z stays editable and honest.** The inspector shows the stored height, the terrain height under it and the
   difference, and says plainly what has been observed (a ground unit is placed on the ground in the runs so far; air

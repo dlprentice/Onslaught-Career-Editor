@@ -232,7 +232,16 @@ internal static class LevelCopyTests
         PlacedObject odd = notACopy.Body.Things[unit].Clone();
         odd.DiesOn += 1;
         notACopy.Body.Things.Add(odd);
-        check.That(Has(notACopy, "added-row"), "an added unit that is not a copy of an earlier row is refused");
+        check.That(Has(notACopy, "added-row"), "an added unit that is not a copy of one the level has is refused");
+
+        // Every added row that is not a copy is named, one that equals another added row that is not a copy included (each is held to the level's own units).
+        EditSession twoBad = new(baseline);
+        PlacedObject badOne = twoBad.Body.Things[unit].Clone(), badTwo = twoBad.Body.Things[unit].Clone();
+        badOne.DiesOn += 1;
+        badTwo.DiesOn += 1;
+        twoBad.Body.Things.Add(badOne);
+        twoBad.Body.Things.Add(badTwo);
+        check.That(twoBad.Validate().Errors.Count(error => error.Code == "added-row") == 2, "two added rows that are not copies are both refused, though they equal each other");
 
         EditSession changedOriginal = new(baseline);
         changedOriginal.Apply(new DuplicateObject(unit, new Vector3(1f, 1f, 0f), "c"));
