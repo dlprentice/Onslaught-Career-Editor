@@ -462,7 +462,7 @@ internal static partial class CePlayTests
                        seen.Environment["BEA_GAME_DIR"] == rig.Install.Game && CePlay.FenceVariables.All(name => !seen.Environment.ContainsKey(name)),
                 $"CE is told a temporary folder of its own, never the player's, and the game folder the editor read; none of the variables that switch mods off reaches it: {playFolder}");
             check.That(LeakedKnobs.Except(["BEA_PORT_QUIT"]).All(name => !seen.Environment.ContainsKey(name)) && seen.Environment.Keys.Where(name => name.StartsWith("BEA_PORT_", StringComparison.Ordinal) || name.StartsWith("BEA_NET_", StringComparison.Ordinal)).SequenceEqual(["BEA_PORT_QUIT"]) &&
-                       seen.Environment["BEA_PORT_QUIT"] == "9" && seen.Environment["BEA_REPORT_NO_OPEN"] == "1",
+                       seen.Environment.GetValueOrDefault("BEA_PORT_QUIT") == "9" && seen.Environment.GetValueOrDefault("BEA_REPORT_NO_OPEN") == "1",
                 "every other BEA_PORT_* and BEA_NET_* is scrubbed too, whether or not the list names it; what the play hooks add after that reaches CE, and other BEA_ variables stay");
             check.That(seen.Ini == "# mine\ngamedir=/somewhere/else\nmods=play-level-100\nrecord_sessions=0\nupdate_check=0\nwide_mode_w=1920\n",
                 $"CE's ce.ini there is the player's with mods= naming the mod alone, recording off and no update check: \"{seen.Ini.Replace("\n", "|")}\"");
@@ -514,14 +514,17 @@ internal static partial class CePlayTests
             string outsideLog = Path.Combine(root, "main", "outside-log.txt"), createdThrough = Path.Combine(root, "main", "created-through-link.txt");
             File.WriteAllText(outsideLog, "outside");
             string working = rig.Play.LastLog + ".new";
+            File.Delete(working);   // (a regression that leaves one behind must fail a check below, not stop the plant)
             File.CreateSymbolicLink(working, createdThrough);
             CePlayReport danglingPlanted = await rig.Play.PlayAsync(100, Stage);
             check.That(danglingPlanted.LogCopy == rig.Play.LastLog && !File.Exists(createdThrough) && File.ReadAllText(rig.Play.LastLog) == FakeLog && !File.Exists(working) && new FileInfo(working).LinkTarget is null,
                 "a dangling link planted at the log's working name is not written through, and the log is kept");
+            File.Delete(working);
             File.CreateSymbolicLink(working, outsideLog);
             CePlayReport filePlanted = await rig.Play.PlayAsync(100, Stage);
             check.That(filePlanted.LogCopy == rig.Play.LastLog && File.ReadAllText(outsideLog) == "outside" && File.ReadAllText(rig.Play.LastLog) == FakeLog && !File.Exists(working) &&
                        Mode(rig.Play.LastLog) == (UnixFileMode.UserRead | UnixFileMode.UserWrite), "a link to a file planted at the working name leaves that file as it was, and the kept log is private to the player");
+            File.Delete(working);
             File.WriteAllText(working, "stale");
             CePlayReport stale = await rig.Play.PlayAsync(100, Stage);
             check.That(stale.LogCopy == rig.Play.LastLog && File.ReadAllText(rig.Play.LastLog) == FakeLog && !File.Exists(working), "a stale file at the working name is replaced and the log is kept");
