@@ -165,10 +165,18 @@ public sealed class PlacedObject
             object? left = property.GetValue(a), right = property.GetValue(b);
             if (left is null || right is null) { if (left is not null || right is not null) return false; continue; }
             bool value = property.PropertyType.IsValueType || property.PropertyType == typeof(string);
-            if (value ? !left.Equals(right) : !SameMembers(left, right)) return false;
+            if (value ? !SameValue(left, right) : !SameMembers(left, right)) return false;
         }
         return true;
     }
+
+    /// <summary>Equal as stored: floats bit for bit (so a number that is not a number still equals its own copy, and a zero that became a negative zero does not).</summary>
+    private static bool SameValue(object left, object right) => left switch
+    {
+        float a when right is float b => BitConverter.SingleToUInt32Bits(a) == BitConverter.SingleToUInt32Bits(b),
+        Vector3 a when right is Vector3 b => SameValue(a.X, b.X) && SameValue(a.Y, b.Y) && SameValue(a.Z, b.Z),
+        _ => left.Equals(right),
+    };
 }
 
 /// <summary>The fields every thing record has, then the one extra block its kind adds.</summary>

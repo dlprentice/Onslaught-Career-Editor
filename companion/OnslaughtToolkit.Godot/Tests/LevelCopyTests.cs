@@ -16,6 +16,7 @@ internal static class LevelCopyTests
         check.Suite("copying units");
         byte[] baseline = LevelTests.Body("authored-v50");
         Cloning(baseline, check);
+        EveryBlock(check);
         Command(baseline, check);
         Session(baseline, check);
         Validation(baseline, check);
@@ -72,6 +73,14 @@ internal static class LevelCopyTests
             change(other);
             check.That(!other.SameExceptPlace(unit) && !unit.SameExceptPlace(other), $"a record whose {member} differs is not a copy");
         }
+        // Numbers are compared as stored: a number that is not a number equals its own copy, and a zero that became a negative zero is not the same.
+        PlacedObject odd = unit.Clone();
+        odd.Init.Orientation = new Vector3(float.NaN, 0f, 0f);
+        PlacedObject oddCopy = odd.Clone();
+        PlacedObject negative = unit.Clone(), positive = unit.Clone();
+        negative.Init.Orientation = new Vector3(-0f, 0f, 0f);
+        positive.Init.Orientation = new Vector3(0f, 0f, 0f);
+        check.That(oddCopy.SameExceptPlace(odd) && odd.SameExceptPlace(oddCopy) && !negative.SameExceptPlace(positive) && !positive.SameExceptPlace(negative), "numbers are compared bit for bit: a NaN equals its own copy, a negative zero is not a zero");
         // The kind-specific blocks are copied apart and compared too.
         int spawner = FirstOf(body, thing => thing.Init.Spawner is not null), trigger = FirstOf(body, thing => thing.Init.SphereTrigger is not null);
         if (spawner >= 0)
@@ -86,6 +95,56 @@ internal static class LevelCopyTests
             s.Init.SphereTrigger!.Radius += 1f;
             check.That(!s.SameExceptPlace(body.Things[trigger]) && s.Init.SphereTrigger.Radius != body.Things[trigger].Init.SphereTrigger!.Radius, "a sphere trigger's block is copied apart and compared");
         }
+    }
+
+    /// <summary>
+    /// A record with every kind-specific block filled in (the authored level has only some of them), copied and compared block by block, and the guards that fail when a member is added to a record
+    /// the copy and the comparison do not know about.
+    /// </summary>
+    private static void EveryBlock(Checks check)
+    {
+        ObjectInit full = new()
+        {
+            Position = new Vector3(1f, 2f, 3f), Orientation = new Vector3(0.1f, 0.2f, 0.3f), MeshNumber = 4, Allegiance = 5, Target = 6, Script = "s", Name = "n", SpawnScript = "ss", Active = 1, AttachScriptsToUnits = 2,
+            Spawner = new SpawnerInit { Amount = 1, Delay = 2f, SquadDelay = 3f, InitialDelay = 4f, SquadSize = 5, SpawnUnit = "u", SpawnerSpawnScript = "x" },
+            Squad = new SquadInit { Amount = 6, Mode = 7 }, Cutscene = new CutsceneInit { File = "f", LinkTo = "l" }, Start = new StartInit { PlaneMode = 8, PlayerNumber = 9 },
+            Tree = new TreeInit { TreeType = "t" }, SphereTrigger = new SphereTriggerInit { Radius = 10f },
+        };
+        PlacedObject everything = new() { ObjectId = ObjectKinds.Unit, Definition = "Def", DiesOn = 3, Init = full };
+        PlacedObject copy = everything.Clone();
+        check.That(copy.SameExceptPlace(everything) && !ReferenceEquals(copy.Init, full) && !ReferenceEquals(copy.Init.Spawner, full.Spawner) && !ReferenceEquals(copy.Init.Squad, full.Squad) &&
+                   !ReferenceEquals(copy.Init.Cutscene, full.Cutscene) && !ReferenceEquals(copy.Init.Start, full.Start) && !ReferenceEquals(copy.Init.Tree, full.Tree) && !ReferenceEquals(copy.Init.SphereTrigger, full.SphereTrigger),
+            "a record with every block filled copies to an equal record that shares no block with it");
+        List<(string Member, Action<ObjectInit> Change)> edits =
+        [
+            ("spawner amount", init => init.Spawner!.Amount += 1), ("spawner delay", init => init.Spawner!.Delay += 1f), ("spawner squad delay", init => init.Spawner!.SquadDelay += 1f),
+            ("spawner initial delay", init => init.Spawner!.InitialDelay += 1f), ("spawner squad size", init => init.Spawner!.SquadSize += 1), ("spawner unit", init => init.Spawner!.SpawnUnit += "x"),
+            ("spawner script", init => init.Spawner!.SpawnerSpawnScript += "x"), ("squad amount", init => init.Squad!.Amount += 1), ("squad mode", init => init.Squad!.Mode += 1),
+            ("cutscene file", init => init.Cutscene!.File += "x"), ("cutscene link", init => init.Cutscene!.LinkTo += "x"), ("start plane mode", init => init.Start!.PlaneMode += 1),
+            ("start player number", init => init.Start!.PlayerNumber += 1), ("tree type", init => init.Tree!.TreeType += "x"), ("trigger radius", init => init.SphereTrigger!.Radius += 1f),
+        ];
+        int alike = 0, apart = 0;
+        foreach ((string member, Action<ObjectInit> change) in edits)
+        {
+            PlacedObject other = everything.Clone();
+            change(other.Init);
+            if (!other.SameExceptPlace(everything) && !everything.SameExceptPlace(other)) alike++;
+            else check.Fail($"a record whose {member} differs is still taken for a copy");
+            if (copy.SameExceptPlace(everything)) apart++;
+            else check.Fail($"changing the {member} of another copy changed this one");
+        }
+        check.That(alike == edits.Count && apart == edits.Count, "every member of every block is compared, and a change to one copy leaves the others as they were");
+
+        // The guards: what the copy and the comparison handle is a number, a text or a block of numbers and texts; a member of any other kind needs them taught first.
+        static bool Plain(Type type) => type.IsValueType || type == typeof(string);
+        System.Reflection.PropertyInfo[] unknown = [.. typeof(ObjectInit).GetProperties().Where(property => !Plain(property.PropertyType) && !typeof(InitBlock).IsAssignableFrom(property.PropertyType))
+            .Concat(typeof(InitBlock).Assembly.GetTypes().Where(type => type != typeof(InitBlock) && typeof(InitBlock).IsAssignableFrom(type)).SelectMany(type => type.GetProperties()).Where(property => !Plain(property.PropertyType)))];
+        check.That(unknown.Length == 0, $"every member of a thing's record is a number, a text or a block of them: {string.Join(", ", unknown.Select(property => property.DeclaringType!.Name + "." + property.Name))}");
+        string[] settable = [.. typeof(PlacedObject).GetProperties().Where(property => property.SetMethod is { IsPublic: true }).Select(property => property.Name).Order(StringComparer.Ordinal)];
+        check.That(settable.SequenceEqual(["Definition", "DiesOn", "Init", "ObjectId"]), $"a thing's settable members are the four the copy and the comparison know: {string.Join(", ", settable)}");
+        string[] initMembers = [.. typeof(ObjectInit).GetProperties().Where(property => property.SetMethod is { IsPublic: true }).Select(property => property.Name).Order(StringComparer.Ordinal)];
+        string[] knownInit = [.. new[] { "Active", "Allegiance", "AttachScriptsToUnits", "Cutscene", "MeshNumber", "Name", "Orientation", "Position", "Script", "Spawner", "SpawnScript", "Squad", "Start", "SphereTrigger", "Target", "Tree" }.Order(StringComparer.Ordinal)];
+        check.That(initMembers.SequenceEqual(knownInit), $"a thing's record has the members the copy and the comparison know: {string.Join(", ", initMembers)}");
     }
 
     // ---- the command --------------------------------------------------------------------------------------------------------------

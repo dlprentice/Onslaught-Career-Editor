@@ -239,7 +239,6 @@ public sealed class EditSession
     /// <exception cref="InvalidDataException">The body holds something the format cannot store.</exception>
     public byte[] ToBytes() => Body.Write();
 
-    /// <summary>The records whose stored position differs from the baseline's, in row order (compared bit for bit).</summary>
     /// <summary>How many rows the world had when it was loaded; rows from this number on were added by copies.</summary>
     public int BaselineThingCount => _baseline.Things.Count;
 
@@ -247,6 +246,7 @@ public sealed class EditSession
     public IReadOnlyList<(int Index, string Kind, string Name)> Additions() =>
         [.. Enumerable.Range(_baseline.Things.Count, Math.Max(0, Body.Things.Count - _baseline.Things.Count)).Select(i => (i, Body.Things[i].Kind, Body.Things[i].Label))];
 
+    /// <summary>The records whose stored position differs from the baseline's, in row order (compared bit for bit).</summary>
     public IReadOnlyList<ObjectChange> Changes()
     {
         List<ObjectChange> changes = [];
