@@ -788,7 +788,7 @@ public partial class LevelEditorCapture : SceneTree
         if (what is null) return;
         CePlay play = app.Services.Play;
         string game = app.Game.Folder!.AssetRoot;
-        string[] userBefore = Snapshot(_playUser), gameBefore = [.. Directory.EnumerateFiles(game, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal).Select(path => Path.GetRelativePath(game, path) + " " + new FileInfo(path).Length)];
+        string[] userBefore = Snapshot(_playUser), packageBefore = Snapshot(_cePackage), gameBefore = [.. Directory.EnumerateFiles(game, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal).Select(path => Path.GetRelativePath(game, path) + " " + new FileInfo(path).Length)];
         Report(play.Unavailable() is null && !page.Play.Disabled, $"the button is on for level {_level}: \"{page.Play.TooltipText}\"");
         await Shot(viewport, label, "play-3-ready");
         Task playing = page.PlayAsync();
@@ -804,6 +804,7 @@ public partial class LevelEditorCapture : SceneTree
         CePlayReport report = play.Last!;
         Report(report is { Started: true, ExitCode: 0, ModServed: true } && report.Left.Count == 0, $"CE ran and its log says it served the mod's world file: exit {report.ExitCode}, {report.ModLines.Count} lines about mods, served {report.ModServed}");
         Report(Snapshot(_playUser).SequenceEqual(userBefore), "the player's own CE folder (ce.ini, careers, tapes) is byte for byte as it was");
+        Report(Snapshot(_cePackage).SequenceEqual(packageBefore), $"the Onslaught CE package folder the launcher ran from is byte for byte as it was ({packageBefore.Length} files)");
         Report(Directory.EnumerateFiles(game, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal).Select(path => Path.GetRelativePath(game, path) + " " + new FileInfo(path).Length).SequenceEqual(gameBefore), "the game folder has the same files and sizes");
         Report(Directory.GetDirectories(_playParent, "play-*").Length == 0 && File.Exists(play.LastLog), $"the temporary folder is gone and CE's log is kept in {play.LastLog}");
         Report(page.HasChanges && page.ChangeCount == 1 && !page.Play.Disabled, $"the edit still counts as unsaved and the button is on again: \"{page.PlayNote.Split('\n')[0]}\"");
