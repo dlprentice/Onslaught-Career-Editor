@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-30 (the Level editor's Scripts view edits a script's source, compiles it and makes the open level use it, with an Undo, a warning for calls to `Damage` and a count of uncompiled drafts as unsaved work; earlier: the toolchain paragraph no longer names the maintainer's private installer or paths; earlier: the Level editor's read-only Scripts view; earlier: CE 0.1.11, the first CE to take a world file from a mod, named; earlier: the Level editor's map; what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
+Last updated: 2026-10-30 (one script edit staged by the Level editor was played in CE on Linux; the Level editor's Scripts view edits a script's source, compiles it and makes the open level use it, with an Undo, a warning for calls to `Damage` and a count of uncompiled drafts as unsaved work; earlier: the toolchain paragraph no longer names the maintainer's private installer or paths; earlier: the Level editor's read-only Scripts view; earlier: CE 0.1.11, the first CE to take a world file from a mod, named; earlier: the Level editor's map; what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -381,8 +381,9 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   file with the replaced script, and only when every replaced script passes the structural check (`ScriptChecker`: the opcodes,
   operands, jump targets, game functions and their argument counts, entry points, handlers, symbol tables and stack balance the game's
   loader and script machine assume); the mod holds the world file only, so the edited source is not kept beside it. The page was driven
-  by events in tests and looked at in offscreen captures; nobody has used it by hand, no edited level has been played in CE, and there
-  has been no native Windows run.
+  by events in tests and looked at in offscreen captures, and its `scriptmod` capture staged one edit (a tutorial message of level 100) as a mod that Onslaught CE played on
+  Linux, offscreen and live, with the edited subtitle on screen beside control runs (the mission editor design's section 16 says how and what it does not show); nobody has used
+  it by hand, no other edit has been played, and there has been no native Windows run.
 
   The page is laid out for a window of about 1366 by 800 or more. In a smaller one, down to the Companion's 1024 by 700
   minimum, the map is a small overview, the table is narrower, the right-hand column scrolls and the notice a save leaves is
