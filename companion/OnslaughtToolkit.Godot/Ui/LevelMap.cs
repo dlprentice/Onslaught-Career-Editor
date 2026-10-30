@@ -240,7 +240,10 @@ internal sealed partial class LevelMap : Control
         if (_selected is not int selected || _rows.FirstOrDefault(row => row.Index == selected) is not { } row) return false;
         double step = key.ShiftPressed ? 5 : key.CtrlPressed ? 0.05 : 0.5;
         (double dx, double dy) = key.Keycode switch { Key.Left => (-step, 0.0), Key.Right => (step, 0.0), Key.Up => (0.0, step), _ => (0.0, -step) };
-        MoveRequested?.Invoke(selected, MapView.ToHundredths(row.Position.X + dx), MapView.ToHundredths(row.Position.Y + dy));
+        // Only the pressed axis is asked for, to a hundredth like a drop; the other axis is given back exactly as it is (an off-grid number and a stored -0 stay as they are).
+        float x = dx == 0 ? row.Position.X : MapView.ToHundredths(row.Position.X + dx);
+        float y = dy == 0 ? row.Position.Y : MapView.ToHundredths(row.Position.Y + dy);
+        MoveRequested?.Invoke(selected, x, y);
         return true;
     }
 
