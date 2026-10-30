@@ -115,9 +115,11 @@ internal static partial class CePlayTests
         Directory.CreateDirectory(realPlace);
         Directory.CreateSymbolicLink(link, realPlace);
         File.WriteAllText(Path.Combine(root, "a-file"), "x");
+        Directory.CreateDirectory(Path.Combine(realPlace, "sub"));
         check.That(!CePlayFolder.Create("relative/play", 100, "m", 1, now).Ok && !CePlayFolder.Create(Path.Combine(root, "a-file"), 100, "m", 1, now).Ok &&
                    !CePlayFolder.Create(link, 100, "m", 1, now).Ok && !CePlayFolder.Create(Path.Combine(link, "play"), 100, "m", 1, now).Ok &&
-                   Listing(realPlace) == "", "a play folder that is not a full path, is a file, is a link or lies behind one is refused, and nothing is written through the link");
+                   !CePlayFolder.Create(Path.Combine(link, "sub", "play"), 100, "m", 1, now).Ok && Listing(realPlace) == "sub",
+            "a play folder that is not a full path, is a file, is a link or lies behind one (however deep) is refused, and nothing is written through the link");
 
         // Files go in new, once, inside the folder.
         folder.WriteFile("ce.ini", Encoding.UTF8.GetBytes("mods=x\n"));
