@@ -12,15 +12,15 @@ the campaign's records are in the private `dlprentice/onslaught-re-archive`.
 
 ## Cross-project progress and priorities
 
-This is the single cross-project chart. Snapshot checked **2026-10-29, 21:09 ET**; verify the linked owner and current
-release before relying on it. David has paused feature, gameplay, build and release work while documentation and
-processes are organized; resume those lanes only when he changes direction. A development branch is not a released feature. Update the affected row at a material
-milestone rather than keeping a second live dashboard in a handoff. The [goal](GOAL.md#how-progress-is-measured)
+This is the single cross-project chart. Snapshot checked **2026-10-29, 21:44 ET**; verify the linked owner and current
+release before relying on it. David has authorized all work to resume when the next lead takes over; the current Codex
+session is winding down for handoff. A development branch is not a released feature. Update the affected row at a
+material milestone rather than keeping a second live dashboard in a handoff. The [goal](GOAL.md#how-progress-is-measured)
 defines progress and what a completion claim requires.
 
 | Area | Current state and remaining outcome | Detailed owner |
 | --- | --- | --- |
-| CE release and player experience | 0.1.12 is the latest verified public release. Reviewed menu, cursor and timing corrections are in later development source; 0.1.13 is not released. Validate exact Linux and Windows packages and updates before shipping. | [CE releases](https://github.com/dlprentice/onslaught-ce/releases/latest), [CE README](https://github.com/dlprentice/onslaught-ce) |
+| CE release and player experience | 0.1.12 is the latest verified public release. Reviewed menu, cursor and timing corrections are in later development source; 0.1.13 is not released. Player-documentation corrections are in private source and await a safe public export. Validate exact Linux and Windows packages and updates before shipping. | [CE releases](https://github.com/dlprentice/onslaught-ce/releases/latest), [CE README](https://github.com/dlprentice/onslaught-ce) |
 | Reported Windows issues | One reproduced cause of double music is fixed in 0.1.12, with software-VM evidence. The reporter's physical AMD/audio/input retest, separate stutter and reported graphics artifacts remain open. | [CE releases](https://github.com/dlprentice/onslaught-ce/releases/latest) |
 | Online multiplayer | Experimental two-process work is not player-ready. Deliver independently controlled players, compatible content, reliable session lifecycle and approachable connections across Linux and Windows, then validate actual networks. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play), [CE README](https://github.com/dlprentice/onslaught-ce) |
 | Campaign co-op and scale | Ordinary-campaign objectives, transitions, deaths, rejoin and safe progression are not established online. Larger matches, maps and Battle Engine customization are later goals. Local split-screen is not online co-op. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play) |
@@ -29,11 +29,11 @@ defines progress and what a completion claim requires.
 | Mods and content catalogue | Experimental CE mods are available on Linux. Windows mod support, safe authoring/compatibility, a complete verified content inventory and HD successors remain. | [CE README](https://github.com/dlprentice/onslaught-ce), [catalogue work below](#content-catalogue) |
 | Commander | A limited development foundation exists. A usable tactical commander, including eventual multiplayer, remains to be validated and delivered. | [Goal](GOAL.md), [CE](https://github.com/dlprentice/onslaught-ce) |
 | Godot rebuild | Selected recorded level-100 comparisons exist; complete gameplay, audio and presentation parity and a finished playable replacement are not established. HD assets and expanded gameplay follow a faithful baseline. | [Godot parity record](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md) |
-| Decompilation and baseline | The private mapped-function check uses a disclosed one-byte compiled-object concession; without it one mapped function remains unmatched. Stand-ins and full linked/runtime equivalence remain separate work. | [Public decompilation](https://github.com/dlprentice/onslaught-decomp) |
+| Decompilation and baseline | The private mapped-function check uses a disclosed one-byte compiled-object concession; without it one mapped function remains unmatched. Stand-ins and full linked/runtime equivalence remain separate work. A correction to the public overview and score-write documentation is prepared in private source and awaits export. | [Public decompilation](https://github.com/dlprentice/onslaught-decomp) |
 | Companion | CE/original careers, settings and backups exist with bounded tests. Broader Windows UI/device acceptance, listening and safe release remain. | [Companion README](companion/OnslaughtToolkit.Godot/README.md), [acceptance below](#companion--ce-integration) |
 | Diagnostics and recording | Useful bounded logs and manual, informed reporting are available. Preserve faithful reference tapes and develop separate coverage for CE features and controller input; avoid telemetry or automatic uploads. | [CE reporting guidance](https://github.com/dlprentice/onslaught-ce#report-a-problem) |
 | Special Thanks | Stuart Gillam, Jeppi and BermudaMaster are acknowledged in 0.1.12. Keep acknowledgements accurate as further contributors are identified. | [CE credits](https://github.com/dlprentice/onslaught-ce#credits-and-special-thanks) |
-| Documentation, repositories and recovery | Reconcile the active owners and retained handoffs. Selected off-site data has been restored and checked; full corpus and replacement-machine recovery remain unproven. Private recovery details stay in private records. | [Project index](PROJECT-INDEX.md), repository guides |
+| Documentation, repositories and recovery | Reconcile the active owners and retained handoffs. Selected off-site data has been restored and checked; some restored sets still need discoverable index entries. Full corpus and replacement-machine recovery remain unproven. Private recovery details stay in private records. | [Project index](PROJECT-INDEX.md), repository guides |
 | Showcase and website | The requested port footage has not met its brief and is paused. The domain is owned; no website deployment is currently required. | Maintainer direction |
 
 ## Open work
