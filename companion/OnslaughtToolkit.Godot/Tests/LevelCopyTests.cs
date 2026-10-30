@@ -294,6 +294,7 @@ internal static class LevelCopyTests
         check.That(second.Ok && model.Row(second.Row!.Value)!.Name == "Tank 1 copy 2" && ghost.Ok && model.Row(ghost.Row!.Value)!.Name.Length == 0 && model.Row(ghost.Row!.Value)!.Label == "Ghost",
             "a second copy of the same unit is numbered, and a unit with no name has a copy with none");
         check.That(model.ChangeSummary() == $"3 units copied: Tank 1 copy (row {count}); Tank 1 copy 2 (row {count + 1}); Ghost (row {count + 2}).", $"the summary lists them: \"{model.ChangeSummary()}\"");
+        check.That(model.UnsavedChangeCount == 3, $"three copies are three unsaved changes: {model.UnsavedChangeCount}");
         DuplicateOutcome copyOfCopy = model.Duplicate(count);
         check.That(copyOfCopy.Ok && model.Row(copyOfCopy.Row!.Value)!.Name == "Tank 1 copy copy" && model.Row(copyOfCopy.Row!.Value)!.Position == new Vector3(30f, 20f, 0f), "a copy of a copy is allowed, named after it and shifted from it");
 
@@ -307,7 +308,8 @@ internal static class LevelCopyTests
         check.That(edge.Ok && model.Row(edge.Row!.Value)!.Position == new Vector3(495f, 20f, 0f) && edge.Message.Contains("to its left", StringComparison.Ordinal), $"a copy that would leave the square goes to the left instead: {edge.Message}");
 
         // What is saved holds the copies, strictly; after the save nothing is unsaved, and undoing a copy is an unsaved change again.
-        check.That(model.Session!.Validate().CanSave && model.Session.Additions().Count == 5, "the edit with its copies can be saved");
+        check.That(model.Session!.Validate().CanSave && model.Session.Additions().Count == 5 && model.Session.Changes().Count == 1 && model.UnsavedChangeCount == 6,
+            $"the edit with its five copies and one moved unit can be saved, and counts as six changes: {model.UnsavedChangeCount}");
         string mods = Path.Combine(folder, "mods");
         SaveOutcome saved = model.SaveAsMod(mods, new ModInfo("copy-test", "Copy test"), []);
         byte[] world = saved.Staged is null ? [] : File.ReadAllBytes(Path.Combine(saved.Staged.Root, "data", "worlds", "world100.wrd"));
