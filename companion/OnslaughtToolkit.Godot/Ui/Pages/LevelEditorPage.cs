@@ -205,7 +205,9 @@ internal sealed class LevelEditorPage : Page
         Y = Axis(fields, "Y");
         Z = Axis(fields, "Z");
         _stock = inside.Add(Build.Text("", "Faint"));
-        HBoxContainer actions = inside.Add(Build.Row(10));
+        HFlowContainer actions = inside.Add(new HFlowContainer());   // the three buttons wrap in a narrow column instead of widening the page past a 1024 pixel window
+        actions.AddThemeConstantOverride("h_separation", 10);
+        actions.AddThemeConstantOverride("v_separation", 6);
         Apply = actions.Add(Build.Button("Move", tooltip: "Move the object to these coordinates (Enter does the same).", disabled: true));
         Reset = actions.Add(Build.Button("Reset this object", tooltip: "Put the object back where the level has it.", disabled: true));
         Duplicate = actions.Add(Build.Button("Copy this unit", tooltip: "Add a copy of this unit at the end of the level, 10 units to its right, to be moved where you want it. Only units can be copied.", disabled: true));
