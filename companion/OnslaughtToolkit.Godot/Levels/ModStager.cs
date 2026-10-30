@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using OnslaughtToolkit.Companion.Assets;
 using OnslaughtToolkit.Companion.Files;
+using OnslaughtToolkit.Companion.Missions;
 
 namespace OnslaughtToolkit.Companion.Levels;
 
@@ -20,7 +21,7 @@ public sealed record ModInfo(string Id, string Name, string Version = "1", strin
 /// <summary>One file of a staged mod: its path inside the mod's folder, its size and its SHA-256.</summary>
 public sealed record StagedFile(string Path, long Size, string Sha256);
 
-/// <summary>A mod that was written: its folder, the SHA-256 of its <c>mod.json</c> and every world file, in the order written.</summary>
+/// <summary>A mod that was written: its folder, the SHA-256 of its <c>mod.json</c> and every staged file, in the order written.</summary>
 public sealed record StagedMod(string Root, string ManifestSha256, IReadOnlyList<StagedFile> Files);
 
 /// <summary>A mod that cannot be made or saved, in a sentence the player can act on.</summary>
@@ -36,15 +37,16 @@ public sealed class ModStageException : Exception
 }
 
 /// <summary>
-/// Packages edited world bodies as an Onslaught CE mod folder, so that CE loads them with no hand editing. A port of the
-/// Toolkit's <c>tools/world_mod_stage.py</c>, which the tests compare it with byte for byte: the same limits CE's mod loader
-/// applies at start-up are checked first, and the folder it writes is
+/// Packages edited world bodies as an Onslaught CE mod folder. A port of the Toolkit's <c>tools/world_mod_stage.py</c>,
+/// which the tests compare it with byte for byte: supported per-mod loader limits are checked first, but CE still checks the
+/// files and other enabled mods present when it runs. The folder it writes is
 /// <code>
 /// ID/mod.json                   schema 1, the id, name, version, optional author, description, ce_min and ce_max, and every file with its size and SHA-256
 /// ID/data/worlds/worldNNN.wrd   the bodies, byte for byte
+/// ID/data/MissionScripts/...    optional edited source text for an existing game file
 /// </code>
 /// A mod is always a new folder (an existing empty one is used), never inside a game folder or a protected folder, with the
-/// world files written first and <c>mod.json</c> last (a folder without it is inert). Each file goes through the companion's
+/// files written first and <c>mod.json</c> last (a folder without it is inert). Each file goes through the companion's
 /// new-file-only publisher. If a write fails, files and folders may remain: they are not removed by path because another
 /// writer may have changed them. The error names the folder and warns that a manifest may also be present.
 /// <para>
@@ -59,18 +61,35 @@ public sealed class ModStageException : Exception
 public static class ModStager
 {
     private const string PartialOutputWarningKey = "OnslaughtToolkit.ModStager.PartialOutputWarning";
-    public const int MaxFilesPerMod = 4096, MaxWorldFiles = 1000, MaxWorldBytes = 4 << 20, MaxManifestBytes = 256 << 10;
+    public const int MaxFilesPerMod = 4096, MaxWorldFiles = 1000, MaxWorldBytes = 4 << 20, MaxSourceBytes = 1 << 20, MaxManifestBytes = 256 << 10,
+        MaxSourceFiles = 128, MaxSourceTotal = 8 << 20, MaxStageIncludes = 2048, MaxStageIncludeChars = 16 << 20;
     public const long MaxTotalBytes = 1L << 30;
 
     private static readonly Regex IdPattern = new("\\A[a-z0-9_-]{1,48}\\z", RegexOptions.CultureInvariant);
     private static readonly Regex VersionPattern = new("\\A[0-9]{1,5}(?:\\.[0-9]{1,5}){0,3}\\z", RegexOptions.CultureInvariant);
     private static readonly Regex WorldPathPattern = new("\\Adata/worlds/world[0-9]{3}\\.wrd\\z", RegexOptions.CultureInvariant);
+    private static readonly Regex SourcePathPattern = new("\\Adata/MissionScripts/level([0-9]{3})/([^/]+)\\.msl\\z", RegexOptions.CultureInvariant);
 
     /// <summary>The path CE reads a level's world from inside a mod: <c>data/worlds/worldNNN.wrd</c>.</summary>
     public static string WorldPath(int level)
     {
         if (level is < 0 or > 999) throw new ModStageException($"A world level is a number from 0 to 999, not {level}.");
         return LevelWorlds.WorldFileName(level);
+    }
+
+    /// <summary>The level of a supported CE mission-source path, or null when CE's path rules would refuse it.</summary>
+    internal static int? SourceLevel(string path)
+    {
+        if (path.Length > 240) return null;
+        Match match = SourcePathPattern.Match(path);
+        if (!match.Success) return null;
+        string part = path[(path.LastIndexOf('/') + 1)..];
+        if (part.Length > 128 || part[0] == ' ' || part[^1] is ' ' or '.' ||
+            part.Any(c => c < 32 || c >= 127 || "\\:*?\"<>|".Contains(c))) return null;
+        string stem = part.Split('.')[0].TrimEnd(' ').ToUpperInvariant();
+        if (stem is "CON" or "PRN" or "AUX" or "NUL" or "CONIN$" or "CONOUT$" ||
+            (stem.Length == 4 && (stem.StartsWith("COM", StringComparison.Ordinal) || stem.StartsWith("LPT", StringComparison.Ordinal)) && stem[3] is >= '0' and <= '9')) return null;
+        return int.Parse(match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
     }
 
     /// <summary>The first thing wrong with what a mod says about itself, or null when CE's loader would accept it (and, as the Toolkit stager does, some CE could load it: ce_min is not after ce_max).</summary>
@@ -125,14 +144,29 @@ public static class ModStager
         if (info.CeMax is not null) text.Append("  \"ce_max\": ").Append(Json(info.CeMax)).Append(",\n");
         text.Append("  \"files\": [\n");
         string[] paths = [.. files.Keys.Order(StringComparer.Ordinal)];
+        HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase);
+        bool hasWorld = false;
+        long total = 0;
         for (int i = 0; i < paths.Length; i++)
         {
             byte[] data = files[paths[i]];
-            if (!WorldPathPattern.IsMatch(paths[i])) throw new ModStageException($"{paths[i]}: this stager writes world files only (data/worlds/worldNNN.wrd).");
-            if (data.Length is 0 or > MaxWorldBytes) throw new ModStageException($"{paths[i]}: a world file is 1 byte to {MaxWorldBytes} bytes.");
+            if (!seen.Add(paths[i])) throw new ModStageException($"{paths[i]}: a file is listed twice, ignoring case.");
+            if (WorldPathPattern.IsMatch(paths[i]))
+            {
+                hasWorld = true;
+                if (data.Length is 0 or > MaxWorldBytes) throw new ModStageException($"{paths[i]}: a world file is 1 byte to {MaxWorldBytes} bytes.");
+            }
+            else if (SourceLevel(paths[i]) is not null)
+            {
+                if (data.Length > MaxSourceBytes) throw new ModStageException($"{paths[i]}: a mission source is at most {MaxSourceBytes} bytes.");
+            }
+            else throw new ModStageException($"{paths[i]}: this stager writes world files and mission sources only.");
+            total += data.Length;
+            if (total > MaxTotalBytes) throw new ModStageException($"A mod's files total at most {MaxTotalBytes} bytes.");
             text.Append("    {\n      \"path\": ").Append(Json(paths[i])).Append(",\n      \"size\": ").Append(data.Length)
                 .Append(",\n      \"sha256\": ").Append(Json(Hex(data))).Append("\n    }").Append(i + 1 < paths.Length ? ",\n" : "\n");
         }
+        if (!hasWorld) throw new ModStageException("A staged mod needs at least one world file.");
         text.Append("  ]\n}\n");
         if (text.Length > MaxManifestBytes) throw new ModStageException("mod.json would be larger than the loader's 256 KiB.");
         return Encoding.ASCII.GetBytes(text.ToString());
@@ -156,9 +190,16 @@ public static class ModStager
         Action<string>? beforeWrite, Action<string>? beforeCommittedOpen = null, Action<string>? beforePublish = null)
     {
         if (Problem(info) is { } problem) throw new ModStageException(problem);
+        Dictionary<string, byte[]> files = CopyWorlds(ValidateWorlds(worlds, out _));
+        return StageFiles(parent, info, files, protectedFolders, beforeWrite, beforeCommittedOpen, beforePublish);
+    }
+
+    // Capture the input entries and validate every size before allocating copies.
+    private static Dictionary<string, byte[]> ValidateWorlds(IReadOnlyDictionary<int, byte[]> worlds, out long total)
+    {
         if (worlds.Count > MaxWorldFiles) throw new ModStageException($"A mod stages at most {MaxWorldFiles} world files.");
         Dictionary<string, byte[]> inputs = [];
-        long total = 0;
+        total = 0;
         int count = 0;
         foreach ((int level, byte[] body) in worlds)
         {
@@ -169,18 +210,118 @@ public static class ModStager
             if (total > MaxTotalBytes) throw new ModStageException($"A mod's files total at most {MaxTotalBytes} bytes.");
             inputs[path] = body;
         }
-        Dictionary<string, byte[]> files = inputs.ToDictionary(entry => entry.Key, entry => entry.Value.ToArray());
+        return inputs;
+    }
+
+    private static Dictionary<string, byte[]> CopyWorlds(Dictionary<string, byte[]> inputs) =>
+        inputs.ToDictionary(entry => entry.Key, entry => entry.Value.ToArray());
+
+    /// <summary>
+    /// Stages a world together with edited source text. Each source must name a world being staged and a source already in the selected game;
+    /// this preserves the text, since the game runs the compiled world script. Each source must compile to the exact named script in its
+    /// round-tripping world and fit its single-byte encoding; included headers are read from the game and are not copied. Reopening a staged
+    /// source is not provided by this API. CE's Windows mod loader remains disabled.
+    /// The selected game folder is protected in addition to <paramref name="protectedFolders"/>.
+    /// </summary>
+    public static StagedMod StageWithSources(string parent, ModInfo info, IReadOnlyDictionary<int, byte[]> worlds,
+        IReadOnlyDictionary<string, string> sources, string gameRoot, IEnumerable<string?> protectedFolders) =>
+        StageWithSources(parent, info, worlds, sources, gameRoot, protectedFolders, null);
+
+    internal static StagedMod StageWithSources(string parent, ModInfo info, IReadOnlyDictionary<int, byte[]> worlds,
+        IReadOnlyDictionary<string, string> sources, string gameRoot, IEnumerable<string?> protectedFolders,
+        Action<string>? beforeWrite, Action<string>? beforeCommittedOpen = null, Action<string>? beforePublish = null,
+        int maxStageIncludes = MaxStageIncludes, int maxStageIncludeChars = MaxStageIncludeChars, int maxStageSources = MaxSourceFiles)
+    {
+        if (string.IsNullOrWhiteSpace(gameRoot) || !Path.IsPathFullyQualified(gameRoot)) throw new ModStageException("Choose the game's full folder path first.");
+        if (Problem(info) is { } problem) throw new ModStageException(problem);
+        if (worlds.Count == 0) throw new ModStageException("A staged mod needs at least one world file.");
+        if (sources.Count > maxStageSources) throw new ModStageException($"At most {maxStageSources} mission sources can be staged at once.");
+        Dictionary<string, byte[]> worldInputs = ValidateWorlds(worlds, out long worldTotal);
+        List<KeyValuePair<string, string>> capturedSources = [];
+        int sourceTotal = 0, sourceCount = 0;
+        foreach ((string path, string source) in sources)
+        {
+            if (++sourceCount > maxStageSources) throw new ModStageException($"At most {maxStageSources} mission sources can be staged at once.");
+            if (SourceLevel(path) is not int level || !worldInputs.ContainsKey(WorldPath(level)))
+                throw new ModStageException($"{path}: a mission source must name a safe path for a world being staged.");
+            if (source is null || source.Length > MaxSourceBytes || source.Any(c => c > 255))
+                throw new ModStageException($"{path}: source must be at most {MaxSourceBytes} single-byte characters.");
+            sourceTotal += source.Length;
+            if (sourceTotal > MaxSourceTotal) throw new ModStageException($"Mission sources total at most {MaxSourceTotal} bytes.");
+            if (worldTotal + sourceTotal > MaxTotalBytes) throw new ModStageException($"A mod's files total at most {MaxTotalBytes} bytes.");
+            capturedSources.Add(new KeyValuePair<string, string>(path, source));
+        }
+        Dictionary<string, byte[]> files = CopyWorlds(worldInputs);
+        Dictionary<int, WorldBody> parsedWorlds = [];
+        StageIncludeBudget includes = new(ScriptCompiler.IncludesFrom(gameRoot), maxStageIncludes, maxStageIncludeChars);
+        foreach ((string path, string source) in capturedSources)
+        {
+            int level = SourceLevel(path)!.Value;
+            try { _ = ScriptSourceReader.ReadInGame(gameRoot, path); }
+            catch (CompileError) { throw new ModStageException($"{path}: the game's original source could not be read safely."); }
+            CheckSourceMatchesWorld(path, source, level, files[WorldPath(level)], parsedWorlds, includes.Read);
+            files.Add(path, Encoding.Latin1.GetBytes(source));
+        }
+        return StageFiles(parent, info, files, protectedFolders.Append(gameRoot), beforeWrite, beforeCommittedOpen, beforePublish);
+    }
+
+    private static void CheckSourceMatchesWorld(string path, string source, int level, byte[] bytes, Dictionary<int, WorldBody> parsed, Func<string, string> readInclude)
+    {
+        try
+        {
+            if (!parsed.TryGetValue(level, out WorldBody? body))
+            {
+                body = WorldBody.Read(bytes);
+                if (!body.Write().AsSpan().SequenceEqual(bytes)) throw new ModStageException($"{path}: the staged world does not round-trip exactly.");
+                parsed[level] = body;
+            }
+            string name = path[(path.LastIndexOf('/') + 1)..^4];
+            MissionScript[] found = [.. body.Scripts.Where(script => script.Name == name)];
+            if (found.Length != 1) throw new ModStageException($"{path}: the staged world must have exactly one script of this name.");
+            MissionScript script = found[0];
+            MissionScript compiled = ScriptCompiler.Compile(name, source, readInclude,
+                ScriptCompiler.ConstStartOf(script), ScriptCompiler.DoOnceStartOf(script));
+            if (!WorldBodyWriter.ScriptBytes(compiled).AsSpan().SequenceEqual(WorldBodyWriter.ScriptBytes(script)))
+                throw new ModStageException($"{path}: this source does not compile to the script in the staged world.");
+        }
+        catch (ModStageException) { throw; }
+        catch (CompileError error) { throw new ModStageException($"{path}: {error.Message}", error); }
+        catch (Exception error) when (error is IOException || EditSession.IsUnstorable(error))
+        {
+            throw new ModStageException($"{path}: the source and staged world could not be checked.", error);
+        }
+    }
+
+    /// <summary>Bounds header reads across every source checked in one stage, not just within each compilation.</summary>
+    internal sealed class StageIncludeBudget(Func<string, string> read, int maxFiles, int maxChars)
+    {
+        private int _files, _chars;
+        internal string Read(string path)
+        {
+            if (_files >= maxFiles) throw new CompileError($"A stage reads at most {maxFiles} included files.");
+            _files++;
+            string text = read(path);
+            if (text.Length > maxChars - _chars) throw new CompileError($"A stage reads at most {maxChars} characters of included text.");
+            _chars += text.Length;
+            return text;
+        }
+    }
+
+    private static StagedMod StageFiles(string parent, ModInfo info, Dictionary<string, byte[]> files, IEnumerable<string?> protectedFolders,
+        Action<string>? beforeWrite, Action<string>? beforeCommittedOpen, Action<string>? beforePublish)
+    {
         byte[] manifest = BuildManifest(info, files);
 
         string root = CheckDestination(parent, info.Id, protectedFolders);
 
         try
         {
-            CreateFolder(Path.Combine(root, "data", "worlds"));
             List<StagedFile> written = [];
             foreach (string path in files.Keys.Order(StringComparer.Ordinal))
             {
-                Write(Path.Combine(root, path.Replace('/', Path.DirectorySeparatorChar)), files[path], beforeWrite, beforeCommittedOpen, beforePublish);
+                string destination = Path.Combine(root, path.Replace('/', Path.DirectorySeparatorChar));
+                CreateFolder(Path.GetDirectoryName(destination)!);
+                Write(destination, files[path], beforeWrite, beforeCommittedOpen, beforePublish);
                 written.Add(new StagedFile(path, files[path].Length, Hex(files[path])));
             }
             Write(Path.Combine(root, "mod.json"), manifest, beforeWrite, beforeCommittedOpen, beforePublish);
