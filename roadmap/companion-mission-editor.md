@@ -513,10 +513,12 @@ player's careers, so the button never writes the player's CE folder at all: it m
   inside it is refused before anything is made), never records the session, and never leaves a mod enabled. Because mods are off in a session CE records (the launcher's `--record`, or
   `record_sessions=1` in `ce.ini`, sets `BEA_PORT_RECORD` and `BEA_PORT_CLOCK`), the copy of `ce.ini` turns recording off.
 - **The temporary folder.** Made exclusively (`mkdirat`, so a name that exists is never reused), private to the player, with a marker file only `CePlayFolder` writes (its format, the
-  folder's name, the companion's process, the launcher's process, the level and the mod). It is removed by the one path the companion made, after checking that it is a direct child of the
-  play folder, a real folder (not a link) and carries the marker; a link or a special file inside it (CE writes none) is left where it is, never followed, and reported, and the marker
-  goes last, so a folder that could not be removed whole is still known as the companion's. At the companion's start a sweep removes the folders an earlier run left, only direct children
-  of the play folder that carry the marker, whose companion and CE are no longer running.
+  folder's name, the companion's process, the launcher's process, the level and the mod). It is removed by the one folder the companion made, and every step is by name in an open folder, so no path
+  is followed: the play folder is opened without following a link, the temporary folder by name inside it (the open fails for a link or a file; the marker is read through it, and must name it), every
+  folder under it the same way, names are read through the open descriptor, and files are unlinked and folders removed by name in the folder that holds them. A link or a special file inside (CE
+  writes none) is left where it is, never followed, and reported; a folder swapped for a link after its kind was read fails to open and stays; the marker goes last, so a folder that could not
+  be removed whole is still known as the companion's. At the companion's start a sweep removes the folders an earlier run left, only direct children of the play folder that carry the marker,
+  whose companion and CE are no longer running.
 - **When it refuses.** On Windows (CE loads a level's world from a mod on Linux only for now), with no CE launcher chosen, with a CE older than 0.1.11 (it would show the unchanged level),
   with an affected launcher package (0.1.0 to 0.1.6), with no change made, with a test play running, and when the edit cannot be staged. The reason is the button's tooltip.
 - **Checks.** The route's play suites check the folder, the sweep, the `ce.ini` copy, the launcher's start (arguments, environment, the fence variables), the unchanged player's folder
