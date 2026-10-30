@@ -2,7 +2,7 @@
 
 Status: design; the reference compiler and read-only scripts view with name links and map paths are built. The C# and Python compiler backends and the script-aware editor model are integrated, and the Level editor's Scripts view edits a script's source, compiles it and makes the open level use it (section 15); the acceptance in section 6 was run once on Linux (section 16) and the Level editor's Play button starts CE at the open level with the changes (section 17); source-preserving staging and native Windows validation remain open. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-10-30 (the Level editor's Play button, section 17; the CE acceptance of an edited script was run on Linux, section 16, timing restated from CE's own log, repeated once with the released 0.1.12 package and once through its launcher; the Level editor's Scripts view edits a script's source, section 15; earlier: held and bounded viewer reads and platform limits; script-gate stale record pairs pinned by identity; descriptor-relative Python source reads; The C# compiler is integrated on main; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
+Last updated: 2026-10-30 (the reviewer's requests on the Level editor's Play button taken, section 17; the Level editor's Play button, section 17; the CE acceptance of an edited script was run on Linux, section 16, timing restated from CE's own log, repeated once with the released 0.1.12 package and once through its launcher; the Level editor's Scripts view edits a script's source, section 15; earlier: held and bounded viewer reads and platform limits; script-gate stale record pairs pinned by identity; descriptor-relative Python source reads; The C# compiler is integrated on main; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours checked against the shipped scripts with the documented
 missing-header and stale-source cases, and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -507,20 +507,25 @@ player's careers, so the button never writes the player's CE folder at all: it m
   they are, through the settings writer's own line handling, with `mods=` naming only this mod, `record_sessions=0` and `update_check=0`), a copy of their options file
   (`defaultoptions.bea`; never a career, a tape or anything else) and the mod, staged by the same stager as Save as mod. It starts CE's own launcher from its package folder with
   `--no-update-check -level N -skipfmv -forcewindowed`, `BEA_USER_DIR` set to the temporary folder and `BEA_GAME_DIR` to the game folder the editor read, and the variables that make
-  CE switch mods off removed (section 16). It waits for CE to close, keeps the first megabyte of CE's log as `last-session.log` in the play folder, reads the log's lines about mods
+  CE switch mods off removed (section 16; and every other `BEA_PORT_*` and `BEA_NET_*`, because the list of those nine lives in another repository and no player sets one, while what the play
+  hooks add after that still reaches CE). It waits for CE to close, keeps the first megabyte of CE's log as `last-session.log` in the play folder (made as a new file and renamed over the old
+  one, so a link planted at its working name is never written through), reads the log's lines about mods
   (the page shows them when CE did not say it served the mod's world file) and removes the temporary folder.
 - **What it never does.** It never writes the player's CE folder, `ce.ini` or careers, never copies a career, never starts CE in the player's own folder (a play folder that is, holds or lies
   inside it is refused before anything is made), never records the session, and never leaves a mod enabled. Because mods are off in a session CE records (the launcher's `--record`, or
   `record_sessions=1` in `ce.ini`, sets `BEA_PORT_RECORD` and `BEA_PORT_CLOCK`), the copy of `ce.ini` turns recording off.
 - **The temporary folder.** Made exclusively (`mkdirat`, so a name that exists is never reused), private to the player, with a marker file only `CePlayFolder` writes (its format, the
-  folder's name, the companion's process, the launcher's process, the level and the mod). It is removed by the one folder the companion made, and every step is by name in an open folder, so no path
-  is followed: the play folder is opened without following a link, the temporary folder by name inside it (the open fails for a link or a file; the marker is read through it, and must name it), every
+  folder's name, the companion's process, the launcher's process, the level and the mod). It is removed by the one folder the companion made, and every step is by name in an open folder, so no link
+  below the play folder is followed (the play folder's own path is resolved once, when it is opened: a link above it is refused when the folder is made, and one swapped in afterwards could send
+  the removal only to a folder of the same random name that carries a copy of the marker): the play folder is opened without following a link at its end, the temporary folder by name inside it (the open fails for a link or a file; the marker is read through it, and must name it), every
   folder under it the same way, names are read through the open descriptor, and files are unlinked and folders removed by name in the folder that holds them. A link or a special file inside (CE
   writes none) is left where it is, never followed, and reported; a folder swapped for a link after its kind was read fails to open and stays; the marker goes last, so a folder that could not
   be removed whole is still known as the companion's. At the companion's start a sweep removes the folders an earlier run left, only direct children of the play folder that carry the marker,
-  whose companion and CE are no longer running.
-- **When it refuses.** On Windows (CE loads a level's world from a mod on Linux only for now), with no CE launcher chosen, with a CE older than 0.1.11 (it would show the unchanged level),
-  with an affected launcher package (0.1.0 to 0.1.6), with no change made, with a test play running, and when the edit cannot be staged. The reason is the button's tooltip.
+  whose companion and CE are no longer running; it also removes an empty `play-*` folder that has no marker and was last changed more than a minute ago (the marker goes last, so a
+  folder whose final removal failed can be left empty and unmarked), and a folder that holds anything stays.
+- **When it refuses.** On Windows (CE loads a level's world from a mod on Linux only for now), with no CE launcher chosen, with a CE older than 0.1.11 (it would show the unchanged level; versions are compared by their numeric core, a leading `v` and a label after `-` or `+`, as in `0.2.0-rc0`, set aside),
+  with an affected launcher package (0.1.0 to 0.1.6), with no change made, with a test play running, and when the edit cannot be staged. The reason is the button's tooltip. A play folder that is a link, lies behind one, is not a folder,
+  belongs to another user or can be written by its group or by others is refused with the path named, before anything is made; the companion's own settings folder is made, private, when it is missing.
 - **Checks.** The route's play suites check the folder, the sweep, the `ce.ini` copy, the launcher's start (arguments, environment, the fence variables), the unchanged player's folder
   and game folder, the refusals and the button on an authored level; a mutation sweep of the new code found three gaps (an oversized marker, a package that turns into an affected
   launcher after its version was known, a redundant second comparison with the player's folder) and each is closed. The capture's `play` mode runs the
@@ -536,4 +541,4 @@ player's careers, so the button never writes the player's CE folder at all: it m
 - **What it does not show.** Nobody has used the button by hand. One level (100) and one edit; the `-level N` start of other levels is not tried. The run was offscreen from a capture with the key
   presses and the frame limit given by environment, with dummy audio (nothing was heard), and on one machine. Windows is out. A test play uses the unchanged settings of the player's `ce.ini` apart from
   the three keys, so a setting that changes how CE starts (a resolution, say) applies to it too. Enabling a mod in the player's own `ce.ini` through the settings writer, with its backups, is a separate
-  step that is not built.
+  step that is not built. The removal reads folder names through `/proc/self/fd` and opens by descriptor on x64 Linux only; without `/proc` it would refuse and leave the folder, which is not exercised.
