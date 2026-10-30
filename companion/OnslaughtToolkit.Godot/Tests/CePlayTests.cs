@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using Godot;
+using OnslaughtToolkit.Companion.Careers;
 using OnslaughtToolkit.Companion.Files;
 using OnslaughtToolkit.Companion.Game;
 using OnslaughtToolkit.Companion.Levels;
@@ -140,13 +141,25 @@ internal static partial class CePlayTests
         // The play folder must be the player's own and not writable by others: it holds copies of their settings.
         string openPlay = Path.Combine(root, "open-play");
         Directory.CreateDirectory(openPlay);
-        File.SetUnixFileMode(openPlay, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute | UnixFileMode.GroupWrite | UnixFileMode.OtherWrite);
-        var writable = CePlayFolder.Create(openPlay, 100, "m", 1, now);
-        string afterRefusal = Listing(openPlay);
-        File.SetUnixFileMode(openPlay, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute | UnixFileMode.GroupRead | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+        const UnixFileMode Own = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute;
+        List<string> openOutcomes = [];
+        foreach ((string who, UnixFileMode extra) in new[] { ("group", UnixFileMode.GroupWrite), ("others", UnixFileMode.OtherWrite), ("group and others", UnixFileMode.GroupWrite | UnixFileMode.OtherWrite) })
+        {
+            File.SetUnixFileMode(openPlay, Own | extra);
+            var writable = CePlayFolder.Create(openPlay, 100, "m", 1, now);
+            if (writable.Ok || !writable.Message.Contains("can be written by other people", StringComparison.Ordinal) || Listing(openPlay) != "") openOutcomes.Add($"{who}: \"{writable.Message}\"");
+        }
+        File.SetUnixFileMode(openPlay, Own | UnixFileMode.GroupRead | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
         var readable = CePlayFolder.Create(openPlay, 100, "m", 1, now);
-        check.That(!writable.Ok && writable.Message.Contains("can be written by other people", StringComparison.Ordinal) && afterRefusal == "" && readable.Ok,
-            $"a play folder that others can write is refused before anything is made, and one they can only read is fine: \"{writable.Message}\"");
+        check.That(openOutcomes.Count == 0 && readable.Ok, $"a play folder that group or others can write is refused before anything is made, and one they can only read is fine: {string.Join("; ", openOutcomes)}");
+        string foreignParent = Path.Combine(root, "foreign-play");
+        Directory.CreateDirectory(foreignParent);
+        File.SetUnixFileMode(foreignParent, Own);
+        CePlayFolder.EffectiveUserId = () => uint.MaxValue - 1;
+        Outcome<CePlayFolder> foreign;
+        try { foreign = CePlayFolder.Create(foreignParent, 100, "m", 1, now); } finally { CePlayFolder.EffectiveUserId = null; }
+        check.That(!foreign.Ok && foreign.Message.Contains("belongs to another user", StringComparison.Ordinal) && Listing(foreignParent) == "" && CePlayFolder.Create(foreignParent, 100, "m", 1, now).Ok,
+            $"a play folder that belongs to another user is refused before anything is made: \"{foreign.Message}\"");
 
         // Files go in new, once, inside the folder.
         folder.WriteFile("ce.ini", Encoding.UTF8.GetBytes("mods=x\n"));

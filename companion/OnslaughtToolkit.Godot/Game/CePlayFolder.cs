@@ -38,6 +38,9 @@ internal sealed class CePlayFolder
     /// <summary>Test hook: called with an entry's name after its kind was read and before it is opened or removed, so a test can swap it for a link at the worst moment.</summary>
     internal static Action<string>? AfterKind { get; set; }
 
+    /// <summary>Test hook: the user id the play folder must belong to; the process's own when null.</summary>
+    internal static Func<uint>? EffectiveUserId { get; set; }
+
     [DllImport("libc", EntryPoint = "geteuid")]
     private static extern uint GetEffectiveUserId();
 
@@ -177,7 +180,7 @@ internal sealed class CePlayFolder
     {
         if (LinuxSaveNative.StatAt(LinuxSaveNative.AtCurrentDirectory, folder, LinuxSaveNative.NoFollow, 0xB, out LinuxSaveNative.Stat stat) != 0)
             return $"{folder} could not be inspected: {new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message}";
-        if (stat.Uid != GetEffectiveUserId()) return $"{folder} belongs to another user, so the companion keeps no test plays in it.";
+        if (stat.Uid != (EffectiveUserId?.Invoke() ?? GetEffectiveUserId())) return $"{folder} belongs to another user, so the companion keeps no test plays in it.";
         if ((stat.Mode & 0x12) != 0) return $"{folder} can be written by other people (group or world write), so the companion keeps no test plays in it. Remove that permission: chmod go-w \"{folder}\".";
         return null;
     }
