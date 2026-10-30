@@ -96,7 +96,6 @@ recompiled, so a mod differs from the game only where the player edited.
   exactly the constructs the shipped scripts use; anything else is refused with a line and a reason, never guessed.
 - **The checker** applies the game's own rules to the compiled script before anything is saved (section 7).
 - **Future source-preserving staging.** A future workflow must verify each selected mission source against the compiled script in the exact staged world, refusing unsupported or mismatched inputs. An installed source can already differ from its compiled record, so including a source in a mod is not by itself evidence that a player edited it. The current stager publishes world data only; neither this source-staging workflow nor a player-facing mission source editor is available yet.
-  The stager and the Python reference stager take extra files for this, with the same refusals as before (decided 2026-10-29).
 
 ## 4. Milestones
 
@@ -104,8 +103,8 @@ recompiled, so a mod differs from the game only where the player edited.
 | --- | --- | --- | --- |
 | MS0 scripts beside the map (read-only; built, section 12) and MS0.1 names and paths (built, section 13) | the Level editor page lists the open level's compiled scripts (name, the events handled, the things that run it, the natives it calls) next to the map, shows the selected script's installed `.msl` source with line numbers, and links names in it (thing names, waypoint paths, scripts and event handlers; text ids are not linked yet) to the table and the map; selecting a thing shows its script and the other way round; waypoint paths are drawn on the map | on every installed level the list equals the world body's scripts, every one finds its source (670 of 670), the capture at three sizes looked at, nothing written | 4 to 5 days |
 | MS1 reference compiler and the byte-exact gate | `tools/msl_compile.py` (preprocess, lex, parse, generate, write the record as the world file stores it) and `tools/msl_gate.py --game GAME`, section 5 | every shipped script compiles to its shipped record, or each difference is explained (built; section 11) | built 2026-10-29 (the spike ran on every script) |
-| MS2 the C# compiler (backend, section 14) | `Missions/` with the same stages, authored vectors from the Python reference in Git, and a local retail gate (`Development/ScriptsGate.cs`) that must match the Python gate on all scripts | the vectors and the retail gate pass; the C# refuses what the Python refuses and the supported platforms are checked The C# and Python backends are integrated; source-preserving staging remains future work. | Native Windows and source-stage validation remain open |
-| MS3 first editable thing | the page edits the selected script's source (a text area with line numbers), compiles it (errors by line and column, a summary of what changed), replaces the script in the session as one undoable command, and saves through Save as mod | the acceptance in section 6 The script-aware model is integrated; player-facing source editing and source staging are not yet available. | 1 week |
+| MS2 the C# compiler (backend, section 14) | `Missions/` with the same stages, authored vectors from the Python reference in Git, and a local retail gate (`Development/ScriptsGate.cs`) that must match the Python gate on all scripts | the vectors and the retail gate pass; the C# refuses what the Python refuses and the supported platforms are checked. The C# and Python backends are integrated; source-preserving staging remains future work. | Native Windows and source-stage validation remain open |
+| MS3 first editable thing | the page edits the selected script's source (a text area with line numbers), compiles it (errors by line and column, a summary of what changed), replaces the script in the session as one undoable command, and saves through Save as mod | the acceptance in section 6. The script-aware model is integrated; player-facing source editing and source staging are not yet available. | 1 week |
 | MS4 structured helpers | forms for common edits (a count, a delay, a message id), the event graph (who posts, who handles), checks against the level (names exist), path membership and order on the map, spawner and trigger parameters (these are world-body data and need no compiler) | each helper has a test and a message a player can act on | 2 weeks |
 | MS5 texts (optional) | the text of a message is in the game's language files, a different mod file; a writer for them | a changed line shows in game | not estimated |
 
@@ -191,7 +190,7 @@ The spawn count and the timer values are the next edits in the same mould.
 
 ## 10. Decisions (2026-10-29, the lead)
 
-1. The mod carries the edited sources as inert `.msl` copies at the game's own paths (section 3), with the stager and its Python
+**Future design, not implemented on main:** 1. The mod carries the edited sources as inert `.msl` copies at the game's own paths (section 3), with the stager and its Python
    reference taking extra files under the same refusals.
 2. The compiler spike on the 20 smallest scripts comes first and MS0, the read-only viewer, runs beside it. The spike's result is
    reported before MS2 (the C# compiler): how many scripts are byte-exact, the first unexplained difference, and what the
