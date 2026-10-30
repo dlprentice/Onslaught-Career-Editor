@@ -181,6 +181,8 @@ internal static class LevelEditorTests
             $"typing coordinates writes the bytes the reference writes for that move: {moved.Message}");
         ObjectRow row = model.Row(0)!;
         check.That(row.Changed && row.Position == new Vector3(12.5f, -40f, 3f) && row.Stock == new Vector3(10f, 20f, 0f), "the row says it changed and where the level has it");
+        check.That(model.Rows("", changedOnly: true).Select(r => r.Index).SequenceEqual([0]) && model.Rows("tank", changedOnly: true).Select(r => r.Index).SequenceEqual([0]) && model.Rows("ghost", changedOnly: true).Count == 0 &&
+                   model.Rows("", changedOnly: false).Count > 1, "the changed-only list holds the moved rows, and a search narrows it further");
         check.That(model.ChangeSummary() is { } summary && summary.StartsWith("1 object moved: Tank 1 (row 0), 60.1 units", StringComparison.Ordinal) && summary.EndsWith('.'), "the changes are summarised: " + model.ChangeSummary());
 
         MoveOutcome same = model.Move(0, "12.5", "-40", "3");

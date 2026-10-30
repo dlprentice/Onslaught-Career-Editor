@@ -249,8 +249,11 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         return false;
     }
 
-    /// <summary>The objects of the open world in row order; a search keeps those whose row number, name, definition, kind or script holds it.</summary>
-    public IReadOnlyList<ObjectRow> Rows(string search = "")
+    /// <summary>
+    /// The objects of the open world in row order; a search keeps those whose row number, name, definition, kind or script holds it, and <paramref name="changedOnly"/>
+    /// keeps those that are not where the level has them.
+    /// </summary>
+    public IReadOnlyList<ObjectRow> Rows(string search = "", bool changedOnly = false)
     {
         if (Session is null) return [];
         Dictionary<int, Vector3> stock = Session.Changes().ToDictionary(change => change.Index, change => change.From);
@@ -261,6 +264,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
             PlacedObject thing = Session.Body.Things[i];
             ObjectRow row = new(i, thing.Kind, thing.Init.Name, thing.Definition ?? "", thing.Init.Position, stock.TryGetValue(i, out Vector3 from) ? from : thing.Init.Position,
                 thing.Init.SphereTrigger?.Radius ?? 0f);
+            if (changedOnly && !row.Changed) continue;
             if (needle.Length == 0 || Matches(row, thing.Init.Script, needle)) rows.Add(row);
         }
         return rows;

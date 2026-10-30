@@ -257,6 +257,37 @@ internal static class LevelEditorPageTests
         check.That(page.Summary.StartsWith("1 object moved: Tank 1 (row 0), 60.1 units", StringComparison.Ordinal) && page.Warnings.Contains("outside the 0 to 512 square", StringComparison.Ordinal) && !page.Save.Disabled,
             $"the changes are summarised, and a position outside the terrain's square is a warning that does not stop saving: \"{page.Summary}\" / \"{page.Warnings}\"");
 
+        // "List only the moved objects": the table holds just the moved rows, a search narrows it, an empty list says so, and the filter goes away when another level opens.
+        check.That(!page.ChangedOnly.Disabled && !page.ChangedOnly.ButtonPressed && page.FilterNote.Length == 0, "with a level open the switch is there, off, and says nothing");
+        page.ChangedOnly.ButtonPressed = true;
+        check.That(page.Table.GetRoot()!.GetChildCount() == 1 && Row(page, 0) is not null && Row(page, 1) is null && page.FilterNote.Length == 0 && page.SelectedRow == 0 && page.Table.GetSelected() is not null,
+            "switched on, the table lists the one moved row, and the selection stays on it");
+        page.Search.Text = "ghost";
+        Edited(page.Search);
+        check.That(page.Table.GetRoot()!.GetChildCount() == 0 && page.FilterNote == "No moved object matches the search.", $"a search that matches no moved row says so: \"{page.FilterNote}\"");
+        page.Search.Text = "";
+        Edited(page.Search);
+        page.Reset.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(page.Table.GetRoot()!.GetChildCount() == 0 && page.FilterNote == "No object is moved yet. Move one and it is listed here.", $"with nothing moved the list says so: \"{page.FilterNote}\"");
+        page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(page.Table.GetRoot()!.GetChildCount() == 1 && page.FilterNote.Length == 0, "moving the object again (undoing the reset) lists it again");
+        page.ChangedOnly.ButtonPressed = false;
+        check.That(page.Table.GetRoot()!.GetChildCount() == body.Things.Count && page.FilterNote.Length == 0, "switched off, every row is back");
+        page.ChangedOnly.ButtonPressed = true;
+        Choose(page, 200);
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
+        app.DiscardDialog.Hide();
+        await Frame(tree);
+        check.That(!page.ChangedOnly.ButtonPressed && page.Model?.Level == 200, "opening another level lists every row again");
+        Choose(page, 100);
+        await Frame(tree);
+        page.SelectRow(0);
+        Set(page.X, "12.5");
+        Set(page.Y, "-40");
+        Set(page.Z, "3");
+        Submit(page.X);
+        check.That(page.Model?.Level == 100 && page.Note == "Tank 1 (row 0) now stands at 12.5, -40, 3.", "the same move again, on the level opened afresh, so the checks below go on as before");
+
         // A coordinate that is not a number is refused in words and nothing moves; putting the field right clears it.
         Set(page.X, "abc");
         Submit(page.X);

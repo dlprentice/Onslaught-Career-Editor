@@ -58,6 +58,9 @@ internal static class LevelMapPageTests
     private static void PressKey(SceneTree tree, Key key) =>
         Push(tree, new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = true });
 
+    private static void PressKeyWith(SceneTree tree, Key key, bool shift = false, bool ctrl = false) =>
+        Push(tree, new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = true, ShiftPressed = shift, CtrlPressed = ctrl });
+
     /// <summary>The world position under a map pixel, worked out here from the view's centre and scale (the inverse of the drawing).</summary>
     private static (double X, double Y) World(LevelMap map, Vector2 local) =>
         (map.View.CenterX + (local.X - map.Size.X / 2.0) / map.View.Scale, map.View.CenterY - (local.Y - map.Size.Y / 2.0) / map.View.Scale);
@@ -225,6 +228,73 @@ internal static class LevelMapPageTests
         check.That(model.Row(0)!.Position == moved && model.Row(1)!.Position.X > 333f, "and a second drag of the same row is its own step: one undo puts it back where the first drag left it, and leaves the other rows' drags");
         page.Redo.EmitSignal(BaseButton.SignalName.Pressed);
         check.That(model.Row(0)!.Position == second, "and one redo makes it again");
+
+        // Arrow keys nudge the selected mark: 0.5 a press (+Y is up), Shift 5, Ctrl 0.05, each press one undo step; a key with nothing selected, or during a drag, moves nothing.
+        page.SelectRow(0);
+        map.GrabFocus();
+        await Frame(tree);
+        System.Numerics.Vector3 from = model.Row(0)!.Position;
+        string beforeNudge = model.Session!.UndoDescription!;
+        PressKey(tree, Godot.Key.Right);
+        System.Numerics.Vector3 afterRight = model.Row(0)!.Position;
+        PressKey(tree, Godot.Key.Up);
+        System.Numerics.Vector3 afterUp = model.Row(0)!.Position;
+        check.That(afterRight.X == Hundredths(from.X + 0.5) && afterRight.Y == from.Y && Bits(afterRight.Z) == Bits(from.Z) && afterUp.X == afterRight.X && afterUp.Y == Hundredths(from.Y + 0.5),
+            $"the right arrow moves the selected mark 0.5 along X and the up arrow 0.5 along Y (up on the map), Z kept: {from} -> {afterRight} -> {afterUp}");
+        check.That(page.X.Text == CoordinateInput.Format(afterUp.X) && page.Y.Text == CoordinateInput.Format(afterUp.Y) && page.SelectedRow == 0, $"the fields follow a nudge: \"{page.X.Text}\", \"{page.Y.Text}\" against {afterUp}");
+        PressKeyWith(tree, Godot.Key.Left, shift: true);
+        PressKeyWith(tree, Godot.Key.Down, ctrl: true);
+        System.Numerics.Vector3 afterBig = model.Row(0)!.Position;
+        check.That(afterBig.X == Hundredths(afterUp.X - 5) && afterBig.Y == Hundredths(afterUp.Y - 0.05), $"Shift nudges by 5 and Ctrl by 0.05, left is -X and down is -Y: {afterUp} -> {afterBig}");
+        page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(model.Row(0)!.Position.X == afterBig.X && model.Row(0)!.Position.Y == afterUp.Y, $"each press is one undo step: one undo takes back the last nudge only: {afterBig} -> {model.Row(0)!.Position}");
+        page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+        page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+        page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(model.Row(0)!.Position == from && model.Session.UndoDescription == beforeNudge, "and four undos take the four nudges back");
+        // A nudge moves the one axis that was pressed: the other axis and Z are kept bit for bit (an off-grid number and a stored -0 included), and the pressed axis lands on the hundredth as a drop does.
+        System.Numerics.Vector3 rowTwo = model.Row(2)!.Position;
+        check.That(model.Move(2, "100.123456", "55.5678", "0").Result == MoveResult.Moved, "row 2 is typed to numbers that are off the hundredth grid");
+        page.SelectRow(2);
+        map.GrabFocus();
+        await Frame(tree);
+        System.Numerics.Vector3 offGrid = model.Row(2)!.Position;
+        check.That(Bits(Hundredths(offGrid.X)) != Bits(offGrid.X) && Bits(Hundredths(offGrid.Y)) != Bits(offGrid.Y), $"row 2 stands off the hundredth grid (the premise of the checks below): {offGrid}");
+        PressKey(tree, Godot.Key.Right);
+        System.Numerics.Vector3 offGridRight = model.Row(2)!.Position;
+        check.That(offGridRight.X == Hundredths(offGrid.X + 0.5) && Bits(offGridRight.Y) == Bits(offGrid.Y) && Bits(offGridRight.Z) == Bits(offGrid.Z),
+            $"a nudge along X puts X on the hundredth and keeps Y and Z bit for bit, Y being off the grid: {offGrid} -> {offGridRight}");
+        PressKey(tree, Godot.Key.Up);
+        System.Numerics.Vector3 offGridUp = model.Row(2)!.Position;
+        check.That(offGridUp.Y == Hundredths(offGrid.Y + 0.5) && Bits(offGridUp.X) == Bits(offGridRight.X) && Bits(offGridUp.Z) == Bits(offGrid.Z),
+            $"a nudge along Y puts Y on the hundredth and keeps X and Z bit for bit: {offGridRight} -> {offGridUp}");
+        check.That(model.Move(2, CoordinateInput.Format(offGridUp.X), "-0", "0").Result == MoveResult.Moved, "row 2's Y is typed as -0");
+        await Frame(tree);
+        System.Numerics.Vector3 negativeY = model.Row(2)!.Position;
+        PressKey(tree, Godot.Key.Right);
+        System.Numerics.Vector3 negativeYRight = model.Row(2)!.Position;
+        check.That(Bits(negativeY.Y) == 0x80000000 && Bits(negativeYRight.Y) == 0x80000000 && negativeYRight.X == Hundredths(negativeY.X + 0.5),
+            $"a stored -0 in Y survives a nudge along X: {negativeY} -> {negativeYRight}");
+        for (int undo = 0; undo < 5; undo++) page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(model.Row(2)!.Position == rowTwo && model.Session.UndoDescription == beforeNudge, "and the two typed moves and the three nudges are each one undo step: five undos put row 2 back");
+        page.SelectRow(0);
+        map.GrabFocus();
+        await Frame(tree);
+        // Mid-drag the arrows are not taken, and with no selected mark they are not either.
+        grab = map.ToScreen(from.X, from.Y);
+        Mouse(tree, map, grab, MouseButton.Left, true);
+        pointer = grab;
+        Glide(tree, map, ref pointer, grab + new Vector2(40, 30), MouseButtonMask.Left);
+        bool midDrag = map.Dragging;
+        PressKey(tree, Godot.Key.Right);
+        bool stillMidDrag = map.Dragging;
+        PressKey(tree, Godot.Key.Escape);
+        Mouse(tree, map, pointer, MouseButton.Left, false);
+        check.That(midDrag && stillMidDrag && model.Row(0)!.Position == from && model.Session.UndoDescription == beforeNudge, $"an arrow key during a drag moves nothing, and Esc still cancels the drag: dragging {midDrag}, {stillMidDrag}; row 0 {model.Row(0)!.Position} against {from}");
+        map.Select(null);
+        PressKey(tree, Godot.Key.Right);
+        check.That(model.Row(0)!.Position == from && model.Session.UndoDescription == beforeNudge, $"an arrow key with no mark selected moves nothing: row 0 {model.Row(0)!.Position} against {from}");
+        page.SelectRow(0);
 
         // The map can be hidden, and then it gets no events; showing it again brings it back.
         page.MapToggle.ButtonPressed = false;
