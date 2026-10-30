@@ -492,7 +492,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         }
         catch (Exception error) when (error is ModStageException or InvalidDataException)
         {
-            return new SaveOutcome(null, error.Message);
+            return new SaveOutcome(null, ModStager.PartialOutputWarning(error) ?? error.Message);
         }
     }
 }

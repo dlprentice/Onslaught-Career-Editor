@@ -7,8 +7,8 @@ namespace OnslaughtToolkit.Companion.Tests;
 
 /// <summary>
 /// The mod stager against the Toolkit's Python stager (tools/world_mod_stage.py) on the inputs tools/level_editor_vectors.py
-/// ran it on: the same <c>mod.json</c> bytes, the same files, the same refusals; its refusals to write where it must not and
-/// to leave anything behind; and the edit session (move, undo, redo, what changed, what is wrong) on the edits the reference
+/// ran it on: the same <c>mod.json</c> bytes, the same files and the same preflight refusals; preservation of files on a
+/// later failure; and the edit session (move, undo, redo, what changed, what is wrong) on the edits the reference
 /// writes. Authored data only; nothing here touches Godot.
 /// </summary>
 internal static class LevelEditTests
@@ -20,6 +20,7 @@ internal static class LevelEditTests
         Stage(check, "the refused stage vectors", () => RefusedStageVectors(Path.Combine(outputDirectory, "level-stage-refused"), check));
         Stage(check, "the destination rules", () => DestinationRules(Path.Combine(outputDirectory, "level-stage-rules"), check));
         Stage(check, "the failure rules", () => FailureRules(Path.Combine(outputDirectory, "level-stage-failures"), check));
+        Stage(check, "the world buffer snapshot", () => StageWorldSnapshot(Path.Combine(outputDirectory, "level-stage-snapshot"), check));
         Stage(check, "the session", () => SessionBasics(check));
         Stage(check, "the history rules", () => HistoryRules(check));
         Stage(check, "the move vectors", () => MoveVectors(check));
@@ -294,91 +295,136 @@ internal static class LevelEditTests
         ModStager.Stage(parent, info, worlds, [], beforeWrite: path => order.Add(Path.GetRelativePath(Path.Combine(parent, "fails"), path).Replace(Path.DirectorySeparatorChar, '/')));
         check.That(order.SequenceEqual(["data/worlds/world007.wrd", "data/worlds/world100.wrd", "mod.json"]), "the world files are written first, in path order, and mod.json last: " + string.Join(", ", order));
 
-        // A failure at any write leaves nothing: not the files, not the folders this call made.
+        // A failure never deletes already published paths. The caller is told where to inspect, including a possibly published manifest.
         for (int failAt = 0; failAt < 3; failAt++)
         {
-            string where = Path.Combine(folder, $"fail-{failAt}");
+            string where = Path.Combine(folder, $"fail-{failAt}"), root = Path.Combine(where, "made", "twice", "fails");
             Directory.CreateDirectory(where);
             int writes = 0, at = failAt;
-            Refuses<ModStageException>(check, $"a failure at write {failAt}", () => ModStager.Stage(Path.Combine(where, "made", "twice"), info, worlds, [],
+            Exception? error = Captured(() => ModStager.Stage(Path.Combine(where, "made", "twice"), info, worlds, [],
                 beforeWrite: _ => { if (writes++ == at) throw new IOException("the disk said no"); }));
-            check.That(Listing(where).Length == 0 && Directory.GetDirectories(where).Length == 0, $"a failure at write {failAt} leaves nothing behind");
+            check.That(error is ModStageException { InnerException: IOException } && error.Message.Contains(root, StringComparison.Ordinal) &&
+                       error.Message.Contains("including mod.json", StringComparison.Ordinal), $"failure at write {failAt} reports the possible leftovers: {error?.Message}");
+            check.That(Directory.Exists(root) && !File.Exists(Path.Combine(root, "mod.json")) && Directory.GetFiles(root, "*.wrd", SearchOption.AllDirectories).Length == failAt,
+                $"failure at write {failAt} preserves the already published payloads without a manifest");
         }
 
-        // A mod folder that existed (empty) stays, empty; one the call made goes.
-        string kept = Path.Combine(folder, "kept");
-        Directory.CreateDirectory(Path.Combine(kept, "fails"));
-        Refuses<ModStageException>(check, "a failure into an existing empty folder", () => ModStager.Stage(kept, info, worlds, [], beforeWrite: path => { if (path.EndsWith("mod.json", StringComparison.Ordinal)) throw new IOException("no"); }));
-        check.That(Directory.Exists(Path.Combine(kept, "fails")) && Directory.GetFileSystemEntries(Path.Combine(kept, "fails")).Length == 0, "an existing empty folder is left empty after a failure");
+        string kept = Path.Combine(folder, "kept"), keptRoot = Path.Combine(kept, "fails");
+        Directory.CreateDirectory(keptRoot);
+        Exception? keptError = Captured(() => ModStager.Stage(kept, info, worlds, [], beforeWrite: path =>
+            { if (path.EndsWith("mod.json", StringComparison.Ordinal)) throw new IOException("no"); }));
+        check.That(keptError is ModStageException && Directory.Exists(keptRoot) && Directory.GetFiles(keptRoot, "*.wrd", SearchOption.AllDirectories).Length == 2 &&
+                   !File.Exists(Path.Combine(keptRoot, "mod.json")), "an existing empty folder retains both published payloads after a failure");
 
-        // Whatever fails, what the call made goes. A problem with the folders or files comes out as a ModStageException; any other failure
-        // (a cancellation, a bug) comes out as it was thrown, after the cleanup.
-        (string Label, Func<Exception> Make, Type Comes)[] failures =
+        // Expected filesystem failures are wrapped; cancellation and unexpected failures retain their original type and stack.
+        using CancellationTokenSource cancellation = new();
+        cancellation.Cancel();
+        check.That(ModStager.PartialOutputWarning(new FormatException("unrelated")) is null,
+            "an unrelated exception has no stager output warning");
+        (string Label, Func<Exception> Make)[] failures =
         [
-            ("an IOException", () => new IOException("the disk said no"), typeof(ModStageException)),
-            ("an InvalidOperationException", () => new InvalidOperationException("not allowed"), typeof(ModStageException)),
-            ("an UnauthorizedAccessException", () => new UnauthorizedAccessException("no access"), typeof(ModStageException)),
-            ("an ArgumentException", () => new ArgumentException("odd argument"), typeof(ArgumentException)),
-            ("a NotSupportedException", () => new NotSupportedException("not supported"), typeof(NotSupportedException)),
-            ("an InvalidDataException", () => new InvalidDataException("bad data"), typeof(InvalidDataException)),
-            ("an OperationCanceledException", () => new OperationCanceledException("cancelled"), typeof(OperationCanceledException)),
+            ("an IOException", () => new IOException("the disk said no")),
+            ("an InvalidOperationException", () => new InvalidOperationException("not allowed")),
+            ("an UnauthorizedAccessException", () => new UnauthorizedAccessException("no access")),
+            ("an ArgumentException", () => new ArgumentException("odd argument")),
+            ("a NotSupportedException", () => new NotSupportedException("not supported")),
+            ("an InvalidDataException", () => new InvalidDataException("bad data")),
+            ("an OperationCanceledException", () => new OperationCanceledException("cancelled", cancellation.Token)),
+            ("a TaskCanceledException", () => new TaskCanceledException("cancelled", null, cancellation.Token)),
         ];
-        foreach ((string label, Func<Exception> make, Type comes) in failures)
+        foreach ((string label, Func<Exception> make) in failures)
         {
             for (int failAt = 0; failAt < 3; failAt++)
             {
                 string where = Path.Combine(folder, $"throws-{label.Replace(' ', '-')}-{failAt}");
+                string root = Path.Combine(where, "made", "twice", "fails");
                 Directory.CreateDirectory(where);
                 int writes = 0, at = failAt;
-                Exception? error = Captured(() => ModStager.Stage(Path.Combine(where, "made", "twice"), info, worlds, [], beforeWrite: _ => { if (writes++ == at) throw make(); }));
-                check.That(error?.GetType() == comes, $"{label} at write {failAt} comes out as {comes.Name}, not {error?.GetType().Name}");
-                check.That(Entries(where).Length == 0, $"{label} at write {failAt} leaves nothing behind: " + string.Join(", ", Entries(where)));
+                Exception injected = make();
+                Exception? error = Captured(() => ModStager.Stage(Path.Combine(where, "made", "twice"), info, worlds, [], beforeWrite: _ => { if (writes++ == at) throw injected; }));
+                bool expected = injected is IOException or InvalidOperationException or UnauthorizedAccessException;
+                string? warning = error is ModStageException ? error.Message : error is null ? null : ModStager.PartialOutputWarning(error);
+                bool same = expected ? error is ModStageException && ReferenceEquals(error.InnerException, injected) : ReferenceEquals(error, injected);
+                bool token = injected is not OperationCanceledException cancelled || error is OperationCanceledException caught && caught.CancellationToken == cancelled.CancellationToken;
+                check.That(same && token && warning is not null && warning.Contains(root, StringComparison.Ordinal) &&
+                           warning.Contains("may be active on the next game launch", StringComparison.Ordinal),
+                    $"{label} at write {failAt} preserves its cause or original exception, token, and output warning: {error?.GetType().Name}");
+                check.That(Directory.GetFiles(root, "*.wrd", SearchOption.AllDirectories).Length == failAt && !File.Exists(Path.Combine(root, "mod.json")),
+                    $"{label} at write {failAt} preserves earlier payloads without a manifest");
             }
         }
 
-        // A failure inside the publisher after it moved a file into place (here the file no longer holds what was written) leaves that file nowhere.
+        // A failure after publication can leave even a manifest. The changed file is not treated as owned merely because its path was ours.
         for (int failAt = 0; failAt < 3; failAt++)
         {
-            string where = Path.Combine(folder, $"published-{failAt}");
+            string where = Path.Combine(folder, $"published-{failAt}"), root = Path.Combine(where, "made", "twice", "fails");
             Directory.CreateDirectory(where);
             int published = 0, at = failAt;
+            string? changedPath = null;
             Exception? error = Captured(() => ModStager.Stage(Path.Combine(where, "made", "twice"), info, worlds, [], beforeWrite: null,
-                beforeCommittedOpen: path => { if (published++ == at) File.AppendAllText(path, "x"); }));
-            check.That(error is ModStageException && error.Message.Contains("Atomic output verification failed after commit", StringComparison.Ordinal),
-                $"a file that fails its check once published (write {failAt}) is reported: {error?.GetType().Name}: {error?.Message}");
-            check.That(Entries(where).Length == 0, $"a file that fails its check once published (write {failAt}) goes with the rest: " + string.Join(", ", Entries(where)));
+                beforeCommittedOpen: path => { if (published++ == at) { changedPath = path; File.AppendAllText(path, "x"); } }));
+            check.That(error is ModStageException && error.Message.Contains("Atomic output verification failed after commit", StringComparison.Ordinal) &&
+                       error.Message.Contains("including mod.json", StringComparison.Ordinal) && error.Message.Contains(root, StringComparison.Ordinal) &&
+                       error.Message.Contains("may be active on the next game launch", StringComparison.Ordinal),
+                $"a failed verification (write {failAt}) reports the output folder and possible active manifest: {error?.Message}");
+            check.That(changedPath is not null && File.Exists(changedPath) && File.ReadAllBytes(changedPath)[^1] == (byte)'x' &&
+                       (failAt != 2 || File.Exists(Path.Combine(root, "mod.json"))), $"a file changed after publication (write {failAt}) is retained");
         }
         string thrown = Path.Combine(folder, "published-thrown");
         Directory.CreateDirectory(thrown);
         Exception? odd = Captured(() => ModStager.Stage(Path.Combine(thrown, "made"), info, worlds, [], beforeWrite: null, beforeCommittedOpen: _ => throw new InvalidDataException("odd")));
-        check.That(odd is InvalidDataException && Entries(thrown).Length == 0, $"any failure after a file was published leaves nothing behind: {odd?.GetType().Name}, " + string.Join(", ", Entries(thrown)));
+        check.That((odd is InvalidDataException || odd is ModStageException { InnerException: InvalidDataException }) &&
+                   (odd is ModStageException ? odd.Message : ModStager.PartialOutputWarning(odd))?.Contains("may be active", StringComparison.Ordinal) == true &&
+                   Directory.GetFiles(thrown, "*.wrd", SearchOption.AllDirectories).Length == 1,
+            "an exception after publication retains the file and reports the original exception");
 
-        // Somebody else's file is never removed. One that appears at a path after the publisher began, before its last look at the destination,
-        // makes the commit fail; that path was never this call's, so the file stays and the folders around it are reported as left.
+        string cancelledParent = Path.Combine(folder, "cancelled-manifest"), cancelledRoot = Path.Combine(cancelledParent, "fails");
+        OperationCanceledException cancelledLate = new("cancelled late", cancellation.Token);
+        Exception? cancelledResult = Captured(() => ModStager.Stage(cancelledParent, info, worlds, [], beforeWrite: null, beforeCommittedOpen: path =>
+        {
+            if (Path.GetFileName(path) == "mod.json") throw cancelledLate;
+        }));
+        string? cancelledWarning = cancelledResult is null ? null : ModStager.PartialOutputWarning(cancelledResult);
+        check.That(ReferenceEquals(cancelledResult, cancelledLate) && cancelledResult is OperationCanceledException observed &&
+                   observed.CancellationToken == cancellation.Token && observed.StackTrace?.Contains(nameof(FailureRules), StringComparison.Ordinal) == true &&
+                   File.Exists(Path.Combine(cancelledRoot, "mod.json")) && cancelledWarning is not null &&
+                   cancelledWarning.Contains(cancelledRoot, StringComparison.Ordinal) && cancelledWarning.Contains("may be active on the next game launch", StringComparison.Ordinal),
+            "cancellation after manifest publication preserves the exact exception, stack, token and active-mod warning");
+
+        // A later writer changes an already published file just before manifest publication; a failure must not remove the newer data.
+        string editedRoot = Path.Combine(folder, "edited"), edited = Path.Combine(editedRoot, "made", "fails", "data", "worlds", "world007.wrd");
+        Exception? editedError = Captured(() => ModStager.Stage(Path.Combine(editedRoot, "made"), info, worlds, [], beforeWrite: path =>
+        {
+            if (Path.GetFileName(path) != "mod.json") return;
+            File.WriteAllText(edited, "newer user data");
+            throw new IOException("manifest failed");
+        }));
+        check.That(editedError is ModStageException && editedError.Message.Contains("including mod.json", StringComparison.Ordinal) &&
+                   File.Exists(edited) && File.ReadAllText(edited) == "newer user data" && !File.Exists(Path.Combine(editedRoot, "made", "fails", "mod.json")),
+            "a later writer's change to a published payload survives a failed manifest");
+
+        // Somebody else's destination is never removed; a failed temporary pathname is also retained because it may have been replaced.
         string raceRoot = Path.Combine(folder, "race");
         Directory.CreateDirectory(raceRoot);
         string raced = Path.Combine(raceRoot, "made", "fails", "data", "worlds", "world007.wrd");
         int publishes = 0;
         Exception? raceError = Captured(() => ModStager.Stage(Path.Combine(raceRoot, "made"), info, worlds, [], beforeWrite: null, beforeCommittedOpen: null,
             beforePublish: path => { if (publishes++ == 0) File.WriteAllText(path, "somebody else's"); }));
-        check.That(raceError is ModStageException && raceError.Message.Contains("no longer vacant", StringComparison.Ordinal) && raceError.Message.Contains("could not be removed", StringComparison.Ordinal),
-            $"a file that appears before the publisher moves its own into place makes the commit fail, and what stays is said: {raceError?.Message}");
-        check.That(File.Exists(raced) && File.ReadAllText(raced) == "somebody else's", "a file that appears before the publisher moves its own into place is not removed");
-        Directory.GetFiles(raceRoot, ".onslaught-*", SearchOption.AllDirectories).ToList().ForEach(leftover => check.Fail($"the publisher left its temporary file behind: {leftover}"));
+        check.That(raceError is ModStageException && raceError.Message.Contains("no longer vacant", StringComparison.Ordinal) && raceError.Message.Contains("may contain files", StringComparison.Ordinal),
+            $"a file that appears before publication makes the commit fail and possible leftovers are reported: {raceError?.Message}");
+        check.That(File.Exists(raced) && File.ReadAllText(raced) == "somebody else's", "a file that appeared at the destination is retained");
+        check.That(Directory.GetFiles(raceRoot, ".onslaught-*", SearchOption.AllDirectories).Length == 1, "the failed temporary pathname is retained for inspection");
 
-        // The same for a file that is there before the publisher begins: it refuses at once.
-        string theirsRoot = Path.Combine(folder, "theirs");
+        string theirsRoot = Path.Combine(folder, "theirs"), theirs = Path.Combine(theirsRoot, "made", "fails", "data", "worlds", "world007.wrd");
         Directory.CreateDirectory(theirsRoot);
-        string theirs = Path.Combine(theirsRoot, "made", "fails", "data", "worlds", "world007.wrd");
         int first = 0;
         Exception? refused = Captured(() => ModStager.Stage(Path.Combine(theirsRoot, "made"), info, worlds, [], beforeWrite: path =>
         {
             if (first++ == 0) File.WriteAllText(path, "somebody else's");
         }));
-        check.That(refused is ModStageException && refused.Message.Contains("could not be removed", StringComparison.Ordinal), $"a file that appeared where one was to be written is refused, and what stays is said: {refused?.Message}");
-        check.That(File.Exists(theirs) && File.ReadAllText(theirs) == "somebody else's", "a file that appeared where one was to be written is not removed");
+        check.That(refused is ModStageException && refused.Message.Contains("may contain files", StringComparison.Ordinal) && File.ReadAllText(theirs) == "somebody else's",
+            "a file that appears before the publisher starts is retained and reported");
 
-        // An unexpected failure comes out as thrown, unless something could not be removed: then the player is told, with the failure inside.
         string strayRoot = Path.Combine(folder, "stray");
         Directory.CreateDirectory(strayRoot);
         Exception? strayed = Captured(() => ModStager.Stage(Path.Combine(strayRoot, "made"), info, worlds, [], beforeWrite: path =>
@@ -386,9 +432,71 @@ internal static class LevelEditTests
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(path)!, "stray.txt"), "not this call's");
             throw new ArgumentException("odd argument");
         }));
-        check.That(strayed is ModStageException { InnerException: ArgumentException } && strayed.Message.Contains("could not be removed", StringComparison.Ordinal),
-            $"an unexpected failure that leaves something behind says so, and keeps the failure: {strayed?.GetType().Name}: {strayed?.Message}");
-        check.That(File.Exists(Path.Combine(strayRoot, "made", "fails", "data", "worlds", "stray.txt")), "what the call did not make is left alone");
+        check.That(strayed is ArgumentException && ModStager.PartialOutputWarning(strayed)?.Contains("may contain files", StringComparison.Ordinal) == true &&
+                   File.Exists(Path.Combine(strayRoot, "made", "fails", "data", "worlds", "stray.txt")),
+            "an unexpected failure retains another writer's file and reports the cause and folder");
+
+        if (OperatingSystem.IsLinux())
+        {
+            string tempRoot = Path.Combine(folder, "temporary-replaced"), replacement = "";
+            Exception? tempError = Captured(() => ModStager.Stage(Path.Combine(tempRoot, "made"), info, worlds, [], beforeWrite: null, beforeCommittedOpen: null,
+                beforePublish: path =>
+                {
+                    string temp = Directory.GetFiles(Path.GetDirectoryName(path)!, ".onslaught-*.tmp").Single();
+                    File.Move(temp, temp + ".original");
+                    File.WriteAllText(temp, "newer temporary data");
+                    replacement = temp;
+                    throw new IOException("publish failed");
+                }));
+            check.That(tempError is ModStageException && tempError.Message.Contains("may contain files", StringComparison.Ordinal) &&
+                       replacement.Length > 0 && File.Exists(replacement) && File.ReadAllText(replacement) == "newer temporary data" && File.Exists(replacement + ".original"),
+                "a replacement of the temporary pathname survives a failed publication");
+        }
+
+    }
+
+    private static void StageWorldSnapshot(string folder, Checks check)
+    {
+        byte[] original = [1, 2, 3], supplied = original.ToArray();
+        Dictionary<int, byte[]> worlds = new() { [7] = supplied };
+        bool changed = false;
+        StagedMod staged = ModStager.Stage(folder, new ModInfo("snapshot", "n"), worlds, [], beforeWrite: _ =>
+        {
+            if (!changed) { supplied[0] = 9; changed = true; }
+        });
+        string worldPath = Path.Combine(staged.Root, "data", "worlds", "world007.wrd");
+        using System.Text.Json.JsonDocument manifest = System.Text.Json.JsonDocument.Parse(File.ReadAllBytes(Path.Combine(staged.Root, "mod.json")));
+        string? manifestHash = manifest.RootElement.GetProperty("files")[0].GetProperty("sha256").GetString();
+        byte[] saved = File.ReadAllBytes(worldPath);
+        check.That(changed && saved.AsSpan().SequenceEqual(original) && manifestHash == Sha256(saved) && staged.Files[0].Sha256 == manifestHash,
+            "the saved world, manifest and receipt use a private copy when the caller changes its buffer");
+
+        // Reuse a single authored buffer so a refusal beyond CE's limit does not itself allocate a gigabyte.
+        byte[] largest = new byte[ModStager.MaxWorldBytes];
+        Dictionary<int, byte[]> overBytes = Enumerable.Range(0, (int)(ModStager.MaxTotalBytes / largest.Length) + 1)
+            .ToDictionary(level => level, _ => largest);
+        string tooLarge = Path.Combine(folder, "too-large");
+        long before = GC.GetAllocatedBytesForCurrentThread();
+        Exception? byteError = Captured(() => ModStager.Stage(tooLarge, new ModInfo("refused", "n"), overBytes, []));
+        long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+        check.That(byteError is ModStageException && byteError.Message.Contains("files total", StringComparison.Ordinal) &&
+                   !Directory.Exists(tooLarge) && allocated < 2L * ModStager.MaxWorldBytes,
+            "over-budget world inputs are refused before output or large copies");
+
+        string badMetadata = Path.Combine(folder, "bad-metadata");
+        before = GC.GetAllocatedBytesForCurrentThread();
+        Exception? infoError = Captured(() => ModStager.Stage(badMetadata, new ModInfo("not a valid id", "n"),
+            new Dictionary<int, byte[]> { [7] = largest }, []));
+        allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+        check.That(infoError is ModStageException && infoError.Message.Contains("mod id", StringComparison.OrdinalIgnoreCase) &&
+                   !Directory.Exists(badMetadata) && allocated < ModStager.MaxWorldBytes,
+            "invalid metadata is refused before output or a world copy");
+
+        Dictionary<int, byte[]> overCount = Enumerable.Range(0, ModStager.MaxWorldFiles + 1).ToDictionary(level => level, _ => original);
+        string tooMany = Path.Combine(folder, "too-many");
+        Exception? countError = Captured(() => ModStager.Stage(tooMany, new ModInfo("refused", "n"), overCount, []));
+        check.That(countError is ModStageException && countError.Message.Contains("world files", StringComparison.Ordinal) && !Directory.Exists(tooMany),
+            "more world files than valid level numbers are refused before output");
     }
 
     // ---- the edit session ----------------------------------------------------------------------------------------------------

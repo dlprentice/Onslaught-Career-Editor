@@ -1,7 +1,7 @@
 # Companion Level Editor: Design and Prototype Plan
 
 Status: M0 (the data layer), M1 (the mod stager and the edit session) and M2 (the first page: a level picker, an object table, typed X, Y and Z, Save as mod) are built and on main; M3 (the map: terrain relief, marks, select, drag, zoom, pan) is built and on main; M4 to M6 are plan; the mission editor that would follow is in [companion-mission-editor.md](companion-mission-editor.md). Nothing in it has been played in a CE release yet; two edits it staged were looked at in a private CE build (section 3).
-Last updated: 2026-10-29 (CE 0.1.11, the first to take a world file from a mod, stated as published; earlier: M2 integrated, M3 built: the map, the mirror check measured; earlier: M0 and M1 built and integrated; first draft; the measurements in section 3 were taken on 2026-10-29 on the read-only retail view)
+Last updated: 2026-10-29 (failed staging preserves possible later changes and reports the output folder; CE 0.1.11, the first to take a world file from a mod, stated as published; earlier: M2 integrated, M3 built: the map, the mirror check measured; earlier: M0 and M1 built and integrated; first draft; the measurements in section 3 were taken on 2026-10-29 on the read-only retail view)
 Summary: how the Companion can grow a visual level editor on top of the Toolkit's world tools and Onslaught CE's mod
 loader: list a level's objects, select one, move it by typing coordinates or dragging it on a top-down map, and save
 the result as a CE mod that CE loads without hand editing. It states what exists, what the measurements say, the
@@ -229,6 +229,8 @@ A custom `Control` like `CampaignMap`:
   Companion's own file-safety primitives.
 - Writing a mod folder does not need the game closed, but enabling one in `ce.ini` does; until the Companion does that
   itself it only shows the line.
+- If staging fails after creating folders, the stager leaves possible files in place rather than deleting a pathname another writer
+  may have changed. It reports the folder and warns that a `mod.json` might remain after a late failure.
 - The stager detects replacement; it does not lock, as the Toolkit's Python stager does not. A directory swapped for a link, or moved into a game folder, by
   another process after the early checks and before the folders are created is not caught by them, and a folder moved during the run is not guaranteed to stay
   outside the game folder (the limit every writer through the Companion's guarded publication has). The page says where the mod was written.

@@ -204,6 +204,7 @@ internal static class LevelEditorPageTests
     internal static async Task RunAsync(CompanionApp app, SceneTree tree, FakeInstall install, string outputDirectory, Checks check)
     {
         LevelEditorPage page = app.LevelEditor;
+        StageFailureBoundary(Path.Combine(outputDirectory, "level-ui-stage-failures"), check);
         app.Navigate("levels");
         await Frame(tree);
         check.That(app.Current == page && page.Root.Visible && app.PageTitle.Text == "LEVEL EDITOR" && page.Level.ItemCount == 1 && page.Save.Disabled && page.Undo.Disabled && page.Redo.Disabled &&
@@ -424,5 +425,50 @@ internal static class LevelEditorPageTests
         check.That(pickers.Contains(dialog.FolderDialog) && pickers.All(picker => !picker.DeletingEnabled && !picker.FolderCreationEnabled && picker.Access == FileDialog.AccessEnum.Filesystem), "the folder picker cannot delete files or create folders");
         app.Navigate("home");
         await Frame(tree);
+    }
+
+    private static void StageFailureBoundary(string folder, Checks check)
+    {
+        ModInfo info = new("mod", "n");
+        Dictionary<int, byte[]> worlds = new() { [7] = [1, 2, 3] };
+        string unexpectedRoot = Path.Combine(folder, "unexpected", "mod");
+        FormatException unexpected = new("authored unexpected failure");
+        SaveOutcome shown = LevelEditorPage.SaveWithStageWarning(() =>
+        {
+            ModStager.Stage(Path.Combine(folder, "unexpected"), info, worlds, [], beforeWrite: path =>
+            {
+                if (Path.GetFileName(path) == "mod.json") throw unexpected;
+            });
+            return new SaveOutcome(null, "unexpected success");
+        });
+        check.That(!shown.Ok && shown.Message.Contains(unexpectedRoot, StringComparison.Ordinal) &&
+                   shown.Message.Contains("may be active on the next game launch", StringComparison.Ordinal) &&
+                   File.Exists(Path.Combine(unexpectedRoot, "data", "worlds", "world007.wrd")) &&
+                   unexpected.StackTrace?.Contains(nameof(StageFailureBoundary), StringComparison.Ordinal) == true,
+            "the save boundary shows an annotated unexpected staging failure and keeps its original stack");
+
+        FormatException unrelated = new("unrelated failure");
+        Exception? propagated = null;
+        try { _ = LevelEditorPage.SaveWithStageWarning(() => throw unrelated); }
+        catch (Exception error) { propagated = error; }
+        check.That(ReferenceEquals(propagated, unrelated), "the save boundary does not swallow an unannotated exception");
+
+        using CancellationTokenSource source = new();
+        source.Cancel();
+        TaskCanceledException cancelled = new("authored cancellation", null, source.Token);
+        string cancelledRoot = Path.Combine(folder, "cancelled", "mod");
+        SaveOutcome cancelledOutcome = LevelEditorPage.SaveWithStageWarning(() =>
+        {
+            ModStager.Stage(Path.Combine(folder, "cancelled"), info, worlds, [], beforeWrite: null, beforeCommittedOpen: path =>
+            {
+                if (Path.GetFileName(path) == "mod.json") throw cancelled;
+            });
+            return new SaveOutcome(null, "unexpected success");
+        });
+        check.That(!cancelledOutcome.Ok && cancelled.CancellationToken == source.Token &&
+                   cancelledOutcome.Message.Contains(cancelledRoot, StringComparison.Ordinal) &&
+                   cancelledOutcome.Message.Contains("may be active on the next game launch", StringComparison.Ordinal) &&
+                   File.Exists(Path.Combine(cancelledRoot, "mod.json")),
+            "the save boundary shows a cancelled late publication with its possible active manifest");
     }
 }
