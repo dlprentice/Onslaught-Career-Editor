@@ -34,7 +34,7 @@ defines progress and what a completion claim requires.
 | Diagnostics and recording | Useful bounded logs and manual, informed reporting are available. Preserve faithful reference tapes and develop separate coverage for CE features and controller input; avoid telemetry or automatic uploads. | [CE reporting guidance](https://github.com/dlprentice/onslaught-ce#report-a-problem) |
 | Special Thanks | Stuart Gillam, Jeppi and BermudaMaster are acknowledged in 0.1.12. Keep acknowledgements accurate as further contributors are identified. | [CE credits](https://github.com/dlprentice/onslaught-ce#credits-and-special-thanks) |
 | Documentation, repositories and recovery | Reconcile the active owners and retained handoffs. Selected off-site data has been restored and checked; some restored sets still need discoverable index entries. Full corpus and replacement-machine recovery remain unproven. Private recovery details stay in private records. | [Project index](PROJECT-INDEX.md), repository guides |
-| Showcase and website | The requested port footage has not met its brief and is paused. The domain is owned; no website deployment is currently required. | Maintainer direction |
+| Showcase and website | The requested port footage has not met its brief and may resume with the next lead. The domain is owned; no website deployment is currently required. | Maintainer direction |
 
 ## Open work
 
