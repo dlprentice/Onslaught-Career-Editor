@@ -181,7 +181,9 @@ The spawn count and the timer values are the next edits in the same mould.
   next instruction is then read from the wrong place. `IScript::Arrived` and `IScript::Hit` return while the machine is running; the entry points for a dying or dead unit
   do not. It is a shape that can fail, not a certainty: one shipped script damages a unit with a death handler of its own from inside a handler and runs through in the
   retail game, and the port's planned guard leaves that path as it is. `Die` is not part of it (it posts an event for the next frame), and `SetHealth`,
-  `SetSegmentHealth` and `SetAllSegmentsHealth` only store values; `HalfDestroy` damages at random and was not followed further. Until a CE release guards the entry, the page
+  `SetSegmentHealth` and `SetAllSegmentsHealth` only store values. `HalfDestroy` is not warned about and is not cleared either: by the names of the functions it calls it reaches the same
+  damage path (it damages parts of a unit at random), and whether it can finish a unit and start its death handler at once is not established; the cheapest falsifier is a test-only level
+  script that calls it on a unit with a death handler from inside a handler, run under the port with a debugger, as the level 888 diagnosis did. Until a CE release guards the entry, the page
   warns about a replaced script that calls `Damage` more often than the shipped one (`ScriptHazards`: by native, not by target, so it cannot tell a unit that has a script from one that has none), and
   the checker (section 7) is where a stricter rule belongs.
 - Nothing here has been played yet. The retail data (sources, objects, frames) stays local and out of Git.

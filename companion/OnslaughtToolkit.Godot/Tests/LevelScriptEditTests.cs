@@ -57,7 +57,7 @@ internal static class LevelScriptEditTests
         check.That(ScriptHazards.Warnings(Script(("Damage", 2)), Script(("Damage", 3))) is [{ } one] && one.Contains("calls Damage more often", StringComparison.Ordinal) && one.Contains("script machine cannot be entered twice", StringComparison.Ordinal) &&
                    ScriptHazards.Warnings(Script(("Pause", 1), ("Damage", 1)), Script(("Pause", 1), ("Damage", 2))) is [{ } two] && two.Contains("calls Damage more often", StringComparison.Ordinal), "one more call to Damage is one warning, naming it");
         check.That(ScriptHazards.Warnings(Script(), Script(("Die", 4), ("SetHealth", 2), ("HalfDestroy", 1), ("SetSegmentHealth", 1))).Count == 0 && ScriptHazards.Warnings(Script(("Pause", 1)), Script(("Pause", 5), ("PostEvent", 2))).Count == 0,
-            "Die posts its event for the next frame and the health setters only store values, so they are no concern, and nor are the other natives");
+            "Die posts its event for the next frame and the health setters only store values, so they are no concern; HalfDestroy is not warned about while whether it can start a death at once is unproven, and nor are the other natives");
         int die = Array.FindIndex(ScriptTables.Natives, native => native.Name == "Die"), damage = Array.FindIndex(ScriptTables.Natives, native => native.Name == "Damage");
         MissionScript pushes = Script();
         pushes.Code.Instructions.Insert(0, new ScriptInstruction(5, die));  // an instruction that is not a call, whose operand is the number of Die

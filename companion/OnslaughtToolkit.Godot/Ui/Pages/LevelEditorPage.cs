@@ -292,8 +292,6 @@ internal sealed class LevelEditorPage : Page
     private readonly HFlowContainer _scriptEditActions;
     private EditSession? _shownSession;
     private IReadOnlyList<ScriptChange> _scriptChanges = [];  // the scripts the open level uses in place of the shipped ones, as of the last model change: the text events must not diff every script of the level
-    private string? _editNoteFor;
-    private IReadOnlyList<ScriptEntry>? _editNoteScripts;  // the scripts the note in the script card was made about: another list (Undo, Redo, another edit, another level) makes it stale
     private bool _editNoteRefused;  // the note is a refusal of the text as it was typed: it goes when the text changes
     private readonly Dictionary<(string Name, string Text), byte[]> _compiledAs = [];  // what each text that was compiled and used made, as the script is stored
     private readonly Dictionary<int, byte[]?> _scriptBytes = [];  // the open level's own scripts as stored, by place, as of the last model change
@@ -714,7 +712,6 @@ internal sealed class LevelEditorPage : Page
             _scriptEditNote.Text = "";
             _scriptEditWarnings.Visible = false;
             _editNoteRefused = false;
-            _editNoteFor = null;
             return;
         }
         ScriptSummary summary = entry.Summary;
@@ -752,12 +749,10 @@ internal sealed class LevelEditorPage : Page
         _scriptSource.Text = source?.Source is { } found
             ? $"Source: {Path.GetFileName(found.Path)}, {(_scripts.Editing ? "being edited" : "read only")}. The game runs the compiled script, which a source in your game folder may differ from."
             : source?.Problem ?? "";
-        if (_editNoteFor != summary.Name || !ReferenceEquals(_editNoteScripts, _model?.Scripts))
-        {
-            _scriptEditNote.Text = "";
-            _editNoteRefused = false;
-            _editNoteFor = null;
-        }
+        // The note says what the last compile or reset did to the script on view. This event comes when another script is chosen and when the level's scripts changed (an Undo, a
+        // Redo, another edit): either makes the note stale. A refused compile changes neither, so its note stays until the text does.
+        _scriptEditNote.Text = "";
+        _editNoteRefused = false;
         ShowScriptWarnings(entry);
         UpdateScriptEdit();
     }
@@ -802,7 +797,7 @@ internal sealed class LevelEditorPage : Page
         ScriptEditOutcome outcome = _model.ReplaceScriptFromSource(index, text, _root);
         // The text is in use when the level's script is exactly what it compiled to: a replacement that was made, or a script that already was that.
         if ((outcome.Result is ScriptEditResult.Replaced or ScriptEditResult.Unchanged) && ScriptBytesAt(index) is { } made) _compiledAs[(entry.Summary.Name, text)] = made;
-        ShowScriptEdit(entry.Summary.Name, outcome);
+        ShowScriptEdit(outcome);
         _scripts.RefreshInfo();
         if (outcome.Line is int line) _scripts.GoToLine(line);
         UpdateScriptEdit();
@@ -819,17 +814,17 @@ internal sealed class LevelEditorPage : Page
         {
             if (!_scripts.HasDraft(entry.Summary.Name)) return;
             _scripts.DiscardEdit(entry.Summary.Name);
-            ShowScriptEdit(entry.Summary.Name, new ScriptEditOutcome(ScriptEditResult.Unchanged, $"The text you typed was dropped; {entry.Summary.Name} is as the level has it.", null, []));
+            ShowScriptEdit(new ScriptEditOutcome(ScriptEditResult.Unchanged, $"The text you typed was dropped; {entry.Summary.Name} is as the level has it.", null, []));
             UpdateScriptEdit();
             return;
         }
         ScriptEditOutcome outcome = _model.ResetScript(index);
         if (outcome.Result == ScriptEditResult.Replaced) _scripts.DiscardEdit(entry.Summary.Name);
-        ShowScriptEdit(entry.Summary.Name, outcome);
+        ShowScriptEdit(outcome);
         UpdateScriptEdit();
     }
 
-    private void ShowScriptEdit(string name, ScriptEditOutcome outcome)
+    private void ShowScriptEdit(ScriptEditOutcome outcome)
     {
         List<string> lines = [outcome.Message];
         lines.AddRange(outcome.Notes.Select(note => $"Line {note.Line + 1}: {note.Text}"));
@@ -837,8 +832,6 @@ internal sealed class LevelEditorPage : Page
         _scriptEditNote.Text = string.Join("\n", lines);
         _scriptEditNote.ThemeTypeVariation = outcome.Result == ScriptEditResult.Refused ? "Warn" : "Muted";
         _editNoteRefused = outcome.Result == ScriptEditResult.Refused;
-        _editNoteFor = name;
-        _editNoteScripts = _model?.Scripts;
     }
 
     /// <summary>The note about a refusal is about the text as it was: it goes with that text. The note about a replacement stays, as the replacement does.</summary>
@@ -848,7 +841,6 @@ internal sealed class LevelEditorPage : Page
         {
             _scriptEditNote.Text = "";
             _editNoteRefused = false;
-            _editNoteFor = null;
         }
         UpdateScriptEdit();
     }
@@ -889,7 +881,7 @@ internal sealed class LevelEditorPage : Page
         return null;
     }
 
-    /// <summary>Shows what to take care of in the script the level uses for this entry (nothing for a script that was not replaced).</summary>
+    /// <summary>Shows what to take care of in the script the level uses for this entry. Only a replaced script can have a warning, so the others cost no parse of the baseline.</summary>
     private void ShowScriptWarnings(ScriptEntry entry)
     {
         IReadOnlyList<string> warnings = _model?.OwnScriptIndex(entry) is int place && _scriptChanges.Any(change => change.Index == place) ? _model.ScriptWarnings(place) : [];

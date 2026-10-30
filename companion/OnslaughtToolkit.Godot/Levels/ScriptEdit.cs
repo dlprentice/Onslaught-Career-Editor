@@ -130,7 +130,9 @@ public sealed record ScriptChange(int Index, string Name, int InstructionsFrom, 
 /// again; <c>IScript::Arrived</c> and <c>IScript::Hit</c> guard against it, the other entry points do not). It was diagnosed with a test-only level script and followed in the decompilation; a shipped script
 /// that damages a unit with a death handler from inside a handler is known to run through in the retail game, so the hazard is a shape that can fail, not a certainty.
 /// The only native warned about is <c>Damage</c>, the one whose path was followed: <c>Die</c> posts its event for the next frame, outside the handler, and
-/// <c>SetHealth</c>, <c>SetSegmentHealth</c> and <c>SetAllSegmentsHealth</c> only store values; <c>HalfDestroy</c> damages at random and was not followed further.
+/// <c>SetHealth</c>, <c>SetSegmentHealth</c> and <c>SetAllSegmentsHealth</c> only store values. <c>HalfDestroy</c> is not warned about and is not cleared either: by the names of
+/// the functions it calls it reaches the same damage path (it damages parts of a unit at random), and whether it can finish a unit and start its death handler at once is not
+/// established. The cheapest falsifier is a test-only level script that calls it on a unit with a death handler from inside a handler, run under the port with a debugger.
 /// </summary>
 internal static class ScriptHazards
 {
