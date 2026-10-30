@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-29 (the Companion's Level editor and bounded Windows development UI evidence; earlier: the decompilation's matching concession and scope stated; the maintainer's storage name removed; findings are written in onslaught-preservation, with `reverse-engineering/` a frozen copy; the companion's update guidance and published decompilation score stated as they are)
+Last updated: 2026-10-29 (live rebuild ownership and catalogue routes clarified)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -270,6 +270,10 @@ The companion does not patch
 `BEA.exe` and that is not planned; mission, rank and link edits are not offered; no legacy
 feature parity or retail gameplay acceptance is implied.
 
+The [content and model/transform catalogue tools](tools/README.md) cover the families their current readers support.
+They are not a complete asset inventory or an HD conversion; the [programme](PROGRAM.md#content-catalogue) owns the
+remaining catalogue work.
+
 ## Retired WinUI toolkit
 
 The Windows-only WinUI 3 shell, its UI tests, the maintainer CLI and the portable ZIP
@@ -290,13 +294,12 @@ test) and have not run on Windows; nobody has looked at the panel on screen.
 
 ## Reconstruction
 
-**Active: the parity-core proof of concept.** David reactivated the rebuild on 2026-10-15 as a scoped proof of
-concept: startup to exit 1:1 with retail, level 100 playable to completion. `OnslaughtRebuild.Parity` (a float-exact
-C# port of the decompilation's simulation) owns the simulation and `OnslaughtRebuild.Host` the presentation, with an
-experimental live mode. What it demonstrates, measured Present by Present against retail and native-port recordings,
-and what remains open are recorded in [rebuild/PARITY.md](rebuild/PARITY.md) rather than repeated here; the Parity
-suite's setup is in [rebuild/README.md](rebuild/README.md#working-lane). Test success there does not establish
-audible audio, visual equality, physical input or a completed tutorial.
+**Current: the parity-core proof of concept.** The rebuild is developed in
+[onslaught-godot](https://github.com/dlprentice/onslaught-godot), not in this repository's frozen `rebuild/` copy.
+`OnslaughtRebuild.Parity` owns the simulation and `OnslaughtRebuild.Host` the presentation. The live
+[parity record](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md) owns the measured bounds;
+its numerical model and portability are not claimed exact beyond those checks. Test success does not establish
+audible audio, visual equality, physical input, whole-game parity or a completed tutorial.
 
 **History: the earlier fixed-point rebuild.** On 2026-10-15 David first parked this fixed-point rebuild in favour of a
 native source port, then restarted the lane around the parity core above. What follows is the fixed-point rebuild's

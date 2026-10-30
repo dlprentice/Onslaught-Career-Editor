@@ -1,13 +1,40 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-29 (bounded Windows companion UI evidence and level and mission editor work; the decompilation's matching concession in the closed measurement; earlier: the maintainer's storage name removed; the game documentation is written in onslaught-preservation, not in the frozen `reverse-engineering/`; the companion's update guidance and published decompilation score stated as they are)
+Last updated: 2026-10-29 (cross-project progress chart, current priorities and completion criteria)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
-The [goal](GOAL.md) sets the direction. Capability claims belong in
-[CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) and checks in [VALIDATION.md](VALIDATION.md). The queue that
+The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
+[CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) and its checks in [VALIDATION.md](VALIDATION.md); CE and the Godot
+rebuild own their own release and parity evidence. The queue that
 ran the Ghidra campaign, the decompilation plan and the rebuild's work items until 2026-10-15 is in Git history;
 the campaign's records are in the private `dlprentice/onslaught-re-archive`.
+
+## Cross-project progress and priorities
+
+This is the single cross-project chart. Snapshot checked **2026-10-29, 21:09 ET**; verify the linked owner and current
+release before relying on it. David has paused feature, gameplay, build and release work while documentation and
+processes are organized; resume those lanes only when he changes direction. A development branch is not a released feature. Update the affected row at a material
+milestone rather than keeping a second live dashboard in a handoff. The [goal](GOAL.md#how-progress-is-measured)
+defines progress and what a completion claim requires.
+
+| Area | Current state and remaining outcome | Detailed owner |
+| --- | --- | --- |
+| CE release and player experience | 0.1.12 is the latest verified public release. Reviewed menu, cursor and timing corrections are in later development source; 0.1.13 is not released. Validate exact Linux and Windows packages and updates before shipping. | [CE releases](https://github.com/dlprentice/onslaught-ce/releases/latest), [CE README](https://github.com/dlprentice/onslaught-ce) |
+| Reported Windows issues | One reproduced cause of double music is fixed in 0.1.12, with software-VM evidence. The reporter's physical AMD/audio/input retest, separate stutter and reported graphics artifacts remain open. | [CE releases](https://github.com/dlprentice/onslaught-ce/releases/latest) |
+| Online multiplayer | Experimental two-process work is not player-ready. Deliver independently controlled players, compatible content, reliable session lifecycle and approachable connections across Linux and Windows, then validate actual networks. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play), [CE README](https://github.com/dlprentice/onslaught-ce) |
+| Campaign co-op and scale | Ordinary-campaign objectives, transitions, deaths, rejoin and safe progression are not established online. Larger matches, maps and Battle Engine customization are later goals. Local split-screen is not online co-op. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play) |
+| Controls, display and guidance | Improve understandable dodge/zoom and free-camera help, controllers, accessible menus, window/display choices, 4K HUD and performance. Real devices and representative Windows graphics remain acceptance gaps. | [CE README](https://github.com/dlprentice/onslaught-ce) |
+| Level and mission tools | The Level editor supports limited inspection and object movement into a CE mod. A compiler and edit model exist; a full level editor and player-facing mission-source editor/staging remain unfinished. | [Level plan](roadmap/companion-level-editor.md), [mission plan](roadmap/companion-mission-editor.md) |
+| Mods and content catalogue | Experimental CE mods are available on Linux. Windows mod support, safe authoring/compatibility, a complete verified content inventory and HD successors remain. | [CE README](https://github.com/dlprentice/onslaught-ce), [catalogue work below](#content-catalogue) |
+| Commander | A limited development foundation exists. A usable tactical commander, including eventual multiplayer, remains to be validated and delivered. | [Goal](GOAL.md), [CE](https://github.com/dlprentice/onslaught-ce) |
+| Godot rebuild | Selected recorded level-100 comparisons exist; complete gameplay, audio and presentation parity and a finished playable replacement are not established. HD assets and expanded gameplay follow a faithful baseline. | [Godot parity record](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md) |
+| Decompilation and baseline | The private mapped-function check uses a disclosed one-byte compiled-object concession; without it one mapped function remains unmatched. Stand-ins and full linked/runtime equivalence remain separate work. | [Public decompilation](https://github.com/dlprentice/onslaught-decomp) |
+| Companion | CE/original careers, settings and backups exist with bounded tests. Broader Windows UI/device acceptance, listening and safe release remain. | [Companion README](companion/OnslaughtToolkit.Godot/README.md), [acceptance below](#companion--ce-integration) |
+| Diagnostics and recording | Useful bounded logs and manual, informed reporting are available. Preserve faithful reference tapes and develop separate coverage for CE features and controller input; avoid telemetry or automatic uploads. | [CE reporting guidance](https://github.com/dlprentice/onslaught-ce#report-a-problem) |
+| Special Thanks | Stuart Gillam, Jeppi and BermudaMaster are acknowledged in 0.1.12. Keep acknowledgements accurate as further contributors are identified. | [CE credits](https://github.com/dlprentice/onslaught-ce#credits-and-special-thanks) |
+| Documentation, repositories and recovery | Reconcile the active owners and retained handoffs. Selected off-site data has been restored and checked; full corpus and replacement-machine recovery remain unproven. Private recovery details stay in private records. | [Project index](PROJECT-INDEX.md), repository guides |
+| Showcase and website | The requested port footage has not met its brief and is paused. The domain is owned; no website deployment is currently required. | Maintainer direction |
 
 ## Open work
 
@@ -47,6 +74,32 @@ in an install.
 
 Keep the companion's application code, the rebuild and private retail data separate. Beyond launching and managing
 Onslaught CE, no store, account or community features are planned.
+
+### Onslaught CE player experience and online play
+
+Prioritize real player reports and a reliable corrective release while keeping the faithful reference path separate.
+Check actual release packages on each claimed platform, and distinguish an authored fixture, Wine, a software-rendered
+VM and representative physical hardware. Confirm that controls and features are accessible in-game and that errors
+help players act. Make planned menu options discoverable with honest disabled or coming-soon states, and pursue live
+display changes where feasible instead of silently requiring a restart. Verify the developer console, cheats, free
+camera and tutorial guidance rather than inferring that all paths work. Keep faithful reference tape and replay behavior
+while developing a separate way to record and
+validate CE enhancements and controller input. More logging must remain bounded, non-admin and user-controlled; do
+not add telemetry or automatic report uploads.
+
+For the reported Windows issues, Jeppi identified the screenshot as the tutorial map; a separate log records a Blackout
+session but does not establish the screenshot's level or cause. Training and Blackout are comparison cases. Verify whether
+his reported fly mode was aircraft flight or the detached/free camera, then compare that view with retail and the port;
+distinguish software rendering from physical hardware and do not claim the reporter's AMD symptoms fixed without evidence.
+
+For multiplayer, progress in dependency order: two independent players with their own input, viewpoint, HUD and audio;
+complete host/join and session failure handling; Linux and native Windows in both host roles across actual networks;
+then tutorial/early-campaign co-op, save-safe progression and broader campaign coverage. Validate compatibility,
+latency, loss, disconnects and rejoin. Versus and skirmish are also goals. Larger player counts, custom maps and
+Battle Engine customization must not be claimed as available merely because a protocol or menu anticipates them.
+Do not assume a transport, paid service, new recipient or cross-platform determinism without evidence and authorization.
+The older [original-binary feasibility note](roadmap/original-binary-online-multiplayer-feasibility.md) concerns a
+separate historical route, not a statement that CE already has online play.
 
 ### Level and mission tools
 
@@ -90,7 +143,12 @@ executable. Its native source port (Windows and Linux) is published as
 from either is copied into this repository.
 Concession-free matching remains open: one mapped function still needs the guarded object-code correction.
 
-### Repository
+### Recovery and repository
+
+Keep an inventory of unique source, evidence, saves and necessary recovery material; verify selected off-site restores
+and eventually rehearse recovery on a replacement machine. Reuse existing backups and deduplicate rather than repeatedly
+uploading large unchanged collections. Keep private paths, credentials and signing keys out of tracked files. Selected
+restores are not proof that the full corpus or current worktrees can be recovered.
 
 - The public history was flattened to a single new root (approved by David); the full earlier history is a
   verified bundle and `refs/old/*` in the private RE archive. The third-party fork and GitHub's pull-request refs
@@ -104,8 +162,8 @@ Concession-free matching remains open: one mapped function still needs the guard
 
 - **The earlier fixed-point rebuild's queue** (Core/Client/Godot, paused 2026-10-15 when the rebuild restarted around
   the parity core): World 110 generalization (former P7) and player-input replay tapes (former P8). Its final state is
-  described in [rebuild/README.md](rebuild/README.md#the-earlier-rebuild-history). The rebuild's scope is level
-  100 only.
+  described in [rebuild/README.md](rebuild/README.md#the-earlier-rebuild-history). That historical queue was scoped to
+  level 100; the current and longer-term rebuild goals are in [GOAL.md](GOAL.md).
 
 ## Closed
 
