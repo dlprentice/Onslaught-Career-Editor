@@ -458,6 +458,30 @@ internal static class ScriptsPageTests
             for (int frame = 0; frame < 3; frame++) await Frame(tree);
             check.That(page.Scripts.Source.Text == Alpha && page.ChangeCount == 0 && !page.HasChanges && page.ScriptEditNote == "The text you typed was dropped; alpha is as the level has it." && page.ShippedScriptButton.Disabled &&
                        page.SourceInUse("alpha") is null, $"Put the shipped script back drops a draft when the level already uses the shipped script: \"{page.ScriptEditNote}\"");
+            // Two different replacements of one byte length (the number a Pause waits is stored in as many bytes): after an Undo the text of the one the level no longer runs is not in
+            // use, which a comparison of lengths would call in use and only the stored bytes tell apart.
+            const string PauseTwo = "// alpha, waits\ninit()\n{\n\tPause(2);\n}\n", PauseThree = "// alpha, waits\ninit()\n{\n\tPause(3);\n}\n";
+            byte[] storedTwo = WorldBodyWriter.ScriptBytes(page.Model!.CompileScript(0, PauseTwo, install.Game).Script!), storedThree = WorldBodyWriter.ScriptBytes(page.Model.CompileScript(0, PauseThree, install.Game).Script!);
+            check.That(storedTwo.Length == storedThree.Length && !storedTwo.AsSpan().SequenceEqual(storedThree), "the two scripts are the same length and are not the same script");
+            page.Scripts.Source.Text = PauseTwo;
+            page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            page.Scripts.Source.Text = PauseThree;
+            page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Scripts.Info == "level130/alpha.msl · 5 lines · editing · in use" && page.Scripts.UnusedDraftCount == 0 && page.ChangeCount == 1, $"the later text is in use: \"{page.Scripts.Info}\"");
+            page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Summary.StartsWith("1 script replaced: alpha (", StringComparison.Ordinal) && page.Scripts.Info == "level130/alpha.msl · 5 lines · editing · not in use" &&
+                       page.Scripts.UnusedDraftCount == 1 && page.ChangeCount == 2, $"after an Undo the level runs the first of the two, so the text on view is not in use and is a draft: \"{page.Scripts.Info}\" / {page.ChangeCount} changes");
+            page.Redo.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(page.Scripts.Info == "level130/alpha.msl · 5 lines · editing · in use" && page.Scripts.UnusedDraftCount == 0 && page.ChangeCount == 1, "and a Redo makes it the one the level runs again");
+            page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+            page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            page.Scripts.Source.Text = Alpha;
+            check.That(page.Summary.StartsWith("No changes yet", StringComparison.Ordinal) && !page.HasChanges && page.ShippedScriptButton.Disabled, "both Undos take the level back to the shipped script, with the source file's text on view");
             // The same with the Edit switch off: the typed text stays on view, read only, and can still be dropped.
             page.Scripts.Source.Text = "// off draft\n";
             page.EditSource.ButtonPressed = false;

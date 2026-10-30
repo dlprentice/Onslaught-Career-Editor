@@ -5,7 +5,7 @@ namespace OnslaughtToolkit.Companion.Development;
 
 /// <summary>
 /// The local retail conformance gate for the level data layer. Every world body of every level archive in an installed game
-/// must read, write back to the same bytes, have each compiled script checked, and, when the Toolkit reference's table is given, dump to the same fields the
+/// must read, write back to the same bytes, have each compiled script checked and no script name used twice, and, when the Toolkit reference's table is given, dump to the same fields the
 /// reference reads (the table holds sizes and hashes only). A game with no compiled scripts does not pass. The game folder comes from BEA_GAME and is only read; nothing it
 /// holds is printed or kept. Not part of the contract tests: it needs a game.
 /// <code>
