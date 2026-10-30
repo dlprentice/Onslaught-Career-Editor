@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-10-29 (the decompilation's matching concession and scope stated; earlier: the maintainer's storage name removed; earlier: the game documentation is written in onslaught-preservation, not in the frozen `reverse-engineering/`; earlier: the companion's update guidance and the published decompilation's score stated as they are; earlier: content catalogue phase 3: world bodies, compiled scripts, terrain payloads, sprintf texture names; content catalogue survey, schema, generator, levels, placements and usage, Linux CE workflow and native Windows backend/load checks completed)
+Last updated: 2026-10-29 (bounded Windows companion UI evidence and level and mission editor work; the decompilation's matching concession in the closed measurement; earlier: the maintainer's storage name removed; the game documentation is written in onslaught-preservation, not in the frozen `reverse-engineering/`; the companion's update guidance and published decompilation score stated as they are)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Capability claims belong in
@@ -30,10 +30,12 @@ feed and installs an update only when the player chooses Update.
 
 Remaining acceptance and release work:
 
-- Exercise the Windows Godot UI. The [Linux acceptance](VALIDATION.md#companion-with-real-onslaught-ce--october-24)
-  uses the real CE launcher, protected edits and the game's own Load menu. The separate
-  [native Windows checks](companion/OnslaughtToolkit.NativeChecks/README.md) now cover production file/settings
-  writes, real-process refusal, and CE loading the edited Unicode career. Neither is full campaign acceptance.
+- Complete Windows UI acceptance. A [selected native Windows development workflow](VALIDATION.md#companion-native-windows-development-ui--october-25)
+  exercised production-page actions and its screenshots were inspected; ordinary release invocation, physical input,
+  file dialogs, hardware rendering and broader UI coverage remain open. The [Linux acceptance](VALIDATION.md#companion-with-real-onslaught-ce--october-24)
+  uses the real CE launcher, protected edits and the game's own Load menu. Separate
+  [native Windows checks](companion/OnslaughtToolkit.NativeChecks/README.md) cover production file/settings writes,
+  real-process refusal, and CE loading the edited Unicode career. None is full campaign acceptance.
 - Resolve the intermittent Windows launcher-version timeout: a reproduced failure waits in loader startup
   opening SDL3.dll, before the launcher's own version handling. The independently reproduced redirected-output
   defect is corrected in CE 0.1.5; it does not explain this separate startup wait.
@@ -45,6 +47,14 @@ in an install.
 
 Keep the companion's application code, the rebuild and private retail data separate. Beyond launching and managing
 Onslaught CE, no store, account or community features are planned.
+
+### Level and mission tools
+
+The Companion's Level editor can inspect and move placed objects, show a map and read mission scripts; it saves changed
+world files as new CE mods. The mission compiler and undoable script-edit model are in the source, but the page does not
+yet offer mission editing or preserve edited source in a mod. The [level editor plan](roadmap/companion-level-editor.md)
+and [mission editor design](roadmap/companion-mission-editor.md) own their remaining gates, including source-preserving
+staging, player-facing editing and gameplay acceptance. CE's documented world-mod loader is currently Linux-only.
 
 ### Game documentation — ongoing
 
@@ -78,6 +88,7 @@ The function matches do not by themselves establish complete behavioural equival
 executable. Its native source port (Windows and Linux) is published as
 [Onslaught CE](https://github.com/dlprentice/onslaught-ce) (GPL-3.0-only source and binaries, no game files). Nothing
 from either is copied into this repository.
+Concession-free matching remains open: one mapped function still needs the guarded object-code correction.
 
 ### Repository
 
@@ -101,7 +112,7 @@ from either is copied into this repository.
 | Item | Outcome |
 | --- | --- |
 | Retail RE by Ghidra campaign (generations, contracts, promotion cohorts, record audit) | Superseded by the byte-matching decompilation; records in the private RE archive. |
-| Byte-matching decompilation | Complete in the private working tree (5,482/5,482); the published [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) reproduces 5,449 of them. |
+| Private decompilation matching measurement | 5,482/5,482 mapped functions match with the guarded one-byte correction; one remains unmatched without it. The published [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) reproduces 5,449, with that concession. |
 | WinUI toolkit, its UI tests and CLI (former P11) | Removed 2026-10-15; the companion replaced them. |
 | Campaign bookkeeping relief (former P6) | Retired with the campaign. |
 | Repository preparation (former P12) | The maintainer's checkout lives on a separate archive drive; `local-lab/` and `local-data/` are real ignored children. The 2026-10-15 cleanup moved the Ghidra checkpoint and RE machinery to the private archive and removed the WinUI surfaces. |
