@@ -106,7 +106,8 @@ base-world edit against an existing career, and any Windows run (mods are refuse
   changes. Only the unit kind is offered: a start, a trigger, a path point, a spawner or a building carries rules the editor does not know (a path names its points by row, a career indexes a base
   world's rows, the game's grids may remember a building). The validator accepts rows after the level's own only when each is a unit that is a copy of one the level has (every member equal but place and
   name, floats compared bit for bit; a copy of a copy is equal to the level's unit, so it counts), a base world is never given more rows, and anything else that differs from the level is still refused. A copy that is moved is still
-  one change; Undo takes it back, and the table, the map, the changes box and the unsaved-change count all know it. Adding a unit from nothing is not offered: a copy carries every field the game needs.
+  one change; Undo takes it back, and the table, the map, the changes box and the unsaved-change count all know it. Adding a unit from nothing is not offered: a copy carries every field the game needs. It also carries the original's script and target: a unit whose script counts deaths or ends the level
+  does the same for its copy, and the editor does not know what a script does (the Target Tank copied in the acceptance below has a script; only the first seconds of that play were seen).
 - **Z stays editable and honest.** The inspector shows the stored height, the terrain height under it and the
   difference, and says plainly what has been observed (a ground unit is placed on the ground in the runs so far; air
   units, the start point and air-route waypoints use their stored height). No rule is enforced on that evidence.
@@ -286,7 +287,7 @@ The Python reference reader and writer round-trip that file byte for byte, and t
 (counts of pixels differing by more than 48 grey levels in cells of 40 by 40, against the Play run of section 17, whose scene differs from this one only by the copy) the scene differs in one patch
 of four cells, about 160 pixels wide, at the crosshair: 197 to 261 pixels in each of the seven frames, and in no other cell outside the subtitle band by more than 19 (33 in all at most); the subtitle band
 differs because that run typed the other message. Looked at beside that run and a control run (frames 2, 4 and 6), the copy is a second tank standing at the crosshair, besides the stock tank to its
-right, which both of the others show. MEASURED on one level, one unit and one place, offscreen, dummy audio, the runs not time-matched; nobody has used the page by hand; the frames hold the game's content and stay in local-data.
+right, which both of the others show. MEASURED on one level, one unit and one place, offscreen, dummy audio, the runs not time-matched; the copy's script (the original's) was not looked at beyond the first seconds; nobody has used the page by hand; the frames hold the game's content and stay in local-data.
 
 ## 10. Prototype plan
 
