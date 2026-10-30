@@ -176,7 +176,8 @@ Behaviour, in the Companion's plain-words tone:
   kind or script.
 - **Moving by number.** X, Y and Z fields apply on Enter or when they lose focus; the value shown afterwards is the
   float32 actually stored (the move tool's rule), with a note when it rounded. Arrow keys nudge the selection by 0.5,
-  Shift by 5, Ctrl by 0.05; every field and action works from the keyboard.
+  Shift by 5, Ctrl by 0.05; every field and action works from the keyboard. The code does not tell a held key's repeats from new presses, so each repeat the keyboard sends is its own
+  move and its own undo step; nobody has tried a real held key (the tests push key events).
 - **Moving by dragging.** Left-drag on the selected mark moves X and Y; Esc cancels the drag; one drag is one undo step.
   Z is left as it was unless the player edits it.
 - **Undo, redo, reset.** Every change is a command; "Reset this object" and "Show changed" make a long session
