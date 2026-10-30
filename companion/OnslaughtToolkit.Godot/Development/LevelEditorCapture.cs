@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using System.Globalization;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using Godot;
 using OnslaughtToolkit.Companion.Files;
 using OnslaughtToolkit.Companion.Levels;
@@ -9,9 +10,9 @@ using OnslaughtToolkit.Companion.Ui;
 namespace OnslaughtToolkit.Companion.Development;
 
 /// <summary>
-/// Draws the Level editor against a Steam-shaped game folder and runs the editor's acceptance on it, in one of five modes. Run on a
+/// Draws the Level editor against a Steam-shaped game folder and runs the editor's acceptance on it, in one of seven modes. Run on a
 /// GPU output (godot-offscreen): <c>--script res://Development/LevelEditorCapture.cs -- --output=DIR --fixture=ANY_FILE --steam-root=DIR
-/// [--mode=drag|typed|markers|scripts|names] [--sizes=1920x1080] [--level=100] [--row=12] [--expect-sha256=HEX] [--to=276.49,265.07]</c>.
+/// [--mode=drag|typed|markers|scripts|names|flow|edit] [--sizes=1920x1080] [--level=100] [--row=12] [--expect-sha256=HEX] [--to=276.49,265.07]</c>.
 /// <list type="bullet">
 /// <item><c>drag</c> (the default): open level 100, click row 12's mark on the map, drag it to the pixel of 276.49, 265.07, let go, save
 /// as a mod into the capture's own output, and compare the saved world file's SHA-256 with the one the Toolkit's pipeline gives for the same
@@ -30,6 +31,12 @@ namespace OnslaughtToolkit.Companion.Development;
 /// of the level and one that names an object, puts the caret in each, follows the buttons that name offers (the path highlighted on the map,
 /// then every path drawn, then the object selected), looks at a text that names only an object of the base world, and at an object that is a point
 /// of a path. The frames hold the game's script text and stay in local-data.</item>
+/// <item><c>flow</c>: the Scripts view across level changes, in a real window (the engine keeps a source view's first visible line while the view is hidden): a long
+/// source scrolled to its end, the Scripts switch off, another level opened, the switch on again, and the same leaving the page; every first script must open at its top
+/// and no engine error may be logged.</item>
+/// <item><c>edit</c>: editing a script's source on the page. Picks a script of the level with an installed source that compiles, types into it, compiles and uses a changed
+/// number, is refused with a line for a name the script does not have, uses a source that adds a call to Damage (the warning), puts the shipped script back, and leaves a
+/// draft (the close prompt and the level picker ask). The frames hold the game's script text and stay in local-data.</item>
 /// </list>
 /// The game folder is only read; every file this writes stays inside the output directory. Development builds only.
 /// </summary>
@@ -74,9 +81,9 @@ public partial class LevelEditorCapture : SceneTree
                 }
             }
             if (_expected.Length == 0) _expected = _mode == "typed" ? TypedSha256 : DragSha256;
-            if (_output.Length == 0 || _steamRoot.Length == 0 || !Directory.Exists(_steamRoot) || _mode is not ("drag" or "typed" or "markers" or "scripts" or "names" or "flow"))
+            if (_output.Length == 0 || _steamRoot.Length == 0 || !Directory.Exists(_steamRoot) || _mode is not ("drag" or "typed" or "markers" or "scripts" or "names" or "flow" or "edit"))
             {
-                GD.PrintErr("--output=DIR and --steam-root=DIR (a Steam-shaped folder holding the game) are required; --mode is drag, typed, markers, scripts, names or flow.");
+                GD.PrintErr("--output=DIR and --steam-root=DIR (a Steam-shaped folder holding the game) are required; --mode is drag, typed, markers, scripts, names, flow or edit.");
                 return;
             }
             Directory.CreateDirectory(_output);
@@ -178,6 +185,7 @@ public partial class LevelEditorCapture : SceneTree
         else if (_mode == "scripts") await ScriptsView(viewport, app, page, label);
         else if (_mode == "names") await NamesView(viewport, app, page, label);
         else if (_mode == "flow") await ScriptsFlow(viewport, app, page, label);
+        else if (_mode == "edit") await EditView(viewport, app, page, label);
         else await Markers(viewport, app, page, label, mods);
         viewport.QueueFree();
         await Settle();
@@ -302,6 +310,99 @@ public partial class LevelEditorCapture : SceneTree
                 $"leaving the page: level {levels[step + 1]}'s first script, {page.Scripts.Current?.Summary.Name}, opens at its top: first visible line {first}, caret line {caret} ({page.Scripts.Source.GetLineCount()} lines)");
         }
         await Shot(viewport, label, "level-editor-flow");
+    }
+
+    /// <summary>
+    /// Editing a script's source on the page, looked at (see the <c>edit</c> mode): read only, typeable, compiled and used with one number raised, refused with a line, used
+    /// with an added call to Damage (the warning), the shipped script put back, and a draft that the close prompt and the level picker ask about. Each step reports what the page
+    /// says; the frames hold the game's script text.
+    /// </summary>
+    private async Task EditView(SubViewport viewport, CompanionApp app, LevelEditorPage page, string label)
+    {
+        LevelEditorModel model = page.Model!;
+        string root = app.Game.Folder!.AssetRoot;
+        Regex pause = new(@"Pause\(\s*([0-9]+(?:\.[0-9]+)?)\s*\)", RegexOptions.CultureInvariant);
+
+        // The first script of the level with an installed source that holds a Pause call, compiles as it is, and still compiles with its number raised by one.
+        ScriptEntry? chosen = null;
+        string source = "", raised = "", broken = "", killing = "";
+        foreach (ScriptEntry entry in model.Scripts.Where(entry => !entry.FromBaseWorld))
+        {
+            if (model.OwnScriptIndex(entry) is not int own || ScriptSources.Find(root, entry.SourceLevel, entry.Summary.Name).Source is not { } found) continue;
+            Match match = pause.Match(found.Text);
+            if (!match.Success) continue;
+            string number = (double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture) + 1).ToString("0.0", CultureInfo.InvariantCulture);
+            string up = found.Text[..match.Index] + $"Pause({number})" + found.Text[(match.Index + match.Length)..];
+            int semicolon = found.Text.IndexOf(';', match.Index + match.Length);
+            if (semicolon < 0 || !model.CompileScript(own, found.Text, root).Ok || !model.CompileScript(own, up, root).Ok) continue;
+            (chosen, source, raised) = (entry, found.Text, up);
+            broken = found.Text[..match.Index] + "Pause(nosuchname)" + found.Text[(match.Index + match.Length)..];
+            killing = found.Text[..(semicolon + 1)] + "\n\tDamage(1.0);" + found.Text[(semicolon + 1)..];
+            break;
+        }
+        Report(chosen is not null, $"a script of level {_level} with an installed source that compiles, holds a Pause call and compiles with its number raised: {chosen?.Summary.Name}");
+        if (chosen is null) return;
+
+        page.ScriptsToggle.ButtonPressed = true;
+        await Settle();
+        page.Scripts.Select(chosen.Summary.Name);
+        await Settle();
+        Report(!page.Scripts.Source.Editable && !page.EditSource.Disabled && page.CompileScriptButton.Disabled && page.ShippedScriptButton.Disabled,
+            $"{chosen.Summary.Name} is on view read only, with Edit source offered: \"{page.Scripts.Info}\"");
+        await Shot(viewport, label, "edit-1-read-only");
+
+        page.EditSource.ButtonPressed = true;
+        await Settle();
+        Report(page.Scripts.Source.Editable && !page.CompileScriptButton.Disabled, $"Edit source makes the view typeable: \"{page.Scripts.Info}\"");
+        await Shot(viewport, label, "edit-2-editing");
+
+        page.Scripts.Source.Text = raised;
+        page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+        await Settle();
+        Report(page.ScriptEditNote.StartsWith("Replaced ", StringComparison.Ordinal) && page.Summary.StartsWith("1 script replaced", StringComparison.Ordinal) && !page.Undo.Disabled && !page.Save.Disabled &&
+               !page.ShippedScriptButton.Disabled, $"one number raised, compiled and used: \"{page.ScriptEditNote.Replace('\n', '|')}\" / \"{page.Summary}\"");
+        await Shot(viewport, label, "edit-3-compiled-and-used");
+
+        page.Scripts.Source.Text = broken;
+        page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+        await Settle();
+        Report(page.ScriptEditNote.StartsWith("line ", StringComparison.Ordinal) && page.Summary.StartsWith("1 script replaced", StringComparison.Ordinal) && page.Scripts.Source.GetCaretLine() >= 0,
+            $"a name the script does not have is refused with its line, the caret goes there and the level keeps the script it had: \"{page.ScriptEditNote.Replace('\n', '|')}\" (caret line {page.Scripts.Source.GetCaretLine() + 1})");
+        await Shot(viewport, label, "edit-4-refused-with-a-line");
+
+        page.Scripts.Source.Text = killing;
+        page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+        await Settle();
+        Report(page.ScriptEditNote.Contains("calls Damage more often", StringComparison.Ordinal) && page.Summary.StartsWith("1 script replaced", StringComparison.Ordinal),
+            $"a source that adds a call to Damage is used and warned about: \"{page.ScriptEditNote.Replace('\n', '|')}\"");
+        await Shot(viewport, label, "edit-5-warning");
+
+        page.ShippedScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+        await Settle();
+        Report(page.Summary.StartsWith("No changes yet", StringComparison.Ordinal) && page.Scripts.Source.Text == source && page.ShippedScriptButton.Disabled && !page.HasChanges,
+            $"the shipped script is put back and the source file's text shows again: \"{page.ScriptEditNote.Replace('\n', '|')}\"");
+        await Shot(viewport, label, "edit-6-shipped-back");
+
+        page.Scripts.Source.Text = raised;
+        await Settle();
+        int other = model.Levels.Select(archive => archive.Level).FirstOrDefault(level => level != _level);
+        page.PickLevel(other);
+        await Settle();
+        Report(page.HasChanges && page.ChangeCount == 1 && app.DiscardDialog.Visible && app.DiscardDialog.DialogText.Contains("not saved", StringComparison.Ordinal),
+            $"text typed and not compiled is a draft, and choosing another level asks first: \"{app.DiscardDialog.DialogText}\"");
+        await Shot(viewport, label, "edit-7-draft-asks");
+        app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
+        app.DiscardDialog.Hide();
+        await Settle();
+        Report(page.Model!.Level == _level && page.Scripts.Source.Text == raised, "and the level and the text stay when the player cancels");
+        Report(page.DraftNote.StartsWith($"Text typed for {chosen.Summary.Name} is not in use", StringComparison.Ordinal), $"the changes card says which script the unsaved text is for: \"{page.DraftNote}\"");
+
+        // The draft is dropped with the button that puts the shipped script back (the level already uses the shipped script), which lets the unsaved-work prompts go.
+        Report(!page.ShippedScriptButton.Disabled, "the button that puts the shipped script back is there for the draft");
+        page.ShippedScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+        await Settle();
+        Report(page.Scripts.Source.Text == source && !page.HasChanges && page.ChangeCount == 0 && page.ShippedScriptButton.Disabled, $"the draft is dropped and the source file's text shows again: \"{page.ScriptEditNote}\"");
+        await Shot(viewport, label, "edit-8-draft-dropped");
     }
 
     private async Task NamesView(SubViewport viewport, CompanionApp app, LevelEditorPage page, string label)

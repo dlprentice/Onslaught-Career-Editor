@@ -25,7 +25,7 @@ internal sealed class LevelEditorPage : Page
     // Short, since the line shares its row with two switches in the narrowest window; the tooltips say the rest.
     private const string ObjectSearchHint = "Name, kind, script, row", ScriptSearchHint = "Script, event, function";
     private readonly AppServices _services;
-    private readonly Label _empty, _worldNote, _objectTitle, _objectDetail, _stock, _note, _hint, _summary, _warnings, _problemText, _savedText;
+    private readonly Label _empty, _worldNote, _objectTitle, _objectDetail, _stock, _note, _hint, _summary, _draftNote, _warnings, _problemText, _savedText;
     private readonly PanelContainer _problemPanel, _savedPanel;
     private readonly SplitContainer _split;
     private readonly ScrollContainer _side;
@@ -157,12 +157,33 @@ internal sealed class LevelEditorPage : Page
         _scriptUses.AddThemeConstantOverride("h_separation", 6);
         _scriptUses.AddThemeConstantOverride("v_separation", 6);
         _scriptSource = scriptInside.Add(Build.Text("", "Faint"));
+        _scriptEditActions = scriptInside.Add(new HFlowContainer());
+        _scriptEditActions.AddThemeConstantOverride("h_separation", 8);
+        _scriptEditActions.AddThemeConstantOverride("v_separation", 6);
+        _scriptEditActions.Visible = false;
+        EditSource = _scriptEditActions.Add(Build.Button("Edit source", tooltip: "Type in the script's source. Nothing in the level changes until you compile and use it."));
+        EditSource.ToggleMode = true;
+        CompileScriptButton = _scriptEditActions.Add(Build.Button("Compile and use", "Primary", "Compile the source and, if it compiles, make the level use the new script. Undo takes it back.", disabled: true));
+        ShippedScriptButton = _scriptEditActions.Add(Build.Button("Put the shipped script back", tooltip: "Make the level use the script it came with.", disabled: true));
+        _scriptEditNote = scriptInside.Add(Build.Text("", "Muted"));
+        _scriptEditWarnings = scriptInside.Add(Build.Text("", "Warn"));
+        _scriptEditWarnings.Visible = false;
         _scriptNamesTitle = scriptInside.Add(Build.Text("", "Strong"));
         _scriptNamesTitle.Visible = false;
         _scriptNames = scriptInside.Add(new HFlowContainer());
         _scriptNames.AddThemeConstantOverride("h_separation", 6);
         _scriptNames.AddThemeConstantOverride("v_separation", 6);
         _scripts.NameUnderCaret += OnNameUnderCaret;
+        _scripts.IsReplaced = name => OwnScriptPlace(name) is int place && _scriptChanges.Any(change => change.Index == place);
+        _scripts.IsInUse = UsesText;
+        _scripts.TextEdited += OnScriptTextEdited;
+        EditSource.Toggled += on =>
+        {
+            _scripts.SetEditing(on);
+            UpdateScriptEdit();
+        };
+        CompileScriptButton.Pressed += CompileCurrentScript;
+        ShippedScriptButton.Pressed += PutShippedScriptBack;
 
         (PanelContainer inspector, VBoxContainer inside) = Build.Panel("Card", 8);
         right.Add(inspector);
@@ -194,6 +215,8 @@ internal sealed class LevelEditorPage : Page
         right.Add(changes);
         changesBody.Add(Build.Eyebrow("Your changes"));
         _summary = changesBody.Add(Build.Text("", "Strong"));
+        _draftNote = changesBody.Add(Build.Text("", "Warn"));  // the typed text that is not in use: what the prompts count as a change beside the level's own
+        _draftNote.Visible = false;
         _warnings = changesBody.Add(Build.Text("", "Warn"));
         Save = changesBody.Add(Build.Button("Save as mod…", "Primary", "Save the changes as an Onslaught CE mod: a new folder. Nothing in your game changes.", disabled: true));
         (_savedPanel, VBoxContainer savedInside) = Build.Panel("SuccessNotice", 6);
@@ -264,6 +287,31 @@ internal sealed class LevelEditorPage : Page
     internal Button Reset { get; }
     internal Button Save { get; }
     internal SaveAsModDialog SaveDialog { get; }
+
+    private readonly Label _scriptEditNote, _scriptEditWarnings;
+    private readonly HFlowContainer _scriptEditActions;
+    private EditSession? _shownSession;
+    private IReadOnlyList<ScriptChange> _scriptChanges = [];  // the scripts the open level uses in place of the shipped ones, as of the last model change: the text events must not diff every script of the level
+    private string? _editNoteFor;
+    private IReadOnlyList<ScriptEntry>? _editNoteScripts;  // the scripts the note in the script card was made about: another list (Undo, Redo, another edit, another level) makes it stale
+    private bool _editNoteRefused;  // the note is a refusal of the text as it was typed: it goes when the text changes
+    private readonly Dictionary<(string Name, string Text), byte[]> _compiledAs = [];  // what each text that was compiled and used made, as the script is stored
+    private readonly Dictionary<int, byte[]?> _scriptBytes = [];  // the open level's own scripts as stored, by place, as of the last model change
+
+    /// <summary>The switch that makes the selected script's source editable.</summary>
+    internal Button EditSource { get; }
+
+    /// <summary>Compiles the source and makes the level use the new script.</summary>
+    internal Button CompileScriptButton { get; }
+
+    /// <summary>Makes the level use the script it came with.</summary>
+    internal Button ShippedScriptButton { get; }
+
+    /// <summary>The note in the changes card about typed text that is not in use (empty when there is none).</summary>
+    internal string DraftNote => _draftNote.Visible ? _draftNote.Text : "";
+
+    /// <summary>What compiling or putting the shipped script back said, in the script card, and the warnings about the script the level uses under it.</summary>
+    internal string ScriptEditNote => string.Join("\n", new[] { _scriptEditNote.Text, _scriptEditWarnings.Visible ? _scriptEditWarnings.Text : "" }.Where(text => text.Length > 0));
     internal LevelEditorModel? Model => _model;
     internal string Note => _note.Text;
     internal string Hint => _hint.Text;
@@ -289,11 +337,14 @@ internal sealed class LevelEditorPage : Page
     /// <summary>Whether the map sits beside the table (a wide column) rather than below it.</summary>
     internal bool MapBesideTable => !_split.Vertical;
 
-    /// <summary>Whether the open level holds changes that no Save as mod has written: what leaving the level, the game or the companion would drop.</summary>
-    internal bool HasChanges => _model?.HasUnsavedChanges ?? false;
+    /// <summary>
+    /// Whether the open level holds changes that no Save as mod has written, or source text typed and not yet compiled and used: what leaving the level, the game
+    /// or the companion would drop.
+    /// </summary>
+    internal bool HasChanges => (_model?.HasUnsavedChanges ?? false) || _scripts.UnusedDraftCount > 0;
 
-    /// <summary>How many changed level records belong to the unsaved state.</summary>
-    internal int ChangeCount => _model?.UnsavedChangeCount ?? 0;
+    /// <summary>How many changed level records and uncompiled source drafts belong to the unsaved state.</summary>
+    internal int ChangeCount => (_model?.UnsavedChangeCount ?? 0) + _scripts.UnusedDraftCount;
 
     private LineEdit Axis(GridContainer grid, string label)
     {
@@ -412,13 +463,20 @@ internal sealed class LevelEditorPage : Page
 
     private void OnModelChanged()
     {
+        _scriptChanges = _model?.Session?.ScriptChanges() ?? [];
+        _scriptBytes.Clear();
         _problemPanel.Visible = _model?.Problem is not null;
         _problemText.Text = _model?.Problem ?? "";
         _worldNote.Text = _model?.BaseLevel is int baseLevel ? $"This level also loads the base world of level {baseLevel}. This editor does not change it." : "";
-        if (!ReferenceEquals(_shownScripts, _model?.Scripts))  // the scripts change only when a level is opened, not with each move
+        if (!ReferenceEquals(_shownScripts, _model?.Scripts))  // the scripts change when a level is opened and when a script is replaced or taken back, not with each move
         {
-            _shownScripts = _model?.Scripts ?? [];
-            _scripts.SetScripts(_root, _shownScripts);
+            IReadOnlyList<ScriptEntry> scripts = _model?.Scripts ?? [];
+            bool sameEdit = _model?.Session is not null && ReferenceEquals(_shownSession, _model.Session);
+            _shownScripts = scripts;
+            _shownSession = _model?.Session;
+            if (!sameEdit) _compiledAs.Clear();  // another level: its scripts are not made by the texts typed for this one
+            if (sameEdit) _scripts.Refresh(scripts);
+            else _scripts.SetScripts(_root, scripts);
         }
         RebuildTable();
         Map.SetLevel(_model?.Terrain, _model?.Rows() ?? []);
@@ -653,6 +711,10 @@ internal sealed class LevelEditorPage : Page
         {
             _scriptTitle.Text = "Nothing selected";
             _scriptWhere.Text = _scriptHandles.Text = _scriptCalls.Text = _scriptRuns.Text = _scriptSource.Text = "";
+            _scriptEditNote.Text = "";
+            _scriptEditWarnings.Visible = false;
+            _editNoteRefused = false;
+            _editNoteFor = null;
             return;
         }
         ScriptSummary summary = entry.Summary;
@@ -688,8 +750,151 @@ internal sealed class LevelEditorPage : Page
             if (summary.Uses.Count > 16) _scriptUses.Add(Build.Text($"and {summary.Uses.Count - 16} more", "Faint", wrap: false));
         }
         _scriptSource.Text = source?.Source is { } found
-            ? $"Source: {Path.GetFileName(found.Path)}, read only. The game runs the compiled script, which a source in your game folder may differ from."
+            ? $"Source: {Path.GetFileName(found.Path)}, {(_scripts.Editing ? "being edited" : "read only")}. The game runs the compiled script, which a source in your game folder may differ from."
             : source?.Problem ?? "";
+        if (_editNoteFor != summary.Name || !ReferenceEquals(_editNoteScripts, _model?.Scripts))
+        {
+            _scriptEditNote.Text = "";
+            _editNoteRefused = false;
+            _editNoteFor = null;
+        }
+        ShowScriptWarnings(entry);
+        UpdateScriptEdit();
+    }
+
+    /// <summary>The edit controls of the script card for the selected script: what can be done with it now, and why not when it cannot.</summary>
+    private void UpdateScriptEdit()
+    {
+        ScriptEntry? entry = _scripts.Current;
+        int? index = entry is null || _model is null ? null : _model.OwnScriptIndex(entry);
+        bool editable = _scripts.CanEditCurrent && index is not null && _root is not null;
+        _scriptEditActions.Visible = entry is not null;
+        EditSource.SetPressedNoSignal(editable && _scripts.WantsEditing);  // a script that cannot be edited shows the switch off; it comes back on with the next one that can
+        EditSource.Disabled = !editable;
+        EditSource.TooltipText = editable ? "Type in the script's source. Nothing in the level changes until you compile and use it."
+            : entry is null ? "Choose a script."
+            : entry.FromBaseWorld ? "This script belongs to the base world, which this editor shows and does not change."
+            : _root is null ? "Choose your game folder on Home to edit a script."
+            : "There is no source file in your game folder to start from.";
+        CompileScriptButton.Disabled = !(editable && _scripts.Editing);
+        // Put the shipped script back has something to do when the level uses a replaced script, and when text was typed that is to be dropped.
+        ShippedScriptButton.Disabled = !(index is int place && (_scriptChanges.Any(change => change.Index == place) || _scripts.HasDraft(entry!.Summary.Name)));
+        UpdateDraftNote();
+    }
+
+    /// <summary>Says which scripts have text that was typed and is not in use, so that the unsaved-work prompts' count has something to point at.</summary>
+    private void UpdateDraftNote()
+    {
+        string text = DraftNoteText(_scripts.UnusedDraftNames);
+        _draftNote.Visible = text.Length > 0;
+        _draftNote.Text = text;
+    }
+
+    /// <summary>What the changes card says about typed text that is not in use, for the scripts it was typed for (empty when there are none).</summary>
+    internal static string DraftNoteText(IReadOnlyList<string> names) => names.Count == 0 ? ""
+        : $"Text typed for {(names.Count <= 2 ? string.Join(" and ", names) : $"{names[0]}, {names[1]} and {names.Count - 2} more")} is not in use yet and is not saved anywhere.";
+
+    /// <summary>Compiles the source in the view and, if it compiles, makes the level use it as the script (one edit that Undo takes back).</summary>
+    private void CompileCurrentScript()
+    {
+        if (_model is null || _root is null || _scripts.Current is not { } entry || _model.OwnScriptIndex(entry) is not int index || !_scripts.Editing) return;
+        string text = _scripts.SourceText;
+        ScriptEditOutcome outcome = _model.ReplaceScriptFromSource(index, text, _root);
+        // The text is in use when the level's script is exactly what it compiled to: a replacement that was made, or a script that already was that.
+        if ((outcome.Result is ScriptEditResult.Replaced or ScriptEditResult.Unchanged) && ScriptBytesAt(index) is { } made) _compiledAs[(entry.Summary.Name, text)] = made;
+        ShowScriptEdit(entry.Summary.Name, outcome);
+        _scripts.RefreshInfo();
+        if (outcome.Line is int line) _scripts.GoToLine(line);
+        UpdateScriptEdit();
+    }
+
+    /// <summary>
+    /// Makes the level use the script it came with, and shows the source file's text again. When the level already uses the shipped script it drops the text that was
+    /// typed instead (the one way to let go of a draft that the unsaved-work prompts count).
+    /// </summary>
+    private void PutShippedScriptBack()
+    {
+        if (_model is null || _scripts.Current is not { } entry || _model.OwnScriptIndex(entry) is not int index) return;
+        if (!_scriptChanges.Any(change => change.Index == index))
+        {
+            if (!_scripts.HasDraft(entry.Summary.Name)) return;
+            _scripts.DiscardEdit(entry.Summary.Name);
+            ShowScriptEdit(entry.Summary.Name, new ScriptEditOutcome(ScriptEditResult.Unchanged, $"The text you typed was dropped; {entry.Summary.Name} is as the level has it.", null, []));
+            UpdateScriptEdit();
+            return;
+        }
+        ScriptEditOutcome outcome = _model.ResetScript(index);
+        if (outcome.Result == ScriptEditResult.Replaced) _scripts.DiscardEdit(entry.Summary.Name);
+        ShowScriptEdit(entry.Summary.Name, outcome);
+        UpdateScriptEdit();
+    }
+
+    private void ShowScriptEdit(string name, ScriptEditOutcome outcome)
+    {
+        List<string> lines = [outcome.Message];
+        lines.AddRange(outcome.Notes.Select(note => $"Line {note.Line + 1}: {note.Text}"));
+        if (outcome.Result == ScriptEditResult.Replaced) lines.Add("Undo takes it back.");
+        _scriptEditNote.Text = string.Join("\n", lines);
+        _scriptEditNote.ThemeTypeVariation = outcome.Result == ScriptEditResult.Refused ? "Warn" : "Muted";
+        _editNoteRefused = outcome.Result == ScriptEditResult.Refused;
+        _editNoteFor = name;
+        _editNoteScripts = _model?.Scripts;
+    }
+
+    /// <summary>The note about a refusal is about the text as it was: it goes with that text. The note about a replacement stays, as the replacement does.</summary>
+    private void OnScriptTextEdited()
+    {
+        if (_editNoteRefused)
+        {
+            _scriptEditNote.Text = "";
+            _editNoteRefused = false;
+            _editNoteFor = null;
+        }
+        UpdateScriptEdit();
+    }
+
+    /// <summary>The place in the open level's own world of the script with this name, or null.</summary>
+    private int? OwnScriptPlace(string name)
+    {
+        if (_model is null) return null;
+        for (int i = 0; i < _model.Scripts.Count; i++)
+            if (!_model.Scripts[i].FromBaseWorld && _model.Scripts[i].Summary.Name == name) return i;
+        return null;
+    }
+
+    /// <summary>The script at this place as the open level stores it (null when it cannot be stored), kept until the model next changes.</summary>
+    private byte[]? ScriptBytesAt(int place)
+    {
+        if (_scriptBytes.TryGetValue(place, out byte[]? known)) return known;
+        byte[]? bytes = null;
+        if (_model?.Session is { } session && place >= 0 && place < session.Body.Scripts.Count && session.Body.Scripts[place] is { } script)
+        {
+            try { bytes = WorldBodyWriter.ScriptBytes(script); }
+            catch (Exception error) when (EditSession.IsUnstorable(error)) { }
+        }
+        _scriptBytes[place] = bytes;
+        return bytes;
+    }
+
+    /// <summary>Whether the open level's script of this name is exactly what this text made when it was compiled and used.</summary>
+    private bool UsesText(string name, string text) =>
+        OwnScriptPlace(name) is int place && _compiledAs.TryGetValue((name, text), out byte[]? made) && ScriptBytesAt(place) is { } current && current.AsSpan().SequenceEqual(made);
+
+    /// <summary>The text the open level's script of this name was compiled from, when it was compiled and used on this page; null for the shipped script and for one made some other way.</summary>
+    internal string? SourceInUse(string name)
+    {
+        if (OwnScriptPlace(name) is not int place || ScriptBytesAt(place) is not { } current) return null;
+        foreach (KeyValuePair<(string Name, string Text), byte[]> made in _compiledAs)
+            if (made.Key.Name == name && current.AsSpan().SequenceEqual(made.Value)) return made.Key.Text;
+        return null;
+    }
+
+    /// <summary>Shows what to take care of in the script the level uses for this entry (nothing for a script that was not replaced).</summary>
+    private void ShowScriptWarnings(ScriptEntry entry)
+    {
+        IReadOnlyList<string> warnings = _model?.OwnScriptIndex(entry) is int place && _scriptChanges.Any(change => change.Index == place) ? _model.ScriptWarnings(place) : [];
+        _scriptEditWarnings.Text = string.Join("\n", warnings);
+        _scriptEditWarnings.Visible = warnings.Count > 0;
     }
 
     /// <summary>Highlights a waypoint path of the open level on the map and brings the map to the objects it passes through. Returns false if there is no such path.</summary>
