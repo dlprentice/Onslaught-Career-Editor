@@ -307,6 +307,17 @@ internal static class LevelCopyTests
         DuplicateOutcome edge = model.Duplicate(0);
         check.That(edge.Ok && model.Row(edge.Row!.Value)!.Position == new Vector3(495f, 20f, 0f) && edge.Message.Contains("to its left", StringComparison.Ordinal), $"a copy that would leave the square goes to the left instead: {edge.Message}");
 
+        // A long name is cut so that the copy's name stays short: the stem (32 characters), " copy", and a number when that name is taken.
+        LevelEditorModel longNamed = LevelEditorModel.ForGame(LevelEditorTests.GameWithLevels(Path.Combine(folder, "long-name")));
+        longNamed.Open(100);
+        longNamed.Session!.Body.Things[0].Init.Name = new string('x', 60);
+        DuplicateOutcome longCopy = longNamed.Duplicate(0);
+        string longName = longCopy.Row is int longRow ? longNamed.Row(longRow)!.Name : "";
+        DuplicateOutcome longAgain = longNamed.Duplicate(0);
+        string longSecond = longAgain.Row is int againRow ? longNamed.Row(againRow)!.Name : "";
+        check.That(longCopy.Ok && longName == new string('x', 32) + " copy" && longName.Length <= 40 && longAgain.Ok && longSecond == new string('x', 32) + " copy 2" && longSecond.Length <= 40,
+            $"a long name is cut to its first 32 characters before \" copy\" and a number: {longName.Length} and {longSecond.Length} characters");
+
         // What is saved holds the copies, strictly; after the save nothing is unsaved, and undoing a copy is an unsaved change again.
         check.That(model.Session!.Validate().CanSave && model.Session.Additions().Count == 5 && model.Session.Changes().Count == 1 && model.UnsavedChangeCount == 6,
             $"the edit with its five copies and one moved unit can be saved, and counts as six changes: {model.UnsavedChangeCount}");
