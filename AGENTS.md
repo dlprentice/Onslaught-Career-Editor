@@ -134,7 +134,7 @@ percentages, and follow the user's current priorities.
 
 1. The smallest gate that could falsify the change passed: docs → `git diff --check` and `npm run test:docs`; added
    files → `npm run test:safety`; tool changes → the affected `_tests.py` cases; rebuild code → the affected Parity
-   tests, then the Parity suite and Host build as `rebuild/README.md` describes; companion → its `npm test`.
+   tests, then the Parity suite and Host build as the [live rebuild guide](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/README.md) describes; companion → its `npm test`.
 2. A new or edited tracked `.md` has `Status:`, `Last updated:` (or `Date:`) and `Summary:` (or `Verdict:`) in its
    header and no volatile counts. `tools/doc_header_backlog.txt` may only shrink.
 3. Stage only the scoped paths, commit plainly and push the working branch.
