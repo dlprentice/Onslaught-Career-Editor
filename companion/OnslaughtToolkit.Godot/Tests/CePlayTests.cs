@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using Godot;
+using OnslaughtToolkit.Companion.Careers;
 using OnslaughtToolkit.Companion.Files;
 using OnslaughtToolkit.Companion.Game;
 using OnslaughtToolkit.Companion.Levels;
@@ -75,12 +77,16 @@ internal static partial class CePlayTests
                    CeInstallation.IsAtLeast("1.0.0.0", "0.1.11") && !CeInstallation.IsAtLeast("0.1.9", "0.1.11") && !CeInstallation.IsAtLeast("0.1.10.5", "0.1.11") &&
                    !CeInstallation.IsAtLeast("dev", "0.1.11") && !CeInstallation.IsAtLeast("0.1.12", "x") && !CeInstallation.IsAtLeast("", "0.1.11"),
             "versions compare as numbers (0.1.10 is before 0.1.11, 0.2 after), and what is not a number is never enough");
+        check.That(CeInstallation.IsAtLeast("0.2.0-rc0", "0.1.11") && CeInstallation.IsAtLeast("v0.1.12", "0.1.11") && CeInstallation.IsAtLeast("V0.1.12", "0.1.11") && CeInstallation.IsAtLeast("0.1.12+build5", "0.1.11") &&
+                   CeInstallation.IsAtLeast("0.1.11-rc1", "0.1.11") && !CeInstallation.IsAtLeast("0.1.10-rc9", "0.1.11") && !CeInstallation.IsAtLeast("v", "0.1.11") && !CeInstallation.IsAtLeast("-rc1", "0.1.11") &&
+                   !CeInstallation.IsAtLeast("0.1.x-rc1", "0.1.11"), "a version with a label is compared by its numeric core, a leading v and a label after a hyphen or a plus set aside, so a release candidate of a later version is not refused");
     }
 
     // ---- the temporary folder -----------------------------------------------------------------------------------------------------
     private static string Listing(string root) => string.Join("|", Directory.EnumerateFileSystemEntries(root, "*", new EnumerationOptions { RecurseSubdirectories = true, AttributesToSkip = 0 })
         .Select(path => Path.GetRelativePath(root, path)).Order(StringComparer.Ordinal));
 
+    [SupportedOSPlatform("linux")]
     private static void Folders(string root, Checks check)
     {
         Directory.CreateDirectory(root);
@@ -120,6 +126,40 @@ internal static partial class CePlayTests
                    !CePlayFolder.Create(link, 100, "m", 1, now).Ok && !CePlayFolder.Create(Path.Combine(link, "play"), 100, "m", 1, now).Ok &&
                    !CePlayFolder.Create(Path.Combine(link, "sub", "play"), 100, "m", 1, now).Ok && Listing(realPlace) == "sub",
             "a play folder that is not a full path, is a file, is a link or lies behind one (however deep) is refused, and nothing is written through the link");
+
+        // A refusal names what is wrong: the link on the way, the file in the way; the settings folder the companion owns is made when it is missing.
+        Directory.CreateDirectory(Path.Combine(realPlace, "named"));
+        var behindLink = CePlayFolder.Create(Path.Combine(link, "named", "play"), 100, "m", 1, now);
+        var behindFile = CePlayFolder.Create(Path.Combine(root, "a-file", "inner", "play"), 100, "m", 1, now);
+        check.That(!behindLink.Ok && behindLink.Message.Contains(link, StringComparison.Ordinal) && behindLink.Message.Contains("is a link", StringComparison.Ordinal) &&
+                   !behindFile.Ok && behindFile.Message.Contains("a-file", StringComparison.Ordinal) && Listing(realPlace) == "named|sub",
+            $"a refusal names the link on the way and the file in the way, and nothing is written behind them: \"{behindLink.Message}\" / \"{behindFile.Message}\"");
+        var madeDeep = CePlayFolder.Create(Path.Combine(root, "new-data", "settings", "play"), 100, "m", 1, now);
+        check.That(madeDeep.Ok && Directory.Exists(Path.Combine(root, "new-data", "settings", "play")) &&
+                   Mode(Path.Combine(root, "new-data", "settings")) == (UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute),
+            "a play folder whose settings folder is not there yet is made with the missing folders above it, private");
+        // The play folder must be the player's own and not writable by others: it holds copies of their settings.
+        string openPlay = Path.Combine(root, "open-play");
+        Directory.CreateDirectory(openPlay);
+        const UnixFileMode Own = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute;
+        List<string> openOutcomes = [];
+        foreach ((string who, UnixFileMode extra) in new[] { ("group", UnixFileMode.GroupWrite), ("others", UnixFileMode.OtherWrite), ("group and others", UnixFileMode.GroupWrite | UnixFileMode.OtherWrite) })
+        {
+            File.SetUnixFileMode(openPlay, Own | extra);
+            var writable = CePlayFolder.Create(openPlay, 100, "m", 1, now);
+            if (writable.Ok || !writable.Message.Contains("can be written by other people", StringComparison.Ordinal) || Listing(openPlay) != "") openOutcomes.Add($"{who}: \"{writable.Message}\"");
+        }
+        File.SetUnixFileMode(openPlay, Own | UnixFileMode.GroupRead | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+        var readable = CePlayFolder.Create(openPlay, 100, "m", 1, now);
+        check.That(openOutcomes.Count == 0 && readable.Ok, $"a play folder that group or others can write is refused before anything is made, and one they can only read is fine: {string.Join("; ", openOutcomes)}");
+        string foreignParent = Path.Combine(root, "foreign-play");
+        Directory.CreateDirectory(foreignParent);
+        File.SetUnixFileMode(foreignParent, Own);
+        CePlayFolder.EffectiveUserId = () => uint.MaxValue - 1;
+        Outcome<CePlayFolder> foreign;
+        try { foreign = CePlayFolder.Create(foreignParent, 100, "m", 1, now); } finally { CePlayFolder.EffectiveUserId = null; }
+        check.That(!foreign.Ok && foreign.Message.Contains("belongs to another user", StringComparison.Ordinal) && Listing(foreignParent) == "" && CePlayFolder.Create(foreignParent, 100, "m", 1, now).Ok,
+            $"a play folder that belongs to another user is refused before anything is made: \"{foreign.Message}\"");
 
         // Files go in new, once, inside the folder.
         folder.WriteFile("ce.ini", Encoding.UTF8.GetBytes("mods=x\n"));
@@ -201,6 +241,11 @@ internal static partial class CePlayTests
                    File.GetAttributes(Path.Combine(racy.Root, "inner")).HasFlag(FileAttributes.ReparsePoint) && !File.Exists(Path.Combine(racy.Root, "a.txt")) && File.Exists(Path.Combine(racy.Root, CePlayFolder.MarkerName)),
             $"a folder swapped for a link after its kind was read is not followed (the link stays, the target's file is untouched), a file swapped for a link loses the link only, and the marker stays with the folder: {raced.Message}");
 
+        RemovalHolderSwapped(Path.Combine(root, "removal-holder"), check);
+        RemovalPlayFolderLink(Path.Combine(root, "removal-play-link"), check);
+        RemovalPlayFolderSwappedLate(Path.Combine(root, "removal-play-late"), check);
+        RemovalTemporaryFolderLink(Path.Combine(root, "removal-temporary-link"), check);
+
         // A blocker deep inside keeps the marker too, so the folder is still known as ours; and a folder whose marker was taken away or replaced (by another folder's) is refused whole.
         CePlayFolder deep = CePlayFolder.Create(parent, 100, "play-level-100", 4242, now).Value!;
         Directory.CreateDirectory(Path.Combine(deep.Root, "inner"));
@@ -269,6 +314,22 @@ internal static partial class CePlayTests
         check.That(CePlayFolder.SweepStale(Path.Combine(root, "absent"), 1, null, _ => false) is { Removed.Count: 0, Kept.Count: 0 } &&
                    CePlayFolder.SweepStale("relative", 1, null, _ => false) is { Removed.Count: 0 }, "a play folder that is not there, or not a full path, is nothing to sweep");
 
+        // An empty play folder with no marker (its marker went before a failing last removal) is removed once it is not new; one that holds anything, a dot file included, or is new, stays.
+        string emptyParent = Path.Combine(root, "sweep-empty");
+        Directory.CreateDirectory(emptyParent);
+        File.SetUnixFileMode(emptyParent, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        string emptyOne = Path.Combine(emptyParent, "play-empty"), holdsDot = Path.Combine(emptyParent, "play-holds-dot"), holdsFolder = Path.Combine(emptyParent, "play-holds-folder");
+        Directory.CreateDirectory(emptyOne);
+        Directory.CreateDirectory(holdsDot);
+        File.WriteAllText(Path.Combine(holdsDot, ".hidden"), "x");
+        Directory.CreateDirectory(Path.Combine(holdsFolder, "inner"));
+        CePlaySweep fresh = CePlayFolder.SweepStale(emptyParent, 1, null, _ => false);
+        bool freshStays = fresh.Removed.Count == 0 && Directory.Exists(emptyOne) && Directory.Exists(holdsDot) && Directory.Exists(holdsFolder);
+        CePlaySweep aged = CePlayFolder.SweepStale(emptyParent, 1, null, _ => false, TimeSpan.Zero);
+        check.That(freshStays && aged.Removed.SequenceEqual(["play-empty (empty, no marker)"]) && !Directory.Exists(emptyOne) &&
+                   File.Exists(Path.Combine(holdsDot, ".hidden")) && Directory.Exists(Path.Combine(holdsFolder, "inner")) && aged.Kept.Count == 2,
+            $"an empty marker-less play folder that is not new is removed, a new one and any that holds something stay (fresh sweep kept all: {freshStays}): removed {string.Join(", ", aged.Removed)}; kept {string.Join(", ", aged.Kept)}");
+
         // A folder that is a link to a real play folder is neither followed nor removed.
         string target = Path.Combine(root, "elsewhere");
         Directory.CreateDirectory(target);
@@ -305,7 +366,7 @@ internal static partial class CePlayTests
     }
 
     private static async Task<Rig> MakeRigAsync(string root, byte[] career, string packageVersion = "0.1.12", string answer = "Onslaught CE V0.1.12, build abcdef123456", string ini = RealIni,
-        Func<bool>? windows = null, bool withPackage = true, string? parentUnder = null, bool executableLauncher = false)
+        Func<bool>? windows = null, bool withPackage = true, string? parentUnder = null, bool executableLauncher = false, IReadOnlyDictionary<string, string?>? environment = null)
     {
         Directory.CreateDirectory(root);
         FakeInstall install = FakeInstall.Create(Path.Combine(root, "install"), career);
@@ -329,7 +390,7 @@ internal static partial class CePlayTests
         await game.DetectAsync();
         string parent = Path.Combine(parentUnder ?? root, "play");
         Rig? rig = null;
-        CePlayHooks hooks = new(Parent: parent, ReadVersion: (_, _) => { rig!.VersionAsked++; return Task.FromResult(answer); }, OnWindows: windows, Now: () => new DateTime(2026, 10, 30, 5, 0, 0, DateTimeKind.Utc),
+        CePlayHooks hooks = new(Parent: parent, ReadVersion: (_, _) => { rig!.VersionAsked++; return Task.FromResult(answer); }, Environment: environment, OnWindows: windows, Now: () => new DateTime(2026, 10, 30, 5, 0, 0, DateTimeKind.Utc),
             OnStart: start => rig!.Started.Add(string.Join(" ", start.ArgumentList)),
             Run: async start =>
             {
@@ -366,6 +427,9 @@ internal static partial class CePlayTests
         }
     }
 
+    /// <summary>Port knobs the fence list does not name (and no port reads today): a test play scrubs them all the same.</summary>
+    private static readonly string[] LeakedKnobs = ["BEA_PORT_UNLISTED_KNOB", "BEA_NET_UNLISTED_KNOB", "BEA_PORT_QUIT"];
+
     private static string[] PlayFolders(string parent) => Directory.Exists(parent) ? [.. Directory.GetDirectories(parent, "play-*").Order(StringComparer.Ordinal)] : [];
 
     internal static async Task RunAsync(SceneTree tree, byte[] original, string output, Checks check)
@@ -376,12 +440,13 @@ internal static partial class CePlayTests
         Directory.CreateDirectory(root);
 
         // ---- the whole play, from a player's CE folder that holds a career, options, tapes and a ce.ini with other ideas ---------------------------------
-        foreach (string name in CePlay.FenceVariables) System.Environment.SetEnvironmentVariable(name, "leaked");
+        foreach (string name in CePlay.FenceVariables.Concat(LeakedKnobs)) System.Environment.SetEnvironmentVariable(name, "leaked");
+        System.Environment.SetEnvironmentVariable("BEA_REPORT_NO_OPEN", "1");
         System.Environment.SetEnvironmentVariable("BEA_USER_DIR", "/should/not/be/used");
         System.Environment.SetEnvironmentVariable("BEA_GAME_DIR", "/should/not/be/used/either");
         try
         {
-            Rig rig = await MakeRigAsync(Path.Combine(root, "main"), original);
+            Rig rig = await MakeRigAsync(Path.Combine(root, "main"), original, environment: new Dictionary<string, string?> { ["BEA_PORT_QUIT"] = "9" });
             string[] userBefore = LevelEditorPageTests.Snapshot(rig.User), gameBefore = LevelEditorPageTests.Snapshot(rig.Install.Game), packageBefore = LevelEditorPageTests.Snapshot(rig.Package);
             string userTreeBefore = Listing(rig.User);
             int changes = 0;
@@ -396,6 +461,9 @@ internal static partial class CePlayTests
             check.That(Path.GetDirectoryName(playFolder) == rig.Parent && Path.GetFileName(playFolder).StartsWith("play-", StringComparison.Ordinal) && playFolder != rig.User &&
                        seen.Environment["BEA_GAME_DIR"] == rig.Install.Game && CePlay.FenceVariables.All(name => !seen.Environment.ContainsKey(name)),
                 $"CE is told a temporary folder of its own, never the player's, and the game folder the editor read; none of the variables that switch mods off reaches it: {playFolder}");
+            check.That(LeakedKnobs.Except(["BEA_PORT_QUIT"]).All(name => !seen.Environment.ContainsKey(name)) && seen.Environment.Keys.Where(name => name.StartsWith("BEA_PORT_", StringComparison.Ordinal) || name.StartsWith("BEA_NET_", StringComparison.Ordinal)).SequenceEqual(["BEA_PORT_QUIT"]) &&
+                       seen.Environment.GetValueOrDefault("BEA_PORT_QUIT") == "9" && seen.Environment.GetValueOrDefault("BEA_REPORT_NO_OPEN") == "1",
+                "every other BEA_PORT_* and BEA_NET_* is scrubbed too, whether or not the list names it; what the play hooks add after that reaches CE, and other BEA_ variables stay");
             check.That(seen.Ini == "# mine\ngamedir=/somewhere/else\nmods=play-level-100\nrecord_sessions=0\nupdate_check=0\nwide_mode_w=1920\n",
                 $"CE's ce.ini there is the player's with mods= naming the mod alone, recording off and no update check: \"{seen.Ini.Replace("\n", "|")}\"");
             check.That(seen.OptionsHash == Convert.ToHexStringLower(SHA256.HashData(original)) &&
@@ -408,7 +476,7 @@ internal static partial class CePlayTests
             check.That(LevelEditorPageTests.Snapshot(rig.User).SequenceEqual(userBefore) && Listing(rig.User) == userTreeBefore && LevelEditorPageTests.Snapshot(rig.Install.Game).SequenceEqual(gameBefore) &&
                        LevelEditorPageTests.Snapshot(rig.Package).SequenceEqual(packageBefore) && File.ReadAllText(Path.Combine(rig.User, "ce.ini")) == RealIni,
                 "the player's CE folder (ce.ini, options, careers, tapes), the game folder and the CE package are byte for byte as they were");
-            check.That(changes == 2 && !rig.Play.Running && report.Message.Contains("ran level 100", StringComparison.Ordinal) && report.Message.Contains("loaded the mod", StringComparison.Ordinal),
+            check.That(changes == 2 && !rig.Play.Running && report.Message.StartsWith("Onslaught CE ran level 100 and closed. Its log says it loaded the mod's world file.", StringComparison.Ordinal) && !report.Message.Contains("with your changes", StringComparison.Ordinal),
                 $"the page is told when a play starts and ends: {report.Message}");
             check.That(ReferenceEquals(rig.Play.Last, report) && rig.Started.Count == 1 && rig.Started[0] == "--no-update-check -level 100 -skipfmv -forcewindowed",
                 "the service keeps the report of the latest play, and a start hook sees the arguments just before the launcher runs");
@@ -435,7 +503,31 @@ internal static partial class CePlayTests
             rig.LogText = null;
             CePlayReport silent = await rig.Play.PlayAsync(100, Stage);
             check.That(silent.Started && !silent.ModServed && silent.LogCopy is null && silent.Message.Contains("wrote no log", StringComparison.Ordinal), $"a CE that wrote no log is said to have written none: {silent.Message}");
+            rig.LogText = "onslaught-ce: nothing about mods here\n";
+            CePlayReport quiet = await rig.Play.PlayAsync(100, Stage);
+            check.That(quiet.Started && quiet.ExitCode == 0 && !quiet.ModServed && quiet.Message.StartsWith("Onslaught CE ran level 100 and closed. Its log does not say it loaded the mod's world file", StringComparison.Ordinal) &&
+                       !quiet.Message.Contains("with your changes", StringComparison.Ordinal) && !silent.Message.Contains("with your changes", StringComparison.Ordinal),
+                $"a clean exit never claims the changes were played unless the log says the mod was served: {quiet.Message}");
             rig.LogText = FakeLog;
+
+            // The kept log is made as a new file and then renamed over the old one: a link planted at the working name is never written through (not a dangling one, not one to a file), and a stale file there is replaced.
+            string outsideLog = Path.Combine(root, "main", "outside-log.txt"), createdThrough = Path.Combine(root, "main", "created-through-link.txt");
+            File.WriteAllText(outsideLog, "outside");
+            string working = rig.Play.LastLog + ".new";
+            File.Delete(working);   // (a regression that leaves one behind must fail a check below, not stop the plant)
+            File.CreateSymbolicLink(working, createdThrough);
+            CePlayReport danglingPlanted = await rig.Play.PlayAsync(100, Stage);
+            check.That(danglingPlanted.LogCopy == rig.Play.LastLog && !File.Exists(createdThrough) && File.ReadAllText(rig.Play.LastLog) == FakeLog && !File.Exists(working) && new FileInfo(working).LinkTarget is null,
+                "a dangling link planted at the log's working name is not written through, and the log is kept");
+            File.Delete(working);
+            File.CreateSymbolicLink(working, outsideLog);
+            CePlayReport filePlanted = await rig.Play.PlayAsync(100, Stage);
+            check.That(filePlanted.LogCopy == rig.Play.LastLog && File.ReadAllText(outsideLog) == "outside" && File.ReadAllText(rig.Play.LastLog) == FakeLog && !File.Exists(working) &&
+                       Mode(rig.Play.LastLog) == (UnixFileMode.UserRead | UnixFileMode.UserWrite), "a link to a file planted at the working name leaves that file as it was, and the kept log is private to the player");
+            File.Delete(working);
+            File.WriteAllText(working, "stale");
+            CePlayReport stale = await rig.Play.PlayAsync(100, Stage);
+            check.That(stale.LogCopy == rig.Play.LastLog && File.ReadAllText(rig.Play.LastLog) == FakeLog && !File.Exists(working), "a stale file at the working name is replaced and the log is kept");
 
             // Something CE (or anything) leaves that is not a plain file or folder is left alone, reported, and the next sweep does not touch it either.
             string canaryFolder = Path.Combine(root, "main", "canary");
@@ -454,7 +546,8 @@ internal static partial class CePlayTests
         }
         finally
         {
-            foreach (string name in CePlay.FenceVariables) System.Environment.SetEnvironmentVariable(name, null);
+            foreach (string name in CePlay.FenceVariables.Concat(LeakedKnobs)) System.Environment.SetEnvironmentVariable(name, null);
+            System.Environment.SetEnvironmentVariable("BEA_REPORT_NO_OPEN", null);
             System.Environment.SetEnvironmentVariable("BEA_USER_DIR", null);
             System.Environment.SetEnvironmentVariable("BEA_GAME_DIR", null);
         }
@@ -574,7 +667,7 @@ internal static partial class CePlayTests
             check.That(stagedWorld!.SequenceEqual(page.Model!.Session!.ToBytes()) && page.Model.Row(1)!.Position == new System.Numerics.Vector3(7f, 8f, 9f), "the mod CE is given holds the open level with the move as it is now, saved or not");
             check.That(page.HasChanges && page.ChangeCount == 1 && !page.Save.Disabled, "the move still counts as unsaved afterwards: a test play saves nothing");
             check.That(!page.Play.Disabled && PlayFolders(Path.Combine(root, "app-play")).Length == 0 && page.Play.Visible, "afterwards the button is on again and the temporary folder is gone");
-            check.That(page.PlayNote.Contains("ran level 100 with your changes", StringComparison.Ordinal) && page.PlayNote.Contains("loaded the mod's world file", StringComparison.Ordinal), $"the page's note says how it went: \"{page.PlayNote}\"");
+            check.That(page.PlayNote.Contains("ran level 100 and closed", StringComparison.Ordinal) && page.PlayNote.Contains("loaded the mod's world file", StringComparison.Ordinal), $"the page's note says how it went: \"{page.PlayNote}\"");
             check.That(app.Status.Label.Text.Contains("Onslaught CE closed after level 100", StringComparison.Ordinal), $"the status line says CE closed: \"{app.Status.Label.Text}\"");
             check.That(LevelEditorPageTests.Snapshot(rig.Install.Game).SequenceEqual(gameBefore) && LevelEditorPageTests.Snapshot(rig.User).SequenceEqual(userBefore), "the game folder and the player's CE folder are untouched by the play");
 
