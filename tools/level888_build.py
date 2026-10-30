@@ -598,8 +598,28 @@ class Build:
     warnings: list[str]
 
 
-def build(install: Install, *, lives: int = DEFAULT_LIVES, ai_state: int | None = None) -> Build:
-    """Level 888's mod files from the player's game folder (nothing is written; see stage_build)."""
+def disc_world(body: bytes, record: headers.WorldHeaderRecord) -> dict:
+    """The world of level 888 as the player's own PS2 copy holds it (the body only: tools/level888_ps2_import.py reads it from the image), taken as it is.
+    It must read back unchanged, carry the header worldheaders.dat holds for 888, and put only units on the field that this recipe can furnish."""
+    model = enc.read_world_model(body)
+    if enc.write_world_body(model) != body:
+        raise BuildError("the world body of the PS2 copy does not read back unchanged")
+    header = model["header"]
+    for key, value in header_from_record(record).items():
+        if header.get(key) != value:
+            raise BuildError(f"the PS2 world's header disagrees with this game's worldheaders.dat record for {LEVEL} in {key}: "
+                             f"{header.get(key)!r} against {value!r}")
+    if model["baseLevel"] != -1:
+        raise BuildError(f"the PS2 world has a base level ({model['baseLevel']}); level {LEVEL} has none")
+    definitions = [t["definition"] for t in model["things"] if t["kind"] == "unit"]
+    if not definitions:
+        raise BuildError("the PS2 world has no unit on the field")
+    return model
+
+
+def build(install: Install, *, lives: int = DEFAULT_LIVES, ai_state: int | None = None, world_body: bytes | None = None) -> Build:
+    """Level 888's mod files from the player's game folder (nothing is written; see stage_build). With `world_body`, the world is the PS2 copy's
+    (see disc_world): its own scripts, units and waypoints are used as they are, and `lives` and `ai_state` have no part in it."""
     sources = script_sources(lives, ai_state)
     if install.has(ARCHIVE_PATH):
         raise BuildError(f"the game folder already has {ARCHIVE_PATH}: a mod can only add an archive the game lacks")
@@ -607,7 +627,9 @@ def build(install: Install, *, lives: int = DEFAULT_LIVES, ai_state: int | None 
     physics_bytes = redirect_unit_mesh(original, FENRIR, FENRIR_FILELESS_MESH, FENRIR_MESH)
     physics = Physics(physics_bytes)
     units, meshes, textures, per_mesh = [], [], [], {}
-    for ship in (VENTURER, FENRIR):
+    disc = None if world_body is None else disc_world(world_body, headers.parse_worldheaders(install.read(WORLDHEADERS_PATH, LIMIT_SMALL)).by_world(LEVEL))
+    ships = (VENTURER, FENRIR) if disc is None else tuple(dict.fromkeys(t["definition"] for t in disc["things"] if t["kind"] == "unit"))
+    for ship in ships:
         ship_units, ship_meshes = physics.closure(ship)
         units += [u for u in ship_units if u not in units]
         meshes += [m for m in ship_meshes if m.lower() not in (known.lower() for known in meshes)]
@@ -626,8 +648,11 @@ def build(install: Install, *, lives: int = DEFAULT_LIVES, ai_state: int | None 
     if record is None or donor_record is None:
         raise BuildError(f"worldheaders.dat has no record for level {LEVEL if record is None else DONOR}")
     donor_world = enc.level_worlds(b"".join(chunk_bytes(t, p) for t, p in donor))
-    scripts = compile_scripts(sources)
-    body, model = build_world(donor_world["bodies"]["RLWD"], record, donor_record, scripts)
+    if disc is None:
+        scripts = compile_scripts(sources)
+        body, model = build_world(donor_world["bodies"]["RLWD"], record, donor_record, scripts)
+    else:
+        body, model, scripts = world_body, disc, disc["scripts"]
 
     raw = assemble(merged, body)
     archive = pack(raw)
@@ -650,14 +675,20 @@ def build(install: Install, *, lives: int = DEFAULT_LIVES, ai_state: int | None 
                     "unit": FENRIR, "mesh": f"{FENRIR_FILELESS_MESH} -> {FENRIR_MESH}"},
         "scripts": [{"name": r["name"], "instructions": len(r["code"]["instructions"]), "handlers": len(r["code"]["eventFunctions"])}
                     for r in scripts],
-        "lives": lives, "aiState": ai_state,
+        "lives": lives if disc is None else None, "aiState": ai_state if disc is None else None,
+        "world": "authored" if disc is None else "ps2-copy",
         "inputs": dict(sorted(install.reads.items())),
         "warnings": list(install.warnings),
     }
     return Build(files, report, list(install.warnings))
 
 
-def description(ce_min: str, lives: int = DEFAULT_LIVES) -> str:
+def description(ce_min: str, lives: int | None = DEFAULT_LIVES) -> str:
+    if lives is None:
+        return ("Level 888, a Fenrir against a Venturer, built on this machine from your own PS2 copy and this game's own files (nothing downloaded). "
+                "EXPERIMENTAL. Adds data/resources/888_res_PC.aya and REPLACES data/default physics.dat (only the unit definition "
+                "Fenrir Multiplayer, which no level uses, changes: it names boss-fenrir.msh, because the PC game has no file for the mesh "
+                f"the PS2 copy uses), so it conflicts with any other mod that replaces that file. Needs Onslaught CE {ce_min} or newer.")
     return ("Level 888, a Fenrir against a Venturer, built on this machine from this game's own files (nothing downloaded). "
             "EXPERIMENTAL. Adds data/resources/888_res_PC.aya and REPLACES data/default physics.dat (only the unit definition "
             "Fenrir Multiplayer, which no level uses, changes: it names boss-fenrir.msh), so it conflicts with any other mod that "

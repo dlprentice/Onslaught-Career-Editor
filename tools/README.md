@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-29 (`level888_build.py` and `world_mod_stage.stage_mod(files=...)`: a generated level archive and replaced files as a CE mod; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-30 (`ps2_disc.py` and `level888_ps2_import.py`: level 888 built from the player's own PS2 copy, and `level888_build.build(world_body=...)`; `level888_build.py` and `world_mod_stage.stage_mod(files=...)`: a generated level archive and replaced files as a CE mod; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -228,6 +228,16 @@ publish, sign, or install anything by themselves.
   build whose Mods section lists added level archives. What the level plays like (the ships' placement, the lives, whether they
   fight) is judged by playing it, not by this tool. `level888_build_tests.py` runs on an authored game folder; its retail gate
   runs when `BEA_GAME` names a game folder (read only) and is a named SKIP otherwise.
+  `ps2_disc.py list|extract|verify IMAGE` reads one member of the PS2 release's `DATA0.NYO` from the player's own image (a plain
+  ISO, or a Redump zip whose one member is the ISO, streamed and never written to disk); the package index and level 888's archive
+  are pinned by SHA-256 (another digest is a warning, `--strict-pins` a refusal). `level888_ps2_import.py inspect|build|stage` builds
+  level 888 from that member: `inspect` prints counts only; `build SOURCE --game DIR --out PARENT --ce-min VERSION` calls
+  `level888_build.build(world_body=...)`, so the mod's world, units, waypoints and scripts are the PS2 copy's (the header must equal
+  the player's `worldheaders.dat` record for 888) on level 857's terrain, with the one mesh the PC game has no file for redirected to
+  its own Fenrir mesh through the same one-field edit of `data/default physics.dat`; `stage MODDIR` copies the mod into the CE user
+  folder's mods folder and names it on `ce.ini`'s `mods=` line, keeping `ce.ini` as `ce.ini.bak-<time>` and never overwriting a mod
+  folder. Nothing derived from the image is committed, shipped or sent anywhere. Both tools' tests run on authored images and folders;
+  their retail gates run when `BEA_PS2_IMAGE` (and `BEA_GAME`) name the player's own files.
   `world_edit_preview.py BASELINE.wrd EDITED.json` is a read-only step before encoding or preparing a stage bundle. It reports input
   hashes, byte and field changes, changes to opaque groups and slot-sensitive structures, and bounded compiled-script
   inspection findings. It also identifies model fields the encoder would silently omit. An omitted field, truncated
