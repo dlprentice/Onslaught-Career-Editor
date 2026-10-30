@@ -10,9 +10,10 @@ using OnslaughtToolkit.Companion.Ui;
 namespace OnslaughtToolkit.Companion.Development;
 
 /// <summary>
-/// Draws the Level editor against a Steam-shaped game folder and runs the editor's acceptance on it, in one of seven modes. Run on a
+/// Draws the Level editor against a Steam-shaped game folder and runs the editor's acceptance on it, in one of eight modes. Run on a
 /// GPU output (godot-offscreen): <c>--script res://Development/LevelEditorCapture.cs -- --output=DIR --fixture=ANY_FILE --steam-root=DIR
-/// [--mode=drag|typed|markers|scripts|names|flow|edit] [--sizes=1920x1080] [--level=100] [--row=12] [--expect-sha256=HEX] [--to=276.49,265.07]</c>.
+/// [--mode=drag|typed|markers|scripts|names|flow|edit|scriptmod] [--sizes=1920x1080] [--level=100] [--row=12] [--expect-sha256=HEX] [--to=276.49,265.07]
+/// [--script=LevelScript] [--edit=message|comment]</c>.
 /// <list type="bullet">
 /// <item><c>drag</c> (the default): open level 100, click row 12's mark on the map, drag it to the pixel of 276.49, 265.07, let go, save
 /// as a mod into the capture's own output, and compare the saved world file's SHA-256 with the one the Toolkit's pipeline gives for the same
@@ -37,6 +38,12 @@ namespace OnslaughtToolkit.Companion.Development;
 /// <item><c>edit</c>: editing a script's source on the page. Picks a script of the level with an installed source that compiles, types into it, compiles and uses a changed
 /// number, is refused with a line for a name the script does not have, uses a source that adds a call to Damage (the warning), puts the shipped script back, and leaves a
 /// draft (the close prompt and the level picker ask). The frames hold the game's script text and stay in local-data.</item>
+/// <item><c>scriptmod</c>: the page's half of the Onslaught CE acceptance of an edited script (the design document's section 16). Opens the Scripts view on <c>--script</c>
+/// (default LevelScript, of level 100), turns Edit source on, makes one small change to its source, compiles and uses it, saves the edit as a mod through the Save as mod
+/// dialog into the capture's own output, and writes <c>scriptmod-SIZE.txt</c>: what was changed and every file of the mod with its size and SHA-256. <c>--edit=message</c>
+/// (the default): the tutorial's first <c>PlayCharMessageWait</c> call plays the second call's message, so another subtitle shows in the cockpit while it plays (one symbol of
+/// the compiled script differs). <c>--edit=comment</c>: a comment line above the first line, which the compiled script keeps as line numbers (every symbol that holds one
+/// differs) and which behaves the same: the control for "the game runs what the page made". The frames hold the game's script text and stay in local-data.</item>
 /// </list>
 /// The game folder is only read; every file this writes stays inside the output directory. Development builds only.
 /// </summary>
@@ -51,7 +58,7 @@ public partial class LevelEditorCapture : SceneTree
     /// </summary>
     private const string DragSha256 = "5f40f82f08e058a39458f9807b710318dbc00dccc0ecbd3d9a2d921ffac6d48a";
 
-    private string _output = "", _steamRoot = "", _expected = "", _mode = "drag";
+    private string _output = "", _steamRoot = "", _expected = "", _mode = "drag", _script = "LevelScript", _edit = "message";
     private int _shots, _level = 100, _row = 12;
     private double _toX = 276.49, _toY = 265.07;
     private bool _passed = true;
@@ -72,6 +79,8 @@ public partial class LevelEditorCapture : SceneTree
                 if (argument.StartsWith("--level=", StringComparison.Ordinal)) _level = int.Parse(argument["--level=".Length..], CultureInfo.InvariantCulture);
                 if (argument.StartsWith("--row=", StringComparison.Ordinal)) _row = int.Parse(argument["--row=".Length..], CultureInfo.InvariantCulture);
                 if (argument.StartsWith("--mode=", StringComparison.Ordinal)) _mode = argument["--mode=".Length..];
+                if (argument.StartsWith("--script=", StringComparison.Ordinal)) _script = argument["--script=".Length..];
+                if (argument.StartsWith("--edit=", StringComparison.Ordinal)) _edit = argument["--edit=".Length..];
                 if (argument.StartsWith("--expect-sha256=", StringComparison.Ordinal)) _expected = argument["--expect-sha256=".Length..].ToLowerInvariant();
                 if (argument.StartsWith("--to=", StringComparison.Ordinal))
                 {
@@ -81,9 +90,10 @@ public partial class LevelEditorCapture : SceneTree
                 }
             }
             if (_expected.Length == 0) _expected = _mode == "typed" ? TypedSha256 : DragSha256;
-            if (_output.Length == 0 || _steamRoot.Length == 0 || !Directory.Exists(_steamRoot) || _mode is not ("drag" or "typed" or "markers" or "scripts" or "names" or "flow" or "edit"))
+            if (_output.Length == 0 || _steamRoot.Length == 0 || !Directory.Exists(_steamRoot) || _mode is not ("drag" or "typed" or "markers" or "scripts" or "names" or "flow" or "edit" or "scriptmod") ||
+                _edit is not ("message" or "comment"))
             {
-                GD.PrintErr("--output=DIR and --steam-root=DIR (a Steam-shaped folder holding the game) are required; --mode is drag, typed, markers, scripts, names, flow or edit.");
+                GD.PrintErr("--output=DIR and --steam-root=DIR (a Steam-shaped folder holding the game) are required; --mode is drag, typed, markers, scripts, names, flow, edit or scriptmod (--edit message or comment, --script the script's name).");
                 return;
             }
             Directory.CreateDirectory(_output);
@@ -186,6 +196,7 @@ public partial class LevelEditorCapture : SceneTree
         else if (_mode == "names") await NamesView(viewport, app, page, label);
         else if (_mode == "flow") await ScriptsFlow(viewport, app, page, label);
         else if (_mode == "edit") await EditView(viewport, app, page, label);
+        else if (_mode == "scriptmod") await ScriptMod(viewport, app, page, label, mods);
         else await Markers(viewport, app, page, label, mods);
         viewport.QueueFree();
         await Settle();
@@ -622,6 +633,56 @@ public partial class LevelEditorCapture : SceneTree
         await SaveAndCompare(viewport, page, label, mods, 4, compare: false);
         File.WriteAllLines(Path.Combine(_output, $"markers-{label}.txt"), lines);
         GD.Print("MARKERS " + string.Join(" || ", lines));
+    }
+
+    /// <summary>
+    /// The page's half of the Onslaught CE acceptance of an edited script (see the <c>scriptmod</c> mode): selects the script, turns Edit source on, makes one small change to its
+    /// source, compiles and uses it, saves the edit as a mod through the dialog and writes a receipt of the mod's files. The change is <c>message</c> (the tutorial's first message
+    /// plays the second one's text) or <c>comment</c> (a comment line above the first line: the compiled script keeps line numbers, so it is stored differently, and it behaves the
+    /// same). The frames hold the game's script text.
+    /// </summary>
+    private async Task ScriptMod(SubViewport viewport, CompanionApp app, LevelEditorPage page, string label, string mods)
+    {
+        page.ScriptsToggle.ButtonPressed = true;
+        await Settle();
+        Report(page.Scripts.Select(_script) && page.Scripts.Current?.Summary.Name == _script, $"{_script} is a script of level {_level}");
+        await Settle();
+        Report(!page.EditSource.Disabled, $"{_script} has an installed source to start from: {page.Scripts.Info}");
+        await Shot(viewport, label, "scriptmod-1-script");
+        page.EditSource.ButtonPressed = true;
+        await Settle();
+        string shipped = page.Scripts.SourceText, edited, what;
+        if (_edit == "comment")
+        {
+            edited = "// recompiled by the page: nothing else changed\n" + shipped;
+            what = "a comment line above the first line";
+        }
+        else
+        {
+            // --edit=message: the tutorial's first message plays the second one's text, the first call taking the second call's message.
+            MatchCollection calls = Regex.Matches(shipped, @"PlayCharMessageWait\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*,\s*([A-Za-z_][A-Za-z0-9_]*)\s*,");
+            bool shape = calls.Count >= 2 && calls[0].Groups[2].Value != calls[1].Groups[2].Value;
+            Report(shape, "the source's first two PlayCharMessageWait calls play different messages");
+            if (!shape) return;
+            Group first = calls[0].Groups[2];
+            edited = shipped[..first.Index] + calls[1].Groups[2].Value + shipped[(first.Index + first.Length)..];
+            what = "the first PlayCharMessageWait call plays the second call's message";
+        }
+        page.Scripts.Source.Text = edited;
+        page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
+        await Settle();
+        Report(page.ScriptEditNote.StartsWith($"Replaced {_script}.", StringComparison.Ordinal) && page.Summary.StartsWith($"1 script replaced: {_script} (", StringComparison.Ordinal),
+            $"Compile and use replaced {_script} ({what}): \"{page.ScriptEditNote.Split('\n')[0]}\" / \"{page.Summary}\"");
+        await Shot(viewport, label, "scriptmod-2-compiled-and-used");
+        await SaveAndCompare(viewport, page, label, mods, 3, compare: false);
+
+        string folder = Path.Combine(mods, page.SaveDialog.Id.Text);
+        List<string> lines = [$"scriptmod: level {_level}, script {_script}, edit {_edit} ({what})", $"page: {page.ScriptEditNote.Replace('\n', ' ')} | {page.Summary}", $"mod id {page.SaveDialog.Id.Text}, folder {folder}"];
+        if (Directory.Exists(folder))
+            foreach (string file in Directory.GetFiles(folder, "*", SearchOption.AllDirectories).Order(StringComparer.Ordinal))
+                lines.Add($"{Path.GetRelativePath(folder, file)} | {new FileInfo(file).Length} bytes | SHA-256 {Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(file)))}");
+        File.WriteAllLines(Path.Combine(_output, $"scriptmod-{label}.txt"), lines);
+        GD.Print("SCRIPTMOD " + string.Join(" || ", lines));
     }
 
     private async Task SaveAndCompare(SubViewport viewport, LevelEditorPage page, string label, string mods, int number, bool compare = true)
