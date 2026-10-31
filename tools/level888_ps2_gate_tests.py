@@ -37,7 +37,8 @@ GOOD = {"Venturer", "Fenrir"}
 KEPT = "the donor's chunks (terrain, lists, descriptors) are kept byte for byte and in order, its baked shadows replaced by the member's shadow chunk"
 SHADOW_CHUNK = "the archive's one shadow chunk is the member's, byte for byte"
 SHADOW_REPORT = "the report says the shadows are the PS2 copy's, with the sizes of both chunks and the counts the decoder reads in the member's"
-STAND_INS = "the report's stand-ins are the replacements the physics file shows: the mesh it named, the one it names now, and the file through which"
+STAND_INS = ("the report's stand-ins are the replacements the physics file shows: the unit definition, the mesh it named, the one it names now, the file through which, and how many of the "
+             "world's units use it")
 DESCRIPTION = "the mod's description says what came from the PS2 copy and what from this game, and calls the shadow chunk empty only if it is"
 
 
@@ -297,12 +298,16 @@ class FaultTests(GateCase):
 
     def test_a_report_whose_stand_ins_are_not_the_replacements_in_the_physics_file_is_found(self) -> None:
         install, build = self.good()
-        self.assertEqual([{"kind": "mesh", "named by the world's units": lvl.FENRIR_FILELESS_MESH, "used instead": lvl.FENRIR_MESH, "through": lvl.PHYSICS_PATH}], build.report["standIns"])
-        entry = build.report["standIns"][0]
+        entry = {"kind": "mesh", "unit definition": lvl.FENRIR, "named": lvl.FENRIR_FILELESS_MESH, "used instead": lvl.FENRIR_MESH, "through": lvl.PHYSICS_PATH, "unitsInWorld": 1}
+        self.assertEqual([entry], build.report["standIns"])
         for label, mutate in (("none reported", lambda r: r.update(standIns=[])), ("no key", lambda r: r.pop("standIns")), ("twice", lambda r: r["standIns"].append(dict(entry))),
-                              ("another mesh named", lambda r: r["standIns"][0].update({"named by the world's units": "some-mesh.msh"})),
+                              ("another unit definition", lambda r: r["standIns"][0].update({"unit definition": lvl.VENTURER})),
+                              ("another mesh named", lambda r: r["standIns"][0].update(named="some-mesh.msh")),
                               ("another mesh used", lambda r: r["standIns"][0].update({"used instead": "air-fighter.msh"})),
                               ("another file through which", lambda r: r["standIns"][0].update(through="data/other.dat")), ("another kind", lambda r: r["standIns"][0].update(kind="texture")),
+                              ("no unit count", lambda r: r["standIns"][0].pop("unitsInWorld")), ("a unit count of 0", lambda r: r["standIns"][0].update(unitsInWorld=0)),
+                              ("a unit count of 2", lambda r: r["standIns"][0].update(unitsInWorld=2)), ("a unit count that is true", lambda r: r["standIns"][0].update(unitsInWorld=True)),
+                              ("a unit count that is a word", lambda r: r["standIns"][0].update(unitsInWorld="1")), ("an old key left in", lambda r: r["standIns"][0].pop("named")),
                               ("not a list", lambda r: r.update(standIns=dict(entry))), ("not entries", lambda r: r.update(standIns=["x"]))):
             report = copy.deepcopy(build.report)
             mutate(report)

@@ -238,12 +238,17 @@ def gate_checks(game: Path, install: lvl.Install, member: bytes, body: bytes, sh
         found = [n.value.rstrip(b"\0").decode("latin-1") for s in source.statements if s.kind == lvl.UNIT_KIND and s.name == name
                  for n in s.nodes if n.field == lvl.MESH_FIELD[lvl.UNIT_KIND]]
         return found[0] if len(found) == 1 else None
-    replaced = [(unit_mesh(original, name), unit_mesh(physics, name)) for name in differing]
+    replaced = [(name, unit_mesh(original, name), unit_mesh(physics, name)) for name in differing]
     stand_ins = report.get("standIns")
-    reported = [(str(e.get("named by the world's units")), str(e.get("used instead"))) for e in stand_ins if isinstance(e, dict)] if isinstance(stand_ins, list) else None
-    check("the report's stand-ins are the replacements the physics file shows: the mesh it named, the one it names now, and the file through which",
+    reported = ([(str(e.get("unit definition")), str(e.get("named")), str(e.get("used instead"))) for e in stand_ins if isinstance(e, dict)]
+                if isinstance(stand_ins, list) else None)
+    placed = collections.Counter(t["definition"] for t in model["things"] if t["kind"] == "unit")
+    check("the report's stand-ins are the replacements the physics file shows: the unit definition, the mesh it named, the one it names now, the file through which, and how many of the "
+          "world's units use it",
           reported is not None and len(reported) == len(stand_ins) and reported == replaced
-          and all(e.get("kind") == "mesh" and e.get("through") == lvl.PHYSICS_PATH for e in stand_ins) and all(install.has(lvl.loose_mesh_path(new)) for _, new in replaced),
+          and all(e.get("kind") == "mesh" and e.get("through") == lvl.PHYSICS_PATH and type(e.get("unitsInWorld")) is int and e["unitsInWorld"] == placed.get(e.get("unit definition"), 0)
+                  for e in stand_ins)
+          and all(install.has(lvl.loose_mesh_path(new)) for _, _, new in replaced),
           f"{len(replaced)} replacements, {len(reported or [])} reported")
 
     # the report says what the files are
