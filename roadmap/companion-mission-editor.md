@@ -2,7 +2,7 @@
 
 Status: design; the reference compiler and read-only scripts view with name links and map paths are built. The C# and Python compiler backends and the script-aware editor model are integrated, and the Level editor's Scripts view edits a script's source, compiles it and makes the open level use it (section 15); the acceptance in section 6 was run once on Linux (section 16) and the Level editor's Play button starts CE at the open level with the changes (section 17); source-preserving staging and native Windows validation remain open. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-10-30 (the reviewer's requests on the Level editor's Play button taken, section 17; the Level editor's Play button, section 17; the CE acceptance of an edited script was run on Linux, section 16, timing restated from CE's own log, repeated once with the released 0.1.12 package and once through its launcher; the Level editor's Scripts view edits a script's source, section 15; earlier: held and bounded viewer reads and platform limits; script-gate stale record pairs pinned by identity; descriptor-relative Python source reads; The C# compiler is integrated on main; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
+Last updated: 2026-10-31 (3D authoring direction; earlier: the reviewer's requests on the Level editor's Play button taken, section 17; the Level editor's Play button, section 17; the CE acceptance of an edited script was run on Linux, section 16, timing restated from CE's own log, repeated once with the released 0.1.12 package and once through its launcher; the Level editor's Scripts view edits a script's source, section 15; earlier: held and bounded viewer reads and platform limits; script-gate stale record pairs pinned by identity; descriptor-relative Python source reads; The C# compiler is integrated on main; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours checked against the shipped scripts with the documented
 missing-header and stale-source cases, and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -12,6 +12,8 @@ Evidence: MEASURED for section 2 (each item names its method and limits), SOURCE
 (cited by function, never quoted), INFERRED where the text says so; the rest is plan.
 Specimen: `BEA.exe.original.backup`, SHA-256 `74154bfa…`, 2,506,752 bytes (the addresses are the decompilation's, which matches
 this binary; the retail view's `BEA.exe` has the same hash)
+
+> **Future direction — 2026-10-31:** David requested a 3D mission editor alongside the 3D map editor. The existing script and data workflows remain as described below; a 3D mission-authoring workflow, its interactions, safe staging and platform acceptance are still to be designed and demonstrated. See the project [goal](../GOAL.md) and [program](../PROGRAM.md).
 
 ## 1. What this is for
 
