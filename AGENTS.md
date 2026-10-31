@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-10-29 (project progress, documentation ownership and evidence stages clarified)
+Last updated: 2026-10-31 (commit messages: keep Co-Authored-By, no Claude-Session line, name no agent or role)
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
@@ -137,7 +137,7 @@ percentages, and follow the user's current priorities.
    tests, then the Parity suite and Host build as the [live rebuild guide](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/README.md) describes; companion → its `npm test`.
 2. A new or edited tracked `.md` has `Status:`, `Last updated:` (or `Date:`) and `Summary:` (or `Verdict:`) in its
    header and no volatile counts. `tools/doc_header_backlog.txt` may only shrink.
-3. Stage only the scoped paths, commit plainly and push the working branch.
+3. Stage only the scoped paths, commit plainly and push the working branch. Commits here are public: keep the Co-Authored-By line, add no Claude-Session line, and describe the change itself, not which agent or role made it.
 
 ## Gotchas
 
