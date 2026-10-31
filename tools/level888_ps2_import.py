@@ -5,19 +5,19 @@
 The PS2 disc carries a level archive that the PC release does not: 888, a Fenrir against a Venturer. This tool reads that archive from the image the
 player supplies (a plain ISO or a Redump zip: tools/ps2_disc.py, read only, nothing written), takes its world as it is (the units, the start points, the
 waypoints and the three scripts the disc holds) and builds a CE mod from it and from this game's own files with the level 888 generator
-(tools/level888_build.py: the PC game's terrain, the descriptors the ships need, and one mesh stand-in, below). Nothing derived from the image is committed,
+(tools/level888_build.py: the PC game's terrain, the descriptors the ships need, and the Fenrir mesh converted from the disc, below). Nothing derived from the image is committed,
 shipped or sent anywhere: the mod is written to a folder the player names, and `stage` copies it into the CE folder only when the player runs it.
 
     level888_ps2_import.py inspect SOURCE                           counts about the member and its world (never names or bytes)
     level888_ps2_import.py build SOURCE --game GAME --out PARENT --ce-min 0.1.13 [--id flagship-duel-ps2] [--strict-pins]
-                                                                     PARENT/<id>/ (mod.json, data/resources/888_res_PC.aya, data/default physics.dat)
+                                                                     PARENT/<id>/ (mod.json, data/resources/888_res_PC.aya; no game file is replaced)
     level888_ps2_import.py stage MODDIR [--user-dir DIR] [--into-my-real-folder] [--replace] [--dry-run]
                                                                      copy the mod into a FRESH CE user folder (your careers and settings stay where they are)
                                                                      and print the one line that starts the level in it
 
 SOURCE is the image (a plain ISO, or a Redump zip whose one member is the ISO) or the extracted member itself (a file that starts with the tag LVLR).
-What the build does not take from the disc: the one mesh the PS2 copy names and the PC game has no file for (the multiplayer Fenrir) is replaced by the
-PC game's own Fenrir mesh through a one-field edit of data/default physics.dat, so that mod conflicts with any other mod that replaces that file; its terrain
+The one mesh the PS2 copy names and the PC game has no file for (the multiplayer Fenrir) is converted from the disc (tools/ps2_mesh.py) and carried inside the
+level archive as its one unnamed MESH chunk, so the mod replaces no game file and conflicts with no other mod; its terrain
 is the PC game's level 857 (the disc's own terrain decodes equal to it) without that level's baked shadows, which the disc's own shadow chunk replaces (none); and CE adds no entry for the level (start it with -level 888 on
 the game's command line). CE loads mods on Linux only, and keeps them off in replays, recordings, probes, virtual clocks, pilots and network sessions.
 
@@ -139,15 +139,15 @@ def inspect(member: bytes) -> dict:
 
 # ---- the build ----------------------------------------------------------------------------------------------------------
 def build(source: Path, game: Path, out: Path, *, ce_min: str, mod_id: str = MOD_ID, name: str = MOD_NAME, version: str = "1", author: str = "",
-          ce_max: str | None = None, strict_pins: bool = False, mesh: bool = False) -> tuple[dict, dict]:
+          ce_max: str | None = None, strict_pins: bool = False) -> tuple[dict, dict]:
     """Read the member, build the mod with the disc's world and stage it as <out>/<mod_id>/. Returns (the staging summary, the build report with the source).
-    With `mesh`, the Fenrir the PS2 copy uses is converted (ps2_mesh.py) and carried in the level archive as an inline mesh, and the physics file is left alone: a test
-    build for a CE whose walker admits one inline mesh, not the build to give a player."""
+    The Fenrir the PS2 copy uses is converted (ps2_mesh.py) and carried in the level archive as an inline mesh; the physics file is left alone and no game file is
+    replaced. A member without that mesh, or one the converter cannot read, is refused by name (there is no stand-in to fall back to)."""
     member, record = read_source(source, strict_pins=strict_pins)
     body = world_body(member)
     install = lvl.Install(game, strict_pins=strict_pins)
     try:
-        inline = {lvl.FENRIR_FILELESS_MESH: ps2_mesh.convert_member_mesh(member, lvl.FENRIR_FILELESS_MESH)} if mesh else None
+        inline = {lvl.FENRIR_FILELESS_MESH: ps2_mesh.convert_member_mesh(member, lvl.FENRIR_FILELESS_MESH)}
         result = lvl.build(install, world_body=body, shadows=shadow_chunk(member), inline_meshes=inline)
         summary = lvl.stage_build(result, enc.selected_game_root(game), out, ce_min=ce_min, mod_id=mod_id, name=name, version=version, author=author,
                                   ce_max=ce_max)
@@ -366,7 +366,7 @@ def cmd_inspect(args) -> int:
 
 def cmd_build(args) -> int:
     summary, report = build(args.source, args.game, args.out, ce_min=args.ce_min, mod_id=args.id, name=args.name, version=args.version,
-                            author=args.author or "", ce_max=args.ce_max, strict_pins=args.strict_pins, mesh=args.mesh)
+                            author=args.author or "", ce_max=args.ce_max, strict_pins=args.strict_pins)
     for warning in report["warnings"]:
         print(f"warning: {warning}", file=sys.stderr)
     print(f"built CE mod {args.id!r} in {summary['root']} from the PS2 copy ({report['member']['from']}), the world of {report['archive']['things']} things as the disc holds it")
@@ -415,7 +415,6 @@ def main(argv: list[str] | None = None) -> int:
     build_parser.add_argument("--name", default=MOD_NAME)
     build_parser.add_argument("--version", default="1")
     build_parser.add_argument("--author", default="")
-    build_parser.add_argument("--mesh", action="store_true", help="TEST BUILD: carry the converted PS2 Fenrir inside the level archive (needs a CE whose walker admits an inline mesh) and leave the physics file alone")
     stage_parser.add_argument("moddir", type=option, help="the mod folder that build wrote")
     stage_parser.add_argument("--user-dir", type=option, default=None,
                               help=f"the CE user folder to put it in (made when missing; default: {FRESH_FOLDER} beside CE's own; CE's own folder and any folder that holds it or lies "

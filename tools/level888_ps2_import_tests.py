@@ -85,9 +85,21 @@ class ImportCase(built.FolderTest):
         super().setUp()
         self.model = disc_model(self.folder)
         self.body = enc.write_world_body(self.model)
-        self.member = member_bytes(self.body)
+        self.member = self.member_with_fenrir()
         self.member_path = self.root / "888_res_PS2.aya"
         self.member_path.write_bytes(self.member)
+
+    def member_with_fenrir(self) -> bytes:
+        """The authored member plus what a PS2 archive holds for the Fenrir: two TEXT chunks (the textures the authored game's boss-fenrir uses) and the MESH chunk of a mesh in
+        the PS2 form, which names those textures by the index of their TEXT chunk."""
+        chunks = stager_tests.level_chunks(lvl.LEVEL, texts=("a.tga",), meshes=("a.msh",), children=[(b"WDAT", struct.pack("<ii", -1, lvl.LEVEL)), (b"RLWD", self.body)])
+        chunks = [(tag, EMPTY_SHADOWS if tag == b"SSHD" else payload) for tag, payload in chunks]
+        first = sum(1 for tag, _ in chunks if tag == b"TEXT")
+        text = [(b"TEXT", mesh_tests.chunk(b"PTEX", struct.pack("<II", 0x1234, 160) + n.encode().ljust(160, b"\0") + bytes(16)))
+                for n in ("meshtex\\BOSSfenrir.tga", "meshtex\\BOSSfenrir-int.tga")]
+        stream = mesh_tests.stream([mesh_tests.mesp([mesh_tests.mmpv(mesh_tests.quad_records())])], texture_ids=(first, first + 1))
+        mesh = (b"MESH", mesh_tests.chunk(b"PMSH", lvl.FENRIR_FILELESS_MESH.encode().ljust(304, b"\0") + stream))
+        return stager_tests.level_stream(chunks[:3 + first] + text + [mesh] + chunks[3 + first:])          # behind the existing TEXT chunks, so their indices are first and first + 1
 
     def image(self, member: bytes | None = None, *, zipped: bool = False) -> Path:
         package = disc_tests.package([(disc_tests.TARGET, self.member if member is None else member), ("\\data\\language\\english.dat", b"x" * 100)])
@@ -186,7 +198,7 @@ class WorldTests(ImportCase):
 
     def test_inspect_gives_counts_and_nothing_that_names_or_holds_the_content(self) -> None:
         report = imp.inspect(self.member)
-        self.assertEqual({"AYAD": 1, "ERES": 1, "IMPS": 1, "LNDS": 1, "LVLR": 1, "MESH": 1, "SSHD": 1, "SURF": 1, "TARG": 1, "TEXT": 1, "WRES": 1}, report["chunksByTag"])
+        self.assertEqual({"AYAD": 1, "ERES": 1, "IMPS": 1, "LNDS": 1, "LVLR": 1, "MESH": 2, "SSHD": 1, "SURF": 1, "TARG": 1, "TEXT": 3, "WRES": 1}, report["chunksByTag"])   # the authored member holds the Fenrir mesh and its two textures
         self.assertTrue(report["everyByteAccounted"])
         world = report["world"]
         self.assertEqual({"start": 2, "level-script": 1, "unit": 3, "waypoint": 16}, world["thingsByKind"])
@@ -278,40 +290,40 @@ class BuildTests(ImportCase):
                 imp.shadow_chunk(member)
         self.assertEqual(28, imp.inspect(self.member)["world"]["shadowBytes"])
 
-    def member_with_fenrir(self) -> bytes:
-        """The authored member plus what a PS2 archive holds for the Fenrir: two TEXT chunks (the textures the authored game's boss-fenrir uses) and the MESH chunk of a mesh in
-        the PS2 form, which names those textures by the index of their TEXT chunk."""
-        chunks = stager_tests.level_chunks(lvl.LEVEL, texts=("a.tga",), meshes=("a.msh",), children=[(b"WDAT", struct.pack("<ii", -1, lvl.LEVEL)), (b"RLWD", self.body)])
-        chunks = [(tag, EMPTY_SHADOWS if tag == b"SSHD" else payload) for tag, payload in chunks]
-        first = sum(1 for tag, _ in chunks if tag == b"TEXT")
-        text = [(b"TEXT", mesh_tests.chunk(b"PTEX", struct.pack("<II", 0x1234, 160) + n.encode().ljust(160, b"\0") + bytes(16)))
-                for n in ("meshtex\\BOSSfenrir.tga", "meshtex\\BOSSfenrir-int.tga")]
-        stream = mesh_tests.stream([mesh_tests.mesp([mesh_tests.mmpv(mesh_tests.quad_records())])], texture_ids=(first, first + 1))
-        mesh = (b"MESH", mesh_tests.chunk(b"PMSH", lvl.FENRIR_FILELESS_MESH.encode().ljust(304, b"\0") + stream))
-        return stager_tests.level_stream(chunks[:3 + first] + text + [mesh] + chunks[3 + first:])          # behind the existing TEXT chunks, so their indices are first and first + 1
-
-    def test_the_mesh_step_converts_the_multiplayer_fenrir_and_carries_it_inline_with_the_physics_file_left_alone(self) -> None:
-        member_path = self.root / "with-fenrir.aya"
-        member_path.write_bytes(self.member_with_fenrir())
-        summary, report = imp.build(member_path, self.game, self.root / "mesh-mods", ce_min="0.1.13", mesh=True)
+    def test_the_build_converts_the_multiplayer_fenrir_and_carries_it_inline_and_replaces_no_game_file(self) -> None:
+        summary, report = imp.build(self.member_path, self.game, self.root / "mesh-mods", ce_min="0.1.13")
         self.assertEqual([lvl.ARCHIVE_PATH], [f["path"] for f in summary["files"]], "the archive and nothing else: no replaced physics file")
         self.assertIsNone(report["physics"])
+        self.assertEqual([], report["standIns"], "no stand-in is left to report")
         self.assertEqual(1, len(report["inlineMeshes"]))
         entry = report["inlineMeshes"][0]
         self.assertEqual(("fenrir-multiplayer.msh", lvl.INLINE_MESH_ID, ["meshtex\\BOSSfenrir.tga", "meshtex\\BOSSfenrir-int.tga"]), (entry["name"], entry["runtimeId"], entry["textures"]))
-        expected = ps2_mesh.convert_member_mesh(member_path.read_bytes(), lvl.FENRIR_FILELESS_MESH)
+        expected = ps2_mesh.convert_member_mesh(self.member, lvl.FENRIR_FILELESS_MESH)
         self.assertEqual(lvl.sha256(expected), entry["streamSha256"], "the stream in the archive is the converter's, byte for byte")
         raw = b"".join(enc.inflate(enc.read_members((Path(summary["root"]) / lvl.ARCHIVE_PATH).read_bytes())))
         rows = [raw[at:at + size] for tag, at, size in enc.chunks(raw) if tag == "MESH" and raw[at + 16] == 0]
-        self.assertEqual([expected], [row[325:] for row in rows])
-        # without the step the same member builds the usual two-file mod
-        summary, report = imp.build(member_path, self.game, self.root / "plain-mods", ce_min="0.1.13", mesh=False)
-        self.assertEqual({lvl.ARCHIVE_PATH, lvl.PHYSICS_PATH}, {f["path"] for f in summary["files"]})
-        self.assertEqual([], report["inlineMeshes"])
+        self.assertEqual([expected], [row[325:] for row in rows], "the real mesh is what the archive holds, as its one unnamed MESH chunk")
 
-    def test_the_mesh_step_refuses_a_member_whose_fenrir_cannot_be_converted(self) -> None:
+    def test_the_build_refuses_a_member_whose_fenrir_is_missing_or_cannot_be_converted_and_never_falls_back(self) -> None:
+        without = self.root / "no-fenrir.aya"
+        without.write_bytes(member_bytes(self.body))
         with self.assertRaisesRegex(imp.ImportFailure, "no mesh of that name"):
-            imp.build(self.member_path, self.game, self.root / "none", ce_min="0.1.13", mesh=True)
+            imp.build(without, self.game, self.root / "none", ce_min="0.1.13")
+        self.assertFalse((self.root / "none").exists(), "a refused build leaves no folder")
+        damaged = self.root / "damaged.aya"
+        damaged.write_bytes(self.member.replace(b"P2VB", b"XXXX"))
+        with self.assertRaises(imp.ImportFailure):
+            imp.build(damaged, self.game, self.root / "damaged-mods", ce_min="0.1.13")
+
+    def test_the_manifest_says_what_the_pack_is_and_that_it_replaces_nothing(self) -> None:
+        summary, _ = imp.build(self.member_path, self.game, self.root / "described", ce_min="0.1.13")
+        manifest = json.loads((Path(summary["root"]) / "mod.json").read_bytes())
+        text = manifest["description"]
+        for fragment in ("from your own PS2 copy", "replaces nothing", "0.1.13"):
+            self.assertIn(fragment, text)
+        self.assertNotIn("REPLACES", text)
+        self.assertTrue(text.isascii())
+        self.assertLessEqual(len(text), 1024)
 
     def test_the_authored_world_path_is_unchanged_by_the_hook(self) -> None:
         result = lvl.build(lvl.Install(self.game))
@@ -335,7 +347,7 @@ class BuildTests(ImportCase):
         self.assertEqual(str(folder), summary["root"])
         manifest = imp.check_mod_folder(folder)
         self.assertEqual(imp.MOD_ID, manifest["id"])
-        self.assertEqual({lvl.ARCHIVE_PATH, lvl.PHYSICS_PATH}, {f["path"] for f in manifest["files"]})
+        self.assertEqual({lvl.ARCHIVE_PATH}, {f["path"] for f in manifest["files"]})
         self.assertEqual("member", report["member"]["from"])
         self.assertTrue(report["member"]["warnings"], "the authored member is not pinned")
         for entry in manifest["files"]:
