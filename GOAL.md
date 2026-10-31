@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-10-29 (David's project-wide outcomes and definition of progress clarified)
+Last updated: 2026-10-31 (museum approval and 3D editor and commander outcomes)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
@@ -26,12 +26,13 @@ archive.
   including versus and co-op. Extend co-op to the ordinary campaign with compatible saves and progression; later aim
   for more players, larger maps and compatible Battle Engine customization. Host/Join, failures and content
   compatibility need understandable in-game workflows. A direct connection or idle synchronization is not completion.
-- **A future commander role** lets a player direct eligible friendly units from a tactical view, including an eventual
-  multiplayer mode alongside players piloting Battle Engines. Aim for Linux and Windows and later more than two
+- **A future real-time 3D commander role** lets a player direct eligible friendly units from a tactical view, including
+  an eventual multiplayer mode alongside players piloting Battle Engines. Aim for Linux and Windows and later more than two
   participants. Ordinary campaign play remains available when the mode is off; missions and game events determine
   outcomes. This is a goal, not a completed capability.
-- **Creation and modding tools** should let players inspect and eventually create levels, missions and compatible
-  modifications safely. An evidence-based catalogue of textures, models, animations, audio and other content should
+- **Creation and modding tools** should let players inspect and create levels, missions and compatible modifications
+  safely, including 3D map and mission editors. David approved a Goodies-style museum as a world of its own, alongside
+  custom test levels. An evidence-based catalogue of textures, models, animations, audio and other content should
   support editors, modding and future HD successors without distributing the game's proprietary assets.
 - **The Godot rebuild**, developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot), currently has
   a scoped proof of concept: a C# reimplementation aiming for startup through level 100 completion (win, loss and
