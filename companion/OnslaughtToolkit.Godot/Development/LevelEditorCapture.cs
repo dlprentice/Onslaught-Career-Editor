@@ -195,10 +195,21 @@ public partial class LevelEditorCapture : SceneTree
         app.Navigate("levels");
         await Settle();
         Report(page.Level.ItemCount > 1, $"the page lists {page.Level.ItemCount - 1} levels");
+
         await Shot(viewport, label, "level-editor-1-pick-a-level");
 
         bool opened = page.OpenLevel(_level);
         await Settle();
+        if (OS.GetEnvironment("ONSLAUGHT_CAPTURE_TERRAIN_PREVIEW") == "1")
+        {
+            var terrainView = FindTerrainViewport(Root);
+            if (terrainView == null || !EnableTerrainViewport(terrainView))
+                throw new InvalidOperationException("Terrain preview control was not available.");
+            await Settle();
+            if (!HasTerrainMesh(terrainView))
+                throw new InvalidOperationException("Terrain preview produced no mesh.");
+            await VerifyTerrainInput(viewport);
+        }
         Report(opened && page.Model?.Session is not null, $"level {_level} opened: {page.Model?.Session?.Body.Things.Count} objects, subtitle \"{app.PageSubtitle.Text}\"");
         Report(page.Map.HasRelief && page.Map.IsVisibleInTree(), $"the map shows the level's relief: {page.Map.Size.X:0}x{page.Map.Size.Y:0} pixels, {page.Map.View.Scale:0.000} pixels to the unit, " +
             (page.MapBesideTable ? "beside the table" : "below the table"));
@@ -926,5 +937,88 @@ public partial class LevelEditorCapture : SceneTree
     {
         for (int frame = 0; frame < 4; frame++) await ToSignal(this, SignalName.ProcessFrame);
         await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+    }
+
+
+    private async System.Threading.Tasks.Task VerifyTerrainInput(SubViewport viewport)
+    {
+        var terrain = FindTerrainViewport(viewport) ?? throw new System.InvalidOperationException("Synthetic terrain control is missing.");
+        var camera = FindTerrainCamera(terrain) ?? throw new System.InvalidOperationException("Synthetic terrain camera is missing.");
+        var center = terrain.GetGlobalRect().GetCenter();
+        var drag = new Vector2(24, 12);
+        viewport.PushInput(new InputEventMouseMotion { Position = center, GlobalPosition = center }, true);
+        await Settle();
+        var beforeOrbit = camera.GlobalPosition;
+        viewport.PushInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true, Position = center, GlobalPosition = center, ButtonMask = MouseButtonMask.Left }, true);
+        await Settle();
+        viewport.PushInput(new InputEventMouseMotion { Position = center + drag, GlobalPosition = center + drag, Relative = drag, ButtonMask = MouseButtonMask.Left }, true);
+        await Settle();
+        viewport.PushInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false, Position = center + drag, GlobalPosition = center + drag }, true);
+        await Settle();
+        if (beforeOrbit.DistanceTo(camera.GlobalPosition) < 0.0001f)
+            throw new System.InvalidOperationException("Synthetic terrain orbit did not move the camera.");
+
+        var beforeZoom = camera.GlobalPosition;
+        void Wheel(MouseButton button)
+        {
+            viewport.PushInput(new InputEventMouseButton { ButtonIndex = button, Pressed = true, Position = center, GlobalPosition = center }, true);
+            viewport.PushInput(new InputEventMouseButton { ButtonIndex = button, Pressed = false, Position = center, GlobalPosition = center }, true);
+        }
+        Wheel(MouseButton.WheelUp);
+        await Settle();
+        if (beforeZoom.DistanceTo(camera.GlobalPosition) < 0.0001f)
+        {
+            Wheel(MouseButton.WheelDown);
+            await Settle();
+        }
+        if (beforeZoom.DistanceTo(camera.GlobalPosition) < 0.0001f)
+            throw new System.InvalidOperationException("Synthetic terrain zoom did not move the camera.");
+    }
+
+    private static Camera3D? FindTerrainCamera(Node node)
+    {
+        if (node is Camera3D camera)
+            return camera;
+        foreach (Node child in node.GetChildren())
+        {
+            var cameraChild = FindTerrainCamera(child);
+            if (cameraChild != null)
+                return cameraChild;
+        }
+        return null;
+    }
+
+    private static OnslaughtToolkit.Companion.Ui.LevelTerrainViewport? FindTerrainViewport(Node node)
+    {
+        if (node is OnslaughtToolkit.Companion.Ui.LevelTerrainViewport view) return view;
+        foreach (Node child in node.GetChildren())
+        {
+            var found = FindTerrainViewport(child);
+            if (found != null) return found;
+        }
+        return null;
+    }
+
+    private static bool EnableTerrainViewport(OnslaughtToolkit.Companion.Ui.LevelTerrainViewport view)
+    {
+        var parent = view.GetParent();
+        if (parent == null) return false;
+        foreach (Node child in parent.GetChildren())
+        {
+            if (child is Button button && button.Text == "3D" && button.ToggleMode)
+            {
+                button.ButtonPressed = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static bool HasTerrainMesh(Node node)
+    {
+        if (node is MeshInstance3D instance && instance.Mesh != null) return true;
+        foreach (Node child in node.GetChildren())
+            if (HasTerrainMesh(child)) return true;
+        return false;
     }
 }

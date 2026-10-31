@@ -18,6 +18,34 @@ internal static class LevelTerrainTests
 {
     internal static void Run(string outputDirectory, Checks check)
     {
+        // Authored geometry keeps preview validation independent of installed game data.
+        var previewVertices = new[]
+        {
+            new System.Numerics.Vector3(0f, 0f, 0f),
+            new System.Numerics.Vector3(1f, 0f, 0f),
+            new System.Numerics.Vector3(0f, 0f, 1f),
+        };
+        var previewIndices = new[] { 0, 1, 2 };
+        var preview = TerrainPreviewMesh.Build(previewVertices, previewIndices);
+        if (preview.Vertices.Length != 3 || preview.Indices.Length != 3 || preview.Normals[0].Y <= 0f)
+            throw new System.InvalidOperationException("Terrain preview did not build an upward-facing triangle.");
+        previewVertices[0] = new System.Numerics.Vector3(5f, 5f, 5f);
+        previewIndices[0] = 2;
+        if (preview.Vertices[0] != System.Numerics.Vector3.Zero || preview.Indices[0] != 0)
+            throw new System.InvalidOperationException("Terrain preview did not retain an independent copy.");
+        bool rejectedIndex = false;
+        try { TerrainPreviewMesh.Build(previewVertices, new[] { -1, 0, 1 }); }
+        catch (System.ArgumentException) { rejectedIndex = true; }
+        if (!rejectedIndex) throw new System.InvalidOperationException("Invalid preview indices were accepted.");
+        bool rejectedNonfinite = false;
+        try { TerrainPreviewMesh.Build(new[] { new System.Numerics.Vector3(float.NaN, 0f, 0f) }, new[] { 0, 0, 0 }); }
+        catch (System.ArgumentException) { rejectedNonfinite = true; }
+        if (!rejectedNonfinite) throw new System.InvalidOperationException("Non-finite preview vertices were accepted.");
+        bool rejectedIncomplete = false;
+        try { TerrainPreviewMesh.Build(previewVertices, new[] { 0, 1 }); }
+        catch (System.ArgumentException) { rejectedIncomplete = true; }
+        if (!rejectedIncomplete) throw new System.InvalidOperationException("An incomplete preview triangle was accepted.");
+
         TerrainSurfaceTests.Run(check, Heightfield.Read(Eres()));
         check.Suite("level terrain");
         Stage(check, "the terrain vector", () => Vector(check));

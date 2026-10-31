@@ -110,6 +110,33 @@ internal sealed class LevelEditorPage : Page
         mapColumn.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
         mapColumn.SizeFlagsStretchRatio = 1.6f;
         _mapPanel = mapColumn;
+        var _terrainPreview3d = new LevelTerrainViewport
+        {
+            TerrainProvider = () => _model?.Terrain,
+            Visible = false,
+            ZIndex = 100,
+        };
+        _mapPanel.AddChild(_terrainPreview3d);
+        _terrainPreview3d.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        var terrainViewSwitch = new Button
+        {
+            Text = "3D",
+            TooltipText = "Switch between the map and the terrain preview.",
+            ToggleMode = true,
+            AnchorLeft = 1f,
+            AnchorRight = 1f,
+            OffsetLeft = -76f,
+            OffsetRight = -8f,
+            OffsetTop = 8f,
+            OffsetBottom = 38f,
+            ZIndex = 101,
+        };
+        _mapPanel.AddChild(terrainViewSwitch);
+        terrainViewSwitch.Toggled += enabled =>
+        {
+            _terrainPreview3d.Visible = enabled;
+            terrainViewSwitch.Text = enabled ? "2D" : "3D";
+        };
         Map = mapColumn.Add(new LevelMap { SizeFlagsVertical = Control.SizeFlags.ExpandFill, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
         mapColumn.Add(Build.Text("Wheel zooms · drag the background to pan · click or drag a mark to select or move it (Esc cancels) · arrow keys nudge the selected mark · Home fits the level", "Faint"));
         HBoxContainer pathBar = mapColumn.Add(Build.Row(8));
