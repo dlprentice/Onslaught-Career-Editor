@@ -244,7 +244,7 @@ publish, sign, or install anything by themselves.
   and reads their output files against the member and the game folder with its own reading (the loader's walk, the archive's world body equal to the
   member's byte for byte, the donor's chunks kept in order, the closure complete, the physics file the original with one mesh name changed, the report's
   figures, the staged mod folder against `mod.json`); it prints counts and booleans only, and refuses a work folder inside the repository except under
-  `local-data/` and `local-lab/`. Three of its checks describe the disc's world and not the builder (world type, the scripts its things name, its start
+  its ignored private folders (`local-data`, `local-lab`). Three of its checks describe the disc's world and not the builder (world type, the scripts its things name, its start
   points): a failure there is a `note`, a finding about the input, and leaves the exit code alone. Its tests run on authored files; its retail gate runs when
   `BEA_PS2_MEMBER` (or `BEA_PS2_IMAGE`), `BEA_GAME` and `BEA_GATE_WORK` are set.
   `world_edit_preview.py BASELINE.wrd EDITED.json` is a read-only step before encoding or preparing a stage bundle. It reports input

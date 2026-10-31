@@ -9,8 +9,8 @@ runs the builder as a library, and checks the OUTPUT FILES against the INPUT FIL
     level888_ps2_gate.py gate --game GAME SOURCE --work DIR [--strict-pins] [--ce-min 0.1.13] [--keep]
 
 SOURCE is what the importer takes: the extracted member (a file that starts with the tag LVLR), or the player's image. DIR is a private folder for the staged copy the gate
-makes (it is removed at the end unless --keep); the gate refuses a DIR inside the repository except under local-data/ and local-lab/, because what it stages comes from the
-player's disc. What it checks:
+makes (it is removed at the end unless --keep); the gate refuses a DIR inside the repository except under its ignored private folders (local-data, local-lab), because what it stages comes
+from the player's disc. What it checks:
 
     the source        the member is the pinned one; its world is level 888 alone with no base world; its body reads back unchanged
     the builds        the library build twice gives the same bytes, and lives/ai-state have no part in it; the importer's staged mod is the library's files
