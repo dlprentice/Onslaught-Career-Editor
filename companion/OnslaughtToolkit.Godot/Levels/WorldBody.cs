@@ -131,6 +131,10 @@ public sealed class EventFunction
 /// </summary>
 public sealed class PlacedObject
 {
+    // Provenance in the originally parsed world-body snapshot; edits may invalidate it.
+    // Newly authored copies have no source record.
+    public int? SourceOffset { get; internal set; }
+
     public int ObjectId { get; set; }
 
     /// <summary>The kind name the loader's object-id table gives (<c>unit</c>, <c>waypoint</c>, ...).</summary>

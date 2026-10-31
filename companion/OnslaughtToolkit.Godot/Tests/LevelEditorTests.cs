@@ -151,6 +151,40 @@ internal static class LevelEditorTests
         check.That(model.Open(200) && model.BaseLevel == 100 && model.Worlds?.BaseBody is not null && model.Session is not null && !model.Session.IsBaseWorld,
             "a level that also carries a base world edits its own world and says which level the base world is");
         check.That(model.Open(100) && model.Problem is null, "a level opens again after a refusal");
+        // Source offsets describe this parsed byte snapshot, not a future edited document.
+        if (model.Session is { } offsetFixtureSession)
+        {
+            var offsetFixtureBytes = offsetFixtureSession.Baseline;
+            var offsetFixtureThings = offsetFixtureSession.Body.Things;
+            var offsetFixtureOffsets = new System.Collections.Generic.HashSet<int>();
+            bool offsetFixtureValid = offsetFixtureThings.Count > 0;
+            foreach (var offsetFixtureThing in offsetFixtureThings)
+            {
+                if (offsetFixtureThing.SourceOffset is not int offsetFixturePosition ||
+                    offsetFixturePosition < 0 || offsetFixturePosition > offsetFixtureBytes.Length - sizeof(int) ||
+                    !offsetFixtureOffsets.Add(offsetFixturePosition) ||
+                    System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(offsetFixtureBytes.AsSpan(offsetFixturePosition, sizeof(int))) != offsetFixtureThing.ObjectId)
+                    offsetFixtureValid = false;
+            }
+            check.That(offsetFixtureValid, "Parsed things retain distinct source offsets for their object IDs");
+            bool offsetFixtureHasDuplicateIds = false;
+            for (int offsetFixtureI = 0; offsetFixtureI < offsetFixtureThings.Count; offsetFixtureI++)
+                for (int offsetFixtureJ = offsetFixtureI + 1; offsetFixtureJ < offsetFixtureThings.Count; offsetFixtureJ++)
+                    if (offsetFixtureThings[offsetFixtureI].ObjectId == offsetFixtureThings[offsetFixtureJ].ObjectId)
+                        offsetFixtureHasDuplicateIds |= offsetFixtureThings[offsetFixtureI].SourceOffset != offsetFixtureThings[offsetFixtureJ].SourceOffset;
+            check.That(offsetFixtureHasDuplicateIds, "Duplicate object IDs retain distinct source occurrences");
+            if (offsetFixtureThings.Count > 0 && offsetFixtureThings[0].SourceOffset is int offsetFixtureFirst &&
+                offsetFixtureFirst >= 0 && offsetFixtureFirst <= offsetFixtureBytes.Length - sizeof(int))
+            {
+                check.That(offsetFixtureThings[0].Clone().SourceOffset is null, "An authored copy has no original source offset");
+                bool offsetFixtureRejected = false;
+                try { WorldBodyReader.Read(offsetFixtureBytes.AsSpan(0, offsetFixtureFirst + sizeof(int) - 1)); }
+                catch (System.IO.InvalidDataException) { offsetFixtureRejected = true; }
+                check.That(offsetFixtureRejected, "A truncated source record is rejected");
+            }
+            else check.That(false, "Offset fixture contains a readable source record");
+        }
+        else check.That(false, "Offset fixture opened a session");
 
         // The game's levels can be listed again without losing the open level.
         string game = Path.Combine(folder, "game");

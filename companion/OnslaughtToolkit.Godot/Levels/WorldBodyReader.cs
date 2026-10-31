@@ -40,7 +40,7 @@ internal static class WorldBodyReader
 
         for (int i = 0, n = r.CountUInt16(); i < n; i++)
         {
-            PlacedObject thing = new() { ObjectId = r.Int32() };
+            PlacedObject thing = new() { SourceOffset = r.Position, ObjectId = r.Int32() };
             ObjectClass objectClass = ObjectKinds.ClassOf(thing.ObjectId);
             thing.Init = ReadInit(r, version, objectClass);
             if (ObjectKinds.IsDefined(thing.ObjectId))
