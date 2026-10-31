@@ -12,15 +12,17 @@ SOURCE is what the importer takes: the extracted member (a file that starts with
 makes (it is removed at the end unless --keep); the gate refuses a DIR inside the repository except under its ignored private folders (local-data, local-lab), because what it stages comes
 from the player's disc. What it checks:
 
-    the source        the member is the pinned one; its world is level 888 alone with no base world; its body reads back unchanged
+    the source        the member is the pinned one; its world is level 888 alone with no base world; its body reads back unchanged; it has one shadow chunk and the decoder reads it
     the builds        the library build twice gives the same bytes, and lives/ai-state have no part in it; the importer's staged mod is the library's files
     the archive       packed as the game's reader needs; the loader's structure walk; the world names level 888 alone; its RLWD is the member's body byte for byte;
                       the header is the worldheaders.dat record and the world type is 2; every script a thing names is one of the world's; the start points of players 1 and 2
     the closure       every definition placed is in the physics file; every mesh the units need has a descriptor, a loose file, and its textures have descriptors; the descriptors
-                      gained are exactly the ones reported, with runtime ids after the donor's highest and none twice; the donor's chunks (terrain and lists) are kept in order
+                      gained are exactly the ones reported, with runtime ids after the donor's highest and none twice; the donor's chunks (terrain and lists) are kept in order,
+                      its baked shadows replaced by the member's one shadow chunk, byte for byte
     the physics file  differs from the original in exactly one unit definition, in exactly its mesh name: the stand-in (the PC game has no file for the PS2 Fenrir's mesh)
-    the report        its sizes, hashes, counts and world label are the files' own
-    the mod folder    mod.json lists exactly the two files with their sizes and SHA-256, each re-hashed here; the folder is the id; nothing else is in it
+    the report        its sizes, hashes, counts and world label are the files' own; its stand-ins are the replacements the physics file shows; its shadows are the member's chunk
+    the mod folder    mod.json lists exactly the two files with their sizes and SHA-256, each re-hashed here; the folder is the id; nothing else is in it; the description says
+                      what came from the PS2 copy and what from the game
     the folders       the game folder's files were not changed; no pinned file differs from what the recipe was checked against
 
 Three checks (the world type, the scripts its things name, its start points) describe the disc's world, which the builder carries over byte for byte: when one of them does not
@@ -44,6 +46,7 @@ sys.path.insert(0, str(TOOLS))
 import level888_build as lvl  # noqa: E402
 import level888_ps2_import as imp  # noqa: E402
 import world_mod_stage as stage  # noqa: E402
+import world_resources_decode as wrd  # noqa: E402
 import world_resources_encode as enc  # noqa: E402
 import worldheaders_decode as headers  # noqa: E402
 from aya_cross_platform_compare import logical_key, normalize_asset_name  # noqa: E402
@@ -84,6 +87,20 @@ def chunk_list(unpacked: bytes) -> list[tuple[str, bytes]]:
     return [(tag, unpacked[at:at + size]) for tag, at, size in enc.chunks(unpacked)]
 
 
+def member_shadows(member: bytes) -> bytes | None:
+    """The member's one shadow chunk (SSHD), read here; None when it has none or several."""
+    found = [member[at:at + size] for tag, at, size in enc.chunks(member) if tag == "SSHD"]
+    return found[0] if len(found) == 1 else None
+
+
+def shadow_counts(shadows: bytes) -> dict | None:
+    """What the decoder reads in a shadow chunk (shadows, part maps, shadowed maps, cells), None when it cannot read it."""
+    try:
+        return wrd.parse_sshd(shadows)
+    except wrd.DecodeError:
+        return None
+
+
 def mod_folder_problems(moddir: Path, expected: dict[str, bytes], mod_id: str) -> list[str]:
     """What is wrong with a staged mod folder, read here and not by the importer: mod.json's id is the folder's name, it lists exactly the expected files, each with the size and
     SHA-256 of the bytes in the folder, and the folder holds those files and mod.json and nothing else."""
@@ -116,8 +133,9 @@ def mod_folder_problems(moddir: Path, expected: dict[str, bytes], mod_id: str) -
     return problems
 
 
-def gate_checks(game: Path, install: lvl.Install, member: bytes, body: bytes, first: lvl.Build, moddir: Path | None, mod_id: str, check) -> None:
-    """The checks that read the finished build (first) and the staged folder against the member and the game folder; check(name, passed, detail) records one."""
+def gate_checks(game: Path, install: lvl.Install, member: bytes, body: bytes, shadows: bytes, first: lvl.Build, moddir: Path | None, mod_id: str, check) -> None:
+    """The checks that read the finished build (first) and the staged folder against the member (its world body and its shadow chunk) and the game folder; check(name, passed,
+    detail) records one."""
     report = first.report
     archive, physics_bytes = first.files[lvl.ARCHIVE_PATH], first.files[lvl.PHYSICS_PATH]
 
@@ -189,8 +207,10 @@ def gate_checks(game: Path, install: lvl.Install, member: bytes, body: bytes, fi
           f"{len(out_ids)} meshes, {len(new_ids)} new ids")
     donor_names = {"TEXT": set(names_of("TEXT", donor)), "MESH": set(names_of("MESH", donor))}
     kept_out = [(t, p) for t, p in chunks if t != "WRES" and not (t in donor_names and logical_key(t, p)[0] not in donor_names[t])]
-    check("the donor's chunks (terrain, lists, descriptors) are kept byte for byte and in order", kept_out == [(t, p) for t, p in donor if t != "WRES"],
-          f"{len(kept_out)} chunks")
+    check("the donor's chunks (terrain, lists, descriptors) are kept byte for byte and in order, its baked shadows replaced by the member's shadow chunk",
+          kept_out == [(t, shadows if t == "SSHD" else p) for t, p in donor if t != "WRES"], f"{len(kept_out)} chunks")
+    out_shadows = [p for t, p in chunks if t == "SSHD"]
+    check("the archive's one shadow chunk is the member's, byte for byte", out_shadows == [shadows], f"{len(out_shadows)} chunks, {len(shadows)} bytes wanted")
 
     # the physics file is the original with the stand-in's mesh name and nothing else, re-derived here from the original's own offsets
     original_bytes = install.read(lvl.PHYSICS_PATH, lvl.LIMIT_SMALL)
@@ -214,6 +234,18 @@ def gate_checks(game: Path, install: lvl.Install, member: bytes, body: bytes, fi
           install.has(lvl.loose_mesh_path(lvl.FENRIR_MESH)) and not install.has(lvl.loose_mesh_path(lvl.FENRIR_FILELESS_MESH)))
     check("the report names the stand-in", report["physics"].get("unit") == lvl.FENRIR and report["physics"].get("mesh") == f"{lvl.FENRIR_FILELESS_MESH} -> {lvl.FENRIR_MESH}")
 
+    def unit_mesh(source: lvl.Physics, name: str) -> str | None:
+        found = [n.value.rstrip(b"\0").decode("latin-1") for s in source.statements if s.kind == lvl.UNIT_KIND and s.name == name
+                 for n in s.nodes if n.field == lvl.MESH_FIELD[lvl.UNIT_KIND]]
+        return found[0] if len(found) == 1 else None
+    replaced = [(unit_mesh(original, name), unit_mesh(physics, name)) for name in differing]
+    stand_ins = report.get("standIns")
+    reported = [(str(e.get("named by the world's units")), str(e.get("used instead"))) for e in stand_ins if isinstance(e, dict)] if isinstance(stand_ins, list) else None
+    check("the report's stand-ins are the replacements the physics file shows: the mesh it named, the one it names now, and the file through which",
+          reported is not None and len(reported) == len(stand_ins) and reported == replaced
+          and all(e.get("kind") == "mesh" and e.get("through") == lvl.PHYSICS_PATH for e in stand_ins) and all(install.has(lvl.loose_mesh_path(new)) for _, new in replaced),
+          f"{len(replaced)} replacements, {len(reported or [])} reported")
+
     # the report says what the files are
     check("the report's archive and physics figures are the files' own",
           report["archive"]["size"] == len(archive) and report["archive"]["sha256"] == sha256(archive) and report["archive"]["unpackedSize"] == len(unpacked or b"")
@@ -221,6 +253,11 @@ def gate_checks(game: Path, install: lvl.Install, member: bytes, body: bytes, fi
     check("the report counts the world's things and scripts, and its body", report["archive"]["things"] == len(model["things"]) and report["archive"]["worldBodyBytes"] == len(out_body)
           and [(s["instructions"], s["handlers"]) for s in report["scripts"]] == [(len(r["code"]["instructions"]), len(r["code"]["eventFunctions"])) for r in model["scripts"]])
     check("the report says the world is the PS2 copy's and that lives and the AI state had no part", report.get("world") == "ps2-copy" and report.get("lives") is None and report.get("aiState") is None)
+    counts = shadow_counts(shadows)
+    donor_shadow_sizes = [len(p) for t, p in donor if t == "SSHD"]
+    check("the report says the shadows are the PS2 copy's, with the sizes of both chunks and the counts the decoder reads in the member's",
+          counts is not None and len(donor_shadow_sizes) == 1
+          and report.get("shadows") == {"from": "ps2-copy", "bytes": len(shadows), "donorBytes": donor_shadow_sizes[0], **counts}, f"{len(shadows)} bytes from the member, {donor_shadow_sizes} in the donor")
 
     # the stager and the staged folder
     try:
@@ -230,13 +267,22 @@ def gate_checks(game: Path, install: lvl.Install, member: bytes, body: bytes, fi
         check("the mod stager (the loader's rules) accepts the files", False, str(error))
     if moddir is not None:
         problems = mod_folder_problems(moddir, first.files, mod_id)
-        check("the staged mod folder is what mod.json says, file by file, and holds nothing else", not problems, "; ".join(problems))
+        check("the staged mod folder is what mod.json says, file by file, and holds nothing else", not problems,
+              "; ".join(problems) or f"mod.json sha256 {sha256((moddir / 'mod.json').read_bytes())[:16]}")
         try:
             imp.check_mod_folder(moddir)
             importer_agrees = True
         except imp.ImportFailure:
             importer_agrees = False
         check("the importer's own folder check agrees", importer_agrees)
+        try:
+            description = json.loads((moddir / "mod.json").read_bytes()).get("description", "")
+        except (OSError, ValueError, AttributeError):
+            description = ""
+        no_shadows = counts is not None and not any(counts.values())
+        check("the mod's description says what came from the PS2 copy and what from this game, and calls the shadow chunk empty only if it is",
+              isinstance(description, str) and "FROM YOUR PS2 COPY" in description and "FROM THIS GAME" in description and ("empty static-shadow chunk" in description) == no_shadows,
+              f"{len(description) if isinstance(description, str) else 0} characters")
 
     # the folders were only read
     changed = [rel for rel, info in install.reads.items() if sha256(lvl.Install(game).read(rel, lvl.LIMIT_ARCHIVE)) != info["sha256"]]
@@ -273,15 +319,22 @@ def run_gate(game: Path, source: Path, work: Path, *, strict_pins: bool = False,
         check("the member's world body reads back unchanged", False, type(error).__name__)
         return results
 
+    shadows = member_shadows(member)
+    check("the member has one shadow chunk, and the decoder reads it", shadows is not None and shadow_counts(shadows) is not None,
+          "none or several" if shadows is None else f"{len(shadows)} bytes, {shadow_counts(shadows)}")
+    if shadows is None or shadow_counts(shadows) is None:
+        return results
+
     install = lvl.Install(game, strict_pins=strict_pins)
     try:
-        first = lvl.build(install, world_body=body)
-        second = lvl.build(lvl.Install(game, strict_pins=strict_pins), world_body=body)
-        third = lvl.build(lvl.Install(game, strict_pins=strict_pins), lives=7, ai_state=3, world_body=body)
+        first = lvl.build(install, world_body=body, shadows=shadows)
+        second = lvl.build(lvl.Install(game, strict_pins=strict_pins), world_body=body, shadows=shadows)
+        third = lvl.build(lvl.Install(game, strict_pins=strict_pins), lives=7, ai_state=3, world_body=body, shadows=shadows)
     except BuildError as error:
         check("build", False, str(error))
         return results
-    check("build", True, f"{first.report['archive']['size']} byte archive, {first.report['physics']['size']} byte physics file")
+    check("build", True, f"{first.report['archive']['size']} byte archive (sha256 {first.report['archive']['sha256'][:16]}), "
+                         f"{first.report['physics']['size']} byte physics file (sha256 {first.report['physics']['sha256'][:16]})")
     check("deterministic: two builds from the same inputs give the same bytes", first.files == second.files and first.report == second.report)
     check("lives and the AI state have no part in the disc's world", first.files == third.files)
 
@@ -292,7 +345,7 @@ def run_gate(game: Path, source: Path, work: Path, *, strict_pins: bool = False,
             summary, imported = imp.build(source, game, staged, ce_min=ce_min, strict_pins=strict_pins)
         except imp.ImportFailure as error:
             check("the importer's build", False, str(error))
-            gate_checks(game, install, member, body, first, None, imp.MOD_ID, check)
+            gate_checks(game, install, member, body, shadows, first, None, imp.MOD_ID, check)
             return results
         moddir = Path(summary["root"])
         check("the importer's build succeeded and staged one folder", moddir.parent == staged and moddir.name == imp.MOD_ID, f"{len(summary['files'])} files")
@@ -300,7 +353,7 @@ def run_gate(game: Path, source: Path, work: Path, *, strict_pins: bool = False,
         check("the importer's report is the library's, plus the member", {k: v for k, v in imported.items() if k not in ("member", "warnings")}
               == {k: v for k, v in first.report.items() if k != "warnings"})
         try:
-            gate_checks(game, install, member, body, first, moddir, imp.MOD_ID, check)
+            gate_checks(game, install, member, body, shadows, first, moddir, imp.MOD_ID, check)
         except (BuildError, enc.EncodeError, ValueError, KeyError, TypeError, struct.error) as error:
             check("the checks ran to the end", False, f"{type(error).__name__}: {error}")
     finally:

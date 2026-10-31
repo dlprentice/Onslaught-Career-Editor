@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """Checks tools/level888_ps2_gate.py, the independent gate of the builder that takes the disc's world, on authored files (no game bytes): that every check passes on a good
 build, and that each kind of fault in the builder's output is found by the check that names it (and by that one): a world that is not the member's, a missing descriptor, a
-changed donor chunk, a physics file edited anywhere else, a header or a script reference that is wrong, a report that does not describe its files, a builder that is not
-deterministic or that differs between the library and the importer, a mod folder that is not what mod.json says, a game folder that changes, a member that is not the pinned
+changed donor chunk, a shadow chunk that is not the member's, a physics file edited anywhere else, a header or a script reference that is wrong, a report that does not
+describe its files, its shadows or its stand-ins, a description that does not say what came from where, a builder that is not deterministic or that differs between the library and
+the importer, a mod folder that is not what mod.json says, a game folder that changes, a member that is not the pinned
 one or not level 888, and a folder to stage in that lies inside the repository.
 
 The retail gate runs only when BEA_PS2_MEMBER names the extracted member (or BEA_PS2_IMAGE the player's own image), BEA_GAME the game folder and BEA_GATE_WORK a private folder
@@ -33,6 +34,11 @@ import world_resources_encode as enc
 
 TOOL = Path(gate.__file__).resolve()
 GOOD = {"Venturer", "Fenrir"}
+KEPT = "the donor's chunks (terrain, lists, descriptors) are kept byte for byte and in order, its baked shadows replaced by the member's shadow chunk"
+SHADOW_CHUNK = "the archive's one shadow chunk is the member's, byte for byte"
+SHADOW_REPORT = "the report says the shadows are the PS2 copy's, with the sizes of both chunks and the counts the decoder reads in the member's"
+STAND_INS = "the report's stand-ins are the replacements the physics file shows: the mesh it named, the one it names now, and the file through which"
+DESCRIPTION = "the mod's description says what came from the PS2 copy and what from this game, and calls the shadow chunk empty only if it is"
 
 
 def gate_model(folder) -> dict:
@@ -53,7 +59,8 @@ class GateCase(itests.ImportCase):
         super().setUp()
         self.model = gate_model(self.folder)
         self.body = enc.write_world_body(self.model)
-        self.member = itests.member_bytes(self.body)
+        self.shadows = itests.EMPTY_SHADOWS
+        self.member = itests.member_bytes(self.body, shadows=self.shadows)
         self.member_path.write_bytes(self.member)
         pinned = self.pin()
         pinned.start()
@@ -71,14 +78,15 @@ class GateCase(itests.ImportCase):
     # -- gate_checks on a doctored build: only the check that names the fault may fail
     def good(self):
         install = lvl.Install(self.game)
-        return install, lvl.build(install, world_body=self.body)
+        return install, lvl.build(install, world_body=self.body, shadows=self.shadows)
 
-    def checks(self, build, *, install=None, body=None, moddir=None) -> set[str]:
+    def checks(self, build, *, install=None, body=None, shadows=None, moddir=None) -> set[str]:
         install = install or lvl.Install(self.game)
         if not install.reads:
-            lvl.build(install, world_body=self.body)
+            lvl.build(install, world_body=self.body, shadows=self.shadows)
         found: dict[str, bool] = {}
-        gate.gate_checks(self.game, install, self.member, self.body if body is None else body, build, moddir, imp.MOD_ID, lambda n, ok, d="": found.__setitem__(n, ok))
+        gate.gate_checks(self.game, install, self.member, self.body if body is None else body, self.shadows if shadows is None else shadows, build, moddir, imp.MOD_ID,
+                         lambda n, ok, d="": found.__setitem__(n, ok))
         return {name for name, ok in found.items() if not ok}
 
     def chunks_of(self, build) -> list[tuple[str, bytes]]:
@@ -102,8 +110,10 @@ class GoodBuildTests(GateCase):
     def test_every_check_passes_on_the_authored_build_and_none_is_skipped(self) -> None:
         verdicts = self.verdicts()
         self.assertEqual([], [name for name, (ok, _) in verdicts.items() if not ok])
-        self.assertGreaterEqual(len(verdicts), 38)
+        self.assertGreaterEqual(len(verdicts), 44)
         for needed in ("the archive's RLWD is the member's world body, byte for byte", "deterministic: two builds from the same inputs give the same bytes",
+                       "the archive's one shadow chunk is the member's, byte for byte", "the member has one shadow chunk, and the decoder reads it",
+                       "the mod's description says what came from the PS2 copy and what from this game, and calls the shadow chunk empty only if it is",
                        "the staged mod folder is what mod.json says, file by file, and holds nothing else",
                        "it is the original with the Fenrir's mesh name replaced and not one other byte changed"):
             self.assertIn(needed, verdicts)
@@ -204,12 +214,32 @@ class FaultTests(GateCase):
         at = next(i for i, (tag, _) in enumerate(chunks) if tag not in ("TEXT", "MESH", "WRES"))
         changed = list(chunks)
         changed[at] = (changed[at][0], changed[at][1][:-1] + bytes([changed[at][1][-1] ^ 1]))
-        key = "the donor's chunks (terrain, lists, descriptors) are kept byte for byte and in order"
+        key = KEPT
         self.assertIn(key, self.checks(self.with_chunks(build, changed), install=install))
         moved = list(chunks)
         other = next(i for i, (tag, _) in enumerate(chunks) if i > at and tag not in ("TEXT", "MESH", "WRES") and chunks[i] != chunks[at])
         moved[at], moved[other] = moved[other], moved[at]
         self.assertIn(key, self.checks(self.with_chunks(build, moved), install=install))
+
+    def test_a_shadow_chunk_that_is_not_the_members_is_found(self) -> None:
+        install, build = self.good()
+        chunks = self.chunks_of(build)
+        at = next(i for i, (tag, _) in enumerate(chunks) if tag == "SSHD")
+        donor_shadows = next(p for t, p in lvl.unpack(install, lvl.DONOR) if t == "SSHD")
+        for label, payload in (("the donor's own", donor_shadows), ("one byte off", self.shadows[:-1] + bytes([self.shadows[-1] ^ 1])), ("longer", self.shadows + b"\0")):
+            doctored = list(chunks)
+            doctored[at] = ("SSHD", payload)
+            found = self.checks(self.with_chunks(build, doctored), install=install)
+            self.assertEqual({SHADOW_CHUNK, KEPT}, found, label)
+        two = chunks[:at + 1] + [("SSHD", self.shadows)] + chunks[at + 1:]
+        self.assertIn(SHADOW_CHUNK, self.checks(self.with_chunks(build, two), install=install), "two shadow chunks")
+        none = chunks[:at] + chunks[at + 1:]
+        self.assertIn(SHADOW_CHUNK, self.checks(self.with_chunks(build, none), install=install), "no shadow chunk")
+        moved = list(chunks)
+        moved.insert(1, moved.pop(at))
+        found = self.checks(self.with_chunks(build, moved), install=install)
+        self.assertIn(KEPT, found, "the chunk is the member's but in another place")
+        self.assertNotIn(SHADOW_CHUNK, found, "its bytes are the member's")
 
     def test_a_physics_file_changed_anywhere_but_the_stand_in_is_found(self) -> None:
         install, build = self.good()
@@ -253,6 +283,30 @@ class FaultTests(GateCase):
             report = copy.deepcopy(build.report)
             mutate(report)
             self.assertIn("the report names the stand-in", self.checks(lvl.Build(build.files, report, []), install=install))
+
+    def test_a_report_whose_shadows_do_not_describe_the_chunks_is_found(self) -> None:
+        install, build = self.good()
+        self.assertEqual({"from": "ps2-copy", "bytes": len(self.shadows), "donorBytes": 1, "shadows": 0, "partMaps": 0, "shadowedMaps": 0, "cells": 0}, build.report["shadows"])
+        for label, mutate in (("from the donor", lambda r: r["shadows"].update({"from": "donor"})), ("bytes", lambda r: r["shadows"].update(bytes=1)),
+                              ("the donor's size", lambda r: r["shadows"].update(donorBytes=544156)), ("a count", lambda r: r["shadows"].update(cells=1)),
+                              ("a count missing", lambda r: r["shadows"].pop("partMaps")), ("an extra key", lambda r: r["shadows"].update(extra=1)),
+                              ("no shadows entry", lambda r: r.pop("shadows"))):
+            report = copy.deepcopy(build.report)
+            mutate(report)
+            self.assertEqual({SHADOW_REPORT}, self.checks(lvl.Build(build.files, report, []), install=install), label)
+
+    def test_a_report_whose_stand_ins_are_not_the_replacements_in_the_physics_file_is_found(self) -> None:
+        install, build = self.good()
+        self.assertEqual([{"kind": "mesh", "named by the world's units": lvl.FENRIR_FILELESS_MESH, "used instead": lvl.FENRIR_MESH, "through": lvl.PHYSICS_PATH}], build.report["standIns"])
+        entry = build.report["standIns"][0]
+        for label, mutate in (("none reported", lambda r: r.update(standIns=[])), ("no key", lambda r: r.pop("standIns")), ("twice", lambda r: r["standIns"].append(dict(entry))),
+                              ("another mesh named", lambda r: r["standIns"][0].update({"named by the world's units": "some-mesh.msh"})),
+                              ("another mesh used", lambda r: r["standIns"][0].update({"used instead": "air-fighter.msh"})),
+                              ("another file through which", lambda r: r["standIns"][0].update(through="data/other.dat")), ("another kind", lambda r: r["standIns"][0].update(kind="texture")),
+                              ("not a list", lambda r: r.update(standIns=dict(entry))), ("not entries", lambda r: r.update(standIns=["x"]))):
+            report = copy.deepcopy(build.report)
+            mutate(report)
+            self.assertEqual({STAND_INS}, self.checks(lvl.Build(build.files, report, []), install=install), label)
 
     def test_an_archive_the_loader_would_not_walk_is_found(self) -> None:
         install, build = self.good()
@@ -303,6 +357,45 @@ class RunFaultTests(GateCase):
             return result
         with mock.patch.object(lvl, "build", listening):
             self.assertIn("lives and the AI state have no part in the disc's world", self.failed())
+
+    def test_a_builder_that_ignores_the_members_shadow_chunk_is_found_even_when_the_importer_agrees_with_it(self) -> None:
+        real = lvl.build
+
+        def forgetful(install, **options):
+            options.pop("shadows", None)
+            return real(install, **options)
+        with mock.patch.object(lvl, "build", forgetful):
+            found = self.failed()
+        self.assertEqual({SHADOW_CHUNK, KEPT, SHADOW_REPORT}, found)
+
+    def test_a_description_that_does_not_say_what_came_from_where_is_found(self) -> None:
+        install, build = self.good()
+        moddir = self.root / "mods" / imp.MOD_ID
+        imp.build(self.member_path, self.game, self.root / "mods", ce_min="0.1.13")
+        self.assertEqual(set(), self.checks(build, install=install, moddir=moddir))
+        manifest = json.loads((moddir / "mod.json").read_bytes())
+        description = manifest["description"]
+        self.assertIn("FROM YOUR PS2 COPY", description)
+        self.assertIn("FROM THIS GAME", description)
+        for label, text in (("the earlier wording", lvl.description("0.1.13", None).split("EXPERIMENTAL. ")[0] + "EXPERIMENTAL. Adds data/resources/888_res_PC.aya."),
+                            ("no PS2 copy part", description.replace("FROM YOUR PS2 COPY", "FROM SOMEWHERE")), ("no game part", description.replace("FROM THIS GAME", "FROM SOMEWHERE")),
+                            ("empty", ""), ("not text", 5), ("claims shadows are not empty", description.replace("empty static-shadow chunk", "static-shadow chunk")),
+                            ("claims an empty chunk the disc does not have", None)):
+            changed = copy.deepcopy(manifest)
+            if text is None:
+                changed.pop("description")
+            else:
+                changed["description"] = text
+            (moddir / "mod.json").write_text(json.dumps(changed))
+            self.assertIn(DESCRIPTION, self.checks(build, install=install, moddir=moddir), label)
+
+    def test_a_description_that_calls_the_chunk_empty_when_the_decoder_finds_shadows_in_it_is_found(self) -> None:
+        install, build = self.good()
+        moddir = self.root / "mods" / imp.MOD_ID
+        imp.build(self.member_path, self.game, self.root / "mods", ce_min="0.1.13")
+        self.assertNotIn(DESCRIPTION, self.checks(build, install=install, moddir=moddir))
+        with mock.patch.object(gate, "shadow_counts", return_value={"shadows": 1, "partMaps": 0, "shadowedMaps": 0, "cells": 0}):
+            self.assertIn(DESCRIPTION, self.checks(build, install=install, moddir=moddir))
 
     def test_an_importer_that_stages_other_bytes_than_the_library_builds_is_found(self) -> None:
         real = imp.build
@@ -388,6 +481,18 @@ class SourceFaultTests(GateCase):
         junk = self.root / "junk.aya"
         junk.write_bytes(itests.member_bytes(b"not a world body at all"))
         self.assertIn("the member's world body reads back unchanged", self.failed(source=junk))
+
+    def test_a_member_without_exactly_one_readable_shadow_chunk_stops_the_gate_with_a_failed_check(self) -> None:
+        key = "the member has one shadow chunk, and the decoder reads it"
+        for label, member in (("none", itests.member_bytes(self.body, shadows=None)), ("two", itests.member_bytes(self.body, extra_shadow_chunks=1)),
+                              ("unreadable", itests.member_bytes(self.body, shadows=b"not shadows")), ("trailing bytes", itests.member_bytes(self.body, shadows=itests.EMPTY_SHADOWS + b"x"))):
+            path = self.root / "shadow.aya"
+            path.write_bytes(member)
+            digest = gate.sha256(member)
+            with mock.patch.dict(itests.ps2_disc.MEMBER_SHA256, {itests.ps2_disc.fold_member_path(itests.ps2_disc.LEVEL_888_MEMBER): digest}):
+                verdicts = self.verdicts(source=path)
+            self.assertFalse(verdicts[key][0], label)
+            self.assertNotIn("build", verdicts, label)
 
     def test_a_source_that_cannot_be_read_is_one_failed_check(self) -> None:
         self.assertEqual({"the source"}, self.failed(source=self.root / "missing"))
@@ -496,8 +601,27 @@ class RetailGate(unittest.TestCase):
         results = gate.run_gate(Path(os.environ["BEA_GAME"]), source, Path(os.environ["BEA_GATE_WORK"]), strict_pins=True)
         faults, findings = gate.verdict(results)
         self.assertEqual([], faults)
-        self.assertGreaterEqual(len(results), 38)
+        self.assertGreaterEqual(len(results), 44)
         print(f"retail gate: {len(results)} checks, {len(faults)} faults, {len(findings)} findings", file=sys.stderr)
+
+    def test_the_members_shadow_chunk_is_the_one_the_game_itself_has_for_a_level_without_shadows(self) -> None:
+        """The loader reads this chunk in the PC game's own archives of levels 331, 332, 741 and 742 (the builder's claim, here measured, counts only)."""
+        source = Path(os.environ.get("BEA_PS2_MEMBER") or os.environ["BEA_PS2_IMAGE"])
+        member, _ = imp.read_source(source)
+        shadows = gate.member_shadows(member)
+        self.assertIsNotNone(shadows)
+        install = lvl.Install(Path(os.environ["BEA_GAME"]))
+        equal, present = 0, 0
+        for level in (331, 332, 741, 742):
+            try:
+                chunks = lvl.unpack(install, level)
+            except lvl.BuildError:
+                continue
+            present += 1
+            equal += [payload for tag, payload in chunks if tag == "SSHD"] == [shadows]
+        print(f"retail gate: the member's shadow chunk ({len(shadows)} bytes) equals the game's own in {equal} of {present} archives of levels 331, 332, 741, 742", file=sys.stderr)
+        self.assertGreaterEqual(present, 1)
+        self.assertEqual(present, equal)
 
 
 if __name__ == "__main__":

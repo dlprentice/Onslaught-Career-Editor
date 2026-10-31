@@ -242,8 +242,8 @@ publish, sign, or install anything by themselves.
   their retail gates run when `BEA_PS2_IMAGE` (and `BEA_GAME`) name the player's own files.
   `level888_ps2_gate.py gate SOURCE --game DIR --work PRIVATE` is the independent gate of that build: it runs the library build twice and the importer,
   and reads their output files against the member and the game folder with its own reading (the loader's walk, the archive's world body equal to the
-  member's byte for byte, the donor's chunks kept in order, the closure complete, the physics file the original with one mesh name changed, the report's
-  figures, the staged mod folder against `mod.json`); it prints counts and booleans only, and refuses a work folder inside the repository except under
+  member's byte for byte, the donor's chunks kept in order with its baked shadows replaced by the member's shadow chunk, the closure complete, the physics file
+  the original with one mesh name changed, the report's figures (sizes, hashes, stand-ins, shadows), the staged mod folder against `mod.json` and its description); it prints counts and booleans only, and refuses a work folder inside the repository except under
   its ignored private folders (`local-data`, `local-lab`). Three of its checks describe the disc's world and not the builder (world type, the scripts its things name, its start
   points): a failure there is a `note`, a finding about the input, and leaves the exit code alone. Its tests run on authored files; its retail gate runs when
   `BEA_PS2_MEMBER` (or `BEA_PS2_IMAGE`), `BEA_GAME` and `BEA_GATE_WORK` are set.
