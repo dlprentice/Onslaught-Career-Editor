@@ -180,6 +180,8 @@ class BuildTests(ImportCase):
         self.assertEqual((lvl.LEVEL, -1, ["RLWD"]), (worlds["realLevel"], worlds["baseLevel"], sorted(worlds["bodies"])))
         self.assertEqual(self.body, worlds["bodies"]["RLWD"])
         self.assertEqual("ps2-copy", result.report["world"])
+        self.assertEqual([{"kind": "mesh", "named by the world's units": lvl.FENRIR_FILELESS_MESH, "used instead": lvl.FENRIR_MESH, "through": lvl.PHYSICS_PATH}],
+                         result.report["standIns"], "the one labelled stand-in is in the report")
         self.assertEqual((None, None), (result.report["lives"], result.report["aiState"]))
         self.assertEqual({"Fenrir", "Venturer", "world888script"}, {s["name"] for s in result.report["scripts"]})
         self.assertEqual(len(self.model["things"]), result.report["archive"]["things"])
@@ -256,6 +258,8 @@ class BuildTests(ImportCase):
         text = lvl.description("0.1.13", None)
         self.assertIn("from your own PS2 copy", text)
         self.assertIn("0.1.13", text)
+        for fragment in ("FROM YOUR PS2 COPY: the world", "FROM THIS GAME: the terrain", "stands in", "REPLACES"):
+            self.assertIn(fragment, text)
         self.assertTrue(text.isascii())
         self.assertLessEqual(len(text), 1024)
 
