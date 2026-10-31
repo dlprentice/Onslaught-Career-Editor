@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-10-29 (the build requirements name the pinned toolchain by its file, not by a maintainer path; earlier: the rebuild described in onslaught-godot's own words (compared Present by Present with recorded runs of the native port and of the original game; a proof of concept, not yet playable); earlier: the game documentation's home stated as onslaught-preservation, with `reverse-engineering/` here a frozen copy; earlier: the companion's update guidance described as it is; earlier: decompilation concessions and native-port validation scope clarified)
+Last updated: 2026-10-31 (the build requirements name the .NET SDK pin of global.json, 10.0.402, which the companion's own global.json repeats; earlier: the build requirements name the pinned toolchain by its file, not by a maintainer path; earlier: the rebuild described in onslaught-godot's own words (compared Present by Present with recorded runs of the native port and of the original game; a proof of concept, not yet playable); earlier: the game documentation's home stated as onslaught-preservation, with `reverse-engineering/` here a frozen copy; earlier: the companion's update guidance described as it is; earlier: decompilation concessions and native-port validation scope clarified)
 Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
 
 Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
@@ -89,7 +89,8 @@ Retired surfaces (WinUI, the CLI, Electron, the Python GUI, WPF) remain in Git h
 
 The engineering host is Omarchy Linux. Requirements:
 
-- The .NET 10 SDK named in `global.json`, and the pinned toolchain that
+- The .NET 10 SDK pinned in `global.json` (10.0.402, the pin that
+  [companion/OnslaughtToolkit.Godot/global.json](companion/OnslaughtToolkit.Godot/global.json) repeats), and the pinned toolchain that
   [companion/OnslaughtToolkit.Godot/toolchain.json](companion/OnslaughtToolkit.Godot/toolchain.json) names
   (Godot 4.8 beta1 .NET with matching templates and .NET SDK 10.0.402)
 - Node.js 26.7 and npm 11.19 from mise
