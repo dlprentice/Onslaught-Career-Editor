@@ -18,7 +18,7 @@ shipped or sent anywhere: the mod is written to a folder the player names, and `
 SOURCE is the image (a plain ISO, or a Redump zip whose one member is the ISO) or the extracted member itself (a file that starts with the tag LVLR).
 What the build does not take from the disc: the one mesh the PS2 copy names and the PC game has no file for (the multiplayer Fenrir) is replaced by the
 PC game's own Fenrir mesh through a one-field edit of data/default physics.dat, so that mod conflicts with any other mod that replaces that file; its terrain
-is the PC game's level 857 (the disc's own terrain has the same height field and mixer map); and CE adds no entry for the level (start it with -level 888 on
+is the PC game's level 857 (the disc's own terrain decodes equal to it) without that level's baked shadows, which the disc's own shadow chunk replaces (none); and CE adds no entry for the level (start it with -level 888 on
 the game's command line). CE loads mods on Linux only, and keeps them off in replays, recordings, probes, virtual clocks, pilots and network sessions.
 
 `stage` puts the mod in a fresh CE user folder (default: onslaught-ce-level888 beside CE's own) and prints the line that starts the level there
@@ -98,6 +98,14 @@ def world_body(member: bytes) -> bytes:
     return worlds["bodies"]["RLWD"]
 
 
+def shadow_chunk(member: bytes) -> bytes:
+    """The member's one SSHD chunk (its static shadows: none, on the disc's level 888)."""
+    found = [member[at:at + size] for tag, at, size in enc.chunks(member) if tag == "SSHD"]
+    if len(found) != 1:
+        raise ImportFailure(f"the member has {len(found)} shadow chunks, not one")
+    return found[0]
+
+
 def inspect(member: bytes) -> dict:
     """Counts only: the chunks by tag, the world's header fields, its things by kind, its scripts and waypoint paths. No name and no byte of the member."""
     tags: dict[str, int] = {}
@@ -112,7 +120,7 @@ def inspect(member: bytes) -> dict:
         kinds[thing["kind"]] = kinds.get(thing["kind"], 0) + 1
     header = model["header"]
     return {"bytes": len(member), "sha256": hashlib.sha256(member).hexdigest(), "chunks": sum(tags.values()), "everyByteAccounted": accounted == len(member),
-            "chunksByTag": dict(sorted(tags.items())), "world": {"version": model["version"], "bodyBytes": len(body), "worldType": header.get("worldType"),
+            "chunksByTag": dict(sorted(tags.items())), "world": {"version": model["version"], "bodyBytes": len(body), "shadowBytes": len(shadow_chunk(member)), "worldType": header.get("worldType"),
                                                                  "configurations": len(header.get("battleEngineConfigurations", [])),
                                                                  "things": len(model["things"]), "thingsByKind": dict(sorted(kinds.items())),
                                                                  "scripts": len(model["scripts"]), "waypointPaths": len(model["waypointPaths"]),
@@ -127,7 +135,7 @@ def build(source: Path, game: Path, out: Path, *, ce_min: str, mod_id: str = MOD
     body = world_body(member)
     install = lvl.Install(game, strict_pins=strict_pins)
     try:
-        result = lvl.build(install, world_body=body)
+        result = lvl.build(install, world_body=body, shadows=shadow_chunk(member))
         summary = lvl.stage_build(result, enc.selected_game_root(game), out, ce_min=ce_min, mod_id=mod_id, name=name, version=version, author=author,
                                   ce_max=ce_max)
     except (lvl.BuildError, enc.EncodeError) as error:

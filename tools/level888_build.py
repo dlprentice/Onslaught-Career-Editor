@@ -617,9 +617,12 @@ def disc_world(body: bytes, record: headers.WorldHeaderRecord) -> dict:
     return model
 
 
-def build(install: Install, *, lives: int = DEFAULT_LIVES, ai_state: int | None = None, world_body: bytes | None = None) -> Build:
+def build(install: Install, *, lives: int = DEFAULT_LIVES, ai_state: int | None = None, world_body: bytes | None = None,
+          shadows: bytes | None = None) -> Build:
     """Level 888's mod files from the player's game folder (nothing is written; see stage_build). With `world_body`, the world is the PS2 copy's
-    (see disc_world): its own scripts, units and waypoints are used as they are, and `lives` and `ai_state` have no part in it."""
+    (see disc_world): its own scripts, units and waypoints are used as they are, and `lives` and `ai_state` have no part in it. With `shadows`, the
+    donor's baked static shadows (those of its own features, which this world does not have) are replaced by the PS2 copy's shadow chunk, which must
+    read with the decoder (the PC game's own chunk for a level with no shadows is the same 28 bytes)."""
     sources = script_sources(lives, ai_state)
     if install.has(ARCHIVE_PATH):
         raise BuildError(f"the game folder already has {ARCHIVE_PATH}: a mod can only add an archive the game lacks")
@@ -642,6 +645,17 @@ def build(install: Install, *, lives: int = DEFAULT_LIVES, ai_state: int | None 
     donor = unpack(install, DONOR)
     source_chunks = {level: unpack(install, level) for level in SOURCES}
     merged, added = merge_descriptors(donor, source_chunks, meshes, textures)
+    donor_shadows = None
+    if shadows is not None:
+        try:
+            counts = wrd.parse_sshd(shadows)
+        except wrd.DecodeError as error:
+            raise BuildError(f"the PS2 copy's shadow chunk cannot be read: {error}") from None
+        at = [i for i, (tag, _) in enumerate(merged) if tag == "SSHD"]
+        if len(at) != 1:
+            raise BuildError(f"the donor archive has {len(at)} SSHD chunks, not one")
+        donor_shadows = len(merged[at[0]][1])
+        merged = merged[:at[0]] + [("SSHD", shadows)] + merged[at[0] + 1:]
 
     parsed = headers.parse_worldheaders(install.read(WORLDHEADERS_PATH, LIMIT_SMALL))
     record, donor_record = parsed.by_world(LEVEL), parsed.by_world(DONOR)
@@ -677,6 +691,8 @@ def build(install: Install, *, lives: int = DEFAULT_LIVES, ai_state: int | None 
                     for r in scripts],
         "lives": lives if disc is None else None, "aiState": ai_state if disc is None else None,
         "world": "authored" if disc is None else "ps2-copy",
+        "shadows": {"from": "donor" if shadows is None else "ps2-copy", "bytes": len(shadows) if shadows is not None else None,
+                    "donorBytes": donor_shadows, **(counts if shadows is not None else {})},
         "inputs": dict(sorted(install.reads.items())),
         "warnings": list(install.warnings),
     }

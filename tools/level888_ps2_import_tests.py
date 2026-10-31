@@ -63,9 +63,15 @@ def disc_model(folder: built.Folder, *, world_type: int | None = None, definitio
     return model
 
 
-def member_bytes(body: bytes, *, level: int = lvl.LEVEL, base: int = -1, extra_children=()) -> bytes:
+EMPTY_SHADOWS = struct.pack("<4sI", b"SSHD", 0) + struct.pack("<4sI", b"SHDW", 0) + struct.pack("<i", 0) + struct.pack("<4sI", b"SLST", 0)
+
+
+def member_bytes(body: bytes, *, level: int = lvl.LEVEL, base: int = -1, extra_children=(), shadows: bytes | None = EMPTY_SHADOWS, extra_shadow_chunks: int = 0) -> bytes:
     children = [(b"WDAT", struct.pack("<ii", base, level))] + list(extra_children) + [(b"RLWD", body)]
-    return stager_tests.level_stream(stager_tests.level_chunks(level, texts=("a.tga",), meshes=("a.msh",), children=children))
+    chunks = stager_tests.level_chunks(level, texts=("a.tga",), meshes=("a.msh",), children=children)
+    chunks = [(tag, shadows if tag == b"SSHD" else payload) for tag, payload in chunks if not (tag == b"SSHD" and shadows is None)]
+    chunks += [(b"SSHD", EMPTY_SHADOWS)] * extra_shadow_chunks
+    return stager_tests.level_stream(chunks)
 
 
 class ImportCase(built.FolderTest):
@@ -213,6 +219,32 @@ class BuildTests(ImportCase):
     def test_a_body_that_does_not_read_back_unchanged_is_refused(self) -> None:
         with mock.patch.object(enc, "write_world_body", return_value=b"other"), self.assertRaisesRegex(lvl.BuildError, "read back unchanged"):
             lvl.disc_world(self.body, headers.parse_worldheaders((self.game / "data/worldheaders.dat").read_bytes()).by_world(lvl.LEVEL))
+
+    def test_the_donors_baked_shadows_are_replaced_by_the_members_shadow_chunk(self) -> None:
+        plain = self.built()
+        self.assertEqual("donor", plain.report["shadows"]["from"])
+        shadowless = lvl.build(lvl.Install(self.game), world_body=self.body, shadows=EMPTY_SHADOWS)
+        self.assertEqual({"from": "ps2-copy", "bytes": 28, "donorBytes": 1, "shadows": 0, "partMaps": 0, "shadowedMaps": 0, "cells": 0}, shadowless.report["shadows"])
+        chunks = {tag: payload for tag, payload in self.unpacked(shadowless)}
+        self.assertEqual(EMPTY_SHADOWS, chunks["SSHD"])
+        before, after = self.unpacked(plain), self.unpacked(shadowless)
+        self.assertEqual([t for t, _ in before], [t for t, _ in after], "the same chunks in the same order")
+        self.assertEqual([(t, p) for t, p in before if t != "SSHD"], [(t, p) for t, p in after if t != "SSHD"], "nothing else changes")
+
+    def test_a_shadow_chunk_the_decoder_cannot_read_or_a_donor_without_exactly_one_is_refused(self) -> None:
+        for label, payload in (("garbage", b"not shadows"), ("empty", b""), ("trailing bytes", EMPTY_SHADOWS + b"x")):
+            with self.subTest(label), self.assertRaisesRegex(lvl.BuildError, "shadow chunk cannot be read"):
+                lvl.build(lvl.Install(self.game), world_body=self.body, shadows=payload)
+
+    def test_the_importer_hands_the_members_shadow_chunk_to_the_build_and_refuses_a_member_without_exactly_one(self) -> None:
+        summary, report = imp.build(self.member_path, self.game, self.root / "shadow-mods", ce_min="0.1.13")
+        self.assertEqual("ps2-copy", report["shadows"]["from"])
+        raw = b"".join(enc.inflate(enc.read_members((Path(summary["root"]) / lvl.ARCHIVE_PATH).read_bytes())))
+        self.assertEqual(EMPTY_SHADOWS, next(raw[at:at + size] for tag, at, size in enc.chunks(raw) if tag == "SSHD"))
+        for label, member in (("none", member_bytes(self.body, shadows=None)), ("two", member_bytes(self.body, extra_shadow_chunks=1))):
+            with self.subTest(label), self.assertRaisesRegex(imp.ImportFailure, "shadow chunks"):
+                imp.shadow_chunk(member)
+        self.assertEqual(28, imp.inspect(self.member)["world"]["shadowBytes"])
 
     def test_the_authored_world_path_is_unchanged_by_the_hook(self) -> None:
         result = lvl.build(lvl.Install(self.game))
@@ -497,6 +529,8 @@ class RetailGate(unittest.TestCase):
         self.assertIsNone(stage.check_level_archive(raw, lvl.LEVEL))
         self.assertEqual(body, enc.level_worlds(raw)["bodies"]["RLWD"])
         self.assertEqual("ps2-copy", report["world"])
+        self.assertEqual(imp.shadow_chunk(member), next(raw[at:at + size] for tag, at, size in enc.chunks(raw) if tag == "SSHD"))
+        self.assertEqual("ps2-copy", report["shadows"]["from"])
 
 
 if __name__ == "__main__":
