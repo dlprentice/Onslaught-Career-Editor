@@ -24,8 +24,9 @@ the game's command line). CE loads mods on Linux only, and keeps them off in rep
 `stage` puts the mod in a fresh CE user folder (default: onslaught-ce-level888 beside CE's own) and prints the line that starts the level there
 (BEA_USER_DIR=<folder> onslaught-ce -level 888): the level's end screen takes the single-player route and writes a career, until a CE build with the bonus-level
 fence is the one that runs, so it must not run on your own careers. It refuses CE's own user folder (and the one BEA_USER_DIR names) unless --into-my-real-folder
-is given. It keeps an existing ce.ini as ce.ini.bak-<time> first, never overwrites a mod folder (--replace moves the old one aside), and does nothing while
---dry-run is given. Close the game before it runs."""
+is given, and always refuses a folder that holds one of them or lies inside it (by name, link or device and inode). It keeps an existing ce.ini as ce.ini.bak-<time> first,
+edits the mods= line as CE reads it (two such lines are refused), never overwrites a mod folder (--replace moves the old one aside), puts nothing in place until the
+copy has been checked against mod.json, puts everything back if a step fails, and does nothing while --dry-run is given. Close the game before it runs."""
 from __future__ import annotations
 
 import argparse
@@ -34,6 +35,7 @@ import json
 import os
 import shlex
 import shutil
+import stat
 import sys
 import time
 from pathlib import Path
@@ -62,10 +64,17 @@ class ImportFailure(ValueError):
 def read_source(source: Path, *, strict_pins: bool = False) -> tuple[bytes, dict]:
     """The 888 member's bytes and a record of where they came from: an extracted member (a file that starts with the archive tag) or the member of an image."""
     try:
-        with open(source, "rb") as handle:
-            head = handle.read(4)
+        fd = os.open(source, os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_CLOEXEC", 0))
     except OSError as error:
         raise ImportFailure(f"cannot read {source}: {error.strerror or error}") from None
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise ImportFailure(f"{source} is not a regular file")
+        head = os.read(fd, 4)
+    except OSError as error:
+        raise ImportFailure(f"cannot read {source}: {error.strerror or error}") from None
+    finally:
+        os.close(fd)
     if head != MEMBER_TAG:
         try:
             member = ps2_disc.read_member(source, strict_pins=strict_pins)
@@ -165,14 +174,46 @@ def fresh_user_folder(env=os.environ) -> Path:
     return ce_user_folder(env).with_name(FRESH_FOLDER)
 
 
+def _stat(path: Path):
+    try:
+        return os.stat(path)
+    except OSError:
+        return None
+
+
+def _chain(path: Path) -> list:
+    """The folder (links followed) and each of its parents, with the stat of each that exists: identity is by device and inode as well as by name."""
+    resolved = path.resolve()
+    return [(p, _stat(p)) for p in (resolved, *resolved.parents)]
+
+
+def _same(a: tuple, b: tuple) -> bool:
+    return a[0] == b[0] or (a[1] is not None and b[1] is not None and os.path.samestat(a[1], b[1]))
+
+
+def real_conflict(path: Path, env=os.environ) -> str | None:
+    """How `path` relates to the player's own CE folders: "is" one, "is inside" one (a link or a bind mount counts), or "holds" one (it is a parent of it); None when it
+    does not."""
+    mine = _chain(path)
+    for real in real_folders(env):
+        theirs = _chain(real)
+        if _same(mine[0], theirs[0]):
+            return "is"
+        if any(_same(parent, theirs[0]) for parent in mine[1:]):
+            return "is inside"
+        if any(_same(mine[0], parent) for parent in theirs[1:]):
+            return "holds"
+    return None
+
+
 def is_real_folder(path: Path, env=os.environ) -> bool:
-    """Whether `path`, followed through links, is one of the player's own CE user folders (or lies inside one)."""
-    target = path.resolve()
-    return any(target == real.resolve() or real.resolve() in target.parents for real in real_folders(env))
+    return real_conflict(path, env) is not None
 
 
-def check_mod_folder(moddir: Path) -> dict:
-    """mod.json and every file it lists, as the loader will check them: the folder is the id, each file is there with its size and SHA-256, and nothing else is staged."""
+def check_mod_folder(moddir: Path, *, expect_name: str | None = None) -> dict:
+    """mod.json and every file it lists, as the loader will check them: the folder is the id (or `expect_name`, for a copy not yet in its place), each file is there with
+    its size and SHA-256, and nothing else is staged."""
+    folder_name = moddir.name if expect_name is None else expect_name
     if moddir.is_symlink() or not moddir.is_dir():
         raise ImportFailure(f"{moddir} is not a folder of a mod")
     try:
@@ -180,8 +221,8 @@ def check_mod_folder(moddir: Path) -> dict:
     except (OSError, ValueError) as error:
         raise ImportFailure(f"{moddir}/mod.json cannot be read: {error}") from None
     mod_id = manifest.get("id") if isinstance(manifest, dict) else None
-    if not isinstance(mod_id, str) or not mod_id or not set(mod_id) <= ID_CHARS or mod_id != moddir.name:
-        raise ImportFailure(f"mod.json's id {mod_id!r} is not the folder's name {moddir.name!r}")
+    if not isinstance(mod_id, str) or not mod_id or not set(mod_id) <= ID_CHARS or mod_id != folder_name:
+        raise ImportFailure(f"mod.json's id {mod_id!r} is not the folder's name {folder_name!r}")
     files = manifest.get("files")
     if not isinstance(files, list) or not files:
         raise ImportFailure("mod.json lists no files")
@@ -203,22 +244,34 @@ def check_mod_folder(moddir: Path) -> dict:
     return manifest
 
 
+MODS_VALUE_LIMIT = 2047                   # CE reads the mods= value into 2,048 bytes, the end mark included
+
+
 def with_mod(ini: bytes, mod_id: str) -> tuple[bytes, list[str]]:
-    """ce.ini's bytes with mod_id at the end of the mods= line (one is added when there is none), and the mods that line named before. Other lines are untouched."""
+    """ce.ini's bytes with mod_id at the end of the mods= line, and the mods that line named before. CE reads a setting as CE_SettingGetText does: lines end at LF (a CR
+    before it belongs to the ending), the key starts the line in exactly that case and the equals sign follows it at once (so MODS=, an indented mods= and mods = are not
+    the setting), blanks around the value are dropped, two such lines make the setting unset, and so does a value with a control byte or of 2,048 bytes or more. So one line is
+    edited and keeps its own ending, two are refused, an unreadable one is refused, and when there is none a line is added at the end in the file's line ending."""
     text = ini.decode("utf-8", "surrogateescape")
-    newline = "\r\n" if "\r\n" in text else "\n"
-    lines = text.split(newline) if text else []
-    at = next((i for i, line in enumerate(lines) if line.strip().lower().startswith("mods=")), None)
-    before: list[str] = []
-    if at is None:
-        if lines and lines[-1] == "":
-            lines.pop()
-        lines.append(f"mods={mod_id}")
-        lines.append("")
-    else:
-        before = [m.strip() for m in lines[at].split("=", 1)[1].split(",") if m.strip()]
-        lines[at] = "mods=" + ",".join([m for m in before if m != mod_id] + [mod_id])
-    return newline.join(lines).encode("utf-8", "surrogateescape"), before
+    lines = text.split("\n")
+    at = [i for i, line in enumerate(lines) if line.startswith("mods=")]
+    if len(at) > 1:
+        raise ImportFailure("ce.ini has two mods= lines, which CE treats as none: keep one of them and run this again")
+    if not at:
+        newline = "\r\n" if "\r\n" in text else "\n"
+        head = text if not text or text.endswith("\n") else text + newline
+        return (head + f"mods={mod_id}" + newline).encode("utf-8", "surrogateescape"), []
+    line = lines[at[0]]
+    ending = "\r" if line.endswith("\r") else ""
+    value = line[len("mods="):len(line) - len(ending)]
+    if any(ord(c) < 0x20 or ord(c) == 0x7F for c in value.strip(" \t")):
+        raise ImportFailure("the mods= line of ce.ini holds a control character, which CE treats as no mods at all: remove the character and run this again")
+    before = [m.strip(" \t") for m in value.split(",") if m.strip(" \t")]
+    new_value = ",".join([m for m in before if m != mod_id] + [mod_id])
+    if len(new_value.encode("utf-8", "surrogateescape")) > MODS_VALUE_LIMIT:
+        raise ImportFailure(f"the mods= line would be longer than the {MODS_VALUE_LIMIT} bytes CE reads: remove a mod from it and run this again")
+    lines[at[0]] = "mods=" + new_value + ending
+    return "\n".join(lines).encode("utf-8", "surrogateescape"), before
 
 
 def stage(moddir: Path, user_dir: Path, *, into_real: bool = False, replace: bool = False, dry_run: bool = False, clock=time.gmtime,
@@ -227,10 +280,11 @@ def stage(moddir: Path, user_dir: Path, *, into_real: bool = False, replace: boo
     player's own CE folder is refused unless `into_real`. An existing ce.ini is kept first. Nothing outside user_dir is touched."""
     manifest = check_mod_folder(moddir)
     mod_id = manifest["id"]
-    real = is_real_folder(user_dir, env)
-    if real and not into_real:
-        raise ImportFailure(f"{user_dir} is your own CE folder (your careers and settings): stage into a fresh folder (the default is {fresh_user_folder(env)}) "
-                            f"or give --into-my-real-folder")
+    relation = real_conflict(user_dir, env)
+    real = relation == "is"
+    if relation is not None and not (real and into_real):
+        raise ImportFailure(f"{user_dir} {relation} your own CE folder (your careers and settings): stage into a fresh folder (the default is "
+                            f"{fresh_user_folder(env)})" + (" or give --into-my-real-folder" if real else ""))
     if user_dir.is_symlink() or (user_dir.exists() and not user_dir.is_dir()):
         raise ImportFailure(f"{user_dir} is not a plain folder")
     if real and not user_dir.is_dir():
@@ -242,6 +296,11 @@ def stage(moddir: Path, user_dir: Path, *, into_real: bool = False, replace: boo
     old = ini.read_bytes() if ini.exists() else b""
     if len(old) > MAX_INI:
         raise ImportFailure(f"{ini} is larger than {MAX_INI} bytes")
+    mods = user_dir / "mods"
+    if mods.is_symlink() or (mods.exists() and not mods.is_dir()):
+        raise ImportFailure(f"{mods} is not a plain folder")
+    if target.is_symlink():
+        raise ImportFailure(f"{target} is a link: remove it yourself first")
     if target.exists() and not replace:
         raise ImportFailure(f"{target} exists already; give --replace to move it aside")
     new, before = with_mod(old, mod_id)
@@ -253,20 +312,38 @@ def stage(moddir: Path, user_dir: Path, *, into_real: bool = False, replace: boo
     if dry_run:
         return plan
     user_dir.mkdir(parents=True, exist_ok=True)
-    (user_dir / "mods").mkdir(exist_ok=True)
-    if plan["iniBackup"]:
-        with open(plan["iniBackup"], "xb") as handle:
-            handle.write(old)
-    if plan["movedAside"]:
-        target.rename(plan["movedAside"])
-    staging = user_dir / "mods" / f".stage-{mod_id}-{stamp}"
-    shutil.copytree(moddir, staging)
-    staging.rename(target)
-    check_mod_folder(target)
+    mods.mkdir(exist_ok=True)
+    staging = mods / f".stage-{mod_id}-{stamp}"
     temporary = user_dir / f".ce.ini.new-{stamp}"
-    with open(temporary, "xb") as handle:
-        handle.write(new)
-    os.replace(temporary, ini)
+    made: list[Path] = []                       # files this call made, taken away again if a later step fails
+    moved = placed = False
+    try:
+        shutil.copytree(moddir, staging)
+        check_mod_folder(staging, expect_name=mod_id)            # what was copied is what mod.json describes, before it is put in its place
+        with open(temporary, "xb") as handle:
+            made.append(temporary)
+            handle.write(new)
+        if plan["iniBackup"]:
+            with open(plan["iniBackup"], "xb") as handle:
+                made.append(Path(plan["iniBackup"]))
+                handle.write(old)
+        if plan["movedAside"]:
+            target.rename(plan["movedAside"])
+            moved = True
+        staging.rename(target)
+        placed = True
+        os.replace(temporary, ini)
+    except BaseException as error:                               # a refusal, a full disk, Ctrl-C: leave what was there before
+        if placed:
+            shutil.rmtree(target, ignore_errors=True)
+        if moved and not target.exists():
+            os.replace(plan["movedAside"], target)
+        shutil.rmtree(staging, ignore_errors=True)
+        for path in made:
+            path.unlink(missing_ok=True)
+        if isinstance(error, OSError):
+            raise ImportFailure(f"the mod could not be put in {target} (nothing was changed): {error.strerror or error}") from None
+        raise
     return plan
 
 
@@ -336,7 +413,8 @@ def main(argv: list[str] | None = None) -> int:
     build_parser.add_argument("--author", default="")
     stage_parser.add_argument("moddir", type=option, help="the mod folder that build wrote")
     stage_parser.add_argument("--user-dir", type=option, default=None,
-                              help=f"the CE user folder to put it in (made when missing; default: {FRESH_FOLDER} beside CE's own, which is refused)")
+                              help=f"the CE user folder to put it in (made when missing; default: {FRESH_FOLDER} beside CE's own; CE's own folder and any folder that holds it or lies "
+                                   f"inside it are refused)")
     stage_parser.add_argument("--into-my-real-folder", action="store_true", help="allow CE's own user folder (careers and settings are there; the level's end screen writes a career)")
     stage_parser.add_argument("--replace", action="store_true", help="move an existing folder of this mod aside instead of refusing")
     stage_parser.add_argument("--dry-run", action="store_true", help="say what would happen and change nothing")

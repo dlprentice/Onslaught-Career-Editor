@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import contextlib
 import copy
+import errno
 import hashlib
 import io
 import json
@@ -21,6 +22,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 import zipfile
 from pathlib import Path
@@ -133,6 +135,31 @@ class SourceTests(ImportCase):
         with mock.patch.object(ps2_disc, "MAX_MEMBER_BYTES", len(self.member) - 1), self.assertRaisesRegex(imp.ImportFailure, "ceiling"):
             imp.read_source(self.member_path)
 
+    def test_a_pipe_a_folder_or_a_device_is_refused_by_name_and_never_waited_on(self) -> None:
+        fifo = self.root / "a-pipe"
+        os.mkfifo(fifo)
+        outcome: list = []
+
+        def attempt() -> None:
+            try:
+                imp.read_source(fifo)
+            except imp.ImportFailure as error:
+                outcome.append(str(error))
+
+        worker = threading.Thread(target=attempt, daemon=True)
+        worker.start()
+        worker.join(5)
+        if worker.is_alive():                      # a reader blocked in open() is let go by a writer, so that the test fails instead of leaving it behind
+            with contextlib.suppress(OSError):
+                os.close(os.open(fifo, os.O_WRONLY | os.O_NONBLOCK))
+            worker.join(5)
+            self.fail("read_source waited on a pipe")
+        self.assertEqual(1, len(outcome))
+        self.assertIn("not a regular file", outcome[0])
+        for other in (self.root, Path("/dev/null")):
+            with self.subTest(str(other)), self.assertRaisesRegex(imp.ImportFailure, "not a regular file"):
+                imp.read_source(other)
+
     def write(self, name: str, data: bytes) -> Path:
         path = self.root / name
         path.write_bytes(data)
@@ -180,8 +207,9 @@ class BuildTests(ImportCase):
         self.assertEqual((lvl.LEVEL, -1, ["RLWD"]), (worlds["realLevel"], worlds["baseLevel"], sorted(worlds["bodies"])))
         self.assertEqual(self.body, worlds["bodies"]["RLWD"])
         self.assertEqual("ps2-copy", result.report["world"])
-        self.assertEqual([{"kind": "mesh", "named by the world's units": lvl.FENRIR_FILELESS_MESH, "used instead": lvl.FENRIR_MESH, "through": lvl.PHYSICS_PATH}],
-                         result.report["standIns"], "the one labelled stand-in is in the report")
+        flagships = sum(1 for thing in self.model["things"] if thing["kind"] == "unit" and thing["definition"] == lvl.FENRIR)
+        self.assertEqual([{"kind": "mesh", "unit definition": lvl.FENRIR, "named": lvl.FENRIR_FILELESS_MESH, "used instead": lvl.FENRIR_MESH,
+                           "through": lvl.PHYSICS_PATH, "unitsInWorld": flagships}], result.report["standIns"], "the one labelled stand-in is in the report, with the units that use it")
         self.assertEqual((None, None), (result.report["lives"], result.report["aiState"]))
         self.assertEqual({"Fenrir", "Venturer", "world888script"}, {s["name"] for s in result.report["scripts"]})
         self.assertEqual(len(self.model["things"]), result.report["archive"]["things"])
@@ -432,6 +460,124 @@ class StageTests(ImportCase):
     def _link(self, link: Path, target: Path) -> Path:
         link.symlink_to(target, target_is_directory=True)
         return link
+
+    def snapshot(self, folder: Path) -> tuple:
+        """Every path under the folder with its bytes (a folder has none): two equal snapshots mean nothing was made, changed or left behind."""
+        return tuple(sorted((str(p.relative_to(folder)), p.read_bytes() if p.is_file() and not p.is_symlink() else None) for p in folder.rglob("*")))
+
+    def test_a_dangling_link_where_the_mod_goes_or_a_mods_folder_that_is_not_plain_is_refused_and_nothing_is_left_behind(self) -> None:
+        (self.ce / "mods").mkdir()
+        (self.ce / "mods" / imp.MOD_ID).symlink_to(self.root / "nowhere", target_is_directory=True)
+        before = self.snapshot(self.ce)
+        for dry_run in (False, True):
+            with self.subTest("a dangling link, dry run" if dry_run else "a dangling link"), self.assertRaisesRegex(imp.ImportFailure, "is a link"):
+                self.stage(dry_run=dry_run)
+            self.assertEqual(before, self.snapshot(self.ce), "no staging folder, no backup, no new ce.ini")
+        for label, make in (("a file", lambda path: path.write_bytes(b"x")), ("a link", lambda path: path.symlink_to(self.ce, target_is_directory=True))):
+            folder = self.root / ("mods-is-" + label.split()[1])
+            folder.mkdir()
+            make(folder / "mods")
+            for dry_run in (False, True):
+                with self.subTest(f"mods is {label}, dry run {dry_run}"), self.assertRaisesRegex(imp.ImportFailure, "not a plain folder"):
+                    imp.stage(self.mod, folder, dry_run=dry_run, clock=self.clock, env=self.env)
+            self.assertEqual(["mods"], [p.name for p in folder.iterdir()])
+
+    def test_a_failure_in_the_middle_of_a_stage_puts_everything_back_as_it_was(self) -> None:
+        self.stage()
+        (self.ce / "mods" / imp.MOD_ID / "marker").write_bytes(b"old")           # an earlier staging, changed, that --replace moves aside
+        before = self.snapshot(self.ce)
+        self.clock = lambda: (2026, 10, 30, 23, 46, 0, 0, 0, 0)
+        real_replace = os.replace
+
+        def full_disk_at_the_ini(source, destination, *args, **kwargs):
+            if str(destination) == str(self.ini):
+                raise OSError(errno.ENOSPC, "No space left on device")
+            return real_replace(source, destination, *args, **kwargs)
+
+        def half_a_copy(source, destination, *args, **kwargs):
+            Path(destination).mkdir()
+            (Path(destination) / "half").write_bytes(b"x")
+            raise OSError(errno.ENOSPC, "No space left on device")
+
+        for label, patched in (("the last step", mock.patch.object(os, "replace", full_disk_at_the_ini)), ("the copy", mock.patch.object(shutil, "copytree", half_a_copy))):
+            with self.subTest(label), patched, self.assertRaisesRegex(imp.ImportFailure, "could not be put in .*nothing was changed"):
+                self.stage(replace=True)
+            self.assertEqual(before, self.snapshot(self.ce), f"a failure of {label} leaves the earlier staging, ce.ini and the folder as they were")
+
+    def test_a_copy_that_is_not_what_mod_json_describes_is_refused_before_it_is_put_in_place(self) -> None:
+        self.stage()
+        before = self.snapshot(self.ce)
+        self.clock = lambda: (2026, 10, 30, 23, 46, 0, 0, 0, 0)
+        real_copytree = shutil.copytree
+
+        def copy_with_a_flipped_byte(source, destination, *args, **kwargs):
+            with mock.patch.object(shutil, "copytree", real_copytree):             # the real function copies the sub-folders too, by its own name
+                result = real_copytree(source, destination, *args, **kwargs)
+            archive = Path(destination) / lvl.ARCHIVE_PATH
+            archive.write_bytes(archive.read_bytes()[:-1] + b"x")
+            return result
+
+        with mock.patch.object(shutil, "copytree", copy_with_a_flipped_byte), self.assertRaisesRegex(imp.ImportFailure, "not the file mod.json describes"):
+            self.stage(replace=True)
+        self.assertEqual(before, self.snapshot(self.ce), "the earlier staging stays, the bad copy and every file made for it are gone")
+
+    def test_a_folder_that_holds_the_players_own_folder_or_lies_inside_it_is_refused_even_with_the_flag(self) -> None:
+        self.make_real()
+        before = self.snapshot(self.root / "xdg")
+        cases = {"its parent": self.real.parent, "its grandparent": self.real.parent.parent, "a folder inside it": self.real / "inside" / "deeper"}
+        for label, folder in cases.items():
+            for into_real in (False, True):
+                for dry_run in (False, True):
+                    with self.subTest(label, into_real=into_real, dry_run=dry_run), self.assertRaisesRegex(imp.ImportFailure, "(holds|is inside) your own CE folder"):
+                        imp.stage(self.mod, folder, into_real=into_real, dry_run=dry_run, clock=self.clock, env=self.env)
+        self.assertEqual(before, self.snapshot(self.root / "xdg"))
+        self.assertEqual(["holds", "holds", "is inside"], [imp.real_conflict(folder, self.env) for folder in cases.values()])
+        self.assertEqual("is", imp.real_conflict(self.real, self.env))
+        self.assertIsNone(imp.real_conflict(self.ce, self.env))
+
+    def test_identity_is_by_device_and_inode_so_another_name_for_the_players_folder_is_refused(self) -> None:
+        self.make_real()
+        alias = self.root / "another-name"                                         # as a bind mount makes one: a different path on the same folder
+        alias.mkdir()
+        original = imp._stat
+
+        def stat_with_alias(path):
+            return original(self.real) if Path(path) == alias.resolve() else original(path)
+
+        with mock.patch.object(imp, "_stat", stat_with_alias):
+            self.assertEqual("is", imp.real_conflict(alias, self.env))
+            self.assertEqual("is inside", imp.real_conflict(alias / "sub", self.env))
+            with self.assertRaisesRegex(imp.ImportFailure, "is your own CE folder"):
+                imp.stage(self.mod, alias, clock=self.clock, env=self.env)
+        self.assertEqual([], list(alias.iterdir()))
+        self.assertIsNone(imp.real_conflict(alias, self.env), "without that, it is only another folder")
+
+    def test_the_mods_line_is_found_as_ce_finds_it(self) -> None:
+        mod = imp.MOD_ID.encode()
+        for line in (b"MODS=x", b"  mods=x", b"mods =x", b"#mods=x", b"modsx=x", b"my_mods=x", b"mods"):
+            with self.subTest(line):                                               # none of these is the setting for CE: the line is added and the original stays
+                self.assertEqual((line + b"\nmods=" + mod + b"\n", []), imp.with_mod(line + b"\n", imp.MOD_ID))
+        self.assertEqual((b"MODS=b\nmods=a," + mod + b"\n", ["a"]), imp.with_mod(b"MODS=b\nmods=a\n", imp.MOD_ID), "only the line CE reads is edited")
+        self.assertEqual((b"a=1\nmods=x," + mod + b"\r\nb=2\n", ["x"]), imp.with_mod(b"a=1\nmods=x\r\nb=2\n", imp.MOD_ID), "a line keeps its own ending")
+        self.assertEqual((b"a=1\r\nb=2\r\nmods=" + mod + b"\r\n", []), imp.with_mod(b"a=1\r\nb=2", imp.MOD_ID), "an added line takes the file's ending")
+        self.assertEqual((b"a=1\nmods=" + mod + b"\n", []), imp.with_mod(b"a=1", imp.MOD_ID))
+        self.assertEqual((b"mods=a,b," + mod + b"\n", ["a", "b"]), imp.with_mod(b"mods= a , b\t\n", imp.MOD_ID), "blanks around a value and its ids are dropped")
+
+    def test_two_mods_lines_a_control_byte_or_a_value_too_long_for_ce_are_refused_before_anything_is_written(self) -> None:
+        pad = "a" * (2047 - len(",") - len(imp.MOD_ID))                    # CE reads the value into a 2,048-byte buffer, so 2,047 bytes are the most it takes
+        self.assertEqual(2047, len(imp.with_mod(f"mods={pad}\n".encode(), imp.MOD_ID)[0]) - len("mods=") - len("\n"), "the longest value CE reads is accepted")
+        cases = {"two lines": (b"mods=a\nmods=b\n", "two mods= lines"), "two lines, one empty": (b"mods=a\r\nx=1\r\nmods=\r\n", "two mods= lines"),
+                 "a control byte": (b"mods=a\x01b\n", "control character"), "a delete byte": (b"mods=a\x7fb\n", "control character"),
+                 "a tab inside": (b"mods=a\tb\n", "control character"), "one byte too long": (f"mods={pad}a\n".encode(), "longer than")}
+        for label, (ini, fragment) in cases.items():
+            with self.subTest(label), self.assertRaisesRegex(imp.ImportFailure, fragment):
+                imp.with_mod(ini, imp.MOD_ID)
+            self.ini.write_bytes(ini)
+            before = self.snapshot(self.ce)
+            for dry_run in (False, True):
+                with self.subTest(label + ", through stage", dry_run=dry_run), self.assertRaisesRegex(imp.ImportFailure, fragment):
+                    self.stage(dry_run=dry_run)
+            self.assertEqual(before, self.snapshot(self.ce), "no copy, no backup, no new ce.ini")
 
     def test_a_mod_folder_that_is_not_what_mod_json_says_is_refused_before_anything_is_written(self) -> None:
         def change_file(folder: Path) -> None:

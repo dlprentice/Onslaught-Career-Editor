@@ -233,12 +233,14 @@ publish, sign, or install anything by themselves.
   are pinned by SHA-256 (another digest is a warning, `--strict-pins` a refusal). `level888_ps2_import.py inspect|build|stage` builds
   level 888 from that member: `inspect` prints counts only; `build SOURCE --game DIR --out PARENT --ce-min VERSION` calls
   `level888_build.build(world_body=...)`, so the mod's world, units, waypoints and scripts are the PS2 copy's (the header must equal
-  the player's `worldheaders.dat` record for 888) on level 857's terrain, with the one mesh the PC game has no file for redirected to
+  the player's `worldheaders.dat` record for 888) on level 857's terrain without that level's baked shadows (the disc's own shadow chunk replaces them), with the one mesh the PC game has no file for redirected to
   its own Fenrir mesh through the same one-field edit of `data/default physics.dat`; `stage MODDIR` copies the mod into a fresh CE user
   folder of its own (default `onslaught-ce-level888` beside CE's own) and prints the one line that starts the level there
   (`BEA_USER_DIR=<folder> onslaught-ce -level 888`), because the level's end screen takes the single-player route and writes a career:
-  CE's own user folder, and the one `BEA_USER_DIR` names, are refused unless `--into-my-real-folder` is given; an existing `ce.ini` is
-  kept as `ce.ini.bak-<time>`, a mod folder is never overwritten, `--dry-run` changes nothing. Nothing derived from the image is committed, shipped or sent anywhere. Both tools' tests run on authored images and folders;
+  CE's own user folder, and the one `BEA_USER_DIR` names, are refused unless `--into-my-real-folder` is given, and a folder that holds
+  one of them or lies inside it is always refused (compared by name, link, device and inode); an existing `ce.ini` is kept as
+  `ce.ini.bak-<time>` and its `mods=` line is edited as CE reads it (two such lines are refused), a mod folder is never overwritten,
+  the copy is checked against `mod.json` before it is put in place and everything is put back if a step fails, `--dry-run` changes nothing. Nothing derived from the image is committed, shipped or sent anywhere. Both tools' tests run on authored images and folders;
   their retail gates run when `BEA_PS2_IMAGE` (and `BEA_GAME`) name the player's own files.
   `world_edit_preview.py BASELINE.wrd EDITED.json` is a read-only step before encoding or preparing a stage bundle. It reports input
   hashes, byte and field changes, changes to opaque groups and slot-sensitive structures, and bounded compiled-script
