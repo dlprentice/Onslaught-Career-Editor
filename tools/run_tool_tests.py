@@ -52,6 +52,7 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/world_mod_stage_tests.py",),
     ("tools/level888_build_tests.py",),
     ("tools/level888_ps2_import_tests.py",),
+    ("tools/level888_ps2_gate_tests.py",),
     ("tools/world_edit_preview_tests.py",),
     ("tools/world_edit_move_tests.py",),
     ("tools/world_thing_index_tests.py",),

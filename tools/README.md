@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-30 (`ps2_disc.py` and `level888_ps2_import.py`: level 888 built from the player's own PS2 copy, and `level888_build.build(world_body=...)`; `level888_build.py` and `world_mod_stage.stage_mod(files=...)`: a generated level archive and replaced files as a CE mod; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-30 (`level888_ps2_gate.py`: the independent gate of the PS2 build; `ps2_disc.py` and `level888_ps2_import.py`: level 888 built from the player's own PS2 copy, and `level888_build.build(world_body=...)`; `level888_build.py` and `world_mod_stage.stage_mod(files=...)`: a generated level archive and replaced files as a CE mod; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -240,6 +240,13 @@ publish, sign, or install anything by themselves.
   CE's own user folder, and the one `BEA_USER_DIR` names, are refused unless `--into-my-real-folder` is given; an existing `ce.ini` is
   kept as `ce.ini.bak-<time>`, a mod folder is never overwritten, `--dry-run` changes nothing. Nothing derived from the image is committed, shipped or sent anywhere. Both tools' tests run on authored images and folders;
   their retail gates run when `BEA_PS2_IMAGE` (and `BEA_GAME`) name the player's own files.
+  `level888_ps2_gate.py gate SOURCE --game DIR --work PRIVATE` is the independent gate of that build: it runs the library build twice and the importer,
+  and reads their output files against the member and the game folder with its own reading (the loader's walk, the archive's world body equal to the
+  member's byte for byte, the donor's chunks kept in order, the closure complete, the physics file the original with one mesh name changed, the report's
+  figures, the staged mod folder against `mod.json`); it prints counts and booleans only, and refuses a work folder inside the repository except under
+  `local-data/` and `local-lab/`. Three of its checks describe the disc's world and not the builder (world type, the scripts its things name, its start
+  points): a failure there is a `note`, a finding about the input, and leaves the exit code alone. Its tests run on authored files; its retail gate runs when
+  `BEA_PS2_MEMBER` (or `BEA_PS2_IMAGE`), `BEA_GAME` and `BEA_GATE_WORK` are set.
   `world_edit_preview.py BASELINE.wrd EDITED.json` is a read-only step before encoding or preparing a stage bundle. It reports input
   hashes, byte and field changes, changes to opaque groups and slot-sensitive structures, and bounded compiled-script
   inspection findings. It also identifies model fields the encoder would silently omit. An omitted field, truncated
