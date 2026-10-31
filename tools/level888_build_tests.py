@@ -577,6 +577,46 @@ class BuildTests(FolderTest):
         lvl.stage_build(result, self.game, out, ce_min="0.1.13")
         self.assertEqual([], stager_tests.LoaderRules.problems(out / lvl.MOD_ID, self.game))
 
+    def test_an_inline_mesh_is_one_chunk_that_holds_its_data_and_the_physics_file_is_left_alone(self) -> None:
+        stream = cmsh_stream("fenrir-multiplayer.msh", ["meshtex\\BOSSfenrir.tga", "meshtex\\BOSSfenrir-int.tga"])
+        result = self.build(inline_meshes={"fenrir-multiplayer.msh": stream})
+        self.assertEqual({lvl.ARCHIVE_PATH}, set(result.files), "no replaced file: the physics file is the game's own")
+        report = result.report
+        self.assertIsNone(report["physics"])
+        self.assertEqual([], report["standIns"])
+        self.assertIn("fenrir-multiplayer.msh", report["closure"]["meshes"])
+        self.assertNotIn("boss-fenrir.msh", report["closure"]["meshes"], "the Fenrir no longer stands in for itself")
+        self.assertEqual([{"name": "fenrir-multiplayer.msh", "runtimeId": lvl.INLINE_MESH_ID, "streamBytes": len(stream), "chunkBytes": 16 + 309 + len(stream),
+                           "streamSha256": lvl.sha256(stream), "textures": ["meshtex\\BOSSfenrir.tga", "meshtex\\BOSSfenrir-int.tga"]}], report["inlineMeshes"])
+        chunks = self.unpacked(result)
+        meshes = [payload for tag, payload in chunks if tag == "MESH"]
+        unnamed = [m for m in meshes if m[16] == 0]
+        self.assertEqual(1, len(unnamed))
+        row = unnamed[0]
+        self.assertEqual((b"PMSH", len(row) - 8, b"PMS2", len(row) - 16), (row[:4], struct.unpack_from("<I", row, 4)[0], row[8:12], struct.unpack_from("<I", row, 12)[0]))
+        self.assertEqual(bytes(300), row[16:316], "an all-zero name is what makes the game read the data from the archive")
+        self.assertEqual((lvl.INLINE_MESH_ID, 0, 1), (struct.unpack_from("<i", row, 316)[0], struct.unpack_from("<i", row, 320)[0], row[324]), "id, optional word, kept flag")
+        self.assertEqual(stream, row[325:])
+        named = [m[16:316].split(b"\0")[0].decode() for m in meshes if m[16]]
+        self.assertNotIn("fenrir-multiplayer.msh", named, "no descriptor of a file the game folder lacks")
+        self.assertEqual(len(named) + 1, len(meshes))
+        self.assertEqual(max(i for i, (tag, _) in enumerate(chunks) if tag == "MESH"), [i for i, (tag, p) in enumerate(chunks) if p is row][0], "the inline row is the last MESH chunk")
+        texts = [p[8:8 + 160].split(b"\0")[0].decode() for tag, p in chunks if tag == "TEXT" and len(p) > 16]
+        self.assertTrue({"meshtex\\BOSSfenrir.tga", "meshtex\\BOSSfenrir-int.tga"} <= {x for x in texts} | {x for x in report["closure"]["textures"]})
+        out = self.root / "inline-mods"
+        lvl.stage_build(result, self.game, out, ce_min="0.1.13")
+        self.assertEqual([], stager_tests.LoaderRules.problems(out / lvl.MOD_ID, self.game))
+        manifest = json.loads((out / lvl.MOD_ID / "mod.json").read_bytes())
+        self.assertEqual([lvl.ARCHIVE_PATH], [f["path"] for f in manifest["files"]])
+        self.assertIn("replaces nothing", manifest["description"])
+
+    def test_an_inline_mesh_no_unit_needs_or_that_is_not_a_mesh_stream_is_refused(self) -> None:
+        stream = cmsh_stream("fenrir-multiplayer.msh", ["meshtex\\BOSSfenrir.tga"])
+        with self.assertRaisesRegex(lvl.BuildError, "is not one that a unit of the world needs"):
+            self.build(inline_meshes={"fenrir-multiplayer.msh": stream, "no-such-mesh.msh": stream})
+        with self.assertRaisesRegex(lvl.BuildError, "not a CMSH stream"):
+            self.build(inline_meshes={"fenrir-multiplayer.msh": b"not a mesh" * 40})
+
     def test_the_build_is_deterministic_and_reads_the_folder_only(self) -> None:
         before = {p: p.read_bytes() for p in self.game.rglob("*") if p.is_file()}
         stamps = {p: p.stat().st_mtime_ns for p in before}

@@ -70,6 +70,7 @@ FENRIR_MESH = "boss-fenrir.msh"                    # the Fenrir the PC game does
 MOD_ID = "flagship-duel"
 ARCHIVE_PATH = "data/resources/888_res_PC.aya"
 PHYSICS_PATH = "data/default physics.dat"
+INLINE_MESH_ID = 20000                # the first runtime id of an inline mesh (the CE walker admits 20000 to 29999; no shipped mesh uses one)
 WORLDHEADERS_PATH = "data/worldheaders.dat"
 DEFAULT_LIVES = 3
 
@@ -617,17 +618,33 @@ def disc_world(body: bytes, record: headers.WorldHeaderRecord) -> dict:
     return model
 
 
+def inline_mesh_payload(stream: bytes, runtime_id: int = INLINE_MESH_ID, kept: bool = True) -> bytes:
+    """A MESH chunk's payload for a mesh whose data is in the chunk: PMSH around a PMS2 that holds the 309-byte reference (an all-zero name, which is what
+    makes CMesh::Deserialize read the data from the archive; the runtime id; no optional word; the kept flag, which keeps the mesh's collision grids) and then
+    the mesh's CMSH stream."""
+    reference = bytearray(309)
+    struct.pack_into("<ii", reference, 300, runtime_id, 0)
+    reference[308] = 1 if kept else 0
+    body = bytes(reference) + stream
+    return b"PMSH" + struct.pack("<I", len(body) + 8) + b"PMS2" + struct.pack("<I", len(body)) + body
+
+
 def build(install: Install, *, lives: int = DEFAULT_LIVES, ai_state: int | None = None, world_body: bytes | None = None,
-          shadows: bytes | None = None) -> Build:
+          shadows: bytes | None = None, inline_meshes: dict | None = None) -> Build:
     """Level 888's mod files from the player's game folder (nothing is written; see stage_build). With `world_body`, the world is the PS2 copy's
     (see disc_world): its own scripts, units and waypoints are used as they are, and `lives` and `ai_state` have no part in it. With `shadows`, the
     donor's baked static shadows (those of its own features, which this world does not have) are replaced by the PS2 copy's shadow chunk, which must
-    read with the decoder (the PC game's own chunk for a level with no shadows is the same 28 bytes)."""
+    read with the decoder (the PC game's own chunk for a level with no shadows is the same 28 bytes). With `inline_meshes` ({mesh name: the mesh's CMSH stream}),
+    each named mesh that a unit needs goes into the archive as a MESH chunk of its own that holds the data (one is the most the CE walker admits), instead of a
+    descriptor of a file the game folder lacks: when that is the Fenrir's, the physics file stays as the game has it and the mod does not replace it."""
     sources = script_sources(lives, ai_state)
     if install.has(ARCHIVE_PATH):
         raise BuildError(f"the game folder already has {ARCHIVE_PATH}: a mod can only add an archive the game lacks")
     original = install.read(PHYSICS_PATH, LIMIT_SMALL)
-    physics_bytes = redirect_unit_mesh(original, FENRIR, FENRIR_FILELESS_MESH, FENRIR_MESH)
+    inline = {name.lower(): (name, stream) for name, stream in (inline_meshes or {}).items()}
+    if len(inline) != len(inline_meshes or {}):
+        raise BuildError("two inline meshes have one name")
+    physics_bytes = original if FENRIR_FILELESS_MESH.lower() in inline else redirect_unit_mesh(original, FENRIR, FENRIR_FILELESS_MESH, FENRIR_MESH)
     physics = Physics(physics_bytes)
     units, meshes, textures, per_mesh = [], [], [], {}
     disc = None if world_body is None else disc_world(world_body, headers.parse_worldheaders(install.read(WORLDHEADERS_PATH, LIMIT_SMALL)).by_world(LEVEL))
@@ -636,15 +653,28 @@ def build(install: Install, *, lives: int = DEFAULT_LIVES, ai_state: int | None 
         ship_units, ship_meshes = physics.closure(ship)
         units += [u for u in ship_units if u not in units]
         meshes += [m for m in ship_meshes if m.lower() not in (known.lower() for known in meshes)]
+    unused = sorted(set(inline) - {m.lower() for m in meshes})
+    if unused:
+        raise BuildError(f"the inline mesh {inline[unused[0]][0]!r} is not one that a unit of the world needs")
     for name in meshes:
-        per_mesh[name] = mesh_textures(install, name)
+        per_mesh[name] = texture_names(inline[name.lower()][1]) if name.lower() in inline else mesh_textures(install, name)
         for texture in per_mesh[name]:
             if normalize_asset_name(texture) not in (normalize_asset_name(known) for known in textures):
                 textures.append(texture)
 
     donor = unpack(install, DONOR)
     source_chunks = {level: unpack(install, level) for level in SOURCES}
-    merged, added = merge_descriptors(donor, source_chunks, meshes, textures)
+    merged, added = merge_descriptors(donor, source_chunks, [m for m in meshes if m.lower() not in inline], textures)
+    inline_report = []
+    if inline:
+        at = max(i for i, (tag, _) in enumerate(merged) if tag == "MESH") + 1
+        rows = []
+        for n, (name, stream) in enumerate(sorted(inline.values(), key=lambda item: item[0].lower())):
+            payload = inline_mesh_payload(stream, INLINE_MESH_ID + n)
+            rows.append(("MESH", payload))
+            inline_report.append({"name": name, "runtimeId": INLINE_MESH_ID + n, "streamBytes": len(stream), "chunkBytes": len(payload),
+                                  "streamSha256": sha256(stream), "textures": per_mesh.get(name, [])})
+        merged[at:at] = rows
     donor_shadows = None
     if shadows is not None:
         try:
@@ -677,7 +707,7 @@ def build(install: Install, *, lives: int = DEFAULT_LIVES, ai_state: int | None 
     if unpacked != raw:
         raise BuildError("the generated archive did not unpack to the stream that was packed")
 
-    files = {ARCHIVE_PATH: archive, PHYSICS_PATH: physics_bytes}
+    files = {ARCHIVE_PATH: archive} if physics_bytes == original else {ARCHIVE_PATH: archive, PHYSICS_PATH: physics_bytes}
     report = {
         "level": LEVEL, "donor": DONOR, "sources": list(SOURCES),
         "closure": {"units": units, "meshes": meshes, "textures": textures,
@@ -685,14 +715,16 @@ def build(install: Install, *, lives: int = DEFAULT_LIVES, ai_state: int | None 
         "added": added,
         "archive": {"path": ARCHIVE_PATH, "size": len(archive), "sha256": sha256(archive), "unpackedSize": len(raw),
                     "chunks": len(merged), "worldBodyBytes": len(body), "things": len(model["things"])},
-        "physics": {"path": PHYSICS_PATH, "size": len(physics_bytes), "sha256": sha256(physics_bytes), "was": len(original),
-                    "unit": FENRIR, "mesh": f"{FENRIR_FILELESS_MESH} -> {FENRIR_MESH}"},
+        "physics": ({"path": PHYSICS_PATH, "size": len(physics_bytes), "sha256": sha256(physics_bytes), "was": len(original),
+                     "unit": FENRIR, "mesh": f"{FENRIR_FILELESS_MESH} -> {FENRIR_MESH}"} if physics_bytes != original else None),
+        "inlineMeshes": inline_report,
         "scripts": [{"name": r["name"], "instructions": len(r["code"]["instructions"]), "handlers": len(r["code"]["eventFunctions"])}
                     for r in scripts],
         "lives": lives if disc is None else None, "aiState": ai_state if disc is None else None,
         "world": "authored" if disc is None else "ps2-copy",
-        "standIns": [{"kind": "mesh", "unit definition": FENRIR, "named": FENRIR_FILELESS_MESH, "used instead": FENRIR_MESH, "through": PHYSICS_PATH,
-                      "unitsInWorld": sum(1 for d in ((t["definition"] for t in disc["things"] if t["kind"] == "unit") if disc is not None else ships) if d == FENRIR)}],
+        "standIns": ([{"kind": "mesh", "unit definition": FENRIR, "named": FENRIR_FILELESS_MESH, "used instead": FENRIR_MESH, "through": PHYSICS_PATH,
+                       "unitsInWorld": sum(1 for d in ((t["definition"] for t in disc["things"] if t["kind"] == "unit") if disc is not None else ships) if d == FENRIR)}]
+                     if physics_bytes != original else []),
         "shadows": {"from": "donor" if shadows is None else "ps2-copy", "bytes": len(shadows) if shadows is not None else None,
                     "donorBytes": donor_shadows, **(counts if shadows is not None else {})},
         "inputs": dict(sorted(install.reads.items())),
@@ -701,7 +733,12 @@ def build(install: Install, *, lives: int = DEFAULT_LIVES, ai_state: int | None 
     return Build(files, report, list(install.warnings))
 
 
-def description(ce_min: str, lives: int | None = DEFAULT_LIVES) -> str:
+def description(ce_min: str, lives: int | None = DEFAULT_LIVES, inline_mesh: bool = False) -> str:
+    if inline_mesh:
+        origin = "your own PS2 copy and this game's own files" if lives is None else "this game's own files"
+        return (f"TEST BUILD, not for play: Level 888, a Fenrir against a Venturer, built on this machine from {origin} (nothing downloaded). EXPERIMENTAL. The Fenrir model is carried "
+                "inside the level archive in the PC mesh form (converted from the PS2 copy's), so the mod adds data/resources/888_res_PC.aya and replaces nothing. "
+                f"Needs a CE whose walker admits one inline mesh ({ce_min} or newer with that change).")
     if lives is None:
         return ("Level 888, a Fenrir against a Venturer, built on this machine from your own PS2 copy and this game's own files (nothing downloaded). "
                 "EXPERIMENTAL. FROM YOUR PS2 COPY: the world (the places of the two flagships, the start points, the waypoints), its three scripts and its "
@@ -721,7 +758,7 @@ def stage_build(result: Build, game: Path, out: Path, *, ce_min: str, mod_id: st
     """Write the mod folder <out>/<mod_id>/ through world_mod_stage (a new folder only, never inside the game folder)."""
     try:
         return stage.stage_mod(out, game, mod_id, None, name=name, version=version, author=author,
-                               description=description(ce_min, result.report["lives"]), ce_min=ce_min, ce_max=ce_max,
+                               description=description(ce_min, result.report["lives"], bool(result.report["inlineMeshes"])), ce_min=ce_min, ce_max=ce_max,
                                files=result.files)
     except stage.ModStageError as error:
         raise BuildError(str(error)) from error

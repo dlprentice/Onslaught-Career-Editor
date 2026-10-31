@@ -62,7 +62,13 @@ def mesp(groups, **more) -> bytes:
 
 
 def stream(parts, texture_ids=(3, 1)) -> bytes:
-    top = [chunk(b"CMSH", bytes(range(256)) + bytes(116)), chunk(b"CMST", bytes(36 * len(texture_ids)))]
+    head = bytearray(bytes(range(256)) + bytes(116))
+    struct.pack_into("<ii", head, 4, len(texture_ids), 0)
+    struct.pack_into("<i", head, 0x15C, len(parts))
+    table = bytearray(36 * len(texture_ids))
+    for i in range(len(texture_ids)):
+        struct.pack_into("<i", table, 36 * i + 8, 1)
+    top = [chunk(b"CMSH", bytes(head)), chunk(b"CMST", bytes(table))]
     top += [chunk(b"MSHT", chunk(b"TEXB", bytes(range(20)) + struct.pack("<I", i))) for i in texture_ids]
     return b"".join(top + list(parts) + [chunk(b"BBOX", bytes(48))])
 

@@ -45,6 +45,7 @@ sys.path.insert(0, str(TOOLS))
 
 import level888_build as lvl  # noqa: E402
 import ps2_disc  # noqa: E402
+import ps2_mesh  # noqa: E402
 import world_resources_encode as enc  # noqa: E402
 
 MOD_ID = "flagship-duel-ps2"
@@ -138,16 +139,19 @@ def inspect(member: bytes) -> dict:
 
 # ---- the build ----------------------------------------------------------------------------------------------------------
 def build(source: Path, game: Path, out: Path, *, ce_min: str, mod_id: str = MOD_ID, name: str = MOD_NAME, version: str = "1", author: str = "",
-          ce_max: str | None = None, strict_pins: bool = False) -> tuple[dict, dict]:
-    """Read the member, build the mod with the disc's world and stage it as <out>/<mod_id>/. Returns (the staging summary, the build report with the source)."""
+          ce_max: str | None = None, strict_pins: bool = False, mesh: bool = False) -> tuple[dict, dict]:
+    """Read the member, build the mod with the disc's world and stage it as <out>/<mod_id>/. Returns (the staging summary, the build report with the source).
+    With `mesh`, the Fenrir the PS2 copy uses is converted (ps2_mesh.py) and carried in the level archive as an inline mesh, and the physics file is left alone: a test
+    build for a CE whose walker admits one inline mesh, not the build to give a player."""
     member, record = read_source(source, strict_pins=strict_pins)
     body = world_body(member)
     install = lvl.Install(game, strict_pins=strict_pins)
     try:
-        result = lvl.build(install, world_body=body, shadows=shadow_chunk(member))
+        inline = {lvl.FENRIR_FILELESS_MESH: ps2_mesh.convert_member_mesh(member, lvl.FENRIR_FILELESS_MESH)} if mesh else None
+        result = lvl.build(install, world_body=body, shadows=shadow_chunk(member), inline_meshes=inline)
         summary = lvl.stage_build(result, enc.selected_game_root(game), out, ce_min=ce_min, mod_id=mod_id, name=name, version=version, author=author,
                                   ce_max=ce_max)
-    except (lvl.BuildError, enc.EncodeError) as error:
+    except (lvl.BuildError, enc.EncodeError, ps2_mesh.Ps2MeshError) as error:
         raise ImportFailure(str(error)) from error
     report = dict(result.report) | {"member": record}
     report["warnings"] = list(result.warnings) + record["warnings"]
@@ -362,7 +366,7 @@ def cmd_inspect(args) -> int:
 
 def cmd_build(args) -> int:
     summary, report = build(args.source, args.game, args.out, ce_min=args.ce_min, mod_id=args.id, name=args.name, version=args.version,
-                            author=args.author or "", ce_max=args.ce_max, strict_pins=args.strict_pins)
+                            author=args.author or "", ce_max=args.ce_max, strict_pins=args.strict_pins, mesh=args.mesh)
     for warning in report["warnings"]:
         print(f"warning: {warning}", file=sys.stderr)
     print(f"built CE mod {args.id!r} in {summary['root']} from the PS2 copy ({report['member']['from']}), the world of {report['archive']['things']} things as the disc holds it")
@@ -411,6 +415,7 @@ def main(argv: list[str] | None = None) -> int:
     build_parser.add_argument("--name", default=MOD_NAME)
     build_parser.add_argument("--version", default="1")
     build_parser.add_argument("--author", default="")
+    build_parser.add_argument("--mesh", action="store_true", help="TEST BUILD: carry the converted PS2 Fenrir inside the level archive (needs a CE whose walker admits an inline mesh) and leave the physics file alone")
     stage_parser.add_argument("moddir", type=option, help="the mod folder that build wrote")
     stage_parser.add_argument("--user-dir", type=option, default=None,
                               help=f"the CE user folder to put it in (made when missing; default: {FRESH_FOLDER} beside CE's own; CE's own folder and any folder that holds it or lies "

@@ -234,7 +234,7 @@ publish, sign, or install anything by themselves.
   level 888 from that member: `inspect` prints counts only; `build SOURCE --game DIR --out PARENT --ce-min VERSION` calls
   `level888_build.build(world_body=...)`, so the mod's world, units, waypoints and scripts are the PS2 copy's (the header must equal
   the player's `worldheaders.dat` record for 888) on level 857's terrain without that level's baked shadows (the disc's own shadow chunk replaces them), with the one mesh the PC game has no file for redirected to
-  its own Fenrir mesh through the same one-field edit of `data/default physics.dat`; `stage MODDIR` copies the mod into a fresh CE user
+  its own Fenrir mesh through the same one-field edit of `data/default physics.dat` (`build --mesh` instead converts the PS2 copy's own multiplayer Fenrir with `ps2_mesh.py` and carries it inside the archive as its one unnamed `MESH` chunk, so the physics file is left alone; that archive is a TEST BUILD, and its description says so, until CE's added-archive walker checks an inline mesh the way the loader reads it); `stage MODDIR` copies the mod into a fresh CE user
   folder of its own (default `onslaught-ce-level888` beside CE's own) and prints the one line that starts the level there
   (`BEA_USER_DIR=<folder> onslaught-ce -level 888`), because the level's end screen takes the single-player route and writes a career:
   CE's own user folder, and the one `BEA_USER_DIR` names, are refused unless `--into-my-real-folder` is given, and a folder that holds
