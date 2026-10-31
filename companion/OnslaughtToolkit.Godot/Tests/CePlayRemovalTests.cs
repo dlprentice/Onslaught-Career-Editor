@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// Four deterministic checks that pin "every step of the removal is by name in an open folder", proposed by the reviewer (Peer E, review of the Play button, request R7) and taken as
-// he wrote them: with the tests of CePlayTests alone, putting back a path-based unlink of a file, a path-based rmdir of a nested folder, a path-based rmdir of the temporary
+// Four deterministic checks that pin "every step of the removal is by name in an open folder", requested in the review of the Play button (request R7) and taken as
+// written there: with the tests of CePlayTests alone, putting back a path-based unlink of a file, a path-based rmdir of a nested folder, a path-based rmdir of the temporary
 // folder, a link-following open of the temporary folder or one of the play folder all passed; with these four each of them fails. They work through the CePlayFolder.AfterKind hook.
 using System.Runtime.Versioning;
 using OnslaughtToolkit.Companion.Game;
