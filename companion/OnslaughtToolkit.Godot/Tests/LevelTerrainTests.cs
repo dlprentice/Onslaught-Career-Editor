@@ -18,6 +18,7 @@ internal static class LevelTerrainTests
 {
     internal static void Run(string outputDirectory, Checks check)
     {
+        TerrainSurfaceTests.Run(check, Heightfield.Read(Eres()));
         check.Suite("level terrain");
         Stage(check, "the terrain vector", () => Vector(check));
         Stage(check, "the test's terrain builder", () => Builder(check));
