@@ -597,6 +597,168 @@ class CommandLineTests(GateCase):
         self.assertEqual(2, done.returncode)
 
 
+STAGE_DRY = "stage --dry-run changes nothing and names the line that starts the level"
+STAGE_FRESH = "stage into a fresh folder puts the mod there byte for byte and a ce.ini that CE reads as naming it, and nothing else"
+STAGE_TWICE = "a second stage of the same mod is refused and changes nothing"
+STAGE_REPLACE = "stage --replace keeps the old copy aside and a backup of ce.ini, names the mod once and leaves nothing half-made"
+STAGE_INI = "an existing ce.ini keeps its other settings, its line endings and the mods it already named, and is backed up"
+STAGE_STAND_IN = "a ce.ini that names the stand-in mod too is said so in the plan, and both stay named"
+STAGE_REAL = "the player's own CE folder, a link to it and a folder that holds it or lies inside it are refused, with or without the flag, and left as they were"
+STAGE_FLAG = "with --into-my-real-folder only the mods line changes, the career stays, ce.ini is backed up and the launch line has no BEA_USER_DIR"
+STAGE_NO_MODS = "a ce.ini that CE would read as no mods, or that is not a plain file, is refused and the folder is left as it was"
+STAGE_LIMIT = "the mods= limit is exact: 2,047 bytes are accepted and CE reads them, 2,048 are refused"
+STAGE_FAILURE = "a failure at the final ce.ini swap, or while the mod is copied, leaves the folder byte for byte as it was"
+STAGE_UNTOUCHED = "no case touched the player's own CE folder (except the one allowed by the flag) or a bystander folder beside it"
+STAGE_ALL = {STAGE_DRY, STAGE_FRESH, STAGE_TWICE, STAGE_REPLACE, STAGE_INI, STAGE_STAND_IN, STAGE_REAL, STAGE_FLAG, STAGE_NO_MODS, STAGE_LIMIT, STAGE_FAILURE, STAGE_UNTOUCHED}
+
+
+# ---- stage ---------------------------------------------------------------------------------------------------------------------
+class CeReadingTests(unittest.TestCase):
+    """The gate's transcription of CE_SettingGetText (port/platform/common/ce.cpp) that it reads every staged ce.ini with."""
+
+    def test_the_setting_is_read_the_way_ce_reads_it(self) -> None:
+        read = gate.ce_setting_text
+        for label, ini, want in (
+                ("a plain line", b"mods=a\n", "a"), ("no final newline", b"mods=a", "a"), ("blanks and a CR around the value", b"mods= a , b \r\n", "a , b"),
+                ("after other lines", b"x=1\r\nmods=a\nz=2\n", "a"), ("a tab around the value", b"mods=\ta\t\n", "a"),
+                ("upper-case key", b"MODS=a\n", None), ("indented key", b" mods=a\n", None), ("blank before the equals sign", b"mods =a\n", None),
+                ("another key that ends the same", b"xmods=a\n", None), ("a longer key", b"modsx=a\n", None), ("an empty value", b"mods=\n", None),
+                ("only blanks", b"mods=  \r\n", None), ("two lines", b"mods=a\nmods=b\n", None), ("two lines, the second empty", b"mods=a\nmods=\n", None),
+                ("a control byte", b"mods=a\x01b\n", None), ("a DEL", b"mods=a\x7fb\n", None), ("two CRs, one of them belongs to the value", b"mods=a\r\r\n", None),
+                ("a CR inside the value", b"mods=a\rb\n", None), ("no such key", b"fullscreen=1\n", None), ("nothing", b"", None)):
+            self.assertEqual(want, read(ini, "mods"), label)
+
+    def test_the_limit_is_2047_bytes_of_value(self) -> None:
+        self.assertEqual(2047, len(gate.ce_setting_text(b"mods=" + b"a" * 2047 + b"\n", "mods")))
+        self.assertIsNone(gate.ce_setting_text(b"mods=" + b"a" * 2048 + b"\n", "mods"))
+        self.assertEqual(3, len(gate.ce_setting_text(b"mods=abc\n", "mods", 4)))
+        self.assertIsNone(gate.ce_setting_text(b"mods=abcd\n", "mods", 4))
+
+    def test_the_snapshot_names_dirs_files_and_links_and_an_absent_root_is_empty(self) -> None:
+        import tempfile
+        with tempfile.TemporaryDirectory(dir="/var/tmp") as raw:
+            root = Path(raw)
+            (root / "d").mkdir()
+            (root / "d" / "f").write_bytes(b"x")
+            (root / "l").symlink_to("d")
+            snap = gate.tree_snapshot(root)
+            self.assertEqual({"d": ("dir",), "d/f": ("file", gate.sha256(b"x")), "l": ("link", "d")}, snap)
+            self.assertEqual({}, gate.tree_snapshot(root / "absent"))
+
+    def test_patched_puts_the_original_back_even_when_the_block_raises(self) -> None:
+        class Owner:
+            value = 1
+        with self.assertRaises(RuntimeError), gate.patched(Owner, "value", 2):
+            self.assertEqual(2, Owner.value)
+            raise RuntimeError
+        self.assertEqual(1, Owner.value)
+        self.assertEqual("", gate.refused(lambda: None))
+        self.assertEqual("no", gate.refused(self.fail_with, "no"))
+
+    @staticmethod
+    def fail_with(message):
+        raise imp.ImportFailure(message)
+
+
+class StageFaultTests(GateCase):
+    """`stage` given a defect, one at a time: the stage section of the gate finds it by the check that names it."""
+
+    def test_a_good_stage_passes_every_stage_check(self) -> None:
+        verdicts = self.verdicts()
+        self.assertTrue(STAGE_ALL <= set(verdicts), "every stage check is in the list")
+        self.assertEqual([], [name for name in STAGE_ALL if not verdicts[name][0]])
+
+    def test_a_stage_that_does_things_on_a_dry_run_is_found(self) -> None:
+        real = imp.stage
+
+        def doing(moddir, user_dir, **options):
+            options["dry_run"] = False
+            return real(moddir, user_dir, **options)
+        with mock.patch.object(imp, "stage", doing):
+            self.assertIn(STAGE_DRY, self.failed())
+
+    def test_a_stage_that_writes_a_second_mods_line_is_found(self) -> None:
+        real = imp.with_mod
+        with mock.patch.object(imp, "with_mod", lambda ini, mod_id: (real(ini, mod_id)[0] + f"mods={mod_id}\n".encode(), real(ini, mod_id)[1])):
+            failed = self.failed()
+        self.assertIn(STAGE_FRESH, failed)
+        self.assertIn(STAGE_INI, failed)
+
+    def test_a_stage_that_does_not_refuse_a_second_copy_is_found(self) -> None:
+        real = imp.stage
+
+        def overwriting(moddir, user_dir, **options):
+            options["replace"] = True
+            return real(moddir, user_dir, **options)
+        with mock.patch.object(imp, "stage", overwriting):
+            failed = self.failed()
+        self.assertIn(STAGE_TWICE, failed)
+        self.assertTrue({STAGE_DRY, STAGE_FRESH, STAGE_REAL, STAGE_LIMIT} .isdisjoint(failed), failed)
+
+    def test_a_stage_that_loses_the_line_endings_of_the_ini_is_found(self) -> None:
+        real = imp.with_mod
+        with mock.patch.object(imp, "with_mod", lambda ini, mod_id: (real(ini, mod_id)[0].replace(b"\r\n", b"\n"), real(ini, mod_id)[1])):
+            self.assertIn(STAGE_INI, self.failed())
+
+    def test_a_stage_that_forgets_the_mods_already_named_is_found(self) -> None:
+        real = imp.with_mod
+        with mock.patch.object(imp, "with_mod", lambda ini, mod_id: (b"mods=" + mod_id.encode() + b"\n", [])):
+            failed = self.failed()
+        self.assertTrue({STAGE_INI, STAGE_STAND_IN} <= failed, failed)
+        self.assertIsNotNone(real)
+
+    def test_a_stage_that_lets_the_players_folder_in_is_found(self) -> None:
+        with mock.patch.object(imp, "real_conflict", return_value=None):
+            failed = self.failed()
+        self.assertIn(STAGE_REAL, failed)
+        self.assertIn(STAGE_UNTOUCHED, failed)
+
+    def test_a_limit_one_too_high_or_one_too_low_is_found(self) -> None:
+        with mock.patch.object(imp, "MODS_VALUE_LIMIT", 2048):
+            self.assertTrue({STAGE_LIMIT, STAGE_NO_MODS} <= self.failed())
+        with mock.patch.object(imp, "MODS_VALUE_LIMIT", 2046):
+            self.assertEqual({STAGE_LIMIT}, self.failed())
+
+    def test_a_stage_that_leaves_its_scraps_after_a_failure_is_found(self) -> None:
+        real = imp.stage
+
+        def littering(moddir, user_dir, **options):
+            try:
+                return real(moddir, user_dir, **options)
+            except imp.ImportFailure:
+                if Path(user_dir).is_dir():
+                    (Path(user_dir) / ".ce.ini.new-left-over").write_bytes(b"x")
+                raise
+        with mock.patch.object(imp, "stage", littering):
+            failed = self.failed()
+        self.assertTrue({STAGE_TWICE, STAGE_FAILURE, STAGE_NO_MODS} <= failed, failed)
+
+    def test_a_stage_that_does_not_roll_back_a_failed_copy_is_found(self) -> None:
+        with mock.patch.object(imp.shutil, "rmtree", lambda *a, **k: None):
+            self.assertIn(STAGE_FAILURE, self.failed())
+
+    def test_a_stage_that_forgets_the_ini_backup_is_found(self) -> None:
+        real = imp.stage
+
+        def unbacked(moddir, user_dir, **options):
+            plan = real(moddir, user_dir, **options)
+            for backup in Path(user_dir).glob("ce.ini.bak-*"):
+                backup.unlink()
+            return plan
+        with mock.patch.object(imp, "stage", unbacked):
+            failed = self.failed()
+        self.assertTrue({STAGE_INI, STAGE_REPLACE, STAGE_FLAG} <= failed, failed)
+
+    def test_a_stage_that_raises_something_unexpected_is_a_failed_check_not_a_crash_of_the_gate(self) -> None:
+        with mock.patch.object(imp, "stage", side_effect=KeyError("boom")):
+            self.assertIn("the stage checks ran to the end", self.failed())
+
+    def test_the_stage_checks_do_not_use_the_callers_environment(self) -> None:
+        with mock.patch.dict(os.environ, {"XDG_DATA_HOME": str(self.root / "callers-xdg"), "HOME": str(self.root / "callers-home"), "BEA_USER_DIR": str(self.root / "callers-user")}):
+            self.assertEqual(set(), self.failed())
+        self.assertFalse((self.root / "callers-xdg").exists() or (self.root / "callers-home").exists() or (self.root / "callers-user").exists())
+
+
 # ---- the retail gate ----------------------------------------------------------------------------------------------------------
 @unittest.skipUnless((os.environ.get("BEA_PS2_MEMBER") or os.environ.get("BEA_PS2_IMAGE")) and os.environ.get("BEA_GAME") and os.environ.get("BEA_GATE_WORK"),
                      "needs BEA_PS2_MEMBER (or BEA_PS2_IMAGE), BEA_GAME and BEA_GATE_WORK")

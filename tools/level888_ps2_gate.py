@@ -24,6 +24,11 @@ from the player's disc. What it checks:
     the mod folder    mod.json lists exactly the two files with their sizes and SHA-256, each re-hashed here; the folder is the id; nothing else is in it; the description says
                       what came from the PS2 copy and what from the game
     the folders       the game folder's files were not changed; no pinned file differs from what the recipe was checked against
+    stage             `stage` run on the staged mod in sandboxes of the gate's own (an environment of its own: the player's folders are not reachable), each result read the way CE
+                      reads ce.ini: a dry run changes nothing; a fresh folder gets the mod byte for byte and a ce.ini that CE reads as naming it; a second stage is refused and
+                      changes nothing; --replace keeps the old copy aside and a backup; an existing ce.ini keeps its other settings and line endings; the player's own folder, a link to
+                      it and a folder that holds it are refused; a ce.ini CE would read as no mods is refused; the 2,047-byte limit is exact; a failure at the final ini swap or in
+                      the copy leaves the tree byte for byte as it was; the player's folder is never touched
 
 Three checks (the world type, the scripts its things name, its start points) describe the disc's world, which the builder carries over byte for byte: when one of them does not
 hold it is printed as a `note`, a finding about the input, and the exit code is unchanged. Exit 0 when no check of the builder failed, 1 when one did, 2 for a refusal. The gate is part of the builder's tests (tools/level888_ps2_gate_tests.py), where each kind of fault is shown to be found."""
@@ -31,13 +36,17 @@ from __future__ import annotations
 
 import argparse
 import collections
+import contextlib
+import errno
 import hashlib
 import json
 import os
+import shlex
 import shutil
 import struct
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 TOOLS = Path(__file__).resolve().parent
@@ -295,6 +304,266 @@ def gate_checks(game: Path, install: lvl.Install, member: bytes, body: bytes, sh
     check("every pinned file is the one the recipe was checked against", not install.warnings, f"{len(install.warnings)} warnings")
 
 
+# ---- stage ---------------------------------------------------------------------------------------------------------------------
+STAMP_CLOCK = lambda: time.gmtime(1000000000)          # noqa: E731  2001-09-09T01:46:40Z: the stamp of every backup and moved-aside copy the gate provokes
+STAMP = "20010909T014640Z"
+CE_SETTING_LIMIT = 2048                                # port/platform/common/mods.cpp Load(): char list[2048] receives the mods value, the end mark included
+
+
+def ce_setting_text(ini: bytes, key: str, n: int = CE_SETTING_LIMIT) -> str | None:
+    """What CE_SettingGetText (port/platform/common/ce.cpp) returns for `key`, transcribed: lines end at LF; a line is the setting when it starts with the key and the equals sign follows
+    at once; a final CR and the blanks (space, tab) around the value are dropped; two such lines make the setting unset, and so does an empty value, one of n bytes or more or one with a
+    control byte (below 0x20, or 0x7f). None means unset."""
+    wanted = key.encode("ascii")
+    found, seen = None, False
+    position = 0
+    while position < len(ini):
+        end = ini.find(b"\n", position)
+        line = ini[position:end] if end >= 0 else ini[position:]
+        position = end + 1 if end >= 0 else len(ini)
+        if len(line) <= len(wanted) or line[:len(wanted)] != wanted or line[len(wanted):len(wanted) + 1] != b"=":
+            continue
+        if seen:
+            return None
+        seen = True
+        value = line[len(wanted) + 1:]
+        if value.endswith(b"\r"):
+            value = value[:-1]
+        found = value.strip(b" \t")
+    if found is None or not 0 < len(found) < n or any(byte < 0x20 or byte == 0x7F for byte in found):
+        return None
+    return found.decode("utf-8", "surrogateescape")
+
+
+def tree_snapshot(root: Path) -> dict:
+    """Everything below `root` as {relative path: ("dir",) | ("file", SHA-256) | ("link", target)}; {} when root is not there."""
+    out: dict = {}
+    if not (root.exists() or root.is_symlink()):
+        return out
+    for path in sorted(root.rglob("*")):
+        relative = path.relative_to(root).as_posix()
+        if path.is_symlink():
+            out[relative] = ("link", os.readlink(path))
+        elif path.is_dir():
+            out[relative] = ("dir",)
+        else:
+            out[relative] = ("file", sha256(path.read_bytes()))
+    return out
+
+
+@contextlib.contextmanager
+def patched(owner, name: str, value):
+    original = getattr(owner, name)
+    setattr(owner, name, value)
+    try:
+        yield
+    finally:
+        setattr(owner, name, original)
+
+
+def refused(call, *args, **options) -> str | None:
+    """The message of the ImportFailure `call` raised, "" when it raised nothing."""
+    try:
+        call(*args, **options)
+    except imp.ImportFailure as error:
+        return str(error)
+    return ""
+
+
+def stage_checks(moddir: Path, mod_id: str, work: Path, check) -> None:
+    """The checks of `stage` on the mod folder the build staged. Every case has a sandbox below `work` with an environment of its own: XDG_DATA_HOME points into it, so "CE's own folder"
+    is a folder of the sandbox holding a career and a ce.ini, and nothing of the player's is reachable."""
+    built = tree_snapshot(moddir)
+    work.mkdir(parents=True, exist_ok=True)
+    counter = [0]
+    sandboxes: list = []
+
+    def sandbox():
+        counter[0] += 1
+        root = work / f"s{counter[0]}"
+        xdg = root / "xdg"
+        real = xdg / "onslaught-ce"
+        (real / "careers").mkdir(parents=True)
+        (real / "ce.ini").write_bytes(b"fullscreen=1\nmods=player-mod\n")
+        (real / "careers" / "slot1.bes").write_bytes(b"the player's career, " + bytes(range(32)))
+        bystander = root / "bystander"
+        bystander.mkdir()
+        (bystander / "note.txt").write_bytes(b"not for stage")
+        box = {"root": root, "xdg": xdg, "real": real, "fresh": xdg / "onslaught-ce-level888", "bystander": bystander, "env": {"XDG_DATA_HOME": str(xdg)},
+               "real_before": tree_snapshot(real), "bystander_before": tree_snapshot(bystander)}
+        sandboxes.append(box)
+        return box
+
+    def expected_mod_tree(prefix: str) -> dict:
+        tree = {prefix: ("dir",)}
+        tree.update({f"{prefix}/{relative}": value for relative, value in built.items()})
+        return tree
+
+    def stage(box, user_dir=None, **options):
+        return imp.stage(moddir, box["fresh"] if user_dir is None else user_dir, env=box["env"], clock=STAMP_CLOCK, **options)
+
+    mod_tree = expected_mod_tree(f"mods/{mod_id}")
+
+    # a dry run changes nothing, and names the line that starts the level
+    box = sandbox()
+    try:
+        plan = stage(box, dry_run=True)
+        ok = (not box["fresh"].exists() and plan.get("dryRun") is True and plan.get("mod") == mod_id and plan.get("target") == str(box["fresh"] / "mods" / mod_id)
+              and plan.get("created") is True and plan.get("intoRealFolder") is False and plan.get("iniBackup") is None and plan.get("movedAside") is None
+              and plan.get("launch") == f"BEA_USER_DIR={shlex.quote(str(box['fresh']))} onslaught-ce -level 888")
+    except imp.ImportFailure:
+        ok = False
+    check("stage --dry-run changes nothing and names the line that starts the level", ok)
+
+    # a fresh folder gets the mod byte for byte and a ce.ini that CE reads as naming it
+    try:
+        plan = stage(box)
+        tree = tree_snapshot(box["fresh"])
+        ini = (box["fresh"] / "ce.ini").read_bytes() if (box["fresh"] / "ce.ini").is_file() else b""
+        expected = {"mods": ("dir",), "ce.ini": ("file", sha256(ini)), **mod_tree}
+        ok = (tree == expected and ini.splitlines() == [f"mods={mod_id}".encode()] and ce_setting_text(ini, "mods") == mod_id and plan.get("created") is True
+              and plan.get("modsBefore") == [] and plan.get("standInAlsoNamed") is False)
+    except imp.ImportFailure:
+        ok = False
+    check("stage into a fresh folder puts the mod there byte for byte and a ce.ini that CE reads as naming it, and nothing else", ok, f"{len(built)} entries in the mod")
+
+    # a second stage is refused and changes nothing
+    before = tree_snapshot(box["fresh"])
+    message = refused(stage, box)
+    check("a second stage of the same mod is refused and changes nothing", "exists already" in message and tree_snapshot(box["fresh"]) == before)
+
+    # --replace keeps the old copy aside, backs up ce.ini and names the mod once
+    old_ini = (box["fresh"] / "ce.ini").read_bytes()
+    try:
+        plan = stage(box, replace=True)
+        tree = tree_snapshot(box["fresh"])
+        ini = (box["fresh"] / "ce.ini").read_bytes()
+        ok = (all(tree.get(key) == value for key, value in {**expected_mod_tree(f"mods/{mod_id}"), **expected_mod_tree(f"mods/{mod_id}.old-{STAMP}")}.items())
+              and tree.get(f"ce.ini.bak-{STAMP}") == ("file", sha256(old_ini)) and ce_setting_text(ini, "mods") == mod_id and not [k for k in tree if ".stage-" in k or ".ce.ini.new-" in k]
+              and plan.get("movedAside") == str(box["fresh"] / "mods" / f"{mod_id}.old-{STAMP}") and plan.get("iniBackup") == str(box["fresh"] / f"ce.ini.bak-{STAMP}"))
+    except imp.ImportFailure:
+        ok = False
+    check("stage --replace keeps the old copy aside and a backup of ce.ini, names the mod once and leaves nothing half-made", ok)
+
+    # an existing ce.ini keeps every other setting, its line endings and the mods already named
+    box = sandbox()
+    old = b"fullscreen=1\r\nmods=other-mod , third\r\nsound = loud\r\nvolume=7\r\n"
+    box["fresh"].mkdir(parents=True)
+    (box["fresh"] / "ce.ini").write_bytes(old)
+    try:
+        plan = stage(box)
+        new = (box["fresh"] / "ce.ini").read_bytes()
+        old_lines, new_lines = old.split(b"\n"), new.split(b"\n")
+        same_elsewhere = len(old_lines) == len(new_lines) and all(a == b for i, (a, b) in enumerate(zip(old_lines, new_lines)) if i != 1)
+        ok = (same_elsewhere and new_lines[1] == f"mods=other-mod,third,{mod_id}\r".encode() and ce_setting_text(new, "mods") == f"other-mod,third,{mod_id}"
+              and all(ce_setting_text(new, key) == ce_setting_text(old, key) for key in ("fullscreen", "sound", "volume"))
+              and tree_snapshot(box["fresh"]).get(f"ce.ini.bak-{STAMP}") == ("file", sha256(old)) and plan.get("modsBefore") == ["other-mod", "third"])
+    except imp.ImportFailure:
+        ok = False
+    check("an existing ce.ini keeps its other settings, its line endings and the mods it already named, and is backed up", ok)
+    box = sandbox()
+    box["fresh"].mkdir(parents=True)
+    (box["fresh"] / "ce.ini").write_bytes(f"mods={imp.STAND_IN_ID}\n".encode())
+    try:
+        plan = stage(box)
+        ok = plan.get("standInAlsoNamed") is True and ce_setting_text((box["fresh"] / "ce.ini").read_bytes(), "mods") == f"{imp.STAND_IN_ID},{mod_id}"
+    except imp.ImportFailure:
+        ok = False
+    check("a ce.ini that names the stand-in mod too is said so in the plan, and both stay named", ok)
+
+    # the player's own folder, a link to it and a folder that holds it are refused; with the flag only the folder itself is allowed
+    box = sandbox()
+    other = box["root"] / "named-by-env"
+    other.mkdir()
+    (other / "career.bes").write_bytes(b"another real folder")
+    link = box["xdg"] / "linked"
+    link.symlink_to(box["real"])
+    box["env"]["BEA_USER_DIR"] = str(other)
+    others_before = tree_snapshot(other)
+    messages = {label: refused(stage, box, target) for label, target in (("is", box["real"]), ("link", link), ("inside", box["real"] / "sub"), ("holds", box["xdg"]),
+                                                                        ("env is", other), ("env inside", other / "sub"), ("env holds", box["root"]))}
+    flagged = {label: refused(stage, box, target, into_real=True) for label, target in (("inside", box["real"] / "sub"), ("holds", box["xdg"]), ("env inside", other / "sub"))}
+    untouched = tree_snapshot(box["real"]) == box["real_before"] and tree_snapshot(other) == others_before and tree_snapshot(box["bystander"]) == box["bystander_before"]
+    check("the player's own CE folder, a link to it and a folder that holds it or lies inside it are refused, with or without the flag, and left as they were",
+          all("your own CE folder" in m for m in messages.values()) and all("your own CE folder" in m for m in flagged.values()) and untouched,
+          f"{sum(1 for m in messages.values() if 'your own CE folder' in m)} of {len(messages)} refused")
+    box = sandbox()
+    try:
+        plan = stage(box, box["real"], into_real=True)
+        new = (box["real"] / "ce.ini").read_bytes()
+        tree = tree_snapshot(box["real"])
+        ok = (plan.get("intoRealFolder") is True and ce_setting_text(new, "mods") == f"player-mod,{mod_id}" and ce_setting_text(new, "fullscreen") == "1"
+              and tree.get("careers/slot1.bes") == box["real_before"]["careers/slot1.bes"] and all(tree.get(k) == v for k, v in mod_tree.items())
+              and tree.get(f"ce.ini.bak-{STAMP}") == box["real_before"]["ce.ini"] and not plan.get("launch", "").startswith("BEA_USER_DIR="))
+    except imp.ImportFailure:
+        ok = False
+    check("with --into-my-real-folder only the mods line changes, the career stays, ce.ini is backed up and the launch line has no BEA_USER_DIR", ok)
+    box["real_before"] = tree_snapshot(box["real"])                  # this case was allowed to change it; the next ones are not
+
+    # a ce.ini that CE would read as no mods is refused and nothing changes
+    id_length = len(mod_id)
+    cases = {"two mods= lines": b"mods=a\nmods=b\n", "a control byte in the value": b"mods=a\x01b\n", "a DEL in the value": b"mods=a\x7fb\n",
+             "a value too long": b"mods=" + b"a" * (CE_SETTING_LIMIT - 1 - id_length) + b"\n", "ce.ini a folder": None, "ce.ini a link": "link"}
+    results = {}
+    for label, content in cases.items():
+        box = sandbox()
+        box["fresh"].mkdir(parents=True)
+        ini = box["fresh"] / "ce.ini"
+        if content is None:
+            ini.mkdir()
+        elif content == "link":
+            (box["root"] / "elsewhere.ini").write_bytes(b"mods=a\n")
+            ini.symlink_to(box["root"] / "elsewhere.ini")
+        else:
+            ini.write_bytes(content)
+        snapshot = tree_snapshot(box["fresh"])
+        message = refused(stage, box)
+        results[label] = bool(message) and tree_snapshot(box["fresh"]) == snapshot
+    check("a ce.ini that CE would read as no mods, or that is not a plain file, is refused and the folder is left as it was", all(results.values()),
+          f"{sum(results.values())} of {len(results)} refused")
+
+    # the limit is exact: 2,047 bytes are read by CE, 2,048 are not
+    verdicts = {}
+    for label, total in (("2,047 bytes", CE_SETTING_LIMIT - 1), ("2,048 bytes", CE_SETTING_LIMIT)):
+        box = sandbox()
+        box["fresh"].mkdir(parents=True)
+        (box["fresh"] / "ce.ini").write_bytes(b"mods=" + b"a" * (total - 1 - id_length) + b"\n")
+        message = refused(stage, box)
+        new = (box["fresh"] / "ce.ini").read_bytes()
+        verdicts[label] = (not message and len(ce_setting_text(new, "mods") or "") == total and ce_setting_text(new, "mods").endswith(mod_id)) if total < CE_SETTING_LIMIT else bool(message)
+    check("the mods= limit is exact: 2,047 bytes are accepted and CE reads them, 2,048 are refused", all(verdicts.values()), f"{sum(verdicts.values())} of {len(verdicts)}")
+
+    # a failure at the final ini swap, or while the mod is copied, leaves the tree byte for byte as it was
+    outcomes = {}
+    for label in ("the ce.ini swap fails", "the copy fails halfway"):
+        box = sandbox()
+        stage(box)                                                   # the mod and a ce.ini are there already; --replace would move the mod aside
+        before = tree_snapshot(box["fresh"])
+        real_replace, real_copytree = os.replace, imp.shutil.copytree
+
+        def failing_replace(source, destination, *a, **k):
+            if Path(destination).name == "ce.ini":
+                raise OSError(errno.ENOSPC, "No space left on device")
+            return real_replace(source, destination, *a, **k)
+
+        def failing_copytree(source, destination, *a, **k):
+            Path(destination).mkdir(parents=True)
+            (Path(destination) / "half").write_bytes(b"x")
+            raise OSError(errno.ENOSPC, "No space left on device")
+        with contextlib.ExitStack() as stack:
+            if label == "the ce.ini swap fails":
+                stack.enter_context(patched(os, "replace", failing_replace))
+            else:
+                stack.enter_context(patched(imp.shutil, "copytree", failing_copytree))
+            message = refused(stage, box, replace=True)
+        outcomes[label] = "nothing was changed" in message and tree_snapshot(box["fresh"]) == before
+    check("a failure at the final ce.ini swap, or while the mod is copied, leaves the folder byte for byte as it was", all(outcomes.values()), f"{sum(outcomes.values())} of {len(outcomes)}")
+
+    # nothing outside the folder it was given was touched, in any case
+    touched = [i + 1 for i, box in enumerate(sandboxes) if tree_snapshot(box["bystander"]) != box["bystander_before"] or tree_snapshot(box["real"]) != box["real_before"]]
+    check("no case touched the player's own CE folder (except the one allowed by the flag) or a bystander folder beside it", not touched, f"{len(sandboxes)} sandboxes, {len(touched)} touched")
+
+
 def run_gate(game: Path, source: Path, work: Path, *, strict_pins: bool = False, ce_min: str = "0.1.13", keep: bool = False) -> list[tuple[str, bool, str]]:
     """Checks on the builder's output against the member and the player's game folder. Each result is (name, passed, detail)."""
     results: list[tuple[str, bool, str]] = []
@@ -361,6 +630,10 @@ def run_gate(game: Path, source: Path, work: Path, *, strict_pins: bool = False,
             gate_checks(game, install, member, body, shadows, first, moddir, imp.MOD_ID, check)
         except (BuildError, enc.EncodeError, ValueError, KeyError, TypeError, struct.error) as error:
             check("the checks ran to the end", False, f"{type(error).__name__}: {error}")
+        try:
+            stage_checks(moddir, imp.MOD_ID, staged / "stage-cases", check)
+        except Exception as error:                      # a defective stage may raise anything; that is a failed check, not a crash of the gate
+            check("the stage checks ran to the end", False, f"{type(error).__name__}: {error}")
     finally:
         if not keep:
             shutil.rmtree(staged, ignore_errors=True)
