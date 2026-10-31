@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-30 (a copy put or moved outside the Level editor's 0 to 512 square gets the warning a moved object gets; the Level editor copies a unit, appended after every row; the Level editor's arrow-key nudges and its list of only the moved objects; the Level editor's Play button starts CE at the open level with the changes in a temporary CE folder; one script edit staged by the Level editor was run in CE on Linux; the Level editor's Scripts view edits a script's source, compiles it and makes the open level use it, with an Undo, a warning for calls to `Damage` and a count of uncompiled drafts as unsaved work; earlier: the toolchain paragraph no longer names the maintainer's private installer or paths; earlier: the Level editor's read-only Scripts view; earlier: CE 0.1.11, the first CE to take a world file from a mod, named; earlier: the Level editor's map; what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
+Last updated: 2026-10-31 (the "no acceptance run" sentence names the flows it covers and points to the Play runs; earlier: a copy put or moved outside the Level editor's 0 to 512 square gets the warning a moved object gets; the Level editor copies a unit, appended after every row; the Level editor's arrow-key nudges and its list of only the moved objects; the Level editor's Play button starts CE at the open level with the changes in a temporary CE folder; one script edit staged by the Level editor was run in CE on Linux; the Level editor's Scripts view edits a script's source, compiles it and makes the open level use it, with an Undo, a warning for calls to `Damage` and a count of uncompiled drafts as unsaved work; earlier: the toolchain paragraph no longer names the maintainer's private installer or paths; earlier: the Level editor's read-only Scripts view; earlier: CE 0.1.11, the first CE to take a world file from a mod, named; earlier: the Level editor's map; what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -99,10 +99,12 @@ package-header check accepts. **Not read again:** the Windows `files.cpp` career
 line. Between 0.1.4 and 0.1.10 `ce_launch.c`, `package.py` and the Windows `files.cpp` changed a good deal, so what this
 README says about those files is as of 0.1.4 until they are read again.
 
-**No acceptance run exists against a real CE 0.1.7 or later package.** The last recorded runs with a real CE package are
-CE 0.1.4 on Linux and a `0.1.6-dev` package on Windows (below). The 0.1.8 hand-off to a package's `versions` folder is
-covered by tests with fixture launchers only, and the 0.1.10 reading above is a reading of files and of one `--version`
-line, not a launch, a user-interface session or a career edit.
+**No acceptance run of these flows (careers, backups, settings and the hand-off to a CE package) exists against a real
+CE 0.1.7 or later package.** The last recorded runs of them with a real CE package are CE 0.1.4 on Linux and a
+`0.1.6-dev` package on Windows (below). The 0.1.8 hand-off to a package's `versions` folder is covered by tests with
+fixture launchers only, and the 0.1.10 reading above is a reading of files and of one `--version` line, not a launch, a
+user-interface session or a career edit. The Level editor's Play button, which starts a real CE package, is a different
+path: its runs are described under "What it does", and they do not stand in for these flows.
 
 Native Windows checks exercised production process detection and protected file/settings writes;
 CE also loaded the edited Unicode career through its own menu. Those backend/load experiments used the
