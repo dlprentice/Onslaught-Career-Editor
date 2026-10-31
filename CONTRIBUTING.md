@@ -1,7 +1,7 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-10-29 (game findings go to onslaught-preservation and `reverse-engineering/` here is a frozen copy; earlier: the companion supports the original game and CE; companion and lore issues go to this repository's issues; earlier: SPDX prose excluded from REUSE parsing; Onslaught CE and onslaught-godot linked; the retired AppCore patching core removed, inbound = outbound licensing)
+Last updated: 2026-10-31 (the Windows-host sentence says what this repository provisions; earlier: game findings go to onslaught-preservation and `reverse-engineering/` here is a frozen copy; earlier: the companion supports the original game and CE; companion and lore issues go to this repository's issues; earlier: SPDX prose excluded from REUSE parsing; Onslaught CE and onslaught-godot linked; the retired AppCore patching core removed, inbound = outbound licensing)
 Summary: what a focused change looks like here, what must never be added to the
 repository, and which checks a change owes.
 
@@ -38,7 +38,7 @@ npm run test:safety
 ```
 
 `npm test` runs the companion's contract and tooling checks without opening a window;
-`npm run dev` launches the companion. No Windows host is provisioned; Linux checks do not
+`npm run dev` launches the companion. This repository provisions no Windows host; Linux checks do not
 establish Windows behaviour. Native workflow checks are separate from build, static or headless
 evidence.
 

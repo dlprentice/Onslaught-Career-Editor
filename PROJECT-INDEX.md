@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-10-29 (live documentation and rebuild authority routes corrected)
+Last updated: 2026-10-31 (the host-boundary sentence says what this repository provisions; earlier: live documentation and rebuild authority routes corrected)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository: the companion, the game documentation, tools and the
 Godot rebuild.
@@ -51,7 +51,7 @@ The companion (GPL-3.0-only) has no dependency on the rebuild or private retail 
 Host boundary: Linux owns native Godot and Core/Client/headless execution. The WinUI shell, its UI tests and the CLI
 were removed on 2026-10-15, and the patching core it left behind (AppCore, with its tests and the `patches/` catalog)
 on 2026-10-22; Git keeps them. The never-built Windows VM was retired;
-no Windows validation host is currently provisioned here.
+this repository provisions no Windows validation host.
 [`VALIDATION.md`](VALIDATION.md) distinguishes focused service tests, native
 runtime checks and unfinished acceptance.
 
