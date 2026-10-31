@@ -543,6 +543,7 @@ class AuthoredInstallTests(unittest.TestCase):
             self.assertEqual(errors, [], asset["id"])
 
     def test_coverage_counts(self) -> None:
+        self.assertEqual(self.coverage["sourceFileCoverage"]["status"], "counted")
         self.assertEqual(self.coverage["assetsByType"]["texture"], 5)
         self.assertEqual(self.coverage["textureFilesReferencedByADescriptor"], 4)
         self.assertEqual(self.coverage["textureFilesNotLoaded"],
@@ -2122,6 +2123,91 @@ class TexbNameIdentityTests(unittest.TestCase):
         bad = json.loads(json.dumps(self.mesh("texb_mixed")))
         del bad["mesh"]["textures"][2]["nameStatus"]
         self.assertFalse(validator.is_valid({**bad, catalog.GENERATED_MARKER: True}))
+
+
+class SourceFileCoverageTests(unittest.TestCase):
+    def test_absent_status_is_not_reported_as_parsed(self):
+        self.assertEqual(catalog.asset_report_status({"file": {"lines": 2}}), "not-recorded")
+        self.assertEqual(catalog.asset_report_status({"mesh": {"status": None}}), "not-recorded")
+        self.assertEqual(catalog.asset_report_status({"texture": {"status": "valid"}}), "valid")
+
+    def test_counts_unique_files_and_only_explicit_resolved_targets(self):
+        files = [
+            {"path": "data/a", "size": 100, "family": "ogg-music"},
+            {"path": "data/b", "size": 50, "family": "ogg-music"},
+            {"path": "data/c", "size": 11, "family": "unclassified"},
+        ]
+        assets = [
+            {"id": "a", "source": {"container": "data/a"}, "relationships": [
+                {"status": "resolved", "target": "b"},
+                {"status": "unresolved", "target": "a"},
+                {"status": "resolved", "target": None},
+            ]},
+            {"id": "a-child", "source": {"container": "data/a"}, "relationships": []},
+            {"id": "b", "source": {"container": "DATA/B"}, "relationships": []},
+            {"id": "elsewhere", "source": {"container": "elsewhere"}, "relationships": []},
+        ]
+        report = catalog.build_source_file_coverage(files, assets)
+        self.assertEqual(report["eligibleFiles"], 3)
+        self.assertEqual(report["unmatchedRecordSources"], 1)
+        by_family = {entry["family"]: entry for entry in report["families"]}
+        self.assertEqual(by_family["ogg-music"]["files"], 2)
+        self.assertEqual(by_family["ogg-music"]["bytes"], 150)
+        self.assertEqual(by_family["ogg-music"]["filesWithRecords"], 2)
+        self.assertEqual(by_family["ogg-music"]["bytesInFilesWithRecords"], 150)
+        self.assertEqual(by_family["ogg-music"]["filesWithResolvedIncomingRelationship"], 1)
+        self.assertEqual(by_family["ogg-music"]["bytesInFilesWithResolvedIncomingRelationship"], 50)
+        self.assertEqual(by_family["unclassified"]["filesWithRecords"], 0)
+        self.assertIn("does not prove a full decode or runtime use", report["limits"])
+
+    def test_partial_inputs_duplicate_ids_and_ambiguous_paths_are_conservative(self):
+        self.assertEqual(catalog.build_source_file_coverage(None, []), {"status": "not-recorded"})
+        self.assertEqual(catalog.build_source_file_coverage([], [])["eligibleFiles"], 0)
+        files = [
+            {"path": "a", "size": 5, "family": "ogg-music"},
+            {"path": "A", "size": 7, "family": "ogg-music"},
+            {"path": "dup", "size": 3, "family": "ogg-music"},
+            {"path": "dup", "size": 4, "family": "ogg-music"},
+            {"path": "link", "size": None, "family": "non-regular"},
+            {"path": "bad", "size": -1, "family": "ogg-music"},
+            None,
+        ]
+        assets = [
+            {"id": "same", "source": {"container": "a"}, "relationships": [
+                {"status": "resolved", "target": "same"}]},
+            {"id": "same", "source": {"container": "A"}, "relationships": []},
+            {"id": "dup", "source": {"container": "dup"}},
+            {"id": "unknown"},
+        ]
+        report = catalog.build_source_file_coverage(files, assets)
+        self.assertEqual(report["eligibleFiles"], 2)
+        self.assertEqual(report["excludedDuplicatePathEntries"], 2)
+        self.assertEqual(report["excludedNonRegularEntries"], 1)
+        self.assertEqual(report["excludedInvalidEntries"], 2)
+        self.assertEqual(report["ambiguousRecordSources"], 1)
+        self.assertEqual(report["unmatchedRecordSources"], 1)
+        self.assertEqual(report["families"][0]["filesWithRecords"], 2)
+        self.assertEqual(report["families"][0]["filesWithResolvedIncomingRelationship"], 0)
+
+    def test_case_ambiguous_source_is_not_attributed(self):
+        files = [
+            {"path": "Case/a", "size": 5, "family": "ogg-music"},
+            {"path": "case/a", "size": 7, "family": "ogg-music"},
+        ]
+        assets = [{"id": "a", "source": {"container": "CASE/A"}, "relationships": []}]
+        report = catalog.build_source_file_coverage(files, assets)
+        self.assertEqual(report["ambiguousRecordSources"], 1)
+        self.assertEqual(report["families"][0]["filesWithRecords"], 0)
+
+    def test_output_stays_aggregated_and_does_not_contain_source_paths(self):
+        files = [{"path": f"private-example-{n}", "size": 1, "family": f"unknown-{n}"}
+                 for n in range(200)]
+        report = catalog.build_source_file_coverage(files, [])
+        self.assertEqual(len(report["families"]), 1)
+        self.assertEqual(report["families"][0]["family"], "unclassified")
+        self.assertEqual(report["families"][0]["files"], 200)
+        self.assertNotIn("private-example", json.dumps(report))
+        self.assertLess(len(json.dumps(report)), 1500)
 
 
 if __name__ == "__main__":

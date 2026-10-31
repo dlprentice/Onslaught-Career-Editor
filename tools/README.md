@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-30 (`game_tables_decode.py`: the battle engine configurations and `sounds.sfx` catalogued with what they name; the `VSDS`, `PMIB` and `DMKR` payloads decoded and checked by the catalogue's retail gate; `named_things.py`, the registry of named things, the catalogue's thing-name joins on it and the catalogue's retail gate `content_catalog_gate.py`; the script gate pins each known stale record pair; descriptor-relative Python mission-source reads and platform limits; `msl_vectors.py`, the vectors for the Companion's C# compiler; the gate table's NAMES and PATHS rows; `script_tables.py` and the gate table's SCRIPTS rows; `msl_compile.py`, `msl_gate.py` and their tests; `heightfield_lookup.py` and the terrain probes and gate rows of `level_editor_vectors.py`; `model_transform_catalog.py`'s CLI, report and schema notes are here, moved from the frozen game documentation; the tool-test gate's coverage and skips; TEXB texture-slot name identity; census v4 wording: the outer MESH name and the internal CMSH name are separate; earlier: read-only world-edit preview; stream-only world body and stage-bundle exports; per-part mesh bounds and identities; per-mip DDS identities; earlier: content catalogue phase 3: world things, paths, compiled scripts, terrain payloads; earlier: content catalogue, single-archive texture catalog, bounded level, texture and mission-script metadata)
+Last updated: 2026-10-31 (catalogue coverage and parser-status limits clarified)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -481,6 +481,21 @@ moved into an output name during the run. A concurrent collision can leave a
 partial set of newly created reports; use a fresh output location to retry. This
 path requires Linux `renameat2` no-replace support and fails closed without it.
 Omitting the archive options leaves the existing catalog publication unchanged.
+
+## Catalogue source-file coverage
+
+The `coverage.json` produced by `content_catalog.py` separates a family’s advertised parser support from what the
+selected input actually yielded. `sourceFileCoverage` counts regular input files and their stored sizes by family,
+then counts files represented by at least one catalogue record and files targeted by at least one explicit resolved
+relationship. Each file is counted once per measure, even when it contains many records. The relationship count reflects
+catalogue evidence, not an observation that the game used the file. Whole stored file sizes are not decoded-byte counts:
+a record may describe only a header or a portion of an archive. An input list that was unavailable is reported as
+`not-recorded`, not as an empty install; invalid, non-regular, duplicate or ambiguous inputs are reported separately.
+
+`assetStatusByType` reports `not-recorded` when a record has no explicit parser status. Family labels such as
+`catalogued` describe available readers, not proof of a complete per-file or per-byte decode. These counts cover only the
+selected local input and the current readers; they are not a percentage of every asset in every version of the game.
+The catalogue and its detailed outputs contain game-derived data and stay in ignored `local-data/`.
 
 ## Parity measurement
 

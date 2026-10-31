@@ -2800,14 +2800,124 @@ def build_catalog(game: Path, decomp: Path | None = None) -> dict:
                                                                           for r in rule_names if not r["resolved"]})}}
 
 
+def asset_report_status(asset: dict) -> str:
+    """Report an explicit parser status; a record alone does not establish parsing."""
+    details = (asset.get("texture") or asset.get("textureDescriptor") or asset.get("mesh") or
+               asset.get("audio") or asset.get("video") or asset.get("animation") or {})
+    status = details.get("status") if isinstance(details, dict) else None
+    return status if isinstance(status, str) and status else "not-recorded"
+
+
+def build_source_file_coverage(files: list[dict] | None, assets: list[dict]) -> dict:
+    """Count represented source files without treating a record as a full decode.
+
+    Only an explicit resolved relationship with one target ID counts as a reference.
+    The result contains no file names or per-record information.
+    """
+    if files is None:
+        return {"status": "not-recorded"}
+
+    known_families = {family for family, *_ in FAMILIES} | {"unclassified"}
+    paths: dict[str, list[dict]] = collections.defaultdict(list)
+    excluded_nonregular = excluded_invalid = 0
+    for row in files:
+        if not isinstance(row, dict):
+            excluded_invalid += 1
+            continue
+        path, size = row.get("path"), row.get("size")
+        if size is None:
+            excluded_nonregular += 1
+        elif not isinstance(path, str) or not path or type(size) is not int or size < 0:
+            excluded_invalid += 1
+        else:
+            paths[path.replace("\\", "/")].append(row)
+
+    duplicate_paths = sum(len(rows) for rows in paths.values() if len(rows) != 1)
+    unique = {path: rows[0] for path, rows in paths.items() if len(rows) == 1}
+    folded: dict[str, list[str]] = collections.defaultdict(list)
+    for path in paths:
+        folded[path.casefold()].append(path)
+
+    represented: set[str] = set()
+    origins_by_id: dict[str, set[str]] = collections.defaultdict(set)
+    seen_ids: collections.Counter = collections.Counter()
+    unmatched = ambiguous = 0
+    for asset in assets:
+        if not isinstance(asset, dict):
+            unmatched += 1
+            continue
+        asset_id = asset.get("id")
+        if isinstance(asset_id, str):
+            seen_ids[asset_id] += 1
+        source = asset.get("source")
+        container = source.get("container") if isinstance(source, dict) else None
+        if not isinstance(container, str) or not container:
+            unmatched += 1
+            continue
+        path = container.replace("\\", "/")
+        if path in paths and path not in unique:
+            ambiguous += 1
+            continue
+        if path not in unique:
+            candidates = folded.get(path.casefold(), [])
+            if len(candidates) > 1 or (candidates and candidates[0] not in unique):
+                ambiguous += 1
+                continue
+            if not candidates:
+                unmatched += 1
+                continue
+            path = candidates[0]
+        represented.add(path)
+        if isinstance(asset_id, str):
+            origins_by_id[asset_id].add(path)
+
+    referenced: set[str] = set()
+    for asset in assets:
+        relationships = asset.get("relationships") if isinstance(asset, dict) else None
+        for rel in relationships if isinstance(relationships, list) else ():
+            if not isinstance(rel, dict):
+                continue
+            target = rel.get("target")
+            if rel.get("status") == "resolved" and isinstance(target, str) and seen_ids[target] == 1:
+                referenced.update(origins_by_id.get(target, ()))
+
+    families: dict[str, collections.Counter] = collections.defaultdict(collections.Counter)
+    for path, row in unique.items():
+        family = row.get("family")
+        family = family if isinstance(family, str) and family in known_families else "unclassified"
+        counts = families[family]
+        counts["files"] += 1
+        counts["bytes"] += row["size"]
+        if path in represented:
+            counts["filesWithRecords"] += 1
+            counts["bytesInFilesWithRecords"] += row["size"]
+        if path in referenced:
+            counts["filesWithResolvedIncomingRelationship"] += 1
+            counts["bytesInFilesWithResolvedIncomingRelationship"] += row["size"]
+    keys = ("files", "bytes", "filesWithRecords", "bytesInFilesWithRecords",
+            "filesWithResolvedIncomingRelationship", "bytesInFilesWithResolvedIncomingRelationship")
+    by_family = [{"family": family, **{key: counts[key] for key in keys}}
+                 for family, counts in sorted(families.items())]
+    return {
+        "status": "counted",
+        "scope": "regular source files in the selected input tree; bytes are stored file sizes",
+        "limits": "a record or resolved relationship does not prove a full decode or runtime use",
+        "eligibleFiles": len(unique),
+        "excludedNonRegularEntries": excluded_nonregular,
+        "excludedInvalidEntries": excluded_invalid,
+        "excludedDuplicatePathEntries": duplicate_paths,
+        "unmatchedRecordSources": unmatched,
+        "ambiguousRecordSources": ambiguous,
+        "families": by_family,
+    }
+
+
 def build_coverage(catalog: dict) -> dict:
     survey, assets = catalog["survey"], catalog["assets"]
     by_type = collections.Counter(a["type"] for a in assets)
-    status_of = lambda a: (a.get("texture") or a.get("textureDescriptor") or a.get("mesh") or a.get("audio")
-                           or a.get("video") or a.get("animation") or {}).get("status", "parsed")
     by_type_status = collections.defaultdict(collections.Counter)
     for a in assets:
-        by_type_status[a["type"]][status_of(a)] += 1
+        by_type_status[a["type"]][asset_report_status(a)] += 1
     rel_status = collections.defaultdict(collections.Counter)
     for a in assets:
         for r in a["relationships"]:
@@ -2820,6 +2930,7 @@ def build_coverage(catalog: dict) -> dict:
     return {
         "schema": COVERAGE_SCHEMA, GENERATED_MARKER: True,
         "installFiles": survey["files"], "installBytes": survey["bytes"],
+        "sourceFileCoverage": build_source_file_coverage(catalog.get("files"), assets),
         "filesInCataloguedFamilies": sum(f["files"] for f in survey["families"] if f["status"] == "catalogued"),
         "filesInParsedElsewhereFamilies": sum(f["files"] for f in survey["families"] if f["status"] == "parsed-elsewhere"),
         "filesInInventoriedFamilies": sum(f["files"] for f in survey["families"] if f["status"] == "inventoried"),
