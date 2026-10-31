@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-10-30 (the Level editor copies a unit, appended after every row, and a level with a copy ran in CE on Linux; the Level editor's arrow-key nudges and its list of only the moved objects; the Level editor's Play button starts CE at the open level with the changes in a temporary CE folder; one script edit staged by the Level editor was run in CE on Linux; the Level editor edits a script's source; earlier: live rebuild ownership and catalogue routes clarified)
+Last updated: 2026-10-31 (the Level editor copies a unit, appended after every row, and a level with a copy ran in CE on Linux; the Level editor's arrow-key nudges and its list of only the moved objects; the Level editor's Play button starts CE at the open level with the changes in a temporary CE folder; one script edit staged by the Level editor was run in CE on Linux; the Level editor edits a script's source; earlier: live rebuild ownership and catalogue routes clarified)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -224,6 +224,9 @@ Its sidebar:
   (the [level editor plan](roadmap/companion-level-editor.md)'s M5 acceptance). Nobody has used the page or its Play button by hand, no other kind of edit has been run (nothing is added from nothing and nothing is deleted), the mod holds the world file only (the
   edited source is not kept beside it) and there has been no native Windows run. The documented CE world-mod loader is Linux-only. See the [level editor description](companion/OnslaughtToolkit.Godot/README.md#what-it-does),
   [level editor plan](roadmap/companion-level-editor.md) and [mission editor design](roadmap/companion-mission-editor.md).
+  Parsed-object source offsets describe positions in the original input buffer; they do not automatically
+  follow later edits. To use offsets with edited or serialized bytes, parse those bytes again or use an independently
+  verified mapping. This metadata does not establish catalogue-to-model identity, a 3D editor, or a completed museum.
 - **Advanced**, folded away: Career bytes (the open career's stored values, or the bytes that
   differ from another career).
 
