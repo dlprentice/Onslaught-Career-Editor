@@ -484,6 +484,8 @@ Omitting the archive options leaves the existing catalog publication unchanged.
 
 ## Catalogue source-file coverage
 
+The counts describe logical source-file paths. Different paths can count separately even when their file contents are identical.
+
 The `coverage.json` produced by `content_catalog.py` separates a family’s advertised parser support from what the
 selected input actually yielded. `sourceFileCoverage` counts regular input files and their stored sizes by family,
 then counts files represented by at least one catalogue record and files targeted by at least one explicit resolved

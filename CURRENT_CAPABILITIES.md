@@ -871,6 +871,8 @@ Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
 
 ## Reverse engineering
 
+The [content catalogue coverage report](tools/README.md#catalogue-source-file-coverage) distinguishes represented logical paths, relationship targets and unrecorded parse status. Its checks use authored fixtures; those counts do not establish a complete asset inventory, unique file contents or mappings to placeable objects.
+
 The byte-matching decompilation matches all 5,482 retail functions in the maintainer's private working tree and is the
 reverse-engineering authority. Its public export, [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp),
 reproduces 5,449 of them (99.40% when this was written; the other 33 are in four DirectX sample files the export leaves
