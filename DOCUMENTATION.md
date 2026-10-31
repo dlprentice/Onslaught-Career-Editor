@@ -1,7 +1,7 @@
 # Documentation standard — five fields, derived from what this repository already does, and mechanically enforced
 
 Status: active — the header contract for tracked documentation
-Last updated: 2026-10-23 (removed a volatile count from the active header guidance; historical measurements remain dated)
+Last updated: 2026-10-31 (the header date means the last substantive change; mechanical edits do not bump it)
 Summary: every tracked document declares whether it is live, how old its claim
 is, and what it settles; a finding additionally declares whether its evidence is
 MEASURED, SOURCE, INFERRED or UNKNOWN, and names its specimen when it quotes
@@ -62,6 +62,10 @@ because they mean different things and both are already in use:
   document is a record of a moment and does not change.
 - **`Last updated:`** on a living document — an index, a reference table, a
   governance file. It is revised in place.
+
+`Last updated:` is the date of the last substantive change to what the document claims. Renames, link
+repairs, bulk reformatting and other mechanical edits do not bump it, so a file's last commit can be newer
+than its header; the checker verifies that the date is real, not that it equals the last commit.
 
 Before this standard there was no single field a checker could read to tell how
 old a claim was: 19 tracked documents used `Date:`, 39 used a `Last updated`
