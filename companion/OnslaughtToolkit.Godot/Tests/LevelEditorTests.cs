@@ -235,6 +235,7 @@ internal static class LevelEditorTests
         check.That(model.ChangeSummary() is { } two && two.StartsWith("2 objects moved: ", StringComparison.Ordinal), "two moved objects are summarised together: " + model.ChangeSummary());
         for (int i = 0; i < model.Rows().Count; i++) model.Move(i, $"{i + 1}", $"{i + 1}", $"{i + 1}");
         int allRows = model.Rows().Count;
+        MissionMarkerSnapshot3DTests.CheckEditorSnapshot(check, model);
         check.That(allRows >= 4 && model.ChangeSummary() is { } many && many.StartsWith($"{allRows} objects moved: ", StringComparison.Ordinal) && many.EndsWith($" and {allRows - 3} more.", StringComparison.Ordinal) && many.Split("(row ").Length - 1 == 3,
             "a long list of changes is shortened: " + model.ChangeSummary());
 
