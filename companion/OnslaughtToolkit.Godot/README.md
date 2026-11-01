@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-10-31 (the "no acceptance run" sentence names the flows it covers and points to the Play runs; earlier: a copy put or moved outside the Level editor's 0 to 512 square gets the warning a moved object gets; the Level editor copies a unit, appended after every row; the Level editor's arrow-key nudges and its list of only the moved objects; the Level editor's Play button starts CE at the open level with the changes in a temporary CE folder; one script edit staged by the Level editor was run in CE on Linux; the Level editor's Scripts view edits a script's source, compiles it and makes the open level use it, with an Undo, a warning for calls to `Damage` and a count of uncompiled drafts as unsaved work; earlier: the toolchain paragraph no longer names the maintainer's private installer or paths; earlier: the Level editor's read-only Scripts view; earlier: CE 0.1.11, the first CE to take a world file from a mod, named; earlier: the Level editor's map; what was and was not re-read at CE 0.1.10 stated; no acceptance run against CE 0.1.7 or later; earlier: CE 0.1.8 packages and their updated versions are recognised; 0.1.0–0.1.6 launchers are never started)
+Last updated: 2026-11-01 (temporary-play safety design and observed test scope clarified)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -385,7 +385,7 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   operands, jump targets, game functions and their argument counts, entry points, handlers, symbol tables and stack balance the game's
   loader and script machine assume); the mod holds the world file only, so the edited source is not kept beside it. **Play this level with the changes** starts Onslaught CE at the
   open level with the changes as they are (nothing is saved), in a temporary CE folder of its own: a copy of your ce.ini with only this mod switched on and recording and the update check off,
-  your options file (never a career) and the mod. Your own CE folder, ce.ini and careers are never written, and the folder is removed when CE closes; it needs Linux and CE 0.1.11 or later,
+  your options file (never a career) and the mod. It is designed to leave your own CE folder, ce.ini and careers untouched. In one offscreen run the scratch player's settings, stand-in career and tape were unchanged and the temporary folder was removed. The Play feature needs Linux and CE 0.1.11 or later,
   and a recorded session switches mods off, which the copy of ce.ini avoids. The page was driven
   by events in tests and looked at in offscreen captures, and its `scriptmod` capture staged one edit (a tutorial message of level 100) as a mod that Onslaught CE ran on
   Linux, offscreen and live, with the edited subtitle on screen beside control runs (the mission editor design's section 16 says how and what it does not show); nobody has used

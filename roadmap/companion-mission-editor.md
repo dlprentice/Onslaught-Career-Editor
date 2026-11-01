@@ -2,7 +2,7 @@
 
 Status: design; the reference compiler and read-only scripts view with name links and map paths are built. The C# and Python compiler backends and the script-aware editor model are integrated, and the Level editor's Scripts view edits a script's source, compiles it and makes the open level use it (section 15); the acceptance in section 6 was run once on Linux (section 16) and the Level editor's Play button starts CE at the open level with the changes (section 17); source-preserving staging and native Windows validation remain open. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-10-31 (3D authoring direction; earlier: the reviewer's requests on the Level editor's Play button taken, section 17; the Level editor's Play button, section 17; the CE acceptance of an edited script was run on Linux, section 16, timing restated from CE's own log, repeated once with the released 0.1.12 package and once through its launcher; the Level editor's Scripts view edits a script's source, section 15; earlier: held and bounded viewer reads and platform limits; script-gate stale record pairs pinned by identity; descriptor-relative Python source reads; The C# compiler is integrated on main; MS0.1 name links and path follow-ups built; earlier: MS0 read-only scripts view, CE 0.1.11 world-file loading, the compiler spike and operator-grouping decision; section 2 measurements use the read-only retail view)
+Last updated: 2026-11-01 (temporary-play safety design distinguished from its observed test)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours checked against the shipped scripts with the documented
 missing-header and stale-source cases, and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -505,7 +505,7 @@ control, a comment line above the first line, which the compiled script keeps as
 The Level editor's changes box has a button, **Play this level with the changes**, which starts Onslaught CE at the open level with the changes as they are now. It works from the
 open edit (nothing has to be saved first, and nothing is saved by it: the edit still counts as unsaved), on Linux, with a CE of 0.1.11 or later. The first design (the roadmap's)
 was to switch the mod on in the player's own `ce.ini`, start the level and switch it off afterwards. A companion or CE that dies in between would leave a mod switched on in the
-player's careers, so the button never writes the player's CE folder at all: it makes a temporary CE user folder of its own.
+player's careers, so the play path is designed to leave the player's CE folder untouched by making a temporary CE user folder of its own.
 
 - **What it does.** `CePlay` makes a new folder inside the companion's own play folder (`ce-play`, beside its settings) and puts in it a copy of the player's `ce.ini` (their lines kept as
   they are, through the settings writer's own line handling, with `mods=` naming only this mod, `record_sessions=0` and `update_check=0`), a copy of their options file
@@ -515,9 +515,10 @@ player's careers, so the button never writes the player's CE folder at all: it m
   hooks add after that still reaches CE). It waits for CE to close, keeps the first megabyte of CE's log as `last-session.log` in the play folder (made as a new file and renamed over the old
   one, so a link planted at its working name is never written through), reads the log's lines about mods
   (the page shows them when CE did not say it served the mod's world file) and removes the temporary folder.
-- **What it never does.** It never writes the player's CE folder, `ce.ini` or careers, never copies a career, never starts CE in the player's own folder (a play folder that is, holds or lies
-  inside it is refused before anything is made), never records the session, and never leaves a mod enabled. Because mods are off in a session CE records (the launcher's `--record`, or
-  `record_sessions=1` in `ce.ini`, sets `BEA_PORT_RECORD` and `BEA_PORT_CLOCK`), the copy of `ce.ini` turns recording off.
+- **Safety design.** The play path is intended to leave the player's CE folder, `ce.ini` and careers untouched, omit careers from the copy, and start CE only in the temporary folder
+  (a play folder that is, holds or lies inside the player's folder is refused before anything is made). It disables recording in the temporary `ce.ini` and is designed not to leave a mod
+  enabled in the player's settings. Because mods are off in a session CE records (the launcher's `--record`, or `record_sessions=1` in `ce.ini`, sets `BEA_PORT_RECORD` and `BEA_PORT_CLOCK`),
+  the copy of `ce.ini` turns recording off. The observed offscreen result is described below.
 - **The temporary folder.** Made exclusively (`mkdirat`, so a name that exists is never reused), private to the player, with a marker file only `CePlayFolder` writes (its format, the
   folder's name, the companion's process, the launcher's process, the level and the mod). It is removed by the one folder the companion made, and every step is by name in an open folder, so no link
   below the play folder is followed (the play folder's own path is resolved once, when it is opened: a link above it is refused when the folder is made, and one swapped in afterwards could send
