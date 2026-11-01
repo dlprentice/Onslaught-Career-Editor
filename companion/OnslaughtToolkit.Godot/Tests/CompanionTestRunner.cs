@@ -64,6 +64,7 @@ public partial class CompanionTestRunner : SceneTree
                 GameAudioTests.Run(output, original, check);
                 LoreTests.Run(output, check);
                 ThemeTests.Run(check);
+                await UnitRowPanelTests.RunAsync(this, output, check);
                 await CompanionUiTests.RunAsync(this, fixture, output, original, check);
                 await CeTargetTests.RunAsync(this, original, output, check);
                 await CeOverlayTests.RunAsync(this, original, output, check);
