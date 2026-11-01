@@ -21,16 +21,20 @@ internal static class LevelObjectDragPageTests
     private static Vector2 Marker(LevelEditorPage page, Camera3D camera, int index)
     {
         NumericVector3 p = page.Map.Rows.Single(row => row.Index == index).Position;
-        return camera.UnprojectPosition(new Vector3(p.X / 100f, p.Z / 100f, p.Y / 100f));
+        return camera.UnprojectPosition(new Vector3(p.X / 100f, -p.Z / 100f, p.Y / 100f));
     }
 
     private static Vector2 Target(Camera3D camera, Heightfield terrain, float x, float y) =>
-        camera.UnprojectPosition(new Vector3(x, terrain.HeightAt(x, y), y));
+        camera.UnprojectPosition(new Vector3(x, -terrain.HeightAt(x, y), y));
 
     private static void Button(LevelTerrainViewport view, Vector2 local, bool pressed)
     {
         Vector2 p = view.GlobalPosition + local;
-        view.GetViewport().PushInput(new InputEventMouseButton { Position = p, GlobalPosition = p, ButtonIndex = MouseButton.Left, Pressed = pressed });
+        view.GetViewport().PushInput(new InputEventMouseButton
+        {
+            Position = p, GlobalPosition = p, ButtonIndex = MouseButton.Left, Pressed = pressed,
+            ButtonMask = pressed ? MouseButtonMask.Left : default,
+        }, true);
     }
 
     private static void Motion(LevelTerrainViewport view, Vector2 from, Vector2 to, bool pressed = true)
@@ -40,7 +44,7 @@ internal static class LevelObjectDragPageTests
         {
             Position = p, GlobalPosition = p, Relative = to - from,
             ButtonMask = pressed ? MouseButtonMask.Left : default,
-        });
+        }, true);
     }
 
     private static bool Unchanged(EditSession session, byte[] bytes, string? undo, bool redo) =>
@@ -143,8 +147,8 @@ internal static class LevelObjectDragPageTests
                 Func<Heightfield?>? provider = view.TerrainProvider;
                 if (cancellation == "Escape")
                 {
-                    view.GetViewport().PushInput(new InputEventKey { Keycode = Key.Escape, PhysicalKeycode = Key.Escape, Pressed = true });
-                    view.GetViewport().PushInput(new InputEventKey { Keycode = Key.Escape, PhysicalKeycode = Key.Escape, Pressed = false });
+                    view.GetViewport().PushInput(new InputEventKey { Keycode = Key.Escape, PhysicalKeycode = Key.Escape, Pressed = true }, true);
+                    view.GetViewport().PushInput(new InputEventKey { Keycode = Key.Escape, PhysicalKeycode = Key.Escape, Pressed = false }, true);
                 }
                 if (cancellation == "terrain") view.TerrainProvider = () => null;
                 Button(view, cancellation == "outside" ? new Vector2(-20, -20) : target, false);
