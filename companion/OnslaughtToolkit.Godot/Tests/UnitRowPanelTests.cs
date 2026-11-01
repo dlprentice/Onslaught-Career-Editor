@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using Godot;
 using OnslaughtToolkit.Companion.Levels;
+using OnslaughtToolkit.Companion.Game;
 using OnslaughtToolkit.Companion.Ui;
 
 namespace OnslaughtToolkit.Companion.Tests;
 
-/// <summary>The unit-row control acts only on an authored level fixture; it does not save or stage a mod.</summary>
+/// <summary>The arrangement control and editor page act only on an authored level fixture; they do not save or stage a mod.</summary>
 internal static class UnitRowPanelTests
 {
     internal static async Task RunAsync(SceneTree tree, string outputDirectory, Checks check)
@@ -100,6 +101,7 @@ internal static class UnitRowPanelTests
             panel.QueueFree();
             await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
         }
+        await GridOnPage(tree, outputDirectory, check);
     }
 
     private static async Task Grid(SceneTree tree, LevelEditorModel model, UnitRowPanel panel, int level, Checks check)
@@ -189,6 +191,103 @@ internal static class UnitRowPanelTests
         panel.Apply.EmitSignal(BaseButton.SignalName.Pressed);
         check.That(panel.Note.Text.Contains("selection changed", StringComparison.OrdinalIgnoreCase) && session.ToBytes().SequenceEqual(stale) && session.CanRedo,
                    "a replaced unit invalidates the grid selection without losing redo");
+    }
+
+    private static async Task GridOnPage(SceneTree tree, string outputDirectory, Checks check)
+    {
+        string scratch = Path.Combine(outputDirectory, "grid-page-authored");
+        string gameRoot = LevelEditorTests.GameWithLevels(scratch);
+        string[] files = Directory.GetFiles(gameRoot, "*", SearchOption.AllDirectories).Order().ToArray();
+        byte[][] originals = files.Select(File.ReadAllBytes).ToArray();
+        SettingsStore settings = new(Path.Combine(scratch, "settings.json"));
+        GameLibrary game = new([], settings, ceUserFolder: "", ceEnvironment: _ => null);
+        GameFolder folder = GameFolder.Inspect(gameRoot, "Authored test fixture");
+        typeof(GameLibrary).GetProperty(nameof(GameLibrary.Folder))!.SetValue(game, folder);
+        Control popups = new();
+        tree.Root.AddChild(popups);
+        AppServices services = new()
+        {
+            Workspace = null!, Game = game, Status = new StatusLine(), Backups = null!,
+            GameRunning = () => false, OpenUrl = _ => { }, Navigate = _ => { }, OpenCareer = null!, ChooseCareer = null!,
+            OpenCareerFile = () => { }, AskToDiscard = (_, _, _) => { }, LevelEditsUnsaved = () => 0,
+            Play = new CePlay(game, Path.Combine(scratch, "unused-play")), Popups = popups, CatchUp = () => Task.CompletedTask,
+        };
+        // The application initializes its shared fonts before constructing pages.
+        Theme theme = CompanionTheme.Build();
+        LevelEditorPage page = new(services);
+        page.Root.Theme = theme;
+        page.Root.Size = new Vector2(1024, 768);
+        tree.Root.AddChild(page.Root);
+        try
+        {
+            page.Refresh();
+            await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+            await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+            if (page.Model?.Session is not EditSession session || page.UnitRowsToggle.Disabled)
+            {
+                check.Fail("the real editor page opens an authored level and offers unit arrangement");
+                return;
+            }
+            int source = session.Body.Things.FindIndex(DuplicateObject.CanCopy);
+            if (source < 0 || page.Model.Duplicate(source).Row is null || page.Model.Duplicate(source).Row is null)
+            {
+                check.Fail("the real page fixture provides four authored units");
+                return;
+            }
+            int[] rows = session.Body.Things.Select((thing, index) => (thing, index))
+                .Where(pair => DuplicateObject.CanCopy(pair.thing)).Select(pair => pair.index).Take(4).ToArray();
+            ScrollContainer? side = page.UnitRowsToggle.GetParent() as ScrollContainer;
+            Node? parent = page.UnitRowsToggle.GetParent();
+            while (side is null && parent is not null) { parent = parent.GetParent(); side = parent as ScrollContainer; }
+            if (rows.Length != 4 || side is null) { check.Fail("the page exposes its arrangement panel inside a scrollable column"); return; }
+            side.EnsureControlVisible(page.UnitRowsToggle);
+            await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+            ClickButton(tree, page.UnitRowsToggle);
+            await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+            check.That(page.UnitRowsToggle.ButtonPressed && page.UnitRows.Visible,
+                       "a real click opens arrangement from the editor page");
+            if (!page.UnitRows.Visible) return;
+            side.EnsureControlVisible(page.UnitRows.Layout);
+            await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+            bool choseGrid = await ChooseLayout(tree, page.UnitRows.Layout, "ui_down");
+            check.That(choseGrid && page.UnitRows.Layout.Selected == 1 && page.UnitRows.GridOptionsVisible,
+                       "the real page exposes grid fields through normal layout input");
+            if (!choseGrid || page.UnitRows.Layout.Selected != 1) return;
+            side.EnsureControlVisible(page.UnitRows.Units);
+            await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+            for (int i = 0; i < 4; i++) Click(tree, page.UnitRows.Units, i);
+            if (page.UnitRows.Units.GetSelectedItems().Length != 4) { check.Fail("the real page selects four authored units"); return; }
+            page.UnitRows.FirstX.Text = "40"; page.UnitRows.FirstY.Text = "60";
+            page.UnitRows.StepX.Text = "12"; page.UnitRows.StepY.Text = "3";
+            page.UnitRows.Columns.Text = "2"; page.UnitRows.RowX.Text = "-4"; page.UnitRows.RowY.Text = "18";
+            byte[] before = session.ToBytes();
+            WorldBody expected = WorldBody.Read(before);
+            for (int i = 0; i < rows.Length; i++)
+            {
+                System.Numerics.Vector3 old = expected.Things[rows[i]].Init.Position;
+                expected.Things[rows[i]].Init.Position = new(40 + 12 * (i % 2) - 4 * (i / 2),
+                    60 + 3 * (i % 2) + 18 * (i / 2), old.Z);
+            }
+            side.EnsureControlVisible(page.UnitRows.Apply);
+            await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+            ClickButton(tree, page.UnitRows.Apply);
+            byte[] after = session.ToBytes();
+            check.That(after.SequenceEqual(expected.Write()) && page.Map.Rows.Count == session.Body.Things.Count &&
+                       session.UndoDescription == "Arrange units in a grid",
+                       "the real page applies the grid as one edit and refreshes its map");
+            check.That(session.Undo() && session.ToBytes().SequenceEqual(before) && session.Redo() && session.ToBytes().SequenceEqual(after),
+                       "the real page's grid edit can be undone and redone");
+            check.That(files.SequenceEqual(Directory.GetFiles(gameRoot, "*", SearchOption.AllDirectories).Order()) &&
+                       files.Select((path, index) => File.ReadAllBytes(path).SequenceEqual(originals[index])).All(same => same),
+                       "the authored game-data fixture stays unchanged throughout the page interaction");
+        }
+        finally
+        {
+            page.Root.QueueFree();
+            services.Status.Root.QueueFree();
+            popups.QueueFree();
+            await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+        }
     }
 
     private static async Task<bool> ChooseLayout(SceneTree tree, OptionButton layout, string direction)
