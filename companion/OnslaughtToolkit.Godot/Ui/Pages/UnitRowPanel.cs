@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using Godot;
+using System.Globalization;
 using OnslaughtToolkit.Companion.Levels;
 using NumericVector2 = System.Numerics.Vector2;
 
@@ -12,12 +13,18 @@ internal sealed partial class UnitRowPanel : VBoxContainer
     private EditSession? _shownSession;
     private bool _listening;
     private readonly List<(int Row, PlacedObject Thing)> _entries = [];
+    private readonly Control _gridOptions;
 
     internal ItemList Units { get; }
     internal LineEdit FirstX { get; }
     internal LineEdit FirstY { get; }
     internal LineEdit StepX { get; }
     internal LineEdit StepY { get; }
+    internal OptionButton Layout { get; }
+    internal LineEdit Columns { get; }
+    internal LineEdit RowX { get; }
+    internal LineEdit RowY { get; }
+    internal bool GridOptionsVisible => _gridOptions.Visible;
     internal Button SelectAll { get; }
     internal Button ClearSelection { get; }
     internal Button UseFirstPosition { get; }
@@ -29,8 +36,14 @@ internal sealed partial class UnitRowPanel : VBoxContainer
     internal UnitRowPanel()
     {
         AddThemeConstantOverride("separation", 8);
-        this.Add(Build.Heading("Arrange units in a row"));
-        this.Add(Build.Text("Choose units below. Their order in this list is the order in the row.", "Muted"));
+        this.Add(Build.Heading("Arrange units"));
+        this.Add(Build.Text("Choose units below. They are placed in the order shown.", "Muted"));
+        HBoxContainer layout = this.Add(Build.Row(8));
+        layout.Add(Build.Text("Layout", wrap: false));
+        Layout = layout.Add(new OptionButton { SizeFlagsHorizontal = SizeFlags.ExpandFill, TooltipText = "Choose a single row or a grid of rows." });
+        Layout.AddItem("One row");
+        Layout.AddItem("Grid");
+        Layout.Select(0);
         Units = this.Add(new ItemList
         {
             SelectMode = ItemList.SelectModeEnum.Toggle,
@@ -51,6 +64,21 @@ internal sealed partial class UnitRowPanel : VBoxContainer
         FirstY = Field(fields, "First unit Y");
         StepX = Field(fields, "X spacing per unit");
         StepY = Field(fields, "Y spacing per unit");
+        StepX.Text = "10";
+        StepY.Text = "0";
+        VBoxContainer grid = this.Add(Build.Column(6));
+        _gridOptions = grid;
+        grid.Visible = false;
+        grid.Add(Build.Text("The next row starts at this X/Y offset from the row before it.", "Muted"));
+        GridContainer gridFields = grid.Add(new GridContainer { Columns = 2, SizeFlagsHorizontal = SizeFlags.ExpandFill });
+        Columns = Field(gridFields, "Units per row");
+        Columns.MaxLength = 4;
+        Columns.Text = "2";
+        RowX = Field(gridFields, "Next row offset X");
+        RowY = Field(gridFields, "Next row offset Y");
+        RowX.Text = "0";
+        RowY.Text = "10";
+        Layout.ItemSelected += index => _gridOptions.Visible = index == 1;
         UseFirstPosition = this.Add(Build.Button("Use first selected unit's position"));
         UseFirstPosition.Pressed += SetFirstPosition;
         this.Add(Build.Text("Only positions change. Heights stay as they are; this does not stop AI or check for overlaps.", "Muted"));
@@ -168,8 +196,26 @@ internal sealed partial class UnitRowPanel : VBoxContainer
             dx = CoordinateInput.Parse(StepX.Text), dy = CoordinateInput.Parse(StepY.Text);
         foreach ((string name, CoordinateParse value) in new[] { ("First unit X", x), ("First unit Y", y), ("X spacing", dx), ("Y spacing", dy) })
             if (!value.Ok) { Note.Text = $"{name}: {value.Problem}"; return; }
-        MoveOutcome outcome = _model!.ArrangeUnitsInRow(rows, new NumericVector2(x.Value, y.Value), new NumericVector2(dx.Value, dy.Value));
-        if (outcome.Result == MoveResult.Moved && (x.Rounded || y.Rounded || dx.Rounded || dy.Rounded))
+        MoveOutcome outcome;
+        bool rounded = x.Rounded || y.Rounded || dx.Rounded || dy.Rounded;
+        if (Layout.Selected == 0)
+            outcome = _model!.ArrangeUnitsInRow(rows, new NumericVector2(x.Value, y.Value), new NumericVector2(dx.Value, dy.Value));
+        else if (Layout.Selected == 1)
+        {
+            if (!int.TryParse(Columns.Text.Trim(' '), NumberStyles.None, CultureInfo.InvariantCulture, out int columns) || columns < 1 || columns > rows.Length)
+            {
+                Note.Text = $"Units per row must be a whole number from 1 to {rows.Length}.";
+                return;
+            }
+            CoordinateParse rowX = CoordinateInput.Parse(RowX.Text), rowY = CoordinateInput.Parse(RowY.Text);
+            foreach ((string name, CoordinateParse value) in new[] { ("Next row offset X", rowX), ("Next row offset Y", rowY) })
+                if (!value.Ok) { Note.Text = $"{name}: {value.Problem}"; return; }
+            rounded |= rowX.Rounded || rowY.Rounded;
+            outcome = _model!.ArrangeUnitsInGrid(rows, columns, new NumericVector2(x.Value, y.Value),
+                new NumericVector2(dx.Value, dy.Value), new NumericVector2(rowX.Value, rowY.Value));
+        }
+        else { Note.Text = "Choose a layout."; return; }
+        if (outcome.Result == MoveResult.Moved && rounded)
             outcome = outcome with { Message = outcome.Message + " Some values were rounded to the stored precision." };
         Note.Text = outcome.Message;
         ArrangementResult?.Invoke(outcome);
