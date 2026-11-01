@@ -75,13 +75,20 @@ def canonical_root() -> Path:
     return common.parent.resolve(strict=True)
 
 
+def worktree_output_owner() -> Path:
+    """Keep each worktree's outputs under the shared canonical directory without sharing retention."""
+    identity = hashlib.sha256(os.fsencode(ROOT.resolve())).hexdigest()
+    return canonical_root() / "local-data/companion/worktrees" / identity
+
+
 # Each check, build, test and audit run leaves its own output folder (about 43 MB for a test run); only the newest
-# few of each are kept. Export and capture folders hold packages and screens, so they are never pruned.
+# few of each are kept per worktree. Export and capture folders hold packages and screens, so they are never pruned.
 PRUNED_MODES = ("check", "build", "test", "run", "audit")
 KEEP_OUTPUTS = 5
-# Every worktree of a clone shares the canonical output owner, so a run holds an exclusive lock on this file in
-# its own folder for as long as it lives (a `run` window keeps its profile there); pruning skips a held folder.
+# A run holds an exclusive lock in its folder for as long as it lives (a `run` window keeps its profile there).
+# Allocation and pruning use a second lock so no run is pruned between creating its folder and holding its lock.
 IN_USE_LOCK = ".in-use.lock"
+ALLOCATION_LOCK = ".allocation.lock"
 _held_locks: list[int] = []
 
 
@@ -121,9 +128,14 @@ def prune_outputs(owner: Path, mode: str, keep: int = KEEP_OUTPUTS) -> list[Path
 
 def allocate_output(owner: Path, mode: str) -> tuple[Path, dict[str, str]]:
     owner.mkdir(parents=True, exist_ok=True)
-    prune_outputs(owner, mode, KEEP_OUTPUTS - 1)
-    output = Path(tempfile.mkdtemp(prefix=f"godot-dotnet-{mode}-", dir=owner))
-    hold_output(output)
+    descriptor = os.open(owner / ALLOCATION_LOCK, os.O_RDWR | os.O_CREAT | os.O_CLOEXEC | os.O_NOFOLLOW, 0o600)
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX)
+        prune_outputs(owner, mode, KEEP_OUTPUTS - 1)
+        output = Path(tempfile.mkdtemp(prefix=f"godot-dotnet-{mode}-", dir=owner))
+        hold_output(output)
+    finally:
+        os.close(descriptor)
     directories = {
         "TMPDIR": "scratch", "XDG_DATA_HOME": "profile/data", "XDG_CONFIG_HOME": "profile/config",
         "XDG_CACHE_HOME": "profile/cache", "DOTNET_CLI_HOME": "profile/dotnet",
@@ -577,8 +589,7 @@ def companion_main(argv: list[str] | None = None) -> int:
 
     previous = signal.signal(signal.SIGTERM, interrupt)
     try:
-        canonical = canonical_root()
-        output, env = allocate_output(canonical / "local-data/companion", args.mode)
+        output, env = allocate_output(worktree_output_owner(), args.mode)
         print(f"Companion output: {output}", flush=True)
         pins = read_json(COMPANION / "toolchain.json")
         platforms = (["linux", "windows"] if args.platform == "both" else [args.platform]) if args.mode == "export" else []

@@ -9,8 +9,10 @@ import hashlib
 import io
 import json
 import os
+import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -313,7 +315,7 @@ class CompanionLauncherTests(unittest.TestCase):
         self.assertTrue(any("--import" in call["args"] for call in self.calls_read()))
 
     def test_old_outputs_are_pruned_to_the_newest_few_of_each_mode(self)->None:
-        owner=self.canonical/"local-data/companion";owner.mkdir(parents=True)
+        owner=host.worktree_output_owner();owner.mkdir(parents=True)
         for index in range(8):
             for mode in ("test","export"):
                 folder=owner/f"godot-dotnet-{mode}-old{index}";folder.mkdir();os.utime(folder,(1000+index,1000+index))
@@ -381,6 +383,189 @@ class CompanionLauncherTests(unittest.TestCase):
 
     def test_contract_tests_in_a_release_assembly_are_refused(self)->None:
         with mock.patch.dict(os.environ,{"FAKE_TEST_LEAK":"1"}):self.assertEqual(2,self.invoke("export","--platform","linux"))
+
+
+@unittest.skipUnless(sys.platform.startswith("linux"), "Linux development runner")
+class CompanionOutputOwnershipTests(unittest.TestCase):
+    def setUp(self) -> None:
+        temporary = tempfile.TemporaryDirectory(prefix="companion-output-ownership-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.canonical = self.root / "canonical"
+        self.canonical.mkdir()
+
+    def test_worktrees_keep_separate_outputs_and_legacy_folders(self) -> None:
+        class ReachedAllocation(Exception):
+            pass
+
+        owners = []
+        with mock.patch.object(host, "canonical_root", return_value=self.canonical):
+            for name in ("first-worktree", "first-worktree", "second-worktree"):
+                root = self.root / name
+                root.mkdir(exist_ok=True)
+                with mock.patch.object(host, "ROOT", root), mock.patch.object(
+                    host, "allocate_output", side_effect=ReachedAllocation
+                ) as allocation, self.assertRaises(ReachedAllocation):
+                    host.companion_main(["test", "--shared-lock", str(self.root / "lock")])
+                owners.append(allocation.call_args.args[0])
+        self.assertEqual(owners[0], owners[1])
+        owners = [owners[0], owners[2]]
+        self.assertNotEqual(*owners)
+        self.assertTrue(all(owner.is_relative_to(self.canonical / "local-data/companion") for owner in owners))
+
+        legacy = self.canonical / "local-data/companion"
+        folders = []
+        for owner in (*owners, legacy):
+            owner.mkdir(parents=True, exist_ok=True)
+            group = []
+            for index in range(host.KEEP_OUTPUTS):
+                folder = owner / f"godot-dotnet-test-owned-{index}"
+                folder.mkdir()
+                (folder / "evidence.txt").write_text("authored evidence", encoding="utf-8")
+                os.utime(folder, (1000 + index, 1000 + index))
+                group.append(folder)
+            folders.append(group)
+
+        with mock.patch.object(host.shutil, "rmtree") as remove:
+            output, _ = host.allocate_output(owners[1], "test")
+        self.assertEqual([mock.call(folders[1][0])], remove.call_args_list)
+        self.assertTrue(output.is_relative_to(owners[1]))
+        self.assertTrue(all(folder.exists() for group in folders for folder in group))
+        with mock.patch.object(host.shutil, "rmtree") as legacy_remove:
+            host.prune_outputs(legacy, "test", 0)
+        self.assertEqual(set(folders[2]), {call.args[0] for call in legacy_remove.call_args_list})
+
+    def test_allocation_is_locked_before_another_run_can_prune(self) -> None:
+        owner = self.root / "output"
+        owner.mkdir()
+        for index in range(host.KEEP_OUTPUTS - 1):
+            folder = owner / f"godot-dotnet-test-old-{index}"
+            folder.mkdir()
+            os.utime(folder, (2000 + index, 2000 + index))
+        entered = threading.Event()
+        release = threading.Event()
+        second_started = threading.Event()
+        second_done = threading.Event()
+        outputs = {}
+        failures = []
+        original_hold = host.hold_output
+
+        def delayed_hold(output: Path) -> None:
+            if threading.current_thread().name == "first":
+                os.utime(output, (1000, 1000))
+                entered.set()
+                if not release.wait(5):
+                    raise TimeoutError("first allocator was not released")
+                original_hold(output)
+                os.utime(output, (1000, 1000))
+            else:
+                original_hold(output)
+
+        def allocate(name: str) -> None:
+            try:
+                if name == "second":
+                    second_started.set()
+                outputs[name], _ = host.allocate_output(owner, "test")
+            except BaseException as error:
+                failures.append(error)
+            finally:
+                if name == "second":
+                    second_done.set()
+
+        first = threading.Thread(target=allocate, args=("first",), name="first")
+        second = threading.Thread(target=allocate, args=("second",), name="second")
+        with mock.patch.object(host, "hold_output", side_effect=delayed_hold), mock.patch.object(
+            host.shutil, "rmtree"
+        ) as remove:
+            try:
+                first.start()
+                self.assertTrue(entered.wait(5))
+                second.start()
+                self.assertTrue(second_started.wait(5))
+                self.assertFalse(second_done.wait(0.2), "another allocator passed the unlocked creation window")
+            finally:
+                release.set()
+                first.join(5)
+                if second.ident is not None:
+                    second.join(5)
+            self.assertFalse(first.is_alive() or second.is_alive())
+            self.assertEqual([], failures)
+            self.assertEqual({"first", "second"}, set(outputs))
+            self.assertTrue(host.output_in_use(outputs["first"]))
+            self.assertNotIn(mock.call(outputs["first"]), remove.call_args_list)
+
+    def test_retention_preserves_live_and_unpruned_modes(self) -> None:
+        owner = self.root / "output"
+        owner.mkdir()
+        folders = []
+        for index in range(8):
+            folder = owner / f"godot-dotnet-run-owned-{index}"
+            folder.mkdir()
+            os.utime(folder, (1000 + index, 1000 + index))
+            folders.append(folder)
+        for mode in ("export", "capture"):
+            (owner / f"godot-dotnet-{mode}-owned").mkdir()
+        descriptor = os.open(folders[0] / host.IN_USE_LOCK, os.O_RDWR | os.O_CREAT, 0o600)
+        self.addCleanup(os.close, descriptor)
+        host.fcntl.flock(descriptor, host.fcntl.LOCK_EX)
+        os.utime(folders[0], (1000, 1000))
+        with mock.patch.object(host.shutil, "rmtree") as remove:
+            removed = host.prune_outputs(owner, "run", 4)
+            self.assertEqual([], host.prune_outputs(owner, "export", 0))
+            self.assertEqual([], host.prune_outputs(owner, "capture", 0))
+        self.assertEqual(folders[1:4], list(reversed(removed)))
+        self.assertEqual([mock.call(folder) for folder in removed], remove.call_args_list)
+        self.assertTrue(all(folder.exists() for folder in folders))
+
+    def test_allocation_lock_is_held_against_another_process(self) -> None:
+        owner = self.root / "output"
+        original_hold = host.hold_output
+        probe = (
+            "import fcntl, os, sys\n"
+            "fd = os.open(sys.argv[1], os.O_RDWR)\n"
+            "try:\n"
+            " fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)\n"
+            "except BlockingIOError:\n"
+            " sys.exit(0)\n"
+            "sys.exit(1)\n"
+        )
+
+        def check_lock(output: Path) -> None:
+            result = subprocess.run([sys.executable, "-I", "-c", probe, str(owner / host.ALLOCATION_LOCK)],
+                                    capture_output=True, timeout=5, check=False)
+            self.assertEqual(0, result.returncode, "another process acquired the allocation lock")
+            original_hold(output)
+
+        with mock.patch.object(host, "hold_output", side_effect=check_lock), mock.patch.object(
+            host.shutil, "rmtree"
+        ) as remove:
+            output, _ = host.allocate_output(owner, "test")
+        remove.assert_not_called()
+        self.assertTrue(host.output_in_use(output))
+
+    def test_allocation_lock_symlink_is_refused_before_pruning(self) -> None:
+        owner = self.root / "output"
+        owner.mkdir()
+        target = self.root / "unrelated"
+        target.write_text("authored evidence", encoding="utf-8")
+        (owner / host.ALLOCATION_LOCK).symlink_to(target)
+        with mock.patch.object(host, "prune_outputs") as prune:
+            with self.assertRaises(OSError):
+                host.allocate_output(owner, "test")
+        prune.assert_not_called()
+        self.assertEqual("authored evidence", target.read_text(encoding="utf-8"))
+        self.assertFalse(list(owner.glob("godot-dotnet-*")))
+
+    def test_test_run_keeps_private_profile_environment(self) -> None:
+        owner = self.root / "output"
+        inherited = {"BEA_USER_DIR": "outside", "BEA_GAME_DIR": "outside", "BEA_UPDATE_FEED": "outside"}
+        with mock.patch.dict(os.environ, inherited), mock.patch.object(host.shutil, "rmtree") as remove:
+            output, env = host.allocate_output(owner, "test")
+        remove.assert_not_called()
+        for name in ("TMPDIR", "XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "HOME"):
+            self.assertTrue(Path(env[name]).is_relative_to(output))
+        self.assertTrue(all(name not in env for name in inherited))
+        self.assertTrue(host.output_in_use(output))
 
 
 class ProjectIconTests(unittest.TestCase):

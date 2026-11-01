@@ -182,7 +182,7 @@ standalone setup route for them. `audit` restores outside locked mode with
 NuGet's vulnerability audit over direct and transitive packages (it needs nuget.org); the
 build's own restore stays locked and does not audit, so a new advisory never changes a build.
 Each check, build, test, run and audit leaves an output folder; the runner keeps the newest five
-of each and removes older ones. Export and capture folders are never removed.
+of each per worktree and removes older ones. Export and capture folders are never removed.
 
 Build, test, capture and export never open a window on the desktop. **Run opens a
 window**; use it when the desktop is available. Each command stages the project and the lore into a unique canonical `local-data/companion/`
