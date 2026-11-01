@@ -290,7 +290,8 @@ public partial class LevelTerrainViewport : SubViewportContainer
         }
         try
         {
-            var surface = draft ?? TerrainSurface.Build(terrain);
+            var editable = draft ?? TerrainSurface.Build(terrain);
+            var surface = TerrainSurface.BuildPreview(terrain, editable);
             var preview = TerrainPreviewMesh.Build(surface.Vertices.Span, surface.Indices.Span);
             var vertices = new Vector3[preview.Vertices.Length];
             var normals = new Vector3[preview.Normals.Length];
