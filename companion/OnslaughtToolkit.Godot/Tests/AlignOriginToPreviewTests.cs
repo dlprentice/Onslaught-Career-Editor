@@ -87,6 +87,38 @@ internal static class AlignOriginToPreviewTests
                    changedWorld.Session.ToBytes().AsSpan().SequenceEqual(worldAfterOtherEdit),
                    "an intervening change elsewhere in the world is refused without removing its history");
 
+        Fixture reentrant = new();
+        int draftReads = 0;
+        Vector3 reentrantPosition = reentrant.Session.Body.Things[0].Init.Position + new Vector3(1, 0, 0);
+        TerrainDraft? SideEffectingAccessor()
+        {
+            if (++draftReads == 3) reentrant.Session.Body.Things[0].Init.Position = reentrantPosition;
+            return reentrant.Draft;
+        }
+        if (!AlignOriginToPreview.TryPrepare(reentrant.Session, reentrant.Draft, SideEffectingAccessor, 0,
+                out AlignOriginToPreview? reentrantMove) || reentrantMove is null) { check.Fail("the reentrant control must prepare"); return; }
+        bool acceptedReentrant = reentrant.Session.TryApply(reentrantMove, out _);
+        check.That(!acceptedReentrant && reentrant.Session.Body.Things[0].Init.Position == reentrantPosition && !reentrant.Session.CanUndo,
+                   "an accessor that changes the object before apply is refused without overwriting it");
+
+        Fixture reentrantIdentity = new();
+        int identityReads = 0;
+        TerrainDraft? ReplacingAccessor()
+        {
+            if (++identityReads == 3)
+            {
+                WorldBody copy = WorldBody.Read(reentrantIdentity.Session.ToBytes());
+                reentrantIdentity.Session.Body.Things[0] = copy.Things[0];
+            }
+            return reentrantIdentity.Draft;
+        }
+        byte[] identityBefore = reentrantIdentity.Session.ToBytes();
+        if (!AlignOriginToPreview.TryPrepare(reentrantIdentity.Session, reentrantIdentity.Draft, ReplacingAccessor, 0,
+                out AlignOriginToPreview? replacedDuringCheck) || replacedDuringCheck is null) { check.Fail("the reentrant identity control must prepare"); return; }
+        check.That(!reentrantIdentity.Session.TryApply(replacedDuringCheck, out _) &&
+                   reentrantIdentity.Session.ToBytes().AsSpan().SequenceEqual(identityBefore) && !reentrantIdentity.Session.CanUndo,
+                   "an accessor that replaces the object with identical bytes is refused by identity");
+
         Fixture identity = new();
         if (!identity.Prepare(out AlignOriginToPreview? identityMove) || identityMove is null) { check.Fail("the identity control must prepare"); return; }
         byte[] identical = identity.Session.ToBytes();

@@ -6,7 +6,7 @@ namespace OnslaughtToolkit.Companion.Levels;
 
 /// <summary>One undoable object-origin move to a sampled editor preview. This is not CE ground contact,
 /// model-foot clearance, a saved level, or evidence about real level behavior.</summary>
-/// <remarks>The caller must supply an accessor to the actually active draft and serialize preparation,
+/// <remarks>The caller must supply a side-effect-free accessor to the actually active draft and serialize preparation,
 /// application, undo and redo on the editor thread. A refusal from undo or redo can throw and must be reported.
 /// This command cannot enforce preview-only mode: a future caller must block save, staging and play while its
 /// preview-origin moves are present until those paths have a separately reviewed design.</remarks>
@@ -70,7 +70,8 @@ internal sealed class AlignOriginToPreview : IEditCommand
     public void Do(WorldBody world)
     {
         if (!Matches(world, _before) || !IsActive(_currentDraft, _draft) || !_draft.BelongsTo(world) ||
-            !_projection.IsCurrent(_draft.Surface)) throw new InvalidOperationException("The object or terrain preview changed; prepare the move again.");
+            !_projection.IsCurrent(_draft.Surface) || !Matches(world, _before))
+            throw new InvalidOperationException("The object or terrain preview changed; prepare the move again.");
         _move.Do(world);
     }
 
