@@ -32,12 +32,16 @@ internal sealed class LevelEditorPage : Page
     private readonly Button _copy, _copyFolder;
     private readonly Control _body;
     private readonly Control _mapPanel;
+    private readonly LevelTerrainViewport _terrainPreview3d;
+    private readonly Button _terrainViewSwitch;
     private readonly ScriptsPanel _scripts;
     private readonly PanelContainer _scriptCard;
     private readonly Label _scriptTitle, _scriptWhere, _scriptHandles, _scriptCalls, _scriptRuns, _scriptSource, _scriptNamesTitle, _pathText;
     private readonly HFlowContainer _scriptUses, _objectScripts, _scriptNames, _objectPaths;
     private IReadOnlyList<ScriptEntry>? _shownScripts;
     private LevelEditorModel? _model;
+    private EditSession? _terrainShownSession;
+    private long _viewRevision;
     private string? _root;
     private int? _selected;
     private (string X, string Y, string Z) _shown = ("", "", "");
@@ -74,6 +78,17 @@ internal sealed class LevelEditorPage : Page
         Redo = toolbar.Add(Build.Button("Redo", tooltip: "Make the move you took back.", disabled: true));
         Undo.Pressed += () => Step(undo: true);
         Redo.Pressed += () => Step(undo: false);
+        TerrainEdit = left.Add(Build.Button("Terrain preview", tooltip: "In 3D, click to raise a preview point or Shift-click to lower it. This cannot be saved or played.", disabled: true));
+        TerrainEdit.ToggleMode = true;
+        TerrainEdit.Toggled += enabled =>
+        {
+            if (enabled && (_model is null || !_model.BeginTerrainPreview(out _)))
+            {
+                TerrainEdit.SetPressedNoSignal(false);
+                ShowNote("Open a level with terrain that can be previewed first.", refusal: true);
+            }
+            UpdateWorldNote();
+        };
         // The search shares its line with the Map switch: the toolbar above has no width to spare in the smallest window.
         HBoxContainer searchRow = left.Add(Build.Row(10));
         Search = searchRow.Add(new LineEdit
@@ -85,6 +100,8 @@ internal sealed class LevelEditorPage : Page
         MapToggle.Toggled += on => _mapPanel!.Visible = on;
         ScriptsToggle = searchRow.Add(new CheckButton { Text = "Scripts", TooltipText = "Show the level's compiled scripts and their source, read only, instead of the objects." });
         ScriptsToggle.Toggled += ShowScripts;
+        _terrainViewSwitch = searchRow.Add(Build.Button("3D", tooltip: "Switch between the 2D map and sampled 3D terrain with object marks."));
+        _terrainViewSwitch.ToggleMode = true;
         Search.TextChanged += _ =>
         {
             if (_scripts!.Visible) _scripts.Filter(Search.Text);
@@ -111,7 +128,17 @@ internal sealed class LevelEditorPage : Page
         mapColumn.SizeFlagsStretchRatio = 1.6f;
         _mapPanel = mapColumn;
         Map = mapColumn.Add(new LevelMap { SizeFlagsVertical = Control.SizeFlags.ExpandFill, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
-        mapColumn.Add(Build.Text("Wheel zooms · drag the background to pan · click or drag a mark to select or move it (Esc cancels) · arrow keys nudge the selected mark · Home fits the level", "Faint"));
+        _terrainPreview3d = mapColumn.Add(new LevelTerrainViewport
+        {
+            TerrainProvider = () => _model?.Terrain,
+            PreviewSurfaceProvider = () => _model?.TerrainPreviewSurface,
+            TerrainModeProvider = () => TerrainEdit.ButtonPressed && _terrainViewSwitch.ButtonPressed,
+            Visible = false,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+            CustomMinimumSize = new Vector2(280, 150),
+        });
+        Label mapHelp = mapColumn.Add(Build.Text("Wheel zooms · drag the background to pan · click or drag a mark to select or move it (Esc cancels) · arrow keys nudge the selected mark · Home fits the level", "Faint"));
         HBoxContainer pathBar = mapColumn.Add(Build.Row(8));
         PathsToggle = pathBar.Add(new CheckButton { Text = "Paths", TooltipText = "Draw every waypoint path of the level, faintly, through the objects it names." });
         PathsToggle.Toggled += on => Map.ShowAllPaths = on;
@@ -121,8 +148,31 @@ internal sealed class LevelEditorPage : Page
         HidePath = pathBar.Add(Build.Button("Hide path", tooltip: "Stop highlighting the path."));
         HidePath.Disabled = true;  // always in the row, so that the map above it keeps its height when a path is shown
         HidePath.Pressed += () => HighlightPath(null);
+        _terrainViewSwitch.Toggled += enabled =>
+        {
+            _terrainPreview3d.Visible = enabled;
+            Map.Visible = !enabled;
+            mapHelp.Visible = pathBar.Visible = !enabled;
+            _terrainViewSwitch.Text = enabled ? "2D" : "3D";
+            if (!enabled) TerrainEdit.SetPressedNoSignal(false);
+            UpdateChanges();
+            UpdateWorldNote();
+        };
         Map.RowPicked += row => SelectIndex(row);
         Map.MoveRequested += (row, x, y) => Dragged(row, x, y);
+        _terrainPreview3d.RowsProvider = () => Map.Rows;
+        _terrainPreview3d.SelectedRowProvider = () => Map.Selected;
+        _terrainPreview3d.MoveContextProvider = row =>
+            _model?.Session is { } session && row >= 0 && row < session.Body.Things.Count
+                ? (session, session.Body.Things[row]) : default;
+        _terrainPreview3d.RowPicked += row => SelectIndex(row);
+        _terrainPreview3d.MoveRequested += (row, x, y) => Dragged(row, x, y);
+        _terrainPreview3d.TerrainEditRequested += (x, y, raise) =>
+        {
+            if (_model is null || !TerrainEdit.ButtonPressed) return;
+            MoveOutcome outcome = _model.ChangeTerrainPreview(x, y, raise);
+            ShowNote(outcome.Message, outcome.Result == MoveResult.Refused);
+        };
         foreach (int column in new[] { 0, 1, 3, 4, 5 }) Table.SetColumnExpand(column, false);
         Table.SetColumnCustomMinimumWidth(0, 46);
         Table.SetColumnCustomMinimumWidth(1, 108);
@@ -297,6 +347,7 @@ internal sealed class LevelEditorPage : Page
     internal LineEdit Z { get; }
     internal Button Undo { get; }
     internal Button Redo { get; }
+    internal Button TerrainEdit { get; }
     internal Button Apply { get; }
     internal Button Reset { get; }
     internal Button Duplicate { get; }
@@ -339,6 +390,9 @@ internal sealed class LevelEditorPage : Page
     /// <summary>What compiling or putting the shipped script back said, in the script card, and the warnings about the script the level uses under it.</summary>
     internal string ScriptEditNote => string.Join("\n", new[] { _scriptEditNote.Text, _scriptEditWarnings.Visible ? _scriptEditWarnings.Text : "" }.Where(text => text.Length > 0));
     internal LevelEditorModel? Model => _model;
+    internal long ConfirmationRevision => _viewRevision;
+    internal LevelTerrainViewport TerrainPreview => _terrainPreview3d;
+    internal Button TerrainViewSwitch => _terrainViewSwitch;
     internal string Note => _note.Text;
     internal string Hint => _hint.Text;
     internal string Summary => _summary.Text;
@@ -394,6 +448,8 @@ internal sealed class LevelEditorPage : Page
         {
             _root = root;
             _selected = null;
+            TerrainEdit.SetPressedNoSignal(false);
+            _terrainShownSession = null;
             _model = root is null ? null : LevelEditorModel.ForGame(root);
             if (_model is not null) _model.Changed += OnModelChanged;
             _savedPanel.Visible = _problemPanel.Visible = false;
@@ -453,14 +509,45 @@ internal sealed class LevelEditorPage : Page
     internal void PickLevel(int level)
     {
         int changed = ChangeCount;
-        if (_model?.Level is int open && changed > 0)
+        if (_model is { Level: int open } model && changed > 0)
         {
             ShowInPicker(open);
+            if (model.Session is not { } session)
+            {
+                ShowChangedConfirmation();
+                return;
+            }
+            byte[] expected;
+            try { expected = session.ToBytes(); }
+            catch (Exception error) when (EditSession.IsUnstorable(error))
+            {
+                _problemPanel.Visible = true;
+                _problemText.Text = "The current edit cannot be checked safely, so it was not discarded.";
+                return;
+            }
+            long revision = _viewRevision;
             _services.AskToDiscard($"{Build.Count(changed, "change")} on level {open} {(changed == 1 ? "is" : "are")} not saved. Open level {level} and discard {(changed == 1 ? "it" : "them")}?",
-                "Discard and open", () => OpenLevel(level));
+                "Discard and open", () =>
+                {
+                    if (!MatchesConfirmedEdit(model, session, revision, expected)) { ShowChangedConfirmation(); return; }
+                    OpenLevel(level);
+                });
             return;
         }
         OpenLevel(level);
+    }
+
+    private bool MatchesConfirmedEdit(LevelEditorModel model, EditSession session, long revision, byte[] expected)
+    {
+        if (!ReferenceEquals(_model, model) || !ReferenceEquals(model.Session, session) || _viewRevision != revision) return false;
+        try { return session.ToBytes().AsSpan().SequenceEqual(expected); }
+        catch (Exception error) when (EditSession.IsUnstorable(error)) { return false; }
+    }
+
+    private void ShowChangedConfirmation()
+    {
+        _problemPanel.Visible = true;
+        _problemText.Text = "The edit changed while confirmation was open. Choose again.";
     }
 
     /// <summary>Opens a level's own world, dropping what was open (the picker asks first when it holds unsaved changes). Returns false, with the reason shown, if it cannot be edited.</summary>
@@ -490,11 +577,17 @@ internal sealed class LevelEditorPage : Page
 
     private void OnModelChanged()
     {
+        _viewRevision++;
+        if (!ReferenceEquals(_terrainShownSession, _model?.Session))
+        {
+            TerrainEdit.SetPressedNoSignal(false);
+            _terrainShownSession = _model?.Session;
+        }
         _scriptChanges = _model?.Session?.ScriptChanges() ?? [];
         _scriptBytes.Clear();
         _problemPanel.Visible = _model?.Problem is not null;
         _problemText.Text = _model?.Problem ?? "";
-        _worldNote.Text = _model?.BaseLevel is int baseLevel ? $"This level also loads the base world of level {baseLevel}. This editor does not change it." : "";
+        UpdateWorldNote();
         if (!ReferenceEquals(_shownScripts, _model?.Scripts))  // the scripts change when a level is opened and when a script is replaced or taken back, not with each move
         {
             IReadOnlyList<ScriptEntry> scripts = _model?.Scripts ?? [];
@@ -513,6 +606,15 @@ internal sealed class LevelEditorPage : Page
         Map.Select(_selected);
         UpdateInspector(clearNote: false);
         UpdateChanges();
+    }
+
+    private void UpdateWorldNote()
+    {
+        string world = _model?.BaseLevel is int baseLevel
+            ? $"This level also loads the base world of level {baseLevel}. This editor does not change it." : "";
+        string terrain = _model?.TerrainHasChanges == true || TerrainEdit.ButtonPressed
+            ? "Terrain changes are an unsaved 3D preview; the 2D map shows base terrain. Changed terrain cannot be saved or played." : "";
+        _worldNote.Text = string.Join(" ", new[] { world, terrain }.Where(text => text.Length > 0));
     }
 
     private void RebuildTable()
@@ -623,6 +725,8 @@ internal sealed class LevelEditorPage : Page
     private void UpdateChanges()
     {
         EditSession? session = _model?.Session;
+        _terrainViewSwitch.Disabled = session is null || _model?.Terrain is null;
+        TerrainEdit.Disabled = session is null || _model?.Terrain is null || !_terrainViewSwitch.ButtonPressed || _scripts.Visible;
         Undo.Disabled = session is not { CanUndo: true };
         Redo.Disabled = session is not { CanRedo: true };
         Undo.TooltipText = session?.UndoDescription is { } undo ? $"Take back: {undo}." : "Take back the last move.";
@@ -644,7 +748,7 @@ internal sealed class LevelEditorPage : Page
         ChangedOnly.Disabled = false;
         ValidationReport report = session.Validate();
         List<string> lines = [];
-        if (summary is not null) lines.AddRange(report.Errors.Select(finding => "Cannot save: " + finding.Message));
+        if (summary is not null) lines.AddRange(report.Errors.Where(finding => !(_model.TerrainHasChanges && finding.Code == "no-change")).Select(finding => "Cannot save: " + finding.Message));
         lines.AddRange(report.Warnings.Select(finding => "Take care: " + finding.Message));
         _warnings.Text = string.Join("\n", lines);
         _warnings.Visible = lines.Count > 0;
@@ -654,6 +758,12 @@ internal sealed class LevelEditorPage : Page
         string? playBlock = summary is null ? "Make a change first: there is nothing to try yet." : !report.CanSave ? report.Errors[0].Message : _services.Play.Unavailable();
         Play.Disabled = playBlock is not null;
         Play.TooltipText = playBlock ?? PlayTip;
+        if (_model.TerrainHasChanges)
+        {
+            Save.Disabled = Play.Disabled = true;
+            Save.TooltipText = "Changed terrain is an unsaved 3D preview and cannot be saved here.";
+            Play.TooltipText = "Changed terrain is an unsaved 3D preview and cannot be played here.";
+        }
     }
 
     private void ShowPlayNote(string text, bool failed)
@@ -670,6 +780,7 @@ internal sealed class LevelEditorPage : Page
     /// </summary>
     internal async Task PlayAsync()
     {
+        if (_model?.TerrainHasChanges == true) return;
         if (_model is not { Level: int level } model || Play.Disabled) return;
         ShowPlayNote($"Onslaught CE is starting at level {level} with your changes. Close it to come back here.", failed: false);
         CePlayReport report = await _services.Play.PlayAsync(level, (parent, info) => model.StageForPlay(parent, info, ProtectedFolders()));
@@ -752,12 +863,15 @@ internal sealed class LevelEditorPage : Page
         _split.Visible = !on;
         _scripts.Visible = on;
         MapToggle.Visible = !on;
+        _terrainViewSwitch.Visible = !on;
+        TerrainEdit.Visible = !on;
         _scriptCard.Visible = on;
         Search.PlaceholderText = on ? ScriptSearchHint : ObjectSearchHint;
         Search.TooltipText = on ? "Shows the scripts whose name, events or functions hold this text."
             : "Shows the objects whose row number, name, kind or script holds this text.";
         if (on) _scripts.Filter(Search.Text);
         else RebuildTable();
+        UpdateChanges();
     }
 
     /// <summary>Shows a script of the open level (the Scripts view, with the search cleared so that nothing hides it). Returns false if there is none of that name.</summary>
@@ -917,6 +1031,7 @@ internal sealed class LevelEditorPage : Page
     /// <summary>The note about a refusal is about the text as it was: it goes with that text. The note about a replacement stays, as the replacement does.</summary>
     private void OnScriptTextEdited()
     {
+        _viewRevision++;
         if (_editNoteRefused)
         {
             _scriptEditNote.Text = "";
@@ -1104,6 +1219,7 @@ internal sealed class LevelEditorPage : Page
 
     private void BeginSave()
     {
+        if (_model?.TerrainHasChanges == true) return;
         if (_model?.Level is not int level || _model.Session is null) return;
         SaveDialog.Begin(level, DefaultDestination());
         SaveDialog.PopupCentered();
@@ -1118,6 +1234,7 @@ internal sealed class LevelEditorPage : Page
     /// <summary>Saves the edit with the words in the dialog. Returns what happened, with the reason shown if it did not save.</summary>
     internal SaveOutcome SaveNow()
     {
+        if (_model?.TerrainHasChanges == true) return new SaveOutcome(null, "Changed terrain is an unsaved 3D preview and cannot be saved here.");
         if (_model is null) return new SaveOutcome(null, "Choose a level first.");
         ModInfo info = SaveDialog.Info;
         SaveOutcome outcome = _model.SaveAsMod(SaveDialog.Destination.Text.Trim(), info, ProtectedFolders());
