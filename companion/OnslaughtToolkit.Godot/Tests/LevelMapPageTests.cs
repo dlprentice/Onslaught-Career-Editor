@@ -94,6 +94,37 @@ internal static class LevelMapPageTests
         (int Row, string X, string Y, string Z)[] spread = [(0, "100", "400", "0"), (1, "300", "380", "-0"), (2, "120", "120", "0"), (3, "400", "100", "0"), (4, "256", "256", "0")];
         foreach ((int row, string x, string y, string z) in spread) check.That(model.Move(row, x, y, z).Result == MoveResult.Moved, $"row {row} is moved to {x}, {y}");
         await Frame(tree);
+        await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+        GD.Print("mission_terrain_page_test_reached");
+        var missionTerrainSplit = tree.Root.FindChild("MissionTerrainSplit", true, false) as HSplitContainer;
+        var missionTerrainPanel = tree.Root.FindChild("MissionReferences", true, false) as MissionReferencePanel;
+        Button? missionTerrainToggle = null;
+        foreach (Node candidate in tree.Root.FindChildren("*", "Button", true, false))
+            if (candidate is Button button && button.Text == "3D") { missionTerrainToggle = button; break; }
+        check.That(missionTerrainSplit != null && missionTerrainPanel != null && missionTerrainToggle != null,
+            "the Level page exposes the combined terrain and mission controls");
+        if (missionTerrainSplit != null && missionTerrainPanel != null && missionTerrainToggle != null)
+        {
+            bool originalTerrainChoice = missionTerrainToggle.ButtonPressed;
+            missionTerrainToggle.ButtonPressed = true;
+            await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+            var missionTerrainViewport = missionTerrainSplit.GetChild(0) as LevelTerrainViewport;
+            check.That(missionTerrainSplit.Visible && missionTerrainViewport != null && missionTerrainViewport.Visible,
+                "the existing 3D toggle shows the combined terrain and mission view");
+            check.That(missionTerrainViewport?.TerrainProvider != null
+                && missionTerrainViewport.TerrainProvider() is not null &&
+                ReferenceEquals(missionTerrainViewport.TerrainProvider(), model.Terrain),
+                "the combined view reads the current in-memory terrain");
+            check.That(missionTerrainPanel.Snapshot != null && model.Session != null
+                && missionTerrainPanel.Snapshot.Scripts.Count == model.Session.Body.Scripts.Count,
+                "the mission panel reads the current in-memory session");
+            missionTerrainToggle.ButtonPressed = false;
+            await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+            check.That(!missionTerrainSplit.Visible, "the existing 3D toggle hides the combined view");
+            missionTerrainToggle.ButtonPressed = originalTerrainChoice;
+            await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+        }
+
         check.That(Bits(model.Row(1)!.Position.Z) == 0x80000000, "row 1 stores a negative zero");
         string setup = model.Session!.UndoDescription!;
 
@@ -254,7 +285,11 @@ internal static class LevelMapPageTests
         check.That(model.Row(0)!.Position == from && model.Session.UndoDescription == beforeNudge, "and four undos take the four nudges back");
         // A nudge moves the one axis that was pressed: the other axis and Z are kept bit for bit (an off-grid number and a stored -0 included), and the pressed axis lands on the hundredth as a drop does.
         System.Numerics.Vector3 rowTwo = model.Row(2)!.Position;
+        var missionPanelSnapshotBeforeMove = missionTerrainPanel?.Snapshot;
         check.That(model.Move(2, "100.123456", "55.5678", "0").Result == MoveResult.Moved, "row 2 is typed to numbers that are off the hundredth grid");
+        check.That(missionTerrainPanel?.Snapshot != null && missionPanelSnapshotBeforeMove != null
+            && !ReferenceEquals(missionTerrainPanel.Snapshot, missionPanelSnapshotBeforeMove),
+            "mission panel recaptures the current session when the editor changes");
         page.SelectRow(2);
         map.GrabFocus();
         await Frame(tree);

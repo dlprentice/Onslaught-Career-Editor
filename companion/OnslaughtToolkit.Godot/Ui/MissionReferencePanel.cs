@@ -71,6 +71,13 @@ public sealed partial class MissionReferencePanel : VBoxContainer
             scripts.AddItem($"{i + 1}. {Caption(value.Scripts[i].Name)}");
     }
 
+    /// <summary>Clear stale selections when a snapshot cannot be produced.</summary>
+    public void SetUnavailable()
+    {
+        SetSnapshot(null);
+        overview.Text = "Mission references are unavailable for this level.";
+    }
+
     /// <summary>Select a script by its snapshot-local index; invalid indices leave the selection unchanged.</summary>
     public bool TrySelectScript(int index)
     {

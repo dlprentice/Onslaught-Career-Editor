@@ -14,6 +14,9 @@ namespace OnslaughtToolkit.Companion.Ui;
 /// </summary>
 internal sealed class LevelEditorPage : Page
 {
+    private HSplitContainer? _missionTerrainSplit;
+    private OnslaughtToolkit.Companion.Ui.MissionReferencePanel? _missionReferencePanel;
+
     private const int PlaceholderId = 99999;
 
     /// <summary>The most characters of the saved mod's folder the notice shows (its middle is left out); the full path is on the Copy button and the tooltip.</summary>
@@ -116,7 +119,26 @@ internal sealed class LevelEditorPage : Page
             Visible = false,
             ZIndex = 100,
         };
-        _mapPanel.AddChild(_terrainPreview3d);
+        _missionReferencePanel = new OnslaughtToolkit.Companion.Ui.MissionReferencePanel
+        {
+            Name = "MissionReferences",
+            CustomMinimumSize = new Vector2(240, 0),
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill
+        };
+        _missionTerrainSplit = new HSplitContainer
+        {
+            Name = "MissionTerrainSplit",
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill
+        };
+        _terrainPreview3d.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        _terrainPreview3d.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+        _missionTerrainSplit.AddChild(_terrainPreview3d);
+        _missionTerrainSplit.AddChild(_missionReferencePanel);
+        _mapPanel.AddChild(_missionTerrainSplit);
+        _missionTerrainSplit.Visible = _terrainPreview3d.Visible;
+        RefreshMissionReferences();
         _terrainPreview3d.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         var terrainViewSwitch = new Button
         {
@@ -135,6 +157,7 @@ internal sealed class LevelEditorPage : Page
         terrainViewSwitch.Toggled += enabled =>
         {
             _terrainPreview3d.Visible = enabled;
+        if (_missionTerrainSplit != null) _missionTerrainSplit.Visible = _terrainPreview3d.Visible;
             terrainViewSwitch.Text = enabled ? "2D" : "3D";
         };
         Map = mapColumn.Add(new LevelMap { SizeFlagsVertical = Control.SizeFlags.ExpandFill, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
@@ -515,8 +538,20 @@ internal sealed class LevelEditorPage : Page
     /// <summary>The source view goes to its top while the page is shown: it is hidden with the page, and a hidden view keeps its first visible line (see ScriptsPanel.ScrollToTop).</summary>
     internal override void Leave() => _scripts.ScrollToTop();
 
-    private void OnModelChanged()
+        private void RefreshMissionReferences()
     {
+        var panel = _missionReferencePanel;
+        if (panel == null) return;
+        var body = _model?.Session?.Body;
+        if (body == null) { panel.SetSnapshot(null); return; }
+        try { panel.SetSnapshot(MissionReferenceIndex.Capture(body, 4096, 100000)); }
+        catch (InvalidOperationException) { panel.SetUnavailable(); }
+    }
+
+private void OnModelChanged()
+    {
+        RefreshMissionReferences();
+
         _scriptChanges = _model?.Session?.ScriptChanges() ?? [];
         _scriptBytes.Clear();
         _problemPanel.Visible = _model?.Problem is not null;
