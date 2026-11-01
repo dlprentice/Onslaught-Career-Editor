@@ -16,6 +16,33 @@ namespace OnslaughtToolkit.Companion.Tests;
 /// </summary>
 internal static class ScriptsPageTests
 {
+    private static void CheckUnitRowsPage(LevelEditorPage page, Checks check)
+    {
+        var panel = page.UnitRows;
+        var session = page.Model?.Session;
+        page.ScriptsToggle.ButtonPressed = false;
+        check.That(session != null && !page.UnitRowsToggle.Disabled, "The open level enables the unit arrangement panel");
+        if (session == null) return;
+        page.UnitRowsToggle.ButtonPressed = true;
+        check.That(panel.Visible && panel.Units.ItemCount >= 2, "The editor shows existing units for arrangement");
+        if (panel.Units.ItemCount < 2) return;
+        byte[] before = session.ToBytes();
+        panel.SelectAll.EmitSignal(BaseButton.SignalName.Pressed);
+        panel.UseFirstPosition.EmitSignal(BaseButton.SignalName.Pressed);
+        panel.StepX.Text = "7.25";
+        panel.StepY.Text = "0";
+        panel.Apply.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(!session.ToBytes().SequenceEqual(before) && !page.Undo.Disabled,
+            "The arrangement panel applies a change through the page model");
+        page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(session.ToBytes().SequenceEqual(before), "The editor can undo an arrangement as one change");
+        page.ScriptsToggle.ButtonPressed = true;
+        check.That(!page.UnitRowsToggle.Visible && !panel.Visible, "Arrangement controls hide in the scripts view");
+        page.ScriptsToggle.ButtonPressed = false;
+        check.That(page.UnitRowsToggle.Visible && panel.Visible, "Returning to objects restores the open arrangement panel");
+        page.UnitRowsToggle.ButtonPressed = false;
+    }
+
     private static void CheckMissionDraftPreserved(LevelEditorPage page, string draft, Checks check)
     {
         var name = page.Scripts.Current?.Summary.Name;
@@ -414,6 +441,7 @@ internal static class ScriptsPageTests
             // nothing; what is typed stays with its script while another is chosen; a script with no source file, or the base world's, cannot be edited.
             const string Alpha = "// alpha, the level's own\ninit()\n{\n\tPause(1);\n}\n";
             CheckMissionSourceLink(page, check);
+            CheckUnitRowsPage(page, check);
             var missionBeforeCompile = page.MissionReferences?.Snapshot;
             page.ShowScript("alpha");
             for (int frame = 0; frame < 3; frame++) await Frame(tree);
