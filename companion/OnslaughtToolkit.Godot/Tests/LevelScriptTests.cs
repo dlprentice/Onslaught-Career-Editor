@@ -39,6 +39,11 @@ internal static class LevelScriptTests
     // ---- the data layer ---------------------------------------------------------------------------------------------------------
     internal static void Run(string output, Checks check)
     {
+        MissionReferenceIndexTests.Run(check);
+        var emptyMissionIndex = OnslaughtToolkit.Companion.Levels.MissionReferenceIndex.Capture(Body(System.Array.Empty<MissionScript>()), 0, 0);
+        check.That(emptyMissionIndex.Scripts.Count == 0 && emptyMissionIndex.Unresolved.Count == 0,
+            "mission reference index reads an empty editor world through the real catalogue");
+
         check.Suite("level scripts");
         Tables(check);
         Catalog(check);
@@ -82,6 +87,28 @@ internal static class LevelScriptTests
             "and the test is by the quote's place: the opening quote after the parenthesis, a line that begins with the parenthesis or the quote is not one");
 
         WorldBody body = Body(Script("alpha", [0], [], ("Pause", 1)), Script("beta", [], ["go"]));
+        var missionReferenceFixtureIndex = MissionReferenceIndex.Capture(body, 1000, 10000);
+        bool missionReferenceFixtureRefusedLimit = false;
+        try { MissionReferenceIndex.Capture(body, 0, 10000); }
+        catch (InvalidOperationException) { missionReferenceFixtureRefusedLimit = true; }
+        check.That(missionReferenceFixtureRefusedLimit, "mission reference index refuses an over-limit authored world");
+        var missionReferenceFixtureSummaries = ScriptCatalog.Of(body);
+        bool missionReferenceFixtureMatches = missionReferenceFixtureIndex.Scripts.Count > 0
+            && missionReferenceFixtureIndex.Scripts.Count == missionReferenceFixtureSummaries.Count;
+        int missionReferenceFixtureMissing = 0;
+        for (int missionReferenceFixtureRow = 0; missionReferenceFixtureRow < missionReferenceFixtureIndex.Scripts.Count; missionReferenceFixtureRow++)
+        {
+            var missionReferenceFixtureRefs = ScriptCatalog.ReferencesOf(body, missionReferenceFixtureRow);
+            var missionReferenceFixtureScript = missionReferenceFixtureIndex.Scripts[missionReferenceFixtureRow];
+            missionReferenceFixtureMatches &= missionReferenceFixtureScript.Index == missionReferenceFixtureRow
+                && missionReferenceFixtureScript.Name == missionReferenceFixtureSummaries[missionReferenceFixtureRow].Name
+                && missionReferenceFixtureScript.References.Count == missionReferenceFixtureRefs.Count;
+            foreach (var missionReferenceFixtureRef in missionReferenceFixtureRefs)
+                if (!missionReferenceFixtureRef.Resolved) missionReferenceFixtureMissing++;
+        }
+        check.That(missionReferenceFixtureMatches && missionReferenceFixtureIndex.Unresolved.Count == missionReferenceFixtureMissing,
+            "mission reference index follows the real catalogue on an authored world");
+
         body.Things[0].Init.Name = "Tank 1";
         body.Things[1].Init.Name = "tank 1";
         body.Things[2].Init.Name = "Tank 1";
