@@ -12,6 +12,7 @@ public partial class LevelTerrainViewport : SubViewportContainer
     internal Func<bool>? TerrainModeProvider { get; set; }
     internal Func<IReadOnlyList<ObjectRow>>? RowsProvider { get; set; }
     internal Func<int?>? SelectedRowProvider { get; set; }
+    internal Func<int, (EditSession? Session, PlacedObject? Thing)>? MoveContextProvider { get; set; }
     internal event Action<int>? RowPicked;
     internal event Action<int, float, float>? MoveRequested;
     internal event Action<float, float, bool>? TerrainEditRequested;
@@ -41,6 +42,9 @@ public partial class LevelTerrainViewport : SubViewportContainer
     private IReadOnlyList<ObjectRow>? _objectDragRows;
     private TerrainSurface? _objectDragSurface;
     private Vector2? _objectDragPreview;
+    private EditSession? _objectDragSession;
+    private PlacedObject? _objectDragThing;
+    private Func<int, (EditSession? Session, PlacedObject? Thing)>? _objectDragContextProvider;
 
 
     public LevelTerrainViewport()
@@ -337,7 +341,20 @@ public partial class LevelTerrainViewport : SubViewportContainer
 
     private bool ObjectDragCurrent => _objectDragRow is { } row && _selected == row.Index &&
         ReferenceEquals(_objectDragRows, _rows) && _rows.Any(candidate => ReferenceEquals(candidate, row)) &&
-        ReferenceEquals(_objectDragSurface, _surface) && HasCurrentTerrain && TerrainModeProvider?.Invoke() != true;
+        ReferenceEquals(_objectDragSurface, _surface) && HasCurrentTerrain && TerrainModeProvider?.Invoke() != true && ObjectContextCurrent;
+
+    private bool ObjectContextCurrent
+    {
+        get
+        {
+            if (!ReferenceEquals(_objectDragContextProvider, MoveContextProvider)) return false;
+            if (_objectDragContextProvider is not { } provider) return true;
+            if (_objectDragRow is not { } row) return false;
+            var current = provider(row.Index);
+            return current.Session is not null && current.Thing is not null &&
+                ReferenceEquals(current.Session, _objectDragSession) && ReferenceEquals(current.Thing, _objectDragThing);
+        }
+    }
 
     private void ClearObjectDrag()
     {
@@ -345,6 +362,9 @@ public partial class LevelTerrainViewport : SubViewportContainer
         _objectDragRows = null;
         _objectDragSurface = null;
         _objectDragPreview = null;
+        _objectDragSession = null;
+        _objectDragThing = null;
+        _objectDragContextProvider = null;
         _marks?.QueueRedraw();
     }
 
@@ -361,9 +381,15 @@ public partial class LevelTerrainViewport : SubViewportContainer
         RowPicked?.Invoke(picked.Index);
         RefreshRows();
         if (_selected != picked.Index || _rows.FirstOrDefault(row => row.Index == picked.Index) is not { } current) return;
+        var provider = MoveContextProvider;
+        var context = provider?.Invoke(current.Index) ?? default;
+        if (provider is not null && (context.Session is null || context.Thing is null)) return;
         _objectDragRow = current;
         _objectDragRows = _rows;
         _objectDragSurface = _surface;
+        _objectDragSession = context.Session;
+        _objectDragThing = context.Thing;
+        _objectDragContextProvider = provider;
     }
 
     private void UpdateObjectDrag(Vector2 at)

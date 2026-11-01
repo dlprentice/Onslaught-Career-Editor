@@ -219,6 +219,9 @@ internal sealed class LevelEditorPage : Page
         Map.MoveRequested += (row, x, y) => Dragged(row, x, y);
         _terrainPreview3d.RowsProvider = () => Map.Rows;
         _terrainPreview3d.SelectedRowProvider = () => Map.Selected;
+        _terrainPreview3d.MoveContextProvider = row =>
+            _model?.Session is { } session && row >= 0 && row < session.Body.Things.Count
+                ? (session, session.Body.Things[row]) : default;
         _terrainPreview3d.RowPicked += row => SelectIndex(row);
         _terrainPreview3d.MoveRequested += (row, x, y) => Dragged(row, x, y);
         _terrainPreview3d.TerrainEditRequested += (x, y, raise) =>
