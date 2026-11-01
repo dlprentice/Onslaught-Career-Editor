@@ -73,6 +73,8 @@ internal static class EditorProjectScriptsTests
             check.That(capturedAgain.Select(script => (script.Name, script.SourceText, script.DraftText)).SequenceEqual(
                            captured.Select(script => (script.Name, script.SourceText, script.DraftText))),
                        "a second capture preserves all restored source and draft text exactly");
+            check.That(capturedAgain[0].UsedText == captured[0].UsedText && capturedAgain[0].UsedRecordHash == captured[0].UsedRecordHash,
+                       "recapture preserves an unverified stored compiled-text claim without asserting that it is in use");
 
             string before = panel.SourceText;
             EditorProjectScript[] collision = [captured[0], captured[1] with { Name = "ALPHA" }];
@@ -99,6 +101,11 @@ internal static class EditorProjectScriptsTests
             check.That(panel.TryPrepareProjectScripts(entries, captured, out PreparedScriptProject? portable, out _) && portable is not null &&
                        panel.CommitProjectScripts(portable) && panel.SourceText == "// alpha draft one\n" && panel.Editing,
                        "preserved source and draft text reopen without a selected source directory");
+            EditorProjectScript usedOnly = captured[0] with { DraftText = null };
+            check.That(panel.TryPrepareProjectScripts(entries, [usedOnly], out PreparedScriptProject? retained, out _) && retained is not null &&
+                       panel.CommitProjectScripts(retained) && panel.SourceText == usedOnly.UsedText && panel.DraftCount == 1 &&
+                       panel.Info.Contains("not in use", StringComparison.Ordinal) && panel.CaptureProjectScripts(session).Single().UsedText == usedOnly.UsedText,
+                       "unverified compiled-source text without another draft is preserved as editable text without an in-use assertion");
         }
         finally
         {

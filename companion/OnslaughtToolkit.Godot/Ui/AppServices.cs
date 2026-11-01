@@ -18,6 +18,7 @@ internal sealed class AppServices
         ? " CE settings are backed up separately when edited, or an absence note is made." : "";
 
     internal required CareerWorkspace Workspace { get; init; }
+    internal IEditorProjectFiles EditorProjects { get; init; } = new EditorProjectFiles();
     internal required GameLibrary Game { get; init; }
     internal required StatusLine Status { get; init; }
     internal required BackupLocation Backups { get; init; }

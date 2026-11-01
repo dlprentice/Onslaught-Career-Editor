@@ -22,6 +22,7 @@ public partial class EditorProjectTestRunner : SceneTree
             LevelScriptEditTests.Run(output, check);
             ScriptCompilerTests.Run(output, check);
             EditorProjectTests.Run(check);
+            EditorProjectFilesTests.Run(output, check);
             await EditorProjectScriptsTests.RunAsync(this, output, check);
             foreach (string failure in check.Failures) GD.PrintErr("FAIL: " + failure);
             GD.Print($"EDITOR_PROJECT_TESTS: {check.Count} checks, {check.Failures.Count} failures.");
