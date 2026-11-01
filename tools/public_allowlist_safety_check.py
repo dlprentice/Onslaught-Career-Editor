@@ -24,11 +24,13 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import os
 import re
 import subprocess
 import sys
 import tempfile
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -1227,7 +1229,7 @@ def retail_text_self_test() -> list[str]:
     return failures
 
 
-def submodule_identity_self_test() -> list[str]:
+def _submodule_identity_self_test() -> list[str]:
     """Exercise gitlink identity and scope with locally authored repositories."""
     failures: list[str] = []
     with tempfile.TemporaryDirectory(prefix="synthetic-submodule-safety-") as tmp:
@@ -1387,7 +1389,100 @@ def submodule_identity_self_test() -> list[str]:
     return failures
 
 
-def run_self_test() -> int:
+@contextmanager
+def _synthetic_git_environment():
+    """Isolate self-test Git; callers must not run this concurrently in-process."""
+    with tempfile.TemporaryDirectory(prefix="synthetic-git-env-") as tmp:
+        root = Path(tmp)
+        home, config, template, hooks = (root / name for name in ("home", "config", "template", "hooks"))
+        for path in (home, config, template, hooks):
+            path.mkdir()
+        env = {key: value for key, value in os.environ.items() if not key.upper().startswith("GIT_")}
+        env.update({
+            "HOME": str(home), "XDG_CONFIG_HOME": str(config),
+            "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_TERMINAL_PROMPT": "0", "GIT_TEMPLATE_DIR": str(template),
+            "GIT_ALLOW_PROTOCOL": "file", "GIT_CONFIG_COUNT": "4",
+            "GIT_CONFIG_KEY_0": "core.hooksPath", "GIT_CONFIG_VALUE_0": str(hooks),
+            "GIT_CONFIG_KEY_1": "commit.gpgSign", "GIT_CONFIG_VALUE_1": "false",
+            "GIT_CONFIG_KEY_2": "tag.gpgSign", "GIT_CONFIG_VALUE_2": "false",
+            "GIT_CONFIG_KEY_3": "core.fsmonitor", "GIT_CONFIG_VALUE_3": "false",
+        })
+        previous = os.environ.copy()
+        try:
+            os.environ.clear()
+            os.environ.update(env)
+            yield
+        finally:
+            os.environ.clear()
+            os.environ.update(previous)
+
+
+def submodule_identity_self_test() -> list[str]:
+    with _synthetic_git_environment():
+        return _submodule_identity_self_test()
+
+
+def synthetic_git_fixture_environment_self_test() -> list[str]:
+    """Verify authored fixture Git ignores synthetic user settings and hooks."""
+    failures: list[str] = []
+    original_env = os.environ.copy()
+    try:
+        with _synthetic_git_environment():
+            raise ValueError("synthetic environment restoration control")
+    except ValueError:
+        pass
+    if os.environ.copy() != original_env:
+        failures.append("synthetic Git environment was not restored after failure")
+    with tempfile.TemporaryDirectory(prefix="synthetic-hostile-git-") as tmp:
+        root = Path(tmp)
+        home, hooks, template = (root / name for name in ("home", "hooks", "template"))
+        for path in (home, hooks, template):
+            path.mkdir()
+        hook_text = '#!/bin/sh\nprintf x > "$SYNTHETIC_SENTINEL"\n'
+        hook = hooks / "pre-commit"
+        hook.write_text(hook_text, encoding="utf-8")
+        hook.chmod(0o700)
+        template_hooks = template / "hooks"
+        template_hooks.mkdir()
+        template_hook = template_hooks / "pre-commit"
+        template_hook.write_text(hook_text, encoding="utf-8")
+        template_hook.chmod(0o700)
+        signer = root / "signer"
+        signer.write_text(hook_text + "exit 1\n", encoding="utf-8")
+        signer.chmod(0o700)
+        hook_config, signing_config, empty_config = (root / name for name in ("hook-config", "signing-config", "empty-config"))
+        hook_config.write_text('[core]\n\thooksPath = ' + json.dumps(str(hooks)) + '\n', encoding="utf-8")
+        signing_config.write_text('[commit]\n\tgpgSign = true\n[gpg]\n\tprogram = ' +
+                                  json.dumps(str(signer)) + '\n', encoding="utf-8")
+        empty_config.write_text("", encoding="utf-8")
+        base_env = {key: value for key, value in os.environ.items() if not key.upper().startswith("GIT_")}
+        base_env.update({"HOME": str(home), "XDG_CONFIG_HOME": str(root / "xdg"),
+                         "GIT_CONFIG_NOSYSTEM": "1", "GIT_TERMINAL_PROMPT": "0",
+                         "GIT_TEMPLATE_DIR": str(template)})
+        code = (
+            "import importlib.util,sys; "
+            "s=importlib.util.spec_from_file_location('safety_fixture',sys.argv[1]); "
+            "m=importlib.util.module_from_spec(s); sys.modules[s.name]=m; s.loader.exec_module(m); "
+            "sys.exit(bool(m.submodule_identity_self_test()))"
+        )
+        for name, config in (("hook", hook_config), ("template", empty_config), ("signing", signing_config)):
+            marker = root / (name + "-invoked")
+            env = dict(base_env, GIT_CONFIG_GLOBAL=str(config), SYNTHETIC_SENTINEL=str(marker))
+            result = subprocess.run([sys.executable, "-B", "-c", code, str(Path(__file__).resolve())],
+                                    env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+            if result.returncode or marker.exists():
+                failures.append("synthetic fixture inherited user Git " + name + " settings")
+        env = dict(base_env, GIT_CONFIG_GLOBAL=str(empty_config),
+                   GIT_DIR=str(root / "nonexistent-git-directory"))
+        result = subprocess.run([sys.executable, "-B", "-c", code, str(Path(__file__).resolve())],
+                                env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+        if result.returncode:
+            failures.append("synthetic fixture inherited a caller Git directory override")
+    return failures
+
+
+def _run_self_test() -> int:
     # A reviewed encoding allows only the exact path/content. Secret scanning
     # still runs on that same file; no general TSV or Base64 exemption exists.
     with tempfile.TemporaryDirectory() as tmp:
@@ -1791,6 +1886,12 @@ def run_self_test() -> int:
             print(f"- root findings: {sorted(root_findings, key=lambda item: item.path)!r}")
             print(f"- combined findings: {sorted(combined_findings, key=lambda item: item.path)!r}")
             return 1
+    fixture_environment_failures = synthetic_git_fixture_environment_self_test()
+    if fixture_environment_failures:
+        print("Public payload safety self-test: FAIL")
+        for item in fixture_environment_failures:
+            print(f"- {item}")
+        return 1
     submodule_failures = submodule_identity_self_test()
     if submodule_failures:
         print("Public payload safety self-test: FAIL")
@@ -1805,6 +1906,11 @@ def run_self_test() -> int:
         return 1
     print("Public payload safety self-test: PASS")
     return 0
+
+
+def run_self_test() -> int:
+    with _synthetic_git_environment():
+        return _run_self_test()
 
 
 def main() -> int:
