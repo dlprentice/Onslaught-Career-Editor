@@ -56,6 +56,7 @@ public partial class CompanionTestRunner : SceneTree
                 LevelTerrainTests.Run(output, check);
                 LevelScriptTests.Run(output, check);
                 LevelScriptEditTests.Run(output, check);
+                LevelTriggerEditTests.Run(check);
                 MissionMarkerSnapshot3DTests.Run(check);
                 LevelScriptCheckerTests.Run(output, check);
                 ScriptCompilerTests.Run(output, check);

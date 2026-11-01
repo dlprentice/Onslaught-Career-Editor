@@ -111,6 +111,13 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     public int? Level { get; private set; }
 
     private string? _savedSignature;
+    private TerrainDraft? _terrainDraft;
+
+    /// <summary>The edited sampled 3D preview, or null until terrain preview mode is enabled.</summary>
+    internal TerrainSurface? TerrainPreviewSurface => _terrainDraft?.Surface;
+
+    /// <summary>Whether the sampled preview differs from the base terrain.</summary>
+    internal bool TerrainHasChanges => _terrainDraft?.HasChanges == true;
 
     private static string Signature(ReadOnlySpan<byte> bytes) => Convert.ToHexStringLower(SHA256.HashData(bytes));
 
@@ -127,8 +134,14 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
             byte[] bytes;
             try { bytes = session.ToBytes(); }
             catch (Exception error) when (EditSession.IsUnstorable(error)) { return 1; }
-            if (session.IsBaseline(bytes) || Signature(bytes) == _savedSignature) return 0;
-            try { return Math.Max(1, session.Changes().Count + session.Additions().Count + session.ScriptChanges().Count); }
+            int terrain = TerrainHasChanges ? 1 : 0;
+            if (session.IsBaseline(bytes) || Signature(bytes) == _savedSignature) return terrain;
+            try
+            {
+                int changedRows = session.Changes().Select(change => change.Index)
+                    .Concat(session.TriggerChanges().Select(change => change.Index)).Distinct().Count();
+                return Math.Max(1, changedRows + session.Additions().Count + session.ScriptChanges().Count) + terrain;
+            }
             catch (Exception error) when (EditSession.IsUnstorable(error)) { return 1; }
         }
     }
@@ -177,6 +190,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         TerrainProblem = null;
         Scripts = [];
         BaseWorld = null;
+        _terrainDraft = null;
         LevelArchiveFile? file = Levels.FirstOrDefault(archive => archive.Level == level);
         if (file is null) return Refuse($"This game has no archive for level {level}.");
         try
@@ -189,6 +203,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
             EditSession session = new(worlds.RealBody);
             session.Changed += () =>
             {
+                if (!ReferenceEquals(Session, session)) return;
                 RefreshScripts();
                 Changed?.Invoke();
             };
@@ -223,8 +238,45 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     private void RefreshScripts()
     {
         if (Session is not { } session || Worlds is not { } worlds) return;
-        if (session.NotifiedCommand is MoveObject) return;
+        if (session.NotifiedCommand is MoveObject || TerrainDraft.IsTerrainCommand(session.NotifiedCommand)) return;
         Scripts = ListScripts(session.Body, worlds);
+    }
+
+    /// <summary>Starts a private sampled-terrain preview without changing the level or its original heightfield.</summary>
+    internal bool BeginTerrainPreview(out string message)
+    {
+        if (Session is not { } session || Terrain is not { } terrain)
+        {
+            message = "Open a level with terrain first.";
+            return false;
+        }
+        if (_terrainDraft is not null)
+        {
+            message = "Terrain preview is ready.";
+            return true;
+        }
+        try
+        {
+            _terrainDraft = new TerrainDraft(session.Body, TerrainSurface.Build(terrain));
+            message = "Terrain changes are an unsaved 3D preview.";
+            return true;
+        }
+        catch (Exception error) when (error is InvalidDataException or ArgumentException or OverflowException)
+        {
+            message = "This terrain cannot be previewed safely.";
+            return false;
+        }
+    }
+
+    /// <summary>Applies one bounded preview edit to the same undo history as object and script edits.</summary>
+    internal MoveOutcome ChangeTerrainPreview(float x, float y, bool raise)
+    {
+        if (Session is not { } session || _terrainDraft is not { } draft)
+            return new MoveOutcome(MoveResult.Refused, "Turn on terrain preview first.");
+        if (!draft.TryPrepare(x, y, raise, out IEditCommand? command, out string message) || command is null)
+            return new MoveOutcome(MoveResult.Refused, message);
+        return session.TryApply(command, out string? refusal)
+            ? new MoveOutcome(MoveResult.Moved, message) : new MoveOutcome(MoveResult.Refused, refusal ?? "The terrain preview could not be changed.");
     }
 
     /// <summary>The scripts of a level's own world and of its base world, as <see cref="Scripts"/> lists them (the retail gate calls this too).</summary>
@@ -354,7 +406,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         BitConverter.SingleToUInt32Bits(a.Y) == BitConverter.SingleToUInt32Bits(b.Y) &&
         BitConverter.SingleToUInt32Bits(a.Z) == BitConverter.SingleToUInt32Bits(b.Z);
 
-    /// <summary>A sentence about moved objects and changed scripts, or null when there are none.</summary>
+    /// <summary>A sentence about moved objects, resized triggers and changed scripts, or null when there are none.</summary>
     public string? ChangeSummary()
     {
         try { return ChangeSummaryCore(); }
@@ -366,6 +418,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         IReadOnlyList<ObjectChange> changes = Session?.Changes() ?? [];
         IReadOnlyList<(int Index, string Kind, string Name)> added = Session?.Additions() ?? [];
         IReadOnlyList<ScriptChange> scripts = Session?.ScriptChanges() ?? [];
+        IReadOnlyList<TriggerRadiusChange> triggers = Session?.TriggerChanges() ?? [];
         List<string> sentences = [];
         if (added.Count > 0)
         {
@@ -382,6 +435,13 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
             string list = string.Join("; ", scripts.Take(3).Select(change => $"{change.Name} ({change.Describe()})"));
             sentences.Add($"{(scripts.Count == 1 ? "1 script replaced" : $"{scripts.Count} scripts replaced")}: {list}{(scripts.Count > 3 ? $" and {scripts.Count - 3} more" : "")}.");
         }
+        if (triggers.Count > 0)
+        {
+            string list = string.Join("; ", triggers.Take(3).Select(change => $"{change.Name} (row {change.Index}), radius {change.From.ToString("G", System.Globalization.CultureInfo.InvariantCulture)} to {change.To.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}"));
+            sentences.Add($"{(triggers.Count == 1 ? "1 trigger resized" : $"{triggers.Count} triggers resized")}: {list}{(triggers.Count > 3 ? $" and {triggers.Count - 3} more" : "")}.");
+        }
+        if (_terrainDraft is { HasChanges: true } terrain)
+            sentences.Add($"3D terrain preview changed at {(terrain.ChangedCount == 1 ? "1 point" : $"{terrain.ChangedCount} points")}; it cannot be saved or played.");
         if (sentences.Count == 0 && HasUnsavedChanges) return "This level has changes this editor cannot describe or save.";
         return sentences.Count == 0 ? null : string.Join(" ", sentences);
     }
@@ -546,13 +606,17 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     }
 
     /// <summary>Writes the open edit as a CE mod folder <c>PARENT/ID</c>, or says why not (nothing changed, a folder that is not new, a game folder).</summary>
-    public SaveOutcome SaveAsMod(string parent, ModInfo info, IEnumerable<string?> protectedFolders) => Stage(parent, info, protectedFolders, markSaved: true);
+    public SaveOutcome SaveAsMod(string parent, ModInfo info, IEnumerable<string?> protectedFolders) => TerrainHasChanges
+        ? new SaveOutcome(null, "The changed terrain is an unsaved 3D preview and cannot be saved here.")
+        : Stage(parent, info, protectedFolders, markSaved: true);
 
     /// <summary>
     /// Writes the open edit as a mod folder the same way, for a test play in Onslaught CE: the folder is a temporary one, so the edit is not counted as saved
     /// (the unsaved-changes prompts still ask about it).
     /// </summary>
-    public SaveOutcome StageForPlay(string parent, ModInfo info, IEnumerable<string?> protectedFolders) => Stage(parent, info, protectedFolders, markSaved: false);
+    public SaveOutcome StageForPlay(string parent, ModInfo info, IEnumerable<string?> protectedFolders) => TerrainHasChanges
+        ? new SaveOutcome(null, "The changed terrain is an unsaved 3D preview and cannot be played here.")
+        : Stage(parent, info, protectedFolders, markSaved: false);
 
     private SaveOutcome Stage(string parent, ModInfo info, IEnumerable<string?> protectedFolders, bool markSaved)
     {
