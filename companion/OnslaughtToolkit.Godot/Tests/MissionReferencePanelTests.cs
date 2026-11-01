@@ -12,72 +12,90 @@ internal static class MissionReferencePanelTests
     {
         var summaries = new[]
         {
-            new ScriptSummary("same", Array.Empty<string>(), Array.Empty<NativeCall>(), 0, Array.Empty<ScriptUse>()),
-            new ScriptSummary("same", Array.Empty<string>(), Array.Empty<NativeCall>(), 0, Array.Empty<ScriptUse>()),
-            new ScriptSummary("long\n" + new string('x', 120), Array.Empty<string>(), Array.Empty<NativeCall>(), 0, Array.Empty<ScriptUse>())
+            new ScriptSummary("alpha", Array.Empty<string>(), Array.Empty<NativeCall>(), 0,
+                new[] { new ScriptUse(2, "main"), new ScriptUse(3, "spawn") }),
+            new ScriptSummary("beta", Array.Empty<string>(), Array.Empty<NativeCall>(), 0, Array.Empty<ScriptUse>()),
+            new ScriptSummary("line\n" + new string('x', 130), Array.Empty<string>(), Array.Empty<NativeCall>(), 0, Array.Empty<ScriptUse>())
         };
         var rows = new IReadOnlyList<ScriptReference>[]
         {
-            new[] { new ScriptReference("unit", "present", true), new ScriptReference("path", "unknown", false) },
             Array.Empty<ScriptReference>(),
-            new[] { new ScriptReference("unit", "other", false) }
+            new[] { new ScriptReference("main", "missing-one", false) },
+            new[] { new ScriptReference("main", "alpha", true) },
+            new[] { new ScriptReference("spawn", "alpha", true), new ScriptReference("main", "missing-two", false) }
         };
-        var first = MissionReferenceIndex.FromSummaries(summaries, i => rows[i], 3, 3);
-        var empty = MissionReferenceIndex.FromSummaries(Array.Empty<ScriptSummary>(), _ => throw new Exception(), 0, 0);
+        var first = MissionReferenceIndex.FromSummaries(summaries, rows.Length, i => rows[i], 3, 8);
+        var empty = MissionReferenceIndex.FromSummaries(Array.Empty<ScriptSummary>(), 0, _ => throw new Exception(), 0, 0);
+        var single = MissionReferenceIndex.FromSummaries(
+            [new ScriptSummary("one", Array.Empty<string>(), Array.Empty<NativeCall>(), 0, [new ScriptUse(0, "main")])],
+            1, _ => [new ScriptReference("main", "one", true), new ScriptReference("spawn", "not here", false)], 1, 2);
         var panel = new MissionReferencePanel();
         try
         {
-            int scriptEvents = 0, referenceEvents = 0, lastScript = -1, lastReference = -1;
+            int scriptEvents = 0, useEvents = 0, missingEvents = 0, lastScript = -1, lastUse = -1, lastMissing = -1;
             MissionReferenceIndex? eventSnapshot = null;
             panel.ScriptSelected += (which, script) => { scriptEvents++; eventSnapshot = which; lastScript = script; };
-            panel.ReferenceSelected += (which, script, reference) => { referenceEvents++; eventSnapshot = which; lastScript = script; lastReference = reference; };
-            check.That(panel.Snapshot == null && panel.ScriptItems.GetItemCount() == 0 && panel.ReferenceItems.GetItemCount() == 0,
-                "mission reference panel starts without a mission");
+            panel.UseSelected += (which, script, use) => { useEvents++; eventSnapshot = which; lastScript = script; lastUse = use; };
+            panel.MissingSelected += (which, index) => { missingEvents++; eventSnapshot = which; lastMissing = index; };
+            check.That(panel.Snapshot == null && panel.ScriptItems.GetItemCount() == 0 && panel.UseItems.GetItemCount() == 0 && panel.MissingItems.GetItemCount() == 0,
+                "The panel starts with no mission or selection");
             panel.SetSnapshot(first);
-            check.That(panel.ExplanationsWrap, "mission reference panel wraps its explanatory text");
-            check.That(panel.ScriptItems.GetItemCount() == 3 && panel.ReferenceItems.GetItemCount() == 0
-                && panel.SelectedScriptIndex == null && scriptEvents == 0, "mission reference panel shows scripts without choosing one");
-            check.That(panel.ScriptItems.GetItemText(0) != panel.ScriptItems.GetItemText(1),
-                "mission reference panel distinguishes duplicate script names");
+            check.That(panel.ExplanationsWrap, "The mission explanations wrap");
+            check.That(panel.ContentScroll.HorizontalScrollMode == ScrollContainer.ScrollMode.Disabled
+                && panel.ContentScroll.FollowFocus, "The mission details use a vertical scroll area that follows focus");
+            check.That(panel.ScriptItems.GetItemCount() == 3 && panel.UseItems.GetItemCount() == 0 && panel.MissingItems.GetItemCount() == 2
+                && panel.SelectedScriptIndex == null && scriptEvents == 0, "A snapshot lists scripts and missing assignments without selecting a script");
+            check.That(panel.ScriptItems.GetItemText(0) != panel.ScriptItems.GetItemText(1), "Different script names have distinct labels");
             string bounded = panel.ScriptItems.GetItemText(2);
-            check.That(!bounded.Contains('\n') && bounded.Length <= 110 && bounded.EndsWith("...", StringComparison.Ordinal),
-                "mission reference panel keeps long control characters out of labels");
-            check.That(panel.OverviewText.Contains("2 reference occurrences not resolved", StringComparison.Ordinal),
-                "mission reference panel reports unresolved occurrences honestly");
+            check.That(!bounded.Contains('\n') && bounded.Length <= 102 && bounded.EndsWith("...", StringComparison.Ordinal),
+                "Untrusted captions are single-line and bounded");
+            check.That(panel.OverviewText.Contains("not found in this world", StringComparison.Ordinal)
+                && panel.MissingItems.GetItemText(0).Contains("Object row 1", StringComparison.Ordinal)
+                && panel.MissingItems.GetItemText(1).Contains("missing-two", StringComparison.Ordinal),
+                "Missing assignments show their actual object rows and explain the world scope");
             panel.ScriptItems.EmitSignal(ItemList.SignalName.ItemSelected, 0L);
             check.That(panel.SelectedScriptIndex == 0 && scriptEvents == 1 && lastScript == 0 && ReferenceEquals(eventSnapshot, first),
-                "mission reference panel sends the selected snapshot and script");
-            check.That(panel.ReferenceItems.GetItemCount() == 2
-                && panel.ReferenceItems.GetItemText(0).StartsWith("Resolved:", StringComparison.Ordinal)
-                && panel.ReferenceItems.GetItemText(1).StartsWith("Not resolved:", StringComparison.Ordinal),
-                "mission reference panel displays both reference states");
-            panel.ReferenceItems.EmitSignal(ItemList.SignalName.ItemSelected, 1L);
-            check.That(referenceEvents == 1 && lastScript == 0 && lastReference == 1 && ReferenceEquals(eventSnapshot, first),
-                "mission reference panel sends the selected reference in its snapshot");
+                "A script selection carries the current snapshot and script index");
+            check.That(panel.UseItems.GetItemCount() == 2
+                && panel.UseItems.GetItemText(0).Contains("Object row 2", StringComparison.Ordinal)
+                && panel.UseItems.GetItemText(1).Contains("spawn", StringComparison.Ordinal),
+                "A selected script lists the object rows that actually use it");
+            panel.UseItems.EmitSignal(ItemList.SignalName.ItemSelected, 1L);
+            check.That(useEvents == 1 && lastScript == 0 && lastUse == 1 && ReferenceEquals(eventSnapshot, first)
+                && first.Scripts[lastScript].Uses[lastUse].Row == 3, "A use selection identifies the corresponding object row");
+            panel.MissingItems.EmitSignal(ItemList.SignalName.ItemSelected, 1L);
+            check.That(missingEvents == 1 && lastMissing == 1 && ReferenceEquals(eventSnapshot, first)
+                && first.Unresolved[lastMissing].Row == 3, "A missing-assignment selection identifies the corresponding object row");
             panel.ScriptItems.EmitSignal(ItemList.SignalName.ItemSelected, long.MaxValue);
-            panel.ReferenceItems.EmitSignal(ItemList.SignalName.ItemSelected, -1L);
+            panel.UseItems.EmitSignal(ItemList.SignalName.ItemSelected, -1L);
+            panel.MissingItems.EmitSignal(ItemList.SignalName.ItemSelected, long.MaxValue);
             check.That(!panel.TrySelectScript(-1) && !panel.TrySelectScript(int.MaxValue)
-                && !panel.TrySelectReference(-1) && !panel.TrySelectReference(int.MaxValue)
-                && panel.SelectedScriptIndex == 0 && scriptEvents == 1 && referenceEvents == 1,
-                "mission reference panel rejects invalid selections without changing state");
-            check.That(panel.TrySelectScript(1) && panel.ReferenceItems.GetItemCount() == 0
-                && panel.DetailText.Contains("No references were identified", StringComparison.Ordinal)
-                && !panel.TrySelectReference(0), "mission reference panel distinguishes an empty identified list");
+                && !panel.TrySelectUse(-1) && !panel.TrySelectUse(int.MaxValue)
+                && !panel.TrySelectMissing(-1) && !panel.TrySelectMissing(int.MaxValue)
+                && panel.SelectedScriptIndex == 0 && scriptEvents == 1 && useEvents == 1 && missingEvents == 1,
+                "Invalid selections leave the snapshot and event counts unchanged");
+            check.That(panel.TrySelectScript(1) && panel.UseItems.GetItemCount() == 0
+                && panel.DetailText.Contains("No object", StringComparison.Ordinal)
+                && !panel.TrySelectUse(0), "A script with no uses has an explicit empty state");
             Action<MissionReferenceIndex, int> switchDuringSelection = (_, _) => panel.SetSnapshot(empty);
             panel.ScriptSelected += switchDuringSelection;
             check.That(panel.TrySelectScript(0) && ReferenceEquals(panel.Snapshot, empty) && panel.SelectedScriptIndex == null,
-                "mission reference panel keeps a reentrant snapshot change");
+                "An event can replace the snapshot without preserving a stale selection");
             panel.ScriptSelected -= switchDuringSelection;
             panel.SetSnapshot(first);
             panel.TrySelectScript(0);
-            int eventsBeforeReset = scriptEvents + referenceEvents;
+            int eventsBeforeReset = scriptEvents + useEvents + missingEvents;
             panel.SetSnapshot(empty);
             check.That(ReferenceEquals(panel.Snapshot, empty) && panel.SelectedScriptIndex == null
-                && panel.ScriptItems.GetItemCount() == 0 && panel.ReferenceItems.GetItemCount() == 0
-                && scriptEvents + referenceEvents == eventsBeforeReset, "mission reference panel drops old selections on model changes");
+                && panel.ScriptItems.GetItemCount() == 0 && panel.UseItems.GetItemCount() == 0 && panel.MissingItems.GetItemCount() == 0
+                && scriptEvents + useEvents + missingEvents == eventsBeforeReset, "Replacing a snapshot clears selections without emitting events");
             panel.SetSnapshot(null);
             check.That(panel.Snapshot == null && panel.OverviewText == "No mission is open."
-                && !panel.TrySelectScript(0) && !panel.TrySelectReference(0), "mission reference panel safely closes a mission");
+                && !panel.TrySelectScript(0) && !panel.TrySelectUse(0) && !panel.TrySelectMissing(0), "Closing the mission disables all selections");
+            panel.SetSnapshot(single);
+            check.That(panel.OverviewText.StartsWith("1 script; 1 object assignment ", StringComparison.Ordinal)
+                && panel.TrySelectScript(0) && panel.DetailText == "1 object assignment uses this script.",
+                "Single scripts, uses and missing assignments use singular wording");
         }
         finally { panel.Free(); }
     }
