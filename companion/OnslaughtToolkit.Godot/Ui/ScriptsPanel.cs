@@ -356,7 +356,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         foreach (string word in Types) highlighter.AddKeywordColor(word, Palette.ViewedBlue);
         CodeEdit view = new()
         {
-            Editable = false, GuttersDrawLineNumbers = true, WrapMode = TextEdit.LineWrappingMode.None, CaretBlink = false, ScrollSmooth = false,
+            Editable = false, DeselectOnFocusLossEnabled = false, GuttersDrawLineNumbers = true, WrapMode = TextEdit.LineWrappingMode.None, CaretBlink = false, ScrollSmooth = false,
             HighlightCurrentLine = false, MinimapDraw = false, SyntaxHighlighter = highlighter, SizeFlagsVertical = SizeFlags.ExpandFill,
             SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(280, 120), AutoBraceCompletionEnabled = false,
             TooltipText = "The script's source, read only. The game does not read this file.",
