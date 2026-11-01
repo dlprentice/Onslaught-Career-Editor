@@ -32,6 +32,7 @@ internal static class LevelMapPageTests
     {
         Vector2 at = InWindow(map, local);
         Push(tree, new InputEventMouseButton { ButtonIndex = up ? MouseButton.WheelUp : MouseButton.WheelDown, Pressed = true, Factor = 1, Position = at, GlobalPosition = at });
+        Push(tree, new InputEventMouseButton { ButtonIndex = up ? MouseButton.WheelUp : MouseButton.WheelDown, Pressed = false, Factor = 1, Position = at, GlobalPosition = at });
     }
 
     private static void Mouse(SceneTree tree, LevelMap map, Vector2 local, MouseButton button, bool pressed)
@@ -39,6 +40,22 @@ internal static class LevelMapPageTests
         Vector2 at = InWindow(map, local);
         MouseButtonMask held = button switch { MouseButton.Left => MouseButtonMask.Left, MouseButton.Right => MouseButtonMask.Right, _ => MouseButtonMask.Middle };
         Push(tree, new InputEventMouseButton { ButtonIndex = button, Pressed = pressed, Position = at, GlobalPosition = at, ButtonMask = pressed ? held : 0 });
+    }
+
+    private static void TerrainClick(SceneTree tree, LevelTerrainViewport view, Vector2 local, MouseButton button)
+    {
+        Vector2 at = view.GetGlobalRect().Position + local;
+        MouseButtonMask mask = button == MouseButton.Left ? MouseButtonMask.Left : MouseButtonMask.Right;
+        Push(tree, new InputEventMouseButton { ButtonIndex = button, Pressed = true, Position = at, GlobalPosition = at, ButtonMask = mask });
+        Push(tree, new InputEventMouseButton { ButtonIndex = button, Pressed = false, Position = at, GlobalPosition = at });
+    }
+
+    private static Camera3D? TerrainCamera(Node root)
+    {
+        if (root is Camera3D camera) return camera;
+        foreach (Node child in root.GetChildren())
+            if (TerrainCamera(child) is Camera3D found) return found;
+        return null;
     }
 
     /// <summary>Moves the pointer in steps of at most <paramref name="stepPixels"/> from where it is to <paramref name="to"/>, holding the buttons given.</summary>
@@ -76,6 +93,9 @@ internal static class LevelMapPageTests
         // The authored level 100 again, now with its authored terrain, so the map has relief to draw.
         File.WriteAllBytes(Path.Combine(install.Game, "data", "resources", "100_res_PC.aya"),
             LevelTests.Unpack(LevelVectors.Archives.First(archive => archive.Name == "level-100-terrain").File));
+        // A second authored archive has its own world and overlapping row numbers, but no terrain.
+        File.WriteAllBytes(Path.Combine(install.Game, "data", "resources", "200_res_PC.aya"),
+            LevelTests.Unpack(LevelVectors.Archives.First(archive => archive.Name == "base-and-real").File));
         string[] gameBefore = Snapshot(install.Game);
         // The page tests before this left the Save as mod dialog open, and an open dialog takes the window's input: close what is still showing.
         foreach (Window window in app.FindChildren("*", nameof(Window), true, false).OfType<Window>().Where(window => window.Visible)) window.Hide();
@@ -96,7 +116,7 @@ internal static class LevelMapPageTests
         await Frame(tree);
         await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
         GD.Print("mission_terrain_page_test_reached");
-        var missionTerrainSplit = tree.Root.FindChild("MissionTerrainSplit", true, false) as HSplitContainer;
+        var missionTerrainSplit = tree.Root.FindChild("MissionTerrainSplit", true, false) as SplitContainer;
         var missionTerrainPanel = tree.Root.FindChild("MissionReferences", true, false) as MissionReferencePanel;
         Button? missionTerrainToggle = null;
         foreach (Node candidate in tree.Root.FindChildren("*", "Button", true, false))
@@ -342,11 +362,152 @@ internal static class LevelMapPageTests
         Wheel(tree, map, new Vector2(100, 100), up: true);
         check.That(map.IsVisibleInTree() && Math.Abs(map.View.Scale / hiddenScale - 1.2) < 1e-9, "and a shown one does");
 
+        await CheckTerrainPageWiring(page, model, tree, check);
+
         // The pointer leaves; the page wrote nothing into the game.
         Push(tree, new InputEventMouseMotion { Position = new Vector2(-50, -50), GlobalPosition = new Vector2(-50, -50) });
         await Frame(tree);
         check.That(Snapshot(install.Game).SequenceEqual(gameBefore), "working the map never wrote anything into the game folder");
         app.Navigate("home");
         await Frame(tree);
+    }
+
+    private static async Task CheckTerrainPageWiring(LevelEditorPage page, LevelEditorModel model, SceneTree tree, Checks check)
+    {
+        Vector2I previousSize = tree.Root.Size;
+        try
+        {
+            tree.Root.Size = new Vector2I(1280, 800);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            await CheckTerrainPageWiringWide(page, model, tree, check);
+        }
+        finally
+        {
+            tree.Root.Size = previousSize;
+            await Frame(tree);
+        }
+    }
+
+    private static async Task CheckTerrainPageWiringWide(LevelEditorPage page, LevelEditorModel model, SceneTree tree, Checks check)
+    {
+        page.TerrainViewSwitch.ButtonPressed = true;
+        for (int frame = 0; frame < 4; frame++) await Frame(tree);
+        LevelTerrainViewport view = page.TerrainPreview;
+        Camera3D? camera = TerrainCamera(view);
+        Heightfield? terrain = model.Terrain;
+        EditSession? session = model.Session;
+        check.That(view.IsVisibleInTree() && camera is not null && terrain is not null && session is not null,
+                   "the real page shows its 3D terrain with an active editor session");
+        if (camera is null || terrain is null || session is null || !view.IsVisibleInTree()) return;
+
+        int[] units = session.Body.Things.Select((thing, row) => (thing, row))
+            .Where(item => DuplicateObject.CanCopy(item.thing)).Select(item => item.row).Take(2).ToArray();
+        check.That(units.Length == 2, "the authored world has two units for the page's 3D selection test");
+        if (units.Length != 2) return;
+        float firstX = Heightfield.Size * 0.35f, firstY = Heightfield.Size * 0.40f;
+        float secondX = Heightfield.Size * 0.60f, secondY = Heightfield.Size * 0.58f;
+        MoveOutcome firstSetup = model.Move(units[0], CoordinateInput.Format(firstX), CoordinateInput.Format(firstY),
+                                            CoordinateInput.Format(terrain.HeightAt(firstX, firstY) + 0.125f));
+        MoveOutcome secondSetup = model.Move(units[1], CoordinateInput.Format(secondX), CoordinateInput.Format(secondY),
+                                             CoordinateInput.Format(terrain.HeightAt(secondX, secondY) + 0.25f));
+        check.That(firstSetup.Result != MoveResult.Refused && secondSetup.Result != MoveResult.Refused,
+                   "the authored units can be placed at distinct visible 3D marks");
+        if (firstSetup.Result == MoveResult.Refused || secondSetup.Result == MoveResult.Refused) return;
+        for (int frame = 0; frame < 2; frame++) await Frame(tree);
+        System.Numerics.Vector3 first = model.Row(units[0])!.Position, second = model.Row(units[1])!.Position;
+        Vector2 firstMark = camera.UnprojectPosition(new Vector3(first.X, -first.Z, -first.Y));
+        Vector2 secondMark = camera.UnprojectPosition(new Vector3(second.X, -second.Z, -second.Y));
+        bool marksVisible = view._GetTooltip(firstMark).Contains($"row {units[0]}", StringComparison.Ordinal) &&
+                            view._GetTooltip(secondMark).Contains($"row {units[1]}", StringComparison.Ordinal);
+        check.That(marksVisible, "the current page projects the two authored units as independently selectable marks");
+        if (!marksVisible) return;
+
+        page.SelectIndex(units[1]);
+        int firstPickEvents = 0, guiEvents = 0;
+        void FirstPicked(int row) => firstPickEvents++;
+        void GotGuiInput(InputEvent input) { if (input is InputEventMouseButton) guiEvents++; }
+        view.RowPicked += FirstPicked;
+        view.GuiInput += GotGuiInput;
+        Vector2 pointer = view.GetGlobalRect().Position + firstMark;
+        Push(tree, new InputEventMouseMotion { Position = pointer, GlobalPosition = pointer });
+        Control? hovered = tree.Root.GuiGetHoveredControl();
+        bool hoveredView = hovered is not null && (ReferenceEquals(hovered, view) || view.IsAncestorOf(hovered));
+        TerrainClick(tree, view, firstMark, MouseButton.Left);
+        view.RowPicked -= FirstPicked;
+        check.That(page.SelectedRow == units[0] && page.Map.Selected == units[0] &&
+                   page.Table.GetSelected()?.GetMetadata(0).AsInt32() == units[0] && firstPickEvents == 1,
+                   $"clicking a 3D mark selects the same row in the real page, map and table (3D hovered {hoveredView}, hovered control {hovered?.GetType().Name ?? "none"}, GUI events {guiEvents}, pick events {firstPickEvents})");
+
+        // Project the interior of an authored preview triangle so a right-click exercises the actual camera and terrain picker.
+        TerrainSurface surface = TerrainSurface.Build(terrain);
+        System.Numerics.Vector3[] vertices = surface.Vertices.ToArray();
+        int[] indices = surface.Indices.ToArray();
+        Vector2? targetScreen = null;
+        System.Numerics.Vector3 target = default;
+        int inViewport = 0;
+        for (int i = 0; i + 2 < indices.Length; i += 3)
+        {
+            var candidate = (vertices[indices[i]] + vertices[indices[i + 1]] + vertices[indices[i + 2]]) / 3;
+            Vector2 screen = camera.UnprojectPosition(new Vector3(candidate.X, candidate.Y, candidate.Z));
+            if (screen.X >= 0 && screen.Y >= 0 && screen.X < view.Size.X && screen.Y < view.Size.Y) inViewport++;
+            if (screen.X <= 12 || screen.Y <= 12 || screen.X >= view.Size.X - 12 || screen.Y >= view.Size.Y - 12 ||
+                screen.DistanceTo(firstMark) < 24 || screen.DistanceTo(secondMark) < 24 ||
+                (Math.Abs(candidate.X - second.X) < 2 && Math.Abs(-candidate.Z - second.Y) < 2)) continue;
+            target = candidate;
+            targetScreen = screen;
+            break;
+        }
+        check.That(targetScreen is not null, $"the authored 3D view has a visible terrain point distinct from both marks (window {tree.Root.Size}, view {view.Size}, projected triangles {inViewport})");
+        if (targetScreen is not Vector2 targetAt) { view.GuiInput -= GotGuiInput; return; }
+
+        byte[] before = session.ToBytes();
+        int selectionEvents = 0, moveEvents = 0;
+        void Picked(int _) => selectionEvents++;
+        void Requested(int row, float x, float y) => moveEvents++;
+        view.RowPicked += Picked;
+        view.MoveRequested += Requested;
+        TerrainClick(tree, view, secondMark, MouseButton.Left);
+        bool selectedImmediately = page.SelectedRow == units[1] && page.Map.Selected == units[1];
+        TerrainClick(tree, view, targetAt, MouseButton.Right); // Deliberately no frame between selection and movement.
+        view.RowPicked -= Picked;
+        view.MoveRequested -= Requested;
+        view.GuiInput -= GotGuiInput;
+        System.Numerics.Vector3 moved = model.Row(units[1])!.Position;
+        check.That(selectionEvents == 1 && moveEvents == 1 && page.SelectedRow == units[1] && page.Map.Selected == units[1] &&
+                   moved != second && model.Row(units[0])!.Position == first && Bits(moved.Z) == Bits(second.Z),
+                   $"selecting a different 3D mark and immediately moving it updates only that page row, keeping its exact height (selected {selectedImmediately}, pick events {selectionEvents}, move events {moveEvents}, changed {moved != second}, first unchanged {model.Row(units[0])!.Position == first}, height kept {Bits(moved.Z) == Bits(second.Z)})");
+        check.That(Math.Abs(moved.X - target.X) < 0.2f && Math.Abs(moved.Y + target.Z) < 0.2f &&
+                   page.X.Text == CoordinateInput.Format(moved.X) && page.Y.Text == CoordinateInput.Format(moved.Y),
+                   "the real page receives the terrain hit as world coordinates and updates its fields");
+        byte[] after = session.ToBytes();
+        page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(session.ToBytes().SequenceEqual(before), "one page Undo restores the entire 3D move");
+        page.Redo.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(session.ToBytes().SequenceEqual(after), "one page Redo restores the same 3D move");
+
+        int previousLevel = model.Level!.Value;
+        int? otherLevel = model.Levels.Select(level => (int?)level.Level).FirstOrDefault(level => level != previousLevel);
+        check.That(otherLevel is not null && page.OpenLevel(otherLevel.Value) && model.Session is not null &&
+                   !ReferenceEquals(model.Session, session), "another authored level opens as a different edit session");
+        if (otherLevel is null || model.Session is not EditSession next || ReferenceEquals(next, session)) return;
+        bool overlappingRow = units[1] < next.Body.Things.Count && page.SelectIndex(units[1]);
+        check.That(overlappingRow && page.SelectedRow == units[1], "the next level has and selects the same row number");
+        if (!overlappingRow) return;
+        check.That(model.Terrain is null, "the second authored world has no terrain of its own");
+        byte[] nextBefore = next.ToBytes();
+        int switchedInput = 0, switchedMove = 0;
+        void SwitchedInput(InputEvent input) { if (input is InputEventMouseButton) switchedInput++; }
+        void SwitchedMove(int row, float x, float y) => switchedMove++;
+        view.GuiInput += SwitchedInput;
+        view.MoveRequested += SwitchedMove;
+        TerrainClick(tree, view, targetAt, MouseButton.Right); // The old camera still exists until the next process frame.
+        check.That(switchedInput > 0 && switchedMove == 0 && next.ToBytes().SequenceEqual(nextBefore) && !next.CanUndo,
+                   "the 3D view receives a right-click immediately after the level switch but cannot move the overlapping row on old terrain");
+        await Frame(tree);
+        TerrainClick(tree, view, targetAt, MouseButton.Right);
+        view.GuiInput -= SwitchedInput;
+        view.MoveRequested -= SwitchedMove;
+        check.That(switchedMove == 0 && next.ToBytes().SequenceEqual(nextBefore) && !next.CanUndo,
+                   "the level with no terrain remains unchanged after the preview refreshes");
     }
 }
