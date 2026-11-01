@@ -56,7 +56,7 @@ The prototype also contains terrain preview, existing-unit grid controls and mis
 The pushed [spherical-trigger radius backend](https://github.com/dlprentice/Onslaught-Career-Editor/blob/6d2c3e4f949f3f4885ec7cb74e5654dfed4d6a33/companion/OnslaughtToolkit.Godot/Levels/TriggerEdit.cs)
 adds a command tied to the existing trigger record, undo/redo, validation and change summaries. Its
 [authored-data fixture](https://github.com/dlprentice/Onslaught-Career-Editor/blob/6d2c3e4f949f3f4885ec7cb74e5654dfed4d6a33/companion/OnslaughtToolkit.Godot/Tests/LevelTriggerEditTests.cs)
-passed without invoking the compiler or mod stager. An inspector control is not wired, and a resized trigger has not
+passed without invoking the compiler or mod stager. In that backend branch, an inspector control is not wired, and a resized trigger has not
 been staged or played in CE. A separate [inspector component candidate](https://github.com/dlprentice/Onslaught-Career-Editor/tree/2b1527eb1bd5bb9cd5457b76fdaf1bff7a88d1e1)
 adds a control and authored tests; that candidate has no Level editor page wiring or normal-runner registration.
 
