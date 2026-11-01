@@ -322,7 +322,7 @@ internal sealed class LevelEditorPage : Page
         _hint = inside.Add(Build.Text("", "Faint"));
 
         (PanelContainer changes, VBoxContainer changesBody) = Build.Panel("Card", 8);
-        _unitRowToggle = right.Add(Build.Button("Arrange units", tooltip: "Arrange existing units in a row.", disabled: true));
+        _unitRowToggle = right.Add(Build.Button("Arrange units", tooltip: "Arrange existing units in a row or grid.", disabled: true));
         _unitRowToggle.ToggleMode = true;
         _unitRowPanel = right.Add(new UnitRowPanel { Visible = false });
         _unitRowToggle.Toggled += on => _unitRowPanel.Visible = on && !_scripts.Visible;

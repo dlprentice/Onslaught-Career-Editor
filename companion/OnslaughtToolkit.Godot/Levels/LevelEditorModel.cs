@@ -587,6 +587,20 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         return Apply(arrangement, "The selected units are arranged in a row. Their heights are unchanged.");
     }
 
+    /// <summary>Arranges existing units in a bounded grid as one undoable edit; it does not disable AI or check clearance.</summary>
+    public MoveOutcome ArrangeUnitsInGrid(IReadOnlyList<int>? rows, int columns, Vector2 first, Vector2 across, Vector2 down)
+    {
+        if (Session is null) return new MoveOutcome(MoveResult.Refused, "Open a level first.");
+        if (rows is null) return new MoveOutcome(MoveResult.Refused, "Choose units to arrange.");
+        ArrangeUnitGrid arrangement = new(rows, columns, first, across, down);
+        try
+        {
+            if (!arrangement.WouldChange(Session.Body)) return new MoveOutcome(MoveResult.Unchanged, "Those units are already arranged there.");
+        }
+        catch (InvalidOperationException error) { return new MoveOutcome(MoveResult.Refused, error.Message); }
+        return Apply(arrangement, "The selected units are arranged in a grid. Their heights are unchanged.");
+    }
+
     /// <summary>Puts a row back where the level has it (an edit that can be undone).</summary>
     public MoveOutcome Reset(int row)
     {
