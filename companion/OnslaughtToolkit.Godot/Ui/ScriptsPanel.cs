@@ -43,6 +43,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
     private readonly Dictionary<string, string> _drafts = new(StringComparer.Ordinal);
     private readonly Dictionary<string, ScriptSourceResult> _sourceBaselines = new(StringComparer.Ordinal);
     private readonly HashSet<string> _projectSources = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, (string Text, string RecordHash)> _retainedUsed = new(StringComparer.Ordinal);
     private long _draftRevision;
     private bool _settingSource;
 
@@ -129,6 +130,12 @@ internal sealed partial class ScriptsPanel : VBoxContainer
 
     /// <summary>How many scripts <see cref="UnusedDraftNames"/> lists.</summary>
     internal int UnusedDraftCount => UnusedDraftNames.Count;
+    internal int DraftCount { get { StoreDraft(); return _drafts.Count; } }
+    internal string DraftContentHash()
+    {
+        StoreDraft();
+        return EditorProject.TextHash(System.Text.Json.JsonSerializer.Serialize(_drafts.OrderBy(entry => entry.Key, StringComparer.Ordinal)));
+    }
 
     /// <summary>Whether text was typed for the script of this name that differs from its source file (the text on view counts): what Put the shipped script back can drop.</summary>
     internal bool HasDraft(string name)
@@ -159,13 +166,19 @@ internal sealed partial class ScriptsPanel : VBoxContainer
             string name = own[index].Summary.Name;
             _drafts.TryGetValue(name, out string? draft);
             string? used = usedText?.Invoke(index);
+            string? recordHash = null;
+            if (used is not null || _retainedUsed.ContainsKey(name))
+            {
+                recordHash = EditorProject.Hash(WorldBodyWriter.ScriptBytes(session.Body.Scripts[index]));
+                if (used is null && _retainedUsed.TryGetValue(name, out var retained) && retained.RecordHash == recordHash) used = retained.Text;
+            }
             if (SourceFor(own[index]).Source is not { } source)
             {
                 if (draft is not null || used is not null) throw new InvalidDataException("A script with typed or used text has no source baseline to save.");
                 continue;
             }
             scripts.Add(new EditorProjectScript(index, name, EditorProject.TextHash(source.Text), source.Text, draft, used,
-                used is null ? null : EditorProject.Hash(WorldBodyWriter.ScriptBytes(session.Body.Scripts[index]))));
+                used is null ? null : recordHash));
         }
         if (_drafts.Keys.Any(name => !own.Any(entry => entry.Summary.Name == name)))
             throw new InvalidDataException("A typed script no longer belongs to the open world.");
@@ -217,6 +230,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         _drafts.Clear();
         _sourceBaselines.Clear();
         _projectSources.Clear();
+        _retainedUsed.Clear();
         ScriptEntry[] own = OwnEntries(_entries);
         foreach (EditorProjectScript script in prepared.Scripts)
         {
@@ -225,7 +239,9 @@ internal sealed partial class ScriptsPanel : VBoxContainer
             int lines = script.SourceText.Count(c => c == '\n') + (script.SourceText.Length > 0 && script.SourceText[^1] != '\n' ? 1 : 0);
             _sourceBaselines.Add(script.Name, new ScriptSourceResult(new ScriptSource(path, script.SourceText, lines), null));
             _projectSources.Add(script.Name);
-            if (script.DraftText is not null && script.DraftText != script.SourceText) _drafts.Add(script.Name, script.DraftText);
+            if (script.UsedText is not null) _retainedUsed.Add(script.Name, (script.UsedText, script.UsedRecordHash!));
+            string? shown = script.DraftText ?? script.UsedText;
+            if (shown is not null && shown != script.SourceText) _drafts.Add(script.Name, shown);
         }
         _draftRevision++;
         Fill(keep: null);
@@ -307,6 +323,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         _drafts.Clear();
         _sourceBaselines.Clear();
         _projectSources.Clear();
+        _retainedUsed.Clear();
         _draftRevision++;
         Fill(keep: null);
     }

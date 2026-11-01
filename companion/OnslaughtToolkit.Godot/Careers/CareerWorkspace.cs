@@ -21,6 +21,15 @@ public sealed class CareerWorkspace(SaveFileWorker worker)
     public bool Busy { get; private set; }
     public bool IsAvailable => worker.IsAvailable;
 
+    /// <summary>Shares the protected single-flight worker and shutdown wait with editor project file operations.</summary>
+    internal async Task<T> RunEditorFileOperationAsync<T>(Func<T> operation, Func<string, T> refusal) where T : class
+    {
+        if (Busy) return refusal("A file operation is already running.");
+        SetBusy(true);
+        try { return await worker.RunExclusiveAsync(_ => operation(), refusal); }
+        finally { SetBusy(false); }
+    }
+
     /// <summary>Raised on the main thread whenever the session, busy state or verified result changes.</summary>
     public event Action? Changed;
 
