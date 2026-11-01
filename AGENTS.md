@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-10-31 (commit messages: keep Co-Authored-By, no Claude-Session line, name no agent or role)
+Last updated: 2026-11-01 (tool outcomes and user holds; commit messages: keep Co-Authored-By, no Claude-Session line, name no agent or role)
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
@@ -62,6 +62,31 @@ Update the existing owner when a material milestone changes; preserve historical
 competing live status files. Before new work, check applicable prior results and share relevant findings between lanes;
 repeat checks only for changed inputs, failures or unresolved risks. Report failures and open gaps without invented
 percentages, and follow the user's current priorities.
+
+## Tool outcomes and user holds
+
+Record consequential tool outcomes in existing private notes with time, caller, action scope, returned status or
+reason, handle and known effects. Keep observations separate from interpretations; fresh evidence can correct an
+interpretation without erasing the original observation.
+
+- **Safety denial:** preserve its stated scope and reason. Do not obtain the denied outcome through another tool,
+  wrapper or helper. Continue only with a materially safer permitted alternative or the supported review process.
+  A task-level safety stop follows its actual notice and supported resume path.
+- **Generic abort:** a failed invocation without a policy reason proves neither approval nor a permanent task-wide
+  ban; its cause remains unknown. An already-authorized harmless check may receive one direct retry through the
+  same controls. If it repeats, record the unresolved failure and finish independent authorized work, without
+  repeated status loops or changing the request to bypass a restriction. Check effects before repeating any mutation.
+- **Observation failure:** a failed status read leaves the task's state unknown. A returned child handle establishes
+  accepted creation, not completion; check that existing task or await its result. A child's inability to observe
+  the parent's result does not invalidate it or justify duplicate work or interruption. Report unobserved required
+  checks as limits, never passes.
+- **User hold:** preserve it until the user explicitly releases that scope. General goal resumption does not release
+  narrower holds, and elapsed time, delegation or tool success grants no new authorization.
+
+Official OpenAI documentation: [Auto-review](https://learn.chatgpt.com/docs/sandboxing/auto-review),
+[task safety notices](https://learn.chatgpt.com/docs/agent-approvals-security),
+[recovery](https://developers.openai.com/api/docs/guides/agents-api/errors), and
+[delegation](https://developers.openai.com/api/docs/guides/agents-api/multi-agent).
 
 ## Ground rules
 
