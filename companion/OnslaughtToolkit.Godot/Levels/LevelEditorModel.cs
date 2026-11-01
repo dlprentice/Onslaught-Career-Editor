@@ -338,6 +338,8 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     /// UI until it owns and validates both current and imported drafts, including stale confirmations.</remarks>
     internal byte[] CaptureProject(IReadOnlyList<EditorProjectScript> scripts)
     {
+        ArgumentNullException.ThrowIfNull(scripts);
+        if (scripts.Count != 0) throw new InvalidDataException("This editor cannot capture snapshots with script source drafts yet.");
         if (ProjectBase() is not { } basis || Session is not { } session) throw new InvalidDataException("Choose a level and its world first.");
         return EditorProject.Capture(basis, session, _terrainDraft, scripts);
     }

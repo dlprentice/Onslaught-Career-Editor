@@ -197,12 +197,16 @@ internal static class EditorProjectTests
         model.Session.Body.Scripts.Add(new MissionScript { Name = draftName });
         string sourceHash = EditorProject.Hash(Encoding.UTF8.GetBytes("authored source"));
         EditorProjectScript draft = new(draftIndex, draftName, sourceHash, "authored draft", null, null);
-        byte[] projectWithDraft = model.CaptureProject([draft]);
+        byte[] withScript = model.Session.ToBytes();
+        check.That(Refused(() => model.CaptureProject([draft])) && model.Session.ToBytes().AsSpan().SequenceEqual(withScript),
+                   "the model refuses to capture drafts it cannot reopen without changing the current edit");
         byte[] projectWithCompiledScript = model.CaptureProject([]);
         model.Session.Body.Scripts.RemoveAt(draftIndex);
         LevelWorlds worlds = model.Worlds!;
         EditorProjectBase basis = new(100, false, worlds.BaseLevel, model.Session.IsBaseWorld, model.Session.Baseline,
             worlds.RealBody!, worlds.BaseBody, worlds.Terrain);
+        RestoredEditorProject restoredCompiled = EditorProject.Restore(projectWithCompiledScript, basis);
+        byte[] projectWithDraft = EditorProject.Capture(basis, restoredCompiled.Session, restoredCompiled.Terrain, [draft]);
         RestoredEditorProject restoredWithDraft = EditorProject.Restore(projectWithDraft, basis);
         check.That(restoredWithDraft.Scripts.Count == 1 && restoredWithDraft.Scripts[0] == draft &&
                    !model.TryPrepareProject(projectWithDraft, out _, out string draftMessage) &&
