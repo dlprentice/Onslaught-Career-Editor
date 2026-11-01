@@ -21,11 +21,11 @@ internal static class LevelObjectDragPageTests
     private static Vector2 Marker(LevelEditorPage page, Camera3D camera, int index)
     {
         NumericVector3 p = page.Map.Rows.Single(row => row.Index == index).Position;
-        return camera.UnprojectPosition(new Vector3(p.X, -p.Z, p.Y));
+        return camera.UnprojectPosition(new Vector3(p.X, -p.Z, -p.Y));
     }
 
     private static Vector2 Target(Camera3D camera, Heightfield terrain, float x, float y) =>
-        camera.UnprojectPosition(new Vector3(x, -terrain.HeightAt(x, y), y));
+        camera.UnprojectPosition(new Vector3(x, -terrain.HeightAt(x, y), -y));
 
     private static void Button(LevelTerrainViewport view, Vector2 local, bool pressed)
     {
