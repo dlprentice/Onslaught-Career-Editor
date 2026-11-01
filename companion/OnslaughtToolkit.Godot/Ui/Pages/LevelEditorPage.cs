@@ -226,6 +226,7 @@ internal sealed partial class LevelEditorPage : Page
         _scriptEditNote = scriptInside.Add(Build.Text("", "Muted"));
         _scriptEditWarnings = scriptInside.Add(Build.Text("", "Warn"));
         _scriptEditWarnings.Visible = false;
+        BuildWaypointRuleControls(scriptInside);
         _scriptNamesTitle = scriptInside.Add(Build.Text("", "Strong"));
         _scriptNamesTitle.Visible = false;
         _scriptNames = scriptInside.Add(new HFlowContainer());
@@ -614,6 +615,7 @@ internal sealed partial class LevelEditorPage : Page
     private void OnModelChanged()
     {
         if (_projectCommitting) return;
+        ClearWaypointRules();
         _viewRevision++;
         if (!ReferenceEquals(_terrainShownSession, _model?.Session))
         {
@@ -801,6 +803,7 @@ internal sealed partial class LevelEditorPage : Page
 
     private void UpdateChanges()
     {
+        SyncWaypointRuleControls();
         UpdateProjectControls();
         UpdateDraftNote();
         EditSession? session = _model?.Session;
@@ -987,6 +990,7 @@ internal sealed partial class LevelEditorPage : Page
     private void OnScriptSelected(ScriptEntry? entry, ScriptSourceResult? source)
     {
         if (_projectCommitting) return;
+        ClearWaypointRules();
         foreach (Node child in _scriptUses.GetChildren())
         {
             _scriptUses.RemoveChild(child);
@@ -1048,6 +1052,7 @@ internal sealed partial class LevelEditorPage : Page
     /// <summary>The edit controls of the script card for the selected script: what can be done with it now, and why not when it cannot.</summary>
     private void UpdateScriptEdit()
     {
+        SyncWaypointRuleControls();
         ScriptEntry? entry = _scripts.Current;
         int? index = entry is null || _model is null ? null : _model.OwnScriptIndex(entry);
         bool editable = _scripts.CanEditCurrent && index is not null && _root is not null;
@@ -1139,6 +1144,7 @@ internal sealed partial class LevelEditorPage : Page
     private void OnScriptTextEdited()
     {
         if (_projectCommitting) return;
+        ClearWaypointRules();
         _viewRevision++;
         if (_editNoteRefused)
         {
