@@ -88,7 +88,7 @@ public sealed record ScriptEditOutcome(ScriptEditResult Result, string Message, 
 /// <see cref="EditSession"/>, the object table, the coordinates typed for one object, and saving the edit as a Onslaught CE mod. The
 /// level's own world is the only one edited; a base world the archive carries is left as it is.
 /// </summary>
-public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
+public sealed partial class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
 {
     /// <summary>The model for the level archives of a game folder.</summary>
     public static LevelEditorModel ForGame(string gameRoot) => new(LevelArchive.List(gameRoot));
@@ -205,7 +205,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
             {
                 if (!ReferenceEquals(Session, session)) return;
                 RefreshScripts();
-                Changed?.Invoke();
+                AnnounceChange();
             };
             Session = session;
             Scripts = ListScripts(session.Body, worlds);
@@ -230,7 +230,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         {
             return Refuse($"Level {level} could not be read: {error.Message}");
         }
-        Changed?.Invoke();
+        AnnounceChange();
         return true;
     }
 
@@ -305,7 +305,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     private bool Refuse(string problem)
     {
         Problem = problem;
-        Changed?.Invoke();
+        AnnounceChange();
         return false;
     }
 
@@ -441,7 +441,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
             sentences.Add($"{(triggers.Count == 1 ? "1 trigger resized" : $"{triggers.Count} triggers resized")}: {list}{(triggers.Count > 3 ? $" and {triggers.Count - 3} more" : "")}.");
         }
         if (_terrainDraft is { HasChanges: true } terrain)
-            sentences.Add($"3D terrain preview changed at {(terrain.ChangedCount == 1 ? "1 point" : $"{terrain.ChangedCount} points")}; it cannot be saved or played.");
+            sentences.Add($"3D terrain preview changed at {(terrain.ChangedCount == 1 ? "1 point" : $"{terrain.ChangedCount} points")}; preserve it in an editor project. CE mod export and play are blocked.");
         if (sentences.Count == 0 && HasUnsavedChanges) return "This level has changes this editor cannot describe or save.";
         return sentences.Count == 0 ? null : string.Join(" ", sentences);
     }
@@ -460,13 +460,16 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     /// counters start where the shipped script's do, which helps preserve generated names. The installed source can already differ from the shipped
     /// compiled script, so recompiling it can change behavior beyond the source edit. Nothing is replaced; see <see cref="ReplaceScriptFromSource"/>.
     /// </summary>
-    public ScriptCompileOutcome CompileScript(int scriptIndex, string source, string gameRoot)
+    public ScriptCompileOutcome CompileScript(int scriptIndex, string source, string gameRoot) => Session is { } session
+        ? CompileProjectScript(session, scriptIndex, source, gameRoot) : new ScriptCompileOutcome(null, "Choose a level first.", null, []);
+
+    internal static ScriptCompileOutcome CompileProjectScript(EditSession session, int scriptIndex, string source, string gameRoot)
     {
-        if (Session is null) return new ScriptCompileOutcome(null, "Open a level first.", null, []);
-        if (scriptIndex < 0 || scriptIndex >= Session.Body.Scripts.Count) return new ScriptCompileOutcome(null, $"There is no script {scriptIndex} in this world.", null, []);
-        if (!Session.SameScripts()) return new ScriptCompileOutcome(null, "The script list has changed and cannot be edited here.", null, []);
-        if (!ScriptsAreInspectable(Session)) return new ScriptCompileOutcome(null, "The level's scripts cannot be inspected or edited safely.", null, []);
-        MissionScript shipped = Session.ShippedScript(scriptIndex);
+        if (session is null) return new ScriptCompileOutcome(null, "Open a level first.", null, []);
+        if (scriptIndex < 0 || scriptIndex >= session.Body.Scripts.Count) return new ScriptCompileOutcome(null, $"There is no script {scriptIndex} in this world.", null, []);
+        if (!session.SameScripts()) return new ScriptCompileOutcome(null, "The script list has changed and cannot be edited here.", null, []);
+        if (!ScriptsAreInspectable(session)) return new ScriptCompileOutcome(null, "The level's scripts cannot be inspected or edited safely.", null, []);
+        MissionScript shipped = session.ShippedScript(scriptIndex);
         List<CompileNote> notes = [];
         try
         {

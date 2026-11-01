@@ -83,7 +83,7 @@ internal static class TerrainPreviewPageTests
             TerrainSurface? original = model.TerrainPreviewSurface;
             Camera3D? camera = Camera(view);
             check.That(original is not null && camera is not null && view.IsVisibleInTree() && !model.TerrainHasChanges &&
-                       page.WorldNote.Contains("unsaved 3D preview", StringComparison.Ordinal) && page.WorldNote.Contains("2D map shows base terrain", StringComparison.Ordinal),
+                       page.WorldNote.Contains("sampled 3D preview", StringComparison.Ordinal) && page.WorldNote.Contains("2D map shows base terrain", StringComparison.Ordinal),
                        "enabling the mode shows its preview and the unchanged 2D-baseline warning");
             if (original is null || camera is null || !view.IsVisibleInTree()) return;
 

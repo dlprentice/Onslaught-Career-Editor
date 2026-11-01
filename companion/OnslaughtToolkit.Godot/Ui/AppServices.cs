@@ -44,6 +44,7 @@ internal sealed class AppServices
 
     /// <summary>How many level edits no Save as mod has written yet (0 for none).</summary>
     internal required Func<int> LevelEditsUnsaved { get; init; }
+    internal Func<Func<bool>> CaptureLevelEditGuard { get; init; } = () => () => false;
 
     /// <summary>Starts Onslaught CE at a level with the edit being tried, in a temporary user folder of its own (the Level editor's test play).</summary>
     internal required CePlay Play { get; init; }

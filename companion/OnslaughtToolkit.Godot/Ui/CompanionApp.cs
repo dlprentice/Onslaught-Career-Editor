@@ -121,6 +121,7 @@ public partial class CompanionApp : Control
             CatchUp = () => CatchUpAsync(force: true, backUp: false),
             OpenCareerFile = () => Home.OpenDialog.PopupCenteredRatio(0.75f),
             AskToDiscard = AskToDiscard, LevelEditsUnsaved = () => LevelEditor.ChangeCount,
+            CaptureLevelEditGuard = () => LevelEditor.CaptureFolderSwitchGuard(),
             OldCopiesFolder = environment.OldCopiesFolder ?? OldSafeCopies.DefaultRoot(), Play = play,
         };
 
@@ -352,7 +353,7 @@ public partial class CompanionApp : Control
 
     private bool CloseWouldAbandonWrite()
     {
-        if (!Workspace.Busy) return false;
+        if (!Workspace.Busy && !Game.Busy) return false;
         Status.Show("A file operation is still finishing. Wait for its result before closing.");
         return true;
     }

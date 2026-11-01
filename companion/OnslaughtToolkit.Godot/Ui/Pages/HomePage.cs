@@ -266,7 +266,8 @@ internal sealed class HomePage : Page
                 "Discard and change folder", () => _app.Status.Track(ChooseAsync(path, discardLevelEdits: true)));
             return;
         }
-        var chosen = await _app.Game.ChooseAsync(path);
+        Func<bool> canCommit = _app.CaptureLevelEditGuard();
+        var chosen = await _app.Game.ChooseAsync(path, canCommit);
         _app.Status.Show(chosen.Message, chosen.Ok ? StatusKind.Success : StatusKind.Failure);
     }
 

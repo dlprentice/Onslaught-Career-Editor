@@ -131,7 +131,9 @@ public sealed class GameLibrary(IReadOnlyList<string> steamRoots, SettingsStore 
     }
 
     /// <summary>Uses a folder the player chose, if it holds BEA.exe and the data folder, and remembers it.</summary>
-    public async Task<Outcome<GameFolder>> ChooseAsync(string path)
+    internal Action<string>? BeforeChooseReadForTest { get; set; }
+
+    public async Task<Outcome<GameFolder>> ChooseAsync(string path, Func<bool>? canCommit = null)
     {
         if (Busy) return Outcome<GameFolder>.Refusal("The game folder is still being checked.");
         string? real = SteamLibraries.Canonical(path);
@@ -140,7 +142,9 @@ public sealed class GameLibrary(IReadOnlyList<string> steamRoots, SettingsStore 
         SetBusy(true);
         try
         {
-            (GameFolder? folder, GameText? text) = await Task.Run(() => Read(real, "Chosen by you"));
+            (GameFolder? folder, GameText? text) = await Task.Run(() => { BeforeChooseReadForTest?.Invoke(real); return Read(real, "Chosen by you"); });
+            if (canCommit?.Invoke() == false)
+                return Outcome<GameFolder>.Refusal("The editor changed while the folder was being read. The current folder and all edits were kept; choose again.");
             CompanionSettings saved = Settings.Load();
             saved.GameFolder = real;
             string note = Settings.Save(saved) ? "" : " It could not be remembered for next time.";

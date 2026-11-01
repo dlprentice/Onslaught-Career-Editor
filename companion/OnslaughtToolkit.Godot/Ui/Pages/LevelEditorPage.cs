@@ -12,7 +12,7 @@ namespace OnslaughtToolkit.Companion.Ui;
 /// folder, and only when the player confirms. Everything it decides (what a coordinate means, what an edit changed, what a mod holds) is in
 /// <see cref="LevelEditorModel"/>; this page lays it out and passes the player's words to it.
 /// </summary>
-internal sealed class LevelEditorPage : Page
+internal sealed partial class LevelEditorPage : Page
 {
     private const int PlaceholderId = 99999;
 
@@ -45,6 +45,10 @@ internal sealed class LevelEditorPage : Page
     private string? _root;
     private int? _selected;
     private (string X, string Y, string Z) _shown = ("", "", "");
+    private EditSession? _coordinateSession;
+    private int? _coordinateRow;
+    private bool _settingCoordinates;
+    internal bool CoordinatesHaveDraft => _coordinateSession is not null && (X.Text, Y.Text, Z.Text) != _shown;
     private string _savedId = "", _savedFolder = "";
     private bool _noteIsRefusal;
 
@@ -78,7 +82,7 @@ internal sealed class LevelEditorPage : Page
         Redo = toolbar.Add(Build.Button("Redo", tooltip: "Make the move you took back.", disabled: true));
         Undo.Pressed += () => Step(undo: true);
         Redo.Pressed += () => Step(undo: false);
-        TerrainEdit = left.Add(Build.Button("Terrain preview", tooltip: "In 3D, click to raise a preview point or Shift-click to lower it. This cannot be saved or played.", disabled: true));
+        TerrainEdit = left.Add(Build.Button("Terrain preview", tooltip: "In 3D, click to raise a preview point or Shift-click to lower it. Save it in an editor project; changed terrain cannot be exported as a CE mod or played.", disabled: true));
         TerrainEdit.ToggleMode = true;
         TerrainEdit.Toggled += enabled =>
         {
@@ -108,6 +112,7 @@ internal sealed class LevelEditorPage : Page
             else RebuildTable();
         };
         _worldNote = left.Add(Build.Text("", "Faint"));
+        AddProjectControls(left);
         _filterNote = left.Add(Build.Text("", "Faint"));
         _filterNote.Visible = false;
         // The table and the map share the column: side by side when it is wide, the map under the table (which keeps its columns) when it is not.
@@ -427,10 +432,10 @@ internal sealed class LevelEditorPage : Page
     /// Whether the open level holds changes that no Save as mod has written, or source text typed and not yet compiled and used: what leaving the level, the game
     /// or the companion would drop.
     /// </summary>
-    internal bool HasChanges => (_model?.HasUnsavedChanges ?? false) || _scripts.UnusedDraftCount > 0 || TriggerRadius.HasDraft;
+    internal bool HasChanges => TriggerRadius.HasDraft || CoordinatesHaveDraft || !MatchesSavedProject() && ((_model?.HasUnsavedChanges ?? false) || _scripts.DraftCount > 0);
 
     /// <summary>How many changed level records and uncompiled source drafts belong to the unsaved state.</summary>
-    internal int ChangeCount => (_model?.UnsavedChangeCount ?? 0) + _scripts.UnusedDraftCount + (TriggerRadius.HasDraft ? 1 : 0);
+    internal int ChangeCount => HasChanges ? Math.Max(1, (_model?.UnsavedChangeCount ?? 0) + _scripts.DraftCount + (TriggerRadius.HasDraft ? 1 : 0) + (CoordinatesHaveDraft ? 1 : 0)) : 0;
 
     private LineEdit Axis(GridContainer grid, string label)
     {
@@ -438,16 +443,22 @@ internal sealed class LevelEditorPage : Page
         LineEdit field = grid.Add(new LineEdit
         {
             ThemeTypeVariation = "MonoField", SizeFlagsHorizontal = Control.SizeFlags.ExpandFill, Editable = false, SelectAllOnFocus = true,
-            TooltipText = $"The object's {label} coordinate. Press Enter to move it.",
+            TooltipText = $"The object's {label} coordinate. Press Enter to apply; Escape restores the current coordinates.",
         });
         field.TextSubmitted += _ => ApplyFields(explicitly: true);
         field.FocusExited += () => ApplyFields(explicitly: false);
+        field.TextChanged += _ => { if (_settingCoordinates) return; _viewRevision++; UpdateChanges(); HeaderChanged?.Invoke(); };
+        field.GuiInput += input =>
+        {
+            if (input is not InputEventKey { Pressed: true, Keycode: Godot.Key.Escape }) return;
+            UpdateInspector(clearNote: true); UpdateChanges(); field.AcceptEvent();
+        };
         return field;
     }
 
     internal override void Refresh()
     {
-        if (_services.Game.Busy) return;
+        if (_services.Game.Busy) { UpdateChanges(); return; }
         string? root = _services.Game.Folder?.AssetRoot;
         // The same game: keep the edit in hand, and list its levels again (a quick listing of one folder). Another game (or none): start over.
         if (_model is null || !string.Equals(root, _root, StringComparison.Ordinal))
@@ -529,8 +540,17 @@ internal sealed class LevelEditorPage : Page
             try { expected = session.ToBytes(); }
             catch (Exception error) when (EditSession.IsUnstorable(error))
             {
-                _problemPanel.Visible = true;
-                _problemText.Text = "The current edit cannot be checked safely, so it was not discarded.";
+                string fingerprint;
+                try { fingerprint = EditorDiscardState.Hash(session.Body); }
+                catch (Exception inspection) when (ProjectOperationFailure(inspection))
+                { _problemPanel.Visible = true; _problemText.Text = "The current edit cannot be checked safely, so it was not discarded."; return; }
+                long unsupportedRevision = _viewRevision;
+                _services.AskToDiscard($"{Build.Count(changed, "change")} on level {open} cannot be saved in its current form. Open level {level} and discard it? Cancel to keep it and try Undo before choosing.",
+                    "Discard and open", () =>
+                    {
+                        if (!MatchesUnsupportedEdit(model, session, unsupportedRevision, fingerprint)) { ShowChangedConfirmation(); return; }
+                        OpenLevel(level);
+                    });
                 return;
             }
             long revision = _viewRevision;
@@ -550,6 +570,13 @@ internal sealed class LevelEditorPage : Page
         if (!ReferenceEquals(_model, model) || !ReferenceEquals(model.Session, session) || _viewRevision != revision) return false;
         try { return session.ToBytes().AsSpan().SequenceEqual(expected); }
         catch (Exception error) when (EditSession.IsUnstorable(error)) { return false; }
+    }
+
+    private bool MatchesUnsupportedEdit(LevelEditorModel model, EditSession session, long revision, string fingerprint)
+    {
+        if (!ReferenceEquals(_model, model) || !ReferenceEquals(model.Session, session) || _viewRevision != revision) return false;
+        try { return EditorDiscardState.Hash(session.Body) == fingerprint; }
+        catch (Exception error) when (ProjectOperationFailure(error)) { return false; }
     }
 
     private void ShowChangedConfirmation()
@@ -586,6 +613,7 @@ internal sealed class LevelEditorPage : Page
 
     private void OnModelChanged()
     {
+        if (_projectCommitting) return;
         _viewRevision++;
         if (!ReferenceEquals(_terrainShownSession, _model?.Session))
         {
@@ -622,8 +650,11 @@ internal sealed class LevelEditorPage : Page
         string world = _model?.BaseLevel is int baseLevel
             ? $"This level also loads the base world of level {baseLevel}. This editor does not change it." : "";
         string terrain = _model?.TerrainHasChanges == true || TerrainEdit.ButtonPressed
-            ? "Terrain changes are an unsaved 3D preview; the 2D map shows base terrain. Changed terrain cannot be saved or played." : "";
-        _worldNote.Text = string.Join(" ", new[] { world, terrain }.Where(text => text.Length > 0));
+            ? "Terrain edits affect a sampled 3D preview; the 2D map shows base terrain. Projects can preserve the preview. Changed terrain cannot be exported as a CE mod or played." : "";
+        string accuracy = _terrainViewSwitch.ButtonPressed
+            ? "The 3D surface is a sampled preview and can differ from game terrain even before editing. Positions chosen against it have unverified ground clearance." : "";
+        _worldNote.ThemeTypeVariation = accuracy.Length > 0 ? "Warn" : "Faint";
+        _worldNote.Text = string.Join(" ", new[] { accuracy, world, terrain }.Where(text => text.Length > 0));
     }
 
     private void RebuildTable()
@@ -722,7 +753,7 @@ internal sealed class LevelEditorPage : Page
         return outcome;
     }
 
-    private void UpdateInspector(bool clearNote)
+    private void UpdateInspector(bool clearNote, bool restoreCoordinates = false)
     {
         ObjectRow? row = _selected is int index ? _model?.Row(index) : null;
         TriggerRadius.Bind(_model, row?.Index);
@@ -741,7 +772,9 @@ internal sealed class LevelEditorPage : Page
             _objectTitle.Text = "Nothing selected";
             _objectDetail.Text = _model?.Session is null ? "Choose a level, then an object in the table." : "Choose an object in the table.";
             _shown = ("", "", "");
-            X.Text = Y.Text = Z.Text = "";
+            _coordinateSession = null; _coordinateRow = null;
+            _settingCoordinates = true;
+            try { X.Text = Y.Text = Z.Text = ""; } finally { _settingCoordinates = false; }
             _stock.Text = "";
             _hint.Text = "";
             _hint.Visible = false;
@@ -749,8 +782,15 @@ internal sealed class LevelEditorPage : Page
         }
         _objectTitle.Text = row.Label;
         _objectDetail.Text = $"{row.Kind} · row {row.Index}" + (row.Name.Length > 0 && row.Definition.Length > 0 ? $" · {row.Definition}" : "");
-        _shown = LevelEditorModel.Shown(row.Position);
-        (X.Text, Y.Text, Z.Text) = _shown;
+        var shown = LevelEditorModel.Shown(row.Position);
+        bool keepDraft = !clearNote && !restoreCoordinates && ReferenceEquals(_coordinateSession, _model?.Session) && _coordinateRow == row.Index && shown == _shown && CoordinatesHaveDraft;
+        _coordinateSession = _model?.Session; _coordinateRow = row.Index;
+        _shown = shown;
+        if (!keepDraft)
+        {
+            _settingCoordinates = true;
+            try { (X.Text, Y.Text, Z.Text) = _shown; } finally { _settingCoordinates = false; }
+        }
         (string sx, string sy, string sz) = LevelEditorModel.Shown(row.Stock);
         _stock.Text = row.Added ? "A copy you made; Undo takes it back." : row.Changed ? $"In the level: {sx}, {sy}, {sz}" : "Where the level has it.";
         bool negativeZero = new[] { _shown.X, _shown.Y, _shown.Z }.Contains("-0");
@@ -761,6 +801,7 @@ internal sealed class LevelEditorPage : Page
 
     private void UpdateChanges()
     {
+        UpdateProjectControls();
         UpdateDraftNote();
         EditSession? session = _model?.Session;
         _terrainViewSwitch.Disabled = session is null || _model?.Terrain is null;
@@ -799,8 +840,13 @@ internal sealed class LevelEditorPage : Page
         if (_model.TerrainHasChanges)
         {
             Save.Disabled = Play.Disabled = true;
-            Save.TooltipText = "Changed terrain is an unsaved 3D preview and cannot be saved here.";
+            Save.TooltipText = "Changed terrain can be preserved in editor projects, but cannot be exported as a CE mod.";
             Play.TooltipText = "Changed terrain is an unsaved 3D preview and cannot be played here.";
+        }
+        else if (TriggerRadius.HasDraft || CoordinatesHaveDraft || _services.Game.Busy || _services.Workspace?.Busy == true)
+        {
+            Save.Disabled = Play.Disabled = true;
+            Save.TooltipText = Play.TooltipText = "Apply radius and coordinate drafts first, or restore them (Escape in a coordinate field). Wait for any game folder read.";
         }
     }
 
@@ -818,6 +864,8 @@ internal sealed class LevelEditorPage : Page
     /// </summary>
     internal async Task PlayAsync()
     {
+        if (TriggerRadius.HasDraft || CoordinatesHaveDraft || _services.Game.Busy || _services.Workspace?.Busy == true)
+        { ShowPlayNote("Apply or discard the radius draft and wait for the game folder read before test play.", failed: true); return; }
         if (_model?.TerrainHasChanges == true) return;
         if (_model is not { Level: int level } model || Play.Disabled) return;
         ShowPlayNote($"Onslaught CE is starting at level {level} with your changes. Close it to come back here.", failed: false);
@@ -832,6 +880,12 @@ internal sealed class LevelEditorPage : Page
     internal MoveOutcome? ApplyFields(bool explicitly)
     {
         if (_model is null || _selected is not int row) return null;
+        if (!ReferenceEquals(_coordinateSession, _model.Session) || _coordinateRow != row)
+        {
+            const string message = "These coordinates belong to an earlier selection. Select the object again before applying them.";
+            ShowNote(message, refusal: true);
+            return new MoveOutcome(MoveResult.Refused, message);
+        }
         // A field left as it is (still the text shown for the stored value) is not read again, so leaving the fields moves nothing.
         if (!explicitly && (X.Text, Y.Text, Z.Text) == _shown)
         {
@@ -842,7 +896,7 @@ internal sealed class LevelEditorPage : Page
         // Pressing Move first takes the focus from the field (which applies what was typed) and then presses the button: the second, which
         // finds nothing to change, must not wipe out the first one's note.
         if (outcome.Result != MoveResult.Unchanged || (explicitly && _note.Text.Length == 0)) ShowNote(outcome.Message, outcome.Result == MoveResult.Refused);
-        if (outcome.Result == MoveResult.Unchanged) UpdateInspector(clearNote: false);
+        if (outcome.Result == MoveResult.Unchanged) UpdateInspector(clearNote: false, restoreCoordinates: true);
         return outcome;
     }
 
@@ -932,6 +986,7 @@ internal sealed class LevelEditorPage : Page
 
     private void OnScriptSelected(ScriptEntry? entry, ScriptSourceResult? source)
     {
+        if (_projectCommitting) return;
         foreach (Node child in _scriptUses.GetChildren())
         {
             _scriptUses.RemoveChild(child);
@@ -979,7 +1034,8 @@ internal sealed class LevelEditorPage : Page
             if (summary.Uses.Count > 16) _scriptUses.Add(Build.Text($"and {summary.Uses.Count - 16} more", "Faint", wrap: false));
         }
         _scriptSource.Text = source?.Source is { } found
-            ? $"Source: {Path.GetFileName(found.Path)}, {(_scripts.Editing ? "being edited" : "read only")}. The game runs the compiled script, which a source in your game folder may differ from."
+            ? _scripts.CurrentSourceFromProject ? "Source preserved in the editor project. The game runs the compiled script; this text is in use only after it is recompiled and verified."
+            : $"Source: {Path.GetFileName(found.Path)}, {(_scripts.Editing ? "being edited" : "read only")}. The game runs the compiled script, which a source in your game folder may differ from."
             : source?.Problem ?? "";
         // The note says what the last compile or reset did to the script on view. This event comes when another script is chosen and when the level's scripts changed (an Undo, a
         // Redo, another edit): either makes the note stale. A refused compile changes neither, so its note stays until the text does.
@@ -1013,15 +1069,21 @@ internal sealed class LevelEditorPage : Page
     private void UpdateDraftNote()
     {
         string text = DraftNoteText(_scripts.UnusedDraftNames);
+        bool preserved = MatchesSavedProject();
+        if (preserved) text = text.Replace("and is not saved anywhere.", "and is preserved in the saved editor project.", StringComparison.Ordinal);
+        else if (_scripts.DraftCount > _scripts.UnusedDraftCount)
+            text += (text.Length > 0 ? "\n" : "") + "Compiled source text is still unsaved as source. Save an editor project to preserve it.";
         if (TriggerRadius.HasDraft) text += (text.Length > 0 ? "\n" : "") + "The radius you typed is not applied yet and is not saved anywhere.";
+        if (CoordinatesHaveDraft) text += (text.Length > 0 ? "\n" : "") + "Coordinate edits are not applied yet. Press Enter to apply, or Escape in a coordinate field to restore current coordinates.";
         _draftNote.Visible = text.Length > 0;
         _draftNote.Text = text;
     }
 
     private void OnRadiusDraftChanged()
     {
+        if (_projectCommitting) return;
         _viewRevision++;
-        UpdateDraftNote();
+        UpdateChanges();
     }
 
     /// <summary>What the changes card says about typed text that is not in use, for the scripts it was typed for (empty when there are none).</summary>
@@ -1076,6 +1138,7 @@ internal sealed class LevelEditorPage : Page
     /// <summary>The note about a refusal is about the text as it was: it goes with that text. The note about a replacement stays, as the replacement does.</summary>
     private void OnScriptTextEdited()
     {
+        if (_projectCommitting) return;
         _viewRevision++;
         if (_editNoteRefused)
         {
@@ -1083,6 +1146,7 @@ internal sealed class LevelEditorPage : Page
             _editNoteRefused = false;
         }
         UpdateScriptEdit();
+        UpdateProjectControls();
     }
 
     /// <summary>The place in the open level's own world of the script with this name, or null.</summary>
@@ -1266,6 +1330,15 @@ internal sealed class LevelEditorPage : Page
     {
         if (_model?.TerrainHasChanges == true) return;
         if (_model?.Level is not int level || _model.Session is null) return;
+        if (TriggerRadius.HasDraft || CoordinatesHaveDraft || _services.Workspace?.Busy == true || _services.Game.Busy)
+        { ShowNote("Apply or discard the radius draft and wait for file operations before exporting a mod.", refusal: true); return; }
+        try
+        {
+            EditorScriptDraftStamp draft = _scripts.CaptureDraftState();
+            _pendingModSave = new(_model, _model.Session, _viewRevision, draft, _model.ProjectState(), _root);
+        }
+        catch (Exception error) when (ProjectOperationFailure(error))
+        { ShowNote("The current edit could not be checked safely, so no mod save was prepared.", refusal: true); return; }
         SaveDialog.Begin(level, DefaultDestination());
         SaveDialog.PopupCentered();
     }
@@ -1281,6 +1354,15 @@ internal sealed class LevelEditorPage : Page
     {
         if (_model?.TerrainHasChanges == true) return new SaveOutcome(null, "Changed terrain is an unsaved 3D preview and cannot be saved here.");
         if (_model is null) return new SaveOutcome(null, "Choose a level first.");
+        ProjectContext? confirmed = _pendingModSave;
+        _pendingModSave = null;
+        if (confirmed is null || !MatchesProjectContext(confirmed) || _services.Workspace?.Busy == true || _services.Game.Busy)
+        {
+            const string message = "The edit changed or a file operation started while mod confirmation was open. Choose Save as mod again; nothing was written.";
+            ShowNote(message, refusal: true);
+            _services.Status.Show(message, StatusKind.Failure);
+            return new SaveOutcome(null, message);
+        }
         ModInfo info = SaveDialog.Info;
         SaveOutcome outcome = _model.SaveAsMod(SaveDialog.Destination.Text.Trim(), info, ProtectedFolders());
         _savedPanel.Visible = true;

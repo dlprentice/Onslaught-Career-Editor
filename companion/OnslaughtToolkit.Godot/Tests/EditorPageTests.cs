@@ -136,7 +136,9 @@ internal static class LevelEditorPageTests
         string saveFolder = Path.Combine(outputDirectory, "ui-level-unsaved-mods");
         app.Navigate("levels");
         await Frame(tree);
+        page.Save.EmitSignal(BaseButton.SignalName.Pressed);
         page.SaveDialog.Begin(100, saveFolder);
+        page.SaveDialog.Hide();
         check.That(page.SaveNow().Ok && !page.HasChanges && page.ChangeCount == 0 && M(page).Session!.Changes().Count == 1, "saving the move as a mod leaves nothing unsaved, and the page still holds the edit");
         check.That(app.RequestClose() && quit.On && !app.DiscardDialog.Visible, "a saved move is not asked about on close");
         quit.On = false;

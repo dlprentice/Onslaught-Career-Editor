@@ -46,6 +46,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
     private readonly Dictionary<string, (string Text, string RecordHash)> _retainedUsed = new(StringComparer.Ordinal);
     private long _draftRevision;
     private bool _settingSource;
+    private bool _suppressProjectEvents;
 
     internal ScriptsPanel()
     {
@@ -221,7 +222,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
     }
 
     /// <summary>The caller prechecks the model and suppresses its panel refresh while both prepared states are committed.</summary>
-    internal bool CommitProjectScripts(PreparedScriptProject prepared)
+    internal bool CommitProjectScripts(PreparedScriptProject prepared, bool notify = true)
     {
         if (!IsPreparedProjectCurrent(prepared)) return false;
         _entries = prepared.Entries;
@@ -244,8 +245,10 @@ internal sealed partial class ScriptsPanel : VBoxContainer
             if (shown is not null && shown != script.SourceText) _drafts.Add(script.Name, shown);
         }
         _draftRevision++;
-        Fill(keep: null);
-        TextEdited?.Invoke();
+        _suppressProjectEvents = !notify;
+        try { Fill(keep: null); }
+        finally { _suppressProjectEvents = false; }
+        if (notify) TextEdited?.Invoke();
         return true;
     }
 
@@ -401,7 +404,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
     {
         if (!_settingSource) StoreDraft();
         UpdateInfo();
-        TextEdited?.Invoke();
+        if (!_suppressProjectEvents) TextEdited?.Invoke();
     }
 
     /// <summary>The path, line count and state of the source shown: read only, or what was typed.</summary>
@@ -520,7 +523,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
             _info.Text = _currentSource.Problem ?? "";
             _info.TooltipText = "";
         }
-        Selected?.Invoke(entry, _currentSource);
+        if (!_suppressProjectEvents) Selected?.Invoke(entry, _currentSource);
     }
 
     private ScriptSourceResult SourceFor(ScriptEntry entry)
@@ -574,7 +577,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         SourceToken? token = line >= 0 && line < _source.GetLineCount() ? ScriptNames.TokenAt(_source.GetLine(line), _source.GetCaretColumn()) : null;
         if (token == _token) return;
         _token = token;
-        NameUnderCaret?.Invoke(token);
+        if (!_suppressProjectEvents) NameUnderCaret?.Invoke(token);
     }
 
     private void ClearSelection()
@@ -585,6 +588,6 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         SetSourceText("");
         _info.Text = "";
         _info.TooltipText = "";
-        if (had) Selected?.Invoke(null, null);
+        if (had && !_suppressProjectEvents) Selected?.Invoke(null, null);
     }
 }
