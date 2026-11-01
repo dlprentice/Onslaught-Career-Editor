@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-01 (pushed editor drag and trigger backend distinguished from integrated capability)
+Last updated: 2026-11-01 (separate editor drag, trigger backend and inspector candidates)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -234,7 +234,8 @@ Separate pushed development candidates are outside main and unreleased. The
 binds a drag to the current edit session and object; authored page-input and offscreen capture assertions cover
 motion without changing the world or undo history, one undoable move on release, preserved height and an unchanged camera. The
 [spherical-trigger radius backend](https://github.com/dlprentice/Onslaught-Career-Editor/tree/6d2c3e4f949f3f4885ec7cb74e5654dfed4d6a33)
-adds undo/redo, validation and change summaries, with a passing authored-data fixture; it has no inspector control.
+adds undo/redo, validation and change summaries, with a passing authored-data fixture; that branch has no inspector
+control. A separate inspector component candidate remains unwired.
 The [level editor owner](roadmap/companion-level-editor.md#unreleased-editor-candidates) records their scope.
 These checks do not establish human use, new-edit acceptance in CE, the full Companion suite or native Windows
 acceptance. Derived terrain/snapshot save and play remain disabled, and the separate unsaved terrain draft remains a

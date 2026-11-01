@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-11-01 (pushed editor, network and Windows mod candidates; selected recovery delta)
+Last updated: 2026-11-01 (CE-first creation direction, pushed candidates and selected recovery delta)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
@@ -126,6 +126,10 @@ public export. They do not prove Windows game hosting, a played campaign win, In
 The public release remains 0.1.13, and the full experimental 0.2.0 scope above remains the target.
 
 ### Level and mission tools
+
+The creation target is a modern CE-native project format and custom gameplay. Original-game export is useful where
+practical but is not a prerequisite; the existing campaign's faithful baseline remains separate. This is direction,
+not a delivered format or loader.
 
 The Companion's Level editor can inspect and move placed objects (typed, dragged on the map or nudged with the arrow keys), list only the moved ones, copy a unit (appended after every row so existing row, path and target indices do not shift; the copy retains its script and target), show a map and mission scripts, and edit a script's
 source (compile it, make the level use it, undo it); it saves changed world files as new CE mods and starts CE at the open level with the changes in a temporary folder of its own (its Play button). The page is covered by

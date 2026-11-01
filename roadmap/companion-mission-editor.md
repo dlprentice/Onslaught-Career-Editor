@@ -2,7 +2,7 @@
 
 Status: design; the reference compiler and read-only scripts view with name links and map paths are built. The C# and Python compiler backends and the script-aware editor model are integrated, and the Level editor's Scripts view edits a script's source, compiles it and makes the open level use it (section 15); the acceptance in section 6 was run once on Linux (section 16) and the Level editor's Play button starts CE at the open level with the changes (section 17); source-preserving staging and native Windows validation remain open. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-11-01 (temporary-play safety design distinguished from its observed test)
+Last updated: 2026-11-01 (CE-first direction and current source-editing scope)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours checked against the shipped scripts with the documented
 missing-header and stale-source cases, and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -15,14 +15,17 @@ this binary; the retail view's `BEA.exe` has the same hash)
 
 > **Future direction — 2026-10-31:** David requested a 3D mission editor alongside the 3D map editor. The existing script and data workflows remain as described below; a 3D mission-authoring workflow, its interactions, safe staging and platform acceptance are still to be designed and demonstrated. See the project [goal](../GOAL.md) and [program](../PROGRAM.md).
 
-Future CE-native level and mission features may use formats and capabilities that the original game cannot load. Retail behavior remains the faithful reference, and retail-compatible output may be supported where useful; it is not a prerequisite for CE-native features. This is a direction for future work, not a claim that a new format or loader has been implemented.
+The [level editor plan](companion-level-editor.md) states the CE-first direction: a modern CE-native project format and
+custom gameplay are first-class targets, original-game export is optional where practical, and campaign faithfulness
+remains a separate baseline. The workflow below describes the existing world-file/script path; it does not prescribe
+the format or loader for future CE-native missions.
 
 ## 1. What this is for
 
 Players ask for missions they can change: what a level asks of them (objectives), what appears and when (spawns), what
 fires on what (triggers and events), and where units go (waypoint paths). The level editor already moves things and saves the
-level's world file as a mod. A level's mission logic lives in the same file, so the mission editor is the next layer on the same
-pipeline, not a second one.
+level's world file as a mod. In that existing workflow, a level's compiled mission logic lives in the same file, so the
+Scripts view extends that pipeline.
 
 ## 2. What the data says (2026-10-29, the read-only retail view; the Toolkit's world decoder)
 
@@ -99,7 +102,7 @@ recompiled, so a mod differs from the game only where the player edited.
   cited by function, with no source copied (the original compiler is not in the decompilation and is not needed). It supports
   exactly the constructs the shipped scripts use; anything else is refused with a line and a reason, never guessed.
 - **The checker** applies the game's own rules to the compiled script before anything is saved (section 7).
-- **Future source-preserving staging.** A future workflow must verify each selected mission source against the compiled script in the exact staged world, refusing unsupported or mismatched inputs. An installed source can already differ from its compiled record, so including a source in a mod is not by itself evidence that a player edited it. The current stager publishes world data only; neither this source-staging workflow nor a player-facing mission source editor is available yet.
+- **Future source-preserving staging.** A future workflow must verify each selected mission source against the compiled script in the exact staged world, refusing unsupported or mismatched inputs. An installed source can already differ from its compiled record, so including a source in a mod is not by itself evidence that a player edited it. The Scripts view can already edit source and compile it for the open level; the current stager publishes world data only. Preserving that source alongside the world remains future work.
 
 ## 4. Milestones
 
