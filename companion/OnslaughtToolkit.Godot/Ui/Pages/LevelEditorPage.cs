@@ -16,6 +16,10 @@ internal sealed class LevelEditorPage : Page
 {
     private HSplitContainer? _missionTerrainSplit;
     private OnslaughtToolkit.Companion.Ui.MissionReferencePanel? _missionReferencePanel;
+    private Button? _missionSourceButton;
+    private Label? _missionSourceHint;
+    private MissionReferenceIndex? _missionSourceSnapshot;
+    private string? _missionSourceName;
 
     private const int PlaceholderId = 99999;
 
@@ -135,6 +139,22 @@ internal sealed class LevelEditorPage : Page
         _terrainPreview3d.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         _terrainPreview3d.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
         _missionTerrainSplit.AddChild(_terrainPreview3d);
+        _missionSourceButton = new Button
+        {
+            Name = "MissionOpenSource",
+            Text = "Open script source",
+            Disabled = true,
+        };
+        _missionSourceHint = new Label
+        {
+            Name = "MissionSourceHint",
+            Text = "Select a script to check whether editable source is available.",
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+        };
+        _missionReferencePanel.AddChild(_missionSourceButton);
+        _missionReferencePanel.AddChild(_missionSourceHint);
+        _missionReferencePanel.ScriptSelected += OnMissionScriptSelected;
+        _missionSourceButton.Pressed += OpenMissionSource;
         _missionTerrainSplit.AddChild(_missionReferencePanel);
         _mapPanel.AddChild(_missionTerrainSplit);
         _missionTerrainSplit.Visible = _terrainPreview3d.Visible;
@@ -389,6 +409,9 @@ internal sealed class LevelEditorPage : Page
     /// <summary>What compiling or putting the shipped script back said, in the script card, and the warnings about the script the level uses under it.</summary>
     internal string ScriptEditNote => string.Join("\n", new[] { _scriptEditNote.Text, _scriptEditWarnings.Visible ? _scriptEditWarnings.Text : "" }.Where(text => text.Length > 0));
     internal LevelEditorModel? Model => _model;
+    internal MissionReferencePanel? MissionReferences => _missionReferencePanel;
+    internal Button? MissionSourceButton => _missionSourceButton;
+    internal Label? MissionSourceHint => _missionSourceHint;
     internal string Note => _note.Text;
     internal string Hint => _hint.Text;
     internal string Summary => _summary.Text;
@@ -538,8 +561,67 @@ internal sealed class LevelEditorPage : Page
     /// <summary>The source view goes to its top while the page is shown: it is hidden with the page, and a hidden view keeps its first visible line (see ScriptsPanel.ScrollToTop).</summary>
     internal override void Leave() => _scripts.ScrollToTop();
 
-        private void RefreshMissionReferences()
+        private void ResetMissionSourceLink(string? reason = null)
     {
+        _missionSourceSnapshot = null;
+        _missionSourceName = null;
+        if (_missionSourceButton != null) _missionSourceButton.Disabled = true;
+        if (_missionSourceHint != null)
+            _missionSourceHint.Text = reason ?? "Select a script to check whether editable source is available.";
+    }
+
+    private void OnMissionScriptSelected(MissionReferenceIndex snapshot, int scriptIndex)
+    {
+        ResetMissionSourceLink();
+        if (!ReferenceEquals(_missionReferencePanel?.Snapshot, snapshot) ||
+            scriptIndex < 0 || scriptIndex >= snapshot.Scripts.Count)
+            return;
+
+        string name = snapshot.Scripts[scriptIndex].Name;
+        int matchingNames = 0;
+        foreach (var script in snapshot.Scripts)
+            if (string.Equals(script.Name, name, StringComparison.OrdinalIgnoreCase)) matchingNames++;
+        if (matchingNames != 1)
+        {
+            ResetMissionSourceLink("This script name is ambiguous, so source editing is unavailable.");
+            return;
+        }
+        if (!_scripts.Select(name) || !ReferenceEquals(_missionReferencePanel?.Snapshot, snapshot))
+        {
+            ResetMissionSourceLink("This script is not available in the source editor.");
+            return;
+        }
+        if (!_scripts.CanEditCurrent || EditSource.Disabled)
+        {
+            ResetMissionSourceLink("No editable source is available for this script.");
+            return;
+        }
+
+        _missionSourceSnapshot = snapshot;
+        _missionSourceName = name;
+        if (_missionSourceButton != null) _missionSourceButton.Disabled = false;
+        if (_missionSourceHint != null)
+            _missionSourceHint.Text = "Open the script and enable editing. Compiling replaces the whole script; undo is available.";
+    }
+
+    private void OpenMissionSource()
+    {
+        var snapshot = _missionSourceSnapshot;
+        var name = _missionSourceName;
+        if (snapshot is null || name is null || !ReferenceEquals(_missionReferencePanel?.Snapshot, snapshot) ||
+            !_scripts.Select(name) || !ReferenceEquals(_missionReferencePanel?.Snapshot, snapshot) ||
+            !_scripts.CanEditCurrent || EditSource.Disabled)
+        {
+            ResetMissionSourceLink("Source is no longer available. Select the script again.");
+            return;
+        }
+        if (!ShowScript(name))
+            ResetMissionSourceLink("Source is no longer available. Select the script again.");
+    }
+
+    private void RefreshMissionReferences()
+    {
+        ResetMissionSourceLink();
         var panel = _missionReferencePanel;
         if (panel == null) return;
         var body = _model?.Session?.Body;

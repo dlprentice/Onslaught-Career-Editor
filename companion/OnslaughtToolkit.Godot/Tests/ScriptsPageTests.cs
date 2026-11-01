@@ -16,6 +16,84 @@ namespace OnslaughtToolkit.Companion.Tests;
 /// </summary>
 internal static class ScriptsPageTests
 {
+    private static void CheckMissionDraftPreserved(LevelEditorPage page, string draft, Checks check)
+    {
+        var name = page.Scripts.Current?.Summary.Name;
+        var panel = page.MissionReferences;
+        var snapshot = panel?.Snapshot;
+        page.ScriptsToggle.ButtonPressed = false;
+        var switched = false;
+        if (name != null && panel != null && snapshot != null)
+            for (int i = 0; i < snapshot.Scripts.Count; i++)
+                if (snapshot.Scripts[i].Name != name && panel.TrySelectScript(i))
+                {
+                    switched = true;
+                    break;
+                }
+        check.That(switched, "A different mission script can be selected while a draft exists");
+        check.That(name != null && page.ShowScript(name) && page.Scripts.Source.Text == draft && page.Scripts.Source.Editable,
+            "Selecting another mission script preserves the current draft and editing state");
+    }
+
+    private static void CheckUnavailableMissionSource(LevelEditorPage page, Checks check)
+    {
+        var panel = page.MissionReferences;
+        var button = page.MissionSourceButton;
+        var snapshot = panel?.Snapshot;
+        var name = page.Scripts.Current?.Summary.Name;
+        var selected = false;
+        if (snapshot != null && name != null && panel != null && button != null)
+        {
+            for (int i = 0; i < snapshot.Scripts.Count; i++)
+                if (snapshot.Scripts[i].Name == name && panel.TrySelectScript(i))
+                {
+                    selected = true;
+                    break;
+                }
+        }
+        check.That(snapshot != null && name != null, "The source-less script and mission snapshot are available for the test");
+        check.That(selected, "The source-less script appears in the mission snapshot");
+        if (selected)
+        {
+            check.That(button?.Disabled == true, "A mission without editable source cannot open the source editor");
+            check.That(!string.IsNullOrWhiteSpace(page.MissionSourceHint?.Text), "Unavailable mission source has an explanation");
+        }
+    }
+
+    private static void CheckMissionSourceLink(LevelEditorPage page, Checks check)
+    {
+        var panel = page.MissionReferences;
+        var button = page.MissionSourceButton;
+        check.That(panel?.Snapshot != null && button != null, "Mission references and the source action are available for the open level");
+        if (panel?.Snapshot == null || button == null) return;
+        var snapshot = panel.Snapshot;
+        var selected = -1;
+        for (int i = 0; i < snapshot.Scripts.Count; i++)
+        {
+            if (panel.TrySelectScript(i) && !button.Disabled)
+            {
+                selected = i;
+                break;
+            }
+        }
+        check.That(selected >= 0, "A mission with available source enables the source action");
+        if (selected < 0) return;
+        var expectedName = snapshot.Scripts[selected].Name;
+        page.Search.Text = "__mission_source_search_that_does_not_match__";
+        button.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(page.Search.Text.Length == 0, "The mission source action clears the prior search");
+        check.That(page.ScriptsToggle.ButtonPressed, "The mission source action opens the script view");
+        check.That(page.Scripts.Current?.Summary.Name == expectedName, "The mission source action opens the selected script");
+        check.That(!page.EditSource.Disabled, "The selected mission source can be edited");
+        page.ScriptsToggle.ButtonPressed = false;
+        var selectedBeforeRefresh = page.Scripts.Current;
+        panel.SetSnapshot(null);
+        button.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(button.Disabled && !page.ScriptsToggle.ButtonPressed && ReferenceEquals(page.Scripts.Current, selectedBeforeRefresh),
+            "A stale mission action cannot open or change the script editor");
+        panel.SetSnapshot(snapshot);
+    }
+
     /// <summary>
     /// Gamma's source: a comment, then calls whose quoted texts name the authored level's path, an object, an event, nothing, and an object of the base world;
     /// then the path in other letter case, as a follow-waypoint call's argument (which the game finds) and as an object's name (which it does not).
@@ -335,6 +413,8 @@ internal static class ScriptsPageTests
             // Editing a script's source: the text typed is compiled and used as the script (one edit that Undo takes back); a source that does not compile changes
             // nothing; what is typed stays with its script while another is chosen; a script with no source file, or the base world's, cannot be edited.
             const string Alpha = "// alpha, the level's own\ninit()\n{\n\tPause(1);\n}\n";
+            CheckMissionSourceLink(page, check);
+            var missionBeforeCompile = page.MissionReferences?.Snapshot;
             page.ShowScript("alpha");
             for (int frame = 0; frame < 3; frame++) await Frame(tree);
             check.That(!page.EditSource.Disabled && !page.EditSource.ButtonPressed && page.CompileScriptButton.Disabled && page.ShippedScriptButton.Disabled && !page.Scripts.Source.Editable &&
@@ -344,8 +424,12 @@ internal static class ScriptsPageTests
             check.That(page.Scripts.Source.Editable && !page.CompileScriptButton.Disabled && page.Scripts.Info == "level130/alpha.msl · 5 lines · editing", $"the Edit switch makes the view typeable: \"{page.Scripts.Info}\"");
             const string Typed = "// alpha, edited\ninit()\n{\n\tPause(2);\n}\n";
             page.Scripts.Source.Text = Typed;
+            CheckMissionDraftPreserved(page, Typed, check);
             page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
             for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            check.That(missionBeforeCompile != null && !ReferenceEquals(page.MissionReferences?.Snapshot, missionBeforeCompile) &&
+                       page.MissionSourceButton?.Disabled == true,
+                "Compiling refreshes mission references and invalidates the old source action");
             check.That(page.ScriptEditNote.StartsWith("Replaced alpha.", StringComparison.Ordinal) && page.Summary.StartsWith("1 script replaced: alpha (", StringComparison.Ordinal) && !page.Undo.Disabled && !page.Save.Disabled &&
                        !page.ShippedScriptButton.Disabled && page.HasChanges, $"a source that compiles replaces the script, and the page says so: \"{page.ScriptEditNote}\" / \"{page.Summary}\"");
             check.That(page.Scripts.Info == "level130/alpha.msl · 5 lines · editing · in use" && page.Scripts.UnusedDraftCount == 0 && page.ChangeCount == 1 && page.DraftNote.Length == 0,
@@ -511,6 +595,7 @@ internal static class ScriptsPageTests
             for (int frame = 0; frame < 3; frame++) await Frame(tree);
             check.That(page.EditSource.Disabled && !page.EditSource.ButtonPressed && page.CompileScriptButton.Disabled && !page.Scripts.Source.Editable && page.EditSource.TooltipText.Contains("no source file", StringComparison.Ordinal),
                 $"a script with no source file cannot be edited, and says why: \"{page.EditSource.TooltipText}\"");
+            CheckUnavailableMissionSource(page, check);
             page.ShowScript("alpha", fromBase: true);
             for (int frame = 0; frame < 3; frame++) await Frame(tree);
             check.That(page.EditSource.Disabled && !page.Scripts.Source.Editable && page.EditSource.TooltipText.Contains("base world", StringComparison.Ordinal), "nor can a script of the base world");
