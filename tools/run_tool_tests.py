@@ -229,34 +229,20 @@ class RunToolTestsSelfTest(unittest.TestCase):
             (marker, "--emit-exit-code", "7"),
             (marker, "--emit-exit-code", "0"),
         )
-        results = [run_suite(command) for command in suites]
-
-        self.assertEqual([0, 7, 0], [row["exitCode"] for row in results])
-        summary = format_summary(results)
+        captured = io.StringIO()
+        with contextlib.redirect_stdout(captured):
+            self.assertEqual(1, run_all(suites))
+        summary = captured.getvalue()
         self.assertIn("2 passed, 1 failed, 3 run", summary)
         self.assertIn("failed suites:", summary)
         self.assertIn("(exit 7)", summary)
 
-    def test_the_run_fails_when_any_suite_fails(self) -> None:
+    def test_the_run_succeeds_when_all_suites_succeed(self) -> None:
         marker = "tools/run_tool_tests.py"
-        self.assertEqual(
-            0,
-            run_all(
-                (
-                    (marker, "--emit-exit-code", "0"),
-                    (marker, "--emit-exit-code", "0"),
-                )
-            ),
-        )
-        self.assertEqual(
-            1,
-            run_all(
-                (
-                    (marker, "--emit-exit-code", "0"),
-                    (marker, "--emit-exit-code", "3"),
-                )
-            ),
-        )
+        captured = io.StringIO()
+        with contextlib.redirect_stdout(captured):
+            self.assertEqual(0, run_all(((marker, "--emit-exit-code", "0"),)))
+        self.assertIn("1 passed, 0 failed, 1 run", captured.getvalue())
 
     def test_the_suite_list_matches_the_files_on_disk(self) -> None:
         # A gate that silently skips a suite it cannot find is the failure this
