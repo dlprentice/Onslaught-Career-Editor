@@ -19,7 +19,10 @@ public partial class EditorPreviewTestRunner : SceneTree
             LevelTerrainTests.Run(output, check);
             TerrainDraftTests.Run(check);
             LevelTriggerEditTests.Run(check);
+            await SphereTriggerRadiusPanelTests.RunAsync(this, check);
+            await LevelTriggerInspectorPageTests.RunAsync(this, output, check);
             await TerrainViewportProjectionTests.RunAsync(this, check);
+            await LevelObjectDragPageTests.RunAsync(this, check);
             await TerrainPreviewPageTests.RunAsync(this, output, check);
             foreach (string failure in check.Failures) GD.PrintErr("FAIL: " + failure);
             GD.Print($"EDITOR_PREVIEW_TESTS: {check.Count} checks, {check.Failures.Count} failures.");

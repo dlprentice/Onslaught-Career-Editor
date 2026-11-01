@@ -191,6 +191,7 @@ internal sealed class LevelEditorPage : Page
         ScrollContainer side = _side = layout.Add(new ScrollContainer
         {
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, CustomMinimumSize = new Vector2(370, 0), SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+            FollowFocus = true,
         });
         MarginContainer gutter = side.Add(Build.Margin(0, 0, 12, 0));
         gutter.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
@@ -266,6 +267,10 @@ internal sealed class LevelEditorPage : Page
         Duplicate.Pressed += () => DuplicateSelected();
         _note = inside.Add(Build.Text("", "Muted"));
         _hint = inside.Add(Build.Text("", "Faint"));
+        TriggerRadius = inside.Add(new SphereTriggerRadiusPanel());
+        TriggerRadius.DraftChanged += OnRadiusDraftChanged;
+        TriggerRadius.ResizeResult += outcome => ShowNote(outcome.Message, outcome.Result == MoveResult.Refused);
+        TriggerRadius.RadiusInput.FocusEntered += () => BringIntoView(TriggerRadius);
 
         (PanelContainer changes, VBoxContainer changesBody) = Build.Panel("Card", 8);
         right.Add(changes);
@@ -348,6 +353,7 @@ internal sealed class LevelEditorPage : Page
     internal Button Undo { get; }
     internal Button Redo { get; }
     internal Button TerrainEdit { get; }
+    internal SphereTriggerRadiusPanel TriggerRadius { get; }
     internal Button Apply { get; }
     internal Button Reset { get; }
     internal Button Duplicate { get; }
@@ -421,10 +427,10 @@ internal sealed class LevelEditorPage : Page
     /// Whether the open level holds changes that no Save as mod has written, or source text typed and not yet compiled and used: what leaving the level, the game
     /// or the companion would drop.
     /// </summary>
-    internal bool HasChanges => (_model?.HasUnsavedChanges ?? false) || _scripts.UnusedDraftCount > 0;
+    internal bool HasChanges => (_model?.HasUnsavedChanges ?? false) || _scripts.UnusedDraftCount > 0 || TriggerRadius.HasDraft;
 
     /// <summary>How many changed level records and uncompiled source drafts belong to the unsaved state.</summary>
-    internal int ChangeCount => (_model?.UnsavedChangeCount ?? 0) + _scripts.UnusedDraftCount;
+    internal int ChangeCount => (_model?.UnsavedChangeCount ?? 0) + _scripts.UnusedDraftCount + (TriggerRadius.HasDraft ? 1 : 0);
 
     private LineEdit Axis(GridContainer grid, string label)
     {
@@ -446,6 +452,8 @@ internal sealed class LevelEditorPage : Page
         // The same game: keep the edit in hand, and list its levels again (a quick listing of one folder). Another game (or none): start over.
         if (_model is null || !string.Equals(root, _root, StringComparison.Ordinal))
         {
+            TriggerRadius.Clear();
+            if (_model is not null) _model.Changed -= OnModelChanged;
             _root = root;
             _selected = null;
             TerrainEdit.SetPressedNoSignal(false);
@@ -554,6 +562,7 @@ internal sealed class LevelEditorPage : Page
     internal bool OpenLevel(int level)
     {
         if (_model is null) return false;
+        TriggerRadius.Clear();
         _selected = null;
         _savedPanel.Visible = false;
         ShowNote("", refusal: false);
@@ -648,9 +657,9 @@ internal sealed class LevelEditorPage : Page
         for (TreeItem? item = Table.GetRoot()?.GetFirstChild(); item is not null; item = item.GetNext())
         {
             if (item.GetMetadata(0).AsInt32() != index) continue;
-            item.Select(0);
+            if (!SelectIndex(index)) return false;
             Table.ScrollToItem(item);
-            return Select(item);
+            return true;
         }
         return false;
     }
@@ -658,28 +667,55 @@ internal sealed class LevelEditorPage : Page
     internal bool Select(TreeItem? item)
     {
         if (item is null || _model?.Row(item.GetMetadata(0).AsInt32()) is not { } row) return false;
-        if (_selected == row.Index) return true;
-        _selected = row.Index;
-        Map.Select(row.Index);
-        UpdateInspector(clearNote: true);
-        return true;
+        return SelectIndex(row.Index);
     }
 
     /// <summary>Selects a row by its index wherever the click came from (the map): in the table too, when the search leaves it there.</summary>
     internal bool SelectIndex(int index)
     {
         if (_model?.Row(index) is null) return false;
-        if (SelectRow(index)) return true;  // the table shows it
+        if (_selected == index) return true;
+        if (TriggerRadius.HasDraft && _model.Session is { } session)
+        {
+            LevelEditorModel model = _model;
+            long revision = _viewRevision;
+            byte[] expected;
+            try { expected = session.ToBytes(); }
+            catch (Exception error) when (EditSession.IsUnstorable(error))
+            {
+                ShowNote("The current edit cannot be checked safely, so the radius draft was kept.", refusal: true);
+                RestoreSelection();
+                return false;
+            }
+            RestoreSelection();
+            _services.AskToDiscard("The radius you typed is not applied or saved. Select another object and discard that text?", "Discard and select", () =>
+            {
+                if (!MatchesConfirmedEdit(model, session, revision, expected)) { ShowChangedConfirmation(); return; }
+                TriggerRadius.Clear();
+                SelectIndex(index);
+            });
+            return false;
+        }
         _selected = index;
         Map.Select(index);
+        RestoreSelection();
         UpdateInspector(clearNote: true);
         return true;
+    }
+
+    private void RestoreSelection()
+    {
+        Table.DeselectAll();
+        for (TreeItem? item = Table.GetRoot()?.GetFirstChild(); item is not null; item = item.GetNext())
+            if (item.GetMetadata(0).AsInt32() == _selected) { item.Select(0); break; }
+        Map.Select(_selected);
     }
 
     /// <summary>A mark was dragged and let go: move the row there. The move is one undo step; Z stays as it was.</summary>
     internal MoveOutcome? Dragged(int row, float x, float y)
     {
         if (_model is null) return null;
+        if (_selected != row && !SelectIndex(row)) return new MoveOutcome(MoveResult.Refused, "Choose the object before moving it; your radius draft was kept.");
         MoveOutcome outcome = _model.MoveTo(row, x, y);
         if (_selected != row) SelectIndex(row);
         ShowNote(outcome.Message, outcome.Result == MoveResult.Refused);
@@ -689,6 +725,7 @@ internal sealed class LevelEditorPage : Page
     private void UpdateInspector(bool clearNote)
     {
         ObjectRow? row = _selected is int index ? _model?.Row(index) : null;
+        TriggerRadius.Bind(_model, row?.Index);
         if (clearNote) ShowNote("", refusal: false);
         foreach (LineEdit field in new[] { X, Y, Z }) field.Editable = row is not null;
         Apply.Disabled = row is null;
@@ -724,6 +761,7 @@ internal sealed class LevelEditorPage : Page
 
     private void UpdateChanges()
     {
+        UpdateDraftNote();
         EditSession? session = _model?.Session;
         _terrainViewSwitch.Disabled = session is null || _model?.Terrain is null;
         TerrainEdit.Disabled = session is null || _model?.Terrain is null || !_terrainViewSwitch.ButtonPressed || _scripts.Visible;
@@ -975,8 +1013,15 @@ internal sealed class LevelEditorPage : Page
     private void UpdateDraftNote()
     {
         string text = DraftNoteText(_scripts.UnusedDraftNames);
+        if (TriggerRadius.HasDraft) text += (text.Length > 0 ? "\n" : "") + "The radius you typed is not applied yet and is not saved anywhere.";
         _draftNote.Visible = text.Length > 0;
         _draftNote.Text = text;
+    }
+
+    private void OnRadiusDraftChanged()
+    {
+        _viewRevision++;
+        UpdateDraftNote();
     }
 
     /// <summary>What the changes card says about typed text that is not in use, for the scripts it was typed for (empty when there are none).</summary>

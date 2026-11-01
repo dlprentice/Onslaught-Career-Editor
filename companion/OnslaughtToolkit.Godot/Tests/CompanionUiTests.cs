@@ -60,6 +60,7 @@ internal static class CompanionUiTests
             await LevelMapPageTests.RunAsync(app, tree, install, check);
             TerrainDraftTests.Run(check);
             await TerrainViewportProjectionTests.RunAsync(tree, check);
+            await LevelObjectDragPageTests.RunAsync(tree, check);
             await TerrainPreviewPageTests.RunAsync(tree, outputDirectory, check);
             await ScriptsPageTests.RunAsync(app, tree, install, outputDirectory, check);
         }

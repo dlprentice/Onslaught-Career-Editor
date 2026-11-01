@@ -175,7 +175,8 @@ internal static class TerrainPreviewPageTests
             page.PickLevel(200);
             check.That(pendingDiscard is not null, "changing levels asks before losing terrain edits");
             pendingDiscard = null;
-            check.That(ReferenceEquals(model.Session, session) && ReferenceEquals(model.TerrainPreviewSurface, raised), "cancel keeps both edits");
+            check.That(ReferenceEquals(model.Session, session) && model.TerrainPreviewSurface!.Vertices.ToArray().SequenceEqual(raisedVertices) &&
+                       session.ToBytes().SequenceEqual(movedWorld), "cancel keeps both edits");
             page.PickLevel(200);
             check.That(model.ChangeTerrainPreview(0, 0, false).Result == MoveResult.Moved, "a newer terrain edit can arrive while the level question is open");
             TerrainSurface? newerAfterQuestion = model.TerrainPreviewSurface;

@@ -15,7 +15,8 @@ internal static class TerrainViewportProjectionTests
         TerrainSurface surface = TerrainSurface.Build(terrain);
         var vertices = surface.Vertices.ToArray();
         Heightfield? currentTerrain = terrain;
-        var view = new LevelTerrainViewport { TerrainProvider = () => currentTerrain, Size = new Vector2(580, 480) };
+        // Stay clear of the headless display's resting pointer at the root origin while routing explicit local events.
+        var view = new LevelTerrainViewport { TerrainProvider = () => currentTerrain, Position = new Vector2(20, 20), Size = new Vector2(580, 480) };
         // The root may still be adding the test runner; wait before attaching a sibling.
         await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
         tree.Root.AddChild(view);
@@ -32,10 +33,12 @@ internal static class TerrainViewportProjectionTests
             check.That(AllInside(camera, vertices), "The initial camera frames every authored terrain vertex.");
             var mouse = view.GlobalPosition + new Vector2(60, 60);
             var beforeOrbit = camera.GlobalPosition;
-            view.GetViewport().PushInput(new InputEventMouseButton { Position = mouse, GlobalPosition = mouse, ButtonIndex = MouseButton.Left, Pressed = true });
+            view.GetViewport().PushInput(new InputEventMouseMotion { Position = mouse, GlobalPosition = mouse }, true);
+            await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+            view.GetViewport().PushInput(new InputEventMouseButton { Position = mouse, GlobalPosition = mouse, ButtonIndex = MouseButton.Left, Pressed = true, ButtonMask = MouseButtonMask.Left }, true);
             var movedMouse = mouse + new Vector2(36, 18);
-            view.GetViewport().PushInput(new InputEventMouseMotion { Position = movedMouse, GlobalPosition = movedMouse, Relative = new Vector2(36, 18), ButtonMask = MouseButtonMask.Left });
-            view.GetViewport().PushInput(new InputEventMouseButton { Position = movedMouse, GlobalPosition = movedMouse, ButtonIndex = MouseButton.Left, Pressed = false });
+            view.GetViewport().PushInput(new InputEventMouseMotion { Position = movedMouse, GlobalPosition = movedMouse, Relative = new Vector2(36, 18), ButtonMask = MouseButtonMask.Left }, true);
+            view.GetViewport().PushInput(new InputEventMouseButton { Position = movedMouse, GlobalPosition = movedMouse, ButtonIndex = MouseButton.Left, Pressed = false }, true);
             await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
             check.That(camera.GlobalPosition.DistanceTo(beforeOrbit) > 0.001f, "3D terrain drag orbits the camera");
             check.That(AllInside(camera, vertices), "3D terrain stays framed after orbit");
@@ -106,8 +109,8 @@ internal static class TerrainViewportProjectionTests
             await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
             await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
             var wideFit = camera.GlobalPosition.DistanceTo(target);
-            view.GetViewport().PushInput(new InputEventMouseButton { Position = mouse, GlobalPosition = mouse, ButtonIndex = MouseButton.WheelDown, Pressed = true });
-            view.GetViewport().PushInput(new InputEventMouseButton { Position = mouse, GlobalPosition = mouse, ButtonIndex = MouseButton.WheelDown, Pressed = false });
+            view.GetViewport().PushInput(new InputEventMouseButton { Position = mouse, GlobalPosition = mouse, ButtonIndex = MouseButton.WheelDown, Pressed = true }, true);
+            view.GetViewport().PushInput(new InputEventMouseButton { Position = mouse, GlobalPosition = mouse, ButtonIndex = MouseButton.WheelDown, Pressed = false }, true);
             await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
             var wideZoom = camera.GlobalPosition.DistanceTo(target);
             check.That(wideZoom > wideFit, "3D terrain wheel zoom moves the camera outward");
@@ -134,8 +137,8 @@ internal static class TerrainViewportProjectionTests
     private static void Click(LevelTerrainViewport view, Vector2 at, MouseButton button)
     {
         Vector2 point = view.GlobalPosition + at;
-        view.GetViewport().PushInput(new InputEventMouseButton { Position = point, GlobalPosition = point, ButtonIndex = button, Pressed = true });
-        view.GetViewport().PushInput(new InputEventMouseButton { Position = point, GlobalPosition = point, ButtonIndex = button, Pressed = false });
+        view.GetViewport().PushInput(new InputEventMouseButton { Position = point, GlobalPosition = point, ButtonIndex = button, Pressed = true }, true);
+        view.GetViewport().PushInput(new InputEventMouseButton { Position = point, GlobalPosition = point, ButtonIndex = button, Pressed = false }, true);
     }
 
     private static Camera3D? FindCamera(Node node)

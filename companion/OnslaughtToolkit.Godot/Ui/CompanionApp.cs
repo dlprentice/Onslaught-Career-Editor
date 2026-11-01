@@ -359,7 +359,20 @@ public partial class CompanionApp : Control
 
     private void AskToDiscard(string text, string action, Action then)
     {
-        _onDiscard = then;
+        LevelEditorPage page = LevelEditor;
+        var model = page.Model;
+        var session = model?.Session;
+        long revision = page.ConfirmationRevision;
+        _onDiscard = () =>
+        {
+            if (!ReferenceEquals(LevelEditor, page) || !ReferenceEquals(page.Model, model) ||
+                !ReferenceEquals(page.Model?.Session, session) || page.ConfirmationRevision != revision)
+            {
+                Status.Show("The level edit changed while confirmation was open. Choose again.", StatusKind.Failure);
+                return;
+            }
+            then();
+        };
         DiscardDialog.DialogText = text;
         DiscardDialog.OkButtonText = action;
         DiscardDialog.PopupCentered();
