@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import os
 import re
 import subprocess
 import sys
@@ -496,53 +497,154 @@ def submodule_paths(root: Path) -> list[str]:
     return sorted(paths)
 
 
-def submodule_candidate_files(root: Path) -> list[str]:
+class SubmoduleScanError(RuntimeError):
+    def __init__(self, path: str, label: str, detail: str):
+        super().__init__(detail)
+        self.finding = Finding(path, label, detail)
+
+
+def _submodule_git(cwd: Path, submodule_path: str, *args: str) -> bytes:
+    # A caller's Git overrides must not redirect a safety check to another tree.
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    env.update({"GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1",
+                "GIT_OPTIONAL_LOCKS": "0", "GIT_TERMINAL_PROMPT": "0"})
+    try:
+        return subprocess.run(["git", "-c", "core.fsmonitor=false", *args], cwd=cwd,
+                              env=env, check=True, stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE).stdout
+    except (FileNotFoundError, subprocess.CalledProcessError) as exc:
+        raise SubmoduleScanError(submodule_path, "deny-unreadable-submodule-scan",
+                                 "submodule Git metadata could not be read") from exc
+
+
+def _validated_submodule_files(root: Path, submodule_path: str) -> list[str]:
+    relative = Path(submodule_path)
+    if relative.is_absolute() or not relative.parts or ".." in relative.parts or relative == Path("."):
+        raise SubmoduleScanError(submodule_path, "deny-invalid-submodule-scan",
+                                 "declared path must remain inside the parent checkout")
+    full_path = root / relative
+    if full_path.is_symlink():
+        raise SubmoduleScanError(submodule_path, "deny-invalid-submodule-scan",
+                                 "declared submodule path is a symbolic link")
+    try:
+        full_path.resolve().relative_to(root.resolve())
+    except (OSError, RuntimeError, ValueError):
+        raise SubmoduleScanError(submodule_path, "deny-invalid-submodule-scan",
+                                 "declared path does not resolve inside the parent checkout") from None
+    if not full_path.is_dir():
+        raise SubmoduleScanError(submodule_path, "deny-missing-submodule-scan",
+                                 "declared submodule directory is absent")
+    if not (full_path / ".git").exists():
+        raise SubmoduleScanError(submodule_path, "deny-uninitialized-submodule-scan",
+                                 "submodule directory is not initialized")
+
+    records = _submodule_git(root, submodule_path, "ls-files", "--stage", "-z", "--",
+                             f":(literal){submodule_path}").split(b"\0")
+    records = [record for record in records if record]
+    if len(records) != 1:
+        raise SubmoduleScanError(submodule_path, "deny-invalid-submodule-gitlink",
+                                 "parent index does not contain one pinned gitlink")
+    metadata, separator, recorded_path = records[0].partition(b"\t")
+    fields = metadata.split()
+    if (not separator or len(fields) != 3 or fields[0] != b"160000" or fields[2] != b"0"
+            or recorded_path != os.fsencode(submodule_path)):
+        raise SubmoduleScanError(submodule_path, "deny-invalid-submodule-gitlink",
+                                 "parent index does not contain one pinned gitlink")
+    expected = fields[1]
+    top = _submodule_git(full_path, submodule_path, "rev-parse", "--show-toplevel").rstrip(b"\n")
+    superproject = _submodule_git(full_path, submodule_path, "rev-parse", "--show-superproject-working-tree").rstrip(b"\n")
+    if not top or Path(os.fsdecode(top)).resolve() != full_path.resolve():
+        raise SubmoduleScanError(submodule_path, "deny-uninitialized-submodule-scan",
+                                 "Git did not identify the declared directory as its own worktree")
+    if not superproject or Path(os.fsdecode(superproject)).resolve() != root.resolve():
+        raise SubmoduleScanError(submodule_path, "deny-misidentified-submodule-scan",
+                                 "Git did not identify the expected parent worktree")
+    actual = _submodule_git(full_path, submodule_path, "rev-parse", "--verify", "HEAD").strip()
+    if actual != expected:
+        raise SubmoduleScanError(submodule_path, "deny-submodule-head-mismatch",
+                                 "submodule HEAD differs from the parent gitlink")
+    entries = _submodule_git(full_path, submodule_path, "ls-files", "--stage", "-z").split(b"\0")
     paths: list[str] = []
-    for submodule_path in submodule_paths(root):
-        full_path = root / submodule_path
-        if not full_path.is_dir():
+    for entry in entries:
+        if not entry:
+            continue
+        metadata, separator, name = entry.partition(b"\t")
+        fields = metadata.split()
+        if not separator or len(fields) != 3 or fields[2] != b"0":
+            raise SubmoduleScanError(submodule_path, "deny-unreadable-submodule-scan",
+                                     "submodule index has an unsupported entry")
+        if fields[0] == b"160000":
+            raise SubmoduleScanError(submodule_path, "deny-nested-submodule-scan",
+                                     "nested submodules are not covered by this scan")
+        if fields[0] == b"120000":
+            raise SubmoduleScanError(submodule_path, "deny-symlink-submodule-scan",
+                                     "tracked symlinks are not covered by this worktree scan")
+        try:
+            decoded = name.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise SubmoduleScanError(submodule_path, "deny-unreadable-submodule-scan",
+                                     "submodule index contains a non-UTF-8 path") from exc
+        paths.append(f"{submodule_path}/{normalize(decoded)}")
+    dirty = _submodule_git(full_path, submodule_path, "status", "--porcelain=v1", "-z",
+                           "--untracked-files=no", "--ignore-submodules=none")
+    if dirty:
+        raise SubmoduleScanError(submodule_path, "deny-dirty-submodule-scan",
+                                 "submodule tracked files or index differ from its pinned HEAD")
+    return sorted(paths)
+
+
+def _declared_submodule_paths(root: Path) -> list[str]:
+    paths = submodule_paths(root)
+    if len(paths) != len(set(paths)):
+        raise SubmoduleScanError(".gitmodules", "deny-duplicate-submodule-map",
+                                 "multiple declarations name the same submodule path")
+    entries = _submodule_git(root, ".", "ls-files", "--stage", "-z").split(b"\0")
+    seen: set[str] = set()
+    for entry in entries:
+        if not entry:
+            continue
+        metadata, separator, name = entry.partition(b"\t")
+        fields = metadata.split()
+        if not separator or len(fields) != 3:
+            raise SubmoduleScanError(".", "deny-invalid-submodule-gitlink",
+                                     "parent index has an unsupported entry")
+        if fields[0] != b"160000":
             continue
         try:
-            result = subprocess.run(
-                ["git", "ls-files", "-z"],
-                cwd=full_path,
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-        except FileNotFoundError as exc:
-            raise RuntimeError(f"git executable was not found while scanning submodule {submodule_path}") from exc
-        except subprocess.CalledProcessError as exc:
-            stderr = exc.stderr.decode("utf-8", errors="replace") if isinstance(exc.stderr, bytes) else str(exc.stderr)
-            raise RuntimeError(f"submodule {submodule_path} could not be scanned: {stderr.strip()}") from exc
-        for item in result.stdout.decode("utf-8", errors="replace").split("\0"):
-            if not item:
-                continue
-            paths.append(f"{submodule_path}/{normalize(item)}")
+            path = normalize(name.decode("utf-8"))
+        except UnicodeDecodeError as exc:
+            raise SubmoduleScanError(".", "deny-invalid-submodule-gitlink",
+                                     "parent gitlink has a non-UTF-8 path") from exc
+        if fields[2] != b"0" or path in seen:
+            raise SubmoduleScanError(path, "deny-invalid-submodule-gitlink",
+                                     "parent gitlink is unmerged or duplicated")
+        seen.add(path)
+        if path not in paths:
+            raise SubmoduleScanError(path, "deny-unmapped-submodule-scan",
+                                     "parent gitlink is absent from the submodule map")
+    return paths
+
+
+def submodule_candidate_files(root: Path) -> list[str]:
+    paths: list[str] = []
+    for submodule_path in _declared_submodule_paths(root):
+        paths.extend(_validated_submodule_files(root, submodule_path))
     return sorted(paths)
 
 
 def submodule_scan_findings(root: Path) -> list[Finding]:
-    findings: list[Finding] = []
     try:
-        paths = submodule_paths(root)
+        paths = _declared_submodule_paths(root)
+    except SubmoduleScanError as exc:
+        return [exc.finding]
     except RuntimeError as exc:
         return [Finding(".gitmodules", "deny-unreadable-submodule-map", str(exc))]
+    findings: list[Finding] = []
     for submodule_path in paths:
-        full_path = root / submodule_path
-        if not full_path.is_dir():
-            findings.append(Finding(submodule_path, "deny-missing-submodule-scan", "declared submodule directory is absent"))
-            continue
         try:
-            subprocess.run(
-                ["git", "ls-files", "-z"],
-                cwd=full_path,
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-        except (FileNotFoundError, subprocess.CalledProcessError) as exc:
-            findings.append(Finding(submodule_path, "deny-unreadable-submodule-scan", str(exc)))
+            _validated_submodule_files(root, submodule_path)
+        except SubmoduleScanError as exc:
+            findings.append(exc.finding)
     return findings
 
 
@@ -829,13 +931,14 @@ def check_repo(root: Path, *, include_submodules: bool = False, stale_allowances
     used: set[tuple[str, str, str]] = set()
     try:
         paths = public_candidate_files(root, include_submodules=include_submodules)
+    except SubmoduleScanError as exc:
+        return [exc.finding]
     except RuntimeError as exc:
         return [Finding(".", "deny-public-candidate-enumeration-failed", str(exc))]
     if not paths:
         return [Finding(".", "deny-empty-public-candidate-set", "git candidate enumeration returned zero files")]
     submodule_prefixes: tuple[str, ...] = ()
     if include_submodules:
-        findings.extend(submodule_scan_findings(root))
         try:
             submodule_prefixes = tuple(f"{item}/" for item in submodule_paths(root))
         except RuntimeError:
@@ -1110,6 +1213,154 @@ def retail_text_self_test() -> list[str]:
         plain = check_repo(root)
         if any(f.path.startswith("references/upstream/") for f in plain):
             failures.append("submodule files were scanned without --include-submodules")
+    return failures
+
+
+def submodule_identity_self_test() -> list[str]:
+    """Exercise gitlink identity and scope with locally authored repositories."""
+    failures: list[str] = []
+    with tempfile.TemporaryDirectory(prefix="synthetic-submodule-safety-") as tmp:
+        scratch = Path(tmp)
+        source, missing, orphan, wrong_repo, valid, nested_source, nested_parent, worktree_source = (
+            scratch / name for name in
+            ("source", "missing", "orphan", "wrong-repo", "valid", "nested-source", "nested-parent", "worktree-source")
+        )
+        for path in (source, missing, orphan, wrong_repo, valid, nested_source, nested_parent, worktree_source):
+            path.mkdir()
+
+        def git(cwd: Path, *args: str) -> str:
+            return subprocess.run(["git", *args], cwd=cwd, check=True, text=True,
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.strip()
+
+        def commit(cwd: Path) -> None:
+            git(cwd, "-c", "user.name=Synthetic", "-c", "user.email=synthetic@example.invalid",
+                "commit", "-qm", "fixture")
+
+        git(source, "init", "-q")
+        (source / "tracked.txt").write_text("synthetic fixture\n", encoding="utf-8")
+        (source / ".gitignore").write_text("ignored.txt\n", encoding="utf-8")
+        git(source, "add", "tracked.txt", ".gitignore")
+        commit(source)
+        oid = git(source, "rev-parse", "HEAD")
+
+        git(missing, "init", "-q")
+        (missing / "README.md").write_text("synthetic parent\n", encoding="utf-8")
+        (missing / ".gitmodules").write_text(
+            '[submodule "demo"]\n\tpath = refs/demo\n\turl = ../source\n', encoding="utf-8")
+        (missing / "refs" / "demo").mkdir(parents=True)
+        git(missing, "add", "README.md", ".gitmodules")
+        git(missing, "update-index", "--add", "--cacheinfo", f"160000,{oid},refs/demo")
+        findings = check_repo(missing, include_submodules=True, stale_allowances=False)
+        if not any(f.path == "refs/demo" and f.label == "deny-uninitialized-submodule-scan"
+                   for f in findings):
+            failures.append("existing empty gitlink did not fail as uninitialized")
+
+        git(orphan, "init", "-q")
+        (orphan / "README.md").write_text("synthetic parent\n", encoding="utf-8")
+        (orphan / "refs" / "demo").mkdir(parents=True)
+        git(orphan, "add", "README.md")
+        git(orphan, "update-index", "--add", "--cacheinfo", f"160000,{oid},refs/demo")
+        orphan_findings = check_repo(orphan, include_submodules=True, stale_allowances=False)
+        if not any(f.path == "refs/demo" and f.label == "deny-unmapped-submodule-scan"
+                   for f in orphan_findings):
+            failures.append("gitlink missing from the submodule map did not fail closed")
+
+        git(wrong_repo, "init", "-q")
+        (wrong_repo / "README.md").write_text("synthetic parent\n", encoding="utf-8")
+        (wrong_repo / ".gitmodules").write_text(
+            '[submodule "demo"]\n\tpath = refs/demo\n\turl = ../source\n', encoding="utf-8")
+        git(wrong_repo, "add", "README.md", ".gitmodules")
+        commit(wrong_repo)
+        git(wrong_repo, "update-index", "--add", "--cacheinfo", f"160000,{oid},refs/demo")
+        (wrong_repo / "refs" / "demo").mkdir(parents=True)
+        (wrong_repo / "refs" / "demo" / ".git").write_text("gitdir: ../../.git\n", encoding="utf-8")
+        wrong_repo_findings = check_repo(wrong_repo, include_submodules=True, stale_allowances=False)
+        if not any(f.path == "refs/demo" and f.label.startswith("deny-")
+                   for f in wrong_repo_findings):
+            failures.append("a submodule referring to its parent's Git directory was accepted")
+
+        git(worktree_source, "init", "-q")
+        (worktree_source / "README.md").write_text("synthetic parent\n", encoding="utf-8")
+        git(worktree_source, "add", "README.md")
+        commit(worktree_source)
+        linked = scratch / "linked-worktree"
+        git(worktree_source, "worktree", "add", "--detach", str(linked), "HEAD")
+        git(linked, "-c", "protocol.file.allow=always", "submodule", "add", "-q", str(source), "refs/demo")
+        linked_modules = linked / ".gitmodules"
+        linked_modules.write_text(linked_modules.read_text(encoding="utf-8").replace(str(source), "../source"),
+                                  encoding="utf-8")
+        git(linked, "add", ".gitmodules", "refs/demo")
+        if submodule_scan_findings(linked):
+            failures.append("pinned submodule in a linked worktree was rejected")
+
+        git(valid, "init", "-q")
+        (valid / "README.md").write_text("synthetic parent\n", encoding="utf-8")
+        git(valid, "add", "README.md")
+        commit(valid)
+        git(valid, "-c", "protocol.file.allow=always", "submodule", "add", "-q", str(source), "refs/demo")
+        modules = valid / ".gitmodules"
+        modules.write_text(modules.read_text(encoding="utf-8").replace(str(source), "../source"), encoding="utf-8")
+        git(valid, "add", ".gitmodules", "refs/demo")
+        child = valid / "refs" / "demo"
+        (child / "untracked.txt").write_text("untracked synthetic\n", encoding="utf-8")
+        (child / "ignored.txt").write_text("ignored synthetic\n", encoding="utf-8")
+        candidates = submodule_candidate_files(valid)
+        if "refs/demo/tracked.txt" not in candidates or any(
+            path in candidates for path in ("refs/demo/untracked.txt", "refs/demo/ignored.txt")
+        ):
+            failures.append("tracked-only submodule enumeration did not preserve its stated scope")
+        if submodule_scan_findings(valid):
+            failures.append("valid pinned synthetic submodule was rejected")
+        cli = (
+            "import importlib.util,sys; "
+            "s=importlib.util.spec_from_file_location('safety_fixture',sys.argv[1]); "
+            "m=importlib.util.module_from_spec(s); sys.modules[s.name]=m; s.loader.exec_module(m); "
+            "original=m.check_repo; "
+            "m.check_repo=lambda root,include_submodules=False: original(root,include_submodules=include_submodules,stale_allowances=False); "
+            "sys.argv=['safety','--repo-root',sys.argv[2],'--include-submodules']; sys.exit(m.main())"
+        )
+        result = subprocess.run([sys.executable, "-B", "-c", cli, str(Path(__file__).resolve()), str(valid)],
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+        if result.returncode or "untracked and ignored submodule files were not checked" not in result.stdout:
+            failures.append("submodule scan did not disclose its tracked-only scope")
+
+        (child / "tracked.txt").write_text("synthetic tracked change\n", encoding="utf-8")
+        dirty = check_repo(valid, include_submodules=True, stale_allowances=False)
+        if not any(f.label == "deny-dirty-submodule-scan" for f in dirty):
+            failures.append("dirty tracked submodule did not fail closed")
+        git(child, "add", "tracked.txt")
+        commit(child)
+        wrong_head = check_repo(valid, include_submodules=True, stale_allowances=False)
+        if not any(f.label == "deny-submodule-head-mismatch" for f in wrong_head):
+            failures.append("submodule HEAD differing from pinned gitlink did not fail closed")
+        (child / "tracked-link").symlink_to("tracked.txt")
+        git(child, "add", "tracked-link")
+        commit(child)
+        git(valid, "add", "refs/demo")
+        symlink = check_repo(valid, include_submodules=True, stale_allowances=False)
+        if not any(f.label == "deny-symlink-submodule-scan" for f in symlink):
+            failures.append("tracked submodule symlink was not rejected")
+
+        git(nested_source, "init", "-q")
+        (nested_source / "README.md").write_text("synthetic nested source\n", encoding="utf-8")
+        (nested_source / ".gitmodules").write_text(
+            '[submodule "inner"]\n\tpath = nested/inner\n\turl = ../source\n', encoding="utf-8")
+        git(nested_source, "add", "README.md", ".gitmodules")
+        git(nested_source, "update-index", "--add", "--cacheinfo", f"160000,{oid},nested/inner")
+        commit(nested_source)
+        git(nested_parent, "init", "-q")
+        (nested_parent / "README.md").write_text("synthetic parent\n", encoding="utf-8")
+        git(nested_parent, "add", "README.md")
+        commit(nested_parent)
+        git(nested_parent, "-c", "protocol.file.allow=always", "submodule", "add", "-q",
+            str(nested_source), "refs/demo")
+        nested_modules = nested_parent / ".gitmodules"
+        nested_modules.write_text(nested_modules.read_text(encoding="utf-8").replace(str(nested_source), "../nested-source"),
+                                  encoding="utf-8")
+        git(nested_parent, "add", ".gitmodules", "refs/demo")
+        nested = check_repo(nested_parent, include_submodules=True, stale_allowances=False)
+        if not any(f.label == "deny-nested-submodule-scan" for f in nested):
+            failures.append("unscanned nested submodule did not fail closed")
     return failures
 
 
@@ -1517,6 +1768,12 @@ def run_self_test() -> int:
             print(f"- root findings: {sorted(root_findings, key=lambda item: item.path)!r}")
             print(f"- combined findings: {sorted(combined_findings, key=lambda item: item.path)!r}")
             return 1
+    submodule_failures = submodule_identity_self_test()
+    if submodule_failures:
+        print("Public payload safety self-test: FAIL")
+        for item in submodule_failures:
+            print(f"- {item}")
+        return 1
     retail_failures = retail_text_self_test()
     if retail_failures:
         print("Public payload safety self-test: FAIL")
@@ -1549,9 +1806,15 @@ def main() -> int:
             print(f"- ... ({len(findings) - 200} more)")
         return 1
 
+    try:
+        count = len(payload_root_files(root)) if args.payload_root else len(public_candidate_files(root, include_submodules=args.include_submodules))
+    except RuntimeError as exc:
+        print(f"Public payload safety check: FAIL\n- candidate enumeration failed: {exc}")
+        return 1
     print("Public payload safety check: PASS")
-    count = len(payload_root_files(root)) if args.payload_root else len(public_candidate_files(root, include_submodules=args.include_submodules))
     print(f"Public candidate files checked: {count}")
+    if args.include_submodules and not args.payload_root:
+        print("Submodule scope: pinned clean tracked files; untracked and ignored submodule files were not checked.")
     return 0
 
 
