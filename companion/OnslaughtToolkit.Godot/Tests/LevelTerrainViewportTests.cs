@@ -128,6 +128,7 @@ internal static class TerrainViewportProjectionTests
             view.QueueFree();
             await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
         }
+        await LevelObjectDragPageTests.RunAsync(tree, check);
     }
 
     private static void Click(LevelTerrainViewport view, Vector2 at, MouseButton button)
