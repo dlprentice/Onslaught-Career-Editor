@@ -285,7 +285,7 @@ public partial class LevelTerrainViewport : SubViewportContainer
 
     private void RequestMove(Vector2 at)
     {
-        if (_selected is not int selected || _surface is null || MoveRequested is null ||
+        if (_selected is not int selected || !HasCurrentTerrain || MoveRequested is null ||
             !_rows.Any(row => row.Index == selected)) return;
         Vector3 origin = _camera.ProjectRayOrigin(at), direction = _camera.ProjectRayNormal(at);
         var start = new System.Numerics.Vector3(origin.X, origin.Y, origin.Z);
@@ -327,7 +327,7 @@ public partial class LevelTerrainViewport : SubViewportContainer
     {
         screen = default;
         depth = 0;
-        if (_surface is null || !IsInsideTree()) return false;
+        if (!HasCurrentTerrain || !IsInsideTree()) return false;
         // Screen-space editor marks intentionally remain visible through the terrain.
         var p = row.Position;
         if (!float.IsFinite(p.X) || !float.IsFinite(p.Y) || !float.IsFinite(p.Z)) return false;
@@ -337,6 +337,9 @@ public partial class LevelTerrainViewport : SubViewportContainer
         screen = _camera.UnprojectPosition(point);
         return float.IsFinite(screen.X) && float.IsFinite(screen.Y) && screen.X >= 0 && screen.Y >= 0 && screen.X < Size.X && screen.Y < Size.Y;
     }
+
+    // A new level can be opened between input and the next _Process. Do not select or place against its predecessor.
+    private bool HasCurrentTerrain => _surface is not null && ReferenceEquals(TerrainProvider?.Invoke(), _loaded);
 
     private sealed partial class MarkerOverlay(LevelTerrainViewport owner) : Control
     {
