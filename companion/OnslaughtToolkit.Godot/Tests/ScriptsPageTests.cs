@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Godot;
 using OnslaughtToolkit.Companion.Levels;
+using OnslaughtToolkit.Companion.Missions;
 using OnslaughtToolkit.Companion.Ui;
 
 namespace OnslaughtToolkit.Companion.Tests;
@@ -16,6 +17,35 @@ namespace OnslaughtToolkit.Companion.Tests;
 /// </summary>
 internal static class ScriptsPageTests
 {
+    private static void CheckMissionNavigation(LevelEditorPage page, Checks check)
+    {
+        var panel = page.MissionReferences;
+        var original = panel?.Snapshot;
+        var summary = page.Scripts.Current?.Summary;
+        var rows = page.Model?.Rows().Take(2).ToArray() ?? [];
+        check.That(panel != null && original != null && summary != null && rows.Length == 2,
+            "The mission navigation fixture has two objects and a script");
+        if (panel == null || original == null || summary == null || rows.Length != 2) return;
+        int target = rows[1].Index;
+        var authored = summary with { Uses = [new ScriptUse(target, "test use")] };
+        var synthetic = MissionReferenceIndex.FromSummaries([authored], target + 1,
+            index => index == target ? [new ScriptReference("test role", "__missing_test_script__", false)] : [], 2, 4);
+        panel.SetSnapshot(synthetic);
+        page.SelectIndex(rows[0].Index);
+        check.That(panel.TrySelectScript(0) && panel.TrySelectUse(0) && page.Map.Selected == target,
+            "Selecting a mission use selects its object in the editor");
+        page.SelectIndex(rows[0].Index);
+        check.That(panel.TrySelectMissing(0) && page.Map.Selected == target,
+            "Selecting a missing assignment selects its object in the editor");
+        var duplicate = MissionReferenceIndex.FromSummaries([authored, authored], 0,
+            _ => throw new InvalidOperationException("There are no object rows in this fixture."), 2, 4);
+        panel.SetSnapshot(duplicate);
+        check.That(panel.TrySelectScript(0) && page.MissionSourceButton?.Disabled == true &&
+                   page.MissionSourceHint?.Text.Contains("ambiguous", StringComparison.OrdinalIgnoreCase) == true,
+            "Ambiguous mission script names cannot open a source editor");
+        panel.SetSnapshot(original);
+    }
+
     private static void CheckUnitRowsPage(LevelEditorPage page, Checks check)
     {
         var panel = page.UnitRows;
@@ -442,6 +472,7 @@ internal static class ScriptsPageTests
             const string Alpha = "// alpha, the level's own\ninit()\n{\n\tPause(1);\n}\n";
             CheckMissionSourceLink(page, check);
             CheckUnitRowsPage(page, check);
+            CheckMissionNavigation(page, check);
             var missionBeforeCompile = page.MissionReferences?.Snapshot;
             page.ShowScript("alpha");
             for (int frame = 0; frame < 3; frame++) await Frame(tree);

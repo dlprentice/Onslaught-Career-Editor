@@ -14,7 +14,7 @@ namespace OnslaughtToolkit.Companion.Ui;
 /// </summary>
 internal sealed class LevelEditorPage : Page
 {
-    private HSplitContainer? _missionTerrainSplit;
+    private VSplitContainer? _missionTerrainSplit;
     private OnslaughtToolkit.Companion.Ui.MissionReferencePanel? _missionReferencePanel;
     private readonly LevelTerrainViewport _terrainPreview3d;
     private readonly Button _terrainViewSwitch;
@@ -134,7 +134,7 @@ internal sealed class LevelEditorPage : Page
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
             SizeFlagsVertical = Control.SizeFlags.ExpandFill
         };
-        _missionTerrainSplit = new HSplitContainer
+        _missionTerrainSplit = new VSplitContainer
         {
             Name = "MissionTerrainSplit",
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
@@ -158,35 +158,21 @@ internal sealed class LevelEditorPage : Page
         _missionReferencePanel.AddChild(_missionSourceButton);
         _missionReferencePanel.AddChild(_missionSourceHint);
         _missionReferencePanel.ScriptSelected += OnMissionScriptSelected;
+        _missionReferencePanel.UseSelected += OnMissionUseSelected;
+        _missionReferencePanel.MissingSelected += OnMissionMissingSelected;
         _missionSourceButton.Pressed += OpenMissionSource;
         _missionTerrainSplit.AddChild(_missionReferencePanel);
         _mapPanel.AddChild(_missionTerrainSplit);
         _missionTerrainSplit.Visible = _terrainPreview3d.Visible;
         RefreshMissionReferences();
         _terrainPreview3d.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        var terrainViewSwitch = _terrainViewSwitch = new Button
-        {
-            Text = "3D",
-            TooltipText = "Switch between the map and the terrain preview.",
-            ToggleMode = true,
-            AnchorLeft = 1f,
-            AnchorRight = 1f,
-            OffsetLeft = -76f,
-            OffsetRight = -8f,
-            OffsetTop = 8f,
-            OffsetBottom = 38f,
-            ZIndex = 101,
-        };
-        _mapPanel.AddChild(terrainViewSwitch);
-        terrainViewSwitch.Toggled += enabled =>
-        {
-            _terrainPreview3d.Visible = enabled;
-        if (_missionTerrainSplit != null) _missionTerrainSplit.Visible = _terrainPreview3d.Visible;
-            terrainViewSwitch.Text = enabled ? "2D" : "3D";
-        };
+        var terrainViewSwitch = _terrainViewSwitch = searchRow.Add(Build.Button("3D", tooltip: "Switch between the 2D map and 3D view."));
+        terrainViewSwitch.ToggleMode = true;
+        Control? mapHelp = null;
+        HBoxContainer? pathBar = null;
         Map = mapColumn.Add(new LevelMap { SizeFlagsVertical = Control.SizeFlags.ExpandFill, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill });
-        mapColumn.Add(Build.Text("Wheel zooms · drag the background to pan · click or drag a mark to select or move it (Esc cancels) · arrow keys nudge the selected mark · Home fits the level", "Faint"));
-        HBoxContainer pathBar = mapColumn.Add(Build.Row(8));
+        mapHelp = mapColumn.Add(Build.Text("Wheel zooms · drag the background to pan · click or drag a mark to select or move it (Esc cancels) · arrow keys nudge the selected mark · Home fits the level", "Faint"));
+        pathBar = mapColumn.Add(Build.Row(8));
         PathsToggle = pathBar.Add(new CheckButton { Text = "Paths", TooltipText = "Draw every waypoint path of the level, faintly, through the objects it names." });
         PathsToggle.Toggled += on => Map.ShowAllPaths = on;
         _pathText = pathBar.Add(Build.Text("", "Muted", wrap: false, clip: true));
@@ -195,6 +181,15 @@ internal sealed class LevelEditorPage : Page
         HidePath = pathBar.Add(Build.Button("Hide path", tooltip: "Stop highlighting the path."));
         HidePath.Disabled = true;  // always in the row, so that the map above it keeps its height when a path is shown
         HidePath.Pressed += () => HighlightPath(null);
+        terrainViewSwitch.Toggled += enabled =>
+        {
+            _terrainPreview3d.Visible = enabled;
+            if (_missionTerrainSplit != null) _missionTerrainSplit.Visible = enabled;
+            Map.Visible = !enabled;
+            if (mapHelp != null) mapHelp.Visible = !enabled;
+            if (pathBar != null) pathBar.Visible = !enabled;
+            terrainViewSwitch.Text = enabled ? "2D" : "3D";
+        };
         Map.RowPicked += row => SelectIndex(row);
         Map.MoveRequested += (row, x, y) => Dragged(row, x, y);
         _terrainPreview3d.RowsProvider = () => Map.Rows;
@@ -587,6 +582,23 @@ internal sealed class LevelEditorPage : Page
         if (_missionSourceButton != null) _missionSourceButton.Disabled = true;
         if (_missionSourceHint != null)
             _missionSourceHint.Text = reason ?? "Select a script to check whether editable source is available.";
+    }
+
+    private void OnMissionUseSelected(MissionReferenceIndex snapshot, int scriptIndex, int useIndex)
+    {
+        if (!ReferenceEquals(_missionReferencePanel?.Snapshot, snapshot) ||
+            scriptIndex < 0 || scriptIndex >= snapshot.Scripts.Count ||
+            useIndex < 0 || useIndex >= snapshot.Scripts[scriptIndex].Uses.Count)
+            return;
+        ShowObject(snapshot.Scripts[scriptIndex].Uses[useIndex].Row);
+    }
+
+    private void OnMissionMissingSelected(MissionReferenceIndex snapshot, int missingIndex)
+    {
+        if (!ReferenceEquals(_missionReferencePanel?.Snapshot, snapshot) ||
+            missingIndex < 0 || missingIndex >= snapshot.Unresolved.Count)
+            return;
+        ShowObject(snapshot.Unresolved[missingIndex].Row);
     }
 
     private void OnMissionScriptSelected(MissionReferenceIndex snapshot, int scriptIndex)
