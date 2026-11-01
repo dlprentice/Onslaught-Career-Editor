@@ -46,6 +46,88 @@ internal static class ScriptsPageTests
         panel.SetSnapshot(original);
     }
 
+    private static async Task CheckReadOnlyFind(LevelEditorPage page, SceneTree tree, Checks check)
+    {
+        var panel = page.Scripts;
+        var source = panel.Source;
+        string before = source.Text;
+        check.That(!source.Editable && before.Length > 0 && !panel.FindToggle.Disabled,
+            "Find is available for a read-only source");
+        if (before.Length == 0 || panel.FindToggle.Disabled) return;
+
+        source.EmitSignal(Control.SignalName.GuiInput, new InputEventKey { Pressed = true, Keycode = Key.F, CtrlPressed = true });
+        check.That(panel.FindToggle.ButtonPressed, "The source shortcut opens find");
+        panel.FindQuery.Text = "";
+        int beforeLine = source.GetCaretLine(), beforeColumn = source.GetCaretColumn();
+        panel.FindNext.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(panel.FindNext.Disabled && panel.FindPrevious.Disabled && panel.FindStatus.Text == "Enter text to find." &&
+                   source.GetCaretLine() == beforeLine && source.GetCaretColumn() == beforeColumn,
+            "An empty query leaves the source position unchanged");
+
+        char letter = before.FirstOrDefault(char.IsAsciiLetter);
+        check.That(letter != default, "The synthetic source contains a letter for the input control");
+        if (letter == default) return;
+        string query = letter.ToString();
+        panel.FindQuery.GrabFocus();
+        await Frame(tree);
+        tree.Root.PushInput(new InputEventKey { Pressed = true, Keycode = (Key)char.ToUpperInvariant(letter), Unicode = letter });
+        await Frame(tree);
+        check.That(panel.FindQuery.Text == query && !panel.FindNext.Disabled && !panel.FindPrevious.Disabled,
+            "Typing a query enables find navigation");
+        source.Deselect();
+        source.SetCaretLine(0);
+        source.SetCaretColumn(0);
+        panel.FindNext.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(source.GetSelectedText().Equals(query, StringComparison.OrdinalIgnoreCase) && !source.Editable && source.Text == before,
+            "Finding in read-only source selects a match without changing it");
+        panel.FindQuery.EmitSignal(Control.SignalName.GuiInput, new InputEventKey { Pressed = true, Keycode = Key.Escape });
+        check.That(!panel.FindToggle.ButtonPressed, "Escape closes find");
+    }
+
+    private static void CheckEditableFind(LevelEditorPage page, string savedDraft, Checks check)
+    {
+        var panel = page.Scripts;
+        var source = panel.Source;
+        var session = page.Model?.Session;
+        byte[] before = session?.ToBytes() ?? [];
+        const string draft = "a \U0001F680 Needle\nb needle";
+        source.Text = draft;
+        check.That(!panel.FindToggle.Disabled, "Find remains available while editing source");
+        panel.FindToggle.ButtonPressed = true;
+        panel.FindQuery.Text = "needle";
+        source.Deselect();
+        source.SetCaretLine(0);
+        source.SetCaretColumn(0);
+        panel.FindNext.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(source.GetSelectionFromLine() == 0 && source.GetSelectionFromColumn() == 4 && source.GetSelectedText() == "Needle",
+            "Find uses the correct Unicode column and ignores case");
+        panel.FindNext.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(source.GetSelectionFromLine() == 1 && source.GetSelectedText() == "needle", "Find next advances to the next line");
+        panel.FindNext.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(source.GetSelectionFromLine() == 0 && source.GetSelectedText() == "Needle", "Find next wraps to the beginning");
+        panel.FindPrevious.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(source.GetSelectionFromLine() == 1 && source.GetSelectedText() == "needle", "Find previous wraps to the end");
+        panel.FindQuery.Text = "not present in this draft";
+        panel.FindNext.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(panel.FindStatus.Text == "No matches." && source.Text == draft && source.Editable &&
+                   session != null && session.ToBytes().SequenceEqual(before),
+            "A missing query preserves the draft and compiled level");
+        const string oneLine = "Needle x needle";
+        source.Text = oneLine;
+        panel.FindQuery.Text = "needle";
+        source.Deselect();
+        source.SetCaretLine(0);
+        source.SetCaretColumn(0);
+        panel.FindNext.EmitSignal(BaseButton.SignalName.Pressed);
+        panel.FindNext.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(source.GetSelectionFromColumn() == 9, "Find next distinguishes matches on the same line");
+        panel.FindPrevious.EmitSignal(BaseButton.SignalName.Pressed);
+        check.That(source.GetSelectionFromColumn() == 0 && source.Text == oneLine,
+            "Find previous returns to the earlier match without changing the draft");
+        source.Text = savedDraft;
+        panel.FindToggle.ButtonPressed = false;
+    }
+
     private static void CheckUnitRowsPage(LevelEditorPage page, Checks check)
     {
         var panel = page.UnitRows;
@@ -478,11 +560,13 @@ internal static class ScriptsPageTests
             for (int frame = 0; frame < 3; frame++) await Frame(tree);
             check.That(!page.EditSource.Disabled && !page.EditSource.ButtonPressed && page.CompileScriptButton.Disabled && page.ShippedScriptButton.Disabled && !page.Scripts.Source.Editable &&
                        page.Scripts.Info == "level130/alpha.msl · 5 lines · read only", $"a script with a source file can be edited, and starts read only: \"{page.Scripts.Info}\"");
+            await CheckReadOnlyFind(page, tree, check);
             page.EditSource.ButtonPressed = true;
             for (int frame = 0; frame < 3; frame++) await Frame(tree);
             check.That(page.Scripts.Source.Editable && !page.CompileScriptButton.Disabled && page.Scripts.Info == "level130/alpha.msl · 5 lines · editing", $"the Edit switch makes the view typeable: \"{page.Scripts.Info}\"");
             const string Typed = "// alpha, edited\ninit()\n{\n\tPause(2);\n}\n";
             page.Scripts.Source.Text = Typed;
+            CheckEditableFind(page, Typed, check);
             CheckMissionDraftPreserved(page, Typed, check);
             page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
             for (int frame = 0; frame < 3; frame++) await Frame(tree);

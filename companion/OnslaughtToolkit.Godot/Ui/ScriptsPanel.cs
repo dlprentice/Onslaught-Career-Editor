@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using Godot;
+using System.Text;
 using OnslaughtToolkit.Companion.Levels;
 
 namespace OnslaughtToolkit.Companion.Ui;
@@ -18,6 +19,12 @@ internal sealed partial class ScriptsPanel : VBoxContainer
 
     private readonly Tree _list;
     private readonly CodeEdit _source;
+    private readonly Button _findToggle;
+    private readonly HBoxContainer _findRow;
+    private readonly LineEdit _findQuery;
+    private readonly Button _findPrevious;
+    private readonly Button _findNext;
+    private readonly Label _findStatus;
     private readonly Label _info, _empty;
     private IReadOnlyList<ScriptEntry> _entries = [];
     private string? _root;
@@ -51,7 +58,34 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         _info = this.Add(Build.Text("", "Faint", wrap: false, clip: true));
         _info.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         _info.MouseFilter = MouseFilterEnum.Pass;  // so that the tooltip, which has the whole path, shows
+        _findToggle = this.Add(new Button
+        {
+            Text = "Find in script",
+            TooltipText = "Find text in the open script (Ctrl+F).",
+            ToggleMode = true,
+            Disabled = true,
+        });
+        _findRow = this.Add(new HBoxContainer { Visible = false });
+        _findQuery = new LineEdit
+        {
+            PlaceholderText = "Find in this script",
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        _findPrevious = new Button { Text = "Previous", Disabled = true };
+        _findNext = new Button { Text = "Next", Disabled = true };
+        _findRow.AddChild(_findQuery);
+        _findRow.AddChild(_findPrevious);
+        _findRow.AddChild(_findNext);
+        _findStatus = this.Add(new Label { Visible = false });
         _source = this.Add(NewSourceView());
+        _findToggle.Toggled += ShowFind;
+        _findQuery.TextChanged += _ => UpdateFindQuery();
+        _findQuery.TextSubmitted += _ => FindInSource(backwards: false);
+        _findQuery.GuiInput += OnFindQueryInput;
+        _findPrevious.Pressed += () => FindInSource(backwards: true);
+        _findNext.Pressed += () => FindInSource(backwards: false);
+        _source.GuiInput += OnSourceFindInput;
+        _source.TextChanged += UpdateFindAvailability;
         _source.SizeFlagsStretchRatio = 2.2f;
         _source.CaretChanged += OnCaret;
         _source.TextChanged += OnText;  // the line count and what the text is (the file's, typed, in use) follow what is typed...
@@ -122,6 +156,11 @@ internal sealed partial class ScriptsPanel : VBoxContainer
 
     internal Tree List => _list;
     internal CodeEdit Source => _source;
+    internal Button FindToggle => _findToggle;
+    internal LineEdit FindQuery => _findQuery;
+    internal Button FindPrevious => _findPrevious;
+    internal Button FindNext => _findNext;
+    internal Label FindStatus => _findStatus;
     internal string Info => _info.Text;
     internal Label InfoLabel => _info;
     internal string EmptyText => _empty.Visible ? _empty.Text : "";
@@ -130,6 +169,94 @@ internal sealed partial class ScriptsPanel : VBoxContainer
 
     /// <summary>How many scripts the list shows with the current search.</summary>
     internal int ShownCount => _list.GetRoot()?.GetChildCount() ?? 0;
+
+    private void ShowFind(bool visible)
+    {
+        _findRow.Visible = visible;
+        _findStatus.Visible = visible;
+        if (visible && _findQuery.IsInsideTree()) _findQuery.GrabFocus();
+    }
+
+    private void OnSourceFindInput(InputEvent input)
+    {
+        if (input is not InputEventKey { Pressed: true, Echo: false } key ||
+            key.Keycode != Key.F || !(key.CtrlPressed || key.MetaPressed) || key.AltPressed || _findToggle.Disabled)
+            return;
+        if (!_findToggle.ButtonPressed) _findToggle.ButtonPressed = true;
+        else if (_findQuery.IsInsideTree()) _findQuery.GrabFocus();
+        _source.AcceptEvent();
+    }
+
+    private void OnFindQueryInput(InputEvent input)
+    {
+        if (input is not InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape }) return;
+        _findToggle.ButtonPressed = false;
+        if (_source.IsInsideTree()) _source.GrabFocus();
+        _findQuery.AcceptEvent();
+    }
+
+    private void UpdateFindQuery()
+    {
+        bool empty = string.IsNullOrEmpty(_findQuery.Text);
+        _findPrevious.Disabled = empty;
+        _findNext.Disabled = empty;
+        _findStatus.Text = "";
+    }
+
+    private void UpdateFindAvailability()
+    {
+        bool available = !string.IsNullOrEmpty(_source.Text);
+        _findToggle.Disabled = !available;
+        _findStatus.Text = "";
+        if (!available)
+        {
+            _findToggle.SetPressedNoSignal(false);
+            _findRow.Visible = false;
+            _findStatus.Visible = false;
+        }
+    }
+
+    private void FindInSource(bool backwards)
+    {
+        string query = _findQuery.Text;
+        if (string.IsNullOrEmpty(query))
+        {
+            _findStatus.Text = "Enter text to find.";
+            return;
+        }
+        if (query.Contains('\n') || query.Contains('\r'))
+        {
+            _findStatus.Text = "Find searches within one line.";
+            return;
+        }
+
+        bool selected = _source.HasSelection();
+        int line = selected ? (backwards ? _source.GetSelectionFromLine() : _source.GetSelectionToLine()) : _source.GetCaretLine();
+        int column = selected ? (backwards ? _source.GetSelectionFromColumn() : _source.GetSelectionToColumn()) : _source.GetCaretColumn();
+        int lastLine = Math.Max(0, _source.GetLineCount() - 1);
+        int lastColumn = _source.GetLine(lastLine).EnumerateRunes().Count();
+        if (backwards)
+        {
+            if (column > 0) column--;
+            else if (line > 0) { line--; column = _source.GetLine(line).EnumerateRunes().Count(); }
+            else { line = lastLine; column = lastColumn; }
+        }
+        uint flags = backwards ? (uint)TextEdit.SearchFlags.Backwards : 0;
+        Vector2I found = _source.Search(query, flags, line, column);
+        if (found.X < 0 || found.Y < 0)
+            found = _source.Search(query, flags, backwards ? lastLine : 0, backwards ? lastColumn : 0);
+        if (found.X < 0 || found.Y < 0)
+        {
+            _findStatus.Text = "No matches.";
+            return;
+        }
+
+        int endColumn = found.X + query.EnumerateRunes().Count();
+        _source.SetCaretLine(found.Y);
+        _source.SetCaretColumn(endColumn);
+        _source.Select(found.Y, found.X, found.Y, endColumn);
+        _findStatus.Text = "Found.";
+    }
 
     private static CodeEdit NewSourceView()
     {
@@ -367,6 +494,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         _source.ScrollVertical = 0;
         _source.ScrollHorizontal = 0;
         _source.Text = text;
+        UpdateFindAvailability();
         _source.SetLineAsFirstVisible(0);
         _source.SetCaretLine(0);
         _source.ScrollVertical = 0;
