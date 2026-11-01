@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import os
 import pathlib
 import re
 import subprocess
@@ -72,10 +73,11 @@ def repo_root() -> pathlib.Path:
 
 def tracked_files(root: pathlib.Path) -> list[str]:
     out = subprocess.run(
-        ["git", "ls-files"], cwd=root, capture_output=True, text=True, check=False
-    ).stdout.split()
+        ["git", "ls-files", "-z"], cwd=root, capture_output=True, check=True
+    ).stdout
+    names = (os.fsdecode(name) for name in out.split(b"\0") if name)
     return [
-        f for f in out
+        f for f in names
         if f.endswith(CHECKED_SUFFIXES) and not f.startswith(SKIP_PREFIXES)
     ]
 
@@ -95,6 +97,43 @@ def scan(root: pathlib.Path) -> list[tuple[str, int, str, str]]:
                     hits.append((name, number, line.strip()[:160], why))
                     break
     return hits
+
+
+def self_test_inventory() -> bool:
+    """Tracked names round-trip through Git, and a missing repository fails closed."""
+    import contextlib
+    import tempfile
+    from unittest import mock
+
+    with tempfile.TemporaryDirectory() as temporary:
+        root = pathlib.Path(temporary)
+        repo = root / "repo"
+        repo.mkdir()
+        non_repo = root / "non-repo"
+        non_repo.mkdir()
+        names = ["ordinary.md", "two words.md", "naïve.md"]
+        if os.name != "nt":
+            # Windows cannot create names containing control characters or undecodable bytes.
+            names.extend(("tab\tname.md", "line\nbreak.md", "non-utf8-" + os.fsdecode(bytes([255])) + ".md"))
+        git_env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+        git_env.update(GIT_CEILING_DIRECTORIES=str(root.resolve()), GIT_CONFIG_NOSYSTEM="1",
+                       GIT_CONFIG_GLOBAL=os.devnull, GIT_TERMINAL_PROMPT="0")
+        with mock.patch.dict(os.environ, git_env, clear=True):
+            subprocess.run(["git", "init", "-q", "--template="], cwd=repo, capture_output=True, check=True)
+            for name in names:
+                (repo / name).write_text("The installed game is never changed.\n", encoding="utf-8")
+            clean = "clean spaced.md"
+            (repo / clean).write_text("This action uses a safe copy.\n", encoding="utf-8")
+            subprocess.run(["git", "add", "--", *names, clean], cwd=repo, capture_output=True, check=True)
+            (repo / "untracked.md").write_text("The installed game is never changed.\n", encoding="utf-8")
+            if set(tracked_files(repo)) != set(names) | {clean}:
+                return False
+            if {hit[0] for hit in scan(repo)} != set(names):
+                return False
+            with mock.patch(__name__ + ".repo_root", return_value=non_repo), \
+                    mock.patch.object(sys, "argv", ["check_installed_game_claims.py", "--check"]), \
+                    contextlib.redirect_stderr(io.StringIO()):
+                return main() != 0
 
 
 def self_test() -> int:
@@ -130,6 +169,12 @@ def self_test() -> int:
         verdict = "banned" if actual else "allowed"
         print(f"  {'PASS' if ok else 'FAIL'}  [{verdict}] {line[:64]}")
 
+    try:
+        inventory_ok = self_test_inventory()
+    except (OSError, subprocess.CalledProcessError):
+        inventory_ok = False
+    failures += 0 if inventory_ok else 1
+    print(f"  {'PASS' if inventory_ok else 'FAIL'}  tracked-file enumeration")
     print("SELF-TEST PASS" if failures == 0 else f"SELF-TEST FAIL ({failures})")
     return 0 if failures == 0 else 1
 
@@ -144,7 +189,11 @@ def main() -> int:
         return self_test()
 
     root = repo_root()
-    hits = scan(root)
+    try:
+        hits = scan(root)
+    except (OSError, subprocess.CalledProcessError) as exc:
+        print(f"FAIL: cannot enumerate tracked files: {exc}", file=sys.stderr)
+        return 1
     unexplained = [h for h in hits if h[0] not in ALLOWED]
 
     if args.check:
