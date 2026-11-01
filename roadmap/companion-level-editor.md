@@ -61,9 +61,21 @@ been staged or played in CE. A separate [inspector component candidate](https://
 adds a control and authored tests; that candidate has no Level editor page wiring or normal-runner registration.
 
 These candidates are outside main and unreleased. The full Companion suite, human use, real-world CE acceptance of
-these edit kinds and Windows validation remain open. Derived-world previews and terrain/snapshot drafts cannot be
-saved or played; the preview's terrain pairing is unverified. Project save/open, script-draft restoration and
-source-preserving staging remain unfinished. The separate unsaved terrain draft is unchanged by these checkpoints.
+these edit kinds and Windows validation remain open. On main, derived-world previews and terrain/snapshot drafts cannot
+be saved or played, project save/open and script-draft restoration remain unwired, and source-preserving CE staging
+remains unfinished. The preview's terrain pairing is unverified.
+
+A later pushed [editor-only project workflow](https://github.com/dlprentice/Onslaught-Career-Editor/commit/ac54cb070228a2109e9ca64e91e0f2bcd9197b40)
+integrates the inspector with the page and saves and reopens the sampled terrain-preview draft, world snapshot, installed
+source and script drafts, with a fresh undo history. Unapplied radius and coordinate fields must be applied or restored
+before project save/open; terrain edits remain fenced from CE export and play. Focused authored checks and safety pass,
+and full-app offscreen captures were inspected. This candidate is not on main or released; lead full normal-suite
+acceptance remains open.
+
+A separate pushed [waypoint-rule candidate](https://github.com/dlprentice/Onslaught-Career-Editor/commit/636e3b100e1b24d04048fa973e73041d948a9f3f)
+adds read-only checks of literal waypoint names in the selected script against level and base-world data. Dynamic
+expressions, includes, macros and runtime behavior remain unchecked. Focused authored checks and safety pass, and
+wide and compact page captures were inspected. Its normal test registry is unchanged; it is not integrated or released.
 
 Parts of the Companion the editor can reuse as they are:
 
