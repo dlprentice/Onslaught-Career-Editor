@@ -125,6 +125,12 @@ recipients and data handling remain undecided. Public discovery, any discovery o
 and the information listed or sent require design and authorization; none is a shipped service claim. Private
 lobby access controls must be designed and validated: being unlisted alone does not establish private access.
 
+Future multiplayer should include in-game text and voice chat, especially online, on Linux and Windows. Players need
+controls to mute and block others, and to use push-to-talk or disable voice. These are unimplemented requirements; a
+lobby directory or relay proposal does not provide them. Chat and voice privacy and data handling, any hosting or relay
+operator, costs and recipients require design and explicit authorization. The existing no-telemetry rule still applies;
+automatic recording, a provider, player accounts and spending are not assumed.
+
 The older [original-binary feasibility note](roadmap/original-binary-online-multiplayer-feasibility.md) concerns a
 separate historical route, not a statement that CE already has online play.
 
