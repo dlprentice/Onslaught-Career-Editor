@@ -585,6 +585,17 @@ def _validated_submodule_files(root: Path, submodule_path: str) -> list[str]:
             raise SubmoduleScanError(submodule_path, "deny-unreadable-submodule-scan",
                                      "submodule index contains a non-UTF-8 path") from exc
         paths.append(f"{submodule_path}/{normalize(decoded)}")
+    flags = _submodule_git(full_path, submodule_path, "ls-files", "-v", "-z").split(b"\0")
+    for entry in flags:
+        if not entry:
+            continue
+        if len(entry) < 3 or entry[1:2] != b" ":
+            raise SubmoduleScanError(submodule_path, "deny-unreadable-submodule-scan",
+                                     "submodule index flags could not be read")
+        tag = entry[:1]
+        if tag == b"S" or b"a" <= tag <= b"z":
+            raise SubmoduleScanError(submodule_path, "deny-hidden-submodule-index",
+                                     "submodule index hides tracked changes or omits tracked files")
     dirty = _submodule_git(full_path, submodule_path, "status", "--porcelain=v1", "-z",
                            "--untracked-files=no", "--ignore-submodules=none")
     if dirty:
@@ -1321,8 +1332,20 @@ def submodule_identity_self_test() -> list[str]:
         )
         result = subprocess.run([sys.executable, "-B", "-c", cli, str(Path(__file__).resolve()), str(valid)],
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
-        if result.returncode or "untracked and ignored submodule files were not checked" not in result.stdout:
+        if result.returncode or "untracked and ignored submodule files were not checked" not in result.stdout.lower():
             failures.append("submodule scan did not disclose its tracked-only scope")
+
+        for flag, clear in (("--assume-unchanged", "--no-assume-unchanged"),
+                            ("--skip-worktree", "--no-skip-worktree")):
+            git(child, "update-index", flag, "tracked.txt")
+            (child / "tracked.txt").write_text("synthetic hidden change\n", encoding="utf-8")
+            if git(child, "status", "--porcelain=v1", "--untracked-files=no"):
+                failures.append("hidden index flag fixture did not hide the tracked change")
+            hidden = check_repo(valid, include_submodules=True, stale_allowances=False)
+            if not any(f.label == "deny-hidden-submodule-index" for f in hidden):
+                failures.append("hidden tracked submodule index flag did not fail closed")
+            git(child, "update-index", clear, "tracked.txt")
+            (child / "tracked.txt").write_text("synthetic fixture\n", encoding="utf-8")
 
         (child / "tracked.txt").write_text("synthetic tracked change\n", encoding="utf-8")
         dirty = check_repo(valid, include_submodules=True, stale_allowances=False)
@@ -1814,7 +1837,8 @@ def main() -> int:
     print("Public payload safety check: PASS")
     print(f"Public candidate files checked: {count}")
     if args.include_submodules and not args.payload_root:
-        print("Submodule scope: pinned clean tracked files; untracked and ignored submodule files were not checked.")
+        print("Submodule scope: tracked working-tree files; HEAD matches the gitlink and Git reports tracked state clean. "
+              "Untracked and ignored submodule files were not checked.")
     return 0
 
 
