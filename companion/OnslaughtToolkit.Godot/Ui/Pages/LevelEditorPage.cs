@@ -50,6 +50,7 @@ internal sealed class LevelEditorPage : Page
     private IReadOnlyList<ScriptEntry>? _shownScripts;
     private LevelEditorModel? _model;
     private EditSession? _terrainShownSession;
+    private long _viewRevision;
     private string? _root;
     private int? _selected;
     private (string X, string Y, string Z) _shown = ("", "", "");
@@ -575,11 +576,29 @@ internal sealed class LevelEditorPage : Page
     internal void PickLevel(int level)
     {
         int changed = ChangeCount;
-        if (_model?.Level is int open && changed > 0)
+        if (_model is { Level: int open } model && changed > 0)
         {
             ShowInPicker(open);
+            if (model.Session is not { } session)
+            {
+                ShowChangedConfirmation();
+                return;
+            }
+            byte[] expected;
+            try { expected = session.ToBytes(); }
+            catch (Exception error) when (EditSession.IsUnstorable(error))
+            {
+                _problemPanel.Visible = true;
+                _problemText.Text = "The current edit cannot be checked safely, so it was not discarded.";
+                return;
+            }
+            long revision = _viewRevision;
             _services.AskToDiscard($"{Build.Count(changed, "change")} on level {open} {(changed == 1 ? "is" : "are")} not saved. Open level {level} and discard {(changed == 1 ? "it" : "them")}?",
-                "Discard and open", () => OpenLevel(level));
+                "Discard and open", () =>
+                {
+                    if (!MatchesConfirmedEdit(model, session, revision, expected)) { ShowChangedConfirmation(); return; }
+                    OpenLevel(level);
+                });
             return;
         }
         OpenLevel(level);
@@ -596,20 +615,34 @@ internal sealed class LevelEditorPage : Page
             return;
         }
         int changed = ChangeCount;
+        long revision = _viewRevision;
         if (changed > 0)
         {
             _services.AskToDiscard($"{Build.Count(changed, "change")} {(changed == 1 ? "is" : "are")} not saved. Open the selected world and discard {(changed == 1 ? "it" : "them")}?",
-                "Discard and open", () => CommitSelectedWorld(model, prepared));
+                "Discard and open", () => CommitSelectedWorld(model, prepared, revision));
             return;
         }
-        CommitSelectedWorld(model, prepared);
+        CommitSelectedWorld(model, prepared, revision);
     }
 
-    private void CommitSelectedWorld(LevelEditorModel model, PreparedWorldOverride prepared)
+    private bool MatchesConfirmedEdit(LevelEditorModel model, EditSession session, long revision, byte[] expected)
+    {
+        if (!ReferenceEquals(_model, model) || !ReferenceEquals(model.Session, session) || _viewRevision != revision) return false;
+        try { return session.ToBytes().AsSpan().SequenceEqual(expected); }
+        catch (Exception error) when (EditSession.IsUnstorable(error)) { return false; }
+    }
+
+    private void ShowChangedConfirmation()
+    {
+        _problemPanel.Visible = true;
+        _problemText.Text = "The edit changed while confirmation was open. Choose again.";
+    }
+
+    private void CommitSelectedWorld(LevelEditorModel model, PreparedWorldOverride prepared, long revision)
     {
         int? previousSelection = _selected;
         _selected = null;
-        if (!ReferenceEquals(_model, model) || !model.CommitWorldOverride(prepared))
+        if (_viewRevision != revision || !ReferenceEquals(_model, model) || !model.CommitWorldOverride(prepared))
         {
             _selected = previousSelection;
             _problemPanel.Visible = true;
@@ -754,6 +787,7 @@ internal sealed class LevelEditorPage : Page
 
     private void OnModelChanged()
     {
+        _viewRevision++;
         if (!ReferenceEquals(_terrainShownSession, _model?.Session))
         {
             TerrainEdit.SetPressedNoSignal(false);
@@ -1225,6 +1259,7 @@ internal sealed class LevelEditorPage : Page
     /// <summary>The note about a refusal is about the text as it was: it goes with that text. The note about a replacement stays, as the replacement does.</summary>
     private void OnScriptTextEdited()
     {
+        _viewRevision++;
         if (_editNoteRefused)
         {
             _scriptEditNote.Text = "";

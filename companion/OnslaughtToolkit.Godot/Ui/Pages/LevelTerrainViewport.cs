@@ -35,6 +35,7 @@ public partial class LevelTerrainViewport : SubViewportContainer
     private bool _dragging;
     private bool _leftPressed;
     private bool _pressedInTerrainMode;
+    private bool _raiseAtPress;
     private Vector2 _pressedAt;
 
     public LevelTerrainViewport()
@@ -120,6 +121,7 @@ public partial class LevelTerrainViewport : SubViewportContainer
                     _leftPressed = true;
                     _dragging = false;
                     _pressedInTerrainMode = TerrainModeProvider?.Invoke() == true;
+                    _raiseAtPress = !button.ShiftPressed;
                     _pressedAt = button.Position;
                     GrabFocus();
                 }
@@ -128,7 +130,7 @@ public partial class LevelTerrainViewport : SubViewportContainer
                     bool terrainMode = TerrainModeProvider?.Invoke() == true;
                     if (_leftPressed && !_dragging && terrainMode == _pressedInTerrainMode)
                     {
-                        if (terrainMode) RequestTerrainEdit(button.Position, !button.ShiftPressed);
+                        if (terrainMode) RequestTerrainEdit(button.Position, _raiseAtPress);
                         else if (RowAt(button.Position) is { } row) RowPicked?.Invoke(row.Index);
                     }
                     _leftPressed = _dragging = false;

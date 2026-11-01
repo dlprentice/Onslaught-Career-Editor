@@ -74,5 +74,28 @@ internal static class TerrainDraftTests
         TerrainDraft unrepresentable = new(session.Body, huge);
         check.That(!unrepresentable.TryPrepare(0, 0, true, out _, out _) && !unrepresentable.HasChanges,
                    "a step too small to change a stored float is refused");
+
+        foreach (float fractional in new[] { 0.1f, -0.1f, 0.3f, -0.3f })
+        {
+            EditSession fractionalSession = new(LevelTests.Body("authored-v50"));
+            TerrainSurface fractionalBaseline = TerrainSurface.Build((_, _) => fractional, 4);
+            TerrainDraft fractionalDraft = new(fractionalSession.Body, fractionalBaseline);
+            int baselineBits = BitConverter.SingleToInt32Bits(fractionalBaseline.Vertices.Span[12].Y);
+            IEditCommand? raise = null, lower = null;
+            bool raisedOk = fractionalDraft.TryPrepare(256, 256, true, out raise, out _) && raise is not null && fractionalSession.TryApply(raise, out _);
+            int raisedBits = BitConverter.SingleToInt32Bits(fractionalDraft.Surface.Vertices.Span[12].Y);
+            bool loweredOk = fractionalDraft.TryPrepare(256, 256, false, out lower, out _) && lower is not null && fractionalSession.TryApply(lower, out _);
+            check.That(raisedOk && loweredOk && !fractionalDraft.HasChanges && fractionalDraft.ChangedCount == 0 &&
+                       BitConverter.SingleToInt32Bits(fractionalDraft.Surface.Vertices.Span[12].Y) == baselineBits,
+                       "raising then lowering a fractional point restores its exact baseline bits and clears dirty state");
+            check.That(fractionalSession.Undo() && fractionalDraft.HasChanges && BitConverter.SingleToInt32Bits(fractionalDraft.Surface.Vertices.Span[12].Y) == raisedBits &&
+                       fractionalSession.Redo() && !fractionalDraft.HasChanges && BitConverter.SingleToInt32Bits(fractionalDraft.Surface.Vertices.Span[12].Y) == baselineBits,
+                       "undo and redo preserve the fractional raise and exact clean baseline");
+            bool loweredFirst = fractionalDraft.TryPrepare(256, 256, false, out IEditCommand? lowerFirst, out _) && lowerFirst is not null && fractionalSession.TryApply(lowerFirst, out _);
+            bool raisedBack = fractionalDraft.TryPrepare(256, 256, true, out IEditCommand? raiseBack, out _) && raiseBack is not null && fractionalSession.TryApply(raiseBack, out _);
+            check.That(loweredFirst && raisedBack && !fractionalDraft.HasChanges &&
+                       BitConverter.SingleToInt32Bits(fractionalDraft.Surface.Vertices.Span[12].Y) == baselineBits,
+                       "lowering then raising a fractional point also restores exact baseline bits");
+        }
     }
 }

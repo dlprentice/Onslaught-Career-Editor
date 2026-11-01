@@ -18,12 +18,12 @@ internal static class TerrainPreviewPageTests
         return null;
     }
 
-    private static void Click(SceneTree tree, LevelTerrainViewport view, Vector2 local, bool lower = false)
+    private static void Click(SceneTree tree, LevelTerrainViewport view, Vector2 local, bool lower = false, bool? lowerAtRelease = null)
     {
         Vector2 at = view.GetGlobalRect().Position + local;
         tree.Root.PushInput(new InputEventMouseMotion { Position = at, GlobalPosition = at }, true);
         tree.Root.PushInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true, Position = at, GlobalPosition = at, ButtonMask = MouseButtonMask.Left, ShiftPressed = lower }, true);
-        tree.Root.PushInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false, Position = at, GlobalPosition = at, ShiftPressed = lower }, true);
+        tree.Root.PushInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false, Position = at, GlobalPosition = at, ShiftPressed = lowerAtRelease ?? lower }, true);
     }
 
     internal static async Task RunAsync(CompanionApp app, SceneTree tree, FakeInstall install, Checks check)
@@ -88,15 +88,25 @@ internal static class TerrainPreviewPageTests
             for (int i = 0; i < 2; i++) await Frame(tree);
             check.That(camera.GlobalPosition.DistanceTo(cameraBefore) < 0.001f, "a terrain rebuild preserves the camera position");
             var raisedVertices = raised.Vertices.ToArray();
-            Click(tree, view, at, lower: true);
+            Click(tree, view, at, lower: true, lowerAtRelease: false);
             TerrainSurface? lowered = model.TerrainPreviewSurface;
             check.That(lowered is not null && !ReferenceEquals(lowered, raised) &&
                        lowered.Vertices.ToArray().Zip(raisedVertices).Count(pair => pair.First.Y == pair.Second.Y - TerrainDraft.Step) == 1,
-                       "after redraw, Shift-click lowers one preview point");
+                       "releasing Shift before the mouse still lowers one preview point");
             page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
             raised = model.TerrainPreviewSurface;
             check.That(raised is not null && raised.Vertices.ToArray().SequenceEqual(raisedVertices) && model.TerrainHasChanges,
                        "undo takes back the Shift-click without losing the earlier raise");
+            if (raised is null) return;
+            for (int i = 0; i < 2; i++) await Frame(tree);
+            Click(tree, view, at, lower: false, lowerAtRelease: true);
+            TerrainSurface? raisedAgain = model.TerrainPreviewSurface;
+            check.That(raisedAgain is not null && !ReferenceEquals(raisedAgain, raised) &&
+                       raisedAgain.Vertices.ToArray().Zip(raisedVertices).Count(pair => pair.First.Y == pair.Second.Y + TerrainDraft.Step) == 1,
+                       "pressing Shift only after the mouse still raises one preview point");
+            page.Undo.EmitSignal(BaseButton.SignalName.Pressed);
+            raised = model.TerrainPreviewSurface;
+            check.That(raised is not null && raised.Vertices.ToArray().SequenceEqual(raisedVertices), "undo restores the preview after that raise");
             if (raised is null) return;
             for (int i = 0; i < 2; i++) await Frame(tree);
             check.That(page.Save.Disabled && page.Play.Disabled && !page.SaveNow().Ok && !model.IsWorldOverride &&
@@ -150,6 +160,21 @@ internal static class TerrainPreviewPageTests
             app.DiscardDialog.Hide();
             check.That(ReferenceEquals(model.Session, session) && ReferenceEquals(model.TerrainPreviewSurface, newer), "cancel keeps both edits");
             page.PickLevel(200);
+            check.That(model.ChangeTerrainPreview(0, 0, false).Result == MoveResult.Moved, "a newer terrain edit can arrive while the level question is open");
+            TerrainSurface? newerAfterQuestion = model.TerrainPreviewSurface;
+            app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
+            app.DiscardDialog.Hide();
+            check.That(ReferenceEquals(model.Session, session) && ReferenceEquals(model.TerrainPreviewSurface, newerAfterQuestion) &&
+                       page.Problem.Contains("changed", StringComparison.Ordinal), "a stale level confirmation preserves the newer terrain edit");
+            page.PickLevel(200);
+            var position = session.Body.Things[0].Init.Position;
+            session.Body.Things[0].Init.Position = new System.Numerics.Vector3(position.X + 1, position.Y, position.Z); // Deliberately bypass the command notifier.
+            byte[] changedWithoutNotice = session.ToBytes();
+            app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
+            app.DiscardDialog.Hide();
+            check.That(ReferenceEquals(model.Session, session) && session.ToBytes().SequenceEqual(changedWithoutNotice) &&
+                       page.Problem.Contains("changed", StringComparison.Ordinal), "the level confirmation also catches an unnotified world change");
+            page.PickLevel(200);
             app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
             app.DiscardDialog.Hide();
             check.That(!ReferenceEquals(model.Session, session) && !model.TerrainHasChanges && !page.TerrainEdit.ButtonPressed,
@@ -168,6 +193,29 @@ internal static class TerrainPreviewPageTests
             page.TerrainEdit.ButtonPressed = true;
             check.That(model.ChangeTerrainPreview(100, 100, true).Result == MoveResult.Moved && page.TerrainEdit.ButtonPressed,
                        "terrain mode remains active after an edit in a new empty-script session");
+
+            check.That(page.OpenLevel(100), "the authored level opens for script-draft confirmation checks");
+            string? scriptName = model.Scripts.FirstOrDefault()?.Summary.Name;
+            bool scriptReady = scriptName is not null && page.ShowScript(scriptName) && !page.EditSource.Disabled;
+            check.That(scriptReady, "the authored level has an editable source for a draft");
+            if (!scriptReady) return;
+            page.EditSource.ButtonPressed = true;
+            page.Scripts.Source.Text = "// first authored draft\n";
+            EditSession? scriptSession = model.Session;
+            page.PickLevel(200);
+            check.That(app.DiscardDialog.Visible, "a script draft triggers the level discard question");
+            page.Scripts.Source.Text = "// newer authored draft\n";
+            app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
+            app.DiscardDialog.Hide();
+            check.That(ReferenceEquals(model.Session, scriptSession) && page.Scripts.Source.Text == "// newer authored draft\n" &&
+                       page.Problem.Contains("changed", StringComparison.Ordinal), "a same-count newer draft survives stale level confirmation");
+            page.OpenSelectedWorld(selectedPath);
+            check.That(app.DiscardDialog.Visible, "the same draft triggers the selected-world discard question");
+            page.Scripts.Source.Text = "// newest authored draft\n";
+            app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
+            app.DiscardDialog.Hide();
+            check.That(ReferenceEquals(model.Session, scriptSession) && page.Scripts.Source.Text == "// newest authored draft\n" &&
+                       page.Problem.Contains("changed", StringComparison.Ordinal), "a same-count newer draft survives stale selected-world confirmation");
         }
         finally
         {
