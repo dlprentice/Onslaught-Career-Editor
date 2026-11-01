@@ -389,7 +389,7 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   and a recorded session switches mods off, which the copy of ce.ini avoids. The page was driven
   by events in tests and looked at in offscreen captures, and its `scriptmod` capture staged one edit (a tutorial message of level 100) as a mod that Onslaught CE ran on
   Linux, offscreen and live, with the edited subtitle on screen beside control runs (the mission editor design's section 16 says how and what it does not show); nobody has used
-  it or the Play button by hand (the button ran once offscreen through the released 0.1.12 launcher, section 17 of the design), no other edit has been run, and there has been no native Windows run. Onslaught CE switches mods off under a deterministic clock, a tape, probes, a
+  it or the Play button by hand (the button ran once offscreen through the released 0.1.12 launcher, section 17 of the design), no other script edit has been run, and there has been no native Windows run. Onslaught CE switches mods off under a deterministic clock, a tape, probes, a
   recording, a pilot or a network session, so a run that should load a mod is a live one.
 
   The page is laid out for a window of about 1366 by 800 or more. In a smaller one, down to the Companion's 1024 by 700
