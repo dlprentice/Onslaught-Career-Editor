@@ -130,6 +130,14 @@ internal static class LevelMapPageTests
         // A second authored archive has its own world and terrain, with overlapping row numbers.
         File.WriteAllBytes(Path.Combine(install.Game, "data", "resources", "200_res_PC.aya"),
             WithAuthoredTerrain(LevelTests.Unpack(LevelVectors.Archives.First(archive => archive.Name == "base-and-real").File)));
+        // A same-named authored source in the base level must not be associated with an independently selected world.
+        WorldBody selectedFixture = WorldBody.Read(LevelTests.Body("authored-v50"));
+        if (selectedFixture.Scripts.Count > 0)
+        {
+            string sourceFolder = Path.Combine(install.Game, "data", "MissionScripts", "level100");
+            Directory.CreateDirectory(sourceFolder);
+            File.WriteAllText(Path.Combine(sourceFolder, selectedFixture.Scripts[0].Name + ".msl"), "// unrelated authored source\n");
+        }
         string[] gameBefore = Snapshot(install.Game);
         // The page tests before this left the Save as mod dialog open, and an open dialog takes the window's input: close what is still showing.
         foreach (Window window in app.FindChildren("*", nameof(Window), true, false).OfType<Window>().Where(window => window.Visible)) window.Hide();
@@ -442,6 +450,7 @@ internal static class LevelMapPageTests
         check.That(map.IsVisibleInTree() && Math.Abs(map.View.Scale / hiddenScale - 1.2) < 1e-9, "and a shown one does");
 
         await CheckTerrainPageWiring(page, model, tree, check);
+        await CeWorldOpenTests.RunAsync(app, tree, install, check);
 
         // The pointer leaves; the page wrote nothing into the game.
         Push(tree, new InputEventMouseMotion { Position = new Vector2(-50, -50), GlobalPosition = new Vector2(-50, -50) });
