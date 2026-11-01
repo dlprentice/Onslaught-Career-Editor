@@ -38,6 +38,50 @@ internal static class TerrainViewportProjectionTests
             await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
             check.That(camera.GlobalPosition.DistanceTo(beforeOrbit) > 0.001f, "3D terrain drag orbits the camera");
             check.That(AllInside(camera, vertices), "3D terrain stays framed after orbit");
+
+            // Connect a synthetic edit session just as the page will: a view requests a move; the host owns the edit and undo.
+            var edit = new EditSession(LevelTests.Body("authored-v50"));
+            var anchor = new System.Numerics.Vector3(256, 256, terrain.HeightAt(256, 256));
+            check.That(edit.TryApply(new MoveObject(0, anchor), out _), "The synthetic 3D move starts with a movable object");
+            ObjectRow marker = new(0, "unit", "Test object", "", anchor, anchor);
+            IReadOnlyList<ObjectRow> rows = [marker];
+            int? selected = null;
+            int moveRequests = 0;
+            view.RowsProvider = () => rows;
+            view.SelectedRowProvider = () => selected;
+            view.RowPicked += row => selected = row;
+            view.MoveRequested += (row, x, y) =>
+            {
+                moveRequests++;
+                var before = edit.Body.Things[row].Init.Position;
+                if (edit.TryApply(new MoveObject(row, new System.Numerics.Vector3(x, y, before.Z)), out _))
+                    rows = [marker with { Position = edit.Body.Things[row].Init.Position }];
+            };
+            await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+            Vector2 targetScreen = camera.UnprojectPosition(new Vector3(320, -terrain.HeightAt(320, 200), -200));
+            Click(view, targetScreen, MouseButton.Right);
+            await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+            check.That(moveRequests == 0 && edit.Body.Things[0].Init.Position == anchor,
+                "Right-clicking terrain without a selected object changes nothing");
+            Vector2 markAt = camera.UnprojectPosition(new Vector3(anchor.X, -anchor.Z, -anchor.Y));
+            check.That(view._GetTooltip(markAt).Contains("Test object"), "Hovering a 3D mark identifies its object");
+            Click(view, markAt, MouseButton.Left);
+            Click(view, targetScreen, MouseButton.Right);
+            await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+            check.That(selected == 0, "Clicking a visible 3D mark selects its object");
+            var moved = edit.Body.Things[0].Init.Position;
+            check.That(moveRequests == 1 && moved != anchor &&
+                BitConverter.SingleToInt32Bits(moved.Z) == BitConverter.SingleToInt32Bits(anchor.Z),
+                "Immediately right-clicking terrain requests one move for the newly selected object and preserves its height");
+            check.That(Math.Abs(moved.X - 320) < 2 && Math.Abs(moved.Y - 200) < 2,
+                $"3D placement maps the visible point back to world X/Y (got {moved.X}, {moved.Y})");
+            check.That(edit.Undo() && edit.Body.Things[0].Init.Position == anchor &&
+                edit.Redo() && edit.Body.Things[0].Init.Position == moved,
+                "The requested 3D move can be undone and redone through the shared edit session");
+            selected = 999;
+            Click(view, targetScreen, MouseButton.Right);
+            check.That(moveRequests == 1, "A selection that no longer names an object cannot move a stale row");
+
             view.Size = new Vector2(240, 480);
             await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
             await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
@@ -78,6 +122,13 @@ internal static class TerrainViewportProjectionTests
             view.QueueFree();
             await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
         }
+    }
+
+    private static void Click(LevelTerrainViewport view, Vector2 at, MouseButton button)
+    {
+        Vector2 point = view.GlobalPosition + at;
+        view.GetViewport().PushInput(new InputEventMouseButton { Position = point, GlobalPosition = point, ButtonIndex = button, Pressed = true });
+        view.GetViewport().PushInput(new InputEventMouseButton { Position = point, GlobalPosition = point, ButtonIndex = button, Pressed = false });
     }
 
     private static Camera3D? FindCamera(Node node)
