@@ -1138,14 +1138,15 @@ def diagnostic_redaction_self_test() -> list[str]:
             # matching a production rule. Never print captured output on failure.
             cli_root = root / "cli-root"
             cli_root.mkdir()
-            cli_token = "sk-" + "z" * 30
+            cli_fragments = ("frontFixtureQb7", "middleFixtureYc8", "tailFixtureXd9")
+            cli_token = "sk-" + "".join(cli_fragments)
             (cli_root / "cli.py").write_text("first line\n" + cli_token + "\n", encoding="utf-8")
             cli = subprocess.run(
                 [sys.executable, "-I", "-B", str(Path(__file__).resolve()), "--payload-root", str(cli_root)],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False, timeout=15,
             )
             if (cli.returncode != 1 or "cli.py: deny-openai-key: line 2:" not in cli.stdout or
-                    cli_token[:20] in cli.stdout or cli_token[:20] in cli.stderr):
+                    any(fragment in cli.stdout or fragment in cli.stderr for fragment in cli_fragments)):
                 failures.append("CLI did not retain path/rule/line without the matched token")
         blobs = content_signature_findings("synthetic.md", "first line\n" + encoded, retail_rules=False)
         matching = [finding for finding in blobs if finding.label == "deny-large-base64-blob"]
