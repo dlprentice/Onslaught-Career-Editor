@@ -748,16 +748,17 @@ def content_signature_findings(path: str, text: str, *, retail_rules: bool = Tru
     if retail_rules:
         findings.extend(retail_text_findings(path, text, used))
     cdb_prompt_count = len(CDB_PROMPT_RE.findall(text))
-    register_count = len(REGISTER_DUMP_RE.findall(text))
-    stack_trace_count = len(STACK_TRACE_RE.findall(text))
-    if cdb_prompt_count >= 3 or (cdb_prompt_count >= 1 and (register_count >= 4 or stack_trace_count >= 1)):
-        findings.append(
-            Finding(
-                path,
-                "deny-raw-debugger-transcript-content",
-                f"cdbPrompts={cdb_prompt_count} registerRows={register_count} stackRows={stack_trace_count}",
+    if cdb_prompt_count:
+        register_count = len(REGISTER_DUMP_RE.findall(text))
+        stack_trace_count = len(STACK_TRACE_RE.findall(text))
+        if cdb_prompt_count >= 3 or register_count >= 4 or stack_trace_count >= 1:
+            findings.append(
+                Finding(
+                    path,
+                    "deny-raw-debugger-transcript-content",
+                    f"cdbPrompts={cdb_prompt_count} registerRows={register_count} stackRows={stack_trace_count}",
+                )
             )
-        )
     if DATA_IMAGE_RE.search(text):
         findings.append(Finding(path, "deny-data-image-url", "data:image/*;base64"))
     if GENERATED_CATALOGUE_RE.search(text):
@@ -1113,7 +1114,43 @@ def retail_text_self_test() -> list[str]:
     return failures
 
 
+def self_test_debugger_classification() -> bool:
+    from unittest.mock import patch
+
+    class CountedMatches:
+        def __init__(self, count: int) -> None:
+            self.count = count
+            self.calls = 0
+
+        def findall(self, _text: str) -> list[None]:
+            self.calls += 1
+            return [None] * self.count
+
+    # The prompt is required for a debugger finding, but all three counts
+    # must still be reported when one is present.
+    for prompt_count in range(5):
+        for register_count in range(6):
+            for stack_count in range(3):
+                prompt = CountedMatches(prompt_count)
+                registers = CountedMatches(register_count)
+                stack = CountedMatches(stack_count)
+                with patch.dict(globals(), {"CDB_PROMPT_RE": prompt, "REGISTER_DUMP_RE": registers,
+                                            "STACK_TRACE_RE": stack}):
+                    findings = content_signature_findings("fixture.txt", "ordinary prose", retail_rules=False)
+                expected = []
+                if prompt_count >= 3 or (prompt_count >= 1 and (register_count >= 4 or stack_count >= 1)):
+                    expected = [Finding("fixture.txt", "deny-raw-debugger-transcript-content",
+                                        f"cdbPrompts={prompt_count} registerRows={register_count} stackRows={stack_count}")]
+                if findings != expected or registers.calls != bool(prompt_count) or stack.calls != bool(prompt_count):
+                    return False
+    return True
+
+
 def run_self_test() -> int:
+    if not self_test_debugger_classification():
+        print("Public payload safety self-test: FAIL")
+        print("- debugger transcript classification or prompt short-circuit differs")
+        return 1
     # A reviewed encoding allows only the exact path/content. Secret scanning
     # still runs on that same file; no general TSV or Base64 exemption exists.
     with tempfile.TemporaryDirectory() as tmp:
@@ -1388,6 +1425,7 @@ def run_self_test() -> int:
             print("- non-git root did not fail closed")
             print(f"- findings: {findings!r}")
             return 1
+
     with tempfile.TemporaryDirectory() as tmp:
         payload_root = Path(tmp)
         (payload_root / "README.MD").write_text("# OK\n", encoding="utf-8")
