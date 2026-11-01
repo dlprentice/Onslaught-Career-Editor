@@ -85,6 +85,10 @@ internal sealed class LevelEditorPage : Page
         Redo = toolbar.Add(Build.Button("Redo", tooltip: "Make the move you took back.", disabled: true));
         Undo.Pressed += () => Step(undo: true);
         Redo.Pressed += () => Step(undo: false);
+        OpenWorld = left.Add(Build.Button("Open CE world…", tooltip: "Open a selected world using this level's terrain for an unsaved preview.", disabled: true));
+        WorldDialog = services.Popups.Add(Build.FilePicker("Open a CE world for preview", FileDialog.FileModeEnum.OpenFile, "*.wrd ; CE world files"));
+        OpenWorld.Pressed += () => WorldDialog.PopupCenteredRatio(0.75f);
+        WorldDialog.FileSelected += OpenSelectedWorld;
         // The search shares its line with the Map switch: the toolbar above has no width to spare in the smallest window.
         HBoxContainer searchRow = left.Add(Build.Row(10));
         Search = searchRow.Add(new LineEdit
@@ -376,6 +380,8 @@ internal sealed class LevelEditorPage : Page
     internal LineEdit Z { get; }
     internal Button Undo { get; }
     internal Button Redo { get; }
+    internal Button OpenWorld { get; }
+    internal FileDialog WorldDialog { get; }
     internal Button Apply { get; }
     internal Button Reset { get; }
     internal Button Duplicate { get; }
@@ -551,6 +557,49 @@ internal sealed class LevelEditorPage : Page
         OpenLevel(level);
     }
 
+    /// <summary>Prepares a selected world against the current terrain without changing the edit, then asks before discarding changes.</summary>
+    internal void OpenSelectedWorld(string path)
+    {
+        if (_model is not { } model) return;
+        if (!model.TryPrepareWorldOverride(path, out PreparedWorldOverride? prepared, out string message) || prepared is null)
+        {
+            _problemPanel.Visible = true;
+            _problemText.Text = message;
+            return;
+        }
+        int changed = ChangeCount;
+        if (changed > 0)
+        {
+            _services.AskToDiscard($"{Build.Count(changed, "change")} {(changed == 1 ? "is" : "are")} not saved. Open the selected world and discard {(changed == 1 ? "it" : "them")}?",
+                "Discard and open", () => CommitSelectedWorld(model, prepared));
+            return;
+        }
+        CommitSelectedWorld(model, prepared);
+    }
+
+    private void CommitSelectedWorld(LevelEditorModel model, PreparedWorldOverride prepared)
+    {
+        int? previousSelection = _selected;
+        _selected = null;
+        if (!ReferenceEquals(_model, model) || !model.CommitWorldOverride(prepared))
+        {
+            _selected = previousSelection;
+            _problemPanel.Visible = true;
+            _problemText.Text = "The level changed while you were choosing. Choose the world again.";
+            return;
+        }
+        _savedPanel.Visible = false;
+        ShowNote("", refusal: false);
+        ChangedOnly.SetPressedNoSignal(false);
+        RebuildTable();
+        Map.FitToLevel();
+        Map.Select(null);
+        HighlightPath(null);
+        UpdateInspector(clearNote: true);
+        UpdateChanges();
+        HeaderChanged?.Invoke();
+    }
+
     /// <summary>Opens a level's own world, dropping what was open (the picker asks first when it holds unsaved changes). Returns false, with the reason shown, if it cannot be edited.</summary>
     internal bool OpenLevel(int level)
     {
@@ -642,7 +691,7 @@ internal sealed class LevelEditorPage : Page
     {
         var snapshot = _missionSourceSnapshot;
         var name = _missionSourceName;
-        if (snapshot is null || name is null || !ReferenceEquals(_missionReferencePanel?.Snapshot, snapshot) ||
+        if (_model?.IsWorldOverride == true || snapshot is null || name is null || !ReferenceEquals(_missionReferencePanel?.Snapshot, snapshot) ||
             !_scripts.Select(name) || !ReferenceEquals(_missionReferencePanel?.Snapshot, snapshot) ||
             !_scripts.CanEditCurrent || EditSource.Disabled)
         {
@@ -684,7 +733,9 @@ internal sealed class LevelEditorPage : Page
         _scriptBytes.Clear();
         _problemPanel.Visible = _model?.Problem is not null;
         _problemText.Text = _model?.Problem ?? "";
-        _worldNote.Text = _model?.BaseLevel is int baseLevel ? $"This level also loads the base world of level {baseLevel}. This editor does not change it." : "";
+        _worldNote.Text = _model?.IsWorldOverride == true
+            ? $"Selected world: {_model.WorldOverrideName}. Terrain comes from level {_model.Level}; this pairing has not been verified. Preview only: changes cannot be saved or played."
+            : _model?.BaseLevel is int baseLevel ? $"This level also loads the base world of level {baseLevel}. This editor does not change it." : "";
         if (!ReferenceEquals(_shownScripts, _model?.Scripts))  // the scripts change when a level is opened and when a script is replaced or taken back, not with each move
         {
             IReadOnlyList<ScriptEntry> scripts = _model?.Scripts ?? [];
@@ -693,7 +744,7 @@ internal sealed class LevelEditorPage : Page
             _shownSession = _model?.Session;
             if (!sameEdit) _compiledAs.Clear();  // another level: its scripts are not made by the texts typed for this one
             if (sameEdit) _scripts.Refresh(scripts);
-            else _scripts.SetScripts(_root, scripts);
+            else _scripts.SetScripts(_model?.IsWorldOverride == true ? null : _root, scripts);
         }
         if (_selected is int selectedRow && _model?.Row(selectedRow) is null) _selected = null;   // the row is gone (Undo took back the copy that was selected)
         RebuildTable();
@@ -813,6 +864,7 @@ internal sealed class LevelEditorPage : Page
     private void UpdateChanges()
     {
         EditSession? session = _model?.Session;
+        OpenWorld.Disabled = session is null || _model?.Terrain is null;
         Undo.Disabled = session is not { CanUndo: true };
         Redo.Disabled = session is not { CanRedo: true };
         Undo.TooltipText = session?.UndoDescription is { } undo ? $"Take back: {undo}." : "Take back the last move.";
@@ -844,6 +896,13 @@ internal sealed class LevelEditorPage : Page
         string? playBlock = summary is null ? "Make a change first: there is nothing to try yet." : !report.CanSave ? report.Errors[0].Message : _services.Play.Unavailable();
         Play.Disabled = playBlock is not null;
         Play.TooltipText = playBlock ?? PlayTip;
+        if (_model.IsWorldOverride)
+        {
+            Save.Disabled = true;
+            Save.TooltipText = "A selected world is preview only and cannot be saved here.";
+            Play.Disabled = true;
+            Play.TooltipText = "A selected world is preview only and cannot be played here.";
+        }
     }
 
     private void ShowPlayNote(string text, bool failed)
@@ -860,6 +919,7 @@ internal sealed class LevelEditorPage : Page
     /// </summary>
     internal async Task PlayAsync()
     {
+        if (_model?.IsWorldOverride == true) return;
         if (_model is not { Level: int level } model || Play.Disabled) return;
         ShowPlayNote($"Onslaught CE is starting at level {level} with your changes. Close it to come back here.", failed: false);
         CePlayReport report = await _services.Play.PlayAsync(level, (parent, info) => model.StageForPlay(parent, info, ProtectedFolders()));
@@ -1018,7 +1078,13 @@ internal sealed class LevelEditorPage : Page
             }
             if (summary.Uses.Count > 16) _scriptUses.Add(Build.Text($"and {summary.Uses.Count - 16} more", "Faint", wrap: false));
         }
-        _scriptSource.Text = source?.Source is { } found
+        if (_model?.IsWorldOverride == true)
+        {
+            _scripts.InfoLabel.Text = "Source is not linked to this selected world preview.";
+            _scripts.InfoLabel.TooltipText = "";
+        }
+        _scriptSource.Text = _model?.IsWorldOverride == true ? "Source is not linked to this selected world preview."
+            : source?.Source is { } found
             ? $"Source: {Path.GetFileName(found.Path)}, {(_scripts.Editing ? "being edited" : "read only")}. The game runs the compiled script, which a source in your game folder may differ from."
             : source?.Problem ?? "";
         // The note says what the last compile or reset did to the script on view. This event comes when another script is chosen and when the level's scripts changed (an Undo, a
@@ -1034,18 +1100,19 @@ internal sealed class LevelEditorPage : Page
     {
         ScriptEntry? entry = _scripts.Current;
         int? index = entry is null || _model is null ? null : _model.OwnScriptIndex(entry);
-        bool editable = _scripts.CanEditCurrent && index is not null && _root is not null;
+        bool editable = _model?.IsWorldOverride != true && _scripts.CanEditCurrent && index is not null && _root is not null;
         _scriptEditActions.Visible = entry is not null;
         EditSource.SetPressedNoSignal(editable && _scripts.WantsEditing);  // a script that cannot be edited shows the switch off; it comes back on with the next one that can
         EditSource.Disabled = !editable;
         EditSource.TooltipText = editable ? "Type in the script's source. Nothing in the level changes until you compile and use it."
             : entry is null ? "Choose a script."
+            : _model?.IsWorldOverride == true ? "Source editing is unavailable for a selected world preview."
             : entry.FromBaseWorld ? "This script belongs to the base world, which this editor shows and does not change."
             : _root is null ? "Choose your game folder on Home to edit a script."
             : "There is no source file in your game folder to start from.";
         CompileScriptButton.Disabled = !(editable && _scripts.Editing);
         // Put the shipped script back has something to do when the level uses a replaced script, and when text was typed that is to be dropped.
-        ShippedScriptButton.Disabled = !(index is int place && (_scriptChanges.Any(change => change.Index == place) || _scripts.HasDraft(entry!.Summary.Name)));
+        ShippedScriptButton.Disabled = _model?.IsWorldOverride == true || !(index is int place && (_scriptChanges.Any(change => change.Index == place) || _scripts.HasDraft(entry!.Summary.Name)));
         UpdateDraftNote();
     }
 
@@ -1296,6 +1363,7 @@ internal sealed class LevelEditorPage : Page
 
     private void BeginSave()
     {
+        if (_model?.IsWorldOverride == true) return;
         if (_model?.Level is not int level || _model.Session is null) return;
         SaveDialog.Begin(level, DefaultDestination());
         SaveDialog.PopupCentered();
@@ -1310,6 +1378,7 @@ internal sealed class LevelEditorPage : Page
     /// <summary>Saves the edit with the words in the dialog. Returns what happened, with the reason shown if it did not save.</summary>
     internal SaveOutcome SaveNow()
     {
+        if (_model?.IsWorldOverride == true) return new SaveOutcome(null, "A selected world is preview only and cannot be saved here.");
         if (_model is null) return new SaveOutcome(null, "Choose a level first.");
         ModInfo info = SaveDialog.Info;
         SaveOutcome outcome = _model.SaveAsMod(SaveDialog.Destination.Text.Trim(), info, ProtectedFolders());

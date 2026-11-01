@@ -21,6 +21,10 @@ public sealed record ObjectRow(int Index, string Kind, string Name, string Defin
 /// <summary>A compiled script of the open level: its summary, and where its source is looked for (a base world's scripts are in the base level's folder).</summary>
 public sealed record ScriptEntry(ScriptSummary Summary, int SourceLevel, bool FromBaseWorld);
 
+// A validated snapshot prepared without replacing the current edit. Its captured state prevents a stale confirmation.
+internal sealed record PreparedWorldOverride(EditSession ExpectedSession, byte[] ExpectedBytes, Heightfield ExpectedTerrain,
+    int ExpectedLevel, long ExpectedRevision, EditSession Replacement, IReadOnlyList<ScriptEntry> Scripts, string Name);
+
 /// <summary>What typing coordinates for an object (or putting it back) did.</summary>
 public enum MoveResult
 {
@@ -111,6 +115,13 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     public int? Level { get; private set; }
 
     private string? _savedSignature;
+    private long _revision;
+
+    /// <summary>True for a selected external world, which is only an in-memory preview and cannot be saved or played here.</summary>
+    public bool IsWorldOverride { get; private set; }
+
+    /// <summary>The safe display name of the selected world, without its path.</summary>
+    public string? WorldOverrideName { get; private set; }
 
     private static string Signature(ReadOnlySpan<byte> bytes) => Convert.ToHexStringLower(SHA256.HashData(bytes));
 
@@ -177,6 +188,9 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         TerrainProblem = null;
         Scripts = [];
         BaseWorld = null;
+        IsWorldOverride = false;
+        WorldOverrideName = null;
+        _revision++;
         LevelArchiveFile? file = Levels.FirstOrDefault(archive => archive.Level == level);
         if (file is null) return Refuse($"This game has no archive for level {level}.");
         try
@@ -189,6 +203,8 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
             EditSession session = new(worlds.RealBody);
             session.Changed += () =>
             {
+                if (!ReferenceEquals(Session, session)) return;
+                _revision++;
                 RefreshScripts();
                 Changed?.Invoke();
             };
@@ -219,13 +235,71 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         return true;
     }
 
+    /// <summary>Reads and validates a chosen CE world without changing the current edit or its terrain.</summary>
+    internal bool TryPrepareWorldOverride(string path, out PreparedWorldOverride? prepared, out string message)
+    {
+        prepared = null;
+        if (Session is not { } current || Terrain is not { } terrain || Level is not int level || Worlds is not { } worlds)
+        {
+            message = "Open a base level with terrain first.";
+            return false;
+        }
+        try
+        {
+            byte[] before = current.ToBytes();
+            byte[] bytes = SelectedWorldInput.Read(path);
+            EditSession replacement = new(bytes);
+            IReadOnlyList<ScriptEntry> scripts = ListOverrideScripts(replacement.Body, level);
+            prepared = new PreparedWorldOverride(current, before, terrain, level, _revision, replacement, scripts, SelectedWorldInput.DisplayName(path));
+            message = "The chosen world is ready to open as a preview.";
+            return true;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException || EditSession.IsUnstorable(error))
+        {
+            message = error is InvalidDataException && error.Message.StartsWith("Choose ", StringComparison.Ordinal)
+                ? error.Message : "The selected world could not be read safely. The current edit is unchanged.";
+            return false;
+        }
+    }
+
+    /// <summary>Switches to the prepared snapshot only if the level and edit still match the state that was confirmed.</summary>
+    internal bool CommitWorldOverride(PreparedWorldOverride prepared)
+    {
+        if (!ReferenceEquals(Session, prepared.ExpectedSession) || !ReferenceEquals(Terrain, prepared.ExpectedTerrain) ||
+            Level != prepared.ExpectedLevel || _revision != prepared.ExpectedRevision) return false;
+        try { if (!Session!.ToBytes().AsSpan().SequenceEqual(prepared.ExpectedBytes)) return false; }
+        catch (Exception error) when (EditSession.IsUnstorable(error)) { return false; }
+        EditSession replacement = prepared.Replacement;
+        replacement.Changed += () =>
+        {
+            if (!ReferenceEquals(Session, replacement)) return;
+            _revision++;
+            RefreshScripts();
+            Changed?.Invoke();
+        };
+        Session = replacement;
+        Scripts = prepared.Scripts;
+        BaseWorld = null;
+        _savedSignature = null;
+        IsWorldOverride = true;
+        WorldOverrideName = prepared.Name;
+        Problem = null;
+        _revision++;
+        Changed?.Invoke();
+        return true;
+    }
+
     /// <summary>Refreshes after any command that could change scripts or their uses; a known move only changes position.</summary>
     private void RefreshScripts()
     {
         if (Session is not { } session || Worlds is not { } worlds) return;
         if (session.NotifiedCommand is MoveObject) return;
-        Scripts = ListScripts(session.Body, worlds);
+        Scripts = IsWorldOverride && Level is int level ? ListOverrideScripts(session.Body, level) : ListScripts(session.Body, worlds);
     }
+
+    // The selected file has no established base-world association; do not add unrelated scripts from the terrain's archive.
+    private static IReadOnlyList<ScriptEntry> ListOverrideScripts(WorldBody own, int terrainLevel) =>
+        [.. ScriptCatalog.Of(own).Select(summary => new ScriptEntry(summary, terrainLevel, FromBaseWorld: false))];
 
     /// <summary>The scripts of a level's own world and of its base world, as <see cref="Scripts"/> lists them (the retail gate calls this too).</summary>
     internal static IReadOnlyList<ScriptEntry> ListScripts(WorldBody own, LevelWorlds worlds)
@@ -419,6 +493,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     /// </summary>
     public ScriptCompileOutcome CompileScript(int scriptIndex, string source, string gameRoot)
     {
+        if (IsWorldOverride) return new ScriptCompileOutcome(null, "Source editing is unavailable for a selected world preview.", null, []);
         if (Session is null) return new ScriptCompileOutcome(null, "Open a level first.", null, []);
         if (scriptIndex < 0 || scriptIndex >= Session.Body.Scripts.Count) return new ScriptCompileOutcome(null, $"There is no script {scriptIndex} in this world.", null, []);
         if (!Session.SameScripts()) return new ScriptCompileOutcome(null, "The script list has changed and cannot be edited here.", null, []);
@@ -474,6 +549,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     /// <summary>Puts a script back as the level has it (an edit that can be undone).</summary>
     public ScriptEditOutcome ResetScript(int scriptIndex)
     {
+        if (IsWorldOverride) return new ScriptEditOutcome(ScriptEditResult.Refused, "Source editing is unavailable for a selected world preview.", null, []);
         if (Session is null) return new ScriptEditOutcome(ScriptEditResult.Refused, "Open a level first.", null, []);
         if (scriptIndex < 0 || scriptIndex >= Session.Body.Scripts.Count) return new ScriptEditOutcome(ScriptEditResult.Refused, $"There is no script {scriptIndex} in this world.", null, []);
         if (!Session.SameScripts()) return new ScriptEditOutcome(ScriptEditResult.Refused, "The script list has changed and cannot be edited here.", null, []);
@@ -563,13 +639,15 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     }
 
     /// <summary>Writes the open edit as a CE mod folder <c>PARENT/ID</c>, or says why not (nothing changed, a folder that is not new, a game folder).</summary>
-    public SaveOutcome SaveAsMod(string parent, ModInfo info, IEnumerable<string?> protectedFolders) => Stage(parent, info, protectedFolders, markSaved: true);
+    public SaveOutcome SaveAsMod(string parent, ModInfo info, IEnumerable<string?> protectedFolders) => IsWorldOverride
+        ? new SaveOutcome(null, "A selected world is preview only and cannot be saved here.") : Stage(parent, info, protectedFolders, markSaved: true);
 
     /// <summary>
     /// Writes the open edit as a mod folder the same way, for a test play in Onslaught CE: the folder is a temporary one, so the edit is not counted as saved
     /// (the unsaved-changes prompts still ask about it).
     /// </summary>
-    public SaveOutcome StageForPlay(string parent, ModInfo info, IEnumerable<string?> protectedFolders) => Stage(parent, info, protectedFolders, markSaved: false);
+    public SaveOutcome StageForPlay(string parent, ModInfo info, IEnumerable<string?> protectedFolders) => IsWorldOverride
+        ? new SaveOutcome(null, "A selected world is preview only and cannot be played here.") : Stage(parent, info, protectedFolders, markSaved: false);
 
     private SaveOutcome Stage(string parent, ModInfo info, IEnumerable<string?> protectedFolders, bool markSaved)
     {
