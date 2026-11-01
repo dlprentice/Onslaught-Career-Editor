@@ -14,7 +14,8 @@ internal static class TerrainViewportProjectionTests
         Heightfield terrain = Heightfield.Read(LevelTests.Unpack(LevelVectors.Terrain.Eres));
         TerrainSurface surface = TerrainSurface.Build(terrain);
         var vertices = surface.Vertices.ToArray();
-        var view = new LevelTerrainViewport { TerrainProvider = () => terrain, Size = new Vector2(580, 480) };
+        Heightfield? currentTerrain = terrain;
+        var view = new LevelTerrainViewport { TerrainProvider = () => currentTerrain, Size = new Vector2(580, 480) };
         // The root may still be adding the test runner; wait before attaching a sibling.
         await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
         tree.Root.AddChild(view);
@@ -81,6 +82,11 @@ internal static class TerrainViewportProjectionTests
             selected = 999;
             Click(view, targetScreen, MouseButton.Right);
             check.That(moveRequests == 1, "A selection that no longer names an object cannot move a stale row");
+            selected = 0;
+            currentTerrain = null;
+            Click(view, targetScreen, MouseButton.Right);
+            check.That(moveRequests == 1, "A level change before the next frame cannot move an object on the old terrain");
+            currentTerrain = terrain;
 
             view.Size = new Vector2(240, 480);
             await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
