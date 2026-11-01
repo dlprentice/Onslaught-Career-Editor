@@ -97,5 +97,22 @@ internal static class TerrainDraftTests
                        BitConverter.SingleToInt32Bits(fractionalDraft.Surface.Vertices.Span[12].Y) == baselineBits,
                        "lowering then raising a fractional point also restores exact baseline bits");
         }
+
+        foreach (bool raise in new[] { true, false })
+        {
+            float origin = raise ? 16777155f : -16777155f;
+            EditSession roundedSession = new(LevelTests.Body("authored-v50"));
+            TerrainSurface roundedBaseline = TerrainSurface.Build((_, _) => -origin, 4);
+            TerrainDraft roundedDraft = new(roundedSession.Body, roundedBaseline);
+            bool withinLimit = true;
+            for (int i = 0; i < (int)(TerrainDraft.MaxOffset / TerrainDraft.Step) - 1; i++)
+                withinLimit &= roundedDraft.TryPrepare(256, 256, raise, out IEditCommand? command, out _) && command is not null &&
+                               roundedSession.TryApply(command, out _) && Math.Abs((double)roundedDraft.Surface.Vertices.Span[12].Y - origin) <= TerrainDraft.MaxOffset;
+            TerrainSurface beforeRoundedLimit = roundedDraft.Surface;
+            check.That(withinLimit && !roundedDraft.TryPrepare(256, 256, raise, out _, out _) &&
+                       ReferenceEquals(roundedDraft.Surface, beforeRoundedLimit) && roundedDraft.ChangedCount == 1 &&
+                       Math.Abs((double)roundedDraft.Surface.Vertices.Span[12].Y - origin) <= TerrainDraft.MaxOffset,
+                       "a rounded height beyond the limit is refused without a change in either direction");
+        }
     }
 }

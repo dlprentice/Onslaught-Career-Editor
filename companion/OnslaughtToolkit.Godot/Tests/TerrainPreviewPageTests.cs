@@ -201,17 +201,31 @@ internal static class TerrainPreviewPageTests
             if (!scriptReady) return;
             page.EditSource.ButtonPressed = true;
             page.Scripts.Source.Text = "// first authored draft\n";
+            page.Scripts.Source.EmitSignal(TextEdit.SignalName.TextChanged);
+            await Frame(tree);
+            int draftCount = page.ChangeCount;
+            check.That(page.Scripts.Source.Editable && draftCount == 1 && page.Scripts.HasDraft(scriptName!), "the first authored source change is an unsaved draft");
             EditSession? scriptSession = model.Session;
             page.PickLevel(200);
             check.That(app.DiscardDialog.Visible, "a script draft triggers the level discard question");
+            long revisionBeforeNewerDraft = page.ConfirmationRevision;
             page.Scripts.Source.Text = "// newer authored draft\n";
+            page.Scripts.Source.EmitSignal(TextEdit.SignalName.TextChanged);
+            await Frame(tree);
+            check.That(page.ConfirmationRevision > revisionBeforeNewerDraft && page.ChangeCount == draftCount && page.Scripts.HasDraft(scriptName!),
+                       "the level confirmation sees a source text-change event with the same draft count");
             app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
             app.DiscardDialog.Hide();
             check.That(ReferenceEquals(model.Session, scriptSession) && page.Scripts.Source.Text == "// newer authored draft\n" &&
                        page.Problem.Contains("changed", StringComparison.Ordinal), "a same-count newer draft survives stale level confirmation");
             page.OpenSelectedWorld(selectedPath);
             check.That(app.DiscardDialog.Visible, "the same draft triggers the selected-world discard question");
+            long revisionBeforeNewestDraft = page.ConfirmationRevision;
             page.Scripts.Source.Text = "// newest authored draft\n";
+            page.Scripts.Source.EmitSignal(TextEdit.SignalName.TextChanged);
+            await Frame(tree);
+            check.That(page.ConfirmationRevision > revisionBeforeNewestDraft && page.ChangeCount == draftCount && page.Scripts.HasDraft(scriptName!),
+                       "the selected-world confirmation sees a source text-change event with the same draft count");
             app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
             app.DiscardDialog.Hide();
             check.That(ReferenceEquals(model.Session, scriptSession) && page.Scripts.Source.Text == "// newest authored draft\n" &&

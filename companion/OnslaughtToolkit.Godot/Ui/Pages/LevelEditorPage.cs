@@ -451,6 +451,7 @@ internal sealed class LevelEditorPage : Page
     /// <summary>What compiling or putting the shipped script back said, in the script card, and the warnings about the script the level uses under it.</summary>
     internal string ScriptEditNote => string.Join("\n", new[] { _scriptEditNote.Text, _scriptEditWarnings.Visible ? _scriptEditWarnings.Text : "" }.Where(text => text.Length > 0));
     internal LevelEditorModel? Model => _model;
+    internal long ConfirmationRevision => _viewRevision;
     internal LevelTerrainViewport TerrainPreview => _terrainPreview3d;
     internal Button TerrainViewSwitch => _terrainViewSwitch;
     internal UnitRowPanel UnitRows => _unitRowPanel;

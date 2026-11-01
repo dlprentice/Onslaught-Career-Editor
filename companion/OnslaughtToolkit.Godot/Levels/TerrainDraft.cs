@@ -45,7 +45,12 @@ internal sealed class TerrainDraft
         }
         // Each height comes from the original and an integer offset: returning to zero copies every original bit exactly.
         float after = afterSteps == 0 ? original : (float)((double)original + (double)afterSteps * Step);
-        if (!float.IsFinite(after) || Bits(after) == Bits(before))
+        if (!float.IsFinite(after) || Math.Abs((double)after - original) > MaxOffset)
+        {
+            message = "This point is at the preview's height limit.";
+            return false;
+        }
+        if (Bits(after) == Bits(before))
         {
             message = "This point cannot be changed by the preview's step.";
             return false;
