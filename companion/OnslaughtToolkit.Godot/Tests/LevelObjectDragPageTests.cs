@@ -21,7 +21,7 @@ internal static class LevelObjectDragPageTests
     private static Vector2 Marker(LevelEditorPage page, Camera3D camera, int index)
     {
         NumericVector3 p = page.Map.Rows.Single(row => row.Index == index).Position;
-        return camera.UnprojectPosition(new Vector3(p.X / 100f, -p.Z / 100f, p.Y / 100f));
+        return camera.UnprojectPosition(new Vector3(p.X, -p.Z, p.Y));
     }
 
     private static Vector2 Target(Camera3D camera, Heightfield terrain, float x, float y) =>
@@ -98,7 +98,6 @@ internal static class LevelObjectDragPageTests
             }
             page.SelectIndex(index);
             await Frames(tree);
-            tree.Root.NotifyMouseEntered();
             int moves = 0;
             int picks = 0;
             view.MoveRequested += (_, _, _) => moves++;
@@ -127,7 +126,7 @@ internal static class LevelObjectDragPageTests
             WorldBody expected = WorldBody.Read(before);
             expected.Things[index].Init.Position = new NumericVector3(moved.X, moved.Y, original.Z);
             check.That(moves == 1 && !after.SequenceEqual(before) && after.SequenceEqual(expected.Write()) &&
-                Math.Abs(moved.X - MapView.ToHundredths(230)) <= 1 && Math.Abs(moved.Y - MapView.ToHundredths(180)) <= 1 &&
+                Math.Abs(moved.X - MapView.ToHundredths(230)) <= 0.02f && Math.Abs(moved.Y - MapView.ToHundredths(180)) <= 0.02f &&
                 BitConverter.SingleToInt32Bits(moved.Z) == BitConverter.SingleToInt32Bits(original.Z),
                 "release makes one guarded XY move and preserves height and all other world bytes");
             ObjectRow shown = page.Map.Rows.Single(row => row.Index == index);
