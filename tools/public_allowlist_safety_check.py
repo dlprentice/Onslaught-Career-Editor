@@ -475,6 +475,15 @@ def _git_scan_environment() -> dict[str, str]:
     return env
 
 
+def _repo_path_has_symlink(root: Path, path: str) -> bool:
+    current = root
+    for part in Path(path).parts:
+        current = current / part
+        if current.is_symlink():
+            return True
+    return False
+
+
 def public_candidate_files(root: Path, *, include_submodules: bool = False) -> list[str]:
     """Enumerate candidates without user-global Git configuration or excludes."""
     env = _git_scan_environment()
@@ -496,7 +505,7 @@ def public_candidate_files(root: Path, *, include_submodules: bool = False) -> l
     paths = [
         path
         for item in result.stdout.decode("utf-8", errors="replace").split("\0")
-        if (path := normalize(item)) and (root / path).exists()
+        if (path := normalize(item)) and (_repo_path_has_symlink(root, path) or (root / path).exists())
     ]
     if include_submodules:
         paths.extend(submodule_candidate_files(root))
@@ -1030,6 +1039,9 @@ def check_repo(root: Path, *, include_submodules: bool = False, stale_allowances
         except RuntimeError:
             submodule_prefixes = ()
     for path in paths:
+        if _repo_path_has_symlink(root, path):
+            findings.append(Finding(path, "deny-repo-symlink-candidate", "candidate or parent is a symlink; content not scanned"))
+            continue
         findings.extend(path_findings(path))
         findings.extend(exact_allow_hash_findings(root, path))
         findings.extend(size_findings(root, path))
@@ -1636,6 +1648,56 @@ def synthetic_git_fixture_environment_self_test() -> list[str]:
     return failures
 
 
+def repository_symlink_self_test() -> list[str]:
+    """Use authored links and targets to check the repository scan boundary."""
+    from unittest.mock import patch
+
+    failures: list[str] = []
+    with tempfile.TemporaryDirectory(prefix="synthetic-repo-links-") as tmp:
+        base = Path(tmp)
+        root, outside = base / "repo", base / "outside"
+        root.mkdir()
+        outside.mkdir()
+        (outside / "target.py").write_text("authored fixture\n", encoding="utf-8")
+        (outside / "child.py").write_text("authored fixture\n", encoding="utf-8")
+
+        def git(*args: str, data: bytes | None = None) -> bytes:
+            return subprocess.run(["git", "-c", "core.hooksPath=/dev/null", *args], cwd=root,
+                                  input=data, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                  check=True).stdout.strip()
+
+        git("init", "-q")
+        oid = git("hash-object", "-w", "--stdin", data=b"authored fixture\n").decode()
+        for path in ("nested/child.py", "missing/child.py"):
+            git("update-index", "--add", "--cacheinfo", f"100644,{oid},{path}")
+        (root / "tracked.py").symlink_to("../outside/target.py")
+        (root / "loose.py").symlink_to("../outside/target.py")
+        (root / "broken.py").symlink_to("../absent.py")
+        (root / "nested").symlink_to("../outside", target_is_directory=True)
+        (root / "missing").symlink_to("../absent", target_is_directory=True)
+        (root / "good.py").write_text("authored fixture\n", encoding="utf-8")
+        git("add", "tracked.py", "broken.py", "good.py")
+        link_paths = {"tracked.py", "loose.py", "broken.py", "nested/child.py", "missing/child.py"}
+        reads: list[Path] = []
+        read_bytes = Path.read_bytes
+
+        def observe_read(path: Path) -> bytes:
+            if path in {root / item for item in link_paths}:
+                reads.append(path)
+            return read_bytes(path)
+
+        with patch.object(Path, "read_bytes", new=observe_read):
+            findings = check_repo(root, stale_allowances=False)
+        rejected = {f.path for f in findings if f.label == "deny-repo-symlink-candidate"}
+        if not link_paths.issubset(rejected):
+            failures.append("repository scan did not reject every synthetic symlink candidate")
+        if reads:
+            failures.append("repository scan read a synthetic symlink target")
+        if any(f.path == "good.py" for f in findings):
+            failures.append("repository scan rejected an ordinary synthetic file")
+    return failures
+
+
 def git_feature_probe_self_test() -> list[str]:
     """Unsupported synthetic Git must fail before any repository operation."""
     from unittest.mock import patch
@@ -2119,6 +2181,12 @@ def _run_self_test() -> int:
             print(f"- root findings: {sorted(root_findings, key=lambda item: item.path)!r}")
             print(f"- combined findings: {sorted(combined_findings, key=lambda item: item.path)!r}")
             return 1
+    symlink_failures = repository_symlink_self_test()
+    if symlink_failures:
+        print("Public payload safety self-test: FAIL")
+        for item in symlink_failures:
+            print(f"- {item}")
+        return 1
     git_feature_failures = git_feature_probe_self_test()
     if git_feature_failures:
         print("Public payload safety self-test: FAIL")
