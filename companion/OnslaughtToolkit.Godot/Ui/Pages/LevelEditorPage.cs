@@ -14,7 +14,7 @@ namespace OnslaughtToolkit.Companion.Ui;
 /// </summary>
 internal sealed class LevelEditorPage : Page
 {
-    private VSplitContainer? _missionTerrainSplit;
+    private TabContainer? _missionTerrainTabs;
     private OnslaughtToolkit.Companion.Ui.MissionReferencePanel? _missionReferencePanel;
     private readonly LevelTerrainViewport _terrainPreview3d;
     private readonly Button _terrainViewSwitch;
@@ -124,7 +124,7 @@ internal sealed class LevelEditorPage : Page
         _terrainPreview3d = new LevelTerrainViewport
         {
             TerrainProvider = () => _model?.Terrain,
-            Visible = false,
+            Visible = true,
             ZIndex = 100,
         };
         _missionReferencePanel = new OnslaughtToolkit.Companion.Ui.MissionReferencePanel
@@ -134,7 +134,7 @@ internal sealed class LevelEditorPage : Page
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
             SizeFlagsVertical = Control.SizeFlags.ExpandFill
         };
-        _missionTerrainSplit = new VSplitContainer
+        _missionTerrainTabs = new TabContainer
         {
             Name = "MissionTerrainSplit",
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
@@ -142,7 +142,7 @@ internal sealed class LevelEditorPage : Page
         };
         _terrainPreview3d.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         _terrainPreview3d.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
-        _missionTerrainSplit.AddChild(_terrainPreview3d);
+        _missionTerrainTabs.AddChild(_terrainPreview3d);
         _missionSourceButton = new Button
         {
             Name = "MissionOpenSource",
@@ -161,9 +161,11 @@ internal sealed class LevelEditorPage : Page
         _missionReferencePanel.UseSelected += OnMissionUseSelected;
         _missionReferencePanel.MissingSelected += OnMissionMissingSelected;
         _missionSourceButton.Pressed += OpenMissionSource;
-        _missionTerrainSplit.AddChild(_missionReferencePanel);
-        _mapPanel.AddChild(_missionTerrainSplit);
-        _missionTerrainSplit.Visible = _terrainPreview3d.Visible;
+        _missionTerrainTabs.AddChild(_missionReferencePanel);
+        _missionTerrainTabs.SetTabTitle(0, "3D view");
+        _missionTerrainTabs.SetTabTitle(1, "Mission");
+        _mapPanel.AddChild(_missionTerrainTabs);
+        _missionTerrainTabs.Visible = false;
         RefreshMissionReferences();
         _terrainPreview3d.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         var terrainViewSwitch = _terrainViewSwitch = searchRow.Add(Build.Button("3D", tooltip: "Switch between the 2D map and 3D view."));
@@ -183,8 +185,7 @@ internal sealed class LevelEditorPage : Page
         HidePath.Pressed += () => HighlightPath(null);
         terrainViewSwitch.Toggled += enabled =>
         {
-            _terrainPreview3d.Visible = enabled;
-            if (_missionTerrainSplit != null) _missionTerrainSplit.Visible = enabled;
+            if (_missionTerrainTabs != null) _missionTerrainTabs.Visible = enabled;
             Map.Visible = !enabled;
             if (mapHelp != null) mapHelp.Visible = !enabled;
             if (pathBar != null) pathBar.Visible = !enabled;
@@ -590,7 +591,8 @@ internal sealed class LevelEditorPage : Page
             scriptIndex < 0 || scriptIndex >= snapshot.Scripts.Count ||
             useIndex < 0 || useIndex >= snapshot.Scripts[scriptIndex].Uses.Count)
             return;
-        ShowObject(snapshot.Scripts[scriptIndex].Uses[useIndex].Row);
+        if (ShowObject(snapshot.Scripts[scriptIndex].Uses[useIndex].Row) && _missionTerrainTabs is { Visible: true })
+            _missionTerrainTabs.CurrentTab = 0;
     }
 
     private void OnMissionMissingSelected(MissionReferenceIndex snapshot, int missingIndex)
@@ -598,7 +600,8 @@ internal sealed class LevelEditorPage : Page
         if (!ReferenceEquals(_missionReferencePanel?.Snapshot, snapshot) ||
             missingIndex < 0 || missingIndex >= snapshot.Unresolved.Count)
             return;
-        ShowObject(snapshot.Unresolved[missingIndex].Row);
+        if (ShowObject(snapshot.Unresolved[missingIndex].Row) && _missionTerrainTabs is { Visible: true })
+            _missionTerrainTabs.CurrentTab = 0;
     }
 
     private void OnMissionScriptSelected(MissionReferenceIndex snapshot, int scriptIndex)
