@@ -514,7 +514,7 @@ def _submodule_git(cwd: Path, submodule_path: str, *args: str) -> bytes:
         return subprocess.run(["git", "-c", "core.fsmonitor=false", *args], cwd=cwd,
                               env=env, check=True, stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE).stdout
-    except (FileNotFoundError, subprocess.CalledProcessError) as exc:
+    except (OSError, subprocess.CalledProcessError) as exc:
         raise SubmoduleScanError(submodule_path, "deny-unreadable-submodule-scan",
                                  "submodule Git metadata could not be read") from exc
 
@@ -555,10 +555,20 @@ def _validated_submodule_files(root: Path, submodule_path: str) -> list[str]:
     expected = fields[1]
     top = _submodule_git(full_path, submodule_path, "rev-parse", "--show-toplevel").rstrip(b"\n")
     superproject = _submodule_git(full_path, submodule_path, "rev-parse", "--show-superproject-working-tree").rstrip(b"\n")
-    if not top or Path(os.fsdecode(top)).resolve() != full_path.resolve():
+
+    def resolved_matches(value: bytes, expected_path: Path) -> bool:
+        if not value:
+            return False
+        try:
+            return Path(os.fsdecode(value)).resolve() == expected_path.resolve()
+        except (OSError, RuntimeError, ValueError) as exc:
+            raise SubmoduleScanError(submodule_path, "deny-unreadable-submodule-scan",
+                                     "submodule Git worktree path could not be resolved") from exc
+
+    if not resolved_matches(top, full_path):
         raise SubmoduleScanError(submodule_path, "deny-uninitialized-submodule-scan",
                                  "Git did not identify the declared directory as its own worktree")
-    if not superproject or Path(os.fsdecode(superproject)).resolve() != root.resolve():
+    if not resolved_matches(superproject, root):
         raise SubmoduleScanError(submodule_path, "deny-misidentified-submodule-scan",
                                  "Git did not identify the expected parent worktree")
     actual = _submodule_git(full_path, submodule_path, "rev-parse", "--verify", "HEAD").strip()
@@ -1231,6 +1241,8 @@ def retail_text_self_test() -> list[str]:
 
 def _submodule_identity_self_test() -> list[str]:
     """Exercise gitlink identity and scope with locally authored repositories."""
+    from unittest.mock import patch
+
     failures: list[str] = []
     with tempfile.TemporaryDirectory(prefix="synthetic-submodule-safety-") as tmp:
         scratch = Path(tmp)
@@ -1336,6 +1348,42 @@ def _submodule_identity_self_test() -> list[str]:
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
         if result.returncode or "untracked and ignored submodule files were not checked" not in result.stdout.lower():
             failures.append("submodule scan did not disclose its tracked-only scope")
+
+        original_run = subprocess.run
+
+        def denied_child_git(*args, **kwargs):
+            if kwargs.get("cwd") == child:
+                raise PermissionError("synthetic denied child cwd")
+            return original_run(*args, **kwargs)
+
+        try:
+            with patch.object(subprocess, "run", side_effect=denied_child_git):
+                denied = check_repo(valid, include_submodules=True, stale_allowances=False)
+        except OSError:
+            failures.append("denied submodule cwd escaped as an unstructured exception")
+        else:
+            if not any(f.label == "deny-unreadable-submodule-scan" for f in denied):
+                failures.append("denied submodule cwd did not produce a structured finding")
+
+        original_resolve = Path.resolve
+        child_resolutions = 0
+
+        def denied_later_resolution(path, *args, **kwargs):
+            nonlocal child_resolutions
+            if path == child:
+                child_resolutions += 1
+                if child_resolutions == 2:
+                    raise PermissionError("synthetic denied Git worktree resolution")
+            return original_resolve(path, *args, **kwargs)
+
+        try:
+            with patch.object(Path, "resolve", new=denied_later_resolution):
+                denied = check_repo(valid, include_submodules=True, stale_allowances=False)
+        except OSError:
+            failures.append("denied Git worktree resolution escaped as an unstructured exception")
+        else:
+            if not any(f.label == "deny-unreadable-submodule-scan" for f in denied):
+                failures.append("denied Git worktree resolution did not produce a structured finding")
 
         for flag, clear in (("--assume-unchanged", "--no-assume-unchanged"),
                             ("--skip-worktree", "--no-skip-worktree")):
