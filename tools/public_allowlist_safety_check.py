@@ -662,6 +662,10 @@ def token_digest(token: str) -> str:
     return "sha256:" + hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
+def redacted_match_detail(text: str, match: re.Match) -> str:
+    return f"line {text.count(chr(10), 0, match.start()) + 1}: matched content redacted"
+
+
 def retail_text_findings(path: str, text: str, used: set[tuple[str, str, str]] | None = None) -> list[Finding]:
     """The three retail-text rules. Details give line numbers and counts, never the bytes themselves. ``used`` collects
     the allowances that excused something, as (path, kind, key), so that a stale one can be found."""
@@ -712,7 +716,7 @@ def retail_text_findings(path: str, text: str, used: set[tuple[str, str, str]] |
         token = match.group(0).rstrip(".:")
         if allowed(token, marker=True):
             continue
-        findings.append(Finding(path, "deny-private-path-marker", f"line {line_of(match)}: {token}"))
+        findings.append(Finding(path, "deny-private-path-marker", redacted_match_detail(text, match)))
     kept: list[Finding] = []
     for finding in findings:
         if finding.label in rules_here:
@@ -775,8 +779,7 @@ def content_signature_findings(path: str, text: str, *, retail_rules: bool = Tru
             continue
         if "+" not in token and "/" not in token and "=" not in token:
             continue
-        snippet = token[:117] + "..." if len(token) > 120 else token
-        findings.append(Finding(path, "deny-large-base64-blob", snippet))
+        findings.append(Finding(path, "deny-large-base64-blob", redacted_match_detail(text, match)))
         break
     return findings
 
@@ -796,10 +799,7 @@ def text_findings(root: Path, path: str, *, retail_rules: bool = True, used: set
     for label, pattern in TEXT_DENY_PATTERNS:
         match = pattern.search(text)
         if match:
-            snippet = match.group(0).replace("\n", "\\n")
-            if len(snippet) > 120:
-                snippet = snippet[:117] + "..."
-            findings.append(Finding(path, label, snippet))
+            findings.append(Finding(path, label, redacted_match_detail(text, match)))
     findings.extend(content_signature_findings(path, text, retail_rules=retail_rules, used=used))
     return findings
 
@@ -815,10 +815,7 @@ def find_text_payload_errors(path: str, text: str, require_private_text_guard: b
     for label, pattern in TEXT_DENY_PATTERNS:
         match = pattern.search(text)
         if match:
-            snippet = match.group(0).replace("\n", "\\n")
-            if len(snippet) > 120:
-                snippet = snippet[:117] + "..."
-            errors.append(f"{label} in {path}: {snippet}")
+            errors.append(f"{label} in {path}: {redacted_match_detail(text, match)}")
     for finding in content_signature_findings(path, text):
         errors.append(f"{finding.label} in {path}: {finding.detail}")
     return errors
@@ -1110,6 +1107,44 @@ def retail_text_self_test() -> list[str]:
         plain = check_repo(root)
         if any(f.path.startswith("references/upstream/") for f in plain):
             failures.append("submodule files were scanned without --include-submodules")
+    return failures
+
+
+def diagnostic_redaction_self_test() -> list[str]:
+    """Exercise diagnostics with invented text only; never print the fixture tokens."""
+    failures: list[str] = []
+    token = "synthetic-sensitive-" + "z" * 180
+    encoded = "/" * 512
+    private_marker = "local-" + "lab/synthetic-private-marker"
+    original_patterns = TEXT_DENY_PATTERNS
+    try:
+        globals()["TEXT_DENY_PATTERNS"] = (("deny-synthetic-token", re.compile(re.escape(token))),)
+        with tempfile.TemporaryDirectory(prefix="synthetic-redaction-") as tmp:
+            root = Path(tmp)
+            path = "synthetic.py"
+            text = "first line\n" + token + "\n"
+            (root / path).write_text(text, encoding="utf-8")
+            findings = text_findings(root, path, retail_rules=False)
+            if (len(findings) != 1 or findings[0].path != path or
+                    findings[0].label != "deny-synthetic-token" or
+                    "line 2" not in findings[0].detail or token[:20] in findings[0].detail):
+                failures.append("text finding did not retain path/rule/line without the matched token")
+            errors = find_text_payload_errors(path, text)
+            if (len(errors) != 1 or "deny-synthetic-token" not in errors[0] or
+                    path not in errors[0] or "line 2" not in errors[0] or token[:20] in errors[0]):
+                failures.append("compatibility helper did not retain path/rule/line without the matched token")
+        blobs = content_signature_findings("synthetic.md", "first line\n" + encoded, retail_rules=False)
+        matching = [finding for finding in blobs if finding.label == "deny-large-base64-blob"]
+        if (len(matching) != 1 or "line 2" not in matching[0].detail or
+                encoded[:8] in matching[0].detail):
+            failures.append("encoded finding did not retain line without matched content")
+        private = retail_text_findings("synthetic.md", "first line\n" + private_marker)
+        matching = [finding for finding in private if finding.label == "deny-private-path-marker"]
+        if (len(matching) != 1 or "line 2" not in matching[0].detail or
+                "synthetic-private-marker" in matching[0].detail):
+            failures.append("private marker finding did not retain line without matched content")
+    finally:
+        globals()["TEXT_DENY_PATTERNS"] = original_patterns
     return failures
 
 
@@ -1517,6 +1552,12 @@ def run_self_test() -> int:
             print(f"- root findings: {sorted(root_findings, key=lambda item: item.path)!r}")
             print(f"- combined findings: {sorted(combined_findings, key=lambda item: item.path)!r}")
             return 1
+    diagnostic_failures = diagnostic_redaction_self_test()
+    if diagnostic_failures:
+        print("Public payload safety self-test: FAIL")
+        for item in diagnostic_failures:
+            print(f"- {item}")
+        return 1
     retail_failures = retail_text_self_test()
     if retail_failures:
         print("Public payload safety self-test: FAIL")
