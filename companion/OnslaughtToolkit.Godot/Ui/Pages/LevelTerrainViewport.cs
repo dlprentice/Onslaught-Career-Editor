@@ -37,6 +37,11 @@ public partial class LevelTerrainViewport : SubViewportContainer
     private bool _pressedInTerrainMode;
     private bool _raiseAtPress;
     private Vector2 _pressedAt;
+    private ObjectRow? _objectDragRow;
+    private IReadOnlyList<ObjectRow>? _objectDragRows;
+    private TerrainSurface? _objectDragSurface;
+    private Vector2? _objectDragPreview;
+
 
     public LevelTerrainViewport()
     {
@@ -92,7 +97,7 @@ public partial class LevelTerrainViewport : SubViewportContainer
         if (_surface is not null)
             _help.Text = TerrainModeProvider?.Invoke() == true
                 ? "Click raise · Shift-click lower (preview only)\nDrag orbit · wheel zoom"
-                : "Click select · right-click move; height stays\nDrag orbit · wheel zoom · markers stay on top";
+                : "Drag a mark to move · drag elsewhere to orbit · right-click to place · wheel to zoom";
         RefreshRows();
     }
 
@@ -106,6 +111,7 @@ public partial class LevelTerrainViewport : SubViewportContainer
             _selected = selected;
             _marks.QueueRedraw();
         }
+        if (_objectDragRow is not null && !ObjectDragCurrent) CancelDrag();
     }
 
     public override void _GuiInput(InputEvent input)
@@ -123,32 +129,46 @@ public partial class LevelTerrainViewport : SubViewportContainer
                     _pressedInTerrainMode = TerrainModeProvider?.Invoke() == true;
                     _raiseAtPress = !button.ShiftPressed;
                     _pressedAt = button.Position;
+                    if (!_pressedInTerrainMode) BeginObjectDrag(button.Position);
                     GrabFocus();
+                    _leftPressed = true;
                 }
                 else
                 {
-                    bool terrainMode = TerrainModeProvider?.Invoke() == true;
-                    if (_leftPressed && !_dragging && terrainMode == _pressedInTerrainMode)
+                    if (_objectDragRow is not null)
                     {
-                        if (terrainMode) RequestTerrainEdit(button.Position, _raiseAtPress);
-                        else if (RowAt(button.Position) is { } row) RowPicked?.Invoke(row.Index);
+                        bool commit = _leftPressed && _dragging && ObjectDragCurrent && TryDragPoint(button.Position);
+                        CancelDrag();
+                        if (commit) RequestMove(button.Position);
                     }
-                    _leftPressed = _dragging = false;
+                    else
+                    {
+                        bool terrainMode = TerrainModeProvider?.Invoke() == true;
+                        if (_leftPressed && !_dragging && terrainMode == _pressedInTerrainMode)
+                        {
+                            if (terrainMode) RequestTerrainEdit(button.Position, _raiseAtPress);
+                            else if (RowAt(button.Position) is { } row) RowPicked?.Invoke(row.Index);
+                        }
+                        _leftPressed = _dragging = false;
+                    }
                 }
                 AcceptEvent();
             }
             else if (button.Pressed && button.ButtonIndex == MouseButton.Right)
             {
+                if (_objectDragRow is not null) CancelDrag();
                 if (TerrainModeProvider?.Invoke() != true) RequestMove(button.Position);
                 AcceptEvent();
             }
             else if (button.Pressed && button.ButtonIndex == MouseButton.WheelUp)
             {
+                if (_objectDragRow is not null) CancelDrag();
                 Zoom(0.9f);
                 AcceptEvent();
             }
             else if (button.Pressed && button.ButtonIndex == MouseButton.WheelDown)
             {
+                if (_objectDragRow is not null) CancelDrag();
                 Zoom(1.1f);
                 AcceptEvent();
             }
@@ -158,12 +178,20 @@ public partial class LevelTerrainViewport : SubViewportContainer
             if (_dragging || motion.Position.DistanceTo(_pressedAt) > 4f)
             {
                 _dragging = true;
-                Orbit(-motion.Relative.X * 0.008f, -motion.Relative.Y * 0.008f);
+                if (_objectDragRow is not null) UpdateObjectDrag(motion.Position);
+                else Orbit(-motion.Relative.X * 0.008f, -motion.Relative.Y * 0.008f);
             }
             AcceptEvent();
         }
         else if (input is InputEventKey key && key.Pressed && !key.Echo)
         {
+            if (key.Keycode == Key.Escape && _leftPressed)
+            {
+                CancelDrag();
+                AcceptEvent();
+                return;
+            }
+            if (_objectDragRow is not null) CancelDrag();
             switch (key.Keycode)
             {
                 case Key.Left: Orbit(0.1f, 0f); break;
@@ -182,11 +210,12 @@ public partial class LevelTerrainViewport : SubViewportContainer
     {
         if (what == NotificationResized)
         {
+            if (_objectDragRow is not null) CancelDrag();
             ReframeOnResize();
             _marks?.QueueRedraw();
         }
-        if (what == NotificationFocusExit || what == NotificationVisibilityChanged)
-            _leftPressed = _dragging = false;
+        if (what == NotificationFocusExit || what == NotificationVisibilityChanged || what == NotificationMouseExit)
+        CancelDrag();
     }
 
     private void Orbit(float yaw, float pitch)
@@ -306,6 +335,58 @@ public partial class LevelTerrainViewport : SubViewportContainer
         }
     }
 
+    private bool ObjectDragCurrent => _objectDragRow is { } row && _selected == row.Index &&
+        ReferenceEquals(_objectDragRows, _rows) && _rows.Any(candidate => ReferenceEquals(candidate, row)) &&
+        ReferenceEquals(_objectDragSurface, _surface) && HasCurrentTerrain && TerrainModeProvider?.Invoke() != true;
+
+    private void ClearObjectDrag()
+    {
+        _objectDragRow = null;
+        _objectDragRows = null;
+        _objectDragSurface = null;
+        _objectDragPreview = null;
+        _marks?.QueueRedraw();
+    }
+
+    private void CancelDrag()
+    {
+        _leftPressed = _dragging = false;
+        ClearObjectDrag();
+    }
+
+    private void BeginObjectDrag(Vector2 at)
+    {
+        ClearObjectDrag();
+        if (!HasCurrentTerrain || RowAt(at) is not { } picked) return;
+        RowPicked?.Invoke(picked.Index);
+        RefreshRows();
+        if (_selected != picked.Index || _rows.FirstOrDefault(row => row.Index == picked.Index) is not { } current) return;
+        _objectDragRow = current;
+        _objectDragRows = _rows;
+        _objectDragSurface = _surface;
+    }
+
+    private void UpdateObjectDrag(Vector2 at)
+    {
+        RefreshRows();
+        if (!ObjectDragCurrent || !new Rect2(Vector2.Zero, Size).HasPoint(at))
+        {
+            CancelDrag();
+            return;
+        }
+        _objectDragPreview = TryDragPoint(at) ? at : null;
+        _marks.QueueRedraw();
+    }
+
+    private bool TryDragPoint(Vector2 at)
+    {
+        if (!HasCurrentTerrain || !new Rect2(Vector2.Zero, Size).HasPoint(at)) return false;
+        Vector3 origin = _camera.ProjectRayOrigin(at), direction = _camera.ProjectRayNormal(at);
+        var start = new System.Numerics.Vector3(origin.X, origin.Y, origin.Z);
+        var ray = new System.Numerics.Vector3(direction.X, direction.Y, direction.Z);
+        return TerrainRayPicker.TryHit(_surface!, start, ray, out _);
+    }
+
     private void RequestMove(Vector2 at)
     {
         if (_selected is not int selected || !HasCurrentTerrain || MoveRequested is null ||
@@ -379,16 +460,23 @@ public partial class LevelTerrainViewport : SubViewportContainer
     {
         public override void _Draw()
         {
-            foreach (var row in owner._rows)
-            {
-                if (!owner.TryProject(row, out Vector2 at, out _)) continue;
-                bool selected = row.Index == owner._selected;
-                DrawCircle(at, 6f, new Color(0.04f, 0.06f, 0.08f, 0.9f), true, -1, true);
-                DrawCircle(at, 4f, selected ? new Color(1f, 0.8f, 0.3f) : new Color(0.36f, 0.8f, 0.95f), true, -1, true);
-            }
-            var selectedRow = owner._rows.FirstOrDefault(row => row.Index == owner._selected);
-            if (selectedRow is not null && owner.TryProject(selectedRow, out Vector2 selectedAt, out _))
-                DrawCircle(selectedAt, 10f, Colors.White, false, 2f, true);
+        foreach (var row in owner._rows)
+        {
+            if (!owner.TryProject(row, out Vector2 at, out _)) continue;
+            bool selected = row.Index == owner._selected;
+            DrawCircle(at, 6f, new Color(0.04f, 0.06f, 0.08f, 0.9f), true, -1, true);
+            DrawCircle(at, 4f, selected ? new Color(1f, 0.8f, 0.3f) : new Color(0.36f, 0.8f, 0.95f), true, -1, true);
         }
+        var selectedRow = owner._rows.FirstOrDefault(row => row.Index == owner._selected);
+        if (selectedRow is not null && owner.TryProject(selectedRow, out Vector2 selectedAt, out _))
+        DrawCircle(selectedAt, 10f, Colors.White, false, 2f, true);
+        if (owner._objectDragRow is { } dragged && owner._objectDragPreview is Vector2 drop)
+        {
+            if (owner.TryProject(dragged, out Vector2 start, out _)) DrawLine(start, drop, Palette.Data, 2, true);
+            DrawCircle(drop, 10, Palette.Data, false, 2, true);
+            DrawLine(drop - new Vector2(14, 0), drop + new Vector2(14, 0), Palette.Data, 1, true);
+            DrawLine(drop - new Vector2(0, 14), drop + new Vector2(0, 14), Palette.Data, 1, true);
+        }
+    }
     }
 }
