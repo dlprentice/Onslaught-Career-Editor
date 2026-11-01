@@ -4,10 +4,24 @@ using OnslaughtToolkit.Companion.Levels;
 
 namespace OnslaughtToolkit.Companion.Ui;
 
+/// <summary>An exact checkpoint of one panel's draft ownership, including edits between two dirty states.</summary>
+internal readonly record struct EditorScriptDraftStamp(ScriptsPanel Owner, long Revision);
+
+/// <summary>A copied, validated script import, tied to the draft checkpoint the player confirmed.</summary>
+internal sealed class PreparedScriptProject(ScriptsPanel owner, EditorScriptDraftStamp expected,
+    IReadOnlyList<ScriptEntry> entries, IReadOnlyList<EditorProjectScript> scripts, string contentHash, string entriesHash)
+{
+    internal ScriptsPanel Owner { get; } = owner;
+    internal EditorScriptDraftStamp Expected { get; } = expected;
+    internal IReadOnlyList<ScriptEntry> Entries { get; } = entries;
+    internal IReadOnlyList<EditorProjectScript> Scripts { get; } = scripts;
+    internal string ContentHash { get; } = contentHash;
+    internal string EntriesHash { get; } = entriesHash;
+}
+
 /// <summary>
-/// The compiled scripts of the open level, and the selected script's installed source beside them, read only. The list says what each script
-/// runs on and handles; the source is the <c>.msl</c> file the script was compiled from, with line numbers. The game never reads that file
-/// (it runs the compiled script in the level's world), so the panel says so, and says when a file is missing.
+/// The compiled scripts of the open level beside their opened or project-preserved source text. Typed drafts stay owned by the panel
+/// until a confirmed discard or level change. The game runs the compiled record; source text alone does not establish what is in use.
 /// </summary>
 internal sealed partial class ScriptsPanel : VBoxContainer
 {
@@ -27,6 +41,10 @@ internal sealed partial class ScriptsPanel : VBoxContainer
     private SourceToken? _token;
     private bool _wantEditing;
     private readonly Dictionary<string, string> _drafts = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, ScriptSourceResult> _sourceBaselines = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _projectSources = new(StringComparer.Ordinal);
+    private long _draftRevision;
+    private bool _settingSource;
 
     internal ScriptsPanel()
     {
@@ -71,7 +89,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
     internal SourceToken? Token => _token;
 
     /// <summary>
-    /// Whether the source can be typed in: the Edit switch is on and the selected script is one of the level's own with a source file to start from. The
+    /// Whether the source can be typed in: the Edit switch is on and the selected script is one of the level's own with a source baseline to start from. The
     /// text typed is kept for the script (a draft) while another is chosen, and is not what the game runs until it is compiled and used.
     /// </summary>
     internal bool Editing => _source.Editable;
@@ -88,8 +106,9 @@ internal sealed partial class ScriptsPanel : VBoxContainer
     /// <summary>Whether the player turned Edit source on: it stays on while scripts that cannot be edited are chosen, and applies again to the next one that can.</summary>
     internal bool WantsEditing => _wantEditing;
 
-    /// <summary>Whether the selected script can be edited at all: one of the level's own, with a source file found.</summary>
-    internal bool CanEditCurrent => _current is { FromBaseWorld: false } && _currentSource?.Source is not null;
+    /// <summary>Whether the selected script has an unambiguous name and an opened or project-preserved source baseline.</summary>
+    internal bool CanEditCurrent => _current is { FromBaseWorld: false } current && _currentSource?.Source is not null &&
+        _entries.Count(entry => !entry.FromBaseWorld && string.Equals(entry.Summary.Name, current.Summary.Name, StringComparison.OrdinalIgnoreCase)) == 1;
 
     /// <summary>The text in the source view (line ends are \n).</summary>
     internal string SourceText => _source.Text;
@@ -118,6 +137,122 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         return _drafts.ContainsKey(name);
     }
 
+    /// <summary>Records all current typed text before a save, open or discard is prepared.</summary>
+    internal EditorScriptDraftStamp CaptureDraftState()
+    {
+        StoreDraft();
+        return new EditorScriptDraftStamp(this, _draftRevision);
+    }
+
+    internal bool MatchesDraftState(EditorScriptDraftStamp expected) => CaptureDraftState() == expected;
+
+    /// <summary>Copies available source baselines and every draft; a missing source cannot silently drop typed or used text.</summary>
+    internal IReadOnlyList<EditorProjectScript> CaptureProjectScripts(EditSession session, Func<int, string?>? usedText = null)
+    {
+        StoreDraft();
+        ScriptEntry[] own = OwnEntries(_entries);
+        if (own.Length != session.Body.Scripts.Count || own.Where((entry, index) => entry.Summary.Name != session.Body.Scripts[index].Name).Any())
+            throw new InvalidDataException("The source panel no longer belongs to the open world.");
+        List<EditorProjectScript> scripts = [];
+        for (int index = 0; index < own.Length; index++)
+        {
+            string name = own[index].Summary.Name;
+            _drafts.TryGetValue(name, out string? draft);
+            string? used = usedText?.Invoke(index);
+            if (SourceFor(own[index]).Source is not { } source)
+            {
+                if (draft is not null || used is not null) throw new InvalidDataException("A script with typed or used text has no source baseline to save.");
+                continue;
+            }
+            scripts.Add(new EditorProjectScript(index, name, EditorProject.TextHash(source.Text), source.Text, draft, used,
+                used is null ? null : EditorProject.Hash(WorldBodyWriter.ScriptBytes(session.Body.Scripts[index]))));
+        }
+        if (_drafts.Keys.Any(name => !own.Any(entry => entry.Summary.Name == name)))
+            throw new InvalidDataException("A typed script no longer belongs to the open world.");
+        EditorProject.CheckScriptTexts(scripts);
+        return Array.AsReadOnly(scripts.ToArray());
+    }
+
+    /// <summary>Validates imported text without replacing the current sources, selection or drafts.</summary>
+    internal bool TryPrepareProjectScripts(IReadOnlyList<ScriptEntry> entries, IReadOnlyList<EditorProjectScript> scripts,
+        out PreparedScriptProject? prepared, out string message)
+    {
+        prepared = null;
+        try
+        {
+            ScriptEntry[] copiedEntries = entries.ToArray();
+            EditorProjectScript[] copiedScripts = scripts.ToArray();
+            CheckProjectEntries(copiedEntries, copiedScripts);
+            prepared = new PreparedScriptProject(this, CaptureDraftState(), Array.AsReadOnly(copiedEntries), Array.AsReadOnly(copiedScripts),
+                EditorProject.ScriptStateHash(copiedScripts), EntryHash(copiedEntries));
+            message = "The project's script sources and drafts are ready to open.";
+            return true;
+        }
+        catch (Exception error) when (error is InvalidDataException or ArgumentException or InvalidOperationException)
+        {
+            message = error is InvalidDataException ? error.Message : "The project's script sources could not be prepared safely.";
+            return false;
+        }
+    }
+
+    /// <summary>Checks the current draft checkpoint and both copied import identities immediately before a model swap.</summary>
+    internal bool IsPreparedProjectCurrent(PreparedScriptProject prepared)
+    {
+        if (!ReferenceEquals(prepared.Owner, this) || !MatchesDraftState(prepared.Expected)) return false;
+        try
+        {
+            CheckProjectEntries(prepared.Entries, prepared.Scripts);
+            return EditorProject.ScriptStateHash(prepared.Scripts) == prepared.ContentHash && EntryHash(prepared.Entries) == prepared.EntriesHash;
+        }
+        catch (Exception error) when (error is InvalidDataException or ArgumentException or InvalidOperationException) { return false; }
+    }
+
+    /// <summary>The caller prechecks the model and suppresses its panel refresh while both prepared states are committed.</summary>
+    internal bool CommitProjectScripts(PreparedScriptProject prepared)
+    {
+        if (!IsPreparedProjectCurrent(prepared)) return false;
+        _entries = prepared.Entries;
+        _current = null;
+        _currentSource = null;
+        _drafts.Clear();
+        _sourceBaselines.Clear();
+        _projectSources.Clear();
+        ScriptEntry[] own = OwnEntries(_entries);
+        foreach (EditorProjectScript script in prepared.Scripts)
+        {
+            ScriptEntry entry = own[script.Index];
+            string path = Path.Combine(_root ?? ".", "data", "MissionScripts", $"level{entry.SourceLevel:D3}", script.Name + ".msl");
+            int lines = script.SourceText.Count(c => c == '\n') + (script.SourceText.Length > 0 && script.SourceText[^1] != '\n' ? 1 : 0);
+            _sourceBaselines.Add(script.Name, new ScriptSourceResult(new ScriptSource(path, script.SourceText, lines), null));
+            _projectSources.Add(script.Name);
+            if (script.DraftText is not null && script.DraftText != script.SourceText) _drafts.Add(script.Name, script.DraftText);
+        }
+        _draftRevision++;
+        Fill(keep: null);
+        TextEdited?.Invoke();
+        return true;
+    }
+
+    private static ScriptEntry[] OwnEntries(IReadOnlyList<ScriptEntry> entries)
+    {
+        ScriptEntry[] own = [.. entries.Where(entry => !entry.FromBaseWorld)];
+        if (own.Any(entry => !EditorProject.IsScriptName(entry.Summary.Name)) ||
+            own.Select(entry => entry.Summary.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != own.Length)
+            throw new InvalidDataException("The open world has ambiguous script source names.");
+        return own;
+    }
+
+    private static void CheckProjectEntries(IReadOnlyList<ScriptEntry> entries, IReadOnlyList<EditorProjectScript> scripts)
+    {
+        EditorProject.CheckScriptTexts(scripts);
+        ScriptEntry[] own = OwnEntries(entries);
+        if (scripts.Any(script => script.Index >= own.Length || own[script.Index].Summary.Name != script.Name))
+            throw new InvalidDataException("A project source does not belong to the selected script record.");
+    }
+
+    private static string EntryHash(IReadOnlyList<ScriptEntry> entries) => EditorProject.TextHash(System.Text.Json.JsonSerializer.Serialize(
+        entries.Select(entry => new { entry.Summary.Name, entry.SourceLevel, entry.FromBaseWorld })));
+
     private bool InUse(string name, string text) => IsInUse?.Invoke(name, text) == true;
 
     internal Tree List => _list;
@@ -127,6 +262,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
     internal string EmptyText => _empty.Visible ? _empty.Text : "";
     internal ScriptEntry? Current => _current;
     internal ScriptSourceResult? CurrentSource => _currentSource;
+    internal bool CurrentSourceFromProject => _current is { FromBaseWorld: false } current && _projectSources.Contains(current.Summary.Name);
 
     /// <summary>How many scripts the list shows with the current search.</summary>
     internal int ShownCount => _list.GetRoot()?.GetChildCount() ?? 0;
@@ -169,6 +305,9 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         _entries = entries;
         _current = null;
         _drafts.Clear();
+        _sourceBaselines.Clear();
+        _projectSources.Clear();
+        _draftRevision++;
         Fill(keep: null);
     }
 
@@ -183,6 +322,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         int line = _source.GetCaretLine(), column = _source.GetCaretColumn();
         double scroll = _source.ScrollVertical;
         _entries = entries;
+        _draftRevision++;
         _current = null;
         ScriptEntry? keep = previous is null ? null : entries.FirstOrDefault(entry => entry.FromBaseWorld == previous.FromBaseWorld && entry.Summary.Name == previous.Summary.Name);
         Fill(keep);
@@ -203,15 +343,24 @@ internal sealed partial class ScriptsPanel : VBoxContainer
     /// <summary>Shows the state of the text on view again: the page calls it when what the level runs changed without the text changing (a compile that was used).</summary>
     internal void RefreshInfo() => UpdateInfo();
 
-    /// <summary>Forgets what was typed for a script and shows its source file's text again.</summary>
+    /// <summary>Forgets what was typed for a script and shows its source baseline's text again.</summary>
     internal void DiscardEdit(string name)
     {
-        _drafts.Remove(name);
+        StoreDraft();
+        if (_drafts.Remove(name)) _draftRevision++;
         if (_current is { FromBaseWorld: false } current && current.Summary.Name == name && _currentSource?.Source is { } source)
         {
             SetSourceText(source.Text);
             UpdateInfo();
         }
+    }
+
+    /// <summary>A delayed discard cannot drop text typed since its confirmation was requested.</summary>
+    internal bool TryDiscardEdit(string name, EditorScriptDraftStamp expected)
+    {
+        if (!MatchesDraftState(expected)) return false;
+        DiscardEdit(name);
+        return true;
     }
 
     /// <summary>Puts the caret at the start of a line (0-based), in view.</summary>
@@ -233,6 +382,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
 
     private void OnText()
     {
+        if (!_settingSource) StoreDraft();
         UpdateInfo();
         TextEdited?.Invoke();
     }
@@ -247,11 +397,13 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         bool differs = own && text != source.Text, used = own && InUse(_current!.Summary.Name, text);
         bool notUsed = own && !used && (differs || IsReplaced?.Invoke(_current!.Summary.Name) == true);  // the level runs something else than this text
         string state = (_source.Editable ? "editing" : "read only") + (used ? " · in use" : notUsed ? " · not in use" : "");  // short: the line is one clipped line, as the column narrows
-        string relative = Path.GetRelativePath(_root!, source.Path).Replace('\\', '/');
+        bool projectSource = own && _projectSources.Contains(_current!.Summary.Name);
+        string relative = Path.GetRelativePath(_root ?? ".", source.Path).Replace('\\', '/');
         const string folder = "data/MissionScripts/";
         string shown = relative.StartsWith(folder, StringComparison.OrdinalIgnoreCase) ? relative[folder.Length..] : relative;  // the folder is the same for every script
-        _info.Text = $"{shown} · {Build.Count(lines, "line")} · {state}";
-        _info.TooltipText = $"{source.Path}\nThe game runs the compiled script in the level's world, not this file." +
+        _info.Text = $"{shown} · {Build.Count(lines, "line")} · {state}" + (projectSource ? " · project source" : "");
+        _info.TooltipText = (projectSource ? $"{_current!.Summary.Name}.msl · source preserved in the editor project" : source.Path) +
+            "\nThe game runs the compiled script in the level's world, not this file." +
             (used ? "\nIn use: the level runs the script compiled from this text." : notUsed ? "\nNot in use: the level does not run this text. Compile and use makes it run." : "");
     }
 
@@ -259,8 +411,13 @@ internal sealed partial class ScriptsPanel : VBoxContainer
     private void StoreDraft()
     {
         if (_current is not { FromBaseWorld: false } current || _currentSource?.Source is not { } source || !_source.Editable) return;
-        if (_source.Text != source.Text) _drafts[current.Summary.Name] = _source.Text;
-        else _drafts.Remove(current.Summary.Name);
+        if (_source.Text != source.Text)
+        {
+            if (_drafts.TryGetValue(current.Summary.Name, out string? before) && before == _source.Text) return;
+            _drafts[current.Summary.Name] = _source.Text;
+            _draftRevision++;
+        }
+        else if (_drafts.Remove(current.Summary.Name)) _draftRevision++;
     }
 
     /// <summary>Shows the scripts whose name, events or functions hold this text (all of them when it is empty).</summary>
@@ -287,6 +444,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
 
     private void Fill(ScriptEntry? keep)
     {
+        StoreDraft();
         _list.Clear();
         TreeItem root = _list.CreateItem();
         TreeItem? wanted = null, first = null;
@@ -332,14 +490,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         if (ReferenceEquals(entry, _current)) return;
         StoreDraft();
         _current = entry;
-        if (_root is null)
-        {
-            _currentSource = new ScriptSourceResult(null, "Choose your game folder on Home to see script sources.");
-        }
-        else
-        {
-            _currentSource = ScriptSources.Find(_root, entry.SourceLevel, entry.Summary.Name);
-        }
+        _currentSource = SourceFor(entry);
         if (_currentSource.Source is { } source)
         {
             SetSourceText(!entry.FromBaseWorld && _drafts.TryGetValue(entry.Summary.Name, out string? draft) ? draft : source.Text);
@@ -355,6 +506,16 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         Selected?.Invoke(entry, _currentSource);
     }
 
+    private ScriptSourceResult SourceFor(ScriptEntry entry)
+    {
+        if (!entry.FromBaseWorld && _sourceBaselines.TryGetValue(entry.Summary.Name, out ScriptSourceResult? baseline)) return baseline;
+        ScriptSourceResult found = _root is null
+            ? new ScriptSourceResult(null, "Choose your game folder on Home to see script sources.")
+            : ScriptSources.Find(_root, entry.SourceLevel, entry.Summary.Name);
+        if (!entry.FromBaseWorld && found.Source is not null) _sourceBaselines[entry.Summary.Name] = found;
+        return found;
+    }
+
     /// <summary>
     /// Puts new text in the source view, at its first line, whether the view is shown or not: the scroll position and the first visible line kept from a
     /// longer text would lie past the end of a shorter one.
@@ -366,7 +527,9 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         _source.SetCaretColumn(0);
         _source.ScrollVertical = 0;
         _source.ScrollHorizontal = 0;
-        _source.Text = text;
+        _settingSource = true;
+        try { _source.Text = text; }
+        finally { _settingSource = false; }
         _source.SetLineAsFirstVisible(0);
         _source.SetCaretLine(0);
         _source.ScrollVertical = 0;

@@ -47,6 +47,18 @@ public sealed class TerrainSurface
         return new TerrainSurface(Divisions, vertices, _indices);
     }
 
+    /// <summary>Copies a sampled surface once while restoring checked preview heights.</summary>
+    internal TerrainSurface WithVertexHeights(IReadOnlyDictionary<int, float> heights)
+    {
+        Vector3[] vertices = _vertices.ToArray();
+        foreach ((int index, float height) in heights)
+        {
+            if (index < 0 || index >= vertices.Length || !float.IsFinite(height)) throw new ArgumentOutOfRangeException(nameof(heights));
+            vertices[index].Y = height;
+        }
+        return new TerrainSurface(Divisions, vertices, _indices);
+    }
+
     /// <summary>Samples an existing read-only terrain. A malformed non-finite height is refused.</summary>
     public static TerrainSurface Build(Heightfield field, int divisions = DefaultDivisions)
     {

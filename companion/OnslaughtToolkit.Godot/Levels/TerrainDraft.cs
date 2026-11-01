@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-only
 namespace OnslaughtToolkit.Companion.Levels;
 
+/// <summary>A nonzero number of preview steps at one sampled vertex.</summary>
+internal readonly record struct TerrainOffset(int Index, int Steps);
+
 /// <summary>A bounded, in-memory edit of the sampled 3D preview, separate from the level's original heightfield.</summary>
 internal sealed class TerrainDraft
 {
@@ -21,6 +24,36 @@ internal sealed class TerrainDraft
     internal int ChangedCount => _steps.Count;
     internal bool HasChanges => ChangedCount > 0;
     internal static bool IsTerrainCommand(IEditCommand? command) => command is VertexChange;
+    internal bool BelongsTo(WorldBody owner) => ReferenceEquals(_owner, owner);
+
+    /// <summary>Snapshots the current offsets in deterministic vertex order.</summary>
+    internal IReadOnlyList<TerrainOffset> Offsets() => [.. _steps.OrderBy(entry => entry.Key).Select(entry => new TerrainOffset(entry.Key, entry.Value))];
+
+    /// <summary>Restores bounded offsets without manufacturing undo history.</summary>
+    internal static TerrainDraft Restore(WorldBody owner, TerrainSurface baseline, IReadOnlyList<TerrainOffset> offsets)
+    {
+        ArgumentNullException.ThrowIfNull(owner);
+        ArgumentNullException.ThrowIfNull(baseline);
+        ArgumentNullException.ThrowIfNull(offsets);
+        TerrainDraft draft = new(owner, baseline);
+        Dictionary<int, float> heights = [];
+        int previous = -1, maxSteps = (int)(MaxOffset / Step);
+        foreach (TerrainOffset offset in offsets)
+        {
+            if (offset.Index <= previous || offset.Index >= baseline.Vertices.Length ||
+                offset.Steps == 0 || offset.Steps < -maxSteps || offset.Steps > maxSteps)
+                throw new InvalidDataException("A saved terrain preview point is invalid or repeated.");
+            float original = baseline.Vertices.Span[offset.Index].Y;
+            float after = (float)((double)original + (double)offset.Steps * Step);
+            if (!float.IsFinite(original) || !float.IsFinite(after) || Math.Abs((double)after - original) > MaxOffset || Bits(after) == Bits(original))
+                throw new InvalidDataException("A saved terrain preview height is outside its safe bounds.");
+            heights.Add(offset.Index, after);
+            draft._steps.Add(offset.Index, offset.Steps);
+            previous = offset.Index;
+        }
+        draft.Surface = baseline.WithVertexHeights(heights);
+        return draft;
+    }
 
     /// <summary>Prepares one vertex adjustment without mutating the draft or its owner.</summary>
     internal bool TryPrepare(float x, float y, bool raise, out IEditCommand? command, out string message)
