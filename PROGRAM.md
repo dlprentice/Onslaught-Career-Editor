@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-11-01 (CE-first creation direction, pushed candidates and selected recovery delta)
+Last updated: 2026-11-01 (CE-first direction, pushed candidates and bounded recovery scope)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
@@ -34,7 +34,7 @@ defines progress and what a completion claim requires.
 | Companion | CE/original careers, settings and backups exist with bounded tests. Broader Windows UI/device acceptance, listening and safe release remain. | [Companion README](companion/OnslaughtToolkit.Godot/README.md), [acceptance below](#companion--ce-integration) |
 | Diagnostics and recording | Useful bounded logs and manual, informed reporting are available. Preserve faithful reference tapes and develop separate coverage for CE features and controller input; avoid telemetry or automatic uploads. | [CE reporting guidance](https://github.com/dlprentice/onslaught-ce#report-a-problem) |
 | Special Thanks | Stuart Gillam, Jeppi and BermudaMaster are acknowledged in 0.1.12. Keep acknowledgements accurate as further contributors are identified. | [CE credits](https://github.com/dlprentice/onslaught-ce#credits-and-special-thanks) |
-| Documentation, repositories and recovery | Reconcile the active owners and retained handoffs. The selected current review-evidence delta was restored and hash-matched: 77 files, 8,466,420 bytes. This is a bounded restore, and some retained sets still need discoverable index entries. Full corpus and replacement-machine recovery remain unproven. Private recovery details stay in private records. | [Recovery scope below](#recovery-and-repository), [Project index](PROJECT-INDEX.md), repository guides |
+| Documentation, repositories and recovery | Reconcile the active owners and retained handoffs. A selected review-evidence delta was restored and hash-matched: 77 files, 8,466,420 bytes. The evidence covers only that snapshot, not work created afterward; some retained sets still need discoverable index entries. Full corpus and replacement-machine recovery remain unproven. Private recovery details stay in private records. | [Recovery scope below](#recovery-and-repository), [Project index](PROJECT-INDEX.md), repository guides |
 | Showcase and website | The requested port footage has not met its brief and may resume with the next lead. The domain is owned; no website deployment is currently required. | Maintainer direction |
 
 ### Order after 0.1.13
@@ -185,11 +185,11 @@ and eventually rehearse recovery on a replacement machine. Reuse existing backup
 uploading large unchanged collections. Keep private paths, credentials and signing keys out of tracked files. Selected
 restores are not proof that the full corpus or current worktrees can be recovered.
 
-On 2026-11-01, the selected current review-evidence delta was restored with a fresh cache: the exact 77-file set,
+On 2026-11-01, a selected review-evidence delta was restored with a fresh cache: the exact 77-file set,
 8,466,420 bytes, matched every recorded file hash. The private verification receipt
 `ROOT-RESTORE-VERIFIED.private.json` has SHA-256
 `2499c8105365440c626a2b0d92d71e9c8ba9243039fc1d65ad02c0da994a3fa3` and records that the original inputs were unchanged.
-This establishes that selected delta only; full-corpus and replacement-machine recovery remain open.
+This establishes only the selected snapshot; it does not cover work created afterward. Full-corpus and replacement-machine recovery remain open.
 
 - The public history was flattened to a single new root (approved by David); the full earlier history is a
   verified bundle and `refs/old/*` in the private RE archive. The third-party fork and GitHub's pull-request refs
