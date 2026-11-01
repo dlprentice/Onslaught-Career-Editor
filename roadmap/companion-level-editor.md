@@ -1,7 +1,7 @@
 # Companion Level Editor: Design and Prototype Plan
 
 Status: M0 (the data layer), M1 (the mod stager and the edit session) and M2 (the first page: a level picker, an object table, typed X, Y and Z, Save as mod) are built and on main; M3 (the map: terrain relief, marks, select, drag, zoom, pan) is built and on main; M4's arrow-key nudges and list of only the moved objects and M6's play button ("Play this level with the changes", section 17 of the mission editor design) are built; M5's first increment (copy a unit) is built, and its other parts (adding other kinds, deleting) and M6's persistent enable toggle are plan; the mission editor that would follow is in [companion-mission-editor.md](companion-mission-editor.md). Its edits have been run in CE on Linux, offscreen, through a private CE build and the released 0.1.12 package and launcher (section 3 and the mission editor design's sections 16 and 17); nobody has used the page or its play button by hand. The C# and Python mission compilers and the script-aware editor model are integrated backend components; the Level editor's Scripts view can edit and compile a script's source and make the open level use it; source-preserving mod staging and 3D mission authoring remain future work.
-Last updated: 2026-11-01 (level-edit safety design and observed play scope clarified)
+Last updated: 2026-11-01 (current editor scope, level-edit safety design and observed play scope clarified)
 Summary: how the Companion can grow a visual level editor on top of the Toolkit's world tools and Onslaught CE's mod
 loader: list a level's objects, select one, move it by typing coordinates or dragging it on a top-down map, and save
 the result as a CE mod that CE loads without hand editing. It states what exists, what the measurements say, the
@@ -16,11 +16,11 @@ Future CE-native level and mission features may use formats and capabilities tha
 
 ## 1. What the editor is for
 
-A player or modder opens a level, sees what the level places (the player's start, units, features, waypoints,
-triggers), moves something, and plays the change. The first version edits **where things stand** in a level's world
-body and nothing else: no terrain, no models, no mission scripts, no new object types. The result is always a CE mod
-folder (a new folder, never a change to the game's files), so a player can switch it off by removing one word from
-`ce.ini`, and the game's own files stay as they were.
+A player or modder opens a level, sees what the level places (the player's start, units, features, waypoints and
+triggers), moves something, and plays the change. The initial milestone only moved existing objects. The current
+editor can also copy a unit and replace a level's script when its source is installed; see [current capabilities](../CURRENT_CAPABILITIES.md).
+It saves the changed world as a CE mod; staging and temporary play follow the safety rules and measured limits
+described below.
 
 This follows the existing split of work: the Toolkit's Python tools are the reference implementation and the oracle
 for the file format; the Companion is the player's interface; Onslaught CE is the engine that loads the result.
