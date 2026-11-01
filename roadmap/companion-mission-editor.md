@@ -15,6 +15,8 @@ this binary; the retail view's `BEA.exe` has the same hash)
 
 > **Future direction — 2026-10-31:** David requested a 3D mission editor alongside the 3D map editor. The existing script and data workflows remain as described below; a 3D mission-authoring workflow, its interactions, safe staging and platform acceptance are still to be designed and demonstrated. See the project [goal](../GOAL.md) and [program](../PROGRAM.md).
 
+Future CE-native level and mission features may use formats and capabilities that the original game cannot load. Retail behavior remains the faithful reference, and retail-compatible output may be supported where useful; it is not a prerequisite for CE-native features. This is a direction for future work, not a claim that a new format or loader has been implemented.
+
 ## 1. What this is for
 
 Players ask for missions they can change: what a level asks of them (objectives), what appears and when (spawns), what

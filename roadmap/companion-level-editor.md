@@ -12,6 +12,8 @@ the text says so; the rest is plan.
 
 > **Future direction — 2026-10-31:** David requested a 3D map editor and approved a Goodies-style museum and custom test levels. The current map workflow and any existing model previews remain as described below; a complete 3D map-authoring workflow is not established. Its design and acceptance must address safe game-data handling and the loader contract. See the project [goal](../GOAL.md) and [program](../PROGRAM.md).
 
+Future CE-native level and mission features may use formats and capabilities that the original game cannot load. Retail behavior remains the faithful reference, and retail-compatible output may be supported where useful; it is not a prerequisite for CE-native features. This is a direction for future work, not a claim that a new format or loader has been implemented.
+
 ## 1. What the editor is for
 
 A player or modder opens a level, sees what the level places (the player's start, units, features, waypoints,
