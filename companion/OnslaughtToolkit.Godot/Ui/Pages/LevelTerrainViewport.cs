@@ -14,6 +14,8 @@ public partial class LevelTerrainViewport : SubViewportContainer
     private OnslaughtToolkit.Companion.Levels.Heightfield? _loaded;
     private Vector3 _target;
     private float _extent = 1f;
+    private float _radius;
+    private float _fitDistance;
     private float _distance = 4f;
     private float _yaw = 0.8f;
     private float _pitch = 0.8f;
@@ -102,6 +104,8 @@ public partial class LevelTerrainViewport : SubViewportContainer
 
     public override void _Notification(int what)
     {
+        if (what == NotificationResized)
+            ReframeOnResize();
         if (what == NotificationFocusExit || what == NotificationVisibilityChanged)
             _dragging = false;
     }
@@ -113,14 +117,47 @@ public partial class LevelTerrainViewport : SubViewportContainer
         PositionCamera();
     }
 
+
+    private float FitDistance()
+    {
+        double width = System.Math.Max(1.0, Size.X);
+        double height = System.Math.Max(1.0, Size.Y);
+        double verticalHalf = _camera.Fov * System.Math.PI / 360.0;
+        double horizontalHalf = System.Math.Atan(System.Math.Tan(verticalHalf) * width / height);
+        double halfAngle = System.Math.Max(0.000001, System.Math.Min(verticalHalf, horizontalHalf));
+        double distance = 1.1 * _radius / System.Math.Sin(halfAngle);
+        return (float)System.Math.Min(distance, float.MaxValue / 8.0);
+    }
+
+    private void ReframeOnResize()
+    {
+        if (_radius <= 0f || _fitDistance <= 0f)
+            return;
+        float zoomRatio = _distance / _fitDistance;
+        _fitDistance = FitDistance();
+        _distance = _fitDistance * zoomRatio;
+        PositionCamera();
+    }
+
+    private void UpdateClipPlanes()
+    {
+        float near = Mathf.Max(0.0001f, _radius * 0.001f);
+        if (_distance > _radius)
+            near = Mathf.Min(near, (_distance - _radius) * 0.5f);
+        _camera.Near = Mathf.Max(0.0001f, near);
+        _camera.Far = Mathf.Max(_camera.Near + 1f, _distance + _radius * 1.1f + 1f);
+    }
+
     private void Zoom(float scale)
     {
-        _distance = Mathf.Clamp(_distance * scale, Math.Max(_extent * 0.05f, 0.1f), Math.Max(_extent * 8f, 1f));
+        _distance = Mathf.Clamp(_distance * scale, Math.Max(_extent * 0.05f, 0.1f), Mathf.Max(Math.Max(_extent * 8f, 1f), _fitDistance * 4f));
         PositionCamera();
     }
 
     private void PositionCamera()
     {
+        if (_radius > 0f)
+            UpdateClipPlanes();
         float horizontal = Mathf.Cos(_pitch);
         var direction = new Vector3(horizontal * Mathf.Cos(_yaw), Mathf.Sin(_pitch), horizontal * Mathf.Sin(_yaw));
         _camera.Position = _target + direction * _distance;
@@ -166,9 +203,12 @@ public partial class LevelTerrainViewport : SubViewportContainer
             var max = preview.Max;
             _target = new Vector3((min.X + max.X) * 0.5f, (min.Y + max.Y) * 0.5f, (min.Z + max.Z) * 0.5f);
             _extent = Math.Max(1f, Math.Max(max.X - min.X, Math.Max(max.Y - min.Y, max.Z - min.Z)));
-            _distance = _extent * 1.5f;
-            _camera.Near = Math.Max(0.05f, _extent / 10000f);
-            _camera.Far = Math.Max(100f, _extent * 20f);
+            _radius = (preview.Max - preview.Min).Length() * 0.5f;
+            if (!float.IsFinite(_radius))
+                throw new System.IO.InvalidDataException("Terrain bounds cannot be framed.");
+            _radius = Mathf.Max(_radius, 0.0001f);
+            _fitDistance = FitDistance();
+            _distance = _fitDistance;
             PositionCamera();
             _help.Text = "Terrain preview: drag to orbit, wheel to zoom. Arrow and Page keys also work.";
         }

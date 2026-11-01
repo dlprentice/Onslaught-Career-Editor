@@ -58,6 +58,7 @@ internal static class CompanionUiTests
             await LevelEditorPageTests.UnsavedAsync(app, tree, install, outputDirectory, quit, check);
             await LevelEditorPageTests.CopyAsync(app, tree, quit, check);
             await LevelMapPageTests.RunAsync(app, tree, install, check);
+            await TerrainViewportProjectionTests.RunAsync(tree, check);
             await ScriptsPageTests.RunAsync(app, tree, install, outputDirectory, check);
         }
         finally
