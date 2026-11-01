@@ -20,11 +20,13 @@ internal sealed partial class ScriptsPanel : VBoxContainer
     private readonly Tree _list;
     private readonly CodeEdit _source;
     private readonly Button _findToggle;
+    private readonly Button _commentLines;
     private readonly HBoxContainer _findRow;
     private readonly LineEdit _findQuery;
     private readonly Button _findPrevious;
     private readonly Button _findNext;
     private readonly Label _findStatus;
+    private readonly Label _commentNotice;
     private readonly Label _info, _empty;
     private IReadOnlyList<ScriptEntry> _entries = [];
     private string? _root;
@@ -58,13 +60,22 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         _info = this.Add(Build.Text("", "Faint", wrap: false, clip: true));
         _info.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         _info.MouseFilter = MouseFilterEnum.Pass;  // so that the tooltip, which has the whole path, shows
-        _findToggle = this.Add(new Button
+        HBoxContainer sourceTools = this.Add(Build.Row(8));
+        _findToggle = sourceTools.Add(new Button
         {
             Text = "Find in script",
             TooltipText = "Find text in the open script (Ctrl+F).",
             ToggleMode = true,
             Disabled = true,
         });
+        _findToggle.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        _commentLines = sourceTools.Add(new Button
+        {
+            Text = "Toggle line comments",
+            TooltipText = "Comment or uncomment the selected lines, or the current line. Ctrl+/ also works. Undo restores the draft.",
+            Disabled = true,
+        });
+        _commentLines.Pressed += ToggleLineComments;
         _findRow = this.Add(new HBoxContainer { Visible = false });
         _findQuery = new LineEdit
         {
@@ -77,6 +88,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         _findRow.AddChild(_findPrevious);
         _findRow.AddChild(_findNext);
         _findStatus = this.Add(new Label { Visible = false });
+        _commentNotice = this.Add(new Label { Visible = false, AutowrapMode = TextServer.AutowrapMode.WordSmart });
         _source = this.Add(NewSourceView());
         _findToggle.Toggled += ShowFind;
         _findQuery.TextChanged += _ => UpdateFindQuery();
@@ -157,6 +169,8 @@ internal sealed partial class ScriptsPanel : VBoxContainer
     internal Tree List => _list;
     internal CodeEdit Source => _source;
     internal Button FindToggle => _findToggle;
+    internal Button CommentLines => _commentLines;
+    internal Label CommentNotice => _commentNotice;
     internal LineEdit FindQuery => _findQuery;
     internal Button FindPrevious => _findPrevious;
     internal Button FindNext => _findNext;
@@ -180,11 +194,83 @@ internal sealed partial class ScriptsPanel : VBoxContainer
     private void OnSourceFindInput(InputEvent input)
     {
         if (input is not InputEventKey { Pressed: true, Echo: false } key ||
-            key.Keycode != Key.F || !(key.CtrlPressed || key.MetaPressed) || key.AltPressed || _findToggle.Disabled)
+            !(key.CtrlPressed || key.MetaPressed) || key.AltPressed)
             return;
+        if (key.Keycode == Key.Slash)
+        {
+            if (_source.Editable)
+            {
+                ToggleLineComments();
+                _source.AcceptEvent();
+            }
+            return;
+        }
+        if (key.Keycode != Key.F || _findToggle.Disabled) return;
         if (!_findToggle.ButtonPressed) _findToggle.ButtonPressed = true;
         else if (_findQuery.IsInsideTree()) _findQuery.GrabFocus();
         _source.AcceptEvent();
+    }
+
+    private void ToggleLineComments()
+    {
+        if (!_source.Editable) return;
+        if (_source.GetCaretCount() != 1)
+        {
+            _commentNotice.Text = "Use one caret or one selection to toggle line comments.";
+            _commentNotice.Visible = true;
+            return;
+        }
+
+        _commentNotice.Visible = false;
+        bool selected = _source.HasSelection();
+        int caretLine = _source.GetCaretLine(), caretColumn = _source.GetCaretColumn();
+        int originLine = selected ? _source.GetSelectionOriginLine() : caretLine;
+        int originColumn = selected ? _source.GetSelectionOriginColumn() : caretColumn;
+        int first = selected ? _source.GetSelectionFromLine() : caretLine;
+        int last = selected ? _source.GetSelectionToLine() : caretLine;
+        if (selected && last > first && _source.GetSelectionToColumn() == 0) last--;
+
+        List<(int Line, int Indent, bool Commented)> edits = [];
+        for (int line = first; line <= last; line++)
+        {
+            string text = _source.GetLine(line);
+            int indent = 0;
+            while (indent < text.Length && (text[indent] == ' ' || text[indent] == '\t')) indent++;
+            edits.Add((line, indent, text.AsSpan(indent).StartsWith("//", StringComparison.Ordinal)));
+        }
+        bool remove = edits.All(edit => edit.Commented);
+        int Adjust(int line, int column)
+        {
+            int found = edits.FindIndex(edit => edit.Line == line);
+            if (found < 0) return column;
+            int indent = edits[found].Indent;
+            if (column < indent) return column;
+            if (!remove) return column + 2;
+            return column <= indent + 2 ? indent : column - 2;
+        }
+
+        _source.BeginComplexOperation();
+        try
+        {
+            for (int i = edits.Count - 1; i >= 0; i--)
+            {
+                var edit = edits[i];
+                if (remove) _source.RemoveText(edit.Line, edit.Indent, edit.Line, edit.Indent + 2);
+                else _source.InsertText("//", edit.Line, edit.Indent, true, true);
+            }
+        }
+        finally { _source.EndComplexOperation(); }
+
+        if (selected)
+            _source.Select(originLine, Adjust(originLine, originColumn), caretLine, Adjust(caretLine, caretColumn));
+        else
+        {
+            _source.SetCaretLine(caretLine);
+            _source.SetCaretColumn(Adjust(caretLine, caretColumn));
+        }
+        UpdateFindAvailability();
+        OnText();
+        if (_source.IsInsideTree()) _source.GrabFocus();
     }
 
     private void OnFindQueryInput(InputEvent input)
@@ -270,7 +356,7 @@ internal sealed partial class ScriptsPanel : VBoxContainer
         foreach (string word in Types) highlighter.AddKeywordColor(word, Palette.ViewedBlue);
         CodeEdit view = new()
         {
-            Editable = false, GuttersDrawLineNumbers = true, WrapMode = TextEdit.LineWrappingMode.None, CaretBlink = false, ScrollSmooth = false,
+            Editable = false, DeselectOnFocusLossEnabled = false, GuttersDrawLineNumbers = true, WrapMode = TextEdit.LineWrappingMode.None, CaretBlink = false, ScrollSmooth = false,
             HighlightCurrentLine = false, MinimapDraw = false, SyntaxHighlighter = highlighter, SizeFlagsVertical = SizeFlags.ExpandFill,
             SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(280, 120), AutoBraceCompletionEnabled = false,
             TooltipText = "The script's source, read only. The game does not read this file.",
@@ -353,6 +439,8 @@ internal sealed partial class ScriptsPanel : VBoxContainer
     {
         bool on = _wantEditing && CanEditCurrent;
         _source.Editable = on;
+        _commentLines.Disabled = !on;
+        _commentNotice.Visible = false;
         _source.TooltipText = on ? "Type here, then Compile and use. The game does not read this file: it runs the compiled script."
             : "The script's source, read only. The game does not read this file.";
         UpdateInfo();

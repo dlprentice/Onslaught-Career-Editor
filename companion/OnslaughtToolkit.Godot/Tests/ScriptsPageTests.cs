@@ -51,6 +51,10 @@ internal static class ScriptsPageTests
         var panel = page.Scripts;
         var source = panel.Source;
         string before = source.Text;
+        panel.CommentLines.EmitSignal(BaseButton.SignalName.Pressed);
+        source.EmitSignal(Control.SignalName.GuiInput, new InputEventKey { Pressed = true, Keycode = Key.Slash, CtrlPressed = true });
+        check.That(panel.CommentLines.Disabled && source.Text == before,
+            "Read-only source refuses the comment action and shortcut");
         check.That(!source.Editable && before.Length > 0 && !panel.FindToggle.Disabled,
             "Find is available for a read-only source");
         if (before.Length == 0 || panel.FindToggle.Disabled) return;
@@ -126,6 +130,190 @@ internal static class ScriptsPageTests
             "Find previous returns to the earlier match without changing the draft");
         source.Text = savedDraft;
         panel.FindToggle.ButtonPressed = false;
+    }
+
+    private static async Task CheckLineComments(LevelEditorPage page, SceneTree tree, string savedDraft, Checks check)
+    {
+        Vector2I oldSize = tree.Root.Size;
+        try
+        {
+            tree.Root.Size = new Vector2I(1600, 1200);
+            for (int frame = 0; frame < 3; frame++) await Frame(tree);
+            var panel = page.Scripts;
+            var source = panel.Source;
+            var session = page.Model?.Session;
+            byte[] beforeWorld = session?.ToBytes() ?? [];
+            string? sourcePath = panel.CurrentSource?.Source?.Path;
+            byte[]? beforeFile = sourcePath is null ? null : File.ReadAllBytes(sourcePath);
+            const string draft = "  Wait(1);\n\t// kept\n   \n  Wait(2);\nend";
+            const string commented = "  //Wait(1);\n\t//// kept\n   //\n  //Wait(2);\nend";
+            source.Text = draft;
+            await Frame(tree);
+            source.GrabFocus();
+            await Frame(tree);
+            source.Select(0, 0, 4, 0);
+            Rect2 buttonBounds = panel.CommentLines.GetGlobalRect();
+            check.That(source.HasFocus() && source.HasSelection() && panel.CommentLines.IsVisibleInTree() &&
+                buttonBounds.Size.X > 0 && buttonBounds.Size.Y > 0,
+                "Real comment click begins with a focused source and visible button");
+            int mouseDowns = 0, presses = 0;
+            bool selectedAtDown = false;
+            void OnMouseDown() { mouseDowns++; selectedAtDown = source.HasSelection(); }
+            void OnPressed() => presses++;
+            panel.CommentLines.ButtonDown += OnMouseDown;
+            panel.CommentLines.Pressed += OnPressed;
+            Vector2 buttonPoint = buttonBounds.Position + buttonBounds.Size / 2;
+            check.That(new Rect2(Vector2.Zero, tree.Root.GetVisibleRect().Size).HasPoint(buttonPoint),
+                "Real comment click point is inside the root viewport");
+            tree.Root.PushInput(new InputEventMouseMotion { Position = buttonPoint, GlobalPosition = buttonPoint }, true);
+            await Frame(tree);
+            check.That(ReferenceEquals(tree.Root.GuiGetHoveredControl(), panel.CommentLines),
+                "Real mouse hovers the comment button before pressing");
+            tree.Root.PushInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true,
+                ButtonMask = MouseButtonMask.Left, Position = buttonPoint, GlobalPosition = buttonPoint }, true);
+            tree.Root.PushInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false,
+                Position = buttonPoint, GlobalPosition = buttonPoint }, true);
+            await Frame(tree);
+            panel.CommentLines.ButtonDown -= OnMouseDown;
+            panel.CommentLines.Pressed -= OnPressed;
+            check.That(mouseDowns == 1 && presses == 1, "Real mouse click reaches the comment button");
+            check.That(selectedAtDown, "Real mouse down preserves the source selection");
+            check.That(source.Text == commented, "Real mouse click comments every selected line");
+            check.That(source.HasSelection() && source.GetSelectionFromLine() == 0 &&
+                source.GetSelectionToLine() == 4 && source.GetSelectionToColumn() == 0,
+                "Real mouse click retains the multiline selection");
+            source.Text = draft;
+            await Frame(tree);
+            source.GrabFocus();
+            await Frame(tree);
+            source.Select(0, 0, 4, 0);
+            panel.CommentLines.GrabFocus();
+            await Frame(tree);
+            int keyboardPresses = 0;
+            void OnKeyboardPressed() => keyboardPresses++;
+            panel.CommentLines.Pressed += OnKeyboardPressed;
+            check.That(panel.CommentLines.HasFocus() && source.HasSelection(),
+                "Comment button remains keyboard-focusable while the source selection stays active");
+            tree.Root.PushInput(new InputEventKey { Keycode = Key.Enter, PhysicalKeycode = Key.Enter, Pressed = true }, true);
+            tree.Root.PushInput(new InputEventKey { Keycode = Key.Enter, PhysicalKeycode = Key.Enter, Pressed = false }, true);
+            await Frame(tree);
+            panel.CommentLines.Pressed -= OnKeyboardPressed;
+            check.That(keyboardPresses == 1 && source.Text == commented && source.HasSelection() && source.HasFocus(),
+                "Keyboard activation comments the selection and returns focus to the source");
+            source.Text = draft;
+            await Frame(tree);
+            source.ClearUndoHistory();
+            source.Select(0, 0, 4, 0);
+            panel.CommentLines.EmitSignal(BaseButton.SignalName.Pressed);
+            check.That(!panel.CommentLines.Disabled && source.Text == commented &&
+                source.GetSelectionFromLine() == 0 && source.GetSelectionToLine() == 4 && source.GetSelectionToColumn() == 0 &&
+                ScriptLexer.Lex(source.Text).All(token => token.Text != "Wait"),
+                "Comment selected lines preserves indentation, empty lines and the excluded final line");
+            source.Undo();
+            check.That(source.Text == draft, "One undo restores the exact mixed source draft");
+            source.Redo();
+            check.That(source.Text == commented, "One redo reapplies the complete comment operation");
+            source.Select(0, 0, 4, 0);
+            panel.CommentLines.EmitSignal(BaseButton.SignalName.Pressed);
+            check.That(source.Text == draft && ScriptLexer.Lex(source.Text).Count(token => token.Text == "Wait") == 2,
+                "Toggling the mixed selection back restores the original comments and code");
+            source.Undo();
+            check.That(source.Text == commented, "Undo reverses the uncomment operation as one step");
+            source.Redo();
+            check.That(source.Text == draft, "Redo restores the mixed draft as one step");
+
+            source.Select(0, 0, 1, 1);
+            panel.CommentLines.EmitSignal(BaseButton.SignalName.Pressed);
+            check.That(source.Text == "  //Wait(1);\n\t//// kept\n   \n  Wait(2);\nend",
+                "A selection ending within a line includes that line only");
+            source.Undo();
+            source.Deselect();
+            source.SetCaretLine(4);
+            source.SetCaretColumn(3);
+            source.GrabFocus();
+            await Frame(tree);
+            tree.Root.PushInput(new InputEventKey { Pressed = true, Keycode = Key.Slash, CtrlPressed = true });
+            await Frame(tree);
+            check.That(source.Text == "  Wait(1);\n\t// kept\n   \n  Wait(2);\n//end" && source.GetCaretColumn() == 5,
+                "Ctrl+/ comments the current line and retains the caret relative to the text");
+            tree.Root.PushInput(new InputEventKey { Pressed = true, Keycode = Key.Slash, CtrlPressed = true });
+            await Frame(tree);
+            check.That(source.Text == draft && source.GetCaretColumn() == 3,
+                "Ctrl+/ restores the current line and caret");
+
+            const string unicode = " \tAlpha(\"🚀\");\n β\n";
+            source.Text = unicode;
+            await Frame(tree);
+            source.ClearUndoHistory();
+            source.Select(1, 2, 0, 3);
+            panel.CommentLines.EmitSignal(BaseButton.SignalName.Pressed);
+            check.That(source.Text == " \t//Alpha(\"🚀\");\n //β\n" && source.HasSelection() &&
+                source.GetCaretLine() == 0 && source.GetCaretColumn() == 5 &&
+                source.GetSelectionOriginLine() == 1 && source.GetSelectionOriginColumn() == 4,
+                "Unicode text and reversed selection retain their caret and anchor");
+            source.Undo();
+            check.That(source.Text == unicode, "Undo restores the exact Unicode draft");
+            const string afterSupplementary = " \tAlpha(\"🚀";
+            int unicodeColumn = afterSupplementary.EnumerateRunes().Count();
+            source.Deselect();
+            source.Select(0, unicodeColumn, 1, 2);
+            panel.CommentLines.EmitSignal(BaseButton.SignalName.Pressed);
+            check.That(source.Text == " \t//Alpha(\"🚀\");\n //β\n" &&
+                source.GetSelectionFromLine() == 0 && source.GetSelectionFromColumn() == unicodeColumn + 2 &&
+                source.GetSelectionToLine() == 1 && source.GetSelectionToColumn() == 4,
+                "Selection columns after a supplementary character remain correct");
+            source.Undo();
+            source.Deselect();
+            source.SetCaretLine(0);
+            source.SetCaretColumn(unicodeColumn);
+            panel.CommentLines.EmitSignal(BaseButton.SignalName.Pressed);
+            check.That(source.GetCaretLine() == 0 && source.GetCaretColumn() == unicodeColumn + 2,
+                "A caret after a supplementary character keeps its logical position");
+            source.Undo();
+            source.Deselect();
+            source.SetCaretLine(0);
+            source.SetCaretColumn(0);
+            source.GrabFocus();
+            await Frame(tree);
+            int secondary = source.AddCaret(1, 0);
+            if (secondary >= 0)
+            {
+                int downCount = 0, pressedCount = 0, caretsAtDown = -1, caretsAtPressed = -1;
+                void OnMultipleDown() { downCount++; caretsAtDown = source.GetCaretCount(); }
+                void OnMultiplePressed() { pressedCount++; caretsAtPressed = source.GetCaretCount(); }
+                panel.CommentLines.ButtonDown += OnMultipleDown;
+                panel.CommentLines.Pressed += OnMultiplePressed;
+                check.That(source.HasFocus() && source.GetCaretCount() == 2,
+                    "Multicaret mouse control begins with the source focused and two carets");
+                buttonBounds = panel.CommentLines.GetGlobalRect();
+                buttonPoint = buttonBounds.Position + buttonBounds.Size / 2;
+                tree.Root.PushInput(new InputEventMouseMotion { Position = buttonPoint, GlobalPosition = buttonPoint }, true);
+                await Frame(tree);
+                tree.Root.PushInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true,
+                    ButtonMask = MouseButtonMask.Left, Position = buttonPoint, GlobalPosition = buttonPoint }, true);
+                tree.Root.PushInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false,
+                    Position = buttonPoint, GlobalPosition = buttonPoint }, true);
+                await Frame(tree);
+                panel.CommentLines.ButtonDown -= OnMultipleDown;
+                panel.CommentLines.Pressed -= OnMultiplePressed;
+                check.That(downCount == 1 && pressedCount == 1 && caretsAtDown == 2 && caretsAtPressed == 2,
+                    "Real multicaret click reaches the button with both carets intact");
+                check.That(source.Text == unicode && panel.CommentNotice.Visible,
+                    "Real multicaret click is refused without changing the draft");
+                source.RemoveSecondaryCarets();
+            }
+            else check.That(false, "The multiple-caret refusal control was set up");
+            check.That(session is not null && session.ToBytes().SequenceEqual(beforeWorld) && beforeFile is not null &&
+                File.ReadAllBytes(sourcePath!).SequenceEqual(beforeFile),
+                "Comment actions leave the world and original source file unchanged");
+            source.Text = savedDraft;
+            await Frame(tree);
+        }
+        finally
+        {
+            tree.Root.Size = oldSize;
+            await Frame(tree);
+        }
     }
 
     private static void CheckUnitRowsPage(LevelEditorPage page, Checks check)
@@ -567,6 +755,7 @@ internal static class ScriptsPageTests
             const string Typed = "// alpha, edited\ninit()\n{\n\tPause(2);\n}\n";
             page.Scripts.Source.Text = Typed;
             CheckEditableFind(page, Typed, check);
+        await CheckLineComments(page, tree, Typed, check);
             CheckMissionDraftPreserved(page, Typed, check);
             page.CompileScriptButton.EmitSignal(BaseButton.SignalName.Pressed);
             for (int frame = 0; frame < 3; frame++) await Frame(tree);
