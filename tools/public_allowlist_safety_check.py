@@ -457,7 +457,8 @@ def _git_scan_environment() -> dict[str, str]:
         raise GitEnvironmentError("unsupported Git repository/index/worktree override: " + ", ".join(sorted(bad)))
     env = {key: value for key, value in os.environ.items() if not key.upper().startswith("GIT_")}
     env.update({"GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1",
-                "GIT_OPTIONAL_LOCKS": "0", "GIT_TERMINAL_PROMPT": "0"})
+                "GIT_OPTIONAL_LOCKS": "0", "GIT_TERMINAL_PROMPT": "0",
+                "GIT_NO_LAZY_FETCH": "1", "GIT_NO_REPLACE_OBJECTS": "1"})
     return env
 
 
@@ -1613,6 +1614,52 @@ def synthetic_git_fixture_environment_self_test() -> list[str]:
     return failures
 
 
+def scanner_git_environment_self_test() -> list[str]:
+    """Check scanner Git flags with authored inputs and no network access."""
+    from unittest.mock import patch
+
+    failures: list[str] = []
+    with tempfile.TemporaryDirectory(prefix="synthetic-scan-git-") as tmp:
+        root = Path(tmp)
+        (root / "tracked.txt").write_text("authored fixture\n", encoding="utf-8")
+        (root / ".gitmodules").write_text("authored fixture\n", encoding="utf-8")
+        observed: list[dict[str, str]] = []
+
+        def fake_git(args, **kwargs):
+            observed.append(kwargs.get("env", {}))
+            if "ls-files" in args:
+                output = b"tracked.txt\0"
+            elif "config" in args:
+                output = "submodule.demo.path refs/demo\n"
+            else:
+                output = b"authored fixture\n"
+            return subprocess.CompletedProcess(args, 0, stdout=output)
+
+        with patch.dict(os.environ, {"GIT_NO_LAZY_FETCH": "0", "GIT_NO_REPLACE_OBJECTS": ""}):
+            with patch.object(subprocess, "run", side_effect=fake_git):
+                public_candidate_files(root)
+                submodule_paths(root)
+                _submodule_git(root, "refs/demo", "rev-parse", "--show-toplevel")
+        if (len(observed) != 3 or any(env.get("GIT_NO_LAZY_FETCH") != "1" or
+                                      env.get("GIT_NO_REPLACE_OBJECTS") != "1" for env in observed)):
+            failures.append("scanner Git calls did not force no-lazy-fetch and no-replacement settings")
+
+        def git(*args: str, data: bytes | None = None, env: dict[str, str] | None = None) -> bytes:
+            return subprocess.run(["git", "-c", "core.hooksPath=/dev/null", *args], cwd=root,
+                                  input=data, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                  check=True).stdout.strip()
+
+        git("init", "-q")
+        original = git("hash-object", "-w", "--stdin", data=b"synthetic original\n").decode()
+        replacement = git("hash-object", "-w", "--stdin", data=b"synthetic replacement\n").decode()
+        git("replace", original, replacement)
+        if git("cat-file", "-p", original) != b"synthetic replacement":
+            failures.append("synthetic replacement-ref control did not take effect")
+        if git("cat-file", "-p", original, env=_git_scan_environment()) != b"synthetic original":
+            failures.append("scanner Git environment did not ignore synthetic replacement objects")
+    return failures
+
+
 def _run_self_test() -> int:
     # A reviewed encoding allows only the exact path/content. Secret scanning
     # still runs on that same file; no general TSV or Base64 exemption exists.
@@ -2017,6 +2064,12 @@ def _run_self_test() -> int:
             print(f"- root findings: {sorted(root_findings, key=lambda item: item.path)!r}")
             print(f"- combined findings: {sorted(combined_findings, key=lambda item: item.path)!r}")
             return 1
+    scanner_environment_failures = scanner_git_environment_self_test()
+    if scanner_environment_failures:
+        print("Public payload safety self-test: FAIL")
+        for item in scanner_environment_failures:
+            print(f"- {item}")
+        return 1
     fixture_environment_failures = synthetic_git_fixture_environment_self_test()
     if fixture_environment_failures:
         print("Public payload safety self-test: FAIL")
