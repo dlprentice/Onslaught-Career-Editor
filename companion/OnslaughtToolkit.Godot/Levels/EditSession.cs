@@ -137,12 +137,20 @@ public sealed class EditSession
     /// <param name="baseline">The body as the game has it (an archive's body, or a mod's world file).</param>
     /// <param name="isBaseWorld">True for a level's base world: careers remember which of its buildings still stand.</param>
     /// <exception cref="InvalidDataException">The bytes are not a world body, or do not write back to the same bytes.</exception>
-    public EditSession(byte[] baseline, bool isBaseWorld = false)
+    public EditSession(byte[] baseline, bool isBaseWorld = false) : this(baseline, baseline, isBaseWorld)
+    {
+    }
+
+    // Reopening a project restores its current body against the original baseline. Earlier undo history is not stored.
+    internal static EditSession Restore(byte[] baseline, byte[] working, bool isBaseWorld = false) => new(baseline, working, isBaseWorld);
+
+    private EditSession(byte[] baseline, byte[] working, bool isBaseWorld)
     {
         _baselineBytes = baseline.ToArray();
         _baseline = WorldBody.Read(_baselineBytes);
         if (!_baseline.Write().AsSpan().SequenceEqual(_baselineBytes)) throw new InvalidDataException("This world body does not write back to the same bytes, so it cannot be edited safely.");
-        Body = WorldBody.Read(_baselineBytes);
+        Body = WorldBody.Read(working);
+        if (!Body.Write().AsSpan().SequenceEqual(working)) throw new InvalidDataException("The working world does not write back to the same bytes, so it cannot be restored safely.");
         IsBaseWorld = isBaseWorld;
     }
 
