@@ -274,7 +274,7 @@ public partial class LevelTerrainViewport : SubViewportContainer
             _distance = _fitDistance;
             PositionCamera();
             _surface = surface;
-            _help.Text = "Click to select · right-click to move (height unchanged) · drag to orbit · wheel to zoom";
+        _help.Text = "Click to select · right-click to move (height unchanged) · drag to orbit · wheel to zoom. Markers show through terrain.";
         }
         catch (Exception error) when (error is ArgumentException or System.IO.InvalidDataException or OverflowException)
         {
