@@ -171,6 +171,15 @@ internal static class LevelObjectDragPageTests
             start = Marker(page, camera, index); target = Target(camera, terrain, 270, 210);
             Button(view, start, true); Motion(view, start, target);
             movesBeforeChange = moves;
+            session.Body.Things[index] = session.Body.Things[index].Clone();
+            before = session.ToBytes(); undo = session.UndoDescription; redo = session.CanRedo;
+            Button(view, target, false);
+            check.That(moves == movesBeforeChange && Unchanged(session, before, undo, redo),
+                "an unannounced object replacement invalidates the pending drag without changing history");
+            await Frames(tree);
+            start = Marker(page, camera, index); target = Target(camera, terrain, 270, 210);
+            Button(view, start, true); Motion(view, start, target);
+            movesBeforeChange = moves;
             if (!model.Open(model.Level!.Value) || model.Session is not { } reopened)
                 check.Fail("the authored level reopens for stale-session cancellation");
             else
