@@ -330,6 +330,23 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         return Apply(new MoveObject(row, target), $"{Session.Body.Things[row].Label} (row {row}) now stands at {Describe(target)}.");
     }
 
+    /// <summary>
+    /// Arranges selected existing units as one undoable edit, in selection order. This moves records only; it
+    /// neither disables their scripts nor checks clearance between the models or against terrain features.
+    /// </summary>
+    public MoveOutcome ArrangeUnitsInRow(IReadOnlyList<int>? rows, Vector2 first, Vector2 step)
+    {
+        if (Session is null) return new MoveOutcome(MoveResult.Refused, "Open a level first.");
+        if (rows is null) return new MoveOutcome(MoveResult.Refused, "Choose units to arrange.");
+        ArrangeUnitRow arrangement = new(rows, first, step);
+        try
+        {
+            if (!arrangement.WouldChange(Session.Body)) return new MoveOutcome(MoveResult.Unchanged, "Those units are already arranged there.");
+        }
+        catch (InvalidOperationException error) { return new MoveOutcome(MoveResult.Refused, error.Message); }
+        return Apply(arrangement, "The selected units are arranged in a row. Their heights are unchanged.");
+    }
+
     /// <summary>Puts a row back where the level has it (an edit that can be undone).</summary>
     public MoveOutcome Reset(int row)
     {
