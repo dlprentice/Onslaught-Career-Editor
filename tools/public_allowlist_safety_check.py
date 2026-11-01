@@ -440,6 +440,10 @@ class GitEnvironmentError(RuntimeError):
     pass
 
 
+class GitCapabilityError(RuntimeError):
+    pass
+
+
 def _git_scan_environment() -> dict[str, str]:
     overrides = (
         "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR",
@@ -459,6 +463,15 @@ def _git_scan_environment() -> dict[str, str]:
     env.update({"GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1",
                 "GIT_OPTIONAL_LOCKS": "0", "GIT_TERMINAL_PROMPT": "0",
                 "GIT_NO_LAZY_FETCH": "1", "GIT_NO_REPLACE_OBJECTS": "1"})
+    # Probe the option instead of assuming a version: older or backported
+    # installations can differ, and an unsupported partial clone must fail shut.
+    try:
+        probe = subprocess.run(["git", "--no-lazy-fetch", "--version"], env=env,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10, check=False)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise GitCapabilityError("could not verify Git supports --no-lazy-fetch") from exc
+    if probe.returncode:
+        raise GitCapabilityError("Git must support --no-lazy-fetch; older or backported installations may differ")
     return env
 
 
@@ -696,6 +709,8 @@ def submodule_scan_findings(root: Path) -> list[Finding]:
         return [exc.finding]
     except GitEnvironmentError as exc:
         return [Finding(".", "deny-git-environment-override", str(exc))]
+    except GitCapabilityError as exc:
+        return [Finding(".", "deny-git-no-lazy-fetch-unsupported", str(exc))]
     except RuntimeError as exc:
         return [Finding(".gitmodules", "deny-unreadable-submodule-map", str(exc))]
     findings: list[Finding] = []
@@ -706,6 +721,9 @@ def submodule_scan_findings(root: Path) -> list[Finding]:
             findings.append(exc.finding)
         except GitEnvironmentError as exc:
             findings.append(Finding(".", "deny-git-environment-override", str(exc)))
+            break
+        except GitCapabilityError as exc:
+            findings.append(Finding(".", "deny-git-no-lazy-fetch-unsupported", str(exc)))
             break
     return findings
 
@@ -997,6 +1015,8 @@ def check_repo(root: Path, *, include_submodules: bool = False, stale_allowances
         return [exc.finding]
     except GitEnvironmentError as exc:
         return [Finding(".", "deny-git-environment-override", str(exc))]
+    except GitCapabilityError as exc:
+        return [Finding(".", "deny-git-no-lazy-fetch-unsupported", str(exc))]
     except RuntimeError as exc:
         return [Finding(".", "deny-public-candidate-enumeration-failed", str(exc))]
     if not paths:
@@ -1005,6 +1025,8 @@ def check_repo(root: Path, *, include_submodules: bool = False, stale_allowances
     if include_submodules:
         try:
             submodule_prefixes = tuple(f"{item}/" for item in submodule_paths(root))
+        except GitCapabilityError as exc:
+            return [Finding(".", "deny-git-no-lazy-fetch-unsupported", str(exc))]
         except RuntimeError:
             submodule_prefixes = ()
     for path in paths:
@@ -1614,6 +1636,37 @@ def synthetic_git_fixture_environment_self_test() -> list[str]:
     return failures
 
 
+def git_feature_probe_self_test() -> list[str]:
+    """Unsupported synthetic Git must fail before any repository operation."""
+    from unittest.mock import patch
+
+    failures: list[str] = []
+    with tempfile.TemporaryDirectory(prefix="synthetic-unsupported-git-") as tmp:
+        root = Path(tmp)
+        fake_bin = root / "bin"
+        fake_bin.mkdir()
+        fake_git = fake_bin / "git"
+        fake_git.write_text(
+            '#!/bin/sh\n'
+            'if [ "$1" = "--no-lazy-fetch" ] && [ "$2" = "--version" ]; then exit 129; fi\n'
+            'printf x > "$SYNTHETIC_GIT_MARKER"\n'
+            'exit 1\n', encoding="utf-8")
+        fake_git.chmod(0o700)
+        marker = root / "git-operation-called"
+        with patch.dict(os.environ, {"PATH": str(fake_bin), "SYNTHETIC_GIT_MARKER": str(marker)}):
+            findings = check_repo(root, stale_allowances=False)
+            cli = subprocess.run([sys.executable, "-I", "-B", str(Path(__file__).resolve()),
+                                  "--repo-root", str(root)], env=os.environ.copy(), text=True,
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=15, check=False)
+        if not any(f.label == "deny-git-no-lazy-fetch-unsupported" for f in findings):
+            failures.append("unsupported Git did not return the required feature diagnostic")
+        if cli.returncode != 1 or "deny-git-no-lazy-fetch-unsupported" not in cli.stdout:
+            failures.append("unsupported Git did not produce the CLI feature diagnostic")
+        if marker.exists():
+            failures.append("unsupported Git ran a repository operation after the feature probe")
+    return failures
+
+
 def scanner_git_environment_self_test() -> list[str]:
     """Check scanner Git flags with authored inputs and no network access."""
     from unittest.mock import patch
@@ -1623,10 +1676,10 @@ def scanner_git_environment_self_test() -> list[str]:
         root = Path(tmp)
         (root / "tracked.txt").write_text("authored fixture\n", encoding="utf-8")
         (root / ".gitmodules").write_text("authored fixture\n", encoding="utf-8")
-        observed: list[dict[str, str]] = []
+        observed: list[tuple[list[str], dict[str, str]]] = []
 
         def fake_git(args, **kwargs):
-            observed.append(kwargs.get("env", {}))
+            observed.append((args, kwargs.get("env", {})))
             if "ls-files" in args:
                 output = b"tracked.txt\0"
             elif "config" in args:
@@ -1640,8 +1693,10 @@ def scanner_git_environment_self_test() -> list[str]:
                 public_candidate_files(root)
                 submodule_paths(root)
                 _submodule_git(root, "refs/demo", "rev-parse", "--show-toplevel")
-        if (len(observed) != 3 or any(env.get("GIT_NO_LAZY_FETCH") != "1" or
-                                      env.get("GIT_NO_REPLACE_OBJECTS") != "1" for env in observed)):
+        probes = [args for args, _ in observed if args == ["git", "--no-lazy-fetch", "--version"]]
+        if (len(observed) != 6 or len(probes) != 3 or
+                any(env.get("GIT_NO_LAZY_FETCH") != "1" or
+                    env.get("GIT_NO_REPLACE_OBJECTS") != "1" for _, env in observed)):
             failures.append("scanner Git calls did not force no-lazy-fetch and no-replacement settings")
 
         def git(*args: str, data: bytes | None = None, env: dict[str, str] | None = None) -> bytes:
@@ -2064,6 +2119,12 @@ def _run_self_test() -> int:
             print(f"- root findings: {sorted(root_findings, key=lambda item: item.path)!r}")
             print(f"- combined findings: {sorted(combined_findings, key=lambda item: item.path)!r}")
             return 1
+    git_feature_failures = git_feature_probe_self_test()
+    if git_feature_failures:
+        print("Public payload safety self-test: FAIL")
+        for item in git_feature_failures:
+            print(f"- {item}")
+        return 1
     scanner_environment_failures = scanner_git_environment_self_test()
     if scanner_environment_failures:
         print("Public payload safety self-test: FAIL")
