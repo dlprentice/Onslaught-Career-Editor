@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using System.Globalization;
 using System.IO.Compression;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -176,6 +177,42 @@ internal static class LevelMapPageTests
             await Frame(tree);
             check.That(missionTerrainPanel.IsVisibleInTree() && missionTerrainViewport is not null && !missionTerrainViewport.IsVisibleInTree(),
                 "the Mission tab gives the mission controls the view and hides the terrain preview");
+            if (missionTerrainPanel.Snapshot is { } realSnapshot && model.Session is { } missionSession &&
+                missionSession.Body.Scripts.Count > 0 && missionSession.Body.Things.Count > 1)
+            {
+                // The authored world has no object assignment, so make one in a separate in-memory world only.
+                WorldBody assignedWorld = WorldBody.Read(missionSession.ToBytes());
+                const int targetRow = 1, otherRow = 0;
+                assignedWorld.Things[targetRow].Init.Script = assignedWorld.Scripts[0].Name;
+                MissionReferenceIndex assigned = MissionReferenceIndex.Capture(assignedWorld, assignedWorld.Scripts.Count, assignedWorld.Things.Count * 8);
+                int scriptIndex = Enumerable.Range(0, assigned.Scripts.Count).FirstOrDefault(i => assigned.Scripts[i].Uses.Any(use => use.Row == targetRow), -1);
+                int useIndex = scriptIndex < 0 ? -1 : Enumerable.Range(0, assigned.Scripts[scriptIndex].Uses.Count)
+                    .FirstOrDefault(i => assigned.Scripts[scriptIndex].Uses[i].Row == targetRow, -1);
+                bool assignmentAvailable = scriptIndex >= 0 && useIndex >= 0;
+                check.That(assignmentAvailable, "the separate authored snapshot contains an object assigned to a script");
+                if (assignmentAvailable)
+                {
+                    page.SelectIndex(otherRow);
+                    missionTerrainPanel.SetSnapshot(assigned);
+                    bool selected = missionTerrainPanel.TrySelectScript(scriptIndex) && missionTerrainPanel.TrySelectUse(useIndex);
+                    await Frame(tree);
+                    check.That(selected && page.SelectedRow == targetRow && map.Selected == targetRow &&
+                               missionTerrainSplit.CurrentTab == 0 && missionTerrainViewport is not null && missionTerrainViewport.IsVisibleInTree(),
+                               "selecting a mission object selects the same page row and returns to the 3D tab");
+
+                    // The replacement has the same valid indexes and row; only its identity differs.
+                    MissionReferenceIndex replacement = MissionReferenceIndex.Capture(assignedWorld, assignedWorld.Scripts.Count, assignedWorld.Things.Count * 8);
+                    missionTerrainPanel.SetSnapshot(replacement);
+                    missionTerrainSplit.CurrentTab = 1;
+                    page.SelectIndex(otherRow);
+                    MethodInfo? handler = typeof(LevelEditorPage).GetMethod("OnMissionUseSelected", BindingFlags.Instance | BindingFlags.NonPublic);
+                    handler?.Invoke(page, [assigned, scriptIndex, useIndex]);
+                    check.That(handler is not null && page.SelectedRow == otherRow && map.Selected == otherRow && missionTerrainSplit.CurrentTab == 1,
+                               "a delayed mission selection from a replaced snapshot changes neither the selected row nor the tab");
+                }
+                missionTerrainPanel.SetSnapshot(realSnapshot);
+            }
+            else check.Fail("the authored level supplies a mission snapshot and object rows");
             missionTerrainSplit.CurrentTab = 0;
             await Frame(tree);
             check.That(missionTerrainViewport is not null && missionTerrainViewport.IsVisibleInTree() && !missionTerrainPanel.IsVisibleInTree(),
