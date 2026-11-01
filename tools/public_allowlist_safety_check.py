@@ -18,6 +18,10 @@ do not read them, and every other rule still does. Reviewed exceptions are RETAI
 exact file), RETAIL_TEXT_ALLOW_PREFIX (a ``local-lab/`` prefix in a document that names the lab folder) and
 RETAIL_TEXT_ALLOW_RULE (one rule in a generated file), each with a reason; an entry that no longer matches anything
 fails as stale, so the lists cannot outlive the text they excuse.
+
+Git scans reject repository/index/worktree environment overrides. Repository-local
+ignore files still apply; user-global excludes and system/global Git configuration
+are ignored so they cannot silently hide candidates.
 """
 
 from __future__ import annotations
@@ -432,11 +436,40 @@ def normalize(path: str) -> str:
     return path.replace("\\", "/")
 
 
+class GitEnvironmentError(RuntimeError):
+    pass
+
+
+def _git_scan_environment() -> dict[str, str]:
+    overrides = (
+        "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR",
+        "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+        "GIT_NAMESPACE", "GIT_PREFIX", "GIT_CEILING_DIRECTORIES",
+        "GIT_DISCOVERY_ACROSS_FILESYSTEM", "GIT_GRAFT_FILE", "GIT_SHALLOW_FILE",
+        "GIT_REPLACE_REF_BASE", "GIT_CONFIG_PARAMETERS",
+    )
+    bad = [name for name in overrides if os.environ.get(name)]
+    for name, value in os.environ.items():
+        if (re.fullmatch(r"GIT_CONFIG_KEY_\d+", name) and
+                value.lower() in {"core.worktree", "core.bare", "extensions.worktreeconfig"}):
+            bad.append(name)
+    if bad:
+        raise GitEnvironmentError("unsupported Git repository/index/worktree override: " + ", ".join(sorted(bad)))
+    env = {key: value for key, value in os.environ.items() if not key.upper().startswith("GIT_")}
+    env.update({"GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1",
+                "GIT_OPTIONAL_LOCKS": "0", "GIT_TERMINAL_PROMPT": "0"})
+    return env
+
+
 def public_candidate_files(root: Path, *, include_submodules: bool = False) -> list[str]:
+    """Enumerate candidates without user-global Git configuration or excludes."""
+    env = _git_scan_environment()
     try:
         result = subprocess.run(
-            ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+            ["git", "-c", "core.fsmonitor=false", "-c", f"core.excludesFile={os.devnull}",
+             "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
             cwd=root,
+            env=env,
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -478,10 +511,12 @@ def submodule_paths(root: Path) -> list[str]:
     gitmodules = root / ".gitmodules"
     if not gitmodules.is_file():
         return []
+    env = _git_scan_environment()
     try:
         result = subprocess.run(
             ["git", "config", "--file", str(gitmodules), "--get-regexp", r"^submodule\..*\.path$"],
             cwd=root,
+            env=env,
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -507,9 +542,7 @@ class SubmoduleScanError(RuntimeError):
 
 def _submodule_git(cwd: Path, submodule_path: str, *args: str) -> bytes:
     # A caller's Git overrides must not redirect a safety check to another tree.
-    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
-    env.update({"GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1",
-                "GIT_OPTIONAL_LOCKS": "0", "GIT_TERMINAL_PROMPT": "0"})
+    env = _git_scan_environment()
     try:
         return subprocess.run(["git", "-c", "core.fsmonitor=false", *args], cwd=cwd,
                               env=env, check=True, stdout=subprocess.PIPE,
@@ -660,6 +693,8 @@ def submodule_scan_findings(root: Path) -> list[Finding]:
         paths = _declared_submodule_paths(root)
     except SubmoduleScanError as exc:
         return [exc.finding]
+    except GitEnvironmentError as exc:
+        return [Finding(".", "deny-git-environment-override", str(exc))]
     except RuntimeError as exc:
         return [Finding(".gitmodules", "deny-unreadable-submodule-map", str(exc))]
     findings: list[Finding] = []
@@ -668,6 +703,9 @@ def submodule_scan_findings(root: Path) -> list[Finding]:
             _validated_submodule_files(root, submodule_path)
         except SubmoduleScanError as exc:
             findings.append(exc.finding)
+        except GitEnvironmentError as exc:
+            findings.append(Finding(".", "deny-git-environment-override", str(exc)))
+            break
     return findings
 
 
@@ -956,6 +994,8 @@ def check_repo(root: Path, *, include_submodules: bool = False, stale_allowances
         paths = public_candidate_files(root, include_submodules=include_submodules)
     except SubmoduleScanError as exc:
         return [exc.finding]
+    except GitEnvironmentError as exc:
+        return [Finding(".", "deny-git-environment-override", str(exc))]
     except RuntimeError as exc:
         return [Finding(".", "deny-public-candidate-enumeration-failed", str(exc))]
     if not paths:
@@ -1346,7 +1386,8 @@ def _submodule_identity_self_test() -> list[str]:
         )
         result = subprocess.run([sys.executable, "-B", "-c", cli, str(Path(__file__).resolve()), str(valid)],
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
-        if result.returncode or "untracked and ignored submodule files were not checked" not in result.stdout.lower():
+        if (result.returncode or "untracked and ignored submodule files were not checked" not in result.stdout.lower()
+                or "user-global excludes are not applied" not in result.stdout.lower()):
             failures.append("submodule scan did not disclose its tracked-only scope")
 
         original_run = subprocess.run
@@ -1384,6 +1425,48 @@ def _submodule_identity_self_test() -> list[str]:
         else:
             if not any(f.label == "deny-unreadable-submodule-scan" for f in denied):
                 failures.append("denied Git worktree resolution did not produce a structured finding")
+
+        for name, value in (("GIT_INDEX_FILE", source / ".git" / "index"),
+                            ("GIT_DIR", source / ".git"),
+                            ("GIT_WORK_TREE", source),
+                            ("GIT_COMMON_DIR", source / ".git"),
+                            ("GIT_OBJECT_DIRECTORY", source / ".git" / "objects"),
+                            ("GIT_ALTERNATE_OBJECT_DIRECTORIES", source / ".git" / "objects"),
+                            ("GIT_NAMESPACE", "synthetic-namespace"),
+                            ("GIT_CONFIG_PARAMETERS", "synthetic-override"),
+                            ("GIT_CONFIG_KEY_0", "core.worktree")):
+            with patch.dict(os.environ, {name: str(value)}):
+                overridden = check_repo(valid, include_submodules=True, stale_allowances=False)
+            if not any(f.label == "deny-git-environment-override" for f in overridden):
+                failures.append("Git repository or index override did not fail explicitly")
+            if any(str(value) in f.detail for f in overridden):
+                failures.append("Git override diagnostic disclosed its value")
+        overridden_env = dict(os.environ, GIT_INDEX_FILE=str(source / ".git" / "index"))
+        result = subprocess.run([sys.executable, "-B", "-c", cli, str(Path(__file__).resolve()), str(valid)],
+                                env=overridden_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                text=True, check=False)
+        if (result.returncode == 0 or "deny-git-environment-override" not in result.stdout or
+                str(source / ".git" / "index") in result.stdout):
+            failures.append("CLI did not report the Git index override safely")
+        with patch.dict(os.environ, {"GIT_OPTIONAL_LOCKS": "0"}):
+            if check_repo(valid, include_submodules=True, stale_allowances=False):
+                failures.append("safe optional-lock setting was rejected")
+
+        xdg = scratch / "synthetic-xdg"
+        (xdg / "git").mkdir(parents=True)
+        (xdg / "git" / "ignore").write_text("global-only.txt\n", encoding="utf-8")
+        (valid / "global-only.txt").write_text("synthetic untracked file\n", encoding="utf-8")
+        (valid / ".gitignore").write_text("repo-ignored.txt\n", encoding="utf-8")
+        (valid / ".git" / "info").mkdir(parents=True, exist_ok=True)
+        (valid / ".git" / "info" / "exclude").write_text("local-excluded.txt\n", encoding="utf-8")
+        for name in ("repo-ignored.txt", "local-excluded.txt"):
+            (valid / name).write_text("synthetic ignored file\n", encoding="utf-8")
+        with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(xdg)}):
+            root_candidates = public_candidate_files(valid, include_submodules=True)
+        if "global-only.txt" not in root_candidates:
+            failures.append("user-global ignore silently hid an untracked root candidate")
+        if any(name in root_candidates for name in ("repo-ignored.txt", "local-excluded.txt")):
+            failures.append("repository-local ignore rules were not preserved")
 
         for flag, clear in (("--assume-unchanged", "--no-assume-unchanged"),
                             ("--skip-worktree", "--no-skip-worktree")):
@@ -1990,6 +2073,8 @@ def main() -> int:
         return 1
     print("Public payload safety check: PASS")
     print(f"Public candidate files checked: {count}")
+    if not args.payload_root:
+        print("Git scope: repository ignore files apply; user-global excludes are not applied.")
     if args.include_submodules and not args.payload_root:
         print("Submodule scope: tracked working-tree files; HEAD matches the gitlink and Git reports tracked state clean. "
               "Untracked and ignored submodule files were not checked.")
