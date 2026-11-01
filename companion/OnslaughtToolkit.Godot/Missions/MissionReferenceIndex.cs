@@ -4,22 +4,21 @@ using System.Collections.Generic;
 namespace OnslaughtToolkit.Companion.Levels;
 
 /// <summary>
-/// A bounded, read-only view of the script references the existing catalogue
-/// can identify. Resolution is the catalogue's observation, not proof that a
-/// mission will run or that every runtime reference is known.
+/// A bounded, read-only view of scripts and the object assignments found in one
+/// world. A missing name here may be supplied by another world. This does not
+/// describe references inside script instructions or prove a mission will run.
 /// </summary>
 public sealed class MissionReferenceIndex
 {
     public sealed class Script
     {
-        internal Script(int index, ScriptSummary summary, IReadOnlyList<ScriptReference> references)
+        internal Script(int index, ScriptSummary summary)
         {
             Index = index;
             Name = summary.Name;
             Events = Copy(summary.Events);
             Calls = Copy(summary.Calls);
             Uses = Copy(summary.Uses);
-            References = Copy(references);
         }
 
         public int Index { get; }
@@ -27,19 +26,22 @@ public sealed class MissionReferenceIndex
         public IReadOnlyList<string> Events { get; }
         public IReadOnlyList<NativeCall> Calls { get; }
         public IReadOnlyList<ScriptUse> Uses { get; }
-        public IReadOnlyList<ScriptReference> References { get; }
     }
 
-    public readonly record struct UnresolvedReference(int ScriptIndex, string ScriptName, string Role, string Name);
+    public readonly record struct ObjectReference(int Row, string Role, string Name, bool Resolved);
 
-    private MissionReferenceIndex(Script[] scripts, UnresolvedReference[] unresolved)
+    private MissionReferenceIndex(Script[] scripts, ObjectReference[] references, ObjectReference[] unresolved)
     {
         Scripts = Array.AsReadOnly(scripts);
+        References = Array.AsReadOnly(references);
         Unresolved = Array.AsReadOnly(unresolved);
     }
 
     public IReadOnlyList<Script> Scripts { get; }
-    public IReadOnlyList<UnresolvedReference> Unresolved { get; }
+    /// <summary>Script assignments on every object in this world, in object order.</summary>
+    public IReadOnlyList<ObjectReference> References { get; }
+    /// <summary>Assignments whose exact-case name was not found in this world.</summary>
+    public IReadOnlyList<ObjectReference> Unresolved { get; }
 
     /// <summary>Rebuild the snapshot after editing, undoing, reloading or switching levels.</summary>
     public static MissionReferenceIndex Capture(WorldBody body, int maxScripts, int maxReferences)
@@ -47,38 +49,56 @@ public sealed class MissionReferenceIndex
         if (body == null) throw new ArgumentNullException(nameof(body));
         if (maxScripts < 0) throw new ArgumentOutOfRangeException(nameof(maxScripts));
         if (maxReferences < 0) throw new ArgumentOutOfRangeException(nameof(maxReferences));
-        if (body.Scripts.Count > maxScripts) throw new InvalidOperationException("The mission has too many scripts to inspect.");
-        return FromSummaries(ScriptCatalog.Of(body), index => ScriptCatalog.ReferencesOf(body, index), maxScripts, maxReferences);
+        if (body.Scripts.Count > maxScripts) throw new InvalidOperationException("Too many scripts for the mission view.");
+        HashSet<string> names = new(StringComparer.Ordinal);
+        foreach (var script in body.Scripts) names.Add(script.Name);
+        var references = CollectReferences(body.Things.Count, row => ScriptCatalog.ReferencesOf(body, row, names), maxReferences);
+        return Assemble(ScriptCatalog.Of(body), references);
     }
 
     internal static MissionReferenceIndex FromSummaries(
         IReadOnlyList<ScriptSummary> summaries,
+        int objectCount,
         Func<int, IReadOnlyList<ScriptReference>> referencesAt,
         int maxScripts,
         int maxReferences)
     {
         if (summaries == null) throw new ArgumentNullException(nameof(summaries));
         if (referencesAt == null) throw new ArgumentNullException(nameof(referencesAt));
+        if (objectCount < 0) throw new ArgumentOutOfRangeException(nameof(objectCount));
         if (maxScripts < 0) throw new ArgumentOutOfRangeException(nameof(maxScripts));
         if (maxReferences < 0) throw new ArgumentOutOfRangeException(nameof(maxReferences));
-        if (summaries.Count > maxScripts) throw new InvalidOperationException("The mission has too many scripts to inspect.");
+        if (summaries.Count > maxScripts) throw new InvalidOperationException("Too many scripts for the mission view.");
 
-        var scripts = new Script[summaries.Count];
-        var unresolved = new List<UnresolvedReference>();
-        int referenceCount = 0;
-        for (int i = 0; i < scripts.Length; i++)
+        return Assemble(summaries, CollectReferences(objectCount, referencesAt, maxReferences));
+    }
+
+    private static List<ObjectReference> CollectReferences(int objectCount,
+        Func<int, IReadOnlyList<ScriptReference>> referencesAt, int maxReferences)
+    {
+        var references = new List<ObjectReference>();
+        for (int row = 0; row < objectCount; row++)
         {
-            var references = referencesAt(i) ?? throw new InvalidOperationException("Script references are unavailable.");
-            if (references.Count > maxReferences - referenceCount)
-                throw new InvalidOperationException("The mission has too many script references to inspect.");
-            referenceCount += references.Count;
-            var summary = summaries[i];
-            scripts[i] = new Script(i, summary, references);
-            foreach (var reference in scripts[i].References)
-                if (!reference.Resolved)
-                    unresolved.Add(new UnresolvedReference(i, summary.Name, reference.Role, reference.Name));
+            var assignments = referencesAt(row) ?? throw new InvalidOperationException("Object assignments are unavailable.");
+            if (assignments.Count > maxReferences - references.Count)
+                throw new InvalidOperationException("Too many object assignments for the mission view.");
+            foreach (var assignment in assignments)
+            {
+                var reference = new ObjectReference(row, assignment.Role, assignment.Name, assignment.Resolved);
+                references.Add(reference);
+            }
         }
-        return new MissionReferenceIndex(scripts, unresolved.ToArray());
+        return references;
+    }
+
+    private static MissionReferenceIndex Assemble(IReadOnlyList<ScriptSummary> summaries, List<ObjectReference> references)
+    {
+        var unresolved = new List<ObjectReference>();
+        foreach (var reference in references)
+            if (!reference.Resolved) unresolved.Add(reference);
+        var scripts = new Script[summaries.Count];
+        for (int i = 0; i < scripts.Length; i++) scripts[i] = new Script(i, summaries[i]);
+        return new MissionReferenceIndex(scripts, references.ToArray(), unresolved.ToArray());
     }
 
     private static IReadOnlyList<T> Copy<T>(IReadOnlyList<T> items)

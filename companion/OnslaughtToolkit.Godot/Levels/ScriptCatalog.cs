@@ -45,6 +45,13 @@ public static class ScriptCatalog
     {
         if (row < 0 || row >= body.Things.Count) return [];
         HashSet<string> names = [.. body.Scripts.Select(script => script.Name)];
+        return ReferencesOf(body, row, names);
+    }
+
+    // A snapshot visits every object. Build its name set once, not once per object.
+    internal static IReadOnlyList<ScriptReference> ReferencesOf(WorldBody body, int row, IReadOnlySet<string> names)
+    {
+        if (row < 0 || row >= body.Things.Count) return [];
         return [.. References(body.Things[row]).Select(reference => new ScriptReference(reference.Role, reference.Name, names.Contains(reference.Name)))];
     }
 

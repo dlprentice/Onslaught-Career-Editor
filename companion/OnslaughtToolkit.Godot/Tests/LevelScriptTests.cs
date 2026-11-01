@@ -40,7 +40,7 @@ internal static class LevelScriptTests
     internal static void Run(string output, Checks check)
     {
         MissionReferenceIndexTests.Run(check);
-        var emptyMissionIndex = OnslaughtToolkit.Companion.Levels.MissionReferenceIndex.Capture(Body(System.Array.Empty<MissionScript>()), 0, 0);
+        var emptyMissionIndex = OnslaughtToolkit.Companion.Levels.MissionReferenceIndex.Capture(new WorldBody(), 0, 0);
         check.That(emptyMissionIndex.Scripts.Count == 0 && emptyMissionIndex.Unresolved.Count == 0,
             "mission reference index reads an empty editor world through the real catalogue");
 
@@ -87,27 +87,30 @@ internal static class LevelScriptTests
             "and the test is by the quote's place: the opening quote after the parenthesis, a line that begins with the parenthesis or the quote is not one");
 
         WorldBody body = Body(Script("alpha", [0], [], ("Pause", 1)), Script("beta", [], ["go"]));
-        var missionReferenceFixtureIndex = MissionReferenceIndex.Capture(body, 1000, 10000);
+        int originalThingCount = body.Things.Count;
+        while (body.Things.Count <= body.Scripts.Count) body.Things.Add(new PlacedObject());
+        body.Things.Add(new PlacedObject { Init = new ObjectInit { Script = "missing-after-scripts" } });
+        var missionReferenceFixtureIndex = MissionReferenceIndex.Capture(body, 100, 100);
         bool missionReferenceFixtureRefusedLimit = false;
-        try { MissionReferenceIndex.Capture(body, 0, 10000); }
+        try { MissionReferenceIndex.Capture(body, 0, 100); }
         catch (InvalidOperationException) { missionReferenceFixtureRefusedLimit = true; }
-        check.That(missionReferenceFixtureRefusedLimit, "mission reference index refuses an over-limit authored world");
+        check.That(missionReferenceFixtureRefusedLimit, "mission index refuses too many scripts");
         var missionReferenceFixtureSummaries = ScriptCatalog.Of(body);
-        bool missionReferenceFixtureMatches = missionReferenceFixtureIndex.Scripts.Count > 0
-            && missionReferenceFixtureIndex.Scripts.Count == missionReferenceFixtureSummaries.Count;
-        int missionReferenceFixtureMissing = 0;
-        for (int missionReferenceFixtureRow = 0; missionReferenceFixtureRow < missionReferenceFixtureIndex.Scripts.Count; missionReferenceFixtureRow++)
+        bool missionReferenceFixtureMatches = missionReferenceFixtureIndex.Scripts.Count == missionReferenceFixtureSummaries.Count;
+        for (int script = 0; script < missionReferenceFixtureIndex.Scripts.Count; script++)
         {
-            var missionReferenceFixtureRefs = ScriptCatalog.ReferencesOf(body, missionReferenceFixtureRow);
-            var missionReferenceFixtureScript = missionReferenceFixtureIndex.Scripts[missionReferenceFixtureRow];
-            missionReferenceFixtureMatches &= missionReferenceFixtureScript.Index == missionReferenceFixtureRow
-                && missionReferenceFixtureScript.Name == missionReferenceFixtureSummaries[missionReferenceFixtureRow].Name
-                && missionReferenceFixtureScript.References.Count == missionReferenceFixtureRefs.Count;
-            foreach (var missionReferenceFixtureRef in missionReferenceFixtureRefs)
-                if (!missionReferenceFixtureRef.Resolved) missionReferenceFixtureMissing++;
+            var snapshot = missionReferenceFixtureIndex.Scripts[script];
+            var summary = missionReferenceFixtureSummaries[script];
+            missionReferenceFixtureMatches &= snapshot.Index == script && snapshot.Name == summary.Name
+                && snapshot.Uses.SequenceEqual(summary.Uses);
         }
-        check.That(missionReferenceFixtureMatches && missionReferenceFixtureIndex.Unresolved.Count == missionReferenceFixtureMissing,
-            "mission reference index follows the real catalogue on an authored world");
+        var expectedMissing = Enumerable.Range(0, body.Things.Count)
+            .SelectMany(row => ScriptCatalog.ReferencesOf(body, row))
+            .Where(reference => !reference.Resolved).Select(reference => (reference.Role, reference.Name));
+        check.That(missionReferenceFixtureMatches
+            && missionReferenceFixtureIndex.Unresolved.Select(reference => (reference.Role, reference.Name)).SequenceEqual(expectedMissing),
+            "mission snapshot keeps scripts in order and reports missing assignments from every object");
+        body.Things.RemoveRange(originalThingCount, body.Things.Count - originalThingCount);
 
         body.Things[0].Init.Name = "Tank 1";
         body.Things[1].Init.Name = "tank 1";
