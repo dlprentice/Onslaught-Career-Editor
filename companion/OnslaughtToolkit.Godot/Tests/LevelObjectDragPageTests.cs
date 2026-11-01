@@ -100,7 +100,9 @@ internal static class LevelObjectDragPageTests
             await Frames(tree);
             tree.Root.NotifyMouseEntered();
             int moves = 0;
+            int picks = 0;
             view.MoveRequested += (_, _, _) => moves++;
+            view.RowPicked += _ => picks++;
             Vector2 start = Marker(page, camera, index), target = Target(camera, terrain, 230, 180);
             check.That(new Rect2(Vector2.Zero, view.Size).HasPoint(start) && new Rect2(Vector2.Zero, view.Size).HasPoint(target),
                 "the authored object and drop point are inside the actual 3D page view");
@@ -112,7 +114,7 @@ internal static class LevelObjectDragPageTests
             Button(view, start, true);
             Motion(view, start, start + Vector2.One);
             Button(view, start + Vector2.One, false);
-            check.That(moves == 0 && Unchanged(session, before, undo, redo) && camera.GlobalPosition == cameraBefore && page.SelectedRow == index,
+            check.That(picks == 1 && moves == 0 && Unchanged(session, before, undo, redo) && camera.GlobalPosition == cameraBefore && page.SelectedRow == index,
                 "a click with small pointer jitter selects without moving or creating history");
             Button(view, start, true);
             Motion(view, start, target);
