@@ -8,16 +8,20 @@ namespace OnslaughtToolkit.Companion.Ui;
 public partial class LevelTerrainViewport : SubViewportContainer
 {
     internal Func<Heightfield?>? TerrainProvider { get; set; }
+    internal Func<TerrainSurface?>? PreviewSurfaceProvider { get; set; }
+    internal Func<bool>? TerrainModeProvider { get; set; }
     internal Func<IReadOnlyList<ObjectRow>>? RowsProvider { get; set; }
     internal Func<int?>? SelectedRowProvider { get; set; }
     internal event Action<int>? RowPicked;
     internal event Action<int, float, float>? MoveRequested;
+    internal event Action<float, float, bool>? TerrainEditRequested;
 
     private readonly MeshInstance3D _mesh;
     private readonly Camera3D _camera;
     private readonly Label _help;
     private readonly MarkerOverlay _marks;
     private Heightfield? _loaded;
+    private TerrainSurface? _loadedPreview;
     private TerrainSurface? _surface;
     private IReadOnlyList<ObjectRow> _rows = Array.Empty<ObjectRow>();
     private int? _selected;
@@ -30,6 +34,7 @@ public partial class LevelTerrainViewport : SubViewportContainer
     private float _pitch = 0.8f;
     private bool _dragging;
     private bool _leftPressed;
+    private bool _pressedInTerrainMode;
     private Vector2 _pressedAt;
 
     public LevelTerrainViewport()
@@ -75,11 +80,18 @@ public partial class LevelTerrainViewport : SubViewportContainer
     {
         if (!IsVisibleInTree()) return;
         var current = TerrainProvider?.Invoke();
-        if (!ReferenceEquals(current, _loaded))
+        var preview = PreviewSurfaceProvider?.Invoke();
+        bool baseChanged = !ReferenceEquals(current, _loaded);
+        if (baseChanged || !ReferenceEquals(preview, _loadedPreview))
         {
             _loaded = current;
-            Rebuild(current);
+            _loadedPreview = preview;
+            Rebuild(current, preview, baseChanged);
         }
+        if (_surface is not null)
+            _help.Text = TerrainModeProvider?.Invoke() == true
+                ? "Click raise · Shift-click lower (preview only)\nDrag orbit · wheel zoom"
+                : "Click select · right-click move; height stays\nDrag orbit · wheel zoom · markers stay on top";
         RefreshRows();
     }
 
@@ -107,20 +119,25 @@ public partial class LevelTerrainViewport : SubViewportContainer
                 {
                     _leftPressed = true;
                     _dragging = false;
+                    _pressedInTerrainMode = TerrainModeProvider?.Invoke() == true;
                     _pressedAt = button.Position;
                     GrabFocus();
                 }
                 else
                 {
-                    if (_leftPressed && !_dragging && RowAt(button.Position) is { } row)
-                        RowPicked?.Invoke(row.Index);
+                    bool terrainMode = TerrainModeProvider?.Invoke() == true;
+                    if (_leftPressed && !_dragging && terrainMode == _pressedInTerrainMode)
+                    {
+                        if (terrainMode) RequestTerrainEdit(button.Position, !button.ShiftPressed);
+                        else if (RowAt(button.Position) is { } row) RowPicked?.Invoke(row.Index);
+                    }
                     _leftPressed = _dragging = false;
                 }
                 AcceptEvent();
             }
             else if (button.Pressed && button.ButtonIndex == MouseButton.Right)
             {
-                RequestMove(button.Position);
+                if (TerrainModeProvider?.Invoke() != true) RequestMove(button.Position);
                 AcceptEvent();
             }
             else if (button.Pressed && button.ButtonIndex == MouseButton.WheelUp)
@@ -225,7 +242,7 @@ public partial class LevelTerrainViewport : SubViewportContainer
         _marks.QueueRedraw();
     }
 
-    private void Rebuild(Heightfield? terrain)
+    private void Rebuild(Heightfield? terrain, TerrainSurface? draft, bool baseChanged)
     {
         _mesh.Mesh = null;
         _surface = null;
@@ -237,7 +254,7 @@ public partial class LevelTerrainViewport : SubViewportContainer
         }
         try
         {
-            var surface = TerrainSurface.Build(terrain);
+            var surface = draft ?? TerrainSurface.Build(terrain);
             var preview = TerrainPreviewMesh.Build(surface.Vertices.Span, surface.Indices.Span);
             var vertices = new Vector3[preview.Vertices.Length];
             var normals = new Vector3[preview.Normals.Length];
@@ -264,17 +281,21 @@ public partial class LevelTerrainViewport : SubViewportContainer
             };
             var min = preview.Min;
             var max = preview.Max;
-            _target = new Vector3((min.X + max.X) * 0.5f, (min.Y + max.Y) * 0.5f, (min.Z + max.Z) * 0.5f);
+            bool refit = baseChanged || _radius <= 0f;
+            if (refit) _target = new Vector3((min.X + max.X) * 0.5f, (min.Y + max.Y) * 0.5f, (min.Z + max.Z) * 0.5f);
             _extent = Math.Max(1f, Math.Max(max.X - min.X, Math.Max(max.Y - min.Y, max.Z - min.Z)));
-            _radius = (preview.Max - preview.Min).Length() * 0.5f;
+            // Keep the target and zoom for a draft edit, but cover the changed bounds in the clip planes.
+            float dx = Math.Max(Math.Abs(min.X - _target.X), Math.Abs(max.X - _target.X));
+            float dy = Math.Max(Math.Abs(min.Y - _target.Y), Math.Abs(max.Y - _target.Y));
+            float dz = Math.Max(Math.Abs(min.Z - _target.Z), Math.Abs(max.Z - _target.Z));
+            _radius = new Vector3(dx, dy, dz).Length();
             if (!float.IsFinite(_radius))
                 throw new System.IO.InvalidDataException("Terrain bounds cannot be framed.");
             _radius = Mathf.Max(_radius, 0.0001f);
             _fitDistance = FitDistance();
-            _distance = _fitDistance;
+            if (refit) _distance = _fitDistance;
             PositionCamera();
             _surface = surface;
-            _help.Text = "Click select · right-click move; height stays\nDrag orbit · wheel zoom · markers stay on top";
         }
         catch (Exception error) when (error is ArgumentException or System.IO.InvalidDataException or OverflowException)
         {
@@ -297,6 +318,16 @@ public partial class LevelTerrainViewport : SubViewportContainer
             double y = Math.Clamp(-(double)hit.Z, 0, Heightfield.Size - 0.01);
             MoveRequested.Invoke(selected, MapView.ToHundredths(x), MapView.ToHundredths(y));
         }
+    }
+
+    private void RequestTerrainEdit(Vector2 at, bool raise)
+    {
+        if (!HasCurrentTerrain || TerrainEditRequested is null) return;
+        Vector3 origin = _camera.ProjectRayOrigin(at), direction = _camera.ProjectRayNormal(at);
+        var start = new System.Numerics.Vector3(origin.X, origin.Y, origin.Z);
+        var ray = new System.Numerics.Vector3(direction.X, direction.Y, direction.Z);
+        if (TerrainRayPicker.TryHit(_surface, start, ray, out var hit))
+            TerrainEditRequested.Invoke(Math.Clamp(hit.X, 0f, Heightfield.Size), Math.Clamp(-hit.Z, 0f, Heightfield.Size), raise);
     }
 
     public override string _GetTooltip(Vector2 atPosition)
@@ -339,7 +370,8 @@ public partial class LevelTerrainViewport : SubViewportContainer
     }
 
     // A new level can be opened between input and the next _Process. Do not select or place against its predecessor.
-    private bool HasCurrentTerrain => _surface is not null && ReferenceEquals(TerrainProvider?.Invoke(), _loaded);
+    private bool HasCurrentTerrain => _surface is not null && ReferenceEquals(TerrainProvider?.Invoke(), _loaded) &&
+        ReferenceEquals(PreviewSurfaceProvider?.Invoke(), _loadedPreview);
 
     private sealed partial class MarkerOverlay(LevelTerrainViewport owner) : Control
     {
