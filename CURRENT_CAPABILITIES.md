@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-01 (editor play evidence and observed edit types clarified)
+Last updated: 2026-11-01 (pushed editor drag and trigger backend distinguished from integrated capability)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -225,9 +225,20 @@ Its sidebar:
   [level editor plan](roadmap/companion-level-editor.md) and [mission editor design](roadmap/companion-mission-editor.md).
   Parsed-object source offsets describe positions in the original input buffer; they do not automatically
   follow later edits. To use offsets with edited or serialized bytes, parse those bytes again or use an independently
-  verified mapping. This metadata does not establish catalogue-to-model identity, a 3D editor, or a completed museum.
+  verified mapping. This metadata does not establish catalogue-to-model identity, a complete 3D editor, or a completed museum.
 - **Advanced**, folded away: Career bytes (the open career's stored values, or the bytes that
   differ from another career).
+
+Separate pushed development candidates are outside main and unreleased. The
+[3D drag candidate](https://github.com/dlprentice/Onslaught-Career-Editor/tree/8aacbb23577ce57397a5319282bf33cd5f742494)
+binds a drag to the current edit session and object; authored page-input and offscreen capture assertions cover
+motion without changing the world or undo history, one undoable move on release, preserved height and an unchanged camera. The
+[spherical-trigger radius backend](https://github.com/dlprentice/Onslaught-Career-Editor/tree/6d2c3e4f949f3f4885ec7cb74e5654dfed4d6a33)
+adds undo/redo, validation and change summaries, with a passing authored-data fixture; it has no inspector control.
+The [level editor owner](roadmap/companion-level-editor.md#unreleased-editor-candidates) records their scope.
+These checks do not establish human use, new-edit acceptance in CE, the full Companion suite or native Windows
+acceptance. Derived terrain/snapshot save and play remain disabled, and the separate unsaved terrain draft remains a
+preview rather than published content.
 
 A career change reaches the game through a dialog that offers a new career, replacement where allowed,
 or a copy elsewhere. Before a career write, the readable careers for the selected game are copied to a
