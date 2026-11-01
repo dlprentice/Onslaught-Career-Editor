@@ -115,6 +115,33 @@ internal static class EditorProjectPageTests
             check.That(!Directory.Exists(Path.Combine(projects, "stale-mod-draft")) && page.Scripts.SourceText == "// dirty draft after mod confirmation\n" && services.Status.Failed,
                        "dirty-to-dirty source typing invalidates the real mod SaveDialog confirmation without losing the draft");
             page.Scripts.Source.Text = "// saved authored draft\n";
+            byte[] beforeModRetry = model.Session!.ToBytes();
+            EditSession modRetrySession = model.Session!;
+            page.Save.EmitSignal(BaseButton.SignalName.Pressed);
+            page.SaveDialog.FolderDialog.EmitSignal(FileDialog.SignalName.DirSelected, Path.Combine(gameRoot, "mods"));
+            page.SaveDialog.EmitSignal(ConfirmationDialog.SignalName.Confirmed); page.SaveDialog.Hide();
+            check.That(services.Status.Failed && !Directory.Exists(Path.Combine(gameRoot, "mods")) && page.Scripts.SourceText == "// saved authored draft\n",
+                       "a protected mod-output refusal consumes one confirmation and retains source drafts");
+            string retryParent = Path.Combine(projects, "mod-retry");
+            page.SaveDialog.Begin(100, retryParent);
+            page.SaveDialog.EmitSignal(ConfirmationDialog.SignalName.Confirmed); page.SaveDialog.Hide();
+            check.That(!Directory.Exists(retryParent) && page.Note.Contains("Choose Save as mod again", StringComparison.Ordinal),
+                       "resetting only the dialog cannot reuse a consumed mod-save authorization");
+            page.Save.EmitSignal(BaseButton.SignalName.Pressed);
+            page.SaveDialog.FolderDialog.EmitSignal(FileDialog.SignalName.DirSelected, retryParent);
+            page.SaveDialog.EmitSignal(ConfirmationDialog.SignalName.Confirmed); page.SaveDialog.Hide();
+            string retryRoot = Path.Combine(retryParent, page.SaveDialog.Id.Text);
+            check.That(!services.Status.Failed && File.Exists(Path.Combine(retryRoot, "mod.json")) &&
+                       File.ReadAllBytes(Path.Combine(retryRoot, "data", "worlds", "world100.wrd")).AsSpan().SequenceEqual(beforeModRetry) &&
+                       ReferenceEquals(model.Session, modRetrySession) && page.Scripts.SourceText == "// saved authored draft\n" && page.HasChanges,
+                       "reopening through the real Save action publishes the exact authored world while retaining unsaved source text");
+            byte[] retryManifest = File.ReadAllBytes(Path.Combine(retryRoot, "mod.json"));
+            page.Save.EmitSignal(BaseButton.SignalName.Pressed);
+            page.SaveDialog.FolderDialog.EmitSignal(FileDialog.SignalName.DirSelected, retryParent);
+            page.SaveDialog.EmitSignal(ConfirmationDialog.SignalName.Confirmed); page.SaveDialog.Hide();
+            check.That(services.Status.Failed && page.SavedText.Contains("already holds", StringComparison.Ordinal) &&
+                       File.ReadAllBytes(Path.Combine(retryRoot, "mod.json")).AsSpan().SequenceEqual(retryManifest) && page.Scripts.SourceText == "// saved authored draft\n",
+                       "a separately confirmed repeat still refuses to overwrite the existing mod and keeps drafts");
             check.That(model.BeginTerrainPreview(out _) &&
                        model.ChangeTerrainPreview(256, 256, true).Result == MoveResult.Moved, "the authored project has a world move, source draft and sampled terrain edit");
             byte[] savedWorld = model.Session!.ToBytes();

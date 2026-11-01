@@ -410,6 +410,12 @@ internal static class LevelEditorPageTests
         Press(page.Save);
         await Frame(tree);
         SaveAsModDialog dialog = page.SaveDialog;
+        void ReopenSave(string destination)
+        {
+            dialog.Hide();
+            Press(page.Save);
+            dialog.FolderDialog.EmitSignal(FileDialog.SignalName.DirSelected, destination);
+        }
         check.That(dialog.Visible && dialog.ModName.Text == "Level 100 edit" && dialog.Id.Text == "level-100-edit" && dialog.Version.Text == "1" && dialog.Author.Text == "" &&
                    dialog.Destination.Text == Path.Combine(app.Game.CeUserFolder, "mods") && dialog.Problem.Length == 0 && !dialog.GetOkButton().Disabled,
             $"Save as mod opens with a name, an id, a version and CE's mods folder filled in: \"{dialog.ModName.Text}\", \"{dialog.Id.Text}\", \"{dialog.Destination.Text}\", \"{dialog.Problem}\"");
@@ -447,7 +453,7 @@ internal static class LevelEditorPageTests
                    app.Status.Label.Text.StartsWith("✕", StringComparison.Ordinal) && app.Status.Label.Text.Contains("game folder", StringComparison.Ordinal), $"a mod is not saved into the game folder: \"{page.SavedText}\"");
 
         // The words of the reference's stager for this edit, into a folder of the test's own.
-        dialog.Begin(100, chosen);
+        ReopenSave(chosen);
         Set(dialog.Author, vector.Author);
         Edited(dialog.Author);
         Set(dialog.Description, vector.Description);
@@ -463,12 +469,13 @@ internal static class LevelEditorPageTests
         check.That(File.ReadAllBytes(Path.Combine(root, "mod.json")).AsSpan().SequenceEqual(LevelTests.Unpack(vector.Manifest)) &&
                    File.ReadAllBytes(Path.Combine(root, "data", "worlds", "world100.wrd")).AsSpan().SequenceEqual(LevelTests.Unpack(LevelVectors.Edits.First(e => e.Name == "move-v50").Body)) &&
                    Directory.GetFiles(root, "*", SearchOption.AllDirectories).Length == 2, "the saved mod.json and world file are the reference stager's, byte for byte");
+        ReopenSave(chosen);
         dialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
         check.That(page.SavedText.Contains("already holds", StringComparison.Ordinal) && !page.CopyVisible, "saving again into the same folder is refused, and says so: " + page.SavedText);
 
         // A very long folder does not make the notice long: it shows the path's two ends, keeps the full path for Copy and the tooltip, and the page still fits the smallest window.
         string deep = Path.Combine(chosen, new string('d', 120), new string('e', 120));
-        dialog.Begin(100, deep);
+        ReopenSave(deep);
         dialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
         await Frame(tree);
         string deepRoot = Path.Combine(deep, dialog.Id.Text);
@@ -484,7 +491,7 @@ internal static class LevelEditorPageTests
         if (existed) Directory.Move(backups, held);
         try
         {
-            dialog.Begin(100, Path.Combine(backups, "mods"));
+            ReopenSave(Path.Combine(backups, "mods"));
             dialog.EmitSignal(AcceptDialog.SignalName.Confirmed);
             check.That(page.SavedText.Contains("never saved into your game folder or the companion's backups", StringComparison.Ordinal) && !page.CopyVisible && !Directory.Exists(backups),
                 $"a mod is not saved into the backups folder before it exists, and the folder is not made: \"{page.SavedText}\"");
