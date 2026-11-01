@@ -1,7 +1,7 @@
 # Companion Level Editor: Design and Prototype Plan
 
 Status: M0 (the data layer), M1 (the mod stager and the edit session) and M2 (the first page: a level picker, an object table, typed X, Y and Z, Save as mod) are built and on main; M3 (the map: terrain relief, marks, select, drag, zoom, pan) is built and on main; M4's arrow-key nudges and list of only the moved objects and M6's play button ("Play this level with the changes", section 17 of the mission editor design) are built; M5's first increment (copy a unit) is built, and its other parts (adding other kinds, deleting) and M6's persistent enable toggle are plan; the mission editor that would follow is in [companion-mission-editor.md](companion-mission-editor.md). Its edits have been run in CE on Linux, offscreen, through a private CE build and the released 0.1.12 package and launcher (section 3 and the mission editor design's sections 16 and 17); nobody has used the page or its play button by hand. The C# and Python mission compilers and the script-aware editor model are integrated backend components; the Level editor's Scripts view can edit and compile a script's source and make the open level use it; source-preserving mod staging and 3D mission authoring remain future work.
-Last updated: 2026-11-01 (current editor scope, level-edit safety design and observed play scope clarified)
+Last updated: 2026-11-01 (CE-first direction and separate editor candidates)
 Summary: how the Companion can grow a visual level editor on top of the Toolkit's world tools and Onslaught CE's mod
 loader: list a level's objects, select one, move it by typing coordinates or dragging it on a top-down map, and save
 the result as a CE mod that CE loads without hand editing. It states what exists, what the measurements say, the
@@ -12,7 +12,9 @@ the text says so; the rest is plan.
 
 > **Future direction — 2026-10-31:** David requested a 3D map editor and approved a Goodies-style museum and custom test levels. The current map workflow and any existing model previews remain as described below; a complete 3D map-authoring workflow is not established. Its design and acceptance must address safe game-data handling and the loader contract. See the project [goal](../GOAL.md) and [program](../PROGRAM.md).
 
-Future CE-native level and mission features may use formats and capabilities that the original game cannot load. Retail behavior remains the faithful reference, and retail-compatible output may be supported where useful; it is not a prerequisite for CE-native features. This is a direction for future work, not a claim that a new format or loader has been implemented.
+A modern CE-native project format and custom gameplay are first-class targets. Original-game-compatible export is useful
+where practical but is not a prerequisite; faithful behavior for the existing campaign remains a separate baseline.
+This is a direction for future work, not a claim that a new format or loader has been implemented.
 
 ## 1. What the editor is for
 
@@ -22,8 +24,8 @@ editor can also copy a unit and replace a level's script when its source is inst
 It saves the changed world as a CE mod; staging and temporary play follow the safety rules and measured limits
 described below.
 
-This follows the existing split of work: the Toolkit's Python tools are the reference implementation and the oracle
-for the file format; the Companion is the player's interface; Onslaught CE is the engine that loads the result.
+The current world-file workflow follows this split: the Toolkit's Python tools are the reference implementation and
+oracle for that format; the Companion is the player's interface; Onslaught CE is the engine that loads the result.
 
 ## 2. What exists today
 
@@ -37,9 +39,31 @@ for the file format; the Companion is the player's interface; Onslaught CE is th
 | The Companion's data layer: world bodies, level archives, the mod stager, an edit session with undo | [`companion/OnslaughtToolkit.Godot/Levels/`](../companion/OnslaughtToolkit.Godot/Levels) (M0, M1) | on main, reviewed; checked against the Python reference on generated vectors and, locally, on every retail world body |
 | The Level editor page (M2) | `Ui/Pages/LevelEditorPage.cs`, `Ui/SaveAsModDialog.cs`, `Levels/LevelEditorModel.cs`, `Levels/CoordinateInput.cs` | on main, reviewed (it asks before an unsaved move is dropped); the mod it saves for a move of one Target Tank is byte for byte the one the Toolkit pipeline stages for the same move, and a mod it saved was looked at in a private CE build, offscreen |
 | The level map (M3) | `Ui/LevelMap.cs`, `Levels/MapView.cs`, `Levels/TerrainRelief.cs`, `Levels/Heightfield.cs`, `tools/heightfield_lookup.py` | on main, reviewed; the terrain lookup is checked against the Python port on generated vectors and on every installed level, and the drag gives the Toolkit pipeline's world file for the same coordinates |
-| CE loading a world file from a mod (a mod may add `data/worlds/worldNNN.wrd`) | Onslaught CE's mod loader and its world-file override | released: CE 0.1.11 (published 2026-10-29) is the first to take a world file from a mod; Linux only for now, Windows later |
+| CE loading a world file from a mod (a mod may add `data/worlds/worldNNN.wrd`) | Onslaught CE's mod loader and its world-file override | released: CE 0.1.11 (published 2026-10-29) first added world-file mods; the public 0.1.13 route remains Linux-only. A Windows read-only/base-fallback contract candidate is outside main and public export; native Windows acceptance remains open |
 | Copying a unit (M5, first increment) | `Levels/EditSession.cs` (`DuplicateObject` and the validator's rule for added rows), `Levels/WorldBody.cs` (`PlacedObject.Clone`, `SameExceptPlace`), `Levels/LevelEditorModel.cs`, the page's **Copy this unit** | built: a copy is appended after every row, only units, only as a copy; the C# edit gives the Python reference writer's bytes for six copy edits; the Play button ran a level with a copy in CE on Linux (the acceptance below); nobody has used the page by hand |
 | A code-built Godot C# interface, a game library, verified file safety | `companion/OnslaughtToolkit.Godot/` | on main |
+
+### Unreleased editor candidates
+
+The pushed [3D drag candidate](https://github.com/dlprentice/Onslaught-Career-Editor/blob/8aacbb23577ce57397a5319282bf33cd5f742494/companion/OnslaughtToolkit.Godot/Ui/Pages/LevelTerrainViewport.cs#L341)
+binds a gesture to its captured edit session and object, so a replaced session or record cannot receive a stale drag.
+Its authored-data page-input and offscreen capture assertions passed on Linux: motion leaves the world and undo
+history unchanged, release makes one undoable move while preserving height, the camera stays unchanged, and Undo/Redo
+works. Those are fixture observations, not a judgment of physical drag feel or acceptance in a real CE world.
+The prototype also contains terrain preview, existing-unit grid controls and mission/source navigation; complete
+3D authoring is not established.
+
+The pushed [spherical-trigger radius backend](https://github.com/dlprentice/Onslaught-Career-Editor/blob/6d2c3e4f949f3f4885ec7cb74e5654dfed4d6a33/companion/OnslaughtToolkit.Godot/Levels/TriggerEdit.cs)
+adds a command tied to the existing trigger record, undo/redo, validation and change summaries. Its
+[authored-data fixture](https://github.com/dlprentice/Onslaught-Career-Editor/blob/6d2c3e4f949f3f4885ec7cb74e5654dfed4d6a33/companion/OnslaughtToolkit.Godot/Tests/LevelTriggerEditTests.cs)
+passed without invoking the compiler or mod stager. An inspector control is not wired, and a resized trigger has not
+been staged or played in CE. A separate [inspector component candidate](https://github.com/dlprentice/Onslaught-Career-Editor/tree/2b1527eb1bd5bb9cd5457b76fdaf1bff7a88d1e1)
+adds a control and authored tests; that candidate has no Level editor page wiring or normal-runner registration.
+
+These candidates are outside main and unreleased. The full Companion suite, human use, real-world CE acceptance of
+these edit kinds and Windows validation remain open. Derived-world previews and terrain/snapshot drafts cannot be
+saved or played; the preview's terrain pairing is unverified. Project save/open, script-draft restoration and
+source-preserving staging remain unfinished. The separate unsaved terrain draft is unchanged by these checkpoints.
 
 Parts of the Companion the editor can reuse as they are:
 
