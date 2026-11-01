@@ -27,6 +27,36 @@ internal static class EditorProjectTests
         return body.Write();
     }
 
+    private static byte[] WithAuthoredTerrain(byte[] archive)
+    {
+        byte[] terrain = Unpack(LevelVectors.Terrain.Eres);
+        using MemoryStream chunk = new();
+        using (BinaryWriter writer = new(chunk, Encoding.ASCII, leaveOpen: true))
+        {
+            writer.Write(Encoding.ASCII.GetBytes("ERES"));
+            writer.Write((uint)terrain.Length);
+            writer.Write(terrain);
+        }
+        byte[] input = chunk.ToArray();
+        using MemoryStream joined = new();
+        using (BinaryWriter writer = new(joined, Encoding.ASCII, leaveOpen: true))
+        {
+            int part = Math.Min(LevelArchive.PackBufferBytes / 2, LevelArchive.MaxMemberInflatedBytes / 2);
+            for (int at = 0; at < input.Length; at += part)
+            {
+                using MemoryStream compressed = new();
+                using (ZLibStream zlib = new(compressed, CompressionLevel.Optimal, leaveOpen: true))
+                    zlib.Write(input, at, Math.Min(part, input.Length - at));
+                byte[] member = compressed.ToArray();
+                if (member.Length > LevelArchive.PackBufferBytes) throw new InvalidDataException("The authored terrain fixture exceeds the member limit.");
+                writer.Write((uint)member.Length);
+                writer.Write(member);
+            }
+            writer.Write(archive);
+        }
+        return joined.ToArray();
+    }
+
     private static bool Refused(Action action)
     {
         try { action(); return false; }
@@ -144,11 +174,44 @@ internal static class EditorProjectTests
         check.Suite("editor project model");
         Directory.CreateDirectory(folder);
         string archive = Path.Combine(folder, "100_res_PC.aya");
-        File.WriteAllBytes(archive, Unpack(LevelVectors.Archives.Single(vector => vector.Name == "level-100").File));
+        File.WriteAllBytes(archive, WithAuthoredTerrain(Unpack(LevelVectors.Archives.Single(vector => vector.Name == "level-100").File)));
         LevelEditorModel model = new([new LevelArchiveFile(100, archive)]);
         if (!model.Open(100) || model.Session is null) { check.Fail("the authored level must open"); return; }
+        EditorProjectState noTerrain = model.ProjectState();
+        if (!model.BeginTerrainPreview(out _)) { check.Fail("the authored terrain must open for preview"); return; }
+        EditorProjectState emptyTerrain = model.ProjectState();
+        check.That(emptyTerrain == model.ProjectState() && emptyTerrain != noTerrain,
+                   "unchanged empty terrain states compare by value and remain distinct from no preview");
+        if (model.ChangeTerrainPreview(256, 256, true).Result != MoveResult.Moved) { check.Fail("the authored point must raise"); return; }
+        EditorProjectState terrainState = model.ProjectState();
+        EditorProjectState sameTerrain = model.ProjectState();
+        check.That(terrainState == sameTerrain && terrainState.GetHashCode() == sameTerrain.GetHashCode(),
+                   "fresh snapshots of an unchanged edited terrain have equal values and hashes");
+        check.That(model.ChangeTerrainPreview(256, 256, true).Result == MoveResult.Moved && model.ProjectState() != terrainState &&
+                   model.Session.Undo() && model.ProjectState() == terrainState,
+                   "a changed terrain differs and undo restores the earlier value");
         check.That(model.Move(0, "12", "24", "3").Result == MoveResult.Moved, "an authored model edit is made");
         byte[] savedWorld = model.Session.ToBytes(), project = model.CaptureProject([]);
+        const string draftName = "snapshot-draft-only";
+        int draftIndex = model.Session.Body.Scripts.Count;
+        model.Session.Body.Scripts.Add(new MissionScript { Name = draftName });
+        string sourceHash = EditorProject.Hash(Encoding.UTF8.GetBytes("authored source"));
+        EditorProjectScript draft = new(draftIndex, draftName, sourceHash, "authored draft", null, null);
+        byte[] projectWithDraft = model.CaptureProject([draft]);
+        byte[] projectWithCompiledScript = model.CaptureProject([]);
+        model.Session.Body.Scripts.RemoveAt(draftIndex);
+        LevelWorlds worlds = model.Worlds!;
+        EditorProjectBase basis = new(100, false, worlds.BaseLevel, model.Session.IsBaseWorld, model.Session.Baseline,
+            worlds.RealBody!, worlds.BaseBody, worlds.Terrain);
+        RestoredEditorProject restoredWithDraft = EditorProject.Restore(projectWithDraft, basis);
+        check.That(restoredWithDraft.Scripts.Count == 1 && restoredWithDraft.Scripts[0] == draft &&
+                   !model.TryPrepareProject(projectWithDraft, out _, out string draftMessage) &&
+                   draftMessage.Contains("draft", StringComparison.OrdinalIgnoreCase) && model.Session.ToBytes().AsSpan().SequenceEqual(savedWorld),
+                   "the codec restores a valid draft but the model refuses it without changing the current edit");
+        if (!model.TryPrepareProject(project, out PreparedEditorProject? forgedDraft, out _) || forgedDraft is null) { check.Fail("the draft control must prepare"); return; }
+        forgedDraft = forgedDraft with { Restored = restoredWithDraft, ExpectedRestoredHash = EditorProject.Hash(projectWithDraft) };
+        check.That(!model.CommitProject(forgedDraft) && model.Session.ToBytes().AsSpan().SequenceEqual(savedWorld),
+                   "a prepared project cannot bypass the model's draft refusal by replacing its restored state");
         check.That(model.Move(0, "13", "25", "4").Result == MoveResult.Moved &&
                    model.TryPrepareProject(project, out PreparedEditorProject? old, out _) && old is not null,
                    "a project prepares while another edit is held");
@@ -161,6 +224,13 @@ internal static class EditorProjectTests
         altered.Restored.Session.Apply(new MoveObject(0, new Vector3(60, 61, 62)));
         check.That(!model.CommitProject(altered) && model.Session.ToBytes().AsSpan().SequenceEqual(current),
                    "a changed prepared snapshot is refused without touching the current edit");
+        if (!model.TryPrepareProject(project, out PreparedEditorProject? undone, out _) || undone is null) { check.Fail("the undo control must prepare"); return; }
+        byte[] unchangedPrepared = undone.Restored.Session.ToBytes();
+        bool editAndUndo = undone.Restored.Session.TryApply(new MoveObject(0, new Vector3(50, 51, 52)), out _) && undone.Restored.Session.Undo();
+        check.That(editAndUndo && !undone.Restored.Session.CanUndo && undone.Restored.Session.CanRedo &&
+                   undone.Restored.Session.ToBytes().AsSpan().SequenceEqual(unchangedPrepared) && !model.CommitProject(undone) &&
+                   model.Session.ToBytes().AsSpan().SequenceEqual(current),
+                   "a prepared edit that was undone is refused even though its bytes match, because redo history remains");
         if (!model.TryPrepareProject(project, out PreparedEditorProject? wrongBase, out _) || wrongBase is null) { check.Fail("the project must prepare with its base"); return; }
         byte[] anchor = model.Worlds!.RealBody!;
         anchor[0] ^= 1;
@@ -168,9 +238,21 @@ internal static class EditorProjectTests
                    "a changed selected base refuses confirmation without touching the current edit");
         anchor[0] ^= 1;
         if (!model.TryPrepareProject(project, out PreparedEditorProject? ready, out _) || ready is null) { check.Fail("the project must prepare a third time"); return; }
-        check.That(model.CommitProject(ready) && model.IsProjectSnapshot && model.Session is { CanUndo: false } &&
+        check.That(model.CommitProject(ready) && model.IsProjectSnapshot && model.Session is { CanUndo: false, CanRedo: false } &&
                    model.Session.ToBytes().AsSpan().SequenceEqual(savedWorld), "a confirmed snapshot opens with exact bytes and fresh history");
         check.That(!model.SaveAsMod("", null!, []).Ok && !model.StageForPlay("", null!, []).Ok,
                    "an editor snapshot refuses both mod staging and play before entering either operation");
+        if (!model.TryPrepareProject(projectWithCompiledScript, out PreparedEditorProject? compiled, out _) || compiled is null) { check.Fail("the compiled script control must prepare"); return; }
+        check.That(model.CommitProject(compiled) && model.Scripts.Any(entry => entry.Summary.Name == draftName),
+                   "the committed script summaries come from the checked replacement world");
+        if (!model.TryPrepareProject(project, out PreparedEditorProject? notified, out _) || notified is null) { check.Fail("the observer control must prepare"); return; }
+        EditSession previous = model.Session!;
+        model.Changed += () => throw new InvalidOperationException("authored observer");
+        bool observerThrew = false;
+        try { model.CommitProject(notified); }
+        catch (InvalidOperationException) { observerThrew = true; }
+        check.That(observerThrew && !ReferenceEquals(previous, model.Session) && model.IsProjectSnapshot &&
+                   model.Session!.ToBytes().AsSpan().SequenceEqual(savedWorld),
+                   "an observer may throw after the model replacement has already happened");
     }
 }

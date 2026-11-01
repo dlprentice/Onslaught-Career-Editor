@@ -27,9 +27,28 @@ internal sealed record PreparedWorldOverride(EditSession ExpectedSession, byte[]
 
 internal sealed record PreparedEditorProject(EditSession ExpectedSession, byte[] ExpectedBytes, Heightfield? ExpectedTerrain,
     TerrainDraft? ExpectedDraft, int ExpectedLevel, long ExpectedRevision, EditorProjectIdentity ExpectedBase,
-    string ExpectedRestoredHash, RestoredEditorProject Restored, IReadOnlyList<ScriptEntry> Scripts);
+    string ExpectedRestoredHash, RestoredEditorProject Restored);
 
-internal sealed record EditorProjectState(EditorProjectIdentity Basis, string WorkingHash, IReadOnlyList<TerrainOffset>? Terrain);
+/// <summary>An immutable, ordered terrain snapshot with value equality rather than list-reference equality.</summary>
+internal sealed class EditorTerrainState : IReadOnlyList<TerrainOffset>, IEquatable<EditorTerrainState>
+{
+    private readonly TerrainOffset[] _offsets;
+    internal EditorTerrainState(IReadOnlyList<TerrainOffset> offsets) => _offsets = offsets.ToArray();
+    public int Count => _offsets.Length;
+    public TerrainOffset this[int index] => _offsets[index];
+    public IEnumerator<TerrainOffset> GetEnumerator() => ((IEnumerable<TerrainOffset>)_offsets).GetEnumerator();
+    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+    public bool Equals(EditorTerrainState? other) => other is not null && _offsets.AsSpan().SequenceEqual(other._offsets);
+    public override bool Equals(object? other) => other is EditorTerrainState terrain && Equals(terrain);
+    public override int GetHashCode()
+    {
+        HashCode hash = new();
+        foreach (TerrainOffset offset in _offsets) hash.Add(offset);
+        return hash.ToHashCode();
+    }
+}
+
+internal sealed record EditorProjectState(EditorProjectIdentity Basis, string WorkingHash, EditorTerrainState? Terrain);
 
 /// <summary>What typing coordinates for an object (or putting it back) did.</summary>
 public enum MoveResult
@@ -315,6 +334,8 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         : null;
 
     /// <summary>Captures an editor-only snapshot; no file is opened or written here.</summary>
+    /// <remarks>The model does not own the page's source drafts. Do not connect project capture or reopening to a
+    /// UI until it owns and validates both current and imported drafts, including stale confirmations.</remarks>
     internal byte[] CaptureProject(IReadOnlyList<EditorProjectScript> scripts)
     {
         if (ProjectBase() is not { } basis || Session is not { } session) throw new InvalidDataException("Choose a level and its world first.");
@@ -324,10 +345,13 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     internal EditorProjectState ProjectState()
     {
         if (ProjectBase() is not { } basis || Session is not { } session) throw new InvalidDataException("Choose a level and its world first.");
-        return new EditorProjectState(EditorProject.Identity(basis), EditorProject.Hash(session.ToBytes()), _terrainDraft?.Offsets());
+        return new EditorProjectState(EditorProject.Identity(basis), EditorProject.Hash(session.ToBytes()),
+            _terrainDraft is { } terrain ? new EditorTerrainState(terrain.Offsets()) : null);
     }
 
     /// <summary>Prepares a project against the currently selected level and world without replacing the current edit.</summary>
+    /// <remarks>The model does not own the page's current source drafts. Do not connect this API to a UI until the
+    /// caller owns, restores and checks both current and imported drafts, including stale confirmations.</remarks>
     internal bool TryPrepareProject(ReadOnlyMemory<byte> bytes, out PreparedEditorProject? prepared, out string message)
     {
         prepared = null;
@@ -340,11 +364,11 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         {
             byte[] expected = session.ToBytes();
             RestoredEditorProject restored = EditorProject.Restore(bytes, basis);
-            if (IsWorldOverride && restored.Scripts.Count != 0)
-                throw new InvalidDataException("A selected world preview cannot link script source drafts.");
-            IReadOnlyList<ScriptEntry> scripts = IsWorldOverride ? ListOverrideScripts(restored.Session.Body, level) : ListScripts(restored.Session.Body, worlds);
+            if (restored.Scripts.Count != 0)
+                throw new InvalidDataException("This editor cannot open snapshots with script source drafts yet.");
+            _ = IsWorldOverride ? ListOverrideScripts(restored.Session.Body, level) : ListScripts(restored.Session.Body, worlds);
             string restoredHash = EditorProject.Hash(EditorProject.Capture(basis, restored.Session, restored.Terrain, restored.Scripts));
-            prepared = new PreparedEditorProject(session, expected, Terrain, _terrainDraft, level, _revision, EditorProject.Identity(basis), restoredHash, restored, scripts);
+            prepared = new PreparedEditorProject(session, expected, Terrain, _terrainDraft, level, _revision, EditorProject.Identity(basis), restoredHash, restored);
             message = "The editor snapshot is ready to open. Undo history starts again; it cannot be played.";
             return true;
         }
@@ -356,16 +380,21 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     }
 
     /// <summary>Commits a prepared project only if the confirmed edit and every selected resource still match.</summary>
+    /// <remarks>No UI may call this until it owns and checks current and imported source drafts. A Changed observer
+    /// may throw after the model has already been replaced, so an exception does not imply an unchanged model.</remarks>
     internal bool CommitProject(PreparedEditorProject prepared)
     {
-        if (!ReferenceEquals(Session, prepared.ExpectedSession) || !ReferenceEquals(Terrain, prepared.ExpectedTerrain) ||
+        if (prepared.Restored.Scripts.Count != 0 || prepared.Restored.Session.CanUndo || prepared.Restored.Session.CanRedo ||
+            !ReferenceEquals(Session, prepared.ExpectedSession) || !ReferenceEquals(Terrain, prepared.ExpectedTerrain) ||
             !ReferenceEquals(_terrainDraft, prepared.ExpectedDraft) || Level != prepared.ExpectedLevel || _revision != prepared.ExpectedRevision ||
-            ProjectBase() is not { } basis || EditorProject.Identity(basis) != prepared.ExpectedBase) return false;
+            ProjectBase() is not { } basis || Worlds is not { } worlds || EditorProject.Identity(basis) != prepared.ExpectedBase) return false;
+        IReadOnlyList<ScriptEntry> scripts;
         try
         {
             if (!Session!.ToBytes().AsSpan().SequenceEqual(prepared.ExpectedBytes) ||
                 EditorProject.Hash(EditorProject.Capture(basis, prepared.Restored.Session, prepared.Restored.Terrain, prepared.Restored.Scripts)) != prepared.ExpectedRestoredHash)
                 return false;
+            scripts = IsWorldOverride ? ListOverrideScripts(prepared.Restored.Session.Body, prepared.ExpectedLevel) : ListScripts(prepared.Restored.Session.Body, worlds);
         }
         catch (Exception error) when (EditSession.IsUnstorable(error)) { return false; }
         EditSession replacement = prepared.Restored.Session;
@@ -377,7 +406,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
             Changed?.Invoke();
         };
         Session = replacement;
-        Scripts = prepared.Scripts;
+        Scripts = scripts;
         _terrainDraft = prepared.Restored.Terrain;
         _savedSignature = null;
         IsProjectSnapshot = true;
