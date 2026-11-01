@@ -396,7 +396,7 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   minimum, the map is a small overview, the table is narrower, the right-hand column scrolls and the notice a save leaves is
   scrolled into view there; the Map switch gives the table the whole column back. The design and what is still planned
   (adding and deleting things, keyboard nudges, playing the mod from the page) are in
-  [`roadmap/companion-level-editor.md`](../../roadmap/companion-level-editor.md).
+  [`roadmap/companion-level-editor.md`](../../roadmap/companion-level-editor.md). The [mission-editor roadmap](../../roadmap/companion-mission-editor.md) describes current limitations and planned work.
 - **Advanced**: **Career bytes** shows, read-only, either the open career's stored values
   (including both players' god flags) or, after you choose another career, every byte that
   differs between the two, named by region.
