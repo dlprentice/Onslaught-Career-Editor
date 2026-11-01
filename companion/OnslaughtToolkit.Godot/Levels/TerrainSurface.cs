@@ -37,6 +37,16 @@ public sealed class TerrainSurface
     /// <summary>Triangle indices in Godot's clockwise front-face order, with the front of a flat surface facing up.</summary>
     public ReadOnlyMemory<int> Indices => _indices;
 
+    /// <summary>Returns a new preview surface with one changed vertical coordinate, keeping its topology.</summary>
+    internal TerrainSurface WithVertexHeight(int index, float height)
+    {
+        if (index < 0 || index >= _vertices.Length) throw new ArgumentOutOfRangeException(nameof(index));
+        if (!float.IsFinite(height)) throw new ArgumentOutOfRangeException(nameof(height));
+        Vector3[] vertices = _vertices.ToArray();
+        vertices[index].Y = height;
+        return new TerrainSurface(Divisions, vertices, _indices);
+    }
+
     /// <summary>Samples an existing read-only terrain. A malformed non-finite height is refused.</summary>
     public static TerrainSurface Build(Heightfield field, int divisions = DefaultDivisions)
     {

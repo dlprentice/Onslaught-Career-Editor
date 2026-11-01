@@ -451,6 +451,8 @@ internal static class LevelMapPageTests
 
         await CheckTerrainPageWiring(page, model, tree, check);
         await CeWorldOpenTests.RunAsync(app, tree, install, check);
+        TerrainDraftTests.Run(check);
+        await TerrainPreviewPageTests.RunAsync(app, tree, install, check);
 
         // The pointer leaves; the page wrote nothing into the game.
         Push(tree, new InputEventMouseMotion { Position = new Vector2(-50, -50), GlobalPosition = new Vector2(-50, -50) });

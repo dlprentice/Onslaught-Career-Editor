@@ -116,6 +116,13 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
 
     private string? _savedSignature;
     private long _revision;
+    private TerrainDraft? _terrainDraft;
+
+    /// <summary>The edited sampled 3D preview, or null until terrain preview mode is enabled.</summary>
+    internal TerrainSurface? TerrainPreviewSurface => _terrainDraft?.Surface;
+
+    /// <summary>Whether the sampled preview differs from the base terrain.</summary>
+    internal bool TerrainHasChanges => _terrainDraft?.HasChanges == true;
 
     /// <summary>True for a selected external world, which is only an in-memory preview and cannot be saved or played here.</summary>
     public bool IsWorldOverride { get; private set; }
@@ -138,8 +145,9 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
             byte[] bytes;
             try { bytes = session.ToBytes(); }
             catch (Exception error) when (EditSession.IsUnstorable(error)) { return 1; }
-            if (session.IsBaseline(bytes) || Signature(bytes) == _savedSignature) return 0;
-            try { return Math.Max(1, session.Changes().Count + session.Additions().Count + session.ScriptChanges().Count); }
+            int terrain = TerrainHasChanges ? 1 : 0;
+            if (session.IsBaseline(bytes) || Signature(bytes) == _savedSignature) return terrain;
+            try { return Math.Max(1, session.Changes().Count + session.Additions().Count + session.ScriptChanges().Count) + terrain; }
             catch (Exception error) when (EditSession.IsUnstorable(error)) { return 1; }
         }
     }
@@ -188,6 +196,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         TerrainProblem = null;
         Scripts = [];
         BaseWorld = null;
+        _terrainDraft = null;
         IsWorldOverride = false;
         WorldOverrideName = null;
         _revision++;
@@ -280,6 +289,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         Session = replacement;
         Scripts = prepared.Scripts;
         BaseWorld = null;
+        _terrainDraft = null;
         _savedSignature = null;
         IsWorldOverride = true;
         WorldOverrideName = prepared.Name;
@@ -293,8 +303,45 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     private void RefreshScripts()
     {
         if (Session is not { } session || Worlds is not { } worlds) return;
-        if (session.NotifiedCommand is MoveObject) return;
+        if (session.NotifiedCommand is MoveObject || TerrainDraft.IsTerrainCommand(session.NotifiedCommand)) return;
         Scripts = IsWorldOverride && Level is int level ? ListOverrideScripts(session.Body, level) : ListScripts(session.Body, worlds);
+    }
+
+    /// <summary>Starts a private sampled-terrain preview without changing the level or its original heightfield.</summary>
+    internal bool BeginTerrainPreview(out string message)
+    {
+        if (Session is not { } session || Terrain is not { } terrain)
+        {
+            message = "Open a level with terrain first.";
+            return false;
+        }
+        if (_terrainDraft is not null)
+        {
+            message = "Terrain preview is ready.";
+            return true;
+        }
+        try
+        {
+            _terrainDraft = new TerrainDraft(session.Body, TerrainSurface.Build(terrain));
+            message = "Terrain changes are an unsaved 3D preview.";
+            return true;
+        }
+        catch (Exception error) when (error is InvalidDataException or ArgumentException or OverflowException)
+        {
+            message = "This terrain cannot be previewed safely.";
+            return false;
+        }
+    }
+
+    /// <summary>Applies one bounded preview edit to the same undo history as object and script edits.</summary>
+    internal MoveOutcome ChangeTerrainPreview(float x, float y, bool raise)
+    {
+        if (Session is not { } session || _terrainDraft is not { } draft)
+            return new MoveOutcome(MoveResult.Refused, "Turn on terrain preview first.");
+        if (!draft.TryPrepare(x, y, raise, out IEditCommand? command, out string message) || command is null)
+            return new MoveOutcome(MoveResult.Refused, message);
+        return session.TryApply(command, out string? refusal)
+            ? new MoveOutcome(MoveResult.Moved, message) : new MoveOutcome(MoveResult.Refused, refusal ?? "The terrain preview could not be changed.");
     }
 
     // The selected file has no established base-world association; do not add unrelated scripts from the terrain's archive.
@@ -473,6 +520,8 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
             string list = string.Join("; ", scripts.Take(3).Select(change => $"{change.Name} ({change.Describe()})"));
             sentences.Add($"{(scripts.Count == 1 ? "1 script replaced" : $"{scripts.Count} scripts replaced")}: {list}{(scripts.Count > 3 ? $" and {scripts.Count - 3} more" : "")}.");
         }
+        if (_terrainDraft is { HasChanges: true } terrain)
+            sentences.Add($"3D terrain preview changed at {(terrain.ChangedCount == 1 ? "1 point" : $"{terrain.ChangedCount} points")}; it cannot be saved or played.");
         if (sentences.Count == 0 && HasUnsavedChanges) return "This level has changes this editor cannot describe or save.";
         return sentences.Count == 0 ? null : string.Join(" ", sentences);
     }
@@ -640,14 +689,16 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
 
     /// <summary>Writes the open edit as a CE mod folder <c>PARENT/ID</c>, or says why not (nothing changed, a folder that is not new, a game folder).</summary>
     public SaveOutcome SaveAsMod(string parent, ModInfo info, IEnumerable<string?> protectedFolders) => IsWorldOverride
-        ? new SaveOutcome(null, "A selected world is preview only and cannot be saved here.") : Stage(parent, info, protectedFolders, markSaved: true);
+        ? new SaveOutcome(null, "A selected world is preview only and cannot be saved here.")
+        : TerrainHasChanges ? new SaveOutcome(null, "The changed terrain is an unsaved 3D preview and cannot be saved here.") : Stage(parent, info, protectedFolders, markSaved: true);
 
     /// <summary>
     /// Writes the open edit as a mod folder the same way, for a test play in Onslaught CE: the folder is a temporary one, so the edit is not counted as saved
     /// (the unsaved-changes prompts still ask about it).
     /// </summary>
     public SaveOutcome StageForPlay(string parent, ModInfo info, IEnumerable<string?> protectedFolders) => IsWorldOverride
-        ? new SaveOutcome(null, "A selected world is preview only and cannot be played here.") : Stage(parent, info, protectedFolders, markSaved: false);
+        ? new SaveOutcome(null, "A selected world is preview only and cannot be played here.")
+        : TerrainHasChanges ? new SaveOutcome(null, "The changed terrain is an unsaved 3D preview and cannot be played here.") : Stage(parent, info, protectedFolders, markSaved: false);
 
     private SaveOutcome Stage(string parent, ModInfo info, IEnumerable<string?> protectedFolders, bool markSaved)
     {
