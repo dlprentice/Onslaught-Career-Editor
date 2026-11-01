@@ -1,0 +1,262 @@
+// SPDX-License-Identifier: GPL-3.0-only
+using System.IO.Compression;
+using System.Numerics;
+using System.Text;
+using System.Text.Json.Nodes;
+using OnslaughtToolkit.Companion.Levels;
+
+namespace OnslaughtToolkit.Companion.Tests;
+
+/// <summary>Editor snapshot round trips and refusals on authored worlds and terrain, with no filesystem or game.</summary>
+internal static class EditorProjectTests
+{
+    private static byte[] Unpack(string packed)
+    {
+        using MemoryStream input = new(Convert.FromBase64String(string.Concat(packed.Where(c => !char.IsWhiteSpace(c)))));
+        using ZLibStream inflater = new(input, CompressionMode.Decompress);
+        using MemoryStream output = new();
+        inflater.CopyTo(output);
+        return output.ToArray();
+    }
+
+    private static byte[] AuthoredWorld()
+    {
+        WorldBody body = WorldBody.Read(Unpack(LevelVectors.Valid.Single(vector => vector.Name == "authored-v50").Body));
+        body.Scripts.Clear();
+        body.Scripts.Add(new MissionScript { Name = "alpha" });
+        return body.Write();
+    }
+
+    private static byte[] WithAuthoredTerrain(byte[] archive)
+    {
+        byte[] terrain = Unpack(LevelVectors.Terrain.Eres);
+        using MemoryStream chunk = new();
+        using (BinaryWriter writer = new(chunk, Encoding.ASCII, leaveOpen: true))
+        {
+            writer.Write(Encoding.ASCII.GetBytes("ERES"));
+            writer.Write((uint)terrain.Length);
+            writer.Write(terrain);
+        }
+        byte[] input = chunk.ToArray();
+        using MemoryStream joined = new();
+        using (BinaryWriter writer = new(joined, Encoding.ASCII, leaveOpen: true))
+        {
+            int part = Math.Min(LevelArchive.PackBufferBytes / 2, LevelArchive.MaxMemberInflatedBytes / 2);
+            for (int at = 0; at < input.Length; at += part)
+            {
+                using MemoryStream compressed = new();
+                using (ZLibStream zlib = new(compressed, CompressionLevel.Optimal, leaveOpen: true))
+                    zlib.Write(input, at, Math.Min(part, input.Length - at));
+                byte[] member = compressed.ToArray();
+                if (member.Length > LevelArchive.PackBufferBytes) throw new InvalidDataException("The authored terrain fixture exceeds the member limit.");
+                writer.Write((uint)member.Length);
+                writer.Write(member);
+            }
+            writer.Write(archive);
+        }
+        return joined.ToArray();
+    }
+
+    private static bool Refused(Action action)
+    {
+        try { action(); return false; }
+        catch (InvalidDataException) { return true; }
+    }
+
+    private static byte[] Change(byte[] project, Action<JsonObject> edit)
+    {
+        JsonObject root = JsonNode.Parse(project)!.AsObject();
+        edit(root);
+        return Encoding.UTF8.GetBytes(root.ToJsonString());
+    }
+
+    private static bool SameBits(TerrainSurface left, TerrainSurface right)
+    {
+        Vector3[] a = left.Vertices.ToArray(), b = right.Vertices.ToArray();
+        return left.Divisions == right.Divisions && a.Length == b.Length && a.Zip(b).All(pair =>
+            BitConverter.SingleToUInt32Bits(pair.First.X) == BitConverter.SingleToUInt32Bits(pair.Second.X) &&
+            BitConverter.SingleToUInt32Bits(pair.First.Y) == BitConverter.SingleToUInt32Bits(pair.Second.Y) &&
+            BitConverter.SingleToUInt32Bits(pair.First.Z) == BitConverter.SingleToUInt32Bits(pair.Second.Z));
+    }
+
+    internal static void Run(Checks check)
+    {
+        check.Suite("editor project snapshot");
+        byte[] baseline = AuthoredWorld(), eres = Unpack(LevelVectors.Terrain.Eres);
+        EditorProjectBase basis = new(100, false, -1, false, baseline, baseline, null, eres);
+        EditSession session = new(baseline);
+        check.That(session.TryApply(new MoveObject(0, new Vector3(12.5f, -0f, 3f)), out _) &&
+                   session.TryApply(new DuplicateObject(0, new Vector3(14f, 15f, 16f), "new unit"), out _),
+                   "an authored move and unit copy are in the same session");
+        MissionScript replacement = ScriptCopy.Of(session.Body.Scripts[0]);
+        replacement.Code.Tail1 = 12345;
+        check.That(session.TryApply(new ReplaceScript(0, replacement), out _), "an authored compiled script is replaced");
+        TerrainSurface surface = TerrainSurface.Build(Heightfield.Read(eres), 4);
+        TerrainDraft terrain = new(session.Body, surface);
+        check.That(terrain.TryPrepare(256, 256, true, out IEditCommand? point, out _) && point is not null && session.TryApply(point, out _),
+                   "an authored terrain point is raised");
+        string sourceHash = EditorProject.Hash(Encoding.UTF8.GetBytes("base source"));
+        string usedHash = EditorProject.Hash(WorldBodyWriter.ScriptBytes(session.Body.Scripts[0]));
+        EditorProjectScript script = new(0, "alpha", sourceHash, "// uncompiled draft\r\nλ 🕹️", "// unverified text claim\n", usedHash);
+        byte[] working = session.ToBytes(), saved = EditorProject.Capture(basis, session, terrain, [script]);
+        RestoredEditorProject reopened = EditorProject.Restore(saved, basis);
+        check.That(reopened.Session.Baseline.AsSpan().SequenceEqual(baseline) && reopened.Session.ToBytes().AsSpan().SequenceEqual(working),
+                   "reopening preserves the baseline and every working world byte");
+        check.That(reopened.Terrain is not null && reopened.Terrain.Offsets().SequenceEqual(terrain.Offsets()) && SameBits(reopened.Terrain.Surface, terrain.Surface),
+                   "the terrain steps and sampled surface bits are restored");
+        check.That(reopened.Scripts.Count == 1 && reopened.Scripts[0] == script,
+                   "both the uncompiled draft and unverified text claim round-trip exactly without asserting compilation");
+        check.That(!reopened.Session.CanUndo && !reopened.Session.CanRedo, "reopening starts a new undo history");
+        check.That(reopened.Session.TryApply(new MoveObject(0, new Vector3(20, 21, 22)), out _) && reopened.Session.Undo() &&
+                   reopened.Session.ToBytes().AsSpan().SequenceEqual(working), "new edits remain undoable after reopening");
+
+        TerrainDraft? restoredTerrain = reopened.Terrain;
+        check.That(restoredTerrain is not null && restoredTerrain.TryPrepare(256, 256, false, out IEditCommand? lower, out _) && lower is not null &&
+                   reopened.Session.TryApply(lower, out _) && reopened.Session.Undo() && SameBits(restoredTerrain.Surface, terrain.Surface),
+                   "a new terrain edit and undo return to the restored surface exactly");
+
+        byte[] otherAnchor = Unpack(LevelVectors.Valid.Single(vector => vector.Name == "authored-v43").Body);
+        EditorProjectBase selected = basis with { SelectedWorld = true, AnchorWorld = otherAnchor };
+        byte[] selectedProject = EditorProject.Capture(selected, session, terrain, [script]);
+        check.That(EditorProject.Restore(selectedProject, selected).Session.ToBytes().AsSpan().SequenceEqual(working) &&
+                   Refused(() => EditorProject.Restore(selectedProject, basis)), "selected-world identity is retained and cannot be silently changed");
+        byte[] other = baseline.ToArray(); other[^1] ^= 1;
+        byte[] otherTerrain = eres.ToArray(); otherTerrain[^1] ^= 1;
+        check.That(Refused(() => EditorProject.Restore(saved, basis with { Level = 101 })) &&
+                   Refused(() => EditorProject.Restore(saved, basis with { World = other, AnchorWorld = other })) &&
+                   Refused(() => EditorProject.Restore(saved, basis with { Terrain = otherTerrain })),
+                   "the level, world and terrain must all match the saved identities");
+        check.That(Refused(() => EditorProject.Restore(Change(saved, root => root["version"] = 2), basis)) &&
+                   Refused(() => EditorProject.Restore(Change(saved, root => root["unknown"] = 1), basis)) &&
+                   Refused(() => EditorProject.Restore(Encoding.UTF8.GetBytes("{\"kind\":\"x\",\"kind\":\"y\"}"), basis)),
+                   "unknown versions and fields and repeated properties are refused");
+        check.That(Refused(() => EditorProject.Restore(Change(saved, root => root["world_delta"]!["prefix"] = int.MaxValue), basis)) &&
+                   Refused(() => EditorProject.Restore(Change(saved, root => root["world_delta"]!["working_sha256"] = new string('0', 64)), basis)) &&
+                   Refused(() => EditorProject.Restore(Change(saved, root => root["world_delta"]!["insert"] = "!"), basis)),
+                   "bad world bounds, hash and encoded bytes are refused");
+        check.That(Refused(() => EditorProject.Restore(Change(saved, root => root["terrain_preview"]!["points"] = new JsonArray(new JsonArray(12, 1), new JsonArray(12, 1))), basis)) &&
+                   Refused(() => EditorProject.Restore(Change(saved, root => root["terrain_preview"]!["points"] = new JsonArray(new JsonArray(12, 33))), basis)) &&
+                   Refused(() => EditorProject.Restore(Change(saved, root => root["terrain_preview"]!["working_sha256"] = new string('0', 64)), basis)),
+                   "duplicate points, excessive offsets and altered terrain identities are refused");
+        check.That(Refused(() => EditorProject.Restore(Change(saved, root => root["scripts"]![0]!["name"] = "other"), basis)) &&
+                   Refused(() => EditorProject.Restore(Change(saved, root => root["scripts"]![0]!["used_record_sha256"] = new string('0', 64)), basis)) &&
+                   Refused(() => EditorProject.Restore(Change(saved, root => root["scripts"]!.AsArray().Add(root["scripts"]![0]!.DeepClone())), basis)),
+                   "ambiguous or mismatched script associations are refused");
+        check.That(Refused(() => EditorProject.Capture(basis, session, terrain, [script with { DraftText = "\ud800" }])) &&
+                   Refused(() => EditorProject.Capture(basis, session, terrain, [script with { DraftText = new string('x', EditorProject.MaxTextBytes + 1) }])) &&
+                   Refused(() => EditorProject.Restore(new byte[EditorProject.MaxProjectBytes + 1], basis)),
+                   "unrepresentable text and oversized drafts or snapshots are refused");
+        EditSession otherSession = new(baseline);
+        TerrainDraft unrelated = new(otherSession.Body, surface);
+        check.That(Refused(() => EditorProject.Capture(basis, session, unrelated, [])) && session.ToBytes().AsSpan().SequenceEqual(working) && terrain.HasChanges,
+                   "a terrain from another session is refused without changing the edit");
+
+        WorldBody many = WorldBody.Read(baseline);
+        many.Scripts.Clear();
+        for (int i = 0; i < 4096; i++) many.Scripts.Add(new MissionScript { Name = $"script-{i:D4}" });
+        byte[] manyWorld = many.Write();
+        EditSession manySession = new(manyWorld);
+        EditorProjectBase manyBase = new(100, false, -1, false, manyWorld, manyWorld, null, null);
+        EditorProjectScript[] drafts = [.. Enumerable.Range(0, EditorProject.MaxDrafts).Select(i =>
+            new EditorProjectScript(i, $"script-{i:D4}", sourceHash, "authored draft", null, null))];
+        RestoredEditorProject manyReopened = EditorProject.Restore(EditorProject.Capture(manyBase, manySession, null, drafts), manyBase);
+        check.That(manyReopened.Scripts.SequenceEqual(drafts), "the supported maximum number of uniquely named drafts round-trips in a large authored script list");
+        check.That(Refused(() => EditorProject.Capture(manyBase, manySession, null, [.. drafts, drafts[0]])),
+                   "a draft count above the bound is refused");
+        manySession.Body.Scripts[^1].Name = manySession.Body.Scripts[0].Name;
+        check.That(Refused(() => EditorProject.Capture(manyBase, manySession, null, drafts)),
+                   "a duplicated script name is refused even when the matching draft index is otherwise valid");
+    }
+
+    /// <summary>Uses only an authored archive under the supplied fixture folder; it never stages a mod.</summary>
+    internal static void Model(string folder, Checks check)
+    {
+        check.Suite("editor project model");
+        Directory.CreateDirectory(folder);
+        string archive = Path.Combine(folder, "100_res_PC.aya");
+        File.WriteAllBytes(archive, WithAuthoredTerrain(Unpack(LevelVectors.Archives.Single(vector => vector.Name == "level-100").File)));
+        LevelEditorModel model = new([new LevelArchiveFile(100, archive)]);
+        if (!model.Open(100) || model.Session is null) { check.Fail("the authored level must open"); return; }
+        EditorProjectState noTerrain = model.ProjectState();
+        if (!model.BeginTerrainPreview(out _)) { check.Fail("the authored terrain must open for preview"); return; }
+        EditorProjectState emptyTerrain = model.ProjectState();
+        check.That(emptyTerrain == model.ProjectState() && emptyTerrain != noTerrain,
+                   "unchanged empty terrain states compare by value and remain distinct from no preview");
+        if (model.ChangeTerrainPreview(256, 256, true).Result != MoveResult.Moved) { check.Fail("the authored point must raise"); return; }
+        EditorProjectState terrainState = model.ProjectState();
+        EditorProjectState sameTerrain = model.ProjectState();
+        check.That(terrainState == sameTerrain && terrainState.GetHashCode() == sameTerrain.GetHashCode(),
+                   "fresh snapshots of an unchanged edited terrain have equal values and hashes");
+        check.That(model.ChangeTerrainPreview(256, 256, true).Result == MoveResult.Moved && model.ProjectState() != terrainState &&
+                   model.Session.Undo() && model.ProjectState() == terrainState,
+                   "a changed terrain differs and undo restores the earlier value");
+        check.That(model.Move(0, "12", "24", "3").Result == MoveResult.Moved, "an authored model edit is made");
+        byte[] savedWorld = model.Session.ToBytes(), project = model.CaptureProject([]);
+        const string draftName = "snapshot-draft-only";
+        int draftIndex = model.Session.Body.Scripts.Count;
+        model.Session.Body.Scripts.Add(new MissionScript { Name = draftName });
+        string sourceHash = EditorProject.Hash(Encoding.UTF8.GetBytes("authored source"));
+        EditorProjectScript draft = new(draftIndex, draftName, sourceHash, "authored draft", null, null);
+        byte[] withScript = model.Session.ToBytes();
+        check.That(Refused(() => model.CaptureProject([draft])) && model.Session.ToBytes().AsSpan().SequenceEqual(withScript),
+                   "the model refuses to capture drafts it cannot reopen without changing the current edit");
+        byte[] projectWithCompiledScript = model.CaptureProject([]);
+        model.Session.Body.Scripts.RemoveAt(draftIndex);
+        LevelWorlds worlds = model.Worlds!;
+        EditorProjectBase basis = new(100, false, worlds.BaseLevel, model.Session.IsBaseWorld, model.Session.Baseline,
+            worlds.RealBody!, worlds.BaseBody, worlds.Terrain);
+        RestoredEditorProject restoredCompiled = EditorProject.Restore(projectWithCompiledScript, basis);
+        byte[] projectWithDraft = EditorProject.Capture(basis, restoredCompiled.Session, restoredCompiled.Terrain, [draft]);
+        RestoredEditorProject restoredWithDraft = EditorProject.Restore(projectWithDraft, basis);
+        check.That(restoredWithDraft.Scripts.Count == 1 && restoredWithDraft.Scripts[0] == draft &&
+                   !model.TryPrepareProject(projectWithDraft, out _, out string draftMessage) &&
+                   draftMessage.Contains("draft", StringComparison.OrdinalIgnoreCase) && model.Session.ToBytes().AsSpan().SequenceEqual(savedWorld),
+                   "the codec restores a valid draft but the model refuses it without changing the current edit");
+        if (!model.TryPrepareProject(project, out PreparedEditorProject? forgedDraft, out _) || forgedDraft is null) { check.Fail("the draft control must prepare"); return; }
+        forgedDraft = forgedDraft with { Restored = restoredWithDraft, ExpectedRestoredHash = EditorProject.Hash(projectWithDraft) };
+        check.That(!model.CommitProject(forgedDraft) && model.Session.ToBytes().AsSpan().SequenceEqual(savedWorld),
+                   "a prepared project cannot bypass the model's draft refusal by replacing its restored state");
+        check.That(model.Move(0, "13", "25", "4").Result == MoveResult.Moved &&
+                   model.TryPrepareProject(project, out PreparedEditorProject? old, out _) && old is not null,
+                   "a project prepares while another edit is held");
+        if (!model.TryPrepareProject(project, out PreparedEditorProject? stale, out _) || stale is null) { check.Fail("the project must prepare"); return; }
+        model.Move(0, "14", "26", "5");
+        byte[] current = model.Session.ToBytes();
+        check.That(!model.CommitProject(stale) && model.Session.ToBytes().AsSpan().SequenceEqual(current),
+                   "an intervening edit refuses a stale confirmation without discarding it");
+        if (!model.TryPrepareProject(project, out PreparedEditorProject? altered, out _) || altered is null) { check.Fail("the project must prepare again"); return; }
+        altered.Restored.Session.Apply(new MoveObject(0, new Vector3(60, 61, 62)));
+        check.That(!model.CommitProject(altered) && model.Session.ToBytes().AsSpan().SequenceEqual(current),
+                   "a changed prepared snapshot is refused without touching the current edit");
+        if (!model.TryPrepareProject(project, out PreparedEditorProject? undone, out _) || undone is null) { check.Fail("the undo control must prepare"); return; }
+        byte[] unchangedPrepared = undone.Restored.Session.ToBytes();
+        bool editAndUndo = undone.Restored.Session.TryApply(new MoveObject(0, new Vector3(50, 51, 52)), out _) && undone.Restored.Session.Undo();
+        check.That(editAndUndo && !undone.Restored.Session.CanUndo && undone.Restored.Session.CanRedo &&
+                   undone.Restored.Session.ToBytes().AsSpan().SequenceEqual(unchangedPrepared) && !model.CommitProject(undone) &&
+                   model.Session.ToBytes().AsSpan().SequenceEqual(current),
+                   "a prepared edit that was undone is refused even though its bytes match, because redo history remains");
+        if (!model.TryPrepareProject(project, out PreparedEditorProject? wrongBase, out _) || wrongBase is null) { check.Fail("the project must prepare with its base"); return; }
+        byte[] anchor = model.Worlds!.RealBody!;
+        anchor[0] ^= 1;
+        check.That(!model.CommitProject(wrongBase) && model.Session.ToBytes().AsSpan().SequenceEqual(current),
+                   "a changed selected base refuses confirmation without touching the current edit");
+        anchor[0] ^= 1;
+        if (!model.TryPrepareProject(project, out PreparedEditorProject? ready, out _) || ready is null) { check.Fail("the project must prepare a third time"); return; }
+        check.That(model.CommitProject(ready) && model.IsProjectSnapshot && model.Session is { CanUndo: false, CanRedo: false } &&
+                   model.Session.ToBytes().AsSpan().SequenceEqual(savedWorld), "a confirmed snapshot opens with exact bytes and fresh history");
+        check.That(!model.SaveAsMod("", null!, []).Ok && !model.StageForPlay("", null!, []).Ok,
+                   "an editor snapshot refuses both mod staging and play before entering either operation");
+        if (!model.TryPrepareProject(projectWithCompiledScript, out PreparedEditorProject? compiled, out _) || compiled is null) { check.Fail("the compiled script control must prepare"); return; }
+        check.That(model.CommitProject(compiled) && model.Scripts.Any(entry => entry.Summary.Name == draftName),
+                   "the committed script summaries come from the checked replacement world");
+        if (!model.TryPrepareProject(project, out PreparedEditorProject? notified, out _) || notified is null) { check.Fail("the observer control must prepare"); return; }
+        EditSession previous = model.Session!;
+        model.Changed += () => throw new InvalidOperationException("authored observer");
+        bool observerThrew = false;
+        try { model.CommitProject(notified); }
+        catch (InvalidOperationException) { observerThrew = true; }
+        check.That(observerThrew && !ReferenceEquals(previous, model.Session) && model.IsProjectSnapshot &&
+                   model.Session!.ToBytes().AsSpan().SequenceEqual(savedWorld),
+                   "an observer may throw after the model replacement has already happened");
+    }
+}

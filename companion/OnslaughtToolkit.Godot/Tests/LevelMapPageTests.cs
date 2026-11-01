@@ -452,6 +452,8 @@ internal static class LevelMapPageTests
         await CheckTerrainPageWiring(page, model, tree, check);
         await CeWorldOpenTests.RunAsync(app, tree, install, check);
         TerrainDraftTests.Run(check);
+        EditorProjectTests.Run(check);
+        EditorProjectTests.Model(Path.Combine(install.SteamRoot, "editor-project-model"), check);
         await TerrainPreviewPageTests.RunAsync(app, tree, install, check);
 
         // The pointer leaves; the page wrote nothing into the game.

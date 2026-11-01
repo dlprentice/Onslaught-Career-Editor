@@ -25,6 +25,31 @@ public sealed record ScriptEntry(ScriptSummary Summary, int SourceLevel, bool Fr
 internal sealed record PreparedWorldOverride(EditSession ExpectedSession, byte[] ExpectedBytes, Heightfield ExpectedTerrain,
     int ExpectedLevel, long ExpectedRevision, EditSession Replacement, IReadOnlyList<ScriptEntry> Scripts, string Name);
 
+internal sealed record PreparedEditorProject(EditSession ExpectedSession, byte[] ExpectedBytes, Heightfield? ExpectedTerrain,
+    TerrainDraft? ExpectedDraft, int ExpectedLevel, long ExpectedRevision, EditorProjectIdentity ExpectedBase,
+    string ExpectedRestoredHash, RestoredEditorProject Restored);
+
+/// <summary>An immutable, ordered terrain snapshot with value equality rather than list-reference equality.</summary>
+internal sealed class EditorTerrainState : IReadOnlyList<TerrainOffset>, IEquatable<EditorTerrainState>
+{
+    private readonly TerrainOffset[] _offsets;
+    internal EditorTerrainState(IReadOnlyList<TerrainOffset> offsets) => _offsets = offsets.ToArray();
+    public int Count => _offsets.Length;
+    public TerrainOffset this[int index] => _offsets[index];
+    public IEnumerator<TerrainOffset> GetEnumerator() => ((IEnumerable<TerrainOffset>)_offsets).GetEnumerator();
+    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+    public bool Equals(EditorTerrainState? other) => other is not null && _offsets.AsSpan().SequenceEqual(other._offsets);
+    public override bool Equals(object? other) => other is EditorTerrainState terrain && Equals(terrain);
+    public override int GetHashCode()
+    {
+        HashCode hash = new();
+        foreach (TerrainOffset offset in _offsets) hash.Add(offset);
+        return hash.ToHashCode();
+    }
+}
+
+internal sealed record EditorProjectState(EditorProjectIdentity Basis, string WorkingHash, EditorTerrainState? Terrain);
+
 /// <summary>What typing coordinates for an object (or putting it back) did.</summary>
 public enum MoveResult
 {
@@ -127,6 +152,9 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     /// <summary>True for a selected external world, which is only an in-memory preview and cannot be saved or played here.</summary>
     public bool IsWorldOverride { get; private set; }
 
+    /// <summary>An editor snapshot was reopened. It is not a playable CE project.</summary>
+    internal bool IsProjectSnapshot { get; private set; }
+
     /// <summary>The safe display name of the selected world, without its path.</summary>
     public string? WorldOverrideName { get; private set; }
 
@@ -198,6 +226,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         BaseWorld = null;
         _terrainDraft = null;
         IsWorldOverride = false;
+        IsProjectSnapshot = false;
         WorldOverrideName = null;
         _revision++;
         LevelArchiveFile? file = Levels.FirstOrDefault(archive => archive.Level == level);
@@ -292,7 +321,97 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         _terrainDraft = null;
         _savedSignature = null;
         IsWorldOverride = true;
+        IsProjectSnapshot = false;
         WorldOverrideName = prepared.Name;
+        Problem = null;
+        _revision++;
+        Changed?.Invoke();
+        return true;
+    }
+
+    private EditorProjectBase? ProjectBase() => Session is { } session && Worlds is { RealBody: { } anchor } worlds && Level is int level
+        ? new EditorProjectBase(level, IsWorldOverride, worlds.BaseLevel, session.IsBaseWorld, session.Baseline, anchor, worlds.BaseBody, worlds.Terrain)
+        : null;
+
+    /// <summary>Captures an editor-only snapshot; no file is opened or written here.</summary>
+    /// <remarks>The model does not own the page's source drafts. Do not connect project capture or reopening to a
+    /// UI until it owns and validates both current and imported drafts, including stale confirmations.</remarks>
+    internal byte[] CaptureProject(IReadOnlyList<EditorProjectScript> scripts)
+    {
+        ArgumentNullException.ThrowIfNull(scripts);
+        if (scripts.Count != 0) throw new InvalidDataException("This editor cannot capture snapshots with script source drafts yet.");
+        if (ProjectBase() is not { } basis || Session is not { } session) throw new InvalidDataException("Choose a level and its world first.");
+        return EditorProject.Capture(basis, session, _terrainDraft, scripts);
+    }
+
+    internal EditorProjectState ProjectState()
+    {
+        if (ProjectBase() is not { } basis || Session is not { } session) throw new InvalidDataException("Choose a level and its world first.");
+        return new EditorProjectState(EditorProject.Identity(basis), EditorProject.Hash(session.ToBytes()),
+            _terrainDraft is { } terrain ? new EditorTerrainState(terrain.Offsets()) : null);
+    }
+
+    /// <summary>Prepares a project against the currently selected level and world without replacing the current edit.</summary>
+    /// <remarks>The model does not own the page's current source drafts. Do not connect this API to a UI until the
+    /// caller owns, restores and checks both current and imported drafts, including stale confirmations.</remarks>
+    internal bool TryPrepareProject(ReadOnlyMemory<byte> bytes, out PreparedEditorProject? prepared, out string message)
+    {
+        prepared = null;
+        if (ProjectBase() is not { } basis || Session is not { } session || Worlds is not { } worlds || Level is not int level)
+        {
+            message = "Choose the project's base level and world first.";
+            return false;
+        }
+        try
+        {
+            byte[] expected = session.ToBytes();
+            RestoredEditorProject restored = EditorProject.Restore(bytes, basis);
+            if (restored.Scripts.Count != 0)
+                throw new InvalidDataException("This editor cannot open snapshots with script source drafts yet.");
+            _ = IsWorldOverride ? ListOverrideScripts(restored.Session.Body, level) : ListScripts(restored.Session.Body, worlds);
+            string restoredHash = EditorProject.Hash(EditorProject.Capture(basis, restored.Session, restored.Terrain, restored.Scripts));
+            prepared = new PreparedEditorProject(session, expected, Terrain, _terrainDraft, level, _revision, EditorProject.Identity(basis), restoredHash, restored);
+            message = "The editor snapshot is ready to open. Undo history starts again; it cannot be played.";
+            return true;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException || EditSession.IsUnstorable(error))
+        {
+            message = error is InvalidDataException ? error.Message : "The editor snapshot could not be prepared safely. The current edit is unchanged.";
+            return false;
+        }
+    }
+
+    /// <summary>Commits a prepared project only if the confirmed edit and every selected resource still match.</summary>
+    /// <remarks>No UI may call this until it owns and checks current and imported source drafts. A Changed observer
+    /// may throw after the model has already been replaced, so an exception does not imply an unchanged model.</remarks>
+    internal bool CommitProject(PreparedEditorProject prepared)
+    {
+        if (prepared.Restored.Scripts.Count != 0 || prepared.Restored.Session.CanUndo || prepared.Restored.Session.CanRedo ||
+            !ReferenceEquals(Session, prepared.ExpectedSession) || !ReferenceEquals(Terrain, prepared.ExpectedTerrain) ||
+            !ReferenceEquals(_terrainDraft, prepared.ExpectedDraft) || Level != prepared.ExpectedLevel || _revision != prepared.ExpectedRevision ||
+            ProjectBase() is not { } basis || Worlds is not { } worlds || EditorProject.Identity(basis) != prepared.ExpectedBase) return false;
+        IReadOnlyList<ScriptEntry> scripts;
+        try
+        {
+            if (!Session!.ToBytes().AsSpan().SequenceEqual(prepared.ExpectedBytes) ||
+                EditorProject.Hash(EditorProject.Capture(basis, prepared.Restored.Session, prepared.Restored.Terrain, prepared.Restored.Scripts)) != prepared.ExpectedRestoredHash)
+                return false;
+            scripts = IsWorldOverride ? ListOverrideScripts(prepared.Restored.Session.Body, prepared.ExpectedLevel) : ListScripts(prepared.Restored.Session.Body, worlds);
+        }
+        catch (Exception error) when (EditSession.IsUnstorable(error)) { return false; }
+        EditSession replacement = prepared.Restored.Session;
+        replacement.Changed += () =>
+        {
+            if (!ReferenceEquals(Session, replacement)) return;
+            _revision++;
+            RefreshScripts();
+            Changed?.Invoke();
+        };
+        Session = replacement;
+        Scripts = scripts;
+        _terrainDraft = prepared.Restored.Terrain;
+        _savedSignature = null;
+        IsProjectSnapshot = true;
         Problem = null;
         _revision++;
         Changed?.Invoke();
@@ -544,10 +663,16 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     {
         if (IsWorldOverride) return new ScriptCompileOutcome(null, "Source editing is unavailable for a selected world preview.", null, []);
         if (Session is null) return new ScriptCompileOutcome(null, "Open a level first.", null, []);
-        if (scriptIndex < 0 || scriptIndex >= Session.Body.Scripts.Count) return new ScriptCompileOutcome(null, $"There is no script {scriptIndex} in this world.", null, []);
-        if (!Session.SameScripts()) return new ScriptCompileOutcome(null, "The script list has changed and cannot be edited here.", null, []);
-        if (!ScriptsAreInspectable(Session)) return new ScriptCompileOutcome(null, "The level's scripts cannot be inspected or edited safely.", null, []);
-        MissionScript shipped = Session.ShippedScript(scriptIndex);
+        return CompileProjectScript(Session, scriptIndex, source, gameRoot);
+    }
+
+    /// <summary>Compiles against a prepared session without making it current or changing it.</summary>
+    internal static ScriptCompileOutcome CompileProjectScript(EditSession session, int scriptIndex, string source, string gameRoot)
+    {
+        if (scriptIndex < 0 || scriptIndex >= session.Body.Scripts.Count) return new ScriptCompileOutcome(null, $"There is no script {scriptIndex} in this world.", null, []);
+        if (!session.SameScripts()) return new ScriptCompileOutcome(null, "The script list has changed and cannot be edited here.", null, []);
+        if (!ScriptsAreInspectable(session)) return new ScriptCompileOutcome(null, "The level's scripts cannot be inspected or edited safely.", null, []);
+        MissionScript shipped = session.ShippedScript(scriptIndex);
         List<CompileNote> notes = [];
         try
         {
@@ -688,7 +813,8 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     }
 
     /// <summary>Writes the open edit as a CE mod folder <c>PARENT/ID</c>, or says why not (nothing changed, a folder that is not new, a game folder).</summary>
-    public SaveOutcome SaveAsMod(string parent, ModInfo info, IEnumerable<string?> protectedFolders) => IsWorldOverride
+    public SaveOutcome SaveAsMod(string parent, ModInfo info, IEnumerable<string?> protectedFolders) => IsProjectSnapshot
+        ? new SaveOutcome(null, "An editor snapshot is not a playable CE project.") : IsWorldOverride
         ? new SaveOutcome(null, "A selected world is preview only and cannot be saved here.")
         : TerrainHasChanges ? new SaveOutcome(null, "The changed terrain is an unsaved 3D preview and cannot be saved here.") : Stage(parent, info, protectedFolders, markSaved: true);
 
@@ -696,7 +822,8 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
     /// Writes the open edit as a mod folder the same way, for a test play in Onslaught CE: the folder is a temporary one, so the edit is not counted as saved
     /// (the unsaved-changes prompts still ask about it).
     /// </summary>
-    public SaveOutcome StageForPlay(string parent, ModInfo info, IEnumerable<string?> protectedFolders) => IsWorldOverride
+    public SaveOutcome StageForPlay(string parent, ModInfo info, IEnumerable<string?> protectedFolders) => IsProjectSnapshot
+        ? new SaveOutcome(null, "An editor snapshot is not a playable CE project.") : IsWorldOverride
         ? new SaveOutcome(null, "A selected world is preview only and cannot be played here.")
         : TerrainHasChanges ? new SaveOutcome(null, "The changed terrain is an unsaved 3D preview and cannot be played here.") : Stage(parent, info, protectedFolders, markSaved: false);
 
