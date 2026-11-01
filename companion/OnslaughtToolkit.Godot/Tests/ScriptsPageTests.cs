@@ -273,12 +273,33 @@ internal static class ScriptsPageTests
             source.Deselect();
             source.SetCaretLine(0);
             source.SetCaretColumn(0);
+            source.GrabFocus();
+            await Frame(tree);
             int secondary = source.AddCaret(1, 0);
             if (secondary >= 0)
             {
-                panel.CommentLines.EmitSignal(BaseButton.SignalName.Pressed);
+                int downCount = 0, pressedCount = 0, caretsAtDown = -1, caretsAtPressed = -1;
+                void OnMultipleDown() { downCount++; caretsAtDown = source.GetCaretCount(); }
+                void OnMultiplePressed() { pressedCount++; caretsAtPressed = source.GetCaretCount(); }
+                panel.CommentLines.ButtonDown += OnMultipleDown;
+                panel.CommentLines.Pressed += OnMultiplePressed;
+                check.That(source.HasFocus() && source.GetCaretCount() == 2,
+                    "Multicaret mouse control begins with the source focused and two carets");
+                buttonBounds = panel.CommentLines.GetGlobalRect();
+                buttonPoint = buttonBounds.Position + buttonBounds.Size / 2;
+                tree.Root.PushInput(new InputEventMouseMotion { Position = buttonPoint, GlobalPosition = buttonPoint }, true);
+                await Frame(tree);
+                tree.Root.PushInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true,
+                    ButtonMask = MouseButtonMask.Left, Position = buttonPoint, GlobalPosition = buttonPoint }, true);
+                tree.Root.PushInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false,
+                    Position = buttonPoint, GlobalPosition = buttonPoint }, true);
+                await Frame(tree);
+                panel.CommentLines.ButtonDown -= OnMultipleDown;
+                panel.CommentLines.Pressed -= OnMultiplePressed;
+                check.That(downCount == 1 && pressedCount == 1 && caretsAtDown == 2 && caretsAtPressed == 2,
+                    "Real multicaret click reaches the button with both carets intact");
                 check.That(source.Text == unicode && panel.CommentNotice.Visible,
-                    "Multiple carets are refused without changing the draft");
+                    "Real multicaret click is refused without changing the draft");
                 source.RemoveSecondaryCarets();
             }
             else check.That(false, "The multiple-caret refusal control was set up");
