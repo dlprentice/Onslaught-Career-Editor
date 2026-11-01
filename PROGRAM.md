@@ -39,9 +39,18 @@ defines progress and what a completion claim requires.
 
 ### Order after 0.1.13
 
-David's direction (2026-10-30): what players see comes first, so 0.1.13 and then the experimental online co-op release lead. His direction of 2026-10-31: everything in progress is to be finished properly and included in 0.2.0, with no hurry to ship it. **0.2.0 carries all of the lanes below.** They run in parallel where they do not wait on each other, and the order is the order of dependence. It is a plan, not a set of dates.
+David's direction (2026-10-30) put what players see first, initially prioritizing 0.1.13 and experimental online co-op. His later direction is that **0.2.0 is the future-proof, integrated “done and ready” major launch**, carrying all the lanes below with no hurry to ship. Work can run in parallel where dependencies allow. Independent 0.1.x releases may deliver fixes and other ready improvements along the way.
 
-1. Online co-op for two players on the shipped route: validate Windows hosting, the Windows guest rows and controls, message pages and a played win reaching the career writer. Windows hosting, a played win and Internet play remain unproven. Then more of it: every multiplayer map and versus over the network, three or four players (a lockstep design change) and play across the Internet without manual port forwarding.
+The following are release requirements, not claims of current availability:
+
+- Player-ready cross-platform multiplayer and lobbies on Linux and Windows, with a public browser, public and private hosting and joining, in-game text and voice chat, with voice optional for players. Validate the shipped paths on both platforms and actual networks with real players on representative devices. Design for growth beyond initial player counts; supported counts require validation.
+- A usable commander mode, with its shipped player interactions and controls validated in the intended play contexts.
+- Usable 3D map and mission creation, with a validated path to play the created content in CE.
+- A cohesive CE, Companion and tools package or access route, with installation, updates, integration and platform acceptance verified on Linux and Windows.
+
+The lanes below remain the work queue; their order reflects dependencies, not dates.
+
+1. Online co-op for two players on the intended route: validate Windows hosting, the Windows guest rows and controls, message pages and a played win reaching the career writer. Windows hosting, a played win and Internet play remain unproven. Then more of it: every multiplayer map and versus over the network, three or four players (a target requiring lockstep changes and validation) and play across the Internet without manual port forwarding.
 2. The split-screen gamepad layer: a pad for each player in ordinary two-player split screen, with the menus and pause, and with faithful modes and recordings kept as retail. It comes first of the input lanes because the next lane uses it.
 3. Commander on the merged main: gamepad control, the cases not yet covered, a Windows case and a co-op commander seat. Commander design should explore a Battle Engine pilot who can issue battlefield orders and an optional dedicated commander role; these are future proposals, not implemented roles. The team commander role is optional: an eligible player may take a vacant team role and step down, and teammates, including the commander, may vote to remove them; a tie does not remove them. The proposed recall requires a majority of eligible team members, with eligibility, timeouts and disconnections to be defined. The commander role and its voting are proposed, not implemented. AI-controlled Battle Engines and expanded unit AI are planned; reuse of suitable existing unit behavior is to be explored, and no new AI behavior is claimed as implemented.
 4. The remaining player-experience lanes: the CE Settings page as a table (pad navigation, a Windows run), a split-screen HUD scale per viewport (off in faithful modes), the fix for the crash on Retry in levels whose static shadows are bound to things that cannot hold one, the second phase of the sharper UI art, and launcher polish (a prompt that fits 1,280 pixels, a calmer line when a signature does not match). A future unified CE entry should make Play, Create and Multiplayer discoverable, with Create able to open the separate Companion. For 0.2 releases, bundle useful Companion and editor tools with CE or make them readily accessible alongside it when ready; decide the packaging and entry points and verify what each release provides.
@@ -138,7 +147,7 @@ The current pushed menu candidate makes the host choose an advertised address be
 uses the production menu with in-process interfaces. A separate transport candidate drains queued local closure before
 destruction, with focused native transport and failure controls. These are branch-level results, outside main and the
 public export. They do not prove Windows game hosting, a played campaign win, Internet play or real-device controls.
-The public release remains 0.1.13, and the full experimental 0.2.0 scope above remains the target.
+The public release remains 0.1.13, and the integrated 0.2.0 scope above remains the target.
 
 ### Level and mission tools
 
