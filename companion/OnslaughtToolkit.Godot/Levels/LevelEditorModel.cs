@@ -175,7 +175,12 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
             catch (Exception error) when (EditSession.IsUnstorable(error)) { return 1; }
             int terrain = TerrainHasChanges ? 1 : 0;
             if (session.IsBaseline(bytes) || Signature(bytes) == _savedSignature) return terrain;
-            try { return Math.Max(1, session.Changes().Count + session.Additions().Count + session.ScriptChanges().Count) + terrain; }
+            try
+            {
+                int changedRows = session.Changes().Select(change => change.Index)
+                    .Concat(session.TriggerChanges().Select(change => change.Index)).Distinct().Count();
+                return Math.Max(1, changedRows + session.Additions().Count + session.ScriptChanges().Count) + terrain;
+            }
             catch (Exception error) when (EditSession.IsUnstorable(error)) { return 1; }
         }
     }
@@ -625,7 +630,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         BitConverter.SingleToUInt32Bits(a.Y) == BitConverter.SingleToUInt32Bits(b.Y) &&
         BitConverter.SingleToUInt32Bits(a.Z) == BitConverter.SingleToUInt32Bits(b.Z);
 
-    /// <summary>A sentence about moved objects and changed scripts, or null when there are none.</summary>
+    /// <summary>A sentence about moved objects, resized triggers and changed scripts, or null when there are none.</summary>
     public string? ChangeSummary()
     {
         try { return ChangeSummaryCore(); }
@@ -637,6 +642,7 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         IReadOnlyList<ObjectChange> changes = Session?.Changes() ?? [];
         IReadOnlyList<(int Index, string Kind, string Name)> added = Session?.Additions() ?? [];
         IReadOnlyList<ScriptChange> scripts = Session?.ScriptChanges() ?? [];
+        IReadOnlyList<TriggerRadiusChange> triggers = Session?.TriggerChanges() ?? [];
         List<string> sentences = [];
         if (added.Count > 0)
         {
@@ -652,6 +658,11 @@ public sealed class LevelEditorModel(IReadOnlyList<LevelArchiveFile> levels)
         {
             string list = string.Join("; ", scripts.Take(3).Select(change => $"{change.Name} ({change.Describe()})"));
             sentences.Add($"{(scripts.Count == 1 ? "1 script replaced" : $"{scripts.Count} scripts replaced")}: {list}{(scripts.Count > 3 ? $" and {scripts.Count - 3} more" : "")}.");
+        }
+        if (triggers.Count > 0)
+        {
+            string list = string.Join("; ", triggers.Take(3).Select(change => $"{change.Name} (row {change.Index}), radius {change.From.ToString("G", System.Globalization.CultureInfo.InvariantCulture)} to {change.To.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}"));
+            sentences.Add($"{(triggers.Count == 1 ? "1 trigger resized" : $"{triggers.Count} triggers resized")}: {list}{(triggers.Count > 3 ? $" and {triggers.Count - 3} more" : "")}.");
         }
         if (_terrainDraft is { HasChanges: true } terrain)
             sentences.Add($"3D terrain preview changed at {(terrain.ChangedCount == 1 ? "1 point" : $"{terrain.ChangedCount} points")}; it cannot be saved or played.");
