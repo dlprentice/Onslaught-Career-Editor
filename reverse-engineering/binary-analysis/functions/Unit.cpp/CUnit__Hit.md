@@ -3,13 +3,13 @@
 Status: active bounded static and isolated-execution contract
 Last updated: 2026-10-01
 Summary: the corrected contact handler now matches its complete compiled body, preserving the observed float spill and fixed three-normal sum; mesh/sphere producer reachability remains bounded separately.
-Source File: private reconstructed `bea-decomp/src/Unit.cpp` | Binary: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
+Source File: reconstructed `onslaught-decomp@9169f288 src/Unit.cpp` | Binary: pristine `BEA.exe.original.backup`, SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`
 
 The selected specimen is `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
 SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Instructions below were read directly from it. `CUnit::Hit` is the current
 reconstruction label for this body; this note does not promote a Ghidra name.
-The private reconstruction is `bea-decomp/src/Unit.cpp`.
+The published reconstruction is `onslaught-decomp@9169f288 src/Unit.cpp`.
 
 | Address | Stored Ghidra label | Scope |
 | --- | --- | --- |
@@ -69,7 +69,7 @@ two reads to float64. That removes all `0x037f`/`0x027f` decision differences;
 matching. The subsequent source correction below supersedes its open status.
 
 Private reproduction owner:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/unit-hit-root-20261001/`.
+private evidence record `unit-hit-root-20261001`.
 `reproduction.json` pins the fresh source, relocated candidate and original
 helper driver; `native-x87.py` is the rerunnable experiment, and
 `native/receipt.json` has SHA-256
@@ -91,7 +91,7 @@ cases. This closes the reconstructed function's demonstrated arithmetic gap. It 
 establish captured contact inputs, live precision, original source spelling or player parity.
 In particular, the exact retail code still sums three normals when the count is two.
 
-Private owner: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/unit-hit-match-root-20261001/`.
+Private evidence record: `unit-hit-match-root-20261001`.
 `readback.json` records the fresh compile and nine targets; `native/receipt.json` SHA-256 is
 `9b45d9e6e039ba119d4b8c1aad58e64cc066af72ea1d090db47532179388e9bc`.
 The original driver and historical mismatches above remain preserved.
@@ -136,7 +136,7 @@ result, `0x004268bf` writes report `+0 = 1`; calls at `0x004268cb` and
 it; no claim here covers every callback or report producer.
 
 Private reproduction owner:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/report-normal-slot-20261001/`.
+private evidence record `report-normal-slot-20261001`.
 `root-reproduction.json` SHA-256 is
 `a3ad28737868b6b26d09a1b9544552dc938fa04096130cad5a8eff84d0faad19`.
 The adjacent lead owner `integration-root-20261001/readback.json` binds the

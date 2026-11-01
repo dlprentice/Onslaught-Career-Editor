@@ -117,9 +117,9 @@ does not establish inversion, every sensitivity setting, or jet mouse response.
 A fresh pinned-VC6 build matches all 272 bytes and every relocation of
 `0x0042da00` against the pristine specimen identified above. This is static
 instruction and constant evidence; no new physical mouse or live game test ran.
-The private source owner is `bea-decomp/src/Controller.cpp`; reproduction is
+The source is [src/Controller.cpp](https://github.com/dlprentice/onslaught-decomp/blob/9169f28862ebda0b768cbcc7ec354734af013f5e/src/Controller.cpp); reproduction is
 `python -B tools/decomp.py check src/Controller.cpp -v` in that checkout.
-The root's integrated receipt is `bea-decomp/build/controller-root-check-20260930.txt`.
+The root's integrated receipt is private evidence record `controller-root-check-20260930.txt`.
 
 The arithmetic uses float constants `0x3f333333` (approximately `0.7`) and
 `0x3f169697` (`0.5882353186607361`, at `0x005d97c4`). The latter is obtained by
@@ -146,7 +146,7 @@ At 24-bit precision with rounding toward negative infinity (`CW=0x047f`), center
 coordinate 683 produce 717 versus 718. Both coordinate axes agreed and the
 axis-read flag cleared. Nearest-rounding controls at 24 and 53 bits (`0x007f`,
 `0x027f`) produce equal outputs for those inputs. The private script and results
-are `bea-decomp/build/controller-recenter-mode-probe-20260930.py` and `.json`.
+are private evidence record `controller-recenter-mode-probe-20260930.py` and `.json`.
 These are conditional instruction-level witnesses, not evidence that this live
 controller site uses either directed rounding mode or that a player saw a difference.
 

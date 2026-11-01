@@ -77,7 +77,7 @@ These are authored arithmetic values, not a recorded projectile configuration. L
 contact/target generation and reachability remain open. The cheapest gameplay falsifier is to record the
 control word and exact fragment inputs from a copied retail run, then replay that observation at this boundary.
 
-Private root evidence is in `bea-decomp/.worktrees/codex-equiv-20260930/local-data/round-spawn-root-20261001/`:
+Private root evidence is retained in `round-spawn-root-20261001`:
 `readback.json` binds fresh before/after sections and relocation records to the reviewed objects;
 `native/receipt.json` has SHA-256 `fe9af2effa8c474a39796bf1caf2f589ec7153652bc28ea9f0a5b20029915be4`;
 `native/inputs.bin` has SHA-256 `688dee44a5691c00a2ebd0cd04cf1c9a58367925e059ce1376a51bc293c88ddb`.

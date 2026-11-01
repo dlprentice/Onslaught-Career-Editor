@@ -129,8 +129,8 @@ return; its nonzero behavior belongs to the earlier independent evidence.
 establish persistence, physical input, UI behavior, RemapKeyTrap correctness,
 complete equivalence or full branch coverage.
 
-Private owner relative to `~/Projects/game-dev/bea-decomp`:
-`.worktrees/codex-unitai-nearmiss-20260930/build/fepcontrols-remap-20260930/frozen-v2/`.
+Private evidence record:
+`frozen-v2`.
 Script SHA-256:
 `b6fc88f060010dfb48584fb2d5c807cf7a4e3a007d38be19a3465b700de3a145`.
 The script requires pinned source/COFF/parser inputs and records specimen-bound
@@ -168,7 +168,7 @@ execution of jump-table data, a false return and an unexpected call. No instruct
 physical-input, whole-UI, serialized-file or full equivalence claim follows. The complete function remains
 unmatched; all 31 existing exact FEPControls bodies are retained.
 
-Private owner in `bea-decomp`: `.worktrees/codex-equiv-20260930/local-data/remap-keytrap-root-20261001/`.
+Private evidence record: `remap-keytrap-root-20261001`.
 `final-v04/comparison.json` SHA-256 is
 `438898877c85728861117acd6ca5c7158bb99833b7ea302790fe6193e06ed545`;
 its `probe.snapshot.py` SHA-256 is

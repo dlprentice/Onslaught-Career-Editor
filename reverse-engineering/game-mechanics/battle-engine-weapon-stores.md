@@ -144,8 +144,8 @@ exception-status result. No whole-game FPU mode, weapon firing, CanLock behavior
 device/player acceptance or complete equivalence is established. The compiled
 GetCurrentMode section still does not match retail.
 
-Private owner, relative to `~/Projects/game-dev/bea-decomp`:
-`.worktrees/codex-career-nearmiss-20260930/build/weapon-mode-review-20260930/`.
+Private evidence record:
+`weapon-mode-review-20260930`.
 The frozen script SHA-256 is
 `fe4bc36d1c5e3f4242881331be4e069153474ac4046e78edb0836891b03484ec`;
 its receipt pins source, COFF, parser, specimen and linked candidate. The lead's
@@ -190,7 +190,7 @@ height when no angle wins. All 43 existing exact weapon functions survive;
 this aim function itself remains unmatched.
 
 Private lead owner:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/weapon-aim-root-20261001/`.
+private evidence record `weapon-aim-root-20261001`.
 The rerunnable `aim-prefix-probe.py` and `aim-fallback-probe.py` write receipts
 with SHA-256 `4a78c512675038f253021c8017059bcafa7bcc86db79452dea4db03a0b2b6628`
 and `538518d9facf1af3113195cac0a93586a3b9f1b990d3f14b352d45dee5f15b81`.

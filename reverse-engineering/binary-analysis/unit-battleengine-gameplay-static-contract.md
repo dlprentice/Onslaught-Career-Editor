@@ -40,7 +40,7 @@ comparison with admitted dependencies and separately observed live precision;
 fragment agreement does not establish either.
 
 Private root receipts under
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+private evidence record `geometry-gate-resume-20261001`:
 `dropship-threshold-root/readback.json` and
 `dropship-threshold-root/native-root-v1/receipt.json`.
 
@@ -65,7 +65,7 @@ not run the preceding callbacks, atan2/clamping, world queries or full update,
 nor establish live reachability or the game's active control word. The full
 guide remains unmatched. Nineteen other callable graphs, all 41 guide reference
 identities and thirteen exact controls survive. Private root evidence under
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+private evidence record `geometry-gate-resume-20261001`:
 `dive-bank-root/readback.json` and `dive-bank-root/native-bank/receipt.json`.
 
 ## Unit provider selection — October 1
@@ -103,7 +103,7 @@ of inputs, live control-word reachability and world effects were not exercised.
 All nineteen exact controls and twenty other callable graphs survive. Private
 root receipts are `mech-root-static-readback.json` and
 `mech-velocity-root-native/receipt.json`, under
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`.
+private evidence record `geometry-gate-resume-20261001`.
 
 ## Squad registration order — October 1
 
@@ -129,7 +129,7 @@ not settle the remaining initialization body, template expansion, script timing
 or live squad behavior. This pass establishes static call identity and link
 operations, not an observed change in retail gameplay or reconstruction parity.
 Private decoded evidence is under
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+private evidence record `geometry-gate-resume-20261001`:
 `squad-init-retail.asm`, `ptrset-add-retail.asm`, and `ptrset-append-retail.asm`.
 
 ## Unit lifecycle and damage

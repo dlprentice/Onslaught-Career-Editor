@@ -855,7 +855,7 @@ precision and gameplay reachability remain open. The useful next falsifier is a
 retail caller trace binding both current and predicted target positions to the
 actual mode/round and final firing decision.
 
-Private owner: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/weapon-ballistic-root-20261001/`.
+Private evidence record: `weapon-ballistic-root-20261001`.
 `run-zy1ebdlj/weapon_ballistic.json` SHA-256:
 `1635c51d136734952d77bdce4c495875fa80f2de4dd06936429af659ec1d7a38`.
 The lead runner SHA-256 is `61f12be768828235159416d4066a1f532ba6b7f51d9c26557f6852e211321a57`;

@@ -177,7 +177,7 @@ prevent treating modeled agreement as retail I/O or save compatibility.
 Read remains unmatched: a 688-byte compiled section versus the 686-byte retail
 body, with 460 differing positions. Thirteen exact object controls survive; no
 source behavior correction was demonstrated. Private lead evidence:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/dxmembuffer-read-root-20261001/`,
+private evidence record `dxmembuffer-read-root-20261001`,
 `native-model-v1/receipt.json`, SHA-256
 `3e5e0d5df525c713e04affbb59c55d30b062f16aa6b2293201210c9caf301c17`.
 The next useful runtime falsifier is a disposable real packed-file read through

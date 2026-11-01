@@ -102,7 +102,7 @@ ReadToken's 960-byte section still differs at 543 positions; it receives no exac
 match credit. The August corpus/demo comparisons were not rerun in this pass.
 
 Private lead evidence:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/tokenarchive-root-20261001/readback.json`
+private evidence record `tokenarchive-root-20261001/readback.json`
 and `allocation-v1/receipt.json` (SHA-256
 `c1fffd33dab5794f33c216438ff47cb5a613c988e8d012eef1a69adb963cde76`).
 Complete parser/allocator behavior remains open; a useful next falsifier compares
@@ -141,7 +141,7 @@ composed experiment below now tests ReadToken's subsequent result. ReadToken
 itself and archive I/O did not execute in this scanner-only experiment.
 
 Lead reproduction owner:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/retail-sscanf-20261001/`.
+private evidence record `retail-sscanf-20261001`.
 `scanner-v03/receipt.json` SHA-256:
 `1328f00bccda3b44438b691f36c3daef9ac9e8fdff7325852948a9f42509a089`;
 `native-v04/receipt.json`:
@@ -192,7 +192,7 @@ production caller continues then. The simple-sprite caller is tested separately
 below; no real file, original save or game asset was modified.
 
 Private lead owner:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/readtoken-scanner-20261001/`.
+private evidence record `readtoken-scanner-20261001`.
 Original receipt `composition-v02/receipt.json` SHA-256:
 `25be4ba8c58e78535d2da04175a0139abc7fe5667d2d367e757ae0ab60ad2055`;
 fresh candidate comparison `comparison-v05/receipt.json`:

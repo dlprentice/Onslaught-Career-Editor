@@ -8,7 +8,7 @@ The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
 [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) and its checks in [VALIDATION.md](VALIDATION.md); CE and the Godot
 rebuild own their own release and parity evidence. The queue that
 ran the Ghidra campaign, the decompilation plan and the rebuild's work items until 2026-10-15 is in Git history;
-the campaign's records are in the private `dlprentice/onslaught-re-archive`.
+the campaign's records are in the maintainers' private archive.
 
 ## Cross-project progress and priorities
 

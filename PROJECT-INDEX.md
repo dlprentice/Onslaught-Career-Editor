@@ -14,7 +14,7 @@ for demonstrated capability, [`GOAL.md`](GOAL.md) for the direction,
 [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) for the rebuild's evidence and licence boundary. The
 decompilation's public export is [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp); the native port's source and downloads are
 published separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce), never from this repository. The Ghidra checkpoint and campaign machinery are in
-the private `onslaught-re-archive`. Do not embed volatile counts here.
+the maintainers' private archive. Do not embed volatile counts here.
 
 ## Dependency direction
 

@@ -20,7 +20,7 @@ exact controls survive. The complete renderer remains unmatched, so this is a
 bounded operand correction with no additional whole-function credit. No frame
 was rendered; visual scale and presentation acceptance remain open. Private
 root receipt:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/debrief-root-readback.json`.
+private evidence record `geometry-gate-resume-20261001/debrief-root-readback.json`.
 
 ## Word wrapping and message-log input — October 1
 
@@ -42,7 +42,7 @@ word-wrap-object callables and 22 other message-log callables survive, along
 with their five and two vtables. The log-panel renderer stays unmatched. These
 are complete static matches; no UI or player interaction ran. Private root
 receipts under
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+private evidence record `geometry-gate-resume-20261001`:
 `wordwrap-root/readback.json` and `messagelog-root/readback.json`.
 
 ## Main-menu language pulse — October 1
@@ -68,7 +68,7 @@ visible output. A controlled live selection/counter observation remains the
 cheapest check of reachability; a complete body match remains independently open.
 
 Private root evidence under
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+private evidence record `geometry-gate-resume-20261001`:
 `pulse-root-native/receipt.json` and `trail-pulse-shader-root-readback.json`.
 
 ## BE configuration down-arrow gate — October 1
@@ -95,7 +95,7 @@ Full Render remains unmatched. A future whole-caller falsifier should cover the
 counter boundary and flash states while observing actual handler side effects.
 
 Private lead evidence under
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+private evidence record `geometry-gate-resume-20261001`:
 `frontend-gate-root-replay/receipt.json` and `trail-frontend-device-root-readback.json`.
 
 ## Compass direction rounding — October 1
@@ -121,7 +121,7 @@ retrieval, draw arguments, device execution, live control words and gameplay
 reachability are outside this fragment experiment. The coordinate association
 below is retained; a full caller invocation remains the useful next falsifier.
 Private lead owner:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/hud-compass-root/`;
+private evidence record `hud-compass-root`;
 receipts `final-readback.json` and `native-v01/receipt.json`.
 
 ## Compass coordinate association — October 1
@@ -146,7 +146,7 @@ materialization is corrected by the separate recheck above. All
 55 exact functions in the affected three-object check survive, and all 37 other HUD callable sections
 and their relocations are unchanged.
 
-Private reproduction: `bea-decomp/.worktrees/codex-resume-frontend-20261001/local-data/`
+Private reproduction: the maintainers' private reproduction records
 `frontend-resume-20261001/native-coordinate.py --out NEW_OUTPUT`, with frozen inputs in `coordinate/`
 and lead results in `coordinate/root-reproduction-v01/`. The lead verified the frozen retail fragment
 and constants against the specimen and both candidate objects against fresh local compilation.
@@ -186,7 +186,7 @@ controls-pause loading state with bottom text enabled, a valid font and mode oth
 than 3, observing the ID and resulting text.
 
 Private lead evidence is
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/loading-text-root-20261001/`:
+private evidence record `loading-text-root-20261001`:
 `readback.json`, `selection-v02/assets.json` (individual file hashes and offsets),
 and `selection-v02/receipt.json` (SHA-256
 `0de97f1e4632611013781ed37ba904b105ee6a1d7616508d7f95d942261ee3df`).
@@ -210,10 +210,10 @@ flags turn `-0.25` into `-1.0`, whereas `0x10` preserves `-0.25`. The tests exec
 the original rounding slice and its actual CRT floor/control-word helpers, check
 the exit point, floor-call count, stack and FPU state, and use FPU control word
 `0x037f`. They do not execute drawing or a complete font call. Private evidence:
-`bea-decomp/.worktrees/codex-frontend-20260930/local-data/frontend-matching-20260930/font_flag_probe.py`
+private evidence record `frontend-matching-20260930/font_flag_probe.py`
 (SHA-256 `dfb50f617d38a8b83a94dc4ba56ac47c1eadd9e65db71ef27be35b5bded7cb4f`);
 the lead's reproduced receipt is
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/frontend-matching-20260930/font-flag-probe.json`
+private evidence record `frontend-matching-20260930/font-flag-probe.json`
 (SHA-256 `f34c1d4ccee9ea7a2aa557f801fc1d841d8849d6e4c5c5409667d850f76159d2`).
 
 For reconstruction, preserve the fractional Y path at this call site. No retail or
@@ -235,8 +235,8 @@ operation structure; factoring the products or substituting a double-width const
 the compiled instructions. The private reconstruction now matches the complete 848-byte section
 (843-byte body plus alignment) and all 42 relocations. Lead reproduction retained every earlier match
 in the affected objects and full integrated score; receipts are
-`bea-decomp/build/menu-render-root-check-20260930.txt` and
-`bea-decomp/build/root-score-menu-namedmesh-20260930.log`.
+private evidence record `menu-render-root-check-20260930.txt` and
+private evidence record `root-score-menu-namedmesh-20260930.log`.
 
 This gives the rebuild a precise generic current-versus-committed rendering contract. It does not
 establish a visible defect in its currently live-applied options bars, whose values may already be
@@ -265,7 +265,7 @@ that a live retail callback changes or invalidates the title.
 That snapshot-only correction left the renderer unmatched; the subsequent complete
 match below supersedes that state. All 18 prior exact controls and 22 other callable
 sections/relocation destinations were preserved. Lead private evidence is
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/menu-title-root-20261001/`,
+private evidence record `menu-title-root-20261001`,
 particularly `root-readback.json` and `tail/receipt.json` (SHA-256
 `fa3b7e716f5a129c655e69ebfa96b6d0eeeef01eba70de58b2ec31701aae381e`).
 For implementation, preserve the snapshot boundary. The cheapest remaining
@@ -300,7 +300,7 @@ storage. Trace actual loaded text and confirmation-menu construction to settle
 whether normal play can reach the failed-measurement state.
 
 Private lead evidence:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/menu-frame-root-20261001/readback.json`;
+private evidence record `menu-frame-root-20261001/readback.json`;
 prefix receipt SHA-256
 `69c4eb25a6380871a16d5ea4520ab4baadae023dd3cecf60c9192b7c80c88b87`.
 All 18 previous exact controls and 22 other callable bodies/relocation targets remain
@@ -335,7 +335,7 @@ strings, nonfinite coordinates or actual font assets. Missing texture enters
 initialization, which was excluded rather than modeled as a false return.
 GDI/D3D initialization, live rounding state and visual text acceptance remain open.
 Private lead receipt:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/font-extent-root-20261001/native-v2/receipt.json`,
+private evidence record `native-v2/receipt.json`,
 SHA-256 `5887039c1a011a199c4e8b112e4b817fabf3a72be2380fc5bd3fd77f3d58fa63`.
 
 ## Font glyph stream and V-inset rounding — October 1
@@ -383,7 +383,7 @@ also untested. The retained V-inset witness now passes; a live follow-up must
 first establish the actual inset and FPU state at the caller.
 
 Private lead owner:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/font-loop-root-20261001/`.
+private evidence record `font-loop-root-20261001`.
 `readback-copy-v2.json` binds the fresh final source/object; the reproduced
 `native-copy-v1/receipt.json` has SHA-256
 `3155f770439a1c1f120e84b3032879ca372a66ab032a67e4237a4ace9086023a`.
@@ -404,7 +404,7 @@ The Goodies requirement-text builder `0x0045a940` also matches its full 736-byte
 section and 60 relocations (726-byte body). Both text lookups call `0x004f2580`;
 using the existing direct PC lookup removes a forwarding wrapper without changing
 the targets. The separate Goodies renderer remains unmatched. Lead private owners
-in `bea-decomp/.worktrees/codex-equiv-20260930/local-data/` are
+in the maintainers' private reproduction records are
 `messagebox-ctor-root-20261001/` and `goodies-match-root-20261001/`, each with a
 fresh compiled `final-readback.json`. These checks do not establish visual or
 audio acceptance.

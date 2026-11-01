@@ -105,7 +105,7 @@ extent refuses. Candidate padding is not executable evidence. All 85 relocations
 literal/import, matched-object or whole-score placement witnesses; annotation-only placements
 are refused.
 
-Private owner: `bea-decomp/.worktrees/codex-equiv-20260930/build/d3d-init-retail-20260930/`.
+Private evidence record: `d3d-init-retail-20260930`.
 Run with the private repository's `local-data/venv/bin/python -B` and that directory's `run.py`.
 The source/object revision is `9e7f323`; `inputs/` preserves the object, source and placement
 tables. The script pins those files and refuses to overwrite a differing receipt.
@@ -152,7 +152,7 @@ These inspected paths do not prove restoration on every library, callback or DLL
 
 The lead verified all 23 input range hashes and independently decoded the 27 critical instruction
 assertions, plus the import/pointer chain and pinned headers. Private readback:
-`bea-decomp/local-data/fpu-startup-root-20261001/readback-v02.json`, SHA-256
+private evidence record `fpu-startup-root-20261001/readback-v02.json`, SHA-256
 `0b55a5da558e89b6d0c55d24b8924226ff734462e9c3b49e362ad55ebb3c1630`.
 No game/device call ran. The decisive remaining observation is control word **and thread identity**
 before/after creation and both reset sites, then at the tested collision/projectile entries.

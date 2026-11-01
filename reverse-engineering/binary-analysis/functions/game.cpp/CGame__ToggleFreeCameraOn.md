@@ -72,16 +72,16 @@ Exact-axis controls agree. Execution stops **before asin**; no camera, allocator
 Synthetic columns and chosen FPU modes are not observations of live camera inputs or the game's control word.
 Zero magnitude, exceptional values, non-nearest modes, asin's implementation and full camera behavior remain outside this probe.
 
-Private reproduction, from `bea-decomp` main:
+Private reproduction records:
 
-```text
-local-data/venv/bin/python local-data/elevation-call-argument-probe-20260930.py
-```
+Private reproduction uses `elevation-call-argument-probe-20260930.py`. The exact invocation, pinned Python environment and private input/output routing
+are retained in the maintainers' reproduction records.
+
 
 Its adjacent JSON records the verified specimen, exact candidate-object/script hashes, inputs and raw x87
 results. Prior and corrected compiled objects are frozen in the adjacent private input directory, so later
 builds cannot silently replace them. Static and full-build receipts are in
-`bea-decomp/.worktrees/codex-equiv-20260930/build/elevation-retail-readback-20260930.asm` and
+private evidence record `elevation-retail-readback-20260930.asm` and
 `elevation-asinf-full-score-20260930.log` and `elevation-freecamera-full-score-20260930.log`;
 `free-camera-asinf-source-init-20260930.txt` records the subsequent
 whole-object match after restoring the original matrix declaration. Independent review checked the instruction slices and the initial

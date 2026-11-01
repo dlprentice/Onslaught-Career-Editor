@@ -14,7 +14,7 @@ describe what individual retail functions do. They were written during the Ghidr
 function in machine-verified campaign generations. That campaign ended on 2026-10-15: the byte-matching
 decompilation (5,482 of 5,482 functions in the maintainer's working tree; its public export,
 [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), reproduces 5,449 of them) is now the authority on what a function does, and the
-campaign's ledgers, verifiers and `developer_state.json` are in the private `dlprentice/onslaught-re-archive`.
+campaign's ledgers, verifiers and `developer_state.json` are in the maintainers' private archive.
 
 ## What a contract is
 

@@ -50,7 +50,7 @@ reachability remains open; the intervention is a falsifier of the old load order
 not retail observation of a changing mesh. Exact code matching does not broaden
 that experiment's runtime coverage.
 
-Private lead evidence under `bea-decomp/.worktrees/codex-equiv-20260930/`:
+Private lead evidence under the maintainers' private reproduction records:
 `local-data/destroyable-break-root-20261001/accepted/receipt.json` and
 `callback-v01/receipt.json` (SHA-256
 `3ab42b2ed8aaafc91664e6cb0b6aa750e947315b08efefc7d2496d403a4db7e9`);
@@ -74,10 +74,10 @@ corpus preserves earlier exact matches. This is static executable-backed evidenc
 no rubble rendering, random distribution in a live world, pickup behavior or
 gameplay acceptance was measured in this pass.
 
-Private root receipts in `bea-decomp/.worktrees/codex-equiv-20260930/`:
+Private root receipts in the maintainers' private reproduction records:
 `local-data/geometry-gate-resume-20261001/segment-message-root-readback.json` and
 `segment-message-sections.json`. Frozen source, objects and patch evidence are in
-`bea-decomp/.worktrees/codex-resume-aircraft-20261001/local-data/segment-resume-20261001/`.
+private evidence record `segment-resume-20261001`.
 
 ## Inherited static map — June 7
 

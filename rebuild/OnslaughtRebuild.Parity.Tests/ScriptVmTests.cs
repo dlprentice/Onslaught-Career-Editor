@@ -12,7 +12,7 @@ namespace OnslaughtRebuild.Parity.Tests;
 
 /// <summary>
 /// The mission-script machine on small hand-made object codes: each case states the retail behaviour it checks
-/// (bea-decomp src/MissionScript: AsmInstruction.cpp, DataType.h, vm.cpp, IScript.cpp, ScriptEventNB.cpp, MessageBox.cpp).
+/// (onslaught-decomp@9169f288 src/MissionScript: AsmInstruction.cpp, DataType.h, vm.cpp, IScript.cpp, ScriptEventNB.cpp, MessageBox.cpp).
 /// </summary>
 public sealed class ScriptVmTests
 {

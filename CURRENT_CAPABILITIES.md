@@ -895,8 +895,7 @@ Findings are written as prose and specs in [onslaught-preservation](https://gith
 citing functions rather than quoting code; [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) here is a frozen copy.
 
 The Ghidra-era campaign (generations, contract grades, promotion cohorts, the tracked Ghidra checkpoint and
-`developer_state.json`) ended with that work. Its records moved on 2026-10-15 to the private repository
-`dlprentice/onslaught-re-archive`, byte-exact at their old paths; its figures are history, not current capability.
+`developer_state.json`) ended with that work. Its records moved on 2026-10-15 to the maintainers' private archive, byte-exact at their old paths; its figures are history, not current capability.
 
 ## Evidence boundary
 

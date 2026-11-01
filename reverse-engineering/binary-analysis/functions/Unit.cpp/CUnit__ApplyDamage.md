@@ -111,7 +111,7 @@ perform no store or callback. The probe starts inside the ordinarily unreachable
 the full Damage entry or collision query. Fresh instructions reproduce the two same-mask guards with
 no intervening call/write. Full candidate matching remains open.
 
-Private root receipt: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/unit-damage-root-20261001/`
+Private root receipt: `unit-damage-root-20261001`
 (`probe.py`, `input-pin.json`, `report.json`). The report SHA-256 is
 `19d1d86c569dd544afd360c89fed3d2a41c5c05788e7f0f816c84aab24c52625`; it identifies the same pristine
 specimen as this contract. No retail gameplay observation is added.
@@ -145,9 +145,8 @@ rejected rather than accepted as the expected null observation. No allocator, lo
 handler runs; this is not an observed Windows crash or proof of an actual allocation-failure path.
 
 The lead reran the frozen private script
-`bea-decomp/.worktrees/codex-career-nearmiss-20260930/build/messagebox-queue-review-20260930/probe.py`
-with `bea-decomp/local-data/venv/bin/python -B` and
-`--out local-data/messagebox-queue-root-20260930` from `bea-decomp` main. Script SHA-256:
+private evidence record `messagebox-queue-review-20260930/probe.py`
+using the pinned Python interpreter with `-B` and the private `messagebox-queue-root-20260930` output record. Script SHA-256:
 `f40a99c04dcc7af1b80efdee4de1ed40cb071c7b75a6b6f2e11b1ac9e601b866`.
 The output records pinned specimen/source/object identities, exact call boundaries, queue/canary state and
 the two refusal controls. The submission function still has an unresolved byte mismatch.
@@ -188,7 +187,7 @@ linked receiver instead. Source field spellings and saved Ghidra names remain se
 
 September 30: independent read-only review followed by lead re-derivation from the verified specimen,
 whole-body disassembly, fresh body hash, string/constant reads and timer-callee inspection. Private lead
-receipts are under `bea-decomp/.worktrees/codex-equiv-20260930/build/`:
+receipts are under the maintainers' private reproduction records:
 `unit-damage-static-readback-20260930.txt`, `unit-damage-constants-20260930.json` and
 `unit-damage-caller-readback-root-20260930.txt`.
 
@@ -201,12 +200,11 @@ case reached the guarded nexus explosion-geometry block. Negative controls disti
 names, exact-zero death, exact/either-side warning thresholds, exact versus oversized repair, source masks
 2/4, nonzero high-byte flags, disabled text display and already-set warning latches.
 
-Reproduction commands, from private `bea-decomp` main:
+Private reproduction records:
 
-```text
-local-data/venv/bin/python .worktrees/codex-collision-nearmiss-20260930/build/unit-damage-branch-probe/probe.py --out local-data/unit-damage-branch-probe-root-20260930.json
-local-data/venv/bin/python local-data/unit-damage-extra-controls-root-20260930.py
-```
+Private reproduction uses `probe.py`, `unit-damage-extra-controls-root-20260930.py`. The exact invocation, pinned Python environment and private input/output routing
+are retained in the maintainers' reproduction records.
+
 
 The frozen 50-case script's SHA-256 is `0bea2afe08e7cd49056d99b41aeb6ad2433381acc1848316f94abd74d1059514`;
 both JSON outputs record their script and specimen hashes. Only Damage and the squad helper execute original

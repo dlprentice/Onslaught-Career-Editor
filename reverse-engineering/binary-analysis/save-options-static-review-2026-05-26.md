@@ -36,15 +36,15 @@ the hardware-sound restart flag produces a detected callback difference. This is
 explicit boundary models, not proof of whole-function equivalence, malformed-buffer admission, filesystem
 publication, actual graphics/audio/language behavior or complete original-save compatibility.
 
-Private reproduction, from `bea-decomp` main, with a new output directory:
+Private reproduction uses a new output directory:
 
-```text
-local-data/venv/bin/python -B .worktrees/codex-career-nearmiss-20260930/build/career-compatibility-review-20260930/probe.py --out local-data/CHOSEN_NEW_DIRECTORY
-```
+Private reproduction uses `probe.py`. The exact invocation, pinned Python environment and private input/output routing
+are retained in the maintainers' reproduction records.
+
 
 The frozen script SHA-256 is `270920c047c0bb3ce53f2683a9473627d92ecb9b85410776396a98daba3a2846`;
 its pinned source/COFF inputs are adjacent. The lead's actual output is
-`bea-decomp/local-data/career-compatibility-root-20260930/results.json`. Independent review checked the anchors,
+private evidence record `career-compatibility-root-20260930/results.json`. Independent review checked the anchors,
 ABI boundaries and controls before the lead rerun. Extending the callback boundary to original tweak/audio
 implementations is a stronger falsifier; no save or settings file was created or modified by these probes.
 
@@ -77,7 +77,7 @@ The next useful falsifier replaces a remaining callback model in the composed re
 under an admitted real-options input, preserving its original bytes.
 
 Private lead owner:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/career-tweak-native-root-20261001/`.
+private evidence record `career-tweak-native-root-20261001`.
 `v02/receipt.json` SHA-256:
 `d505219ce6314284de26eab4d974258b03baaf01ebd3c94c688a67bc9bd8c80b`.
 

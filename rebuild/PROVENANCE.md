@@ -27,9 +27,9 @@ not a clean-room lane. The root licences do not relicense the pinned `references
 - Controlled copied-runtime observations establish measured behavior.
 - Original design work, deterministic tests, public standards, and engine APIs
   may fill gaps that are clearly labelled provisional.
-- The byte-matching decompilation (bea-decomp, the project's own source, to be published under GPL-3.0 as
+- The byte-matching decompilation (the maintainers' working reconstruction, the project's own source, to be published under GPL-3.0 as
   Onslaught CE; David approved its use here on 2026-10-15) may be ported into the parity core
-  (`OnslaughtRebuild.Parity`). Every ported unit is listed under *Adapted from bea-decomp* with its source file. This
+  (`OnslaughtRebuild.Parity`). Every ported unit is listed under *Adapted from the decompilation* with its source file. This
   is our reconstructed source, not decompiler output; tables or bytes extracted from the executable stay out.
 - Retail assets are user-supplied local inputs. The source tree retains exact
   hashes and bounded extraction/conversion recipes, while the materialized
@@ -40,20 +40,27 @@ decompiler output, user saves, raw runtime captures, or separately licensed
 third-party code/media into this subtree.
 Never describe synthetic or source-only behavior as observed Steam behavior.
 
-## Adapted from bea-decomp
+## Adapted from the decompilation
 
-Each row names a C# unit of `OnslaughtRebuild.Parity` and the bea-decomp source it adapts. Units built only from
+Each row names a C# unit of `OnslaughtRebuild.Parity` and the decompilation source it adapts. Units built only from
 the parity harness's own formats (tape, probe trace, comparator, runner) adapt nothing and are not listed. Neither is
 `Numerics/X87.cs`: it is original work (error-free transforms with one 24-bit rounding), checked against oracle tables
 from a VC6 SP5 harness at 24-bit precision control (`tools/x87_oracle`), and adapts no game source. Nor is
 `Crt/CrtRand.cs`: the C runtime's `rand`/`srand` behaviour (a per-thread linear congruential state starting at 1),
 measured from the pinned VC6 SP5 LIBCMT's `rand.obj` and `tidtable.obj`, with no runtime code copied.
 
+Published source paths below use [onslaught-decomp at `9169f288`](https://github.com/dlprentice/onslaught-decomp/tree/9169f28862ebda0b768cbcc7ec354734af013f5e); `port/` references use
+[Onslaught CE at `cdc077aa`](https://github.com/dlprentice/onslaught-ce/tree/cdc077aa296835fa0967a2781f7dccdcd922a9ea). `src/DXFont.cpp` identifies a retained private
+reconstruction record; that source is [excluded from the public decompilation export](https://github.com/dlprentice/onslaught-decomp/blob/9169f28862ebda0b768cbcc7ec354734af013f5e/README.md#what-is-left-out).
+The historical labels `src/GameMenu.cpp` and `src/ViewPointCamera.cpp` also remain private provenance references;
+no equivalent published file has been established here. Exact historical source and receipt routing is retained
+in the maintainers' private provenance records.
+
 <!-- REUSE-IgnoreStart -->
 Licence identifiers (checked 2026-10-15): Stuart's release (GitHub `stuart73/Onslaught`, in `references/Onslaught`) ships the GPL version 3 text
 in `LICENSE` with no notice offering "any later version", in its README or its source files. Units adapted from his
-source, directly or through bea-decomp, are therefore marked `SPDX-License-Identifier: GPL-3.0-only`. Since 2026-10-21
-(David's decision for every project's code) the rest of the rebuild is GPL-3.0-only too: units adapted from bea-decomp
+source, directly or through the decompilation, are therefore marked `SPDX-License-Identifier: GPL-3.0-only`. Since 2026-10-21
+(David's decision for every project's code) the rest of the rebuild is GPL-3.0-only too: units adapted from the decompilation
 code that is not in his release (reconstructed from the retail program, such as the random stream) and original
 rebuild code, which were `GPL-3.0-or-later` before. The table's licence column notes which units are in his release.
 <!-- REUSE-IgnoreEnd -->
@@ -65,7 +72,7 @@ superset (a test that only cites his code for an expected value is marked too), 
 and combined with the or-later code of the time; the 2026-10-21 decision moved the rest to `GPL-3.0-only`. Every
 rebuild project's package licence expression is `GPL-3.0-only`.
 
-| C# unit | Adapted from bea-decomp | Licence |
+| C# unit | Adapted from the decompilation | Licence |
 | --- | --- | --- |
 | `Career/Career.cs` (career logic: blank, lookups, end-of-level update, links, goodie states, grades, slots, screen position) | `src/Career.cpp` (`CCareer`) | GPL-3.0-only (in Stuart's release) |
 | `Career/CareerRecord.cs` (the 9,404-byte `CCareer` memory layout) | `src/Career.h` (`CCareer`, `CCareerNode`, `CCareerNodeLink`, `CGoodie`) | GPL-3.0-only (in Stuart's release) |
@@ -110,7 +117,7 @@ rebuild project's package licence expression is `GPL-3.0-only`.
 | `Mesh/MeshPolyBucket.cs` (the part's poly bucket as stored) | `src/PolyBucket.cpp` and its header | GPL-3.0-only (not in Stuart's release) |
 | `Mesh/MatrixOps.cs` (FMatrix sum, difference and scale; the 16/48-byte layouts) | `src/maths.h` | GPL-3.0-only (not in Stuart's release) |
 | `Things/Thing.cs` (CThing, CComplexThing) | `src/thing.h`, `src/thing.cpp` | GPL-3.0-only (in Stuart's release) |
-| `Things/RadarWarningReceiver.cs`, ordered world round membership, BattleEngine receiver ownership and ComplexThing animation destruction | `src/RadarWarningReceiver.cpp` (Init 004d65a0, Update 004d66b0), `src/round.cpp`, `src/BattleEngine.cpp` (cockpit call 004055dc before receiver Init 00405710), `src/thing.cpp` (destructor 004f3f00) | GPL-3.0-only as combined; reconstructed receiver file GPL-3.0-only. Real ordered scans and monitored lifetimes; existing atan2, lock admission and nonloop sound limits remain explicit. |
+| `Things/RadarWarningReceiver.cs`, ordered world round membership, BattleEngine receiver ownership and ComplexThing animation destruction | `src/RadarWarningReceiver.cpp` (Init 004d65a0, Update 004d66b0), `src/Round.cpp`, `src/BattleEngine.cpp` (cockpit call 004055dc before receiver Init 00405710), `src/thing.cpp` (destructor 004f3f00) | GPL-3.0-only as combined; reconstructed receiver file GPL-3.0-only. Real ordered scans and monitored lifetimes; existing atan2, lock admission and nonloop sound limits remain explicit. |
 | `Things/Actor.cs` (CActor) | `src/actor.h`, `src/actor.cpp` | GPL-3.0-only (in Stuart's release) |
 | `Things/InitThing.cs` (CInitCSThing, CInitThing's runtime fields, Copy) | `src/InitThing.h` | GPL-3.0-only (in Stuart's release) |
 | `Things/ThingType.cs` (THING_TYPE_ bits) | `src/ThingType.h`, `src/waypoint.h` | GPL-3.0-only (not in Stuart's release) |
@@ -139,7 +146,7 @@ rebuild project's package licence expression is `GPL-3.0-only`.
 | Configured playback calls in BattleEngine movement/morph, walker dash, weapons, impacts, explosions, features and unit initialization/pre-/post-fire | Corresponding `src/BattleEngine.cpp`, `src/BattleEngineWalkerPart.cpp`, `src/weapon.cpp`, `src/thing.cpp`, `src/explosion.cpp`, `src/feature.cpp`, `src/Unit.cpp` call sites | GPL-3.0-only as combined. Native owner, gain, tracking, once/repeat, fade and RNG order are preserved; root reproduced integrated caller tests and original PlayEffect gain outputs. Root additionally reproduced 23 original feature/post-fire cases; component effects and static shadows remain explicit omissions. |
 | `Things/BattleEngine.cs` incoming spoken warning | `src/BattleEngine.cpp` HandleEvent 0040c180 / event 4002 and Init; pristine original handler | GPL-3.0-only as combined. Root reproduced 14 strict/unordered deadline and argument cases plus 19 managed checks. The actual HUD effect call closes the configured trainer CRT divergence; the isolated oracle intercepts three string/sound services and does not establish audible playback. |
 | `Things/Explosion.cs` inlined distance for falloff | `src/explosion.cpp`, pristine `CExplosion::Hit` 0044bf10 and its distance block 0044bf65..0044bf9b | GPL-3.0-only as combined. Root reproduced 5,347 isolated original Hit cases; 521 distinguish the old sum order. Eight managed counterexamples also cover retained exponent range. Radius and Damage are authored service boundaries; the current trainer's first-hit difference is upstream or in the native port, not resolved by this correction. |
-| `Things/Round.Seeking.cs`, `Things/BattleEngine.Locking.cs` | `src/round.cpp`, `src/BattleEngine.cpp`; pristine lock-loss and turn blocks | GPL-3.0-only as combined. Root reproduced 2,320 original cases (39,440 words); PC53 changes 1,056 cases. Target reacquisition, other missile classes and launcher lock behavior remain separate. |
+| `Things/Round.Seeking.cs`, `Things/BattleEngine.Locking.cs` | `src/Round.cpp`, `src/BattleEngine.cpp`; pristine lock-loss and turn blocks | GPL-3.0-only as combined. Root reproduced 2,320 original cases (39,440 words); PC53 changes 1,056 cases. Target reacquisition, other missile classes and launcher lock behavior remain separate. |
 | `Things/LevelResources.cs` (the resource file's MESH, ERES and WRES chunks) | `src/ResourceAccumulator.cpp` (`ReadResources`) | GPL-3.0-only (in Stuart's release) |
 | `Things/WorldLoader.cs` (CWorld::Load, LoadWorld, LoadHeader, LoadScripts in retail's order) | `src/world.cpp` | GPL-3.0-only (not in Stuart's release) |
 | `Things/UnitFactory.cs` (UPhysicsManager::SpawnThing) | `src/WorldPhysicsManager.cpp` | GPL-3.0-only (not in Stuart's release) |
@@ -162,7 +169,7 @@ rebuild project's package licence expression is `GPL-3.0-only`.
 | `World/WorldFile.cs` (the world file's layout) | `src/world.cpp` (`CWorld::LoadWorld`, `LoadHeader`, `LoadScripts`, `Deserialize`), `src/engine.cpp` (`LoadAllNamedMeshes`), `src/InfluenceMap.cpp`, `src/WaypointManager.cpp`, `src/NavigationMap.cpp` (`COccupancyGrid`) | GPL-3.0-only (engine.cpp is in Stuart's release) |
 | `Script/ScriptObjectCode.cs` (compiled mission scripts as stored) | `src/MissionScript/ScriptObjectCode.cpp`, `AsmInstruction.cpp`, `Symtab.cpp`, `DataType.cpp`, `EventFunction.cpp` | GPL-3.0-only (not in Stuart's release) |
 | `Clock/PlatformClock.cs` (the replay shim's timers; GetSysTimeFloat) | `src/PCPlatform.cpp` (`CPCPlatform::GetSysTimeFloat`) | GPL-3.0-only (in Stuart's release) |
-| `Platform/DisplayReset.cs`, `Clock/PlatformClock.cs` (deferred reset after platform Flip; state 2 saves only after success), `Flow/Menus/MachineDisplay.cs` (Apply queues a reset; current mode key) | `src/Platform.cpp` (`CPlatform::Flip` 004d2580), `src/Career.cpp` (`ReadOptions` 00420d70, `CDisplayModeKey::Set` 00420d10), `src/PauseMenu.cpp` (`DisplaySettingChanged`) | GPL-3.0-only (Platform.cpp/Career.cpp adapt Stuart's release; retail additions reconstructed in bea-decomp). Only the transaction is implemented: host device/resource/input reset and live ReadOptions integration remain unsupported. |
+| `Platform/DisplayReset.cs`, `Clock/PlatformClock.cs` (deferred reset after platform Flip; state 2 saves only after success), `Flow/Menus/MachineDisplay.cs` (Apply queues a reset; current mode key) | `src/Platform.cpp` (`CPlatform::Flip` 004d2580), `src/Career.cpp` (`ReadOptions` 00420d70, `CDisplayModeKey::Set` 00420d10), `src/PauseMenu.cpp` (`DisplaySettingChanged`) | GPL-3.0-only (Platform.cpp/Career.cpp adapt Stuart's release; retail additions reconstructed in the decompilation). Only the transaction is implemented: host device/resource/input reset and live ReadOptions integration remain unsupported. |
 | `Events/EventManager.cs` (the scheduler: pool, buffers, overflow, AddEvent, AdvanceTime, Flush; CScheduledEvent) | `src/eventmanager.cpp`, `src/eventmanager.h`, `src/scheduledevent.cpp`, `src/scheduledevent.h` | GPL-3.0-only (in Stuart's release) |
 | `Events/Monitor.cs` (CMonitor, active readers, CEvent) | `src/Monitor.h`, `src/Monitor.cpp`, `src/activereader.h`, `src/activereader.cpp`, `src/Event.h` | GPL-3.0-only (in Stuart's release) |
 | `Game/Game.cs` (CGame's state, level start, pre-run, pan and play states, HandleEvent; CFearGrid creation in InitRestartLoop, game.cpp:505; SFrontEndSettings fields) | `src/game.h`, `src/game.cpp` (`InitRestartLoop`, `RestartLoopRunLevel`, `PreRun`, `StartPanState`, `StartPlayingState`, `HandleEvent`) | GPL-3.0-only (in Stuart's release) |

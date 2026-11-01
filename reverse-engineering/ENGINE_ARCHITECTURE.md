@@ -46,7 +46,7 @@ The retained PPT was freshly hashed to the identity above. An isolated,
 headless LibreOffice conversion of a private copy produced 47 PDF pages;
 all 47 pages' text and rendered images were inspected. The original was
 unchanged. Conversion, text and images are private evidence under
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/retained-gdc-presentation-root-20261012/`.
+private evidence record `retained-gdc-presentation-root-20261012`.
 This reread verifies the deck's contents, not the inherited PC binary joins below.
 
 - Slides 9–19 cover texture reduction/compression, tiling and texel density,

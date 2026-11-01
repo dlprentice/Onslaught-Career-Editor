@@ -19,7 +19,7 @@ its code.
 The Ghidra-era campaign that produced many of these notes has ended. Its records (the tracked Ghidra checkpoint,
 `developer_state.json`, the evidence register, the Ghidra function ledger, the source crosswalk, the full-pass wave
 record and the promotion, boundary and naming records) and the decompiler listings that used to sit in some notes
-moved to the private repository `dlprentice/onslaught-re-archive`, byte-exact at their old paths. Notes that cite
+moved to the maintainers' private archive, byte-exact at their old paths. Notes that cite
 them say "(private RE archive)". Generation numbers, grade counts and Ghidra database versions quoted in dated
 notes are history.
 

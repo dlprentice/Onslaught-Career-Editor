@@ -195,7 +195,7 @@ overflow and probes outside the 256-by-256 allocation are excluded; real pathfin
 and whether authored levels reach the examples remain open. A useful runtime falsifier
 is a recorded failed path-search input with the destination and visited-cost grid intact.
 Private lead evidence:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/navigation-root-20261001/readback.json`
+private evidence record `navigation-root-20261001/readback.json`
 and `native/receipt.json`, SHA-256
 `7f2a995d59868a3e9a4d33d11b1756879de40d8f31413a86ec00e649e27838f7`.
 

@@ -26,7 +26,7 @@ initialized values; no actual gameplay difference or live reachability was
 observed. The full Damage function remains unmatched and earns no new credit.
 
 Private root readback:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/infantry-fallback-root/readback.json`.
+private evidence record `infantry-fallback-root/readback.json`.
 
 ## Audit corrections (2026-09-26)
 

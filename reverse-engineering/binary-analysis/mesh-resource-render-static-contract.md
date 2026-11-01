@@ -30,7 +30,7 @@ the checker contract, not original source spelling, actual draw submissions
 or visual parity. No game or graphics device ran.
 
 Private root evidence in
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/shadow-transform-order-root/`:
+private evidence record `shadow-transform-order-root`:
 `final/readback.json` and `scheduler-readback.json`.
 
 ## Mesh surface detail and interface identities — October 1
@@ -70,7 +70,7 @@ whole renderer remains unmatched. Its corrected arithmetic still omits retail's
 otherwise-unread square-root store at `0x004dcce9`; exception/status effects of
 that store remain open. No renderer or game ran, and actual receiver/branch
 reachability remains unproved. Private root receipts under
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/render-map-root/`:
+private evidence record `render-map-root`:
 `mesh-root-v1/readback.json` and `identity-swap/readback.json`.
 
 ## Map trace fallback logging — October 1
@@ -111,7 +111,7 @@ literal. All 21 other callable graphs are unchanged; only Read and its FPO
 record change. `InitFromFile` still differs in twenty stack-slot byte positions.
 This closes a static byte-match gap, not Windows file-I/O or save-compatibility
 acceptance. Private root receipt:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/dxmembuffer-read-root/readback.json`.
+private evidence record `dxmembuffer-read-root/readback.json`.
 
 ## Render descriptors and texture initialization — October 1
 
@@ -134,7 +134,7 @@ still reports no unique retail vtable; this match does not settle that question.
 These are compiled identities under the decompilation checker's stated contract,
 not device execution, successful asset loading or recovered source spelling.
 Private root receipts under
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+private evidence record `geometry-gate-resume-20261001`:
 `resource-texture-root/PCRTID/readback.json` and
 `resource-texture-root/DXTexture/readback.json`.
 
@@ -237,7 +237,7 @@ match and a controlled receiver-identity observation remain separate falsifiers.
 Private root `shadow-projection-root-readback.json` records the evidence.
 
 The root receipts above are under
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`.
+private evidence record `geometry-gate-resume-20261001`.
 
 ## Buggy and tentacle root transforms — October 1
 
@@ -258,7 +258,7 @@ These helper boundaries and names are reconstructed, not recovered source text.
 This does not close either controller's Init method or establish rendered
 motion, live timing or whole-controller parity. No game or renderer ran.
 Private root evidence under
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+private evidence record `geometry-gate-resume-20261001`:
 `buggy-tentacle-root-readback.json` and `buggy-tentacle-root-check.log`.
 
 ## Declaration shader constants — October 1
@@ -277,7 +277,7 @@ source reconstructs those boundaries; it is not claimed as original source text.
 
 This settles the admitted function's compiled bytes and references, not a GPU
 observation, visible snow result or complete graphics pipeline. Private root proof
-under `bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+under private evidence record `geometry-gate-resume-20261001`:
 `trail-pulse-shader-root-readback.json`.
 
 ## Trail renderer name gate — October 1
@@ -334,7 +334,7 @@ complete trail updates, allocation, live control words or visible output; those
 remain useful falsifiers.
 
 Private lead receipts under
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+private evidence record `geometry-gate-resume-20261001`:
 `trail-native-root-expanded/receipt.json`,
 `trail-native-root-replay/signed-zero-readback.json`, and
 `trail-frontend-device-root-readback.json` preserve the earlier normalization-only
@@ -390,7 +390,7 @@ texture with different third/fourth transformed coordinates, observing the actua
 state and projection under the retail shader configuration.
 
 Private readback:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/texture-projection-root-20261001/state-readback.json`,
+private evidence record `texture-projection-root-20261001/state-readback.json`,
 SHA-256 `367c39ffda7f2e79753c4985235422493bc423e29456d3dbf01a993c43db5aba`.
 The receipt binds the pristine instructions and pinned `d3d9types.h` identity;
 `readback.json` records the before/after object comparison.
@@ -431,9 +431,9 @@ an empty x87 stack. Five simple finite controls per mode, a divide-to-multiply m
 and truncated-input refusal also pass.
 
 Private reproducer:
-`bea-decomp/.worktrees/codex-career-nearmiss-20260930/build/trail-count-native-20260930/probe.py`
+private evidence record `trail-count-native-20260930/probe.py`
 (SHA-256 `a58ee0b5fb6aed5405aea7d371c5957ae660fd5b17d8582b009f4ddcbc6f6ccb`).
-Lead output: `bea-decomp/.worktrees/codex-equiv-20260930/build/trail-count-native-lead-20260930/result.json`
+Lead output: private evidence record `trail-count-native-lead-20260930/result.json`
 (SHA-256 `221566301ee483bc306dd5e8eecaab514eb6c6e946710657eb8a046b508cb7df`).
 The full-section readback is in the adjacent `squad-trail-independent-readback-20260930.json`.
 The actual game's control word, allocation outcome and visible trail remain unmeasured.
@@ -465,8 +465,8 @@ arguments rather than a declaration-only alias. Its complete body remains unmatc
 The lead inspected the pristine instructions above, reproduced all 378 previous exact
 results in the affected twelve-object set and ran the full integrated score with no lost
 matched addresses or relocation conflicts. Private receipts:
-`bea-decomp/.worktrees/codex-equiv-20260930/build/emitter-pointer-20260930/`, its adjacent
-before/after logs, and `bea-decomp/build/emitter-pointer-score-20260930.log`.
+private evidence record `emitter-pointer-20260930`, its adjacent
+before/after logs, and private evidence record `emitter-pointer-score-20260930.log`.
 No new game run or Godot behavior was tested. A useful runtime falsifier would observe the
 loaded part pointer, the effect array and the selected index together on an admitted mesh.
 
@@ -493,8 +493,8 @@ entire loader match: its five independent chunk-read indices now have separate l
 reproducing retail's reuse of dead argument homes. All 2528 compiled section bytes and every
 relocation match, covering 2514 retail function bytes. The lead recompiled the helper's change and
 reproduced it in the complete integrated build with all earlier matched identities retained.
-Private receipts: `bea-decomp/.worktrees/codex-unitai-nearmiss-20260930/build/meshpart-load-stack-20260930/`
-and `bea-decomp/build/source-interfaces-score-20260930.log`.
+Private receipts: `meshpart-load-stack-20260930`
+and private evidence record `source-interfaces-score-20260930.log`.
 
 These are consumer/data-flow findings from the pristine specimen above, independently read
 from its instructions on September 30. The reader advances chunks without comparing the
@@ -526,7 +526,7 @@ onto the existing `GetTexture` implementation at `0x00558690`. The checked calle
 returned pointer unchanged to texture binding; no second animation operation is established.
 The whole integrated build preserves prior matched identities. Fresh instruction readback and
 the before/after object comparison are in the private owner
-`bea-decomp/.worktrees/codex-equiv-20260930/build/interface-bindings-20260930/`.
+private evidence record `interface-bindings-20260930`.
 These findings correct source bindings and state writes, not a demonstrated Godot or GPU defect.
 The cheapest runtime falsifier would observe `+0x10` across the Landscape fallback call and the
 subsequent validation path; no new retail rendering run was performed.
@@ -545,9 +545,9 @@ pointer passed to the render factory; `0x004dc4fa` retrieves the render object's
 pointer and `0x004dc503` invokes its slot `+0x2c`. The private reconstruction's `GetRenderMesh`
 override now reproduces the complete 16-byte compiled section (seven body bytes plus alignment).
 The lead recompiled the affected objects and the full integrated build without losing earlier matches.
-Private receipts: `bea-decomp/.worktrees/codex-equiv-20260930/build/namedmesh-secondary-this-evidence-20260930.json`
+Private receipts: `namedmesh-secondary-this-evidence-20260930.json`
 and `menu-namedmesh-readback-root-20260930.txt`; integrated checks are in
-`bea-decomp/build/root-score-menu-namedmesh-20260930.log`.
+private evidence record `root-score-menu-namedmesh-20260930.log`.
 
 Preserve the adjusted receiver when translating render dispatch or object layouts. This closes the
 getter/receiver identity question; it does not demonstrate a current Godot defect, visible mesh selection,
@@ -587,9 +587,9 @@ positions, observes the preceding cross product and follows normalization into
 the curvature/collapse comparison with the caller precision recorded.
 
 Private source/object readback:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/mesh-side-root-readback.json`.
+private evidence record `geometry-gate-resume-20261001/mesh-side-root-readback.json`.
 The unchanged corpus, frozen before/after objects and lead replay are under
-`bea-decomp/.worktrees/codex-resume-mesh-20261001/local-data/mesh-side-correction-20261001/`:
+private evidence record `mesh-side-correction-20261001`:
 `correction-frozen/` and `root-corrected-replay-20261001/receipt.json`.
 
 ## Triangle travel-limit admission — October 1
@@ -620,7 +620,7 @@ sections and relocations are unchanged. The next falsifier is a complete origina
 that reaches this gate from admitted triangle, sphere and motion inputs, with caller precision recorded.
 
 Private source/object pins, fresh compilation and replay are in
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`:
+private evidence record `geometry-gate-resume-20261001`:
 `native-range-helper-replay.py NEW_OUTPUT`, `range-helper-positive/` and `corrected-gate-native/`.
 The frozen previous candidate is retained under the earlier geometry-mask evidence owner. The original
 specimen and earlier frozen experiment were read, not modified.
@@ -655,12 +655,12 @@ These higher-precision counterexamples are not established failures of ordinary 
 records PC24/RN at 25 Plane/AirGuide calls on its WineD3D route; that retained observation was read,
 not rerun here, and does not cover this collision site or other backends.
 
-Private evidence owner:
-`bea-decomp/.worktrees/codex-collision-nearmiss-20260930/build/geometry-segment-contact-probe-20260930.py`
+Private evidence record:
+`geometry-segment-contact-probe-20260930.py`
 (SHA-256 `6739a2747f431a85c561f306adb9d353da7d91d57034cbd6a6fa4ebc5af8b771`), with
 frozen old/corrected objects pinned in that script. The independent rerun is
-`bea-decomp/local-data/geometry-contact-root-20260930.json`; focused compile results are
-`bea-decomp/.worktrees/codex-equiv-20260930/build/geometry-contact-integrated-focused-20260930.log`.
+private evidence record `geometry-contact-root-20260930.json`; focused compile results are
+private evidence record `geometry-contact-integrated-focused-20260930.log`.
 
 Consumers should preserve the addition-before-store boundary instead of introducing a scaled-vector
 temporary. A useful next falsifier is a controlled caller observation recording the FPU control word,
@@ -690,10 +690,10 @@ declared input/report bytes and FPU control state are preserved. All other Geome
 and relocations are unchanged. The corrected body remains unmatched: 672 section bytes versus
 1,014 retail body bytes. The earlier contact slices still agree in all 27 cases.
 
-Private probe: `bea-decomp/.worktrees/codex-collision-nearmiss-20260930/build/geometry-approach-probe-v2-20260930.py`,
+Private probe: `geometry-approach-probe-v2-20260930.py`,
 SHA-256 `c3d393e008a240aaaa533fe54c1b4859654887cd2230c35f0f3c836ac298bf84`.
-Lead receipts: `bea-decomp/local-data/geometry-approach-root-20260930.json` and
-`bea-decomp/local-data/geometry-contact-retained-root-20260930.json`.
+Lead receipts: private evidence record `geometry-approach-root-20260930.json` and
+private evidence record `geometry-contact-retained-root-20260930.json`.
 The useful runtime falsifier remains observation of the actual caller's FPU state and admission path;
 the earlier Plane/AirGuide PC24 observations do not settle this call site.
 
@@ -741,12 +741,12 @@ in its samples. The October 1 fresh check establishes that the line body `0x0044
 1,456 section bytes and 21 relocations (1,442-byte retail body). The response remains unmatched;
 the broader native experiment below exposes and corrects a radial-rounding defect.
 
-Private frozen probes are `bea-decomp/.worktrees/codex-career-nearmiss-20260930/build/sphere-line-review-20260930/probe.py`
+Private frozen probe records are `sphere-line-review-20260930/probe.py`
 (SHA-256 `f68e248f2d072172bfa0d5e15cc9046bf00f91ba80b644167181d8cb67fd3067`) and
-`bea-decomp/.worktrees/codex-unitai-nearmiss-20260930/build/cylinder-boundaries-20260930/probe.py`
+private evidence record `cylinder-boundaries-20260930/probe.py`
 (SHA-256 `60339772c35dcb6ea86e28aef2014df2515476beac0d9c60e386ef6b48514936`).
-Independent lead results are `bea-decomp/local-data/sphere-line-root-20260930/comparison.json`
-and `bea-decomp/local-data/cylinder-boundaries-root-20260930/comparison.json`.
+Independent lead result records are `sphere-line-root-20260930/comparison.json`
+and private evidence record `cylinder-boundaries-root-20260930/comparison.json`.
 
 ## Sphere response arithmetic — October 1
 
@@ -775,7 +775,7 @@ caller's live control word. Nonfinite inputs, exceptional arithmetic and other r
 outside these samples. The [startup precision contract](../contracts/render-platform/CD3DApplication__Initialize3DEnvironment__0052af00.md#precision-setup--october-1-instruction-recheck)
 explains why PC24 deserves testing without claiming it has been measured at this caller.
 
-Lead private owners in `bea-decomp/.worktrees/codex-equiv-20260930/local-data/` are
+Lead private owners in the maintainers' private reproduction records are
 `sphere-root-20261001/` (baseline) and `sphere-correction-root-20261001/` (fresh compiled correction).
 The latter's `native/receipt.json` SHA-256 is
 `23a9ffe5a4509e9a1e02382aeda646596d19b05298c2885c7d0719527a610fb4`;
@@ -808,9 +808,9 @@ the original entry, its 15 alignment NOPs, all five helpers and the constant reg
 This remains finite, nonaliased authored-input evidence with one stack-fill pattern; live precision,
 world reachability and general equivalence are not established.
 
-Frozen inputs and replayer: `bea-decomp/.worktrees/codex-resume-collision-20261001/local-data/`
+Frozen inputs and replayer: the maintainers' private reproduction records
 `collision-resume-20261001/replay-sphere.py --suite random --out NEW_OUTPUT`. Lead execution is in
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/sphere-random-root-20261001/`;
+private evidence record `sphere-random-root-20261001`;
 the adjacent `geometry-gate-resume-20261001/sphere-original-readback.json` records the specimen readback.
 The exact vector helpers are `0x00401ec0`, `0x0040d150`, `0x0041ad10`, `0x004404f0` and `0x00490900`.
 
@@ -844,7 +844,7 @@ All 20 other retained callable sections and relocation destinations are unchange
 remains exact. The no-longer-emitted local Normalise copy is covered by its exact whole-build owner.
 
 Lead private evidence is
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/cylinder-correction-root-20261001/`:
+private evidence record `cylinder-correction-root-20261001`:
 `root-readback.json`, frozen sources/objects, inputs and outputs. The corrected native receipt
 `accepted-native/receipt.json` has SHA-256
 `b07ef298c8bc904b1ed557fbeb01c4ddd8b05a27388ef14c01fd41f47b00d554`.
@@ -857,7 +857,7 @@ set: the draft reduces disagreements from 692 to 288 but introduces 116 newly
 failing cases. Retail's first position rewind rounds the X/Y products and retains
 Z; the draft retains X instead. That concrete boundary is the next source question,
 not permission to accept fewer total mismatches. Production source is unchanged.
-Private readback: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/cylinder-storage-root-20261001/independent-replay/readback.json`;
+Private readback record: `independent-replay/readback.json`;
 frozen input SHA-256 `985c49eaa0876659e0849eb5a3acbf60191c860cb2503b2865cee4b17b79010a`.
 
 ## Imposter quad coordinates and precision — October 1
@@ -904,7 +904,7 @@ semantics. A useful visual follow-up captures a known non-symmetric imposter fra
 and its emitted vertices together; no such live observation is claimed here.
 
 Private lead evidence:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/imposter-correction-root-20261001/`,
+private evidence record `imposter-correction-root-20261001`,
 with `exact-readback.json`, `native-exact/receipt.json`, the pre-correction witnesses
 and capacity refusal controls. No Ghidra state changed during this correction.
 
@@ -939,7 +939,7 @@ A useful runtime falsifier captures one noncommuting incoming orientation and th
 six resulting quad orientations on an experimental game copy; no such run occurred.
 
 Private lead owner:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/imposter-render-root-20261001/`.
+private evidence record `imposter-render-root-20261001`.
 Rotation receipt SHA-256 `6a43f46e4bda0c1e011e200a36d7dce58815232356dc7a810e9dbbe8072cbc4d`;
 offset receipt SHA-256 `9aeb7e86d28698f1f2c688995ce708c16d763b327b2b4cbde4eb71d1c78f7ac1`.
 The adjacent `render-font-root-20261001/readback.json` binds the final source and
@@ -981,7 +981,7 @@ submission establishes that the unwritten index is valid. The reconstruction
 preserves this static behavior; no visible defect or device failure is claimed.
 
 Private lead owner:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/arrow-root-20261001/`.
+private evidence record `arrow-root-20261001`.
 The native receipt `native-v08/receipt.json` has SHA-256
 `a096ffd7f37c2361550ecc5cd7e3d59f745d33f4d26d041e0d25b10d5c158875`;
 `readback.json` and `static-callers/` retain compiled and caller/buffer evidence.
@@ -1012,7 +1012,7 @@ The checker and comparison resolver now enforce the four independently proved
 entry identities before caller inference, stale annotations or section aliases.
 This corrects a source/tooling defect; it does not prove visible toppling,
 explosion orientation, shadow rendering or all other library identities.
-Lead readback: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/math-binding-root-20261001/readback.json`;
+Lead readback: private evidence record `math-binding-root-20261001/readback.json`;
 library comparison receipt SHA-256:
 `a173dd413c384bacbed2215af09b8b2f9f43aab6384b0f2bd2c5a4d0bcd03e96`.
 
@@ -1064,7 +1064,7 @@ runtime falsifier records an actual shadow ray, resulting BOOL and FPU/CRT state
 an experimental retail copy, then reproduces those inputs without modifying assets.
 
 Private lead owner:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/staticshadow-root-20261001/`.
+private evidence record `staticshadow-root-20261001`.
 `readback.json` records the fresh compiled comparison; `native-plane/receipt.json`
 has SHA-256 `9920a99d67783f330ad20c96fb7f2ee278a21e598f31b1a86969730516abd317`.
 The complete-run receipt `full-native-v01/receipt.json` has SHA-256

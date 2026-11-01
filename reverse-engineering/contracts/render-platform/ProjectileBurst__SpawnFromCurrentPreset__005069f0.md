@@ -135,7 +135,7 @@ The later lifespan problem persists unchanged: 215 PC53 and 224 PC64 differences
 zero in these PC24 cases, and all 45 zero-inaccuracy controls agree. No complete
 SpawnRound match or full burst/RNG acceptance is claimed.
 
-Root evidence in `bea-decomp/.worktrees/codex-equiv-20260930/`:
+Root evidence in the maintainers' private reproduction records:
 
 - `local-data/weapon-spawn-root-20261001/native-admission-v06/receipt.json`, SHA-256
   `e8cb8ec356f2d2b35f75921cefa4442676d8f411a248ab84c9cb617b476bd10c`.

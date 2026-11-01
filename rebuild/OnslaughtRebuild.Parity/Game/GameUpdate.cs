@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// Adapted from bea-decomp src/game.cpp (CGame::Update, 0046e910), in Stuart's release.
+// Adapted from onslaught-decomp@9169f288 src/game.cpp (CGame::Update, 0046e910), in Stuart's release.
 
 using OnslaughtRebuild.Parity.Clock;
 using OnslaughtRebuild.Parity.Events;

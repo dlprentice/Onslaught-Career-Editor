@@ -148,7 +148,7 @@ address; a scan instruction-validates twelve direct calls to the dispatcher but 
 not establish that routine, so its defaults remain unmodified. Full target admission,
 visibility outcomes and retail/Godot play acceptance remain separate.
 
-Private root reproduction under the `bea-decomp` RE worktree:
+Private root reproduction in the maintainers' evidence records:
 `local-data/handleautoaim-root-20261001/call-boundary/receipt.json`, SHA-256
 `d9a4fdfc019dd6dedab7e39d95770a899bc460ed8e2143bd3436c83cdd0cc780`;
 `callee-readback.json` and `default-caller-readback.json` record the instruction reads
@@ -187,7 +187,7 @@ regions (209 bytes/four relocations); its three supporting owners' 27 deeper
 relocation fields and input-dependent indirect dispatch remain explicit limits.
 This is neither complete exception-runtime validation nor retail/Godot play acceptance.
 
-Private lead owner under `bea-decomp/.worktrees/codex-equiv-20260930/`:
+Private lead owner under the maintainers' private reproduction records:
 
 - `local-data/handleautoaim-match-root-20261001/readback.json`, SHA-256
   `d9609c9131406a83264375d6be9e2bcd0af5d7c5401506911eab0334c6b55374`.
@@ -214,10 +214,10 @@ body; target search now also matches as recorded above. `GetLaunchPosition`, act
 target availability, update cadence and player-visible tracking retain their separate limits. No game or Godot window ran.
 
 Private lead owner:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/autoaim-root-20261001/`.
+private evidence record `autoaim-root-20261001`.
 `readback.json` SHA-256:
 `3f5d42e0893671dd208f07c4b95df33d5eaf5feec0cd2a622a133339e1350adf`.
-The complete-build comparison is `bea-decomp/local-data/codex-continuation-20260930/autoaim-reproduction.json`.
+The complete-build comparison is private evidence record `autoaim-reproduction.json`.
 
 ## Launch position and direction
 
@@ -348,7 +348,7 @@ poisoned rather than filled with leftover retail instructions. Matrix padding is
 outside the compared output. These cases do not establish the complete Walker law,
 all floating-point behavior, or player-visible cockpit motion.
 
-Private reproduction: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/cockpit-root-20261001/`,
+Private reproduction record: `cockpit-root-20261001`,
 `composition_probe.py` and `composition-probe.json`; source correction originated
 in private commit `faea76d`. The constructor initializes the base matrix to identity.
 A nonidentity base's reachability in ordinary gameplay has **not** been established;

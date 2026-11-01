@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// Adapted from bea-decomp src/DXFont.cpp (CDXBitmapFont::InitFromTexture, GetTextExtent) and src/Font.cpp (the
-// character map, RemapChar, CanDisplay, WordWrap) (reconstructed from the retail program; not in Stuart's release).
+// Adapted from the maintainers' private reconstruction of src/DXFont.cpp (CDXBitmapFont::InitFromTexture, GetTextExtent)
+// and onslaught-decomp@9169f288 src/Font.cpp (the character map, RemapChar, CanDisplay, WordWrap), reconstructed from the
+// retail program and not in Stuart's release. DXFont.cpp is excluded from the public export.
 
 using System.Buffers.Binary;
 using OnslaughtRebuild.Parity.Flow.Pages;

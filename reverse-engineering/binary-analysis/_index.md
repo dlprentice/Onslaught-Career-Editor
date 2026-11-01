@@ -6,10 +6,10 @@ Summary: front door to the static and byte-level findings about the Steam `BEA.e
 analyses, per-system contracts and per-function notes. Makes no claim of its own — every claim below belongs to the
 document it links.
 
-The byte-matching decompilation (private `bea-decomp`) is the naming and behaviour authority. The Ghidra-era
+The byte-matching decompilation (public export: [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp/tree/9169f28862ebda0b768cbcc7ec354734af013f5e)) is the naming and behaviour authority. The Ghidra-era
 records that used to head this index (the Ghidra workflow reference, full re-audit, correction plans, full-pass
-wave findings, coverage baseline, C1 closure and the promotion and boundary records) are in the private
-`dlprentice/onslaught-re-archive`. Function counts, generations and database versions quoted in the documents below
+wave findings, coverage baseline, C1 closure and the promotion and boundary records) are retained in the maintainers' private
+archive. Function counts, generations and database versions quoted in the documents below
 are dated snapshots.
 
 ## Dated analyses and provenance

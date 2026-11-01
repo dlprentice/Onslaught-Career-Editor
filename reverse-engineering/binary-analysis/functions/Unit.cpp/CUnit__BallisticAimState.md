@@ -82,7 +82,7 @@ was inferred from the agreeing experiment. The cheapest next runtime falsifier i
 a controlled original Pod launch with a recorded descriptor, entry state and stack;
 it requires a separately admitted game execution route.
 
-Private root evidence in `bea-decomp/.worktrees/codex-equiv-20260930/`:
+Private root evidence in the maintainers' private reproduction records:
 `local-data/pod-aim-root-20261001/native-full-v01/receipt.json`, SHA-256
 `131a7fdf448207be106f015ddc4a4b7ca77aa42a7e5526830436223739cbb7bb`;
 inputs SHA-256 `30ee3a01eadc607841546a7dde15266701345b6736d1dccaf3acb3d8ddb345d6`.

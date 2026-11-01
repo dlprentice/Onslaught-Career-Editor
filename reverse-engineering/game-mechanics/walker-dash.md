@@ -200,7 +200,7 @@ The cheapest remaining player-level falsifier records the slow flag and resultin
 velocity during the same charging action in all four directions on a retail copy.
 
 Private lead owner:
-`bea-decomp/.worktrees/codex-equiv-20260930/local-data/walker-strafe-root-20261001/slow-input/`.
+private evidence record `slow-input`.
 `native-v01/receipt.json` SHA-256:
 `309272f1a4bc382fb1100567e8ba6b50d645ac76467b351906b37bdc2a538f09`.
 

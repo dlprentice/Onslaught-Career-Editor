@@ -43,7 +43,7 @@ relocation identities are preserved.
 
 This proves a compiled reconstruction, not the original source spelling or a new
 runtime acceptance result. Earlier caller/vtable censuses were not rerun. Lead
-readback: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/unit-event-root-20261001/readback.json`;
+readback: private evidence record `unit-event-root-20261001/readback.json`;
 entire relocated-section SHA-256:
 `45af6746abfb3d9d258c77fb71bc27153f16c4e97d78180c69f73ef38fea8088`.
 

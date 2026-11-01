@@ -48,7 +48,7 @@ all 18; the former draft agrees in two slope cases and eight span cases. One inp
 24 output-span bytes: fourth slopes become approximately `-0.9364469051, -1.6899201870`,
 instead of the draft's `-0.8529411554, -1.8235293627`.
 
-Private evidence: `bea-decomp/.worktrees/codex-equiv-20260930/local-data/geometry-gate-resume-20261001/`
+Private evidence record: `geometry-gate-resume-20261001`
 contains `gamut-root-static-readback.json`, `gamut-root-retail-prologue-solves.asm`,
 `gamut-root-witness.py` and `gamut-root-witness.json`. Frozen baseline/candidate inputs and rejected
 probes remain in the aircraft worktree's `local-data/gamut-resume-20261001/`.

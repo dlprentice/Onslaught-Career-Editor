@@ -3,7 +3,7 @@ Last updated: 2026-10-22 (the retired AppCore and WinUI named in the past tense)
 Source: pristine retail command-line parser, each option's readers, and the separately dated copied-runtime observations.
 Summary: the Steam launch surface Onslaught Toolkit uses, and what each of the retail parser's 25 options does in the game.
 Evidence: MEASURED — fresh parser/initializer guard instructions and, on 2026-09-30, every retail instruction that reads
-an option's field or global; readers are cited by the bea-decomp function that compiles to their retail bytes, or by
+an option's field or global; readers are cited by the decompilation function that compiles to their retail bytes, or by
 retail address where that function does not match yet. Runtime claims are dated records, not rerun here.
 Specimen: `BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
@@ -47,7 +47,7 @@ spaces, with each value straight after its option (`-skipfmv -level 856`); with 
 after `%command%`. Options apply only to that launch.
 
 Each row names the reader of the option's field, found by searching the retail code for every access to it (`match`:
-the bea-decomp function compiles to its retail bytes; `near miss`: read from retail's instructions). Only `-level`,
+the decompilation function compiles to its retail bytes; `near miss`: read from retail's instructions). Only `-level`,
 `-skipfmv`, `-res`, `-nomusic`, `-nosound` and `-testeur -forcewindowed` have runtime records (above); every other
 row is a static reading, and nothing was launched for it.
 

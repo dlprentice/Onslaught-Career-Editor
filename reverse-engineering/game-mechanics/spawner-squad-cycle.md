@@ -50,7 +50,7 @@ results; live roster validity, squad update timing and player-visible behavior w
 tested. A runtime falsifier would capture the member-reader chain and slot-72 result
 together at a real squad update.
 
-Private replay: `bea-decomp/.worktrees/codex-equiv-20260930/build/squad-centroid-original-20260930/run.py`
+Private replay record: `squad-centroid-original-20260930/run.py`
 (SHA-256 `16d2f433e43c82dadd7120d843e304aaf064f09c29b8abe44beb93c06fb5479e`);
 its `receipt.json` SHA-256 is
 `84b54b578916a28fd4c8b0055cc93770fdf48a1e22cd9cacb74d86d8620cf895`.
