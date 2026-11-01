@@ -1374,8 +1374,15 @@ def run_self_test() -> int:
             print(f"- findings: {findings!r}")
             return 1
     with tempfile.TemporaryDirectory() as tmp:
+        import os
+        from unittest.mock import patch
+
         non_repo = Path(tmp)
-        findings = check_repo(non_repo)
+        # TMPDIR can be inside a worktree; this fixture must not discover its ancestor Git repository.
+        git_env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+        git_env["GIT_CEILING_DIRECTORIES"] = str(non_repo.parent.resolve())
+        with patch.dict(os.environ, git_env, clear=True):
+            findings = check_repo(non_repo)
         if not any(finding.label == "deny-public-candidate-enumeration-failed" for finding in findings):
             print("Public payload safety self-test: FAIL")
             print("- non-git root did not fail closed")
