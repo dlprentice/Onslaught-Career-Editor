@@ -75,6 +75,8 @@ internal static class ScriptsPageTests
 
     internal static async Task RunAsync(CompanionApp app, SceneTree tree, FakeInstall install, string outputDirectory, Checks check)
     {
+        MissionReferencePanelTests.Run(check);
+
         check.Suite("level scripts page");
         LevelEditorPage page = app.LevelEditor;
         string resources = Path.Combine(install.Game, "data", "resources");
