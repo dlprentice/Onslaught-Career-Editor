@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using System.Globalization;
+using System.IO.Compression;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using Godot;
 using OnslaughtToolkit.Companion.Levels;
@@ -22,6 +24,37 @@ internal static class LevelMapPageTests
         .Select(path => Path.GetRelativePath(root, path) + " " + Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(path))))];
 
     private static uint Bits(float value) => BitConverter.SingleToUInt32Bits(value);
+
+    /// <summary>Prepends authored terrain to an authored archive, with bounded members as the reader expects.</summary>
+    private static byte[] WithAuthoredTerrain(byte[] archive)
+    {
+        byte[] terrain = LevelTests.Unpack(LevelVectors.Terrain.Eres);
+        using MemoryStream chunk = new();
+        using (BinaryWriter writer = new(chunk, Encoding.ASCII, leaveOpen: true))
+        {
+            writer.Write(Encoding.ASCII.GetBytes("ERES"));
+            writer.Write((uint)terrain.Length);
+            writer.Write(terrain);
+        }
+        byte[] input = chunk.ToArray();
+        using MemoryStream joined = new();
+        using (BinaryWriter writer = new(joined, Encoding.ASCII, leaveOpen: true))
+        {
+            int part = Math.Min(LevelArchive.PackBufferBytes / 2, LevelArchive.MaxMemberInflatedBytes / 2);
+            for (int at = 0; at < input.Length; at += part)
+            {
+                using MemoryStream compressed = new();
+                using (ZLibStream zlib = new(compressed, CompressionLevel.Optimal, leaveOpen: true))
+                    zlib.Write(input, at, Math.Min(part, input.Length - at));
+                byte[] member = compressed.ToArray();
+                if (member.Length > LevelArchive.PackBufferBytes) throw new InvalidDataException("The authored terrain fixture exceeds the member limit.");
+                writer.Write((uint)member.Length);
+                writer.Write(member);
+            }
+            writer.Write(archive);
+        }
+        return joined.ToArray();
+    }
 
     /// <summary>A pixel of the map as a pixel of the window, which is where events are pushed.</summary>
     private static Vector2 InWindow(LevelMap map, Vector2 local) => map.GetGlobalRect().Position + local;
@@ -93,9 +126,9 @@ internal static class LevelMapPageTests
         // The authored level 100 again, now with its authored terrain, so the map has relief to draw.
         File.WriteAllBytes(Path.Combine(install.Game, "data", "resources", "100_res_PC.aya"),
             LevelTests.Unpack(LevelVectors.Archives.First(archive => archive.Name == "level-100-terrain").File));
-        // A second authored archive has its own world and overlapping row numbers, but no terrain.
+        // A second authored archive has its own world and terrain, with overlapping row numbers.
         File.WriteAllBytes(Path.Combine(install.Game, "data", "resources", "200_res_PC.aya"),
-            LevelTests.Unpack(LevelVectors.Archives.First(archive => archive.Name == "base-and-real").File));
+            WithAuthoredTerrain(LevelTests.Unpack(LevelVectors.Archives.First(archive => archive.Name == "base-and-real").File)));
         string[] gameBefore = Snapshot(install.Game);
         // The page tests before this left the Save as mod dialog open, and an open dialog takes the window's input: close what is still showing.
         foreach (Window window in app.FindChildren("*", nameof(Window), true, false).OfType<Window>().Where(window => window.Visible)) window.Hide();
@@ -493,8 +526,10 @@ internal static class LevelMapPageTests
         bool overlappingRow = units[1] < next.Body.Things.Count && page.SelectIndex(units[1]);
         check.That(overlappingRow && page.SelectedRow == units[1], "the next level has and selects the same row number");
         if (!overlappingRow) return;
-        check.That(model.Terrain is null, "the second authored world has no terrain of its own");
+        check.That(model.Terrain is not null && !ReferenceEquals(model.Terrain, terrain),
+                   "the second authored world has a distinct terrain instance");
         byte[] nextBefore = next.ToBytes();
+        System.Numerics.Vector3 nextPosition = model.Row(units[1])!.Position;
         int switchedInput = 0, switchedMove = 0;
         void SwitchedInput(InputEvent input) { if (input is InputEventMouseButton) switchedInput++; }
         void SwitchedMove(int row, float x, float y) => switchedMove++;
@@ -504,10 +539,12 @@ internal static class LevelMapPageTests
         check.That(switchedInput > 0 && switchedMove == 0 && next.ToBytes().SequenceEqual(nextBefore) && !next.CanUndo,
                    "the 3D view receives a right-click immediately after the level switch but cannot move the overlapping row on old terrain");
         await Frame(tree);
+        await Frame(tree);
         TerrainClick(tree, view, targetAt, MouseButton.Right);
         view.GuiInput -= SwitchedInput;
         view.MoveRequested -= SwitchedMove;
-        check.That(switchedMove == 0 && next.ToBytes().SequenceEqual(nextBefore) && !next.CanUndo,
-                   "the level with no terrain remains unchanged after the preview refreshes");
+        check.That(switchedMove == 1 && !next.ToBytes().SequenceEqual(nextBefore) && next.CanUndo &&
+                   Bits(model.Row(units[1])!.Position.Z) == Bits(nextPosition.Z) && session.ToBytes().SequenceEqual(after),
+                   "after the new terrain loads, a fresh right-click moves only the new world's row and preserves its height");
     }
 }
