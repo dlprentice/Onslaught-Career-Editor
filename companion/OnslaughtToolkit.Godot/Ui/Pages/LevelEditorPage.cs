@@ -16,6 +16,10 @@ internal sealed class LevelEditorPage : Page
 {
     private HSplitContainer? _missionTerrainSplit;
     private OnslaughtToolkit.Companion.Ui.MissionReferencePanel? _missionReferencePanel;
+    private readonly LevelTerrainViewport _terrainPreview3d;
+    private readonly Button _terrainViewSwitch;
+    private readonly UnitRowPanel _unitRowPanel;
+    private readonly Button _unitRowToggle;
     private Button? _missionSourceButton;
     private Label? _missionSourceHint;
     private MissionReferenceIndex? _missionSourceSnapshot;
@@ -117,7 +121,7 @@ internal sealed class LevelEditorPage : Page
         mapColumn.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
         mapColumn.SizeFlagsStretchRatio = 1.6f;
         _mapPanel = mapColumn;
-        var _terrainPreview3d = new LevelTerrainViewport
+        _terrainPreview3d = new LevelTerrainViewport
         {
             TerrainProvider = () => _model?.Terrain,
             Visible = false,
@@ -160,7 +164,7 @@ internal sealed class LevelEditorPage : Page
         _missionTerrainSplit.Visible = _terrainPreview3d.Visible;
         RefreshMissionReferences();
         _terrainPreview3d.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        var terrainViewSwitch = new Button
+        var terrainViewSwitch = _terrainViewSwitch = new Button
         {
             Text = "3D",
             TooltipText = "Switch between the map and the terrain preview.",
@@ -193,6 +197,10 @@ internal sealed class LevelEditorPage : Page
         HidePath.Pressed += () => HighlightPath(null);
         Map.RowPicked += row => SelectIndex(row);
         Map.MoveRequested += (row, x, y) => Dragged(row, x, y);
+        _terrainPreview3d.RowsProvider = () => Map.Rows;
+        _terrainPreview3d.SelectedRowProvider = () => Map.Selected;
+        _terrainPreview3d.RowPicked += row => SelectIndex(row);
+        _terrainPreview3d.MoveRequested += (row, x, y) => Dragged(row, x, y);
         foreach (int column in new[] { 0, 1, 3, 4, 5 }) Table.SetColumnExpand(column, false);
         Table.SetColumnCustomMinimumWidth(0, 46);
         Table.SetColumnCustomMinimumWidth(1, 108);
@@ -288,6 +296,11 @@ internal sealed class LevelEditorPage : Page
         _hint = inside.Add(Build.Text("", "Faint"));
 
         (PanelContainer changes, VBoxContainer changesBody) = Build.Panel("Card", 8);
+        _unitRowToggle = right.Add(Build.Button("Arrange units", tooltip: "Arrange existing units in a row.", disabled: true));
+        _unitRowToggle.ToggleMode = true;
+        _unitRowPanel = right.Add(new UnitRowPanel { Visible = false });
+        _unitRowToggle.Toggled += on => _unitRowPanel.Visible = on && !_scripts.Visible;
+        _unitRowPanel.ArrangementResult += outcome => ShowNote(outcome.Message, outcome.Result == MoveResult.Refused);
         right.Add(changes);
         changesBody.Add(Build.Eyebrow("Your changes"));
         _summary = changesBody.Add(Build.Text("", "Strong"));
@@ -409,6 +422,10 @@ internal sealed class LevelEditorPage : Page
     /// <summary>What compiling or putting the shipped script back said, in the script card, and the warnings about the script the level uses under it.</summary>
     internal string ScriptEditNote => string.Join("\n", new[] { _scriptEditNote.Text, _scriptEditWarnings.Visible ? _scriptEditWarnings.Text : "" }.Where(text => text.Length > 0));
     internal LevelEditorModel? Model => _model;
+    internal LevelTerrainViewport TerrainPreview => _terrainPreview3d;
+    internal Button TerrainViewSwitch => _terrainViewSwitch;
+    internal UnitRowPanel UnitRows => _unitRowPanel;
+    internal Button UnitRowsToggle => _unitRowToggle;
     internal MissionReferencePanel? MissionReferences => _missionReferencePanel;
     internal Button? MissionSourceButton => _missionSourceButton;
     internal Label? MissionSourceHint => _missionSourceHint;
@@ -469,6 +486,7 @@ internal sealed class LevelEditorPage : Page
             _selected = null;
             _model = root is null ? null : LevelEditorModel.ForGame(root);
             if (_model is not null) _model.Changed += OnModelChanged;
+            _unitRowPanel.Bind(_model);
             _savedPanel.Visible = _problemPanel.Visible = false;
             _worldNote.Text = "";
             FillLevels();
@@ -483,6 +501,7 @@ internal sealed class LevelEditorPage : Page
         }
         // A game with levels opens one at once, its training level if it has one, rather than showing an empty table.
         if (_model is { Level: null, Levels.Count: > 0 } fresh) OpenLevel(fresh.Levels.Any(file => file.Level == 100) ? 100 : fresh.Levels[0].Level);
+        UpdateUnitRowAvailability();
         UpdateEmpty();
         UpdateInspector(clearNote: false);
         UpdateChanges();
@@ -630,9 +649,21 @@ internal sealed class LevelEditorPage : Page
         catch (InvalidOperationException) { panel.SetUnavailable(); }
     }
 
-private void OnModelChanged()
+    private void UpdateUnitRowAvailability()
+    {
+        bool available = _model?.Session is not null;
+        _unitRowToggle.Disabled = !available;
+        if (!available)
+        {
+            _unitRowToggle.SetPressedNoSignal(false);
+            _unitRowPanel.Visible = false;
+        }
+    }
+
+    private void OnModelChanged()
     {
         RefreshMissionReferences();
+        UpdateUnitRowAvailability();
 
         _scriptChanges = _model?.Session?.ScriptChanges() ?? [];
         _scriptBytes.Clear();
@@ -896,6 +927,8 @@ private void OnModelChanged()
         _split.Visible = !on;
         _scripts.Visible = on;
         MapToggle.Visible = !on;
+        _unitRowToggle.Visible = !on;
+        _unitRowPanel.Visible = !on && _unitRowToggle.ButtonPressed && !_unitRowToggle.Disabled;
         _scriptCard.Visible = on;
         Search.PlaceholderText = on ? ScriptSearchHint : ObjectSearchHint;
         Search.TooltipText = on ? "Shows the scripts whose name, events or functions hold this text."
