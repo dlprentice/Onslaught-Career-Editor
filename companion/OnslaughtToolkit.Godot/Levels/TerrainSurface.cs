@@ -120,7 +120,7 @@ public sealed class TerrainSurface
     private sealed class PreviewRefinement
     {
         // These are preview work budgets, not statements about the game's collision or rendering grid.
-        private const int FinestDivisions = 512, StableBorderCells = 2, CellsPerRefinement = 64;
+        private const int FinestDivisions = 512, StableBorderCells = 2;
         private readonly Func<float, float, float> _heightAt;
         private readonly TerrainSurface _editable;
         private readonly double _roundingEnvelope;
@@ -129,7 +129,7 @@ public sealed class TerrainSurface
         private readonly bool _hasOffsets;
         private readonly float[] _sampleValues;
         private readonly bool[] _sampled;
-        private readonly Dictionary<long, int> _vertexAt = [];
+        private readonly int[] _vertexAt;
         private readonly List<Vector3> _vertices;
 
         internal PreviewRefinement(Func<float, float, float> heightAt, TerrainSurface editable, double roundingEnvelope)
@@ -141,6 +141,8 @@ public sealed class TerrainSurface
             int probes = checked((_fineDivisions + 1) * (_fineDivisions + 1));
             _sampleValues = new float[probes];
             _sampled = new bool[probes];
+            _vertexAt = new int[probes];
+            Array.Fill(_vertexAt, -1);
             _vertices = [.. editable._vertices];
             _offsets = new double[_vertices.Count];
             for (int row = 0; row <= _divisions; row++)
@@ -151,24 +153,21 @@ public sealed class TerrainSurface
                     float baseline = SampleHeight(point.X, -point.Z);
                     _offsets[index] = (double)point.Y - baseline;
                     _hasOffsets |= _offsets[index] != 0;
-                    _vertexAt.Add(Key(column * _factor, row * _factor), index);
+                    _vertexAt[Key(column * _factor, row * _factor)] = index;
                 }
         }
 
         internal TerrainSurface Build()
         {
-            int budget = _divisions * _divisions / CellsPerRefinement;
-            if (budget == 0) return _editable;
-            PriorityQueue<int, (double Error, int Cell)> candidates = new();
+            // Cover every cell with sampled detail, rather than spending the budget on a small set of peaks.
+            // The finest lattice bounds the complete plan, including dense fields, at 513 * 513 vertices.
+            HashSet<int> refined = [];
             for (int row = StableBorderCells; row < _divisions - StableBorderCells; row++)
                 for (int column = StableBorderCells; column < _divisions - StableBorderCells; column++)
                 {
                     double error = Error(column, row);
-                    int cell = row * _divisions + column;
-                    if (error > 0) candidates.Enqueue(cell, (-error, cell));
+                    if (error > 0) refined.Add(row * _divisions + column);
                 }
-            HashSet<int> refined = [];
-            while (refined.Count < budget && candidates.TryDequeue(out int cell, out _)) refined.Add(cell);
             if (refined.Count == 0) return _editable;
 
             // Register all fine patch vertices first, so adjacent coarse cells can stitch to their exact shared edges.
@@ -220,7 +219,7 @@ public sealed class TerrainSurface
             return maximum - Math.Max(0.0001, _roundingEnvelope + magnitude * 0.000001);
         }
 
-        private static long Key(int x, int y) => ((long)y << 32) | (uint)x;
+        private int Key(int x, int y) => y * (_fineDivisions + 1) + x;
         private float Coordinate(int at) => Heightfield.Size * at / _fineDivisions;
         private float SampleHeight(float x, float y)
         {
@@ -257,18 +256,18 @@ public sealed class TerrainSurface
         private int AddSample(int x, int y) => AddVertex(x, y, At(x, y));
         private int AddVertex(int x, int y, float height)
         {
-            long key = Key(x, y);
-            if (_vertexAt.TryGetValue(key, out int index)) return index;
+            int key = Key(x, y), index = _vertexAt[key];
+            if (index >= 0) return index;
             index = _vertices.Count;
             _vertices.Add(new Vector3(Coordinate(x), height, -Coordinate(y)));
-            _vertexAt.Add(key, index);
+            _vertexAt[key] = index;
             return index;
         }
         private void Edge(List<int> boundary, int x, int y, int dx, int dy, bool includeEnd)
         {
             int end = includeEnd ? _factor : _factor - 1;
             for (int i = 1; i <= end; i++)
-                if (_vertexAt.TryGetValue(Key(x + i * dx, y + i * dy), out int index)) boundary.Add(index);
+                if (_vertexAt[Key(x + i * dx, y + i * dy)] is >= 0 and var index) boundary.Add(index);
         }
         private void Quad(List<int> indices, int x, int y, int size)
         {

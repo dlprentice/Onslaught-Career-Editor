@@ -31,6 +31,13 @@ public partial class TerrainSurfaceFidelityTests : SceneTree
     internal static float Hill(float x, float y) => -32 * MathF.Max(0, 1 - MathF.Abs(x - PeakX) / (Cell * 0.25f)) *
         MathF.Max(0, 1 - MathF.Abs(y - PeakY) / (Cell * 0.25f));
     internal static long MeshPayload(TerrainSurface surface) => surface.Vertices.Length * 24L + surface.Indices.Length * 4L;
+    internal static float ManyHills(float x, float y)
+    {
+        int column = (int)(x / Cell), row = (int)(y / Cell);
+        if (column is < 31 or > 50 || row is < 31 or > 50) return 0;
+        float u = MathF.Sin(MathF.PI * (x / Cell - column)), v = MathF.Sin(MathF.PI * (y / Cell - row));
+        return -4 * u * u * v * v;
+    }
 
     internal static void Run(Checks check)
     {
@@ -63,6 +70,22 @@ public partial class TerrainSurfaceFidelityTests : SceneTree
                    "a coarse preview edit keeps its stored index and its existing linear offset while retaining the sampled feature");
         check.That(Hit(refined, PeakX, PeakY, out var unchangedHit) && Math.Abs(unchangedHit.Y - 32) < 0.0001,
                    "building a later preview leaves the earlier render/pick surface unchanged");
+
+        // Equal peaks beyond the old per-map patch limit must remain visible across the whole map.
+        TerrainSurface manyBase = TerrainSurface.Build(ManyHills, TerrainSurface.DefaultDivisions);
+        TerrainSurface manyPreview = TerrainSurface.BuildPreview(ManyHills, manyBase);
+        bool allPeaksVisible = true;
+        foreach (int row in new[] { 31, 38, 44, 50 })
+            foreach (int column in new[] { 31, 38, 44, 50 })
+                allPeaksVisible &= Hit(manyPreview, (column + 0.5f) * Cell, (row + 0.5f) * Cell, out var peak) && Math.Abs(peak.Y - 4) < 0.0001;
+        check.That(allPeaksVisible, "detail remains visible throughout an authored 400-peak region, including cells beyond the former patch limit");
+        check.That(Watertight(manyPreview) && PrefixMatches(manyPreview, manyBase.Vertices.ToArray()),
+                   "a large adjoining patch region remains conforming and keeps the editable grid");
+        float Waves(float x, float y) => -8 * MathF.Sin(x * 1.1f) * MathF.Cos(y * 0.9f);
+        TerrainSurface denseBase = TerrainSurface.Build(Waves, TerrainSurface.DefaultDivisions);
+        TerrainSurface dense = TerrainSurface.BuildPreview(Waves, denseBase);
+        check.That(dense.Vertices.Length <= 513 * 513 && dense.Indices.Length <= 512 * 512 * 6 && Watertight(dense),
+                   "a detail-bearing field is bounded by the complete finest lattice and its triangle budget");
 
         float tinyX = Heightfield.Size * 0.5f + Cell * 0.125f, tinyY = tinyX;
         float Tiny(float x, float y) => -32 * MathF.Max(0, 1 - MathF.Abs(x - tinyX) / (Cell * 0.04f)) *

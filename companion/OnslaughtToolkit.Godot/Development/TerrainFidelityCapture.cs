@@ -7,7 +7,7 @@ using OnslaughtToolkit.Companion.Ui;
 
 namespace OnslaughtToolkit.Companion.Development;
 
-/// <summary>Fixed-size GPU comparison on an authored feature only; no game data, game launch, career or publication.</summary>
+/// <summary>Fixed-size GPU comparison on an authored feature region only; no game data, game launch, career or publication.</summary>
 public partial class TerrainFidelityCapture : SceneTree
 {
     public override void _Initialize() => _ = CaptureAsync();
@@ -20,10 +20,10 @@ public partial class TerrainFidelityCapture : SceneTree
                 ?? throw new ArgumentException("An owned --output-dir is required.");
             Directory.CreateDirectory(output);
             Stopwatch watch = Stopwatch.StartNew();
-            TerrainSurface baseline = TerrainSurface.Build(TerrainSurfaceFidelityTests.Hill, TerrainSurface.DefaultDivisions);
+            TerrainSurface baseline = TerrainSurface.Build(TerrainSurfaceFidelityTests.ManyHills, TerrainSurface.DefaultDivisions);
             double baseMs = watch.Elapsed.TotalMilliseconds;
             long before = GC.GetAllocatedBytesForCurrentThread(); watch.Restart();
-            TerrainSurface refined = TerrainSurface.BuildPreview(TerrainSurfaceFidelityTests.Hill, baseline);
+            TerrainSurface refined = TerrainSurface.BuildPreview(TerrainSurfaceFidelityTests.ManyHills, baseline);
             double refinedMs = watch.Elapsed.TotalMilliseconds;
             long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
             await ToSignal(this, SignalName.ProcessFrame);
@@ -35,7 +35,7 @@ public partial class TerrainFidelityCapture : SceneTree
             VBoxContainer body = margin.Add(Build.Column(12));
             body.Add(Build.Heading("Terrain preview · authored detail comparison"));
             body.Add(Build.Text("Approximate preview; actual game-ground agreement and clearance remain unverified.", "Warn"));
-            body.Add(Build.Text("This authored peak lies between the editable grid's samples. Refinement retains that grid and adds a bounded render/pick patch.", "Muted"));
+            body.Add(Build.Text("These 400 authored hills lie between the editable grid's samples. Refinement covers the whole region while retaining that grid.", "Muted"));
             HBoxContainer views = body.Add(Build.Row(18)); views.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
             Pane(views, baseline, "Original sampled grid");
             Pane(views, refined, "Bounded adaptive render and pick mesh");
@@ -79,8 +79,8 @@ public partial class TerrainFidelityCapture : SceneTree
             { BackgroundMode = Godot.Environment.BGMode.Color, BackgroundColor = Palette.Background,
                 AmbientLightSource = Godot.Environment.AmbientSource.Color, AmbientLightColor = Colors.White, AmbientLightEnergy = 0.35f } });
         Camera3D camera = new() { Current = true, Fov = 42, Near = 0.1f, Far = 2000 }; world.AddChild(camera);
-        Vector3 target = new(TerrainSurfaceFidelityTests.PeakX, 12, -TerrainSurfaceFidelityTests.PeakY);
-        camera.Position = target + new Vector3(1, 0.9f, 1).Normalized() * 75; camera.LookAt(target, Vector3.Up);
+        Vector3 target = new(41 * TerrainSurfaceFidelityTests.Cell, 1, -41 * TerrainSurfaceFidelityTests.Cell);
+        camera.Position = target + new Vector3(1, 0.9f, 1).Normalized() * 140; camera.LookAt(target, Vector3.Up);
         column.Add(Build.Text($"{surface.Vertices.Length:N0} vertices · {surface.Indices.Length / 3:N0} triangles · {TerrainSurfaceFidelityTests.MeshPayload(surface):N0} estimated mesh bytes", "Faint"));
     }
 }
