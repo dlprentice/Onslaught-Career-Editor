@@ -18,6 +18,10 @@ do not read them, and every other rule still does. Reviewed exceptions are RETAI
 exact file), RETAIL_TEXT_ALLOW_PREFIX (a ``local-lab/`` prefix in a document that names the lab folder) and
 RETAIL_TEXT_ALLOW_RULE (one rule in a generated file), each with a reason; an entry that no longer matches anything
 fails as stale, so the lists cannot outlive the text they excuse.
+
+The optional submodule scan requires initialized checkouts at the parent index's
+gitlinks with clean tracked files; it refuses nested gitlinks. It scans checked-out
+files, not repository history or an atomic snapshot of changing files.
 """
 
 from __future__ import annotations
@@ -436,7 +440,9 @@ def git_scan_env() -> dict[str, str]:
     # discovery ceilings, but select each repository by its actual directory.
     excluded = {"GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR",
                 "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES"}
-    return {key: value for key, value in os.environ.items() if key not in excluded}
+    env = {key: value for key, value in os.environ.items() if key not in excluded}
+    env["GIT_OPTIONAL_LOCKS"] = "0"
+    return env
 
 
 def public_candidate_files(root: Path, *, include_submodules: bool = False) -> list[str]:
@@ -484,27 +490,39 @@ def payload_root_files(root: Path) -> list[str]:
 
 def submodule_paths(root: Path) -> list[str]:
     gitmodules = root / ".gitmodules"
-    if not gitmodules.is_file():
-        return []
-    try:
-        result = subprocess.run(
-            ["git", "config", "--file", str(gitmodules), "--get-regexp", r"^submodule\..*\.path$"],
-            cwd=root,
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            env=git_scan_env(),
-        )
-    except FileNotFoundError as exc:
-        raise RuntimeError("git executable was not found for .gitmodules parsing") from exc
-    except subprocess.CalledProcessError as exc:
-        raise RuntimeError(f".gitmodules could not be parsed: {exc.stderr.strip()}") from exc
     paths: list[str] = []
-    for line in result.stdout.splitlines():
-        parts = line.split(maxsplit=1)
-        if len(parts) == 2:
-            paths.append(normalize(parts[1].strip()))
+    if gitmodules.is_file():
+        try:
+            result = subprocess.run(
+                ["git", "config", "--file", str(gitmodules), "--get-regexp", r"^submodule\..*\.path$"],
+                cwd=root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=git_scan_env(),
+            )
+        except FileNotFoundError as exc:
+            raise RuntimeError("git executable was not found for .gitmodules parsing") from exc
+        except subprocess.CalledProcessError as exc:
+            raise RuntimeError(f".gitmodules could not be parsed: {exc.stderr.strip()}") from exc
+        for line in result.stdout.splitlines():
+            parts = line.split(maxsplit=1)
+            if len(parts) == 2:
+                paths.append(normalize(parts[1].strip()))
+    try:
+        index = subprocess.run(["git", "ls-files", "--stage", "-z"], cwd=root, check=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=git_scan_env()).stdout
+    except (FileNotFoundError, subprocess.CalledProcessError) as exc:
+        raise RuntimeError("the parent index could not be checked for gitlinks") from exc
+    declared = set(paths)
+    for record in index.split(b"\0"):
+        if not record:
+            continue
+        metadata, separator, name = record.partition(b"\t")
+        fields = metadata.split(b" ")
+        if separator != b"\t" or len(fields) != 3:
+            raise RuntimeError("the parent index returned an invalid entry")
+        if fields[0] == b"160000":
+            path = os.fsdecode(name)
+            if path not in declared:
+                raise SubmoduleCheckoutError(path, "deny-undeclared-submodule-scan",
+                                             "parent index gitlink is absent from .gitmodules")
     return sorted(paths)
 
 
@@ -517,10 +535,17 @@ class SubmoduleCheckoutError(RuntimeError):
 
 def require_submodule_checkout(root: Path, submodule_path: str) -> None:
     """Require the exact initialized checkout selected by the parent index."""
-    full_path = root / submodule_path
-    if full_path.is_symlink():
+    parts = submodule_path.split("/")
+    if submodule_path.startswith("/") or any(part in ("", ".", "..") for part in parts):
         raise SubmoduleCheckoutError(submodule_path, "deny-uninitialized-submodule-scan",
-                                     "declared submodule path is a symlink")
+                                     "declared submodule path is not a relative child path")
+    full_path = root / submodule_path
+    component = root
+    for part in parts:
+        component = component / part
+        if component.is_symlink():
+            raise SubmoduleCheckoutError(submodule_path, "deny-uninitialized-submodule-scan",
+                                         "declared submodule path contains a symlink")
     try:
         top = subprocess.run(
             ["git", "rev-parse", "--show-toplevel"], cwd=full_path, check=True,
@@ -552,6 +577,32 @@ def require_submodule_checkout(root: Path, submodule_path: str) -> None:
         if head != fields[1]:
             raise SubmoduleCheckoutError(submodule_path, "deny-submodule-pin-mismatch",
                                          "checkout HEAD differs from the parent index gitlink")
+        entries = subprocess.run(
+            ["git", "ls-files", "-v", "--stage", "-z"], cwd=full_path, check=True,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=git_scan_env(),
+        ).stdout.split(b"\0")
+        for entry in entries:
+            if not entry:
+                continue
+            metadata, separator, _ = entry.partition(b"\t")
+            parts = metadata.split(b" ")
+            if separator != b"\t" or len(parts) != 4:
+                raise SubmoduleCheckoutError(submodule_path, "deny-unreadable-submodule-scan",
+                                             "checkout index returned an invalid entry")
+            if parts[0] != b"H":
+                raise SubmoduleCheckoutError(submodule_path, "deny-submodule-index-flags",
+                                             "checkout has index flags that can hide tracked changes")
+            if parts[1] == b"160000":
+                raise SubmoduleCheckoutError(submodule_path, "deny-nested-submodule-scan",
+                                             "nested submodules are not covered by this scan")
+        status = subprocess.run(
+            ["git", "-c", "core.fsmonitor=false", "-c", "core.trustctime=true", "-c", "core.checkstat=default",
+             "status", "--porcelain=v1", "-z", "--untracked-files=no", "--ignore-submodules=none"],
+            cwd=full_path, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=git_scan_env(),
+        ).stdout
+        if status:
+            raise SubmoduleCheckoutError(submodule_path, "deny-dirty-submodule-scan",
+                                         "checkout index or tracked worktree differs from the pinned HEAD")
     except (FileNotFoundError, subprocess.CalledProcessError, OSError, ValueError) as exc:
         raise SubmoduleCheckoutError(submodule_path, "deny-unreadable-submodule-scan",
                                      "could not verify the declared submodule checkout") from exc
@@ -589,6 +640,8 @@ def submodule_scan_findings(root: Path) -> list[Finding]:
     findings: list[Finding] = []
     try:
         paths = submodule_paths(root)
+    except SubmoduleCheckoutError as exc:
+        return [Finding(exc.path, exc.label, str(exc))]
     except RuntimeError as exc:
         return [Finding(".gitmodules", "deny-unreadable-submodule-map", str(exc))]
     for submodule_path in paths:
@@ -1215,6 +1268,130 @@ def self_test_debugger_classification() -> bool:
     return True
 
 
+def submodule_coverage_self_test() -> list[str]:
+    """Exercise omissions that must never become a successful submodule scan."""
+    failures: list[str] = []
+    with tempfile.TemporaryDirectory() as tmp:
+        base = Path(tmp)
+        template = base / "template"
+        template.mkdir()
+        config = base / "fixture.gitconfig"
+        config.write_text("", encoding="utf-8")
+        env = {**git_scan_env(), "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": str(config),
+               "GIT_TEMPLATE_DIR": str(template), "GIT_TERMINAL_PROMPT": "0"}
+
+        def git(cwd: Path, *args: str) -> str:
+            return subprocess.run(["git", *args], cwd=cwd, env=env, check=True,
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).stdout.strip()
+
+        def repo(path: Path) -> None:
+            path.mkdir(parents=True)
+            git(path, "init", "-q")
+
+        def commit(path: Path) -> str:
+            git(path, "add", ".")
+            git(path, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                "-c", "commit.gpgsign=false", "commit", "-q", "-m", "fixture")
+            return git(path, "rev-parse", "HEAD")
+
+        def parent_with_child(name: str, payload_name: str, payload: bytes) -> tuple[Path, Path]:
+            parent = base / name / "parent"
+            child = parent / "references" / "fixture"
+            repo(parent)
+            repo(child)
+            (child / "README.MD").write_text("# Authored fixture\n", encoding="utf-8")
+            target = child / payload_name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(payload)
+            head = commit(child)
+            (parent / "README.MD").write_text("# Authored fixture\n", encoding="utf-8")
+            (parent / ".gitmodules").write_text(
+                '[submodule "fixture"]\n\tpath = references/fixture\n\turl = ../fixture.git\n', encoding="utf-8")
+            git(parent, "add", ".gitmodules", "README.MD")
+            git(parent, "update-index", "--add", "--cacheinfo", "160000," + head + ",references/fixture")
+            return parent, child
+
+        parent, child = parent_with_child("index", "game/BEA.exe", b"invented prohibited-name fixture")
+        before = check_repo(parent, include_submodules=True, stale_allowances=False)
+        if not any(f.label == "deny-operational-payload-suffix" for f in before):
+            failures.append("initialized submodule payload control was not detected")
+        git(child, "update-index", "--force-remove", "game/BEA.exe")
+        after = check_repo(parent, include_submodules=True, stale_allowances=False)
+        if not (child / "game" / "BEA.exe").is_file() or not any(f.label == "deny-dirty-submodule-scan" for f in after):
+            failures.append("a changed child index hid a still-present pinned file")
+
+        parent = base / "missing-map" / "parent"
+        repo(parent)
+        (parent / "README.MD").write_text("# Authored fixture\n", encoding="utf-8")
+        (parent / "references" / "fixture").mkdir(parents=True)
+        git(parent, "add", "README.MD")
+        git(parent, "update-index", "--add", "--cacheinfo", "160000," + "1" * 40 + ",references/fixture")
+        findings = check_repo(parent, include_submodules=True, stale_allowances=False)
+        if not any(f.label == "deny-undeclared-submodule-scan" for f in findings):
+            failures.append("a gitlink was omitted when .gitmodules was absent")
+
+        parent, child = parent_with_child("nested", "sample.txt", b"authored fixture")
+        nested = child / "references" / "nested"
+        repo(nested)
+        (nested / "game").mkdir()
+        (nested / "game" / "BEA.exe").write_bytes(b"invented prohibited-name fixture")
+        nested_head = commit(nested)
+        (child / ".gitmodules").write_text(
+            '[submodule "nested"]\n\tpath = references/nested\n\turl = ../fixture.git\n', encoding="utf-8")
+        git(child, "add", ".gitmodules")
+        git(child, "update-index", "--add", "--cacheinfo", "160000," + nested_head + ",references/nested")
+        child_head = commit(child)
+        git(parent, "update-index", "--add", "--cacheinfo", "160000," + child_head + ",references/fixture")
+        findings = check_repo(parent, include_submodules=True, stale_allowances=False)
+        if not any(f.label == "deny-nested-submodule-scan" for f in findings):
+            failures.append("a nested gitlink was omitted from the submodule scan")
+
+        parent = base / "ancestor-parent" / "parent"
+        repo(parent)
+        (parent / "README.MD").write_text("# Authored fixture\n", encoding="utf-8")
+        head = commit(parent)
+        (parent / "alias").symlink_to(parent.parent, target_is_directory=True)
+        (parent / ".gitmodules").write_text(
+            '[submodule "alias"]\n\tpath = alias/parent\n\turl = ../fixture.git\n', encoding="utf-8")
+        git(parent, "add", ".gitmodules")
+        git(parent, "update-index", "--add", "--cacheinfo", "160000," + head + ",alias/parent")
+        findings = check_repo(parent, include_submodules=True, stale_allowances=False)
+        if not any(f.label == "deny-uninitialized-submodule-scan" for f in findings):
+            failures.append("an ancestor symlink aliased the parent checkout")
+
+        # This fixture uses a separate tree and a symlinked ancestor, without moving an existing checkout.
+        external = base / "external"
+        repo(external / "fixture")
+        (external / "fixture" / "README.MD").write_text("# Authored fixture\n", encoding="utf-8")
+        external_head = commit(external / "fixture")
+        linked_parent = base / "linked-parent" / "parent"
+        repo(linked_parent)
+        (linked_parent / "README.MD").write_text("# Authored fixture\n", encoding="utf-8")
+        (linked_parent / ".gitmodules").write_text(
+            '[submodule "fixture"]\n\tpath = references/fixture\n\turl = ../fixture.git\n', encoding="utf-8")
+        (linked_parent / "references").symlink_to(external, target_is_directory=True)
+        git(linked_parent, "add", ".gitmodules", "README.MD")
+        git(linked_parent, "update-index", "--add", "--cacheinfo", "160000," + external_head + ",references/fixture")
+        findings = check_repo(linked_parent, include_submodules=True, stale_allowances=False)
+        if not any(f.label == "deny-uninitialized-submodule-scan" for f in findings):
+            failures.append("an ancestor symlink selected a checkout outside the parent")
+
+        for flag in (None, "--assume-unchanged", "--skip-worktree"):
+            label = "plain" if flag is None else flag.removeprefix("--")
+            parent, child = parent_with_child("working-" + label, "sample.bin", b"MZ invented fixture")
+            before = check_repo(parent, include_submodules=True, stale_allowances=False)
+            if not any(f.label == "deny-magic-executable" for f in before):
+                failures.append(label + ": committed payload control was not detected")
+            if flag is not None:
+                git(child, "update-index", flag, "sample.bin")
+            (child / "sample.bin").write_bytes(b"authored harmless replacement")
+            findings = check_repo(parent, include_submodules=True, stale_allowances=False)
+            expected = "deny-dirty-submodule-scan" if flag is None else "deny-submodule-index-flags"
+            if not any(f.label == expected for f in findings):
+                failures.append(label + ": a modified child worktree masked a pinned payload")
+    return failures
+
+
 def run_self_test() -> int:
     if not self_test_debugger_classification():
         print("Public payload safety self-test: FAIL")
@@ -1723,6 +1900,12 @@ def run_self_test() -> int:
             print(f"- root findings: {sorted(root_findings, key=lambda item: item.path)!r}")
             print(f"- combined findings: {sorted(combined_findings, key=lambda item: item.path)!r}")
             return 1
+    coverage_failures = submodule_coverage_self_test()
+    if coverage_failures:
+        print("Public payload safety self-test: FAIL")
+        for item in coverage_failures:
+            print(f"- {item}")
+        return 1
     retail_failures = retail_text_self_test()
     if retail_failures:
         print("Public payload safety self-test: FAIL")
@@ -1736,7 +1919,8 @@ def run_self_test() -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--self-test", action="store_true", help="Run built-in fixture tests.")
-    parser.add_argument("--include-submodules", action="store_true", help="Also scan initialized submodule tracked files with parent hard-payload rules.")
+    parser.add_argument("--include-submodules", action="store_true",
+                        help="Also scan initialized, pinned, clean submodule tracked files; reject nested gitlinks.")
     parser.add_argument("--require-private-text-guard", action="store_true", help="Accepted for compatibility; denylist text guards are built in.")
     parser.add_argument("--repo-root", type=Path, default=ROOT)
     parser.add_argument("--payload-root", type=Path, help="Scan an already materialized non-git payload/export tree by walking files under this root.")
