@@ -178,6 +178,18 @@ public sealed class EditSession
         RecordApplied(command);
     }
 
+    /// <summary>
+    /// Changes an existing spherical trigger's radius as one undoable edit. A bit-identical request returns false
+    /// without changing history or notifying observers; an invalid or stale request throws without changing the body.
+    /// </summary>
+    public bool ResizeTrigger(int row, float radius)
+    {
+        ResizeSphereTrigger command = new(Body, row, radius);
+        if (!command.ChangesRadius) return false;
+        Apply(command);
+        return true;
+    }
+
     /// <summary>Attempts the command, separating its refusal from an exception raised by a later change observer.</summary>
     internal bool TryApply(IEditCommand command, out string? refusal)
     {
@@ -258,6 +270,20 @@ public sealed class EditSession
         return changes;
     }
 
+    /// <summary>Existing spherical triggers whose radii differ from the baseline, compared as stored.</summary>
+    public IReadOnlyList<TriggerRadiusChange> TriggerChanges()
+    {
+        List<TriggerRadiusChange> changes = [];
+        for (int i = 0; i < Math.Min(_baseline.Things.Count, Body.Things.Count); i++)
+        {
+            PlacedObject before = _baseline.Things[i], after = Body.Things[i];
+            if (!ResizeSphereTrigger.IsSphereTrigger(before) || !ResizeSphereTrigger.IsSphereTrigger(after)) continue;
+            float from = before.Init.SphereTrigger!.Radius, to = after.Init.SphereTrigger!.Radius;
+            if (!ResizeSphereTrigger.SameBits(from, to)) changes.Add(new TriggerRadiusChange(i, before.Label, from, to));
+        }
+        return changes;
+    }
+
     /// <summary>
     /// The scripts whose record differs from the baseline's, in script order, with what differs said in numbers and values. Empty when the two bodies do not
     /// have the same scripts by name and order (<see cref="Validate"/> says so): a script is replaced, never added, dropped or renamed here.
@@ -285,7 +311,7 @@ public sealed class EditSession
 
     /// <summary>
     /// Errors that stop a save: nothing changed, the body cannot be written, a script cannot be stored (<c>script-unstorable</c>), the row list or the script list changed, something other than a
-    /// position or the code of a script differs from the baseline, or a replaced script breaks one of the game's rules (<c>script-broken</c>, one
+    /// position, spherical trigger radius or the code of a script differs from the baseline, or a replaced script breaks one of the game's rules (<c>script-broken</c>, one
     /// finding per problem <see cref="ScriptChecker"/> lists; the finding's index is the script's number). Warnings: a position outside the square the
     /// terrain lookup covers (a moved row, or a copy put or moved there), and any change to a base world.
     /// </summary>
@@ -317,14 +343,14 @@ public sealed class EditSession
         int kept = _baseline.Things.Count;
         bool appendedOnly = Body.Things.Count >= kept && Body.Things.Take(kept).Select(t => t.ObjectId).SequenceEqual(_baseline.Things.Select(t => t.ObjectId));
         if (!appendedOnly)
-            errors.Add(new Finding("rows-changed", "The order of the world's rows changed or a row was taken away; this editor only moves things, copies units to the end and replaces scripts."));
+            errors.Add(new Finding("rows-changed", "The order of the world's rows changed or a row was taken away; this editor only moves things, resizes spherical triggers, copies units to the end and replaces scripts."));
         else if (Body.Things.Count > kept && IsBaseWorld)
             errors.Add(new Finding("base-world-rows", "A level's base world is never given more things here: careers remember which of its buildings stand by their row."));
         else if (!SameScripts())
             errors.Add(new Finding("scripts-changed", "The number, order or names of the world's scripts changed; this editor replaces a script's code and keeps its name."));
         else
         {
-            // Everything but the positions and the scripts' code must be what the baseline has: put the baseline's positions and scripts back and compare.
+            // Restore only the supported edits before comparing all other stored data with the baseline.
             WorldBody check = WorldBody.Read(bytes);
             for (int i = kept; i < Body.Things.Count; i++)
             {
@@ -334,10 +360,15 @@ public sealed class EditSession
                     errors.Add(new Finding("added-row", $"Row {i} ({added.Label}) is not a copy of a unit the level has, so it cannot be saved.", i));
             }
             check.Things.RemoveRange(kept, check.Things.Count - kept);
-            for (int i = 0; i < check.Things.Count; i++) check.Things[i].Init.Position = _baseline.Things[i].Init.Position;
+            for (int i = 0; i < check.Things.Count; i++)
+            {
+                check.Things[i].Init.Position = _baseline.Things[i].Init.Position;
+                if (ResizeSphereTrigger.IsSphereTrigger(_baseline.Things[i]))
+                    check.Things[i].Init.SphereTrigger!.Radius = _baseline.Things[i].Init.SphereTrigger!.Radius;
+            }
             for (int i = 0; i < check.Scripts.Count; i++) check.Scripts[i] = _baseline.Scripts[i];
             if (!IsBaseline(check.Write()))
-                errors.Add(new Finding("other-change", "Something other than a position or a script's code differs from the world as it was loaded."));
+                errors.Add(new Finding("other-change", "Something other than a position, a spherical trigger radius or a script's code differs from the world as it was loaded."));
         }
         IReadOnlyList<ScriptChange> scriptChanges = ScriptChanges();
         foreach (ScriptChange change in scriptChanges)
@@ -350,6 +381,10 @@ public sealed class EditSession
             else if (OutsideTerrain(change.To))
                 warnings.Add(OutsideTerrainFinding(change.Name, change.Index));
         }
+        IReadOnlyList<TriggerRadiusChange> triggerChanges = TriggerChanges();
+        foreach (TriggerRadiusChange change in triggerChanges)
+            if (!ResizeSphereTrigger.IsRequestedRadius(change.To))
+                errors.Add(new Finding("trigger-radius", $"The radius of {change.Name} (row {change.Index}) must be a finite number at least zero.", change.Index));
         // An added row is held to the same square, where the copy was put or moved to; one whose position is not finite is the "added-row" error above.
         foreach (var (index, _, name) in Additions())
             if (MoveObject.IsFinite(Body.Things[index].Init.Position) && OutsideTerrain(Body.Things[index].Init.Position))
@@ -358,6 +393,8 @@ public sealed class EditSession
             warnings.Add(new Finding("base-world", "This is a level's base world. Careers remember which of its buildings still stand, so a career may not agree with a base world whose things were moved."));
         if (IsBaseWorld && scriptChanges.Count > 0)
             warnings.Add(new Finding("base-world-scripts", "This is a level's base world, and its scripts run in every level that loads it: a replaced script changes them all."));
+        if (IsBaseWorld && triggerChanges.Count > 0)
+            warnings.Add(new Finding("base-world-triggers", "This is a level's base world: a resized trigger changes every level that loads it."));
         return new ValidationReport(errors, warnings);
     }
 

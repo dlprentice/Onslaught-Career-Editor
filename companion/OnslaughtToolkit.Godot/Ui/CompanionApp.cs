@@ -83,6 +83,7 @@ public partial class CompanionApp : Control
     internal CareerBytesPage Bytes { get; private set; } = null!;
     internal AssetsPage Assets { get; private set; } = null!;
     internal LevelEditorPage LevelEditor { get; private set; } = null!;
+    internal CeMissionProjectPage MissionProject { get; private set; } = null!;
 
     /// <summary>Asks before unsaved changes on Edit career or Game settings would be lost (switching careers, closing).</summary>
     internal ConfirmationDialog DiscardDialog { get; private set; } = null!;
@@ -153,12 +154,14 @@ public partial class CompanionApp : Control
         Bytes = new CareerBytesPage(Workspace, Status, popups);
         Assets = new AssetsPage(Services);
         LevelEditor = new LevelEditorPage(Services);
+        MissionProject = new CeMissionProjectPage(Status, popups, AskToDiscard, () =>
+            [Game.Original?.Root, Game.Folder?.AssetRoot, Game.CePackageRoot, Game.CeOriginalRoot, Game.CeUserFolder, Services.Backups.Folder]);
         NavGroup[] groups =
         [
             new("", [Home]),
             new("Your career", [Summary, Goodies, EditCareer, Cheats]),
             new("Your game", [Settings, Backups]),
-            new("Extras", [Music, Lore, Assets, LevelEditor]),
+            new("Extras", [Music, Lore, Assets, LevelEditor, MissionProject]),
             new("Advanced", [Bytes], Folds: true),
         ];
 
@@ -251,7 +254,11 @@ public partial class CompanionApp : Control
     public override void _UnhandledKeyInput(InputEvent @event)
     {
         if (@event is not InputEventKey { Pressed: true, Echo: false } key) return;
-        if (key is { CtrlPressed: true, Keycode: Key.O } && !Workspace.Busy)
+        if (Current == MissionProject && key is { CtrlPressed: true, Keycode: Key.O })
+            MissionProject.ShowOpen();
+        else if (Current == MissionProject && key is { CtrlPressed: true, Keycode: Key.S })
+            MissionProject.ShowSave();
+        else if (key is { CtrlPressed: true, Keycode: Key.O } && !Workspace.Busy)
             Home.OpenDialog.PopupCenteredRatio(0.75f);
         else if (key is { CtrlPressed: true, Keycode: Key.S } && Current == EditCareer && !EditCareer.Save.Disabled)
             EditCareer.AskToSave();
@@ -311,7 +318,7 @@ public partial class CompanionApp : Control
 
     /// <summary>
     /// Closes the companion, unless a file operation is still running (a close never abandons a write) or Edit career,
-    /// Game settings or the Level editor holds unsaved changes, which are only dropped after the player says so. Returns whether it quit.
+    /// Game settings, Level editor or Mission project holds unsaved changes, which are only dropped after the player says so. Returns whether it quit.
     /// </summary>
     internal bool RequestClose()
     {
@@ -320,6 +327,7 @@ public partial class CompanionApp : Control
         if (EditCareer.HasChanges) unsaved.Add($"{Build.Count(EditCareer.ChangeCount, "change")} on Edit career");
         if (Settings.HasChanges) unsaved.Add($"{Build.Count(Settings.ChangeCount, "change")} on Game settings");
         if (LevelEditor.ChangeCount is int levelChanges and > 0) unsaved.Add($"{Build.Count(levelChanges, "change")} on Level editor");
+        if (MissionProject.HasUnsavedChanges) unsaved.Add("the mission project and its source");
         if (unsaved.Count == 0)
         {
             _quit();
@@ -352,7 +360,7 @@ public partial class CompanionApp : Control
 
     private bool CloseWouldAbandonWrite()
     {
-        if (!Workspace.Busy) return false;
+        if (!Workspace.Busy && !MissionProject.Busy) return false;
         Status.Show("A file operation is still finishing. Wait for its result before closing.");
         return true;
     }

@@ -58,6 +58,29 @@ internal static class TerrainSurfaceTests
         check.That(Throws<InvalidDataException>(() => TerrainSurface.Build((_, _) => float.NaN, 1)) &&
             Throws<InvalidDataException>(() => TerrainSurface.Build((_, _) => float.PositiveInfinity, 1)),
             "3D terrain refuses non-finite heights");
+
+        check.That(TerrainRayPicker.TryHit(flat, new Vector3(128, 50, -96), -Vector3.UnitY, out Vector3 flatHit) &&
+            Vector3.Distance(flatHit, new Vector3(128, -7, -96)) < 0.001f,
+            "A downward ray meets the visible flat terrain at the expected point");
+        check.That(TerrainRayPicker.TryHit(slope, new Vector3(128, 1000, -128), -Vector3.UnitY, out Vector3 slopeHit) &&
+            Vector3.Distance(slopeHit, new Vector3(128, -384, -128)) < 0.05f,
+            "A ray meets a sampled slope in the view's coordinates");
+        check.That(!TerrainRayPicker.TryHit(flat, new Vector3(-10, 50, -96), -Vector3.UnitY, out _) &&
+            !TerrainRayPicker.TryHit(flat, new Vector3(128, 50, -96), Vector3.UnitY, out _) &&
+            !TerrainRayPicker.TryHit(flat, new Vector3(128, 50, -96), Vector3.UnitX, out _),
+            "A ray that misses, points away, or is parallel makes no terrain hit");
+        check.That(!TerrainRayPicker.TryHit(null, Vector3.Zero, Vector3.UnitY, out _) &&
+            !TerrainRayPicker.TryHit(flat, Vector3.Zero, Vector3.Zero, out _) &&
+            !TerrainRayPicker.TryHit(flat, new Vector3(float.NaN, 0, 0), Vector3.UnitY, out _) &&
+            !TerrainRayPicker.TryHit(flat, Vector3.Zero, new Vector3(0, float.PositiveInfinity, 0), out _),
+            "Missing terrain and invalid rays never pick a point");
+        check.That(TerrainRayPicker.TryHit(flat, new Vector3(128, 50, -96), new Vector3(0, -1e-35f, 0), out Vector3 shortRay) &&
+            Vector3.Distance(shortRay, flatHit) < 0.001f,
+            "The terrain hit does not depend on ray length");
+        TerrainSurface ridge = TerrainSurface.Build((x, _) => x is > 128 and < 384 ? -10 : 0, 2);
+        check.That(TerrainRayPicker.TryHit(ridge, new Vector3(-10, 5, -256), Vector3.UnitX, out Vector3 ridgeHit) &&
+            Math.Abs(ridgeHit.X - 128) < 0.01,
+            "When a ray crosses terrain twice the nearest intersection wins");
     }
 
     private static bool Throws<T>(Action action) where T : Exception

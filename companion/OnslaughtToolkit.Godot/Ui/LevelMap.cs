@@ -60,6 +60,8 @@ internal sealed partial class LevelMap : Control
 
     internal MapView View => _view;
     internal int? Selected => _selected;
+    // The 3D view uses the same rows as this map, including changes and undo/redo.
+    internal IReadOnlyList<ObjectRow> Rows => _rows;
 
     /// <summary>The index (in the level's path list) of the path drawn highlighted, or null.</summary>
     internal int? HighlightedPath => _highlightedPath;

@@ -37,6 +37,26 @@ public sealed class TerrainSurface
     /// <summary>Triangle indices in Godot's clockwise front-face order, with the front of a flat surface facing up.</summary>
     public ReadOnlyMemory<int> Indices => _indices;
 
+    /// <summary>An authored preview plane. Its bounds are a workspace view, not a CE terrain or world-size restriction.</summary>
+    internal static TerrainSurface Flat(float minX, float minY, float maxX, float maxY)
+    {
+        if (!float.IsFinite(minX) || !float.IsFinite(minY) || !float.IsFinite(maxX) || !float.IsFinite(maxY) ||
+            !float.IsFinite(maxX - minX) || !float.IsFinite(maxY - minY) || minX >= maxX || minY >= maxY)
+            throw new ArgumentException("The authored workspace bounds cannot be previewed.");
+        return new TerrainSurface(1, [new(minX, 0, -minY), new(maxX, 0, -minY), new(minX, 0, -maxY), new(maxX, 0, -maxY)],
+            [0, 2, 1, 1, 2, 3]);
+    }
+
+    /// <summary>Returns a new preview surface with one changed vertical coordinate, keeping its topology.</summary>
+    internal TerrainSurface WithVertexHeight(int index, float height)
+    {
+        if (index < 0 || index >= _vertices.Length) throw new ArgumentOutOfRangeException(nameof(index));
+        if (!float.IsFinite(height)) throw new ArgumentOutOfRangeException(nameof(height));
+        Vector3[] vertices = _vertices.ToArray();
+        vertices[index].Y = height;
+        return new TerrainSurface(Divisions, vertices, _indices);
+    }
+
     /// <summary>Samples an existing read-only terrain. A malformed non-finite height is refused.</summary>
     public static TerrainSurface Build(Heightfield field, int divisions = DefaultDivisions)
     {
