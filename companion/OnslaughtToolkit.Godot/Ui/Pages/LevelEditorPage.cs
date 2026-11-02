@@ -47,7 +47,9 @@ internal sealed partial class LevelEditorPage : Page
     private (string X, string Y, string Z) _shown = ("", "", "");
     private EditSession? _coordinateSession;
     private int? _coordinateRow;
-    private bool _settingCoordinates;
+    private PlacedObject? _coordinateObject;
+    private ObjectInit? _coordinateInit;
+    private bool _settingCoordinates, _applyingCoordinates;
     internal bool CoordinatesHaveDraft => _coordinateSession is not null && (X.Text, Y.Text, Z.Text) != _shown;
     private string _savedId = "", _savedFolder = "";
     private bool _noteIsRefusal;
@@ -708,24 +710,30 @@ internal sealed partial class LevelEditorPage : Page
     {
         if (_model?.Row(index) is null) return false;
         if (_selected == index) return true;
-        if (TriggerRadius.HasDraft && _model.Session is { } session)
+        if ((TriggerRadius.HasDraft || CoordinatesHaveDraft) && _model.Session is { } session)
         {
             LevelEditorModel model = _model;
             long revision = _viewRevision;
+            Func<bool> inputsUnchanged = CaptureFolderSwitchGuard();
             byte[] expected;
             try { expected = session.ToBytes(); }
             catch (Exception error) when (EditSession.IsUnstorable(error))
             {
-                ShowNote("The current edit cannot be checked safely, so the radius draft was kept.", refusal: true);
+                ShowNote("The current edit cannot be checked safely, so the typed draft was kept.", refusal: true);
                 RestoreSelection();
                 return false;
             }
             RestoreSelection();
-            _services.AskToDiscard("The radius you typed is not applied or saved. Select another object and discard that text?", "Discard and select", () =>
+            string fields = TriggerRadius.HasDraft && CoordinatesHaveDraft ? "radius and coordinates" : TriggerRadius.HasDraft ? "radius" : "coordinates";
+            string agreement = TriggerRadius.HasDraft && !CoordinatesHaveDraft ? "is" : "are";
+            _services.AskToDiscard($"The {fields} you typed {agreement} not applied or saved. Select another object and discard that text?", "Discard and select", () =>
             {
-                if (!MatchesConfirmedEdit(model, session, revision, expected)) { ShowChangedConfirmation(); return; }
+                if (!inputsUnchanged() || !MatchesConfirmedEdit(model, session, revision, expected)) { ShowChangedConfirmation(); return; }
                 TriggerRadius.Clear();
+                UpdateInspector(clearNote: true, restoreCoordinates: true);
                 SelectIndex(index);
+                UpdateChanges();
+                HeaderChanged?.Invoke();
             });
             return false;
         }
@@ -748,7 +756,8 @@ internal sealed partial class LevelEditorPage : Page
     internal MoveOutcome? Dragged(int row, float x, float y)
     {
         if (_model is null) return null;
-        if (_selected != row && !SelectIndex(row)) return new MoveOutcome(MoveResult.Refused, "Choose the object before moving it; your radius draft was kept.");
+        if (RefuseCoordinateDraft()) return new MoveOutcome(MoveResult.Refused, _note.Text);
+        if (_selected != row && !SelectIndex(row)) return new MoveOutcome(MoveResult.Refused, "Choose the object before moving it; your typed draft was kept.");
         MoveOutcome outcome = _model.MoveTo(row, x, y);
         if (_selected != row) SelectIndex(row);
         ShowNote(outcome.Message, outcome.Result == MoveResult.Refused);
@@ -773,10 +782,14 @@ internal sealed partial class LevelEditorPage : Page
         {
             _objectTitle.Text = "Nothing selected";
             _objectDetail.Text = _model?.Session is null ? "Choose a level, then an object in the table." : "Choose an object in the table.";
-            _shown = ("", "", "");
-            _coordinateSession = null; _coordinateRow = null;
-            _settingCoordinates = true;
-            try { X.Text = Y.Text = Z.Text = ""; } finally { _settingCoordinates = false; }
+            if (clearNote || restoreCoordinates || !ReferenceEquals(_coordinateSession, _model?.Session) || !CoordinatesHaveDraft)
+            {
+                _shown = ("", "", "");
+                _coordinateSession = null; _coordinateRow = null;
+                _coordinateObject = null; _coordinateInit = null;
+                _settingCoordinates = true;
+                try { X.Text = Y.Text = Z.Text = ""; } finally { _settingCoordinates = false; }
+            }
             _stock.Text = "";
             _hint.Text = "";
             _hint.Visible = false;
@@ -785,11 +798,13 @@ internal sealed partial class LevelEditorPage : Page
         _objectTitle.Text = row.Label;
         _objectDetail.Text = $"{row.Kind} · row {row.Index}" + (row.Name.Length > 0 && row.Definition.Length > 0 ? $" · {row.Definition}" : "");
         var shown = LevelEditorModel.Shown(row.Position);
-        bool keepDraft = !clearNote && !restoreCoordinates && ReferenceEquals(_coordinateSession, _model?.Session) && _coordinateRow == row.Index && shown == _shown && CoordinatesHaveDraft;
-        _coordinateSession = _model?.Session; _coordinateRow = row.Index;
-        _shown = shown;
+        bool keepDraft = !clearNote && !restoreCoordinates && !_applyingCoordinates && ReferenceEquals(_coordinateSession, _model?.Session) && _coordinateRow == row.Index && CoordinatesHaveDraft;
         if (!keepDraft)
         {
+            _coordinateSession = _model?.Session; _coordinateRow = row.Index;
+            _coordinateObject = _coordinateSession?.Body.Things[row.Index];
+            _coordinateInit = _coordinateObject?.Init;
+            _shown = shown;
             _settingCoordinates = true;
             try { (X.Text, Y.Text, Z.Text) = _shown; } finally { _settingCoordinates = false; }
         }
@@ -809,10 +824,15 @@ internal sealed partial class LevelEditorPage : Page
         EditSession? session = _model?.Session;
         _terrainViewSwitch.Disabled = session is null || _model?.Terrain is null;
         TerrainEdit.Disabled = session is null || _model?.Terrain is null || !_terrainViewSwitch.ButtonPressed || _scripts.Visible;
-        Undo.Disabled = session is not { CanUndo: true };
-        Redo.Disabled = session is not { CanRedo: true };
+        Undo.Disabled = CoordinatesHaveDraft || session is not { CanUndo: true };
+        Redo.Disabled = CoordinatesHaveDraft || session is not { CanRedo: true };
         Undo.TooltipText = session?.UndoDescription is { } undo ? $"Take back: {undo}." : "Take back the last move.";
         Redo.TooltipText = session?.RedoDescription is { } redo ? $"Make again: {redo}." : "Make the move you took back.";
+        if (CoordinatesHaveDraft)
+            Undo.TooltipText = Redo.TooltipText = "Apply coordinate edits first, or press Escape in a coordinate field to restore the current coordinates.";
+        ObjectRow? selected = _selected is int row ? _model?.Row(row) : null;
+        Reset.Disabled = CoordinatesHaveDraft || selected is not { Changed: true, Added: false };
+        Duplicate.Disabled = CoordinatesHaveDraft || selected is null || _model?.CanDuplicate(selected.Index) != true;
         if (session is null)
         {
             _summary.Text = "";
@@ -889,13 +909,23 @@ internal sealed partial class LevelEditorPage : Page
             ShowNote(message, refusal: true);
             return new MoveOutcome(MoveResult.Refused, message);
         }
+        if (_model.Row(row) is not { } current || !ReferenceEquals(_coordinateObject, _model.Session!.Body.Things[row]) ||
+            !ReferenceEquals(_coordinateInit, _coordinateObject?.Init) || LevelEditorModel.Shown(current.Position) != _shown)
+        {
+            const string message = "The stored object or position changed. Your coordinate text was kept; press Escape in a coordinate field to load the current coordinates before editing again.";
+            ShowNote(message, refusal: true);
+            return new MoveOutcome(MoveResult.Refused, message);
+        }
         // A field left as it is (still the text shown for the stored value) is not read again, so leaving the fields moves nothing.
         if (!explicitly && (X.Text, Y.Text, Z.Text) == _shown)
         {
             if (_noteIsRefusal) ShowNote("", refusal: false);  // the fields were put right: the refusal no longer applies
             return null;
         }
-        MoveOutcome outcome = _model.Move(row, X.Text, Y.Text, Z.Text);
+        MoveOutcome outcome;
+        _applyingCoordinates = true;
+        try { outcome = _model.Move(row, X.Text, Y.Text, Z.Text); }
+        finally { _applyingCoordinates = false; }
         // Pressing Move first takes the focus from the field (which applies what was typed) and then presses the button: the second, which
         // finds nothing to change, must not wipe out the first one's note.
         if (outcome.Result != MoveResult.Unchanged || (explicitly && _note.Text.Length == 0)) ShowNote(outcome.Message, outcome.Result == MoveResult.Refused);
@@ -907,6 +937,7 @@ internal sealed partial class LevelEditorPage : Page
     internal DuplicateOutcome? DuplicateSelected()
     {
         if (_model is null || _selected is not int row) return null;
+        if (RefuseCoordinateDraft()) return new DuplicateOutcome(null, _note.Text);
         DuplicateOutcome outcome = _model.Duplicate(row);
         if (outcome.Row is int added) SelectIndex(added);
         ShowNote(outcome.Message, refusal: !outcome.Ok);
@@ -916,6 +947,7 @@ internal sealed partial class LevelEditorPage : Page
     private void ResetSelected()
     {
         if (_model is null || _selected is not int row) return;
+        if (RefuseCoordinateDraft()) return;
         MoveOutcome outcome = _model.Reset(row);
         ShowNote(outcome.Message, outcome.Result == MoveResult.Refused);
     }
@@ -932,9 +964,17 @@ internal sealed partial class LevelEditorPage : Page
     {
         EditSession? session = _model?.Session;
         if (session is null) return;
+        if (RefuseCoordinateDraft()) return;
         string? what = undo ? session.UndoDescription : session.RedoDescription;
         bool done = undo ? session.Undo() : session.Redo();
         ShowNote(done ? (undo ? $"Took back: {what}." : $"Made again: {what}.") : "", refusal: false);
+    }
+
+    private bool RefuseCoordinateDraft()
+    {
+        if (!CoordinatesHaveDraft) return false;
+        ShowNote("Your coordinate text was kept. Apply it with Enter, or press Escape in a coordinate field to restore the current coordinates before another object action.", refusal: true);
+        return true;
     }
 
     /// <summary>Scrolls the right-hand column to the saved notice, once the notice has its place and size (a frame or two after it is shown).</summary>
