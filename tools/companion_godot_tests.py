@@ -13,6 +13,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import types
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -61,16 +62,17 @@ class CompanionLauncherTests(unittest.TestCase):
         sdk_version, runtime = self.pins["dotnet"]["sdkVersion"], self.pins["dotnet"]["runtimeVersion"]
         fake = (
             f"#!{sys.executable}\n"
-            "import json, os, pathlib, sys\n"
+            "import json, os, pathlib, shutil, sys\n"
             "tool=pathlib.Path(sys.argv[0]).name\n"
             "if '--version' in sys.argv:\n"
             f" print({sdk_version!r} if tool=='dotnet' else os.environ.get('FAKE_VERSION',{self.pins['engineVersion']!r})); raise SystemExit(0)\n"
-            "with open(os.environ['FAKE_CALLS'],'a') as f: f.write(json.dumps({'tool':tool,'args':sys.argv[1:],'cwd':os.getcwd(),'tmp':os.environ['TMPDIR'],'data':os.environ['XDG_DATA_HOME'],'cache':os.environ['XDG_CACHE_HOME'],'config':os.environ['XDG_CONFIG_HOME'],'home':os.environ['HOME'],'ce_user':os.environ.get('BEA_USER_DIR'),'old_bridge':os.environ.get('ONSLAUGHT_FILE_BRIDGE')})+'\\n')\n"
+            "with open(os.environ['FAKE_CALLS'],'a') as f: f.write(json.dumps({'tool':tool,'args':sys.argv[1:],'cwd':os.getcwd(),'tmp':os.environ['TMPDIR'],'data':os.environ['XDG_DATA_HOME'],'cache':os.environ['XDG_CACHE_HOME'],'config':os.environ['XDG_CONFIG_HOME'],'home':os.environ['HOME'],'dotnet_home':os.environ['DOTNET_CLI_HOME'],'nuget':os.environ['NUGET_PACKAGES'],'path':os.environ['PATH'],'dotnet_root':os.environ.get('DOTNET_ROOT'),'display':os.environ.get('DISPLAY'),'wayland':os.environ.get('WAYLAND_DISPLAY'),'bus':os.environ.get('DBUS_SESSION_BUS_ADDRESS'),'ce_user':os.environ.get('BEA_USER_DIR'),'old_bridge':os.environ.get('ONSLAUGHT_FILE_BRIDGE')})+'\\n')\n"
             "if tool=='dotnet' and sys.argv[1]=='restore' and os.environ.get('FAKE_ADVISORY'): print('warning NU1903: Package X 1.0.0 has a known high severity vulnerability')\n"
             "if tool=='dotnet' and sys.argv[1] in ('restore','build'):\n"
             " project=pathlib.Path(sys.argv[2]).parent\n"
+            " shutil.copytree(os.environ['FAKE_NUGET'],os.environ['NUGET_PACKAGES'],dirs_exist_ok=True)\n"
             " assets=project/'.godot/mono/temp/obj'; assets.mkdir(parents=True,exist_ok=True)\n"
-            " (assets/'project.assets.json').write_text(json.dumps({'packageFolders':{os.environ['FAKE_NUGET']:{}}}))\n"
+            " (assets/'project.assets.json').write_text(json.dumps({'packageFolders':{os.environ['NUGET_PACKAGES']:{}}}))\n"
             " if sys.argv[1]=='build':\n"
             "  target=project/'.godot/mono/temp/bin/Debug'; target.mkdir(parents=True,exist_ok=True); (target/'OnslaughtToolkit.Godot.dll').write_text('integrated assembly')\n"
             "if 'res://Development/LicenseMetadata.cs' in sys.argv: print(json.dumps({'license':'Godot MIT','components':[{'name':'component'}],'licenses':{'MIT':'notice'}}))\n"
@@ -138,6 +140,18 @@ class CompanionLauncherTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):
             return host.companion_main([*arguments,"--engine",str(self.engine),"--shared-lock",str(self.lock)])
 
+    @contextlib.contextmanager
+    def standalone(self, *, templates: Path | None = None):
+        verifier = mock.Mock(return_value=(self.engine, templates, self.dotnet))
+        module = types.SimpleNamespace(verified_install=verifier)
+        with mock.patch.dict(sys.modules, {"companion_toolchain": module}), mock.patch.dict(
+                os.environ, {host.SHARED_LOCK_ENV: ""}):
+            yield verifier
+
+    def invoke_standalone(self, *arguments: str) -> int:
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            return host.companion_main(list(arguments))
+
     def calls_read(self)->list[dict]:
         return [json.loads(line) for line in self.calls.read_text().splitlines()] if self.calls.exists() else []
 
@@ -170,7 +184,27 @@ class CompanionLauncherTests(unittest.TestCase):
         imports=[call for call in self.calls_read() if "--import" in call["args"]]
         self.assertNotEqual(imports[0]["tmp"],imports[1]["tmp"])
         for call in self.calls_read():
-            for key in ("tmp","data","cache","config"):self.assertTrue(Path(call[key]).is_relative_to(self.canonical/"local-data/companion"))
+            for key in ("tmp","data","cache","config","home","dotnet_home","nuget"):
+                self.assertTrue(Path(call[key]).is_relative_to(self.canonical/"local-data/companion"))
+            self.assertTrue(all(call[key] is None for key in ("display","wayland","bus")))
+
+    def test_build_does_not_require_export_templates(self) -> None:
+        shared = host.read_json(self.lock)
+        shared["archives"] = [entry for entry in shared["archives"]
+                              if entry["id"] != self.pins["templates"]["archiveId"]]
+        self.lock.write_text(json.dumps(shared), encoding="utf-8")
+        self.assertEqual(0, self.invoke("build"))
+        self.assertEqual(2, self.invoke("export", "--platform", "linux"))
+
+    def test_dotnet_lookup_uses_the_child_environment_path(self) -> None:
+        output, env = host.allocate_output(self.canonical / "local-data/companion", "build")
+        env["PATH"] = str(self.dotnet.parent)
+        with mock.patch.dict(os.environ, {"PATH": str(self.root / "missing")}):
+            self.assertEqual(str(self.dotnet), host.dotnet_sdk(self.pins, self.project, env, output))
+        for value in ("", str(self.root / "missing")):
+            env["PATH"] = value
+            with self.assertRaisesRegex(RuntimeError, "pinned .NET SDK"):
+                host.dotnet_sdk(self.pins, self.project, env, output)
 
     def test_engine_bytes_pin_refuses_before_build(self)->None:
         self.engine.write_text(self.engine.read_text()+"\n# different bytes\n")
@@ -299,15 +333,90 @@ class CompanionLauncherTests(unittest.TestCase):
             source=(Path(__file__).resolve().parents[1]/name).read_text(encoding="utf-8")
             self.assertNotIn("game_pipeline_shared",source,name);self.assertNotIn("~/Projects",source,name);self.assertNotIn("Projects/game-dev",source,name)
 
-    def test_a_run_with_no_lock_stops_before_anything_is_made_and_names_both_ways_to_give_it(self)->None:
-        stderr=io.StringIO()
-        with mock.patch.dict(os.environ):
-            os.environ.pop(host.SHARED_LOCK_ENV,None)
-            with contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(stderr),self.assertRaises(SystemExit) as stopped:
-                host.companion_main(["check","--engine",str(self.engine)])
-        self.assertEqual(2,stopped.exception.code)
-        self.assertIn("is not named: pass --shared-lock FILE or set "+host.SHARED_LOCK_ENV,stderr.getvalue(),"the message names both ways, not only the usage line")
-        self.assertEqual([],self.calls_read());self.assertFalse((self.canonical/"local-data/companion").exists(),"no output folder was made")
+    def test_a_run_with_no_shared_lock_uses_the_verified_public_install(self) -> None:
+        with self.standalone() as verifier:
+            self.assertEqual(0, self.invoke_standalone("check"))
+        verifier.assert_called_once_with(self.canonical / "local-data/toolchains/companion", self.pins, [])
+        calls = self.calls_read()
+        self.assertTrue(any("--import" in call["args"] for call in calls))
+        for call in calls:
+            self.assertEqual(str(self.dotnet.parent), call["path"].split(os.pathsep)[0])
+            self.assertEqual(str(self.dotnet.parent), call["dotnet_root"])
+
+    def test_an_unverified_public_install_never_falls_back_to_path_tools(self) -> None:
+        stderr = io.StringIO()
+        with self.standalone() as verifier:
+            verifier.side_effect = RuntimeError("Pinned public setup is missing or changed")
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+                self.assertEqual(2, host.companion_main(["check", "--engine", str(self.engine)]))
+        self.assertIn("tools/companion_toolchain.py setup --root", stderr.getvalue())
+        self.assertEqual([], self.calls_read())
+        self.assertFalse((self.canonical / "local-data/companion").exists())
+
+    def test_explicit_public_root_overrides_the_shared_lock_environment(self) -> None:
+        root = self.root / "public-install"
+        with self.standalone() as verifier, mock.patch.dict(os.environ, {host.SHARED_LOCK_ENV: str(self.lock)}), \
+                mock.patch.object(host, "verify_toolchain", side_effect=AssertionError("shared route selected")):
+            self.assertEqual(0, self.invoke_standalone("build", "--toolchain-root", str(root)))
+        verifier.assert_called_once_with(root, self.pins, [])
+
+    def test_public_root_resolves_against_the_callers_home(self) -> None:
+        home = self.root / "caller-home"
+        with self.standalone() as verifier, mock.patch.dict(os.environ, {"HOME": str(home)}):
+            self.assertEqual(0, self.invoke_standalone("check", "--toolchain-root", "~/public-toolchain"))
+        verifier.assert_called_once_with(home / "public-toolchain", self.pins, [])
+
+    def test_invalid_shared_selection_does_not_fall_back_to_public_setup(self) -> None:
+        with self.standalone() as verifier:
+            self.assertEqual(2, self.invoke_standalone("check", "--shared-lock", str(self.root / "missing-lock")))
+        verifier.assert_not_called()
+        self.assertEqual([], self.calls_read())
+
+    def test_standalone_run_keeps_interactive_home_and_windowed_launch(self) -> None:
+        home = self.root / "caller-home"
+        with self.standalone(), mock.patch.dict(os.environ, {"HOME": str(home)}):
+            self.assertEqual(0, self.invoke_standalone("run", "--timeout", "10"))
+        launch = self.calls_read()[-1]
+        self.assertNotIn("--headless", launch["args"])
+        self.assertEqual(str(home), launch["home"])
+
+    def test_explicit_public_and_shared_install_selections_are_exclusive(self) -> None:
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as stopped:
+            host.companion_main(["check", "--shared-lock", str(self.lock), "--toolchain-root", str(self.root)])
+        self.assertEqual(2, stopped.exception.code)
+        self.assertEqual([], self.calls_read())
+
+    def test_standalone_engine_override_cannot_select_another_install(self) -> None:
+        other = self.root / "other-engine"
+        other.write_bytes(self.engine.read_bytes())
+        other.chmod(0o700)
+        with self.standalone():
+            self.assertEqual(2, self.invoke_standalone("build", "--engine", str(other)))
+        self.assertEqual([], self.calls_read())
+
+    def test_standalone_engine_version_is_checked_before_build(self) -> None:
+        with self.standalone(), mock.patch.dict(os.environ, {"FAKE_VERSION": "other-version"}):
+            self.assertEqual(2, self.invoke_standalone("build"))
+        self.assertEqual([], self.calls_read())
+
+    def test_standalone_build_uses_its_sdk_when_the_parent_path_names_another(self) -> None:
+        other = self.root / "other-bin"
+        other.mkdir()
+        (other / "dotnet").write_text("#!/bin/sh\nexit 99\n", encoding="utf-8")
+        (other / "dotnet").chmod(0o700)
+        with self.standalone(), mock.patch.dict(os.environ, {"PATH": str(other)}):
+            self.assertEqual(0, self.invoke_standalone("build"))
+
+    def test_standalone_export_verifies_only_the_selected_templates(self) -> None:
+        with self.standalone(templates=self.templates) as verifier:
+            self.assertEqual(0, self.invoke_standalone("export", "--platform", "linux"))
+        verifier.assert_called_once_with(self.canonical / "local-data/toolchains/companion", self.pins, ["linux"])
+        self.assertEqual(1, sum("--export-release" in call["args"] for call in self.calls_read()))
+
+    def test_standalone_export_refuses_missing_templates_before_build(self) -> None:
+        with self.standalone():
+            self.assertEqual(2, self.invoke_standalone("export", "--platform", "linux"))
+        self.assertEqual([], self.calls_read())
 
     def test_the_environment_variable_stands_in_for_the_argument(self)->None:
         with mock.patch.dict(os.environ,{host.SHARED_LOCK_ENV:str(self.lock)}),contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):
@@ -566,6 +675,27 @@ class CompanionOutputOwnershipTests(unittest.TestCase):
             self.assertTrue(Path(env[name]).is_relative_to(output))
         self.assertTrue(all(name not in env for name in inherited))
         self.assertTrue(host.output_in_use(output))
+
+    def test_noninteractive_modes_isolate_home_runtime_and_package_caches(self) -> None:
+        inherited = {key: str(self.root / key.lower()) for key in (
+            "HOME", "XDG_RUNTIME_DIR", "NUGET_PACKAGES", "NUGET_HTTP_CACHE_PATH", "NUGET_PLUGINS_CACHE_PATH")}
+        inherited.update(DISPLAY="authored-display", WAYLAND_DISPLAY="authored-wayland", DBUS_SESSION_BUS_ADDRESS="authored-bus")
+        with mock.patch.dict(os.environ, inherited):
+            for mode in ("check", "build", "test", "export", "capture", "audit"):
+                with self.subTest(mode=mode):
+                    output, env = host.allocate_output(self.root / "output", mode)
+                    for key in ("HOME", "XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_STATE_HOME",
+                                "DOTNET_CLI_HOME", "NUGET_PACKAGES", "NUGET_HTTP_CACHE_PATH", "NUGET_PLUGINS_CACHE_PATH"):
+                        self.assertTrue(Path(env[key]).is_relative_to(output), key)
+                    if mode != "capture":
+                        self.assertTrue(Path(env["XDG_RUNTIME_DIR"]).is_relative_to(output))
+                        self.assertEqual(0o700, Path(env["XDG_RUNTIME_DIR"]).stat().st_mode & 0o777)
+                        self.assertTrue(all(key not in env for key in ("DISPLAY", "WAYLAND_DISPLAY", "DBUS_SESSION_BUS_ADDRESS")))
+            output, env = host.allocate_output(self.root / "output", "run")
+        self.assertEqual(inherited["HOME"], env["HOME"])
+        self.assertEqual(inherited["XDG_RUNTIME_DIR"], env["XDG_RUNTIME_DIR"])
+        self.assertEqual(inherited["DISPLAY"], env["DISPLAY"])
+        self.assertTrue(Path(env["NUGET_PACKAGES"]).is_relative_to(output))
 
 
 class ProjectIconTests(unittest.TestCase):

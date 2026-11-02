@@ -11,6 +11,7 @@ import json
 import math
 import os
 import re
+import shlex
 import shutil
 import signal
 import stat
@@ -138,22 +139,27 @@ def allocate_output(owner: Path, mode: str) -> tuple[Path, dict[str, str]]:
         os.close(descriptor)
     directories = {
         "TMPDIR": "scratch", "XDG_DATA_HOME": "profile/data", "XDG_CONFIG_HOME": "profile/config",
-        "XDG_CACHE_HOME": "profile/cache", "DOTNET_CLI_HOME": "profile/dotnet",
+        "XDG_CACHE_HOME": "profile/cache", "XDG_STATE_HOME": "profile/state", "DOTNET_CLI_HOME": "profile/dotnet",
+        "NUGET_PACKAGES": "profile/nuget/packages", "NUGET_HTTP_CACHE_PATH": "profile/nuget/http-cache",
+        "NUGET_PLUGINS_CACHE_PATH": "profile/nuget/plugins-cache",
     }
+    if mode != "run":
+        directories["HOME"] = "profile/home"
+    if mode not in ("run", "capture"):
+        directories["XDG_RUNTIME_DIR"] = "profile/runtime"
     env = {key: value for key, value in os.environ.items() if key != "ONSLAUGHT_FILE_BRIDGE"}
     for key, relative in directories.items():
         path = output / relative
-        path.mkdir(parents=True, exist_ok=True)
+        path.mkdir(parents=True, exist_ok=True, mode=0o700)
         env[key] = str(path)
     env.update(TMP=env["TMPDIR"], TEMP=env["TMPDIR"], DOTNET_CLI_TELEMETRY_OPTOUT="1",
                DOTNET_NOLOGO="1", DOTNET_SKIP_FIRST_TIME_EXPERIENCE="1")
     if mode in ("test", "capture"):
         # Tests and captures must not discover real CE profiles through HOME or inherited overrides.
-        home = output / "profile/home"
-        home.mkdir(parents=True, exist_ok=True)
-        env["HOME"] = str(home)
-        env["NUGET_PACKAGES"] = os.environ.get("NUGET_PACKAGES", str(Path.home() / ".nuget/packages"))
         for key in ("BEA_USER_DIR", "BEA_GAME_DIR", "BEA_UPDATE_FEED"):
+            env.pop(key, None)
+    if mode not in ("run", "capture"):
+        for key in ("DISPLAY", "WAYLAND_DISPLAY", "DBUS_SESSION_BUS_ADDRESS"):
             env.pop(key, None)
     (output / "logs").mkdir()
     return output, env
@@ -189,14 +195,14 @@ def run_logged(command: list[str], *, cwd: Path, env: dict[str, str], timeout: f
 
 
 def verify_toolchain(pins: dict[str, Any], shared_lock: Path, requested_engine: str | None,
-                     env: dict[str, str], output: Path, platforms: list[str]) -> tuple[Path, Path]:
+                     env: dict[str, str], output: Path, platforms: list[str]) -> tuple[Path, Path | None]:
     if pins.get("schemaVersion") != 1:
         raise ValueError("Unsupported companion toolchain pin schema")
     shared = read_json(shared_lock)
     data_root = Path(shared["paths"]["dataRoot"].replace("${HOME}", str(Path.home()))).expanduser()
     archives = {entry["id"]: entry for entry in shared["archives"]}
     installs: dict[str, Path] = {}
-    for name in ("engine", "templates"):
+    for name in (("engine", "templates") if platforms else ("engine",)):
         pin = pins[name]
         actual = archives.get(pin["archiveId"], {})
         for key in ("version", "file", "installDirectory"):
@@ -233,14 +239,15 @@ def verify_toolchain(pins: dict[str, Any], shared_lock: Path, requested_engine: 
                          log=output / "logs/engine-version.log").stdout.strip()
     if version != pins["engineVersion"]:
         raise RuntimeError(f"Expected Godot {pins['engineVersion']}; found {version!r}")
-    templates = installs["templates"]
-    selected = ["version.txt", *(pins["templates"]["releaseFiles"][name] for name in platforms)]
-    for filename in selected:
-        path = templates / filename
-        if path.is_symlink() or not path.is_file() or sha256(path) != pins["templates"]["fileSha256"][filename]:
-            raise RuntimeError(f"Installed export template differs from companion SHA-256 pin: {filename}")
-    if (templates / "version.txt").read_text(encoding="utf-8").strip() != pins["templateVersion"]:
-        raise RuntimeError("Installed export template version differs from companion pin")
+    templates = installs.get("templates")
+    if templates is not None:
+        selected = ["version.txt", *(pins["templates"]["releaseFiles"][name] for name in platforms)]
+        for filename in selected:
+            path = templates / filename
+            if path.is_symlink() or not path.is_file() or sha256(path) != pins["templates"]["fileSha256"][filename]:
+                raise RuntimeError(f"Installed export template differs from companion SHA-256 pin: {filename}")
+        if (templates / "version.txt").read_text(encoding="utf-8").strip() != pins["templateVersion"]:
+            raise RuntimeError("Installed export template version differs from companion pin")
     sdk = next((entry for entry in shared["managedTools"] if entry["id"] == pins["dotnet"]["sdkTool"]), {})
     if sdk.get("exactVersion") != pins["dotnet"]["sdkVersion"]:
         raise RuntimeError("Shared companion build SDK differs from companion pin")
@@ -293,7 +300,8 @@ def stage_project(output: Path) -> Path:
 
 
 def dotnet_sdk(pins: dict[str, Any], project: Path, env: dict[str, str], output: Path) -> str:
-    dotnet = shutil.which("dotnet")
+    search_path = env.get("PATH")
+    dotnet = shutil.which("dotnet", path=search_path) if search_path else None
     if dotnet is None:
         raise RuntimeError("Building the integrated safety boundary requires the pinned .NET SDK")
     version = run_logged([dotnet, "--version"], cwd=project, env=env, timeout=30,
@@ -400,7 +408,7 @@ def prepare_package_licenses(engine: Path, project: Path, env: dict[str, str], o
     lock = read_json(project / "packages.lock.json")
     crypto = lock["dependencies"]["net10.0"].get("BouncyCastle.Cryptography")
     if crypto:
-        cache = Path(env.get("NUGET_PACKAGES", str(Path.home() / ".nuget/packages")))
+        cache = Path(env["NUGET_PACKAGES"])
         license_path = cache / "bouncycastle.cryptography" / crypto["resolved"] / "LICENSE.md"
         if not license_path.is_file():
             raise RuntimeError("The pinned BouncyCastle package license is missing")
@@ -555,9 +563,11 @@ def capture_screens(project: Path, fixture: Path, offscreen_tool: str, sizes: st
 def companion_main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=("check", "build", "test", "run", "export", "capture", "audit"))
-    parser.add_argument("--engine", help="Godot .NET executable; defaults to the pinned install the shared lock names")
+    parser.add_argument("--engine", help="Godot .NET executable; must match the selected verified install")
     parser.add_argument("--shared-lock", type=Path,
                         help=f"the shared toolchain's lock file (its toolchain.linux.lock.json); defaults to the file {SHARED_LOCK_ENV} names")
+    parser.add_argument("--toolchain-root", type=Path,
+                        help="verified public setup directory; defaults to canonical local-data/toolchains/companion")
     parser.add_argument("--platform", choices=("linux", "windows", "both"), default="both", help="export target")
     parser.add_argument("--fixture", type=Path, default=FIXTURE, help="read-only input copied into this test invocation")
     parser.add_argument("--script", default="Tests/CompanionTestRunner.cs", help="project C# test entry (a SceneTree)")
@@ -576,10 +586,9 @@ def companion_main(argv: list[str] | None = None) -> int:
         parser.error("--timeout must be finite and positive")
     if args.engine_arg and args.mode != "run":
         parser.error("--engine-arg is available only for run")
-    shared_lock = shared_lock_file(args.shared_lock)
-    if shared_lock is None:
-        parser.error(f"the shared toolchain's lock file is not named: pass --shared-lock FILE or set {SHARED_LOCK_ENV} "
-                     "(on the maintainer's machine the ignored local-data/rebuild-env.sh sets it)")
+    if args.shared_lock is not None and args.toolchain_root is not None:
+        parser.error("--shared-lock and --toolchain-root select different toolchains; choose one")
+    shared_lock = None if args.toolchain_root is not None else shared_lock_file(args.shared_lock)
     interrupted = signal.SIGINT
 
     def interrupt(signum: int, _frame: object) -> None:
@@ -589,11 +598,40 @@ def companion_main(argv: list[str] | None = None) -> int:
 
     previous = signal.signal(signal.SIGTERM, interrupt)
     try:
-        output, env = allocate_output(worktree_output_owner(), args.mode)
-        print(f"Companion output: {output}", flush=True)
         pins = read_json(COMPANION / "toolchain.json")
         platforms = (["linux", "windows"] if args.platform == "both" else [args.platform]) if args.mode == "export" else []
-        engine, templates = verify_toolchain(pins, shared_lock, args.engine, env, output, platforms)
+        standalone = None
+        if shared_lock is None:
+            # Resolve the installation against the caller's HOME, before child profiles are isolated.
+            toolchain_root = (args.toolchain_root.expanduser().absolute() if args.toolchain_root is not None
+                              else canonical_root() / "local-data/toolchains/companion")
+            try:
+                from companion_toolchain import verified_install
+                standalone = verified_install(toolchain_root, pins, platforms)
+            except (ImportError, OSError, RuntimeError, ValueError, KeyError) as error:
+                setup = ["python", "tools/companion_toolchain.py", "setup", "--root", str(toolchain_root)]
+                if platforms:
+                    setup.append("--with-templates")
+                raise RuntimeError(f"Public toolchain verification failed: {error}. Run {shlex.join(setup)}") from error
+        output, env = allocate_output(worktree_output_owner(), args.mode)
+        print(f"Companion output: {output}", flush=True)
+        if shared_lock is not None:
+            engine, templates = verify_toolchain(pins, shared_lock, args.engine, env, output, platforms)
+        else:
+            if standalone is None:
+                raise RuntimeError("The public toolchain verifier returned no installation")
+            engine, templates, dotnet = standalone
+            if args.engine is not None and Path(args.engine).expanduser().resolve(strict=True) != engine:
+                raise RuntimeError(f"Expected standalone Godot .NET at {engine}; found {args.engine}")
+            env.update(PATH=os.pathsep.join(path for path in (str(dotnet.parent), env.get("PATH", "")) if path),
+                       DOTNET_ROOT=str(dotnet.parent), DOTNET_ROOT_X64=str(dotnet.parent),
+                       DOTNET_HOST_PATH=str(dotnet), DOTNET_MULTILEVEL_LOOKUP="0")
+            version = run_logged([str(engine), "--version"], cwd=COMPANION, env=env, timeout=30,
+                                 log=output / "logs/engine-version.log").stdout.strip()
+            if version != pins["engineVersion"]:
+                raise RuntimeError(f"Expected Godot {pins['engineVersion']}; found {version!r}")
+        if platforms and templates is None:
+            raise RuntimeError("The selected toolchain has no verified export templates")
         project = stage_project(output)
         if args.mode == "audit":
             audit_project(engine, project, pins, env, output)
@@ -607,6 +645,8 @@ def companion_main(argv: list[str] | None = None) -> int:
                             output, args.capture_script, args.capture_arg, beside=args.beside_gpu_jobs)
             return 0
         if args.mode == "export":
+            if templates is None:
+                raise RuntimeError("The selected toolchain has no verified export templates")
             licenses = prepare_package_licenses(engine, project, env, output)
             prepare_icon(engine, project, env, output)
             for platform in platforms:
@@ -638,7 +678,7 @@ def companion_main(argv: list[str] | None = None) -> int:
     except KeyboardInterrupt:
         print("Companion interrupted; owned processes stopped.", file=sys.stderr)
         return 128 + interrupted
-    except (OSError, RuntimeError, ValueError, KeyError) as error:
+    except (ImportError, OSError, RuntimeError, ValueError, KeyError) as error:
         print(f"Companion failed: {error}", file=sys.stderr)
         return 2
     finally:
