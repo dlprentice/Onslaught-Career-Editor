@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-11-02 (public prerequisites, authored editor/catalogue checks and retained support-code scope; dated evidence keeps its own date)
+Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -13,9 +13,10 @@ Documentation and safety gates use the [public prerequisites](README.MD#build-an
 pinned source-reference submodules for full scans; they need no retail installation, private lab or Godot.
 Authored Python suites have [separate package requirements](tools/README.md#python-prerequisites).
 
-Linux is the active development and native Godot host. Companion build, runtime test, capture, run and export
-commands currently require the maintainer's unpublished shared installer; the
-[Companion build guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export) explains the setup gap.
+Linux is the active development and native Godot host. Companion build, runtime test, run and export
+commands use the public pinned toolchain setup in the
+[Companion build guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export). No private installer is required.
+Automated captures additionally require an optional machine-specific offscreen wrapper; it is not part of public setup.
 `npm test` runs the companion's
 C# contract suite (career codec, media inventory, protected adapter, publication races
 and the code-built interface) and its launcher tests without opening a window. `npm run build` and
@@ -26,7 +27,7 @@ support-code checks here do not establish rebuild parity. Source and headless te
 alone do not establish native input, audio, focus or full tutorial behavior.
 
 Dated entries below are history. Those that name the Ghidra campaign, `developer_state.json` or tools now in the
-private RE archive (`dlprentice/onslaught-re-archive`) describe checks that no longer run here. Paths beginning
+private historical maintainer archive describe checks that no longer run here. Paths beginning
 `.worktrees/godot-editor-48-20260919/local-data/` now live under
 `local-data/test-runs/retired-worktrees-20261015/godot-editor-48-20260919-local-data/` in the canonical checkout.
 Commit ids cited below predate the 2026-10 history flatten; they resolve in the private RE archive's bundle and
@@ -54,6 +55,24 @@ companion's tests); dated entries below that name them are history.
 | Catalogue or editor Python reference | The affected authored suite, such as `python tools/content_catalog_tests.py`, `python tools/world_resources_encode_tests.py`, `python tools/level_editor_vectors_tests.py` or `python tools/msl_compile_tests.py`; check changed generated C# vectors/tables with the owning generator's `--check`. These need no retail install; [Python package requirements](tools/README.md#python-prerequisites) and schema skips still apply. Retail catalogue, world and compiler comparisons are separate [tools](tools/README.md#editor-references-and-generators); C# changes also owe the Companion runtime gate |
 | Tools | The affected `tools/<name>_tests.py`; `npm run test:tools` runs every registered suite (`worldheaders_decode --self-test` needs the retail `worldheaders.dat`). Its self-test fails for any `*_tests.py` that is neither registered nor excluded with a reason in `tools/run_tool_tests.py`, so a new test file cannot fall outside it. It covers, besides the earlier ones, `dds_census`, `mission_script_inspect`, `worldheaders_decode`, the skinning and matrix contracts, `battle_engine_config_decode`, `gltf_pose_check`, `goodie_resource_walk`, `xap_bank_walk`, `safe_generated_output` and the extractor source audit. A suite that cannot run (a Windows-only one on another host, or the audit when the `AYAResourceExtractor` or `Onslaught` submodule is not initialised: `git submodule update --init`) is a named SKIP in the summary, never a pass. A suite that runs is reported as passed even when some of its tests skipped themselves (tests that need the retail data or a specimen skip one by one): on 2026-10-29 the skipped tests numbered 27 without the retail environment variables and 17 with the retail view and the pinned asset index, so read each suite's own skip lines before citing the summary as evidence for a retail claim. The companion, Godot host and rebuild launcher suites run under their own npm scripts. |
 | Game documentation claim | New findings belong in [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation). Cite the decompilation's function, capture, byte comparison or source line; never paste decompiler output. The local `reverse-engineering/` notes are frozen references |
+
+## Public Companion setup — November 2
+
+An anonymous HTTPS clone of public source `d9e300cbf4309eacd83aa19c0677a9e302b91054` installed the pinned official
+Godot .NET and .NET SDK archives through `tools/companion_toolchain.py setup`. No private installer, shared lock,
+preexisting NuGet cache, game installation or retained lab was supplied. The test used a new HOME, local temporary
+and cache directories, no display or session bus, and the SDK selected by the public verifier.
+
+`companion_godot.py test` restored and built the application, imported it headlessly, and completed the C# contract
+suite with zero failures. The setup's authored tests and runner tests passed. The complete installed tool payload
+still matched the official archives after execution; the tracked source tree stayed unchanged. These commands are
+the runtime and tooling stages of `npm test`. The test result is Linux headless acceptance of the public development
+route, not native Windows, visual, controller or installed-game acceptance. Optional export templates and the
+machine-specific offscreen capture wrapper were not exercised in this fresh-clone check.
+
+The public setup code and pinned inputs are committed; detailed run outputs are retained as private maintainer
+evidence. New contributors reproduce the commands in the [Companion guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export),
+then report their own platform and results in a PR. Existing shared-lock installs remain an optional separate route.
 
 ## Companion native Windows development UI — October 25
 

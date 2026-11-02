@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-11-02 (current editor and catalogue owners, public setup boundaries and retained rebuild helpers)
+Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository: the companion, tools, lore and frozen references, with routes to the live game projects.
 
@@ -15,7 +15,7 @@ for the live rebuild's evidence and licence boundary. Local [`rebuild/PROVENANCE
 describes the frozen copy. The
 decompilation's public export is [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp); the native port's source and downloads are
 published separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce), never from this repository. The Ghidra checkpoint and campaign machinery are in
-the private `onslaught-re-archive`. Do not embed volatile counts here.
+the private historical maintainer archive. Do not embed volatile counts here.
 
 ## Dependency direction
 

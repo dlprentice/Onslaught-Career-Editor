@@ -2,8 +2,7 @@
   "schemaVersion": 1,
   "engineVersion": "4.8.beta1.mono.official.4d10419ca",
   "templateVersion": "4.8.beta1.mono",
-  "source": "toolchain.linux.lock.json of the maintainer's shared toolchain",
-  "sourceRevision": "80e547e2c3ca25f0c397808596892a4ba2ee72f5",
+  "source": "Official Godot and Microsoft downloads; tools/companion_toolchain.json supplies public URLs, archive sizes and SDK verification pins",
   "engine": {
     "archiveId": "godotDev48Mono",
     "version": "4.8-beta1",

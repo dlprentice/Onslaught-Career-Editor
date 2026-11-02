@@ -20,8 +20,9 @@
     "build:companion-godot": "python ./tools/companion_godot.py build",
     "run:companion-godot": "python ./tools/companion_godot.py run",
     "test:companion-godot": "python ./tools/companion_godot.py test",
-    "test:companion-tools": "python ./tools/companion_godot_tests.py",
+    "test:companion-tools": "python ./tools/companion_toolchain_tests.py && python ./tools/companion_godot_tests.py",
     "export:companion-godot": "python ./tools/companion_godot.py export",
-    "capture:companion-godot": "python ./tools/companion_godot.py capture"
+    "capture:companion-godot": "python ./tools/companion_godot.py capture",
+    "setup:companion": "python ./tools/companion_toolchain.py setup"
   }
 }

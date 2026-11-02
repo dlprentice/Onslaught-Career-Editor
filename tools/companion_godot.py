@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import base64
-import fcntl
 import hashlib
 import json
 import math
@@ -20,6 +19,11 @@ import sys
 import tempfile
 from pathlib import Path
 from typing import Any
+
+try:
+    import fcntl
+except ImportError:  # Report the Linux/WSL2 requirement before doing any work.
+    fcntl = None
 
 from godot_host import print_process_output, run_process
 
@@ -580,8 +584,8 @@ def companion_main(argv: list[str] | None = None) -> int:
     parser.add_argument("--beside-gpu-jobs", action="store_true",
                         help="capture on its own hidden output, queued on the Intel iGPU's lock rather than the NVIDIA one")
     args = parser.parse_args(argv)
-    if not sys.platform.startswith("linux"):
-        parser.error("this development runner requires Linux; exported Windows execution requires Windows acceptance")
+    if not sys.platform.startswith("linux") or fcntl is None:
+        parser.error("this development runner requires Linux; on Windows use WSL2 (see README). Exported Windows execution requires Windows acceptance")
     if args.timeout is not None and (not math.isfinite(args.timeout) or args.timeout <= 0):
         parser.error("--timeout must be finite and positive")
     if args.engine_arg and args.mode != "run":

@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-11-02 (public contribution prerequisites, Companion setup limits and current source routes)
+Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
 Summary: what this project is, where each part lives, which checks a public clone can run, and what Companion builds require.
 
 Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
@@ -63,8 +63,8 @@ Its source and downloads are at [Onslaught CE](https://github.com/dlprentice/ons
 
 ## Using the companion
 
-The companion has no published release yet. Its source-build commands currently require the maintainer's shared
-toolchain installer, which is not published with this repository; see [Build and run](#build-and-run).
+The companion has no published release yet. You can build and test it from this public repository on Linux;
+see [Build and run](#build-and-run).
 It needs your own installation of the game to work on your careers, settings and media. The older Windows-only WinUI toolkit on the
 [Releases](https://github.com/dlprentice/Onslaught-Career-Editor/releases) page (v1.0.11, tag `winui-v1.0.11`) is
 retired and no longer maintained; its source is in the project's private pre-flatten history. Its executable patching
@@ -89,18 +89,33 @@ Retired surfaces (WinUI, the CLI, Electron, the Python GUI, WPF) remain in Git h
 
 ## Build and run
 
-**Companion builds, runtime tests, captures, runs and exports currently require the maintainer's Linux shared
-toolchain installation.** Its installer is not in this repository. Official Godot, template and SDK downloads alone
-do not satisfy the runner's provenance checks, and there is no standalone public setup route yet. The
-[Companion build guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export)
-describes that requirement before its commands.
+Build and test the Companion on Linux x86-64 using the public setup below. No other project checkout, private
+repository, maintainer tool or game installation is required for its authored tests. Windows contributors can use
+WSL2 as described below; exported Windows applications still need separate native Windows validation.
 
-A public clone can still run documentation, safety and selected authored Python checks without a game installation,
-private lab or Godot. For those checks, use:
+### On Windows
+
+The repository's development commands run inside Linux. Use [WSL2](https://learn.microsoft.com/en-us/windows/wsl/install)
+with an x86-64 Ubuntu or Debian installation, then follow the commands below in its Linux terminal. Check
+`wsl --list --verbose` in Windows first. If WSL is absent, the machine owner can install it using `wsl --install`;
+that enables Windows features and can require administrator access and a restart. An automated agent should
+explain those changes and obtain the owner's approval before doing them.
+
+Keep the checkout in the [WSL Linux filesystem](https://learn.microsoft.com/en-us/windows/wsl/filesystems),
+such as `~/src/Onslaught-Career-Editor`, rather than under `/mnt/c`. Install Git, Python and the native .NET libraries
+inside that distribution. The [WSLg prerequisites](https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps)
+apply to opening the Companion with `npm run dev`; headless tests do not need a graphical desktop. A WSL run tests
+the Linux application, not native Windows file or input behavior. This setup was reproduced on native Linux;
+the WSL recipe follows Microsoft's documented route and has not been exercised in the Windows test VM.
+
+### Public setup
+
+Start with:
 
 - Git, including the pinned public source-reference submodules for the full documentation and safety scans
-- Node.js 26.7 and npm 11.19 (the engineering host installs them through mise)
-- Python 3.14 available as `python`; root commands use forward-slash paths
+- Python 3.12 or newer with `venv` for setup/build/runtime checks (the repository's wider Python tools are tested on 3.14)
+- Optionally, Node.js 26.7 and npm 11.19 for the command shortcuts in `package.json`; equivalent Python commands
+  are listed below, so Node is not needed to build or test the application
 
 Some tool checks also require NumPy or Pillow, and catalogue schema checks need `jsonschema` to avoid skips.
 See the [Python prerequisite scopes](tools/README.md#python-prerequisites) before choosing a tooling suite.
@@ -108,27 +123,49 @@ See the [Python prerequisite scopes](tools/README.md#python-prerequisites) befor
 ```bash
 git clone --recurse-submodules https://github.com/dlprentice/Onslaught-Career-Editor.git
 cd Onslaught-Career-Editor
+python3 -m venv local-data/venv
+. local-data/venv/bin/activate
 npm run test:docs
 npm run test:safety
-python tools/content_catalog_tests.py  # authored catalogue inputs; no retail files
+python tools/companion_toolchain.py setup
+npm run build
+npm test
 ```
+
+The setup downloads pinned official Godot .NET and .NET SDK archives into ignored `local-data/`, verifies them
+and installs them there without administrator access or changes to your system tools. The
+[Companion build guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export)
+lists system-library prerequisites, verification and optional export templates. `npm run dev` opens the Companion.
+If you only work on docs or Python tools, skip the Godot/.NET setup and use the relevant checks instead;
+for example, `python tools/content_catalog_tests.py` uses authored catalogue inputs.
 
 For an existing checkout, the full documentation gate needs the pinned source references initialized with
 `git submodule update --init --recursive`; it checks local links into those public sources. This does not require
 retail inputs. A lawfully obtained Battle Engine Aquila installation is needed for tools that read the actual game.
 
-With the required shared installation available, Companion commands use the .NET 10 SDK pinned in
+Companion commands use the .NET 10 SDK pinned in
 [`global.json`](global.json), repeated by [the Companion's pin](companion/OnslaughtToolkit.Godot/global.json),
 and [its toolchain manifest](companion/OnslaughtToolkit.Godot/toolchain.json): Godot 4.8 beta1 .NET,
-matching templates and .NET SDK 10.0.402. `npm run build` builds it, `npm test` runs its headless contract and
-launcher checks, and `npm run dev` opens its window.
+matching templates when exporting, and .NET SDK 10.0.402. Existing explicitly selected shared installations
+remain supported; they are optional. Follow [CONTRIBUTING.md](CONTRIBUTING.md) to establish the baseline,
+implement a feature and submit a PR from your fork.
+
+Activating the virtual environment supplies the `python` command used by npm, including on distributions that
+otherwise provide only `python3`. Without Node/npm, documentation checks are
+`python3 tools/md_link_check.py --check-only` and `python3 tools/doc_header_check.py`; the payload check is
+`python3 tools/public_allowlist_safety_check.py --include-submodules`.
+The equivalent application commands are `python3 tools/companion_godot.py build`,
+`python3 tools/companion_godot.py test` and `python3 tools/companion_godot.py run`. Run both
+`python3 tools/companion_toolchain_tests.py` and `python3 tools/companion_godot_tests.py` for the tooling stage of
+`npm test`. The npm commands are convenience entry points, not a second build system.
 
 Root [`package.json`](package.json) is the command authority; [`VALIDATION.md`](VALIDATION.md) selects the check
 for a change and [`CONTRIBUTING.md`](CONTRIBUTING.md) sets contribution boundaries.
 
 | Task | Command |
 | --- | --- |
-| Companion build, run, test, capture, export (shared installer required) | `npm run build:companion-godot`; `npm run run:companion-godot`; `npm run test:companion-godot`; `npm run capture:companion-godot`; `npm run export:companion-godot -- --platform both` |
+| Companion build, run, test, export | `npm run build:companion-godot`; `npm run run:companion-godot`; `npm run test:companion-godot`; `npm run export:companion-godot -- --platform both` |
+| Optional maintainer capture workflow | `npm run capture:companion-godot` requires the separate wrapper described in the [Companion build guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export) |
 | Tool checks | Affected cases in `python tools/<name>_tests.py`; `npm run test:tools` includes retail-dependent checks, as [the tools guide](tools/README.md#python-prerequisites) explains |
 
 The companion's development runner (`tools/companion_godot.py`) puts scratch, logs and user data under the canonical

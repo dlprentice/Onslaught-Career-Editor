@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-02 (decompilation summary routes to its qualified overview; earlier editor candidates retain their dates)
+Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -895,8 +895,7 @@ Findings are written as prose and specs in [onslaught-preservation](https://gith
 citing functions rather than quoting code; [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) here is a frozen copy.
 
 The Ghidra-era campaign (generations, contract grades, promotion cohorts, the tracked Ghidra checkpoint and
-`developer_state.json`) ended with that work. Its records moved on 2026-10-15 to the private repository
-`dlprentice/onslaught-re-archive`, byte-exact at their old paths; its figures are history, not current capability.
+`developer_state.json`) ended with that work. Its records moved on 2026-10-15 to the private historical maintainer archive, byte-exact at their old paths; its figures are history, not current capability.
 
 ## Evidence boundary
 

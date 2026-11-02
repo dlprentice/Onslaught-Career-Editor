@@ -1,7 +1,7 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-11-02 (public fork workflow, pinned references and Companion setup limits)
+Last updated: 2026-11-02 (public setup and baseline-to-PR workflow)
 Summary: what a focused change looks like here, what must never be added to the
 repository, and which checks a change owes.
 
@@ -26,13 +26,15 @@ to prepare a proposal. The available validation depends on the inputs described 
 
 1. Read [`AGENTS.md`](AGENTS.md), [`README.MD`](README.MD), and only the owning
    README or evidence files for your change.
-2. Confirm the branch, upstream, dirty state, and submodule pins. Initialize
-   missing references only when the authorized work needs them.
-3. Preserve unrelated work and keep `references/Onslaught` pinned unless a
-   separately authorized source-reference update requires otherwise.
-4. Make the smallest coherent change that fixes a current product, contract,
-   evidence, or contributor problem.
-5. Run the smallest check capable of falsifying that change.
+2. Follow [Build and run](README.MD#build-and-run) on your own machine. Record the upstream commit, branch,
+   existing edits and reference pins, then build and run the affected baseline checks before editing.
+3. Preserve unrelated work. Keep recorded reference pins unchanged unless this PR intentionally updates one;
+   explain that update and retain its licence, provenance and relevant checks.
+4. Implement a focused change in its owning source files. Ordinary feature development does not require
+   maintainer pre-approval; discuss large or overlapping changes in a public issue so contributors can coordinate.
+5. Repeat the affected checks, inspect fresh output when appearance or behavior matters, and distinguish new
+   failures from baseline failures. Commit scoped paths, push your branch to your fork, and open the PR with the
+   problem, change, checks and remaining limits.
 
 No game installation is required to test ordinary documentation changes. The full documentation and safety gates
 need the existing pinned public reference submodules, including links into their source. Initialize them once with
@@ -44,12 +46,12 @@ npm run test:docs
 npm run test:safety
 ```
 
-`npm test` runs the Companion's contract and tooling checks without opening a window, but its runtime gate requires
-the maintainer's unpublished shared toolchain installer. Official engine and SDK downloads alone do not satisfy its
-provenance checks. The [Companion build guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export)
-states that current public setup gap. Documentation, safety and selected authored Python checks remain available
-without it. `npm run test:companion-tools` checks the runner using fake tools on Linux; it does not replace the C#
-runtime gate. Maintainers must complete required runtime checks before a Companion change merges.
+After public toolchain setup, `npm test` runs the Companion's C# contract and tooling checks without opening a
+window or requiring a game installation. The [Companion build guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export)
+owns the setup and commands. Documentation and selected authored Python checks need no Godot installation.
+`npm run test:companion-tools` checks the setup and runner with authored inputs; it does not replace the C# gate.
+Checks against your installed game require your own licensed copy. If recorded references or a platform are
+unavailable, name the missing checks in the PR; maintainers complete required acceptance before integration.
 
 `npm run dev` launches the Companion when that toolchain is configured. This repository provisions no Windows host;
 Linux checks do not establish Windows behaviour. Native workflow checks are separate from build, static or headless evidence.

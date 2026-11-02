@@ -10,7 +10,6 @@ from __future__ import annotations
 import argparse
 import base64
 import ctypes
-import fcntl
 import gzip
 import hashlib
 import json
@@ -27,6 +26,11 @@ from typing import Any, BinaryIO
 import urllib.parse
 import urllib.request
 import zipfile
+
+try:
+    import fcntl
+except ImportError:  # Let Windows callers reach the supported-host explanation.
+    fcntl = None
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = Path(__file__).with_suffix(".json")
@@ -62,8 +66,8 @@ def default_root() -> Path:
 
 
 def check_host() -> None:
-    if sys.platform != "linux" or platform.machine().lower() not in ("x86_64", "amd64"):
-        raise ToolchainError("the standalone toolchain supports Linux x86_64 only")
+    if sys.platform != "linux" or platform.machine().lower() not in ("x86_64", "amd64") or fcntl is None:
+        raise ToolchainError("the standalone toolchain requires Linux x86_64; on Windows use WSL2 (see README)")
 
 
 def ordinary_path(path: Path) -> None:
@@ -451,6 +455,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--with-templates", action="store_true", help="include optional Linux/Windows export templates")
     arguments = parser.parse_args(argv)
     try:
+        check_host()
         root = arguments.root or default_root()
         result = (setup(root, with_templates=arguments.with_templates) if arguments.mode == "setup" else
                   verified_install(root, read_json(PINS), ["linux", "windows"] if arguments.with_templates else []))

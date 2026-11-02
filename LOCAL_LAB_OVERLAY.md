@@ -1,9 +1,13 @@
 # Local lab overlay
 
 Status: active — the ignored-directory boundary
-Last updated: 2026-10-29 (the maintainer's paths and storage names removed; earlier: Ghidra and the RE campaign retired as authorities; their tracked records moved to the private RE archive).
+Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
 Summary: which local paths own retail inputs and bulky generated work, and what
 may be promoted out of them into tracked evidence.
+
+This page records the maintainer's retained workspace. Public contributors do not need or receive those inputs;
+[CONTRIBUTING.md](CONTRIBUTING.md) owns public setup. Use your own licensed game files only when the selected task
+needs them, and keep them ignored.
 
 Use ignored local directories for retail inputs and bulky/generated work. They
 are not source and must not be copied wholesale into a release candidate.

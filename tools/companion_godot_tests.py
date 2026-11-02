@@ -6,6 +6,7 @@ from __future__ import annotations
 import base64
 import contextlib
 import hashlib
+import importlib.util
 import io
 import json
 import os
@@ -696,6 +697,21 @@ class CompanionOutputOwnershipTests(unittest.TestCase):
         self.assertEqual(inherited["XDG_RUNTIME_DIR"], env["XDG_RUNTIME_DIR"])
         self.assertEqual(inherited["DISPLAY"], env["DISPLAY"])
         self.assertTrue(Path(env["NUGET_PACKAGES"]).is_relative_to(output))
+
+
+class UnsupportedHostTests(unittest.TestCase):
+    def test_windows_import_reaches_guidance_before_allocating_output(self) -> None:
+        spec = importlib.util.spec_from_file_location("companion_windows_test", Path(host.__file__))
+        module = importlib.util.module_from_spec(spec)
+        output = io.StringIO()
+        with mock.patch.dict(sys.modules, {"fcntl": None}), mock.patch.object(sys, "platform", "win32"):
+            spec.loader.exec_module(module)
+            with mock.patch.object(module, "allocate_output") as allocate, contextlib.redirect_stderr(output):
+                with self.assertRaises(SystemExit) as stopped:
+                    module.companion_main(["build"])
+                self.assertEqual(stopped.exception.code, 2)
+                allocate.assert_not_called()
+        self.assertIn("WSL2", output.getvalue())
 
 
 class ProjectIconTests(unittest.TestCase):

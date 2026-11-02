@@ -1,7 +1,7 @@
 # Retail function and behavior contracts
 
 Status: active — what the contract documents are and how to read their grades
-Last updated: 2026-10-29 (the decompilation's published score stated as it is; earlier: the decompilation cited as onslaught-decomp; the grading campaign ended; the byte-matching decompilation is the authority; campaign records in the private RE archive)
+Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
 Summary: what a retail behaviour contract states, what its recorded grade meant, and where the authority now sits.
 Evidence: SOURCE — the contract documents under `reverse-engineering/contracts/` and the per-function notes under
 `reverse-engineering/binary-analysis/functions/`; grades are those the Ghidra-era campaign recorded.
@@ -11,10 +11,10 @@ Specimen: pristine `BEA.exe.original.backup`, SHA-256
 The contract documents under [`reverse-engineering/contracts/`](reverse-engineering/contracts/) and the
 per-function notes under [`reverse-engineering/binary-analysis/functions/`](reverse-engineering/binary-analysis/functions/_index.md)
 describe what individual retail functions do. They were written during the Ghidra-era campaign, which graded every
-function in machine-verified campaign generations. That campaign ended on 2026-10-15: the byte-matching
-decompilation (5,482 of 5,482 functions in the maintainer's working tree; its public export,
-[onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), reproduces 5,449 of them) is now the authority on what a function does, and the
-campaign's ledgers, verifiers and `developer_state.json` are in the private `dlprentice/onslaught-re-archive`.
+function in machine-verified campaign generations. That campaign ended on 2026-10-15. The reconstructed source in
+[onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) owns current function matching; its published
+record states the coverage, compiled-object concession and exclusions. Matching is distinct from runtime validation. The
+campaign's ledgers, verifiers and `developer_state.json` are in the private historical maintainer archive.
 
 ## What a contract is
 

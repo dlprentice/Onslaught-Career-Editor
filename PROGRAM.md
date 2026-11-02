@@ -1,14 +1,14 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-11-02 (public contributor setup gap recorded; earlier lane measurements retain their dates)
+Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
 [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) and its checks in [VALIDATION.md](VALIDATION.md); CE and the Godot
 rebuild own their own release and parity evidence. The queue that
 ran the Ghidra campaign, the decompilation plan and the rebuild's work items until 2026-10-15 is in Git history;
-the campaign's records are in the private `dlprentice/onslaught-re-archive`.
+the campaign's records are in the private historical maintainer archive.
 
 ## Cross-project progress and priorities
 
@@ -73,13 +73,13 @@ what is proven. Players can choose the original game or CE, manage careers and b
 launcher settings and the steps for updating CE (the companion contacts nothing). The CE launcher checks its own signed
 feed and installs an update only when the player chooses Update.
 
+Public contributor setup is implemented. A fresh anonymous public clone installed verified official tools,
+compiled the Companion and passed its authored runtime gate without maintainer files or game data on 2026-11-02.
+The [setup guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export) and
+[validation record](VALIDATION.md#public-companion-setup--november-2) own the commands and measured scope.
+
 Remaining acceptance and release work:
 
-- Provide a standalone public Companion toolchain setup. The current runner requires an unpublished shared installer,
-  provenance markers and adjacent tooling, so official engine/SDK downloads alone do not make its runtime gate
-  reproducible for contributors. Keep the [build guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export)
-  explicit about this limit. Completion means a fresh public clone can build and run the authored Companion gate
-  using documented public dependencies, without maintainer-only files, while retaining pin and provenance checks.
 - Complete Windows UI acceptance. A [selected native Windows development workflow](VALIDATION.md#companion-native-windows-development-ui--october-25)
   exercised production-page actions and its screenshots were inspected; ordinary release invocation, physical input,
   file dialogs, hardware rendering and broader UI coverage remain open. The [Linux acceptance](VALIDATION.md#companion-with-real-onslaught-ce--october-24)

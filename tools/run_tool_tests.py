@@ -32,6 +32,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 # One entry per registered command. Paths are repository-relative
 # and are resolved against ROOT so the gate behaves the same from any cwd.
 SUITES: tuple[tuple[str, ...], ...] = (
+    ("tools/companion_toolchain_tests.py",),
     ("tools/check_installed_game_claims.py", "--self-test"),
     ("tools/check_installed_game_claims.py", "--check"),
     ("tools/check_registered_screenshots.py", "--self-test"),

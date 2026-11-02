@@ -1,26 +1,27 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-11-02 (public Python prerequisites, catalogue/editor entry points and retained rebuild support)
+Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
 format inspection, capture analysis and focused checks. The Ghidra scripts, cohort specs, campaign/authority tools
-and the Windows TTD/cdb/PowerShell runtime-probe lab moved on 2026-10-15 to the private repository
-`dlprentice/onslaught-re-archive`; the WinUI packaging tools were removed.
+and the Windows TTD/cdb/PowerShell runtime-probe lab moved on 2026-10-15 to the private historical maintainer archive; the WinUI packaging tools were removed.
 
-Root [`package.json`](../package.json) is the command authority. Documentation and safety checks use Python,
-Node/npm and the pinned public source-reference submodules; they need no retail installation or Godot:
+Root [`package.json`](../package.json) is the command authority. Documentation and safety checks use Python and
+the pinned public source-reference submodules, with optional Node/npm shortcuts; they need no retail installation or Godot:
 
 ```bash
 npm run test:docs
 npm run test:safety
 ```
 
-`npm test` runs the companion's contract and tooling checks without opening a window, but its Godot runner requires
-the maintainer's unpublished shared installer. See the [Companion setup boundary](../companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export).
-Current root commands and reusable examples use `python` and
-forward-slash paths on both hosts. Dated receipts and historical evidence may
+`npm test` runs the Companion's contract and tooling checks without opening a window after public toolchain setup.
+See the [Companion build guide](../companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export).
+`companion_toolchain.py` installs and verifies the pinned official development tools locally;
+`companion_godot.py` stages, builds and tests the application using that installation.
+Current root commands and reusable examples use `python` and forward-slash paths. The Companion development
+runner targets Linux, including WSL2; other tools state their own platform limits. Dated receipts and historical evidence may
 retain the literal Windows commands and drive letters that produced them; a
 tool can also have an explicitly documented Windows evidence dependency.
 
@@ -50,7 +51,8 @@ change that needs no retail data. For example, `python tools/content_catalog_tes
 ## Product and release
 
 - `godot_host.py` supplies installed-engine discovery, locked bundled-SDK restore/build and owned-process cleanup;
-  `companion_godot.py` builds and runs the companion through its pinned shared installation.
+  `companion_godot.py` builds and runs the companion through the verified public setup; an explicitly selected
+  shared installation remains an optional maintainer route.
 - `rebuild/` is a frozen reference. Some current format tools import its `cmsh_static_preview.py` parser;
   `test:tools` retains that parser's tests and `materialize_retail_assets_tests.py`. `test:godot-host` also checks
   the retained `first_flight.py` launcher with fake tools. These are support-code checks, not builds or parity

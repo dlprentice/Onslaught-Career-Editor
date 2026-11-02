@@ -5,12 +5,14 @@ from __future__ import annotations
 
 import contextlib
 import hashlib
+import importlib.util
 import io
 import json
 import os
 from pathlib import Path
 import shutil
 import stat
+import sys
 import tarfile
 import tempfile
 import unittest
@@ -306,6 +308,21 @@ class PublicToolchainTests(unittest.TestCase):
             archive.writestr(entry, b"not directory metadata")
         with self.assertRaises(tool.ToolchainError):
             tool.archive_payload(path, {**self.manifest["engine"], "sourceSubdirectory": ""})
+
+
+class UnsupportedHostTests(unittest.TestCase):
+    def test_windows_import_reaches_guidance_before_git_or_setup(self) -> None:
+        spec = importlib.util.spec_from_file_location("toolchain_windows_test", Path(tool.__file__))
+        module = importlib.util.module_from_spec(spec)
+        output = io.StringIO()
+        with mock.patch.dict(sys.modules, {"fcntl": None}), mock.patch.object(sys, "platform", "win32"):
+            spec.loader.exec_module(module)
+            with mock.patch.object(module, "default_root") as root, mock.patch.object(module, "setup") as setup:
+                with contextlib.redirect_stderr(output):
+                    self.assertEqual(module.main(["setup"]), 2)
+                root.assert_not_called()
+                setup.assert_not_called()
+        self.assertIn("WSL2", output.getvalue())
 
 
 if __name__ == "__main__":

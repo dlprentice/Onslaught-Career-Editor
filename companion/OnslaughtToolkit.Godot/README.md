@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-11-02 (public check/setup boundary and editor source routing)
+Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -165,24 +165,46 @@ is a separate Python analysis tool; this application does not load its generated
 
 ## Build, test, capture, run and export
 
-**These runtime commands currently require the maintainer's shared installer, which is not published with this
-repository.** They need the pinned toolchain on Linux: the Godot .NET build and export templates
-that [toolchain.json](toolchain.json) names, installed by the maintainer's shared game-toolchain
-installer (which is not part of this repository), and .NET SDK 10.0.402. The runner takes that
-installation's lock file with `--shared-lock FILE` or from the environment variable `ONSLAUGHT_SHARED_LOCK`
-(the maintainer's ignored `local-data/rebuild-env.sh` sets it) and stops with a message naming both when it has neither.
-The engine defaults to the pinned install; `--engine PATH` must resolve to that install's executable
-and does not bypass its checks. The runner also requires the installer's provenance markers and its
-toolchain script beside the selected lock file. Official Godot, template and SDK downloads plus
-a lock file with the same schema are not sufficient for these commands; this repository does not yet provide a
-standalone setup route for them.
+Use Linux x86-64 with Git and Python 3.12 or newer. The repo-local setup installs the exact Godot .NET and .NET SDK
+versions pinned in [toolchain.json](toolchain.json). The public [download manifest](../../tools/companion_toolchain.json)
+names official URLs, sizes, checksums and licences. No private repository or installer is required.
 
-A public clone can use the [documentation and authored Python checks](../../README.MD#build-and-run) without Godot,
-retail files or a private lab. On Linux, `npm run test:companion-tools` runs this runner's checks with fake tools and
-needs no shared installation; that command is distinct from the Godot runtime suite in `npm test`.
+The host still needs the native libraries required by [.NET on your distribution](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual#dependencies),
+including ICU and OpenSSL, and a working graphics driver for the interactive application. The Companion uses Godot's
+[Compatibility renderer](https://docs.godotengine.org/en/stable/about/system_requirements.html), requiring OpenGL 3.3.
+Headless tests need no display. The setup never runs a system package manager or elevates privileges.
 
-With the required shared installation and its lock configured, build and test in an internal-disk clone;
-the archive checkout receives only light I/O. From the repository checkout or its worktree:
+From a public clone on an internal disk:
+
+```bash
+python tools/companion_toolchain.py setup
+python tools/companion_toolchain.py verify
+```
+
+The default installs below ignored `local-data/toolchains/companion/` in the canonical checkout. Engine and SDK
+downloads total about 318 MiB; allow about 1.2 GiB for the retained archives and installation, plus build outputs.
+The setup reuses matching downloads and refuses changed installations instead of overwriting them. It does not
+modify system tools, PATH or shell startup files. Build commands select the verified local SDK themselves. For a
+separate installation beneath this checkout's `local-data/`, use `setup --root DIR` and pass the same
+`--toolchain-root DIR` to `companion_godot.py`.
+
+Export templates are optional for development. Before exporting either platform, run:
+
+```bash
+python tools/companion_toolchain.py setup --with-templates
+```
+
+That adds approximately 1.1 GiB of downloads plus extracted templates. The whole installation remains private,
+ignored build data; only the setup code and pins belong in Git. Setup contacts the official Godot GitHub releases
+and Microsoft SDK download service; restore contacts nuget.org for pinned packages. No game data or usage data is sent.
+
+A maintainer can still explicitly select an existing shared installation with `--shared-lock FILE` or
+`ONSLAUGHT_SHARED_LOCK`. That optional legacy route retains its provenance checks. `--toolchain-root DIR` explicitly
+selects the public installation even if a shared-lock environment variable is set. Neither route silently falls
+back to a different engine. `--engine PATH`, if provided, must match the selected verified executable.
+
+A game installation is unnecessary for the authored Companion gate. The [documentation and Python checks](../../README.MD#build-and-run)
+also work without Godot. With public setup complete, use the commands in [package.json](../../package.json):
 
 ```bash
 npm run build:companion-godot
@@ -223,7 +245,12 @@ music and voice grouping, every lore article and link, and
 the interface driving its real controls: saving into the game, putting files back,
 catching up after the game closes, and asking before unsaved changes are dropped.
 
-`npm run capture:companion-godot` renders every page and state at 1280×800 and
+The automatic capture route is an optional maintainer workflow, separate from public build/test setup. It requires
+a compatible hidden-output wrapper selected with `--offscreen PATH`; the bootstrap does not install a desktop
+compositor or this machine-specific wrapper. Contributors can inspect the application through `npm run dev` on their
+own desktop. Automated agents must follow their user's rules before opening a window.
+
+With that wrapper available, `npm run capture:companion-godot` renders every page and state at 1280×800 and
 1920×1080 through `godot-offscreen`: first a machine without the game, then a fake install
 built from the fixture. Add `--capture-arg=--steam-root=DIR` to render against a real Steam
 library instead; that library is only read, and nothing is saved into it in that mode. Add
