@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-10-31 (catalogue coverage and parser-status limits clarified)
+Last updated: 2026-11-02 (public Python prerequisites, catalogue/editor entry points and retained rebuild support)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -9,15 +9,16 @@ format inspection, capture analysis and focused checks. The Ghidra scripts, coho
 and the Windows TTD/cdb/PowerShell runtime-probe lab moved on 2026-10-15 to the private repository
 `dlprentice/onslaught-re-archive`; the WinUI packaging tools were removed.
 
-Root [`package.json`](../package.json) is the command authority. On Omarchy,
-start with:
+Root [`package.json`](../package.json) is the command authority. Documentation and safety checks use Python,
+Node/npm and the pinned public source-reference submodules; they need no retail installation or Godot:
 
 ```bash
 npm run test:docs
 npm run test:safety
 ```
 
-`npm test` runs the companion's contract and tooling checks without opening a window.
+`npm test` runs the companion's contract and tooling checks without opening a window, but its Godot runner requires
+the maintainer's unpublished shared installer. See the [Companion setup boundary](../companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export).
 Current root commands and reusable examples use `python` and
 forward-slash paths on both hosts. Dated receipts and historical evidence may
 retain the literal Windows commands and drive letters that produced them; a
@@ -28,12 +29,33 @@ cannot run here (one that needs a Windows host, none registered now, or the extr
 compares with its pin is not initialised) is a named SKIP in the summary, never a pass and never a failure. The runner's
 self-test fails for any `*_tests.py` file that is neither registered nor listed with a reason as run elsewhere or out of scope.
 
+## Python prerequisites
+
+The engineering host uses Python 3.14 as `python`. The modules needed depend on the selected check:
+
+| Scope | Additional Python packages or inputs |
+| --- | --- |
+| Documentation and safety gates | Standard library only; full scans require the pinned public reference submodules initialized, including the documentation links into those sources |
+| Authored catalogue, world/editor and mission-compiler checks | Standard library; catalogue schema assertions additionally need `jsonschema` and report SKIP without it |
+| glTF pose checks and numerical frame/terrain probes | NumPy; probes that read images also need Pillow |
+| Capture comparison, frontend scoring and region-overlap tests | Pillow |
+| Full `npm run test:tools` | NumPy and Pillow, plus the inputs required by its selected retail checks. In particular, `worldheaders_decode.py --self-test` requires retail `worldheaders.dat`; this aggregate is not a game-free contribution gate |
+
+Install NumPy (`numpy`), Pillow (`Pillow`) and, when checking catalogue schemas, `jsonschema` in the Python environment
+used by the command. This repository does not yet pin their versions or provide a Python dependency lock file;
+these dependency names do not establish a tested standalone environment. Prefer the affected authored suite for a
+change that needs no retail data. For example, `python tools/content_catalog_tests.py` uses an authored install;
+`python tools/msl_compile_tests.py` uses authored script sources. Read each suite's SKIP lines when reporting results.
+
 ## Product and release
 
-- `godot_host.py` supplies pinned installed-engine discovery, locked bundled-SDK
-  restore/build and owned-process cleanup for both Godot lanes; `companion_godot.py`
-  builds and runs the companion, and `rebuild/tools/first_flight.py` adds retail
-  preparation and rebuild runtime modes. The shared helper imports no GPL or retail code.
+- `godot_host.py` supplies installed-engine discovery, locked bundled-SDK restore/build and owned-process cleanup;
+  `companion_godot.py` builds and runs the companion through its pinned shared installation.
+- `rebuild/` is a frozen reference. Some current format tools import its `cmsh_static_preview.py` parser;
+  `test:tools` retains that parser's tests and `materialize_retail_assets_tests.py`. `test:godot-host` also checks
+  the retained `first_flight.py` launcher with fake tools. These are support-code checks, not builds or parity
+  acceptance of the frozen rebuild application. Current rebuild setup, runtime commands and gates belong to
+  [onslaught-godot](https://github.com/dlprentice/onslaught-godot).
 Use [`VALIDATION.md`](../VALIDATION.md) to select checks. These tools do not
 publish, sign, or install anything by themselves.
 
@@ -69,6 +91,40 @@ publish, sign, or install anything by themselves.
   opened, so the helper does not guarantee that a destination moved by another process during a run stays outside the
   game folder. Do not point a writer at an output root that another process can rename. The Windows path holds the
   directories with share modes meant to block a rename; no native Windows run has validated it here.
+
+## Content catalogue
+
+[`content_catalog.py`](content_catalog.py) builds a local content inventory from a selected game installation.
+Its [authored tests](content_catalog_tests.py) require no retail files; `jsonschema` enables the schema assertions.
+The generator and separate read-only retail gate need your own lawfully obtained game:
+
+```bash
+python tools/content_catalog_tests.py
+python tools/content_catalog.py --game /path/to/game --out local-data/content-catalog
+python tools/content_catalog_gate.py --game /path/to/game
+```
+
+Optional `--decomp /path/to/onslaught-decomp` adds literal code lookups from a public
+[onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) checkout; no private decompilation or lab is required.
+The generator writes `manifest.json`, `survey.json`, `coverage.json` and `assets.jsonl` below this checkout's
+ignored `local-data/`. They contain retail-derived metadata and stay private. The Companion does not consume this
+catalogue. [The asset schema](content_catalog.schema.json), the detailed format descriptions below and
+[source-file coverage](#catalogue-source-file-coverage) explain the records and their limits.
+
+## Editor references and generators
+
+The Companion's [level and mission editor owners](../PROJECT-INDEX.md#level-and-mission-editor) use these Python references:
+
+- `world_resources_decode.py` and `world_resources_encode.py` for world formats, `world_edit_move.py` for coordinates
+  and moves, `world_mod_stage.py` for separate mod folders, and `heightfield_lookup.py` for terrain lookup.
+- `msl_compile.py` for mission-source compilation, with authored cases in `msl_compile_tests.py`.
+- `level_editor_vectors.py`, `msl_vectors.py` and `script_tables.py` generate the committed C# vectors and tables.
+  Their `--check` mode compares generated content with the tracked file without rewriting it.
+
+These authored checks are separate from retail comparisons: `level_editor_vectors.py gate-table` feeds
+`Development/LevelsGate.cs`, and `msl_gate.py --table` feeds `Development/ScriptsGate.cs`. Those comparisons need
+selected retail inputs and the Companion's shared-toolchain runtime; their detailed commands and limitations are
+documented below and in the development entry headers. Keep retail-derived tables in ignored local output.
 
 ## Assets and formats
 
@@ -443,9 +499,9 @@ publish, sign, or install anything by themselves.
   retail-derived metadata to stdout and opens no report file. If the caller
   redirects or saves the result, the destination and overwrite safety are the
   caller's responsibility; never redirect it into a game or user folder.
-- `rebuild/tools/materialize_retail_assets.py` verifies one supported retail
-  installation and reproduces the exact current rebuild inputs at ignored
-  runtime paths. Existing rebuild build/run/smoke commands invoke it directly.
+- `rebuild/tools/materialize_retail_assets.py` is the frozen rebuild's materialization reference; its retained
+  focused tests still run under `test:tools`. Current rebuild input preparation and build/run commands belong to
+  [onslaught-godot](https://github.com/dlprentice/onslaught-godot).
 - `BeaAssetExportHarness/` is the bounded C# AYA/FBX export bridge.
 - `language_dat_decode.py`, `options_entries_decode.py`,
   `cheat_table_decode.py`, and `cardid_preset_manager.py` are focused format
@@ -503,9 +559,10 @@ The catalogue and its detailed outputs contain game-derived data and stay in ign
 
 - `compare_capture.py` compares one reconstruction frame against one retail
   frame per region. It refuses mismatched sizes rather than resampling.
-- `score_frontend_capture.py` pairs whole capture runs against the retail reference by offset. It is a
-  **gate**: `rebuild/tools/first_flight.py capture` folds its verdict into the
-  capture's `status`, so a frontend regression fails the capture. Its thresholds live in
+- `score_frontend_capture.py` pairs whole capture runs against the retail reference by offset. In the retained
+  `rebuild/tools/first_flight.py` launcher, capture folds its verdict into the capture's `status`, so a frontend
+  regression fails that capture. This describes the frozen route; current capture commands and parity gates belong to
+  [onslaught-godot](https://github.com/dlprentice/onslaught-godot). The retained thresholds live in
   `rebuild/tools/frontend-parity-plan.json` and are regression ceilings, not
   parity claims. The plan stores each measured value plus the single
   `marginPp: 2.0` regression allowance used to derive its ceiling.
@@ -520,8 +577,9 @@ Review is optional and question-driven under
 ## Format and analysis instruments
 
 Each reads only local inputs the user supplies (an installation, a capture, a pinned specimen) and writes, when it
-writes at all, to ignored local paths. Their findings are documented under
-[`reverse-engineering/`](../reverse-engineering/RE-INDEX.md).
+writes at all, to ignored local paths. New game findings belong in
+[onslaught-preservation](https://github.com/dlprentice/onslaught-preservation);
+[`reverse-engineering/`](../reverse-engineering/RE-INDEX.md) retains the frozen reference notes.
 
 - Formats and corpora: `aya_corpus_chunk_inventory.py` (corpus-wide AYA chunk inventory),
   `aya_extractor_source_audit.py` (source/history audit of the pinned AYAResourceExtractor fork),

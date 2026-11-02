@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-11-01 (temporary-play safety design and observed test scope clarified)
+Last updated: 2026-11-02 (public check/setup boundary and editor source routing)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -142,11 +142,12 @@ editor-authored scene, and `npm run build` refuses to stage one.
 | --- | --- |
 | [Careers](Careers/) | The career reader and writer (`CareerSave`), immutable open snapshots (`SaveSession`), the open/publish/compare/install workflow (`CareerWorkspace`), each Goodie's rule and evidence (`GoodieFacts`, `GoodieUnlockRequirementService`) and cheat names (`CheatCodeCatalog`, `CheatSaveNameComposer`) |
 | [Files](Files/) | The protected OS file boundary (`ProtectedSaveFiles` on `SaveLabFileTransaction` and `FileMutationSafety`), its worker thread, and game-folder writes in `GameWrites.cs`: the running-game check (`GameProcess`), backup sets (`Backups`) and the verified write on Linux and elsewhere (`GameInstaller`) |
-| [Game](Game/) | Steam library discovery, the game folder and its files, careers left in the retired Windows toolkit's copied installs (`OldSafeCopies`), the companion's remembered choices and backup folder (`GameFolder`), and the game's own text read from the install (`GameText`, `GameTextCatalog`) |
+| [Game](Game/) | Steam library discovery, the game folder and its files, careers left in the retired Windows toolkit's copied installs (`OldSafeCopies`), the companion's remembered choices and backup folder (`GameFolder`), the game's text (`GameText`, `GameTextCatalog`), CE package discovery (`CeInstallation`) and temporary level play (`CePlay`, `CePlayFolder`) |
 | [Options](Options/) | The settings block's reader and editor (`OptionsFile`), for `defaultoptions.bea` and the copy each career stores, and the physical-key table (`KeyTable`) |
 | [Media](Media/) | The game's music, voice lines and cutscene list (`GameAudio`) |
 | [Assets](Assets/) | The game's models, textures and bank sounds: the `.aya` envelope (`AyaContainer`), the mesh reader (`CmshReader`), DDS decoding (`DdsTexture`), the sound banks (`XapBank`), what each Goodie holds (`GoodieResources`), the install's lists (`AssetLibrary`), glTF export (`GltfExport`) and new-file-only exports (`ExportFiles`) |
 | [Lore](Lore/) | The embedded lore library, its Markdown renderer and the campaign's mission list (`CampaignLoreComposer`) |
+| [Levels](Levels/) | World-body reading/writing and level-archive reading, undoable changes (`EditSession`), the editor's application model (`LevelEditorModel`), terrain lookup and map (`Heightfield`, `MapView`), script/source/name readers and structural checks, and separate CE mod publication (`ModStager`) |
 | [Ui](Ui/) | The Flight-deck theme and icons, the shell, career cards, the save-choice dialog, the game's art read from the install (`GameArt`) and one class per page |
 | [Tests](Tests/) | Every behavioral contract, run headlessly inside Godot |
 | [Missions](Missions/) | The mission script compiler: a source in the game's script language (`.msl`) to the compiled script a level's world file stores (`ScriptCompiler`), held to the Toolkit's reference compiler by authored vectors and a per-script comparison on an installed game, with documented missing-header and stale-source cases. The Level editor's Scripts view uses it to compile a source the player edits |
@@ -155,10 +156,33 @@ editor-authored scene, and `npm run build` refuses to stage one.
 `Tests/` and `Development/` compile only into development builds; release exports
 exclude them from both the assembly and the package.
 
+Start editor changes at [LevelEditorPage](Ui/Pages/LevelEditorPage.cs), which passes actions to
+[LevelEditorModel](Levels/LevelEditorModel.cs). The compiler starts at [ScriptCompiler](Missions/ScriptCompiler.cs);
+the [source map](../../PROJECT-INDEX.md#level-and-mission-editor) connects world edits, script checks, mod publication
+and temporary CE launch to their owners. [Python references and generators](../../tools/README.md#editor-references-and-generators)
+provide authored vectors separately from the optional retail comparisons. The [content catalogue](../../tools/README.md#content-catalogue)
+is a separate Python analysis tool; this application does not load its generated output.
+
 ## Build, test, capture, run and export
 
-Build and test in an internal-disk clone, using `npm test`; the archive checkout receives only
-light I/O. From the repository checkout or its worktree:
+**These runtime commands currently require the maintainer's shared installer, which is not published with this
+repository.** They need the pinned toolchain on Linux: the Godot .NET build and export templates
+that [toolchain.json](toolchain.json) names, installed by the maintainer's shared game-toolchain
+installer (which is not part of this repository), and .NET SDK 10.0.402. The runner takes that
+installation's lock file with `--shared-lock FILE` or from the environment variable `ONSLAUGHT_SHARED_LOCK`
+(the maintainer's ignored `local-data/rebuild-env.sh` sets it) and stops with a message naming both when it has neither.
+The engine defaults to the pinned install; `--engine PATH` must resolve to that install's executable
+and does not bypass its checks. The runner also requires the installer's provenance markers and its
+toolchain script beside the selected lock file. Official Godot, template and SDK downloads plus
+a lock file with the same schema are not sufficient for these commands; this repository does not yet provide a
+standalone setup route for them.
+
+A public clone can use the [documentation and authored Python checks](../../README.MD#build-and-run) without Godot,
+retail files or a private lab. On Linux, `npm run test:companion-tools` runs this runner's checks with fake tools and
+needs no shared installation; that command is distinct from the Godot runtime suite in `npm test`.
+
+With the required shared installation and its lock configured, build and test in an internal-disk clone;
+the archive checkout receives only light I/O. From the repository checkout or its worktree:
 
 ```bash
 npm run build:companion-godot
@@ -169,16 +193,7 @@ npm run export:companion-godot -- --platform both
 python tools/companion_godot.py audit
 ```
 
-These need the pinned toolchain on Linux: the Godot .NET build and export templates
-that [toolchain.json](toolchain.json) names, installed by the maintainer's shared game-toolchain
-installer (which is not part of this repository), and .NET SDK 10.0.402. The runner takes that
-installation's lock file with `--shared-lock FILE` or from the environment variable `ONSLAUGHT_SHARED_LOCK`
-(the maintainer's ignored `local-data/rebuild-env.sh` sets it) and stops with a message naming both when it has neither.
-The engine defaults to the pinned install; `--engine PATH` must resolve to that install's executable
-and does not bypass its checks. The runner also requires the installer's provenance markers and its
-toolchain script beside the selected lock file. Official Godot, template and SDK downloads plus
-a lock file with the same schema are not sufficient for these commands; this repository does not yet provide a
-standalone setup route for them. `audit` restores outside locked mode with
+`audit` restores outside locked mode with
 NuGet's vulnerability audit over direct and transitive packages (it needs nuget.org); the
 build's own restore stays locked and does not audit, so a new advisory never changes a build.
 Each check, build, test, run and audit leaves an output folder; the runner keeps the newest five
@@ -195,8 +210,8 @@ through it. Tests and captures use a private HOME and clear inherited CE user-fo
 
 `npm test` runs `Tests/CompanionTestRunner.cs` against an owned copy of the one tracked
 [real-save fixture](../../tests_shared/fixtures/README.md) and a game-shaped folder built
-from tiny original bytes, then the development runner's own checks (`tools/companion_godot.py`,
-which builds, tests, captures, runs and exports the companion). It checks the career reader and writer
+from tiny authored bytes, then the development runner's own fake-tool checks (`tools/companion_godot_tests.py`).
+The runtime suite checks the career reader and writer
 against the real bytes, Goodie edits, settings edits and the key table, the protected adapter and six Linux
 publication races, Steam discovery, the game's text on a synthetic language table,
 backups, automatic backups and writes into the game on both the Linux and the portable

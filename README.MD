@@ -1,8 +1,8 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-10-31 (the build requirements name the .NET SDK pin of global.json, 10.0.402, which the companion's own global.json repeats; earlier: the build requirements name the pinned toolchain by its file, not by a maintainer path; earlier: the rebuild described in onslaught-godot's own words (compared Present by Present with recorded runs of the native port and of the original game; a proof of concept, not yet playable); earlier: the game documentation's home stated as onslaught-preservation, with `reverse-engineering/` here a frozen copy; earlier: the companion's update guidance described as it is; earlier: decompilation concessions and native-port validation scope clarified)
-Summary: what this project is, where each part lives, how to build the companion, and where each authoritative document is.
+Last updated: 2026-11-02 (public contribution prerequisites, Companion setup limits and current source routes)
+Summary: what this project is, where each part lives, which checks a public clone can run, and what Companion builds require.
 
 Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
 repository holds it and the project's overview.
@@ -27,8 +27,9 @@ repository holds it and the project's overview.
   The [companion's limits](companion/OnslaughtToolkit.Godot/README.md#known-limits) distinguish tested file operations
   from game launch and Windows behavior that still need to be tried.
 - **The Godot rebuild** aims to be 1:1 with retail from startup to exit, with level 100 playable to completion. It
-  is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot), which keeps its measured parity; `rebuild/` here is a frozen copy,
-  not built or tested, and is removed when this repository is split.
+  is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot), which keeps its measured parity.
+  `rebuild/` here is retained as a frozen reference. Its application is not built or gated here; some retained
+  Python helpers still support this repository's format tools and have focused checks.
 
 This repository holds the companion, the lore, our own tools, a frozen copy of the game documentation and a frozen
 copy of the Godot rebuild. It holds no game files, Ghidra database, decompiler output or decomp source.
@@ -62,8 +63,9 @@ Its source and downloads are at [Onslaught CE](https://github.com/dlprentice/ons
 
 ## Using the companion
 
-The companion has no published release yet; build it from source (below). It needs your own installation of the
-game to work on your careers, settings and media. The older Windows-only WinUI toolkit on the
+The companion has no published release yet. Its source-build commands currently require the maintainer's shared
+toolchain installer, which is not published with this repository; see [Build and run](#build-and-run).
+It needs your own installation of the game to work on your careers, settings and media. The older Windows-only WinUI toolkit on the
 [Releases](https://github.com/dlprentice/Onslaught-Career-Editor/releases) page (v1.0.11, tag `winui-v1.0.11`) is
 retired and no longer maintained; its source is in the project's private pre-flatten history. Its executable patching
 and copied-install "safe launch" are not in the current companion and are not coming back: Onslaught CE replaces them:
@@ -75,11 +77,11 @@ on the companion's Home page, where each can be saved as a copy elsewhere.
 
 | Path | Owner |
 | --- | --- |
-| [`companion/OnslaughtToolkit.Godot/`](companion/OnslaughtToolkit.Godot/README.md) | The companion for original-game and CE careers, settings and launch, C# built in code on Godot 4.8 beta1 .NET and .NET 10 |
+| [`companion/OnslaughtToolkit.Godot/`](companion/OnslaughtToolkit.Godot/README.md) | The companion for original-game and CE careers, settings, launch and the level/mission editor, C# built in code on Godot 4.8 beta1 .NET and .NET 10 |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | A frozen copy of the game documentation (formats, mechanics, saves, assets, function notes and contracts) as at commit `fae54b7`. Its home is [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation), where new findings go |
 | [`lore/`](lore/_index.md) | The canonical lore and history library, embedded in the companion |
-| [`tools/`](tools/README.md) | Format decoders, asset exporters, capture analysis and the repository's checks |
-| [`rebuild/`](rebuild/README.md) | A frozen copy of the GPL Godot rebuild, now developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot); not built or tested here |
+| [`tools/`](tools/README.md) | Format decoders, the [local content catalogue](tools/README.md#content-catalogue), asset exporters, capture analysis and the repository's checks |
+| [`rebuild/`](rebuild/README.md) | A frozen GPL Godot rebuild reference, with retained Python helpers used by Toolkit tools. Current rebuild development, builds and parity gates live in [onslaught-godot](https://github.com/dlprentice/onslaught-godot) |
 
 [`PROJECT-INDEX.md`](PROJECT-INDEX.md) maps source ownership and dependencies;
 [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) says what is demonstrated today and what is not.
@@ -87,36 +89,47 @@ Retired surfaces (WinUI, the CLI, Electron, the Python GUI, WPF) remain in Git h
 
 ## Build and run
 
-The engineering host is Omarchy Linux. Requirements:
+**Companion builds, runtime tests, captures, runs and exports currently require the maintainer's Linux shared
+toolchain installation.** Its installer is not in this repository. Official Godot, template and SDK downloads alone
+do not satisfy the runner's provenance checks, and there is no standalone public setup route yet. The
+[Companion build guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export)
+describes that requirement before its commands.
 
-- The .NET 10 SDK pinned in `global.json` (10.0.402, the pin that
-  [companion/OnslaughtToolkit.Godot/global.json](companion/OnslaughtToolkit.Godot/global.json) repeats), and the pinned toolchain that
-  [companion/OnslaughtToolkit.Godot/toolchain.json](companion/OnslaughtToolkit.Godot/toolchain.json) names
-  (Godot 4.8 beta1 .NET with matching templates and .NET SDK 10.0.402)
-- Node.js 26.7 and npm 11.19 from mise
+A public clone can still run documentation, safety and selected authored Python checks without a game installation,
+private lab or Godot. For those checks, use:
+
+- Git, including the pinned public source-reference submodules for the full documentation and safety scans
+- Node.js 26.7 and npm 11.19 (the engineering host installs them through mise)
 - Python 3.14 available as `python`; root commands use forward-slash paths
-- A lawfully obtained Battle Engine Aquila installation for anything that reads the game
+
+Some tool checks also require NumPy or Pillow, and catalogue schema checks need `jsonschema` to avoid skips.
+See the [Python prerequisite scopes](tools/README.md#python-prerequisites) before choosing a tooling suite.
 
 ```bash
 git clone --recurse-submodules https://github.com/dlprentice/Onslaught-Career-Editor.git
 cd Onslaught-Career-Editor
-npm run build      # build the companion
-npm run dev        # run it (opens a window)
-npm test           # the companion's contract and tooling checks, headless
 npm run test:docs
 npm run test:safety
+python tools/content_catalog_tests.py  # authored catalogue inputs; no retail files
 ```
 
-For an existing checkout, initialize the pinned source references once with
-`git submodule update --init --recursive`.
+For an existing checkout, the full documentation gate needs the pinned source references initialized with
+`git submodule update --init --recursive`; it checks local links into those public sources. This does not require
+retail inputs. A lawfully obtained Battle Engine Aquila installation is needed for tools that read the actual game.
+
+With the required shared installation available, Companion commands use the .NET 10 SDK pinned in
+[`global.json`](global.json), repeated by [the Companion's pin](companion/OnslaughtToolkit.Godot/global.json),
+and [its toolchain manifest](companion/OnslaughtToolkit.Godot/toolchain.json): Godot 4.8 beta1 .NET,
+matching templates and .NET SDK 10.0.402. `npm run build` builds it, `npm test` runs its headless contract and
+launcher checks, and `npm run dev` opens its window.
 
 Root [`package.json`](package.json) is the command authority; [`VALIDATION.md`](VALIDATION.md) selects the check
 for a change and [`CONTRIBUTING.md`](CONTRIBUTING.md) sets contribution boundaries.
 
 | Task | Command |
 | --- | --- |
-| Companion build, run, test, capture, export | `npm run build:companion-godot`; `npm run run:companion-godot`; `npm run test:companion-godot`; `npm run capture:companion-godot`; `npm run export:companion-godot -- --platform both` |
-| Tool checks | Affected cases in `python tools/<name>_tests.py`; all of them with `npm run test:tools` |
+| Companion build, run, test, capture, export (shared installer required) | `npm run build:companion-godot`; `npm run run:companion-godot`; `npm run test:companion-godot`; `npm run capture:companion-godot`; `npm run export:companion-godot -- --platform both` |
+| Tool checks | Affected cases in `python tools/<name>_tests.py`; `npm run test:tools` includes retail-dependent checks, as [the tools guide](tools/README.md#python-prerequisites) explains |
 
 The companion's development runner (`tools/companion_godot.py`) puts scratch, logs and user data under the canonical
 checkout's `local-data/companion/`, including from a Git worktree.
