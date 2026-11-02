@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-11-01 (CE-first creation direction, museum and editor outcomes)
+Last updated: 2026-11-02 (lobby discovery, invitations, voice and text chat goals made explicit)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
@@ -25,7 +25,9 @@ archive.
 - **Online play should be approachable.** Start with two independently controlled players across Linux and Windows,
   including versus and co-op. Extend co-op to the ordinary campaign with compatible saves and progression; later aim
   for more players, larger maps and compatible Battle Engine customization. Host/Join, failures and content
-  compatibility need understandable in-game workflows. A direct connection or idle synchronization is not completion.
+  compatibility need understandable in-game workflows. Offer a browser of public lobbies, creation and joining for
+  public and private lobbies, a private invitation path, and in-game voice and text chat. These are planned workflows
+  whose implementation and acceptance remain open. A direct connection or idle synchronization is not completion.
 - **A future real-time 3D commander role** lets a player direct eligible friendly units from a tactical view, including
   an eventual multiplayer mode alongside players piloting Battle Engines. Aim for Linux and Windows and later more than two
   participants. Ordinary campaign play remains available when the mode is off; missions and game events determine

@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-02 (published contributor routes and remaining multiplayer goals reconciled)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
@@ -12,15 +12,16 @@ the campaign's records are in the private historical maintainer archive.
 
 ## Cross-project progress and priorities
 
-This is the single cross-project chart. The candidate and recovery rows were rechecked **2026-11-01**; older
-measurements retain their dates in the linked owners. Verify the owner and current release before relying on a row.
+This is the single cross-project chart. Multiplayer status and the public contributor routes were rechecked
+**2026-11-02**; older measurements retain their dates in the linked owners. Verify the owner and current release
+before relying on a row.
 A development branch is not a released feature. Update the affected row at a
 material milestone rather than keeping a second live dashboard in a handoff. The [goal](GOAL.md#how-progress-is-measured)
 defines progress and what a completion claim requires.
 
 | Area | Current state and remaining outcome | Detailed owner |
 | --- | --- | --- |
-| CE release and player experience | 0.1.13 is the latest public release (published 2026-10-31). It adds Bonus Levels, CE Settings and Help & Info to the Onslaught CE menu page, a Photo Mode row in the pause menu, changes aimed at a Windows player's reports (the pause-menu mouse, the game clock after Alt-Tab, the system cursor in fullscreen) and puts the single-player HUD in the screen's corners on wide screens. Release-candidate checks, a read-back of the published release and a Linux live-update check from 0.1.12 passed; the Windows changes have not been seen on a real Windows PC. Documentation corrections made after its export await the next public export. Validate exact Linux and Windows packages and updates before shipping. | [CE releases](https://github.com/dlprentice/onslaught-ce/releases/latest), [CE README](https://github.com/dlprentice/onslaught-ce) |
+| CE release and player experience | 0.1.13 is the latest public release (published 2026-10-31). It adds Bonus Levels, CE Settings and Help & Info to the Onslaught CE menu page, a Photo Mode row in the pause menu, changes aimed at a Windows player's reports (the pause-menu mouse, the game clock after Alt-Tab, the system cursor in fullscreen) and puts the single-player HUD in the screen's corners on wide screens. Release-candidate checks, a read-back of the published release and a Linux live-update check from 0.1.12 passed; the Windows changes have not been seen on a real Windows PC. Public contributor setup and documentation corrections have since been exported. Validate exact Linux and Windows packages and updates before shipping. | [CE releases](https://github.com/dlprentice/onslaught-ce/releases/latest), [CE README](https://github.com/dlprentice/onslaught-ce) |
 | Reported Windows issues | One reproduced cause of double music is fixed in 0.1.12, with software-VM evidence, and Jeppi reports the audio fixed in 0.1.13 on their own Windows PC (a player's report; no log has been read). 0.1.13 adds changes aimed at the pause-menu mouse, the game clock after Alt-Tab and the system cursor in fullscreen; none has been seen on a real Windows PC. The reporter's physical AMD/input retest, separate stutter and reported graphics artifacts remain open. | [CE releases](https://github.com/dlprentice/onslaught-ce/releases/latest) |
 | Online multiplayer | Experimental two-process work is not player-ready. Pushed candidates add an explicit host-address choice in the menu and drain a local disconnect before destroying the transport. Focused in-process menu and native transport evidence does not establish the game workflow across Linux and Windows. These candidates await main integration, public export and live game acceptance; public 0.1.13 is unchanged. Deliver independently controlled players, compatible content, reliable session lifecycle and approachable connections, then validate actual networks. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play), [CE README](https://github.com/dlprentice/onslaught-ce) |
 | Campaign co-op and scale | Ordinary-campaign objectives, transitions, deaths, rejoin and safe progression are not established online. Larger matches, maps and Battle Engine customization are later goals. Local split-screen is not online co-op. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play) |
@@ -34,7 +35,7 @@ defines progress and what a completion claim requires.
 | Companion | CE/original careers, settings and backups exist with bounded tests. Broader Windows UI/device acceptance, listening and safe release remain. | [Companion README](companion/OnslaughtToolkit.Godot/README.md), [acceptance below](#companion--ce-integration) |
 | Diagnostics and recording | Useful bounded logs and manual, informed reporting are available. Preserve faithful reference tapes and develop separate coverage for CE features and controller input; avoid telemetry or automatic uploads. | [CE reporting guidance](https://github.com/dlprentice/onslaught-ce#report-a-problem) |
 | Special Thanks | Stuart Gillam, Jeppi and BermudaMaster are acknowledged in 0.1.12. Keep acknowledgements accurate as further contributors are identified. | [CE credits](https://github.com/dlprentice/onslaught-ce#credits-and-special-thanks) |
-| Documentation, repositories and recovery | Reconcile the active owners and retained handoffs. A selected review-evidence delta was restored and hash-matched: 77 files, 8,466,420 bytes. The evidence covers only that snapshot, not work created afterward; some retained sets still need discoverable index entries. Full corpus and replacement-machine recovery remain unproven. Private recovery details stay in private records. | [Recovery scope below](#recovery-and-repository), [Project index](PROJECT-INDEX.md), repository guides |
+| Documentation, repositories and recovery | Public setup and the workflow from a fork to a pull request are documented in the product repositories. Continue reconciling active owners and retained handoffs. A selected review-evidence delta was restored and hash-matched: 77 files, 8,466,420 bytes. The evidence covers only that snapshot, not work created afterward; some retained sets still need discoverable index entries. Full corpus and replacement-machine recovery remain unproven. Private recovery details stay in private records. | [Contributor workflow](CONTRIBUTING.md), [Recovery scope below](#recovery-and-repository), [Project index](PROJECT-INDEX.md), repository guides |
 | Showcase and website | The requested port footage has not met its brief and may resume with the next lead. The domain is owned; no website deployment is currently required. | Maintainer direction |
 
 ### Order after 0.1.13
@@ -124,7 +125,8 @@ Do not assume a transport, paid service, new recipient or cross-platform determi
 
 The intended menu is **Multiplayer → Local or Online**. Local should clearly distinguish split-screen from
 local-network play. Online should offer a browser of available public lobbies and options to create or join public
-and private lobbies, including a private invite/join path. One preliminary option is optional LAN discovery plus an
+and private lobbies, including a private invite/join path. Voice and text chat are planned multiplayer workflows,
+with design and validation still open. One preliminary option is optional LAN discovery plus an
 online directory and relay, with initial game admission limited to two players. Service ownership, hosting costs,
 recipients and data handling remain undecided. Public discovery, any discovery or relay hosting, recipients, costs,
 and the information listed or sent require design and authorization; none is a shipped service claim. Private
