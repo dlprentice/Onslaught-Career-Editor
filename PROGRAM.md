@@ -129,17 +129,17 @@ Do not assume a transport, paid service, new recipient or cross-platform determi
 The intended menu is **Multiplayer → Local or Online**. Local should clearly distinguish split-screen from
 local-network play. Online should offer a browser of available public lobbies and options to create or join public
 and private lobbies, including a private invite/join path. One preliminary option is optional LAN discovery plus an
-online directory and relay, with initial game admission limited to two players. An evaluation of Cloudflare TURN is
-being prepared; this does not establish a working relay or a selected provider. Service ownership, hosting costs,
-recipients and data handling remain undecided. Public discovery, any discovery or relay hosting, recipients, costs,
-and the information listed or sent require design and authorization; none is a shipped service claim. Private
-lobby access controls must be designed and validated: being unlisted alone does not establish private access.
+online directory and relay, with initial game admission limited to two players. David has authorized a metered
+Cloudflare TURN service for controlled tests. This does not establish a playable multiplayer service. The public
+directory, credential distribution, hosting arrangements, costs and information shared still require design and
+validation; none is a shipped service claim. Private lobby access controls must be designed and validated: being
+unlisted alone does not establish private access.
 
 Future multiplayer should include in-game text and voice chat, especially online, on Linux and Windows. Players need
 controls to mute and block others, and to use push-to-talk or disable voice. These are unimplemented requirements; a
 lobby directory or relay proposal does not provide them. Chat and voice privacy and data handling, any hosting or relay
-operator, costs and recipients require design and explicit authorization. The existing no-telemetry rule still applies;
-automatic recording, a provider, player accounts and spending are not assumed.
+operator, costs and recipients require design and any necessary authorization. The existing no-telemetry rule still
+applies; automatic recording, a voice provider, player accounts and additional spending are not assumed.
 
 The older [original-binary feasibility note](roadmap/original-binary-online-multiplayer-feasibility.md) concerns a
 separate historical route, not a statement that CE already has online play.
