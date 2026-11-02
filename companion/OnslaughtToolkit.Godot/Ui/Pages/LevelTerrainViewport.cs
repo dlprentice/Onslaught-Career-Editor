@@ -9,7 +9,9 @@ namespace OnslaughtToolkit.Companion.Ui;
 public partial class LevelTerrainViewport : SubViewportContainer
 {
     internal Func<Heightfield?>? TerrainProvider { get; set; }
+    internal bool UseAuthoredSurface { get; set; }
     internal Func<TerrainSurface?>? PreviewSurfaceProvider { get; set; }
+    internal Func<IEnumerable<System.Numerics.Vector3>>? FramingPointsProvider { get; set; }
     internal Func<bool>? TerrainModeProvider { get; set; }
     internal Func<IReadOnlyList<ObjectRow>>? RowsProvider { get; set; }
     internal Func<int?>? SelectedRowProvider { get; set; }
@@ -23,6 +25,8 @@ public partial class LevelTerrainViewport : SubViewportContainer
     private readonly Label _help;
     private readonly MarkerOverlay _marks;
     private Heightfield? _loaded;
+    private bool _loadedAuthoredSurface;
+    private bool _refitRequested;
     private TerrainSurface? _loadedPreview;
     private TerrainSurface? _surface;
     private IReadOnlyList<ObjectRow> _rows = Array.Empty<ObjectRow>();
@@ -92,10 +96,12 @@ public partial class LevelTerrainViewport : SubViewportContainer
         if (!IsVisibleInTree()) return;
         var current = TerrainProvider?.Invoke();
         var preview = PreviewSurfaceProvider?.Invoke();
-        bool baseChanged = !ReferenceEquals(current, _loaded);
+        bool baseChanged = !ReferenceEquals(current, _loaded) || UseAuthoredSurface != _loadedAuthoredSurface || _refitRequested;
         if (baseChanged || !ReferenceEquals(preview, _loadedPreview))
         {
             _loaded = current;
+            _loadedAuthoredSurface = UseAuthoredSurface;
+            _refitRequested = false;
             _loadedPreview = preview;
             Rebuild(current, preview, baseChanged);
         }
@@ -283,14 +289,14 @@ public partial class LevelTerrainViewport : SubViewportContainer
         _mesh.Mesh = null;
         _surface = null;
         _marks.QueueRedraw();
-        if (terrain == null)
+        if (terrain == null && !(UseAuthoredSurface && draft is not null))
         {
             _help.Text = "Load a level to preview its terrain.";
             return;
         }
         try
         {
-            var surface = draft ?? TerrainSurface.Build(terrain);
+            var surface = draft ?? TerrainSurface.Build(terrain!);
             var preview = TerrainPreviewMesh.Build(surface.Vertices.Span, surface.Indices.Span);
             var vertices = new Vector3[preview.Vertices.Length];
             var normals = new Vector3[preview.Normals.Length];
@@ -317,6 +323,14 @@ public partial class LevelTerrainViewport : SubViewportContainer
             };
             var min = preview.Min;
             var max = preview.Max;
+            if (UseAuthoredSurface && FramingPointsProvider is { } points)
+                foreach (var point in points())
+                {
+                    if (!float.IsFinite(point.X) || !float.IsFinite(point.Y) || !float.IsFinite(point.Z))
+                        throw new System.IO.InvalidDataException("An authored position cannot be framed.");
+                    min = System.Numerics.Vector3.Min(min, point);
+                    max = System.Numerics.Vector3.Max(max, point);
+                }
             bool refit = baseChanged || _radius <= 0f;
             if (refit) _target = new Vector3((min.X + max.X) * 0.5f, (min.Y + max.Y) * 0.5f, (min.Z + max.Z) * 0.5f);
             _extent = Math.Max(1f, Math.Max(max.X - min.X, Math.Max(max.Y - min.Y, max.Z - min.Z)));
@@ -424,8 +438,8 @@ public partial class LevelTerrainViewport : SubViewportContainer
         if (TerrainRayPicker.TryHit(_surface, start, ray, out var hit))
         {
             // Rounding a hit at the last edge to 512 would put it outside the ground lookup.
-            double x = Math.Clamp((double)hit.X, 0, Heightfield.Size - 0.01);
-            double y = Math.Clamp(-(double)hit.Z, 0, Heightfield.Size - 0.01);
+            double x = UseAuthoredSurface ? hit.X : Math.Clamp((double)hit.X, 0, Heightfield.Size - 0.01);
+            double y = UseAuthoredSurface ? -hit.Z : Math.Clamp(-(double)hit.Z, 0, Heightfield.Size - 0.01);
             MoveRequested.Invoke(selected, MapView.ToHundredths(x), MapView.ToHundredths(y));
         }
     }
@@ -481,7 +495,22 @@ public partial class LevelTerrainViewport : SubViewportContainer
 
     // A new level can be opened between input and the next _Process. Do not select or place against its predecessor.
     private bool HasCurrentTerrain => _surface is not null && ReferenceEquals(TerrainProvider?.Invoke(), _loaded) &&
-        ReferenceEquals(PreviewSurfaceProvider?.Invoke(), _loadedPreview);
+        ReferenceEquals(PreviewSurfaceProvider?.Invoke(), _loadedPreview) && UseAuthoredSurface == _loadedAuthoredSurface;
+
+    internal void Refit()
+    {
+        CancelDrag();
+        _radius = 0;
+        _refitRequested = true;
+    }
+
+    internal bool TryGetMarkerPoint(int index, out Vector2 screen)
+    {
+        RefreshRows();
+        if (_rows.FirstOrDefault(row => row.Index == index) is { } row) return TryProject(row, out screen, out _);
+        screen = default;
+        return false;
+    }
 
     private sealed partial class MarkerOverlay(LevelTerrainViewport owner) : Control
     {
