@@ -36,6 +36,7 @@ internal static class CeLinkedSceneTests
         anchor.Init.Orientation = new(0.37f, -0.22f, 0.41f);
         anchor.Init.MeshNumber = 0;
         body.NamedMeshes.Clear(); body.NamedMeshes.Add("authored.msh");
+        body.TreeGroups.Clear(); body.TreeTypes.Clear();
         body.Things.Clear(); body.Things.Add(anchor);
         PlacedObject other = anchor.Clone(); other.Init.Name = "OtherAnchor"; other.Init.Position = new(11, 12, -3);
         body.Things.Add(other);
@@ -94,6 +95,12 @@ internal static class CeLinkedSceneTests
         File.WriteAllBytes(Path.Combine(fallback, "data", "resources", "777_res_pc.aya"), Archive(body.Write(), baseLevel: 0));
         check.That(CeLinkedSceneLoader.Load(fallback, project).Objects.Count == 3,
             "base level zero uses its selected loose fallback rather than being mistaken for no base");
+        other.Init.MeshNumber = -1;
+        File.WriteAllBytes(Path.Combine(worlds, "world777.wrd"), body.Write());
+        File.WriteAllBytes(Path.Combine(fallback, "data", "resources", "777_res_pc.aya"), Archive(null));
+        CeLinkedSceneSnapshot omitted = CeLinkedSceneLoader.Load(fallback, project);
+        check.That(omitted.Objects[1].ModelKey is null && omitted.Notes.Any(note => note.Contains("no stored model reference", StringComparison.Ordinal)),
+            "objects whose geometry is selected elsewhere are explicitly reported rather than assigned an invented mesh");
         if (OperatingSystem.IsLinux())
         {
             string linked = Path.Combine(root, "linked-input"); Directory.CreateSymbolicLink(linked, root);
@@ -197,6 +204,15 @@ internal static class CeLinkedSceneTests
             editor.Open(valid); rows = Rows(); await Frame(tree);
             check.That(actor.Position.IsEqualApprox(LinkedSceneCoordinates.View(valid.Placements[0].Position)),
                 "a corrected unique binding restores model placement without reloading the map");
+            editor.TryMovePlacement("anchor", new(80, 80, -60), editor.Revision, out _); rows = Rows(); await Frame(tree);
+            view.Refit(); await Frame(tree);
+            bool framed = layer.WorldBounds is { } all && Enumerable.Range(0, 8).All(index =>
+            {
+                Vector3 corner = all.GetEndpoint(index); Vector2 screen = camera.UnprojectPosition(corner);
+                return !camera.IsPositionBehind(corner) && screen.X >= 0 && screen.X <= view.Size.X && screen.Y >= 0 && screen.Y <= view.Size.Y &&
+                    -(camera.GlobalTransform.AffineInverse() * corner).Z < camera.Far;
+            });
+            check.That(framed, "Frame all includes actual model bounds far beyond the terrain and retains adequate clip planes");
             scene = null; await Frame(tree);
             check.That(view.LinkedModelCount == 0 && !GodotObject.IsInstanceValid(actor),
                 "closing the linked preview releases its instantiated model nodes");

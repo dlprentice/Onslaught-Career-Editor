@@ -136,6 +136,9 @@ public static class CeLinkedSceneLoader
         if (needed.Count > 512) throw new InvalidDataException("The map references too many preview models.");
         List<CeLinkedSceneModel> models = [];
         List<string> notes = [];
+        int withoutModel = objects.Count(row => row.ModelKey is null);
+        if (withoutModel > 0) notes.Add($"{withoutModel} map object(s) have no stored model reference; their geometry is omitted.");
+        if (bodies.Any(body => body.Body.TreeGroups.Count > 0)) notes.Add("Tree-group geometry is not included in this preview.");
         if (needed.Count > 0)
         {
             DirectoryInfo meshes = Directory(resources, "meshes");
