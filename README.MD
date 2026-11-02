@@ -139,9 +139,11 @@ lists system-library prerequisites, verification and optional export templates. 
 If you only work on docs or Python tools, skip the Godot/.NET setup and use the relevant checks instead;
 for example, `python tools/content_catalog_tests.py` uses authored catalogue inputs.
 
-For an existing checkout, the full documentation gate needs the pinned source references initialized with
-`git submodule update --init --recursive`; it checks local links into those public sources. This does not require
-retail inputs. A lawfully obtained Battle Engine Aquila installation is needed for tools that read the actual game.
+For an existing checkout or a fresh Git worktree, run `git submodule update --init --recursive` from that
+checkout's root before the full documentation and safety gates. Initialize each worktree separately, even if the
+main checkout already has the reference files. The command uses the recorded pins; documentation checks follow
+local links into those public sources and need no retail inputs. A lawfully obtained Battle Engine Aquila
+installation is needed for tools that read the actual game.
 
 Companion commands use the .NET 10 SDK pinned in
 [`global.json`](global.json), repeated by [the Companion's pin](companion/OnslaughtToolkit.Godot/global.json),
