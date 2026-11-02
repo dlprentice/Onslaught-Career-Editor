@@ -30,6 +30,7 @@ public partial class LevelTerrainViewport : SubViewportContainer
     private readonly LinkedSceneModelLayer _models;
     private CeLinkedSceneSnapshot? _loadedScene;
     private CeMissionProject? _loadedProject;
+    private Aabb? _loadedModelBounds;
     private bool _linkedError;
     private Heightfield? _loaded;
     private bool _loadedAuthoredSurface;
@@ -109,6 +110,7 @@ public partial class LevelTerrainViewport : SubViewportContainer
         var project = LinkedProjectProvider?.Invoke();
         bool sceneChanged = !ReferenceEquals(scene, _loadedScene);
         bool previousLinkedError = _linkedError;
+        bool modelBoundsChanged = false;
         if (sceneChanged || !ReferenceEquals(project, _loadedProject))
         {
             CancelDrag();
@@ -121,10 +123,13 @@ public partial class LevelTerrainViewport : SubViewportContainer
                 _models.Clear();
                 _linkedError = true;
             }
+            Aabb? bounds = _models.WorldBounds;
+            modelBoundsChanged = bounds != _loadedModelBounds;
+            _loadedModelBounds = bounds;
         }
         bool baseChanged = sceneChanged || previousLinkedError != _linkedError || !ReferenceEquals(current, _loaded) ||
             UseAuthoredSurface != _loadedAuthoredSurface || _refitRequested;
-        if (baseChanged || !ReferenceEquals(preview, _loadedPreview))
+        if (baseChanged || modelBoundsChanged || !ReferenceEquals(preview, _loadedPreview))
         {
             _loaded = current;
             _loadedAuthoredSurface = UseAuthoredSurface;
@@ -314,7 +319,12 @@ public partial class LevelTerrainViewport : SubViewportContainer
 
     private void Rebuild(Heightfield? terrain, TerrainSurface? draft, bool baseChanged)
     {
+        Mesh? previousMesh = _mesh.Mesh;
         _mesh.Mesh = null;
+        previousMesh?.Dispose();
+        Material? previousMaterial = _mesh.MaterialOverride;
+        _mesh.MaterialOverride = null;
+        previousMaterial?.Dispose();
         _surface = null;
         _marks.QueueRedraw();
         if (terrain == null && !(UseAuthoredSurface && draft is not null))
@@ -359,6 +369,12 @@ public partial class LevelTerrainViewport : SubViewportContainer
                     min = System.Numerics.Vector3.Min(min, point);
                     max = System.Numerics.Vector3.Max(max, point);
                 }
+            if (_loadedModelBounds is { } modelBounds)
+            {
+                Vector3 start = modelBounds.Position, end = modelBounds.End;
+                min = System.Numerics.Vector3.Min(min, new(start.X, start.Y, start.Z));
+                max = System.Numerics.Vector3.Max(max, new(end.X, end.Y, end.Z));
+            }
             bool refit = baseChanged || _radius <= 0f;
             if (refit) _target = new Vector3((min.X + max.X) * 0.5f, (min.Y + max.Y) * 0.5f, (min.Z + max.Z) * 0.5f);
             _extent = Math.Max(1f, Math.Max(max.X - min.X, Math.Max(max.Y - min.Y, max.Z - min.Z)));

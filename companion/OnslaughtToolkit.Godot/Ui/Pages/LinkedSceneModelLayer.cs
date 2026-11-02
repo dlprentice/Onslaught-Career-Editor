@@ -17,6 +17,20 @@ internal partial class LinkedSceneModelLayer : Node3D
     private IReadOnlyList<CeLinkedSceneInstance> _instances = [];
 
     internal int ModelInstanceCount => _nodes.Count;
+    internal Aabb? WorldBounds
+    {
+        get
+        {
+            Aabb? result = null;
+            foreach ((string id, Node3D node) in _nodes)
+                if (_bounds.TryGetValue(id, out Aabb local))
+                {
+                    Aabb box = node.Transform * local;
+                    result = result is { } previous ? previous.Merge(box) : box;
+                }
+            return result;
+        }
+    }
 
     internal void Show(CeLinkedSceneSnapshot? scene, CeMissionProject? project)
     {
