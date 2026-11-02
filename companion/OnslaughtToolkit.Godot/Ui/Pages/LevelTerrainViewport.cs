@@ -2,6 +2,7 @@
 using System;
 using Godot;
 using OnslaughtToolkit.Companion.Levels;
+using OnslaughtToolkit.Companion.Missions;
 
 namespace OnslaughtToolkit.Companion.Ui;
 
@@ -11,6 +12,8 @@ public partial class LevelTerrainViewport : SubViewportContainer
     internal Func<Heightfield?>? TerrainProvider { get; set; }
     internal bool UseAuthoredSurface { get; set; }
     internal Func<TerrainSurface?>? PreviewSurfaceProvider { get; set; }
+    internal Func<CeLinkedSceneSnapshot?>? LinkedSceneProvider { get; set; }
+    internal Func<CeMissionProject?>? LinkedProjectProvider { get; set; }
     internal Func<IEnumerable<System.Numerics.Vector3>>? FramingPointsProvider { get; set; }
     internal Func<bool>? TerrainModeProvider { get; set; }
     internal Func<IReadOnlyList<ObjectRow>>? RowsProvider { get; set; }
@@ -24,6 +27,10 @@ public partial class LevelTerrainViewport : SubViewportContainer
     private readonly Camera3D _camera;
     private readonly Label _help;
     private readonly MarkerOverlay _marks;
+    private readonly LinkedSceneModelLayer _models;
+    private CeLinkedSceneSnapshot? _loadedScene;
+    private CeMissionProject? _loadedProject;
+    private bool _linkedError;
     private Heightfield? _loaded;
     private bool _loadedAuthoredSurface;
     private bool _refitRequested;
@@ -67,6 +74,8 @@ public partial class LevelTerrainViewport : SubViewportContainer
         viewport.AddChild(world);
         _mesh = new MeshInstance3D();
         world.AddChild(_mesh);
+        _models = new LinkedSceneModelLayer();
+        world.AddChild(_models);
         _camera = new Camera3D { Current = true, Fov = 50f };
         world.AddChild(_camera);
         world.AddChild(new DirectionalLight3D
@@ -96,19 +105,38 @@ public partial class LevelTerrainViewport : SubViewportContainer
         if (!IsVisibleInTree()) return;
         var current = TerrainProvider?.Invoke();
         var preview = PreviewSurfaceProvider?.Invoke();
-        bool baseChanged = !ReferenceEquals(current, _loaded) || UseAuthoredSurface != _loadedAuthoredSurface || _refitRequested;
+        var scene = LinkedSceneProvider?.Invoke();
+        var project = LinkedProjectProvider?.Invoke();
+        bool sceneChanged = !ReferenceEquals(scene, _loadedScene);
+        bool previousLinkedError = _linkedError;
+        if (sceneChanged || !ReferenceEquals(project, _loadedProject))
+        {
+            CancelDrag();
+            _loadedScene = scene;
+            _loadedProject = project;
+            _linkedError = false;
+            try { _models.Show(scene, project); }
+            catch (Exception error) when (error is ArgumentException or System.IO.InvalidDataException or OverflowException)
+            {
+                _models.Clear();
+                _linkedError = true;
+            }
+        }
+        bool baseChanged = sceneChanged || previousLinkedError != _linkedError || !ReferenceEquals(current, _loaded) ||
+            UseAuthoredSurface != _loadedAuthoredSurface || _refitRequested;
         if (baseChanged || !ReferenceEquals(preview, _loadedPreview))
         {
             _loaded = current;
             _loadedAuthoredSurface = UseAuthoredSurface;
             _refitRequested = false;
             _loadedPreview = preview;
-            Rebuild(current, preview, baseChanged);
+            Rebuild(_linkedError ? null : current, _linkedError ? null : preview, baseChanged);
         }
         if (_surface is not null)
             _help.Text = TerrainModeProvider?.Invoke() == true
                 ? "Click raise · Shift-click lower (preview only)\nDrag orbit · wheel zoom"
                 : "Drag a mark to move · drag elsewhere to orbit · right-click to place · wheel to zoom";
+        if (_linkedError) _help.Text = "The linked map and models could not be previewed. Reload the selected map.";
         RefreshRows();
     }
 
@@ -373,6 +401,7 @@ public partial class LevelTerrainViewport : SubViewportContainer
 
     private void ClearObjectDrag()
     {
+        _models?.RestorePositions();
         _objectDragRow = null;
         _objectDragRows = null;
         _objectDragSurface = null;
@@ -415,17 +444,23 @@ public partial class LevelTerrainViewport : SubViewportContainer
             CancelDrag();
             return;
         }
-        _objectDragPreview = TryDragPoint(at) ? at : null;
+        _objectDragPreview = TryWorldPoint(at, out var hit) ? at : null;
+        if (_objectDragPreview is not null && _objectDragRow is { } row)
+            _models.PreviewPosition(row.Index, new System.Numerics.Vector3(hit.X, -hit.Z, row.Position.Z));
+        else _models.RestorePositions();
         _marks.QueueRedraw();
     }
 
-    private bool TryDragPoint(Vector2 at)
+    private bool TryDragPoint(Vector2 at) => TryWorldPoint(at, out _);
+
+    private bool TryWorldPoint(Vector2 at, out System.Numerics.Vector3 hit)
     {
+        hit = default;
         if (!HasCurrentTerrain || !new Rect2(Vector2.Zero, Size).HasPoint(at)) return false;
         Vector3 origin = _camera.ProjectRayOrigin(at), direction = _camera.ProjectRayNormal(at);
         var start = new System.Numerics.Vector3(origin.X, origin.Y, origin.Z);
         var ray = new System.Numerics.Vector3(direction.X, direction.Y, direction.Z);
-        return TerrainRayPicker.TryHit(_surface!, start, ray, out _);
+        return TerrainRayPicker.TryHit(_surface!, start, ray, out hit);
     }
 
     private void RequestMove(Vector2 at)
@@ -475,7 +510,9 @@ public partial class LevelTerrainViewport : SubViewportContainer
                 bestDepth = depth;
             }
         }
-        return nearest;
+        if (nearest is not null) return nearest;
+        return HasCurrentTerrain && _models.RowAt(_camera, at) is int picked
+            ? _rows.FirstOrDefault(row => row.Index == picked) : null;
     }
 
     private bool TryProject(ObjectRow row, out Vector2 screen, out float depth)
@@ -495,7 +532,10 @@ public partial class LevelTerrainViewport : SubViewportContainer
 
     // A new level can be opened between input and the next _Process. Do not select or place against its predecessor.
     private bool HasCurrentTerrain => _surface is not null && ReferenceEquals(TerrainProvider?.Invoke(), _loaded) &&
-        ReferenceEquals(PreviewSurfaceProvider?.Invoke(), _loadedPreview) && UseAuthoredSurface == _loadedAuthoredSurface;
+        ReferenceEquals(PreviewSurfaceProvider?.Invoke(), _loadedPreview) && UseAuthoredSurface == _loadedAuthoredSurface &&
+        ReferenceEquals(LinkedSceneProvider?.Invoke(), _loadedScene) && ReferenceEquals(LinkedProjectProvider?.Invoke(), _loadedProject) && !_linkedError;
+
+    internal int LinkedModelCount => _models.ModelInstanceCount;
 
     internal void Refit()
     {
