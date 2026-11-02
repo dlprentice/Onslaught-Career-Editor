@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "platform": "linux-x86_64",
+  "engine": {
+    "url": "https://github.com/godotengine/godot-builds/releases/download/4.8-beta1/Godot_v4.8-beta1_mono_linux_x86_64.zip",
+    "sizeBytes": 93307154,
+    "license": "MIT; bundled third-party notices also apply",
+    "licenseUrl": "https://godotengine.org/license/",
+    "sourceSubdirectory": "Godot_v4.8-beta1_mono_linux_x86_64",
+    "archiveType": "zip",
+    "maxFiles": 4096,
+    "maxExpandedBytes": 536870912
+  },
+  "templates": {
+    "url": "https://github.com/godotengine/godot-builds/releases/download/4.8-beta1/Godot_v4.8-beta1_mono_export_templates.tpz",
+    "sizeBytes": 1194669563,
+    "license": "MIT; bundled third-party notices also apply",
+    "licenseUrl": "https://godotengine.org/license/",
+    "sourceSubdirectory": "templates",
+    "archiveType": "zip",
+    "maxFiles": 4096,
+    "maxExpandedBytes": 4294967296
+  },
+  "dotnet": {
+    "url": "https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.402/dotnet-sdk-10.0.402-linux-x64.tar.gz",
+    "sizeBytes": 240279509,
+    "sha256": "a131496fe7dac21dceea13354e50a3636126fac05d6e5ccf5fb250829c6e9b6a",
+    "payloadSha256": "ad16205ca6a742ad9b3a5723c9ec71f6fcf700cdbab08cd600b05a260c959a9d",
+    "payloadHashAlgorithm": "SHA-256 of sorted path, NUL, decimal size, NUL, executable flag, NUL, file SHA-256, newline",
+    "sha512Base64": "GQSpjdots0uni6PE+xsiRFUymvkcNB2DVHhDwYOeESsErmme6S+iRJqPYiSRlqk4cjB4wMYLn2XIhTnVaHcpwg==",
+    "hashSource": "https://builds.dotnet.microsoft.com/dotnet/release-metadata/10.0/releases.json",
+    "license": "MIT; bundled ThirdPartyNotices.txt also applies",
+    "licenseUrl": "https://github.com/dotnet/sdk/blob/main/LICENSE.TXT",
+    "sourceSubdirectory": "",
+    "archiveType": "tar.gz",
+    "maxFiles": 32768,
+    "maxExpandedBytes": 1610612736
+  }
+}
