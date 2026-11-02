@@ -1,7 +1,7 @@
 # Battle Engine weapon stores, charge and firing state
 
 Status: active static contract for the rebuild's player weapons
-Last updated: 2026-10-01 (aim reference and no-selection behavior re-derived; earlier findings retain their dates)
+Last updated: 2026-11-02 (private evidence locator redacted; dated findings unchanged)
 Summary: the Aquila's ammo and heat stores, when a shot spends them, cooling, the
 Missile Pod and Pulse Cannon Pod charge law, what an empty store blocks, and what
 `IsFiring` counts.
@@ -144,7 +144,7 @@ exception-status result. No whole-game FPU mode, weapon firing, CanLock behavior
 device/player acceptance or complete equivalence is established. The compiled
 GetCurrentMode section still does not match retail.
 
-Private owner, relative to `~/Projects/game-dev/bea-decomp`:
+Private owner, relative to `<maintainer evidence>`:
 `.worktrees/codex-career-nearmiss-20260930/build/weapon-mode-review-20260930/`.
 The frozen script SHA-256 is
 `fe4bc36d1c5e3f4242881331be4e069153474ac4046e78edb0836891b03484ec`;

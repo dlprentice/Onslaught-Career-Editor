@@ -1,7 +1,7 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-10-31 (the Windows-host sentence says what this repository provisions; earlier: game findings go to onslaught-preservation and `reverse-engineering/` here is a frozen copy; earlier: the companion supports the original game and CE; companion and lore issues go to this repository's issues; earlier: SPDX prose excluded from REUSE parsing; Onslaught CE and onslaught-godot linked; the retired AppCore patching core removed, inbound = outbound licensing)
+Last updated: 2026-11-02 (public fork workflow, pinned references and Companion setup limits)
 Summary: what a focused change looks like here, what must never be added to the
 repository, and which checks a change owes.
 
@@ -19,6 +19,11 @@ validation.
 
 ## Start here
 
+Fork this public repository, clone your fork and create a branch from upstream `main`. People and automated agents
+use the same route: commit scoped changes, push to your fork and open a pull request against
+`dlprentice/Onslaught-Career-Editor`. No collaborator invitation, private repository or maintainer computer is needed
+to prepare a proposal. The available validation depends on the inputs described below; list unavailable checks in the PR.
+
 1. Read [`AGENTS.md`](AGENTS.md), [`README.MD`](README.MD), and only the owning
    README or evidence files for your change.
 2. Confirm the branch, upstream, dirty state, and submodule pins. Initialize
@@ -29,18 +34,25 @@ validation.
    evidence, or contributor problem.
 5. Run the smallest check capable of falsifying that change.
 
-No game installation is required to test ordinary documentation changes. On
-Omarchy, start with the host-appropriate portable gates:
+No game installation is required to test ordinary documentation changes. The full documentation and safety gates
+need the existing pinned public reference submodules, including links into their source. Initialize them once with
+`git submodule update --init --recursive`; keep both recorded pins rather than replacing them with an upstream's
+latest commit. With the [public prerequisites](README.MD#build-and-run) installed, run:
 
 ```bash
 npm run test:docs
 npm run test:safety
 ```
 
-`npm test` runs the companion's contract and tooling checks without opening a window;
-`npm run dev` launches the companion. This repository provisions no Windows host; Linux checks do not
-establish Windows behaviour. Native workflow checks are separate from build, static or headless
-evidence.
+`npm test` runs the Companion's contract and tooling checks without opening a window, but its runtime gate requires
+the maintainer's unpublished shared toolchain installer. Official engine and SDK downloads alone do not satisfy its
+provenance checks. The [Companion build guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export)
+states that current public setup gap. Documentation, safety and selected authored Python checks remain available
+without it. `npm run test:companion-tools` checks the runner using fake tools on Linux; it does not replace the C#
+runtime gate. Maintainers must complete required runtime checks before a Companion change merges.
+
+`npm run dev` launches the Companion when that toolchain is configured. This repository provisions no Windows host;
+Linux checks do not establish Windows behaviour. Native workflow checks are separate from build, static or headless evidence.
 
 Root [`package.json`](package.json) is the command authority. Do not duplicate
 its command list in new documents.

@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-11-01 (tool outcomes and user holds; commit messages: keep Co-Authored-By, no Claude-Session line, name no agent or role)
+Last updated: 2026-11-02 (public contribution routing and default helper inheritance; commit messages: keep Co-Authored-By, no Claude-Session line, name no agent or role)
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
@@ -135,10 +135,12 @@ Official OpenAI documentation: [Auto-review](https://learn.chatgpt.com/docs/sand
   contacts and why, and reads only public data.
 - C# only, built in code: no `.gd` files, no editor-authored scenes or resources (a `.tscn` only as a one-node entry
   wrapper), shader source in C# strings, one production owner per subsystem. Repository tooling stays Python.
-- Reviews by other agents or models are optional input to reproduce, not authority
-  ([REVIEW-PROTOCOL.md](reverse-engineering/REVIEW-PROTOCOL.md)); hosted reviewers never receive retail material
-  or secrets. Hosted CI and release automation are outside this phase; release claims need the selected platform's
-  validation; Linux evidence alone does not establish Windows behaviour.
+- Reviews by other agents or models are optional input to reproduce, not authority. Helpers inherit the lead's
+  default model and reasoning settings unless David explicitly requests an override. Historical model assignments
+  and the frozen [review protocol](reverse-engineering/REVIEW-PROTOCOL.md) do not impose a strongest-model requirement
+  on current work. Hosted reviewers never receive retail material or secrets. Hosted CI and release automation are
+  outside this phase; release claims need the selected platform's validation; Linux evidence alone does not establish
+  Windows behaviour.
 
 ## Reference routing
 

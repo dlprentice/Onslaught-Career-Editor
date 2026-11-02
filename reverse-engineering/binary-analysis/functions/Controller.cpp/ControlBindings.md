@@ -1,7 +1,7 @@
 # Control Bindings (Options Entries)
 
 Status: active bounded contract; complete remap/input acceptance pending
-Last updated: 2026-10-01 (bounded key-capture comparison; earlier preset/remap evidence retains its scope)
+Last updated: 2026-11-02 (private evidence locator redacted; dated findings unchanged)
 Summary: original preset execution establishes initialized-table replacement and device fallback; separate reconstruction comparisons bound remapping and key capture on authored runtime bindings.
 Source File: binary-derived contract; no exact partial-source body asserted. Binary: pristine `BEA.exe.original.backup`.
 Evidence: MEASURED — selected pristine instructions, direct/composed preset controls and the separately dated remap/key-capture comparisons below; historical UI mappings retain their original limits.
@@ -129,7 +129,7 @@ return; its nonzero behavior belongs to the earlier independent evidence.
 establish persistence, physical input, UI behavior, RemapKeyTrap correctness,
 complete equivalence or full branch coverage.
 
-Private owner relative to `~/Projects/game-dev/bea-decomp`:
+Private owner relative to `<maintainer evidence>`:
 `.worktrees/codex-unitai-nearmiss-20260930/build/fepcontrols-remap-20260930/frozen-v2/`.
 Script SHA-256:
 `b6fc88f060010dfb48584fb2d5c807cf7a4e3a007d38be19a3465b700de3a145`.

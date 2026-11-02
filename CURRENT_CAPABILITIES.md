@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-01 (separate editor drag, trigger backend and inspector candidates)
+Last updated: 2026-11-02 (decompilation summary routes to its qualified overview; earlier editor candidates retain their dates)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -887,10 +887,10 @@ Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
 
 The [content catalogue coverage report](tools/README.md#catalogue-source-file-coverage) distinguishes represented logical paths, relationship targets and unrecorded parse status. Its checks use authored fixtures; those counts do not establish a complete asset inventory, unique file contents or mappings to placeable objects.
 
-The byte-matching decompilation matches all 5,482 retail functions in the maintainer's private working tree and is the
-reverse-engineering authority. Its public export, [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp),
-reproduces 5,449 of them (99.40% when this was written; the other 33 are in four DirectX sample files the export leaves
-out), and its README holds the current score, the matched list and the remaining divergences.
+The byte-matching decompilation is the reverse-engineering authority. The [overview above](#current-capabilities)
+states the compiled-object concession and the limits of function matching. Its public export,
+[onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), owns the current score, matched list, sample-file
+exclusions and remaining divergences.
 Findings are written as prose and specs in [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation),
 citing functions rather than quoting code; [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) here is a frozen copy.
 
