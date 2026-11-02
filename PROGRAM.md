@@ -39,7 +39,7 @@ defines progress and what a completion claim requires.
 
 ### Order after 0.1.13
 
-David's direction (2026-10-30) put what players see first, initially prioritizing 0.1.13 and experimental online co-op. His later direction is that **0.2.0 is the future-proof, integrated “done and ready” major launch**, carrying all the lanes below with no hurry to ship. Work can run in parallel where dependencies allow. Independent 0.1.x releases may deliver fixes and other ready improvements along the way.
+David's direction (2026-10-30) put what players see first, initially prioritizing 0.1.13 and experimental online co-op. His later direction is that **0.2.0 is the future-proof, integrated “done and ready” major launch**, carrying all the lanes below. Work toward a playable multiplayer prototype promptly; ship 0.2.0 only after its requirements pass. Work can run in parallel where dependencies allow. Independent 0.1.x releases may deliver fixes and other ready improvements along the way.
 
 The following are release requirements, not claims of current availability:
 
@@ -129,7 +129,8 @@ Do not assume a transport, paid service, new recipient or cross-platform determi
 The intended menu is **Multiplayer → Local or Online**. Local should clearly distinguish split-screen from
 local-network play. Online should offer a browser of available public lobbies and options to create or join public
 and private lobbies, including a private invite/join path. One preliminary option is optional LAN discovery plus an
-online directory and relay, with initial game admission limited to two players. Service ownership, hosting costs,
+online directory and relay, with initial game admission limited to two players. An evaluation of Cloudflare TURN is
+being prepared; this does not establish a working relay or a selected provider. Service ownership, hosting costs,
 recipients and data handling remain undecided. Public discovery, any discovery or relay hosting, recipients, costs,
 and the information listed or sent require design and authorization; none is a shipped service claim. Private
 lobby access controls must be designed and validated: being unlisted alone does not establish private access.
