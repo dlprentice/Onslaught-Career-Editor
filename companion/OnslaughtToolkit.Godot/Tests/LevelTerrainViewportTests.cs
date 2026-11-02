@@ -18,7 +18,11 @@ internal static class TerrainViewportProjectionTests
         var view = new LevelTerrainViewport { TerrainProvider = () => currentTerrain, Size = new Vector2(580, 480) };
         // The root may still be adding the test runner; wait before attaching a sibling.
         await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
-        tree.Root.AddChild(view);
+        // The full suite also has a real app in the root window. Route this independent geometry
+        // fixture through its own viewport so that app focus/capture cannot receive its pointer events.
+        SubViewport sandbox = new() { Size = new Vector2I(580, 480), GuiEmbedSubwindows = true };
+        tree.Root.AddChild(sandbox);
+        sandbox.AddChild(view);
         try
         {
             await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
@@ -32,10 +36,12 @@ internal static class TerrainViewportProjectionTests
             check.That(AllInside(camera, vertices), "The initial camera frames every authored terrain vertex.");
             var mouse = view.GlobalPosition + new Vector2(60, 60);
             var beforeOrbit = camera.GlobalPosition;
-            view.GetViewport().PushInput(new InputEventMouseButton { Position = mouse, GlobalPosition = mouse, ButtonIndex = MouseButton.Left, Pressed = true });
+            view.GetViewport().PushInput(new InputEventMouseMotion { Position = mouse, GlobalPosition = mouse }, true);
+            view.GetViewport().PushInput(new InputEventMouseButton { Position = mouse, GlobalPosition = mouse, ButtonIndex = MouseButton.Left,
+                Pressed = true, ButtonMask = MouseButtonMask.Left }, true);
             var movedMouse = mouse + new Vector2(36, 18);
-            view.GetViewport().PushInput(new InputEventMouseMotion { Position = movedMouse, GlobalPosition = movedMouse, Relative = new Vector2(36, 18), ButtonMask = MouseButtonMask.Left });
-            view.GetViewport().PushInput(new InputEventMouseButton { Position = movedMouse, GlobalPosition = movedMouse, ButtonIndex = MouseButton.Left, Pressed = false });
+            view.GetViewport().PushInput(new InputEventMouseMotion { Position = movedMouse, GlobalPosition = movedMouse, Relative = new Vector2(36, 18), ButtonMask = MouseButtonMask.Left }, true);
+            view.GetViewport().PushInput(new InputEventMouseButton { Position = movedMouse, GlobalPosition = movedMouse, ButtonIndex = MouseButton.Left, Pressed = false }, true);
             await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
             check.That(camera.GlobalPosition.DistanceTo(beforeOrbit) > 0.001f, "3D terrain drag orbits the camera");
             check.That(AllInside(camera, vertices), "3D terrain stays framed after orbit");
@@ -125,7 +131,7 @@ internal static class TerrainViewportProjectionTests
         }
         finally
         {
-            view.QueueFree();
+            sandbox.QueueFree();
             await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
         }
         await LevelObjectDragPageTests.RunAsync(tree, check);

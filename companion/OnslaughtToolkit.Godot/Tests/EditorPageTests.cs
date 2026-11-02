@@ -169,8 +169,9 @@ internal static class LevelEditorPageTests
         app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
         app.DiscardDialog.Hide();
         Choose(page, 200);
-        check.That(app.DiscardDialog.Visible && app.DiscardDialog.DialogText.Contains("1 change on level 100", StringComparison.Ordinal) && page.Model?.Level == 100,
-            "the level picker asks before dropping an unstorable script edit");
+        check.That(!app.DiscardDialog.Visible && page.Model?.Level == 100 && page.HasChanges &&
+            page.Problem.Contains("cannot be checked safely", StringComparison.Ordinal),
+            "the level picker keeps an unstorable edit when it cannot capture a safe discard confirmation");
         app.DiscardDialog.EmitSignal(AcceptDialog.SignalName.Canceled);
         app.DiscardDialog.Hide();
         await app.Home.ChooseAsync(install.Game);

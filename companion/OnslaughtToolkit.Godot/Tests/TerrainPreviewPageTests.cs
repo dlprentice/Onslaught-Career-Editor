@@ -163,7 +163,10 @@ internal static class TerrainPreviewPageTests
                        "the next undo restores the terrain preview and clears its dirty state");
             page.Redo.EmitSignal(BaseButton.SignalName.Pressed);
             page.Redo.EmitSignal(BaseButton.SignalName.Pressed);
-            check.That(model.TerrainHasChanges && session.ToBytes().SequenceEqual(movedWorld), "redo restores the terrain and object in order");
+            raised = model.TerrainPreviewSurface;
+            check.That(raised is not null && raised.Vertices.ToArray().SequenceEqual(raisedVertices) && model.TerrainHasChanges &&
+                session.ToBytes().SequenceEqual(movedWorld), "redo restores the terrain vertices and object in order");
+            if (raised is null) return;
 
             page.TerrainViewSwitch.ButtonPressed = false;
             check.That(page.TerrainEdit.Disabled && !page.TerrainEdit.ButtonPressed && page.WorldNote.Contains("2D map shows base terrain", StringComparison.Ordinal) && page.Save.Disabled && page.Play.Disabled,
