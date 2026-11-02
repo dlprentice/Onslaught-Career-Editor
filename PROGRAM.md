@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-11-02 (integrated authored mission projects and bounded 3D placement scope)
+Last updated: 2026-11-02 (public multiplayer baseline and remaining acceptance boundaries)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
@@ -23,7 +23,7 @@ defines progress and what a completion claim requires.
 | --- | --- | --- |
 | CE release and player experience | Latest public release: 0.1.13 (published 2026-10-31). Its release notes describe shipped changes, checks and limits; physical Windows retesting remains open. Later public contributor setup and documentation corrections are exported. Validate exact packages and updates before shipping. | [0.1.13 release notes](https://github.com/dlprentice/onslaught-ce/releases/tag/v0.1.13), [CE README](https://github.com/dlprentice/onslaught-ce) |
 | Reported Windows issues | One reproduced cause of double music is fixed in 0.1.12, with software-VM evidence, and Jeppi reports the audio fixed in 0.1.13 on their own Windows PC (a player's report; no log has been read). 0.1.13 adds changes aimed at the pause-menu mouse, the game clock after Alt-Tab and the system cursor in fullscreen; none has been seen on a real Windows PC. The reporter's physical AMD/input retest, separate stutter and reported graphics artifacts remain open. | [CE releases](https://github.com/dlprentice/onslaught-ce/releases/latest) |
-| Online multiplayer | Experimental two-process work is not player-ready. Pushed candidates add an explicit host-address choice in the menu and drain a local disconnect before destroying the transport. Focused in-process menu and native transport evidence does not establish the game workflow across Linux and Windows. These candidates await main integration, public export and live game acceptance; public 0.1.13 is unchanged. Deliver independently controlled players, compatible content, reliable session lifecycle and approachable connections, then validate actual networks. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play), [CE README](https://github.com/dlprentice/onslaught-ce) |
+| Online multiplayer | Unreleased multiplayer engineering is not player-ready. The public CE README still lists Internet multiplayer as planned; public 0.1.13 is unchanged. Ordinary in-game host/join, native Windows hosting, independent-machine networks and campaign progression remain acceptance gaps. Deliver independently controlled players, compatible content, reliable session lifecycle and approachable connections, then validate actual networks. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play), [CE README](https://github.com/dlprentice/onslaught-ce) |
 | Campaign co-op and scale | Ordinary-campaign objectives, transitions, deaths, rejoin and safe progression are not established online. Larger matches, maps and Battle Engine customization are later goals. Local split-screen is not online co-op. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play) |
 | Controls, display and guidance | Improve understandable dodge/zoom and free-camera help, controllers, accessible menus, window/display choices and performance while preserving the game's look and feel. Investigate the reported floaty mouse feel in the original game; CE behavior remains unknown. Scale the ordinary full-screen HUD and UI for 4K and other high-resolution displays; split-screen scaling is a separate requirement. Real devices and representative Windows graphics remain acceptance gaps. | [Player experience work below](#onslaught-ce-player-experience-and-online-play), [CE README](https://github.com/dlprentice/onslaught-ce) |
 | Level and mission tools | Integrated source adds authored mission projects with JSON Save/Open and a flat 3D placement view. Existing installed-level mod edits retain bounded Linux acceptance. The new projects have no CE runtime loader or source compilation. Full terrain/model/mission authoring, human use and native Windows validation remain open; older installed-level project and waypoint candidates remain separate. | [Mission project workflow and limits](companion/OnslaughtToolkit.Godot/README.md#mission-project), [Installed-level workflow](roadmap/companion-level-editor.md#2-what-exists-today), [Remaining candidates](roadmap/companion-level-editor.md#unreleased-editor-candidates) |
@@ -139,11 +139,11 @@ designed and validated: being unlisted alone does not establish private access.
 The older [original-binary feasibility note](roadmap/original-binary-online-multiplayer-feasibility.md) concerns a
 separate historical route, not a statement that CE already has online play.
 
-The current pushed menu candidate makes the host choose an advertised address before creating a lobby; its evidence
-uses the production menu with in-process interfaces. A separate transport candidate drains queued local closure before
-destruction, with focused native transport and failure controls. These are branch-level results, outside main and the
-public export. They do not prove Windows game hosting, a played campaign win, Internet play or real-device controls.
-The public release remains 0.1.13, and the full experimental 0.2.0 scope above remains the target.
+Multiplayer engineering results remain separate from public source and release acceptance. The
+[published CE README](https://github.com/dlprentice/onslaught-ce/blob/bb4fa1f899db0d1826216b89a59c50781bb9cc9b/README.md#L721-L722)
+lists Internet multiplayer as planned. Player-ready in-game host/join, native Windows hosting, two physical machines
+across actual networks, a played campaign win and real-device controls still need acceptance; bandwidth requirements
+still need measurement. The public release remains 0.1.13, and the full experimental 0.2.0 scope above remains the target.
 
 ### Level and mission tools
 
