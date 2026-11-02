@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-11-02 (chart summaries linked to detailed owners; existing goals and limits retained)
+Last updated: 2026-11-02 (chart owner links and selected Cloudflare TURN experimentation clarified)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
@@ -129,11 +129,12 @@ Do not assume a transport, paid service, new recipient or cross-platform determi
 The intended menu is **Multiplayer → Local or Online**. Local should clearly distinguish split-screen from
 local-network play. Online should offer a browser of available public lobbies and options to create or join public
 and private lobbies, including a private invite/join path. Voice and text chat are planned multiplayer workflows,
-with design and validation still open. One preliminary option is optional LAN discovery plus an
-online directory and relay, with initial game admission limited to two players. Service ownership, hosting costs,
-recipients and data handling remain undecided. Public discovery, any discovery or relay hosting, recipients, costs,
-and the information listed or sent require design and authorization; none is a shipped service claim. Private
-lobby access controls must be designed and validated: being unlisted alone does not establish private access.
+with design and validation still open. Optional LAN discovery plus an online directory and relay is one preliminary
+connection design, with initial game admission limited to two players. Cloudflare TURN is selected for relay
+experimentation within the approved scope. Public lobby discovery and admission/broker hosting remain unselected;
+their operators, recipients, information sent and data handling still need design. These experiments do not establish
+a shipped CE multiplayer service or player-ready automatic connections. Private lobby access controls must be
+designed and validated: being unlisted alone does not establish private access.
 
 The older [original-binary feasibility note](roadmap/original-binary-online-multiplayer-feasibility.md) concerns a
 separate historical route, not a statement that CE already has online play.
