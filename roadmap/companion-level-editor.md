@@ -1,7 +1,7 @@
 # Companion Level Editor: Design and Prototype Plan
 
-Status: M0 (the data layer), M1 (the mod stager and the edit session) and M2 (the first page: a level picker, an object table, typed X, Y and Z, Save as mod) are built and on main; M3 (the map: terrain relief, marks, select, drag, zoom, pan) is built and on main; M4's arrow-key nudges and list of only the moved objects and M6's play button ("Play this level with the changes", section 17 of the mission editor design) are built; M5's first increment (copy a unit) is built, and its other parts (adding other kinds, deleting) and M6's persistent enable toggle are plan; the mission editor that would follow is in [companion-mission-editor.md](companion-mission-editor.md). Its edits have been run in CE on Linux, offscreen, through a private CE build and the released 0.1.12 package and launcher (section 3 and the mission editor design's sections 16 and 17); nobody has used the page or its play button by hand. The C# and Python mission compilers and the script-aware editor model are integrated backend components; the Level editor's Scripts view can edit and compile a script's source and make the open level use it; source-preserving mod staging and 3D mission authoring remain future work.
-Last updated: 2026-11-01 (CE-first direction and separate editor candidates)
+Status: M0 (the data layer), M1 (the mod stager and the edit session) and M2 (the first page: a level picker, an object table, typed X, Y and Z, Save as mod) are built and on main; M3 (the map: terrain relief, marks, select, drag, zoom, pan) is built and on main; M4's arrow-key nudges and list of only the moved objects and M6's play button ("Play this level with the changes", section 17 of the mission editor design) are built; M5's first increment (copy a unit) is built, and its other parts (adding other kinds, deleting) and M6's persistent enable toggle are plan; the mission editor that would follow is in [companion-mission-editor.md](companion-mission-editor.md). Its edits have been run in CE on Linux, offscreen, through a private CE build and the released 0.1.12 package and launcher (section 3 and the mission editor design's sections 16 and 17); nobody has used the page or its play button by hand. The C# and Python mission compilers and the script-aware editor model are integrated backend components; the Level editor's Scripts view can edit and compile a script's source and make the open level use it; source-preserving mod staging and complete 3D mission authoring remain future work.
+Last updated: 2026-11-02 (separate authored mission projects and installed-level candidate scope)
 Summary: how the Companion can grow a visual level editor on top of the Toolkit's world tools and Onslaught CE's mod
 loader: list a level's objects, select one, move it by typing coordinates or dragging it on a top-down map, and save
 the result as a CE mod that CE loads without hand editing. It states what exists, what the measurements say, the
@@ -29,6 +29,12 @@ oracle for that format; the Companion is the player's interface; Onslaught CE is
 
 ## 2. What exists today
 
+A separate [Mission project page](../companion/OnslaughtToolkit.Godot/README.md#mission-project) is now integrated:
+authored placements and preserved source, a flat 3D placement view and `.ceproject` JSON Save/Open. It is independent
+of the installed-world editing pipeline below and adds no CE runtime loader, source compilation, terrain/model
+authoring or playable-level export. Its [capability record](../CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore)
+states the authored-test scope and remaining acceptance.
+
 | Piece | Where | State |
 | --- | --- | --- |
 | World body reader and writer, byte for byte | [`tools/world_resources_encode.py`](../tools/world_resources_encode.py) (`read_world_model`, `write_world_body`) | on main; round-trips every retail world body in the tested installation |
@@ -45,6 +51,10 @@ oracle for that format; the Companion is the player's interface; Onslaught CE is
 
 ### Unreleased editor candidates
 
+These are older installed-level candidate workflows, separate from the authored Mission project page. Some shared
+viewport and edit-session foundation code is now integrated; that does not integrate the complete candidate branches
+or their later fixes described below.
+
 The pushed [3D drag candidate](https://github.com/dlprentice/Onslaught-Career-Editor/blob/8aacbb23577ce57397a5319282bf33cd5f742494/companion/OnslaughtToolkit.Godot/Ui/Pages/LevelTerrainViewport.cs#L341)
 binds a gesture to its captured edit session and object, so a replaced session or record cannot receive a stale drag.
 Its authored-data page-input and offscreen capture assertions passed on Linux: motion leaves the world and undo
@@ -60,8 +70,8 @@ passed without invoking the compiler or mod stager. In that backend branch, an i
 been staged or played in CE. A separate [inspector component candidate](https://github.com/dlprentice/Onslaught-Career-Editor/tree/2b1527eb1bd5bb9cd5457b76fdaf1bff7a88d1e1)
 adds a control and authored tests; that candidate has no Level editor page wiring or normal-runner registration.
 
-These candidates are outside main and unreleased. The full Companion suite, human use, real-world CE acceptance of
-these edit kinds and Windows validation remain open. On main, derived-world previews and terrain/snapshot drafts cannot
+These candidate branches are outside main and unreleased. Their full Companion-suite acceptance, human use, real-world
+CE acceptance of these edit kinds and Windows validation remain open. In the installed-level editor, derived-world previews and terrain/snapshot drafts cannot
 be saved or played, project save/open and script-draft restoration remain unwired, and source-preserving CE staging
 remains unfinished. The preview's terrain pairing is unverified.
 

@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-02 (authored mission project source owners)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository: the companion, tools, lore and frozen references, with routes to the live game projects.
 
@@ -104,6 +104,14 @@ the manual's images from the install. Pages live in
 [`Tests/`](companion/OnslaughtToolkit.Godot/Tests/) and never enter a release export.
 
 ### Level and mission editor
+
+[`CeMissionProjectPage`](companion/OnslaughtToolkit.Godot/Ui/Pages/CeMissionProjectPage.cs) routes authored-project
+actions to [`CeMissionProjectEditor`](companion/OnslaughtToolkit.Godot/Missions/CeMissionProjectEditor.cs).
+[`CeMissionProject`](companion/OnslaughtToolkit.Godot/Missions/CeMissionProject.cs) owns the placement/source document,
+[`CeMissionProjectJson`](companion/OnslaughtToolkit.Godot/Missions/CeMissionProjectJson.cs) its serialization and
+[`CeMissionProjectFiles`](companion/OnslaughtToolkit.Godot/Files/CeMissionProjectFiles.cs) protected new-file publication.
+The [Mission project workflow](companion/OnslaughtToolkit.Godot/README.md#mission-project) owns its scope and limits.
+[`LevelTerrainViewport`](companion/OnslaughtToolkit.Godot/Ui/Pages/LevelTerrainViewport.cs) is the shared 3D control.
 
 [`LevelEditorPage`](companion/OnslaughtToolkit.Godot/Ui/Pages/LevelEditorPage.cs) passes player actions to
 [`LevelEditorModel`](companion/OnslaughtToolkit.Godot/Levels/LevelEditorModel.cs).

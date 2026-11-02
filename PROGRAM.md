@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-11-02 (chart owner links and selected Cloudflare TURN experimentation clarified)
+Last updated: 2026-11-02 (integrated authored mission projects and bounded 3D placement scope)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
@@ -26,7 +26,7 @@ defines progress and what a completion claim requires.
 | Online multiplayer | Experimental two-process work is not player-ready. Pushed candidates add an explicit host-address choice in the menu and drain a local disconnect before destroying the transport. Focused in-process menu and native transport evidence does not establish the game workflow across Linux and Windows. These candidates await main integration, public export and live game acceptance; public 0.1.13 is unchanged. Deliver independently controlled players, compatible content, reliable session lifecycle and approachable connections, then validate actual networks. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play), [CE README](https://github.com/dlprentice/onslaught-ce) |
 | Campaign co-op and scale | Ordinary-campaign objectives, transitions, deaths, rejoin and safe progression are not established online. Larger matches, maps and Battle Engine customization are later goals. Local split-screen is not online co-op. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play) |
 | Controls, display and guidance | Improve understandable dodge/zoom and free-camera help, controllers, accessible menus, window/display choices and performance while preserving the game's look and feel. Investigate the reported floaty mouse feel in the original game; CE behavior remains unknown. Scale the ordinary full-screen HUD and UI for 4K and other high-resolution displays; split-screen scaling is a separate requirement. Real devices and representative Windows graphics remain acceptance gaps. | [Player experience work below](#onslaught-ce-player-experience-and-online-play), [CE README](https://github.com/dlprentice/onslaught-ce) |
-| Level and mission tools | Main supports limited inspection, object moves, unit copies and script edits into CE mods, with bounded Linux acceptance. New editor candidates remain unintegrated and unreleased. Human use, Windows, source-preserving staging and complete 3D authoring remain open. Derived terrain cannot be exported or played; the projection helper does not establish CE ground contact. | [Current editor workflow](roadmap/companion-level-editor.md#2-what-exists-today), [Candidate scope and limits](roadmap/companion-level-editor.md#unreleased-editor-candidates), [Mission acceptance](roadmap/companion-mission-editor.md#16-the-ce-acceptance-of-an-edited-script-on-linux-2026-10-30) |
+| Level and mission tools | Integrated source adds authored mission projects with JSON Save/Open and a flat 3D placement view. Existing installed-level mod edits retain bounded Linux acceptance. The new projects have no CE runtime loader or source compilation. Full terrain/model/mission authoring, human use and native Windows validation remain open; older installed-level project and waypoint candidates remain separate. | [Mission project workflow and limits](companion/OnslaughtToolkit.Godot/README.md#mission-project), [Installed-level workflow](roadmap/companion-level-editor.md#2-what-exists-today), [Remaining candidates](roadmap/companion-level-editor.md#unreleased-editor-candidates) |
 | Mods and content catalogue | Released mods override existing files and supply worlds on Linux; Windows remains disabled. The Windows contract candidate awaits integration and native acceptance. The complete mod platform and verified catalogue remain open; catalogue path counts do not establish complete asset coverage. | [CE mods](https://github.com/dlprentice/onslaught-ce#mods-experimental), [Creation scope](#level-and-mission-tools), [Catalogue work](#content-catalogue), [Coverage limits](tools/README.md#catalogue-source-file-coverage) |
 | Museum and custom levels | The CE-first museum and levels built from scratch remain goals; no playable museum exists. An initial exhibition may precede catalogue completion, Windows support and retail-compatible export. Full coverage and authoring remain open; existing edited-level comparisons establish bounded cases only. | [Museum and authoring scope](#level-and-mission-tools), [Order after 0.1.13](#order-after-0113), [Level evidence](roadmap/companion-level-editor.md#3-what-the-measurements-say-2026-10-29-level-100-the-read-only-retail-view) |
 | Commander | A limited development foundation exists. A usable real-time 3D tactical commander, including eventual multiplayer, remains to be validated and delivered. | [Goal](GOAL.md), [CE](https://github.com/dlprentice/onslaught-ce) |
@@ -148,8 +148,11 @@ The public release remains 0.1.13, and the full experimental 0.2.0 scope above r
 ### Level and mission tools
 
 The creation target is a modern CE-native project format and custom gameplay. Original-game export is useful where
-practical but is not a prerequisite; the existing campaign's faithful baseline remains separate. This is direction,
-not a delivered format or loader.
+practical but is not a prerequisite; the existing campaign's faithful baseline remains separate. The integrated
+[Mission project page](companion/OnslaughtToolkit.Godot/README.md#mission-project) now creates an authored editor
+document with placements, preserved source text and source links, saved and reopened as `.ceproject` JSON. Its 3D
+view uses a flat placement plane and markers, with orbit, zoom, drag and undo. It has no terrain or model rendering,
+source compilation, CE runtime loader or playable-level export. The full format, authoring and runtime goals remain open.
 
 David's mod-platform direction (2026-10-30) is to replace any model, texture, sound, music or text; add units, levels
 and missions; and provide a scripting interface for new rules and modes, up to whole new games built inside CE.
@@ -158,8 +161,9 @@ Safe authoring and compatibility, complete content coverage and HD successors re
 The Companion's Level editor can inspect and move placed objects (typed, dragged on the map or nudged with the arrow keys), list only the moved ones, copy a unit (appended after every row so existing row, path and target indices do not shift; the copy retains its script and target), show a map and mission scripts, and edit a script's
 source (compile it, make the level use it, undo it); it saves changed world files as new CE mods and starts CE at the open level with the changes in a temporary folder of its own (its Play button). The page is covered by
 tests and offscreen captures on Linux; a script edit, a unit copy and two moved Target Tanks were staged by it and run in CE on Linux (section 16 of the mission
-editor design and the level editor plan); nobody has used it by hand, and the mod does not preserve the edited source beside the world file. The [unreleased editor candidates](roadmap/companion-level-editor.md#unreleased-editor-candidates)
-record the newer 3D drag and trigger-radius backend separately from that integrated workflow. The [level editor plan](roadmap/companion-level-editor.md)
+editor design and the level editor plan); nobody has used it by hand, and the mod does not preserve the edited source beside the world file. The [older installed-level candidates](roadmap/companion-level-editor.md#unreleased-editor-candidates)
+record their scope separately from the new authored-project workflow. Installed-level world/terrain project Save/Open,
+script-draft restoration and the waypoint-check workflow remain outside that integration. The [level editor plan](roadmap/companion-level-editor.md)
 and [mission editor design](roadmap/companion-mission-editor.md) own their remaining gates, including source-preserving
 staging, hand use and gameplay acceptance. CE's released world-mod route remains Linux-only. A pushed Windows
 candidate constrains mod opens to read-only access and adds contract fixtures for fallback to the installed base

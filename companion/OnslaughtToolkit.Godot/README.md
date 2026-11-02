@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-02 (authored Mission project workflow, source owners and current limits)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -150,7 +150,7 @@ editor-authored scene, and `npm run build` refuses to stage one.
 | [Levels](Levels/) | World-body reading/writing and level-archive reading, undoable changes (`EditSession`), the editor's application model (`LevelEditorModel`), terrain lookup and map (`Heightfield`, `MapView`), script/source/name readers and structural checks, and separate CE mod publication (`ModStager`) |
 | [Ui](Ui/) | The Flight-deck theme and icons, the shell, career cards, the save-choice dialog, the game's art read from the install (`GameArt`) and one class per page |
 | [Tests](Tests/) | Every behavioral contract, run headlessly inside Godot |
-| [Missions](Missions/) | The mission script compiler: a source in the game's script language (`.msl`) to the compiled script a level's world file stores (`ScriptCompiler`), held to the Toolkit's reference compiler by authored vectors and a per-script comparison on an installed game, with documented missing-header and stale-source cases. The Level editor's Scripts view uses it to compile a source the player edits |
+| [Missions](Missions/) | The mission script compiler (`ScriptCompiler`), used by the installed-level Scripts view and checked against the Toolkit's reference compiler, with documented missing-header and stale-source cases. Separately, authored project documents (`CeMissionProject`), undoable edits (`CeMissionProjectEditor`) and JSON (`CeMissionProjectJson`); their page is `Ui/Pages/CeMissionProjectPage.cs` and protected file publication is `Files/CeMissionProjectFiles.cs` |
 | [Development](Development/) | Development-only entries: screen captures, the local retail gates (`LevelsGate`, `ScriptsGate`), export license metadata and the Windows program icon (`IconWriter`) |
 
 `Tests/` and `Development/` compile only into development builds; release exports
@@ -439,6 +439,8 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   scrolled into view there; the Map switch gives the table the whole column back. The design and what is still planned
   (adding and deleting things) are in
   [`roadmap/companion-level-editor.md`](../../roadmap/companion-level-editor.md). The [mission-editor roadmap](../../roadmap/companion-mission-editor.md) describes current limitations and planned work.
+- **Mission project** creates authored placements and source independently of an installed level. Its
+  [workflow and limits](#mission-project) distinguish the flat 3D placement preview and project Save/Open from CE play.
 - **Advanced**: **Career bytes** shows, read-only, either the open career's stored values
   (including both players' god flags) or, after you choose another career, every byte that
   differs between the two, named by region.
@@ -447,6 +449,25 @@ When the selected game closes while the companion is open, or you come back to t
 notices careers and settings the game saved, reads them again, backs them up if automatic
 backups are on (after the game closed), and shows the latest. Changes you have not saved
 are never thrown away for this; the companion says so instead.
+
+### Mission project
+
+Open **Mission project** in the sidebar to start a new authored project without a game installation, career or
+catalogue. Add objects with a name and definition reference, add mission source, attach a source to an object and
+choose the mission entry source. The project preserves source text and stable object/source IDs together.
+
+The 3D view displays a flat placement plane and object markers. Drag empty space to orbit, use the wheel to zoom,
+or choose **Frame all**. Drag a marker to change X/Y while preserving its stored Z; Z is separately editable and
+positive down. Coordinate, name and source drafts can be applied together and undone/redone. **Save as…** writes
+a new `.ceproject` JSON file and verifies it; existing files are not replaced. **Open…** restores the placements,
+source text and links with a fresh undo history, after confirmation when current work would be discarded.
+
+Definition references are names, not resolved game models. This page has no terrain or model rendering, source
+compilation/execution, CE runtime loader or playable-level export. It is an integrated authoring preview; complete
+mission authoring, physical-input use and native Windows acceptance remain open. The
+[document](Tests/CeMissionProjectTests.cs), [file](Tests/CeMissionProjectFilesTests.cs) and
+[page-input](Tests/CeMissionProjectPageTests.cs) tests cover authored data and programmatic controls; the
+[capability record](../../CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore) owns the executed evidence.
 
 ## Known limits
 

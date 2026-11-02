@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-02 (authored mission project integration and placement/source/file scope)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -226,10 +226,24 @@ Its sidebar:
   Parsed-object source offsets describe positions in the original input buffer; they do not automatically
   follow later edits. To use offsets with edited or serialized bytes, parse those bytes again or use an independently
   verified mapping. This metadata does not establish catalogue-to-model identity, a complete 3D editor, or a completed museum.
+- **Mission project** creates an authored document without an installed level, career or catalogue. Its flat 3D
+  placement plane shows object markers with orbit, zoom, selection, dragging and undo/redo; a drag changes X/Y while
+  preserving stored Z. Objects keep stable IDs and definition-reference names. Preserved mission source can be edited,
+  attached to objects and selected as the mission entry source. Save as writes a new `.ceproject` JSON file; Open
+  restores placements, source and links with a fresh undo history. Existing project files are not replaced.
+  [Document tests](companion/OnslaughtToolkit.Godot/Tests/CeMissionProjectTests.cs),
+  [file tests](companion/OnslaughtToolkit.Godot/Tests/CeMissionProjectFilesTests.cs) and
+  [page-input tests](companion/OnslaughtToolkit.Godot/Tests/CeMissionProjectPageTests.cs) cover those authored paths,
+  invalid inputs, stale edits and delayed I/O. Focused authored checks and the composed full `npm test` passed on
+  Linux on 2026-11-02 against [integrated source](https://github.com/dlprentice/Onslaught-Career-Editor/tree/f4f832c7d2b63f42b9837d96e4a3912808f770c4).
+  The [workflow and limits](companion/OnslaughtToolkit.Godot/README.md#mission-project) distinguish
+  this integrated authoring preview from terrain/model rendering, source compilation, CE runtime loading and complete
+  mission authoring. Human use and native Windows acceptance remain open.
 - **Advanced**, folded away: Career bytes (the open career's stored values, or the bytes that
   differ from another career).
 
-Separate pushed development candidates are outside main and unreleased. The
+The authored Mission project page uses the integrated shared viewport foundation. Older installed-level development
+candidates remain separate and unreleased. The
 [3D drag candidate](https://github.com/dlprentice/Onslaught-Career-Editor/tree/8aacbb23577ce57397a5319282bf33cd5f742494)
 binds a drag to the current edit session and object; authored page-input and offscreen capture assertions cover
 motion without changing the world or undo history, one undoable move on release, preserved height and an unchanged camera. The
@@ -237,9 +251,11 @@ motion without changing the world or undo history, one undoable move on release,
 adds undo/redo, validation and change summaries, with a passing authored-data fixture; that branch has no inspector
 control. A separate inspector component candidate remains unwired.
 The [level editor owner](roadmap/companion-level-editor.md#unreleased-editor-candidates) records their scope.
-These checks do not establish human use, new-edit acceptance in CE, the full Companion suite or native Windows
-acceptance. Derived terrain/snapshot save and play remain disabled, and the separate unsaved terrain draft remains a
-preview rather than published content.
+Those older candidate checks do not establish their full Companion-suite acceptance, human use, new-edit acceptance
+in CE or native Windows acceptance. In the installed-level editor, world/terrain project Save/Open and script-draft
+restoration remain unwired. Derived terrain/snapshot save and play remain disabled, and the unsaved terrain draft
+remains a preview rather than published content. The authored `.ceproject` document does not add those installed-level
+snapshot or CE export capabilities.
 
 A career change reaches the game through a dialog that offers a new career, replacement where allowed,
 or a copy elsewhere. Before a career write, the readable careers for the selected game are copied to a
