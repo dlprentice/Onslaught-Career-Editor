@@ -84,8 +84,13 @@ public partial class CeMissionProjectCapture : SceneTree
             page.Objects.EmitSignal(ItemList.SignalName.ItemSelected, row);
             page.ObjectName.GrabFocus();
             await Shot(viewport, output, "placement-" + label);
+            Vector2 coordinatesAt = page.X.GlobalPosition;
             page.Source.GrabFocus();
             await Shot(viewport, output, "source-" + label);
+            if (page.X.GlobalPosition != coordinatesAt || new[] { page.X, page.Y, page.Z }.Any(field =>
+                field.GetParent().GetParent() is not HBoxContainer row || row.GlobalPosition.Y < page.Root.GlobalPosition.Y ||
+                row.GetGlobalRect().End.Y > page.Root.GetGlobalRect().End.Y))
+                throw new InvalidOperationException("The coordinate labels and fields must stay visible while mission source has focus.");
             GD.Print("CE_PROJECT_CAPTURE verified authored placement, source link and file round trip at " + label);
             return 2;
         }
