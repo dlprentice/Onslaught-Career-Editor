@@ -45,7 +45,7 @@ internal static class CeMissionProjectTests
 
         RejectJson(check, bytes, root => root["future_field"] = true, "unknown project fields are refused");
         RejectJson(check, bytes, root => root.Remove("coordinates"), "missing coordinate frames are refused");
-        RejectJson(check, bytes, root => root["version"] = 2, "unknown project versions are refused");
+        RejectJson(check, bytes, root => root["version"] = 3, "unknown project versions are refused");
         RejectJson(check, bytes, root => root["coordinates"] = "another-frame", "unknown coordinate frames are refused");
         RejectJson(check, bytes, root => root["source_language"] = "another-language", "unknown source languages are refused");
         RejectJson(check, bytes, root => root["placements"]![0]!["position"] = new JsonArray(0, 1), "positions need exactly three coordinates");

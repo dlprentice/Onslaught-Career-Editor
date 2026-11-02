@@ -58,12 +58,14 @@ public partial class CeMissionProjectCapture : SceneTree
             Text(page.ObjectName, "Rendezvous beacon"); Text(page.Definition, "project.beacon"); Press(page.AddObject);
             string beacon = page.Editor.Current.Placements.Single().Id;
             Text(page.X, "40"); Text(page.Y, "60"); Press(page.Apply);
+            Text(page.MapLevel, "777"); Text(page.MapObject, "AuthoredBeacon"); Press(page.LinkMapObject);
             Text(page.SourceName, "Arrival"); Press(page.AddSource);
-            page.Source.Text = "// Harbour escort: authored mission source\n// The beacon marks the rendezvous.\n// Attach behaviour when the CE runtime contract is ready.\n";
+            page.Source.Text = "// Harbour escort: authored mission source\n// The beacon marks the rendezvous.\n// Source is preserved; this placement consumer does not execute it.\n";
             page.Source.EmitSignal(TextEdit.SignalName.TextChanged); Press(page.Apply);
             Press(page.Bind); page.EntrySource.ButtonPressed = true;
             Text(page.ObjectName, "Escort start"); Text(page.Definition, "project.escort"); Press(page.AddObject);
             Text(page.X, "70"); Text(page.Y, "95"); Press(page.Apply);
+            Text(page.MapObject, "AuthoredEscort"); Press(page.LinkMapObject);
             int row = page.Editor.Current.Placements.ToList().FindIndex(item => item.Id == beacon);
             page.Objects.EmitSignal(ItemList.SignalName.ItemSelected, row);
             await Frames(3);
@@ -84,6 +86,8 @@ public partial class CeMissionProjectCapture : SceneTree
             page.Objects.EmitSignal(ItemList.SignalName.ItemSelected, row);
             page.ObjectName.GrabFocus();
             await Shot(viewport, output, "placement-" + label);
+            page.MapObject.GrabFocus();
+            await Shot(viewport, output, "map-link-" + label);
             Vector2 coordinatesAt = page.X.GlobalPosition;
             page.Source.GrabFocus();
             await Shot(viewport, output, "source-" + label);
@@ -91,8 +95,8 @@ public partial class CeMissionProjectCapture : SceneTree
                 field.GetParent().GetParent() is not HBoxContainer row || row.GlobalPosition.Y < page.Root.GlobalPosition.Y ||
                 row.GetGlobalRect().End.Y > page.Root.GetGlobalRect().End.Y))
                 throw new InvalidOperationException("The coordinate labels and fields must stay visible while mission source has focus.");
-            GD.Print("CE_PROJECT_CAPTURE verified authored placement, source link and file round trip at " + label);
-            return 2;
+            GD.Print("CE_PROJECT_CAPTURE verified authored placement, installed-map binding, preserved source and file round trip at " + label);
+            return 3;
         }
         finally { viewport.QueueFree(); await Frames(3); }
     }

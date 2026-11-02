@@ -8,6 +8,38 @@ namespace OnslaughtToolkit.Companion.Missions;
 /// <summary>An authored placement, identified independently of its position in a list. Definition names are references, not bundled assets.</summary>
 public sealed record CeMissionPlacement(string Id, string Name, string Definition, Vector3 Position, string? ScriptId = null);
 
+/// <summary>A logical definition bound to one named object supplied by the selected installed map.</summary>
+public sealed record CeMissionObjectBinding(string Definition, string SourceObject);
+
+/// <summary>Existing-map placement only: terrain and object assets remain supplied by the installed map.</summary>
+public sealed class CeMissionMapLink
+{
+    public const string Mode = "existing-object-placement";
+    public int Level { get; }
+    public ReadOnlyCollection<CeMissionObjectBinding> Bindings { get; }
+
+    public CeMissionMapLink(int level, IEnumerable<CeMissionObjectBinding> bindings)
+    {
+        if (level is < 1 or > 9999) throw new ArgumentException("The installed map number must be between 1 and 9999.");
+        ArgumentNullException.ThrowIfNull(bindings);
+        CeMissionObjectBinding[] rows = bindings.Take(CeMissionProject.MaxPlacements + 1).ToArray();
+        if (rows.Length > CeMissionProject.MaxPlacements) throw new ArgumentException("There are too many map-object bindings.");
+        HashSet<string> definitions = new(StringComparer.Ordinal), objects = new(StringComparer.Ordinal);
+        foreach (CeMissionObjectBinding row in rows)
+        {
+            ArgumentNullException.ThrowIfNull(row);
+            CeMissionProject.CheckText(row.Definition, "Definition reference", 256, false, false);
+            CeMissionProject.CheckText(row.SourceObject, "Map object name", 96, false, false);
+            if (row.SourceObject.Any(character => character is < ' ' or > '~'))
+                throw new ArgumentException("Map object names must use printable ASCII.");
+            if (!definitions.Add(row.Definition) || !objects.Add(row.SourceObject))
+                throw new ArgumentException("Each definition and each named map object can be bound only once.");
+        }
+        Level = level;
+        Bindings = Array.AsReadOnly(rows.OrderBy(row => row.Definition, StringComparer.Ordinal).ToArray());
+    }
+}
+
 /// <summary>Preserved source text. This document does not compile it or assert that CE can execute it.</summary>
 public sealed record CeMissionSource(string Id, string Name, string Text);
 
@@ -19,18 +51,37 @@ public sealed record CeMissionSource(string Id, string Name, string Text);
 public sealed class CeMissionProject
 {
     public const string Kind = "onslaught.ce.mission-project", CoordinateFrame = "aquila-xyz-z-down", SourceLanguage = "bea-msl";
-    public const int Version = 1, MaxPlacements = 4096, MaxScripts = 128, MaxSourceBytes = 1 << 20,
+    public const int Version = 1, LinkedVersion = 2, MaxPlacements = 4096, MaxScripts = 128, MaxSourceBytes = 1 << 20,
         MaxTotalSourceBytes = 4 << 20, MaxDocumentBytes = 8 << 20;
     private static readonly UTF8Encoding Utf8 = new(false, true);
 
     public string Id { get; }
     public string Name { get; }
     public string? EntryScriptId { get; }
+    public CeMissionMapLink? Map { get; }
+    public int FormatVersion => Map is null ? Version : LinkedVersion;
+    public const float MaxRuntimeCoordinate = 1048576;
+
+    /// <summary>Checks this slice's runtime contract without reading or asserting the contents of an installation.</summary>
+    public string RuntimeLinkStatus()
+    {
+        if (Map is null) return "No installed map linked. This is an authoring-only project.";
+        if (Placements.Count == 0) return "Add a placement before loading this linked map in CE.";
+        HashSet<string> used = new(StringComparer.Ordinal);
+        foreach (CeMissionPlacement placement in Placements)
+        {
+            if (!Map.Bindings.Any(row => row.Definition == placement.Definition)) return "A placement definition has no named map-object binding.";
+            if (!used.Add(placement.Definition)) return "Existing-object mode needs one placement per definition; it does not clone objects.";
+            if (MathF.Abs(placement.Position.X) > MaxRuntimeCoordinate || MathF.Abs(placement.Position.Y) > MaxRuntimeCoordinate ||
+                MathF.Abs(placement.Position.Z) > MaxRuntimeCoordinate) return "A coordinate exceeds the CE project loader's safety bound.";
+        }
+        return "Linked map ready for CE to validate: " + Placements.Count + " existing-object placement(s). Source text is preserved, not run.";
+    }
     public ReadOnlyCollection<CeMissionPlacement> Placements { get; }
     public ReadOnlyCollection<CeMissionSource> Scripts { get; }
 
     public CeMissionProject(string id, string name, IEnumerable<CeMissionPlacement> placements,
-        IEnumerable<CeMissionSource> scripts, string? entryScriptId = null)
+        IEnumerable<CeMissionSource> scripts, string? entryScriptId = null, CeMissionMapLink? map = null)
     {
         CheckId(id, "Project ID");
         CheckText(name, "Project name", 256, allowEmpty: false, multiline: false);
@@ -67,6 +118,7 @@ public sealed class CeMissionProject
         Id = id;
         Name = name;
         EntryScriptId = entryScriptId;
+        Map = map;
         Placements = Array.AsReadOnly(objects.OrderBy(item => item.Id, StringComparer.Ordinal).ToArray());
         Scripts = Array.AsReadOnly(sources.OrderBy(item => item.Id, StringComparer.Ordinal).ToArray());
     }
@@ -79,10 +131,11 @@ public sealed class CeMissionProject
     public CeMissionSource Script(string id) => Scripts.FirstOrDefault(item => item.Id == id)
         ?? throw new ArgumentException("That script is not in this project.");
 
-    internal CeMissionProject WithPlacements(IEnumerable<CeMissionPlacement> placements) => new(Id, Name, placements, Scripts, EntryScriptId);
-    internal CeMissionProject WithScripts(IEnumerable<CeMissionSource> scripts) => new(Id, Name, Placements, scripts, EntryScriptId);
-    internal CeMissionProject WithEntry(string? scriptId) => new(Id, Name, Placements, Scripts, scriptId);
-    internal CeMissionProject WithName(string name) => new(Id, name, Placements, Scripts, EntryScriptId);
+    internal CeMissionProject WithPlacements(IEnumerable<CeMissionPlacement> placements) => new(Id, Name, placements, Scripts, EntryScriptId, Map);
+    internal CeMissionProject WithScripts(IEnumerable<CeMissionSource> scripts) => new(Id, Name, Placements, scripts, EntryScriptId, Map);
+    internal CeMissionProject WithEntry(string? scriptId) => new(Id, Name, Placements, Scripts, scriptId, Map);
+    internal CeMissionProject WithName(string name) => new(Id, name, Placements, Scripts, EntryScriptId, Map);
+    internal CeMissionProject WithMap(CeMissionMapLink? map) => new(Id, Name, Placements, Scripts, EntryScriptId, map);
 
     private static void CheckScriptReference(string? id, HashSet<string> scripts)
     {
@@ -100,7 +153,7 @@ public sealed class CeMissionProject
 
     private static bool AsciiStart(char value) => value is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or '_';
 
-    private static int CheckText(string value, string label, int maxBytes, bool allowEmpty, bool multiline)
+    internal static int CheckText(string value, string label, int maxBytes, bool allowEmpty, bool multiline)
     {
         if (value is null || (!allowEmpty && string.IsNullOrWhiteSpace(value)) ||
             value.Any(character => char.IsControl(character) && !(multiline && character is '\r' or '\n' or '\t')))

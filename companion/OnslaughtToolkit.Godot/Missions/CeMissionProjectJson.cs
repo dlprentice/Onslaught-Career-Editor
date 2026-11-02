@@ -18,12 +18,28 @@ public static class CeMissionProjectJson
         {
             json.WriteStartObject();
             json.WriteString("kind", CeMissionProject.Kind);
-            json.WriteNumber("version", CeMissionProject.Version);
+            json.WriteNumber("version", project.FormatVersion);
             json.WriteString("coordinates", CeMissionProject.CoordinateFrame);
             json.WriteString("source_language", CeMissionProject.SourceLanguage);
             json.WriteString("id", project.Id);
             json.WriteString("name", project.Name);
             WriteReference(json, "entry_script", project.EntryScriptId);
+            if (project.Map is not null)
+            {
+                json.WriteStartObject("map");
+                json.WriteString("mode", CeMissionMapLink.Mode);
+                json.WriteNumber("level", project.Map.Level);
+                json.WriteStartArray("bindings");
+                foreach (CeMissionObjectBinding binding in project.Map.Bindings)
+                {
+                    json.WriteStartObject();
+                    json.WriteString("definition", binding.Definition);
+                    json.WriteString("source_object", binding.SourceObject);
+                    json.WriteEndObject();
+                }
+                json.WriteEndArray();
+                json.WriteEndObject();
+            }
             json.WriteStartArray("placements");
             foreach (CeMissionPlacement placement in project.Placements)
             {
@@ -67,8 +83,13 @@ public static class CeMissionProjectJson
             _ = Utf8.GetCharCount(bytes.Span);
             using JsonDocument document = JsonDocument.Parse(bytes, new JsonDocumentOptions { MaxDepth = 16 });
             JsonElement root = document.RootElement;
-            Fields(root, "kind", "version", "coordinates", "source_language", "id", "name", "entry_script", "placements", "scripts");
-            if (Text(root, "kind") != CeMissionProject.Kind || root.GetProperty("version").GetInt32() != CeMissionProject.Version)
+            if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("version", out JsonElement versionField))
+                throw new InvalidDataException("The project is missing its version.");
+            int version = versionField.GetInt32();
+            if (version == CeMissionProject.LinkedVersion)
+                Fields(root, "kind", "version", "coordinates", "source_language", "id", "name", "entry_script", "map", "placements", "scripts");
+            else Fields(root, "kind", "version", "coordinates", "source_language", "id", "name", "entry_script", "placements", "scripts");
+            if (Text(root, "kind") != CeMissionProject.Kind || version is not (CeMissionProject.Version or CeMissionProject.LinkedVersion))
                 throw new InvalidDataException("This is not a supported CE mission-project document.");
             if (Text(root, "coordinates") != CeMissionProject.CoordinateFrame || Text(root, "source_language") != CeMissionProject.SourceLanguage)
                 throw new InvalidDataException("The project's coordinate frame or source language is unsupported.");
@@ -91,7 +112,23 @@ public static class CeMissionProjectJson
                 Fields(script, "id", "name", "source");
                 sources.Add(new(Text(script, "id"), Text(script, "name"), Text(script, "source")));
             }
-            return new(Text(root, "id"), Text(root, "name"), objects, sources, Reference(root, "entry_script"));
+            CeMissionMapLink? map = null;
+            if (version == CeMissionProject.LinkedVersion)
+            {
+                JsonElement link = root.GetProperty("map");
+                Fields(link, "mode", "level", "bindings");
+                if (Text(link, "mode") != CeMissionMapLink.Mode) throw new InvalidDataException("The map placement mode is unsupported.");
+                JsonElement bindings = link.GetProperty("bindings");
+                ArrayLimit(bindings, CeMissionProject.MaxPlacements, "binding");
+                List<CeMissionObjectBinding> rows = [];
+                foreach (JsonElement binding in bindings.EnumerateArray())
+                {
+                    Fields(binding, "definition", "source_object");
+                    rows.Add(new(Text(binding, "definition"), Text(binding, "source_object")));
+                }
+                map = new(link.GetProperty("level").GetInt32(), rows);
+            }
+            return new(Text(root, "id"), Text(root, "name"), objects, sources, Reference(root, "entry_script"), map);
         }
         catch (Exception error) when (error is JsonException or ArgumentException or InvalidOperationException or FormatException or OverflowException)
         {

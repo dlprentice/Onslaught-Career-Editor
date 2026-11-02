@@ -18,6 +18,7 @@ public partial class CeMissionProjectTestRunner : SceneTree
             string output = OS.GetCmdlineUserArgs().FirstOrDefault(argument => argument.StartsWith("--output-dir=", StringComparison.Ordinal))?[13..]
                 ?? throw new InvalidOperationException("An owned --output-dir is required.");
             CeMissionProjectFilesTests.Run(output, check);
+            CeMissionRuntimeLinkTests.Run(output, check);
             await CeMissionProjectPageTests.RunAsync(this, output, check);
             foreach (string failure in check.Failures) GD.PrintErr("FAIL: " + failure);
             GD.Print($"CE_PROJECT_TESTS: {check.Count} checks, {check.Failures.Count} failures.");

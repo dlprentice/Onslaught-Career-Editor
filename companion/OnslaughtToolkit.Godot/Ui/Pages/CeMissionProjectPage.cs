@@ -15,7 +15,7 @@ internal sealed class CeMissionProjectPage : Page
     private readonly ICeMissionProjectFiles _files;
     private readonly Func<IReadOnlyList<string?>> _protectedFolders;
     private readonly Action<string, string, Action> _ask;
-    private readonly Label _notice, _selection, _drafts;
+    private readonly Label _notice, _selection, _drafts, _mapStatus, _mapObjectLabel;
     private readonly Dictionary<string, (string X, string Y, string Z)> _positionDrafts = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _sourceDrafts = new(StringComparer.Ordinal);
     private IReadOnlyList<ObjectRow> _rows = [];
@@ -38,6 +38,11 @@ internal sealed class CeMissionProjectPage : Page
     internal LineEdit ObjectName { get; }
     internal LineEdit Definition { get; }
     internal LineEdit SourceName { get; }
+    internal LineEdit MapLevel { get; }
+    internal LineEdit MapObject { get; }
+    internal Button LinkMapObject { get; }
+    internal Button ClearMap { get; }
+    internal string MapStatus => _mapStatus.Text;
     internal LineEdit X { get; }
     internal LineEdit Y { get; }
     internal LineEdit Z { get; }
@@ -66,7 +71,7 @@ internal sealed class CeMissionProjectPage : Page
         _protectedFolders = protectedFolders ?? (() => []);
         VBoxContainer page = Build.Column(10);
         Root = page;
-        page.Add(Build.Text("CE project authoring preview. Runtime loading is not available yet.", "Muted"));
+        page.Add(Build.Text("CE linked-map placement · requires CE project support. Source text is preserved, not compiled.", "Muted"));
         HFlowContainer toolbar = page.Add(new HFlowContainer());
         NewProject = toolbar.Add(Build.Button("New", tooltip: "Start a new mission project."));
         OpenProject = toolbar.Add(Build.Button("Open…", tooltip: "Open a mission project."));
@@ -105,6 +110,15 @@ internal sealed class CeMissionProjectPage : Page
         ObjectName = Field(inspector, "Name for new object", "Object");
         Definition = Field(inspector, "Definition reference", "authored.unit");
         AddObject = inspector.Add(Build.Button("Add object"));
+        inspector.Add(Build.Heading("Installed-map link", "Section"));
+        inspector.Add(Build.Text("Reposition one existing named map object per definition. Terrain and assets come from that map.", "Muted"));
+        MapLevel = Field(inspector, "Installed map number", "");
+        _mapObjectLabel = inspector.Add(Build.Text("Existing map object", "Muted"));
+        MapObject = inspector.Add(new LineEdit { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            TooltipText = "Exact named object supplied by the linked map. Press Link selected definition to apply these fields." });
+        LinkMapObject = inspector.Add(Build.Button("Link selected definition"));
+        ClearMap = inspector.Add(Build.Button("Remove installed-map link"));
+        _mapStatus = inspector.Add(Build.Text("", "Muted"));
         inspector.Add(Build.Heading("Mission source", "Section"));
         SourceName = Field(inspector, "Name for new source", "Mission source");
         AddSource = inspector.Add(Build.Button("Add source"));
@@ -152,6 +166,28 @@ internal sealed class CeMissionProjectPage : Page
                 RefreshDocument();
                 FrameObjects();
             }
+            Report(message);
+        };
+        LinkMapObject.Pressed += () =>
+        {
+            if (_busy || HasDrafts || _selectedObject is null) return;
+            if (!int.TryParse(MapLevel.Text, NumberStyles.None, CultureInfo.InvariantCulture, out int level))
+            { Report("Enter an installed map number, then link the selected definition. No game files are read here."); return; }
+            CeMissionProject project = Editor.Current;
+            string definition = project.Placement(_selectedObject).Definition;
+            try
+            {
+                CeMissionMapLink map = new(level, (project.Map?.Bindings.AsEnumerable() ?? [])
+                    .Where(row => row.Definition != definition).Append(new(definition, MapObject.Text)));
+                Editor.TrySetMapLink(map, Editor.Revision, out string message);
+                Report(message + " Save as keeps this map link with the placements.");
+            }
+            catch (ArgumentException error) { Report(error.Message); }
+        };
+        ClearMap.Pressed += () =>
+        {
+            if (_busy || HasDrafts) return;
+            Editor.TrySetMapLink(null, Editor.Revision, out string message);
             Report(message);
         };
         AddSource.Pressed += () =>
@@ -284,6 +320,10 @@ internal sealed class CeMissionProjectPage : Page
             var position = selected is not null && _positionDrafts.TryGetValue(selected.Id, out var draft) ? draft :
                 selected is not null ? (Number(selected.Position.X), Number(selected.Position.Y), Number(selected.Position.Z)) : ("0", "0", "0");
             (X.Text, Y.Text, Z.Text) = position;
+            MapLevel.Text = project.Map?.Level.ToString(CultureInfo.InvariantCulture) ?? "";
+            _mapObjectLabel.Text = selected is null ? "Select a placement to bind its definition" : "Existing map object for " + selected.Definition;
+            MapObject.Text = selected is null ? "" : project.Map?.Bindings.FirstOrDefault(row => row.Definition == selected.Definition)?.SourceObject ?? "";
+            _mapStatus.Text = project.RuntimeLinkStatus();
             Sources.Clear();
             for (int index = 0; index < project.Scripts.Count; index++)
             {
@@ -302,6 +342,9 @@ internal sealed class CeMissionProjectPage : Page
         bool change = !_busy && !HasDrafts;
         NewProject.Disabled = OpenProject.Disabled = SaveProject.Disabled = _busy;
         AddObject.Disabled = AddSource.Disabled = !change;
+        LinkMapObject.Disabled = !change || _selectedObject is null;
+        ClearMap.Disabled = !change || Editor.Current.Map is null;
+        MapLevel.Editable = MapObject.Editable = !_busy;
         Apply.Disabled = _busy || !HasDrafts;
         Undo.Disabled = !change || !Editor.CanUndo;
         Redo.Disabled = !change || !Editor.CanRedo;
@@ -323,7 +366,7 @@ internal sealed class CeMissionProjectPage : Page
         _selectedObject = _selectedSource = null;
         Editor.Open(document);
         FrameObjects();
-        Report("Project opened. Objects and source are kept together; Undo starts a new history.");
+        Report("Project opened. Placements, map bindings and source are kept together; Undo starts a new history.");
     }
 
     private void FrameObjects()

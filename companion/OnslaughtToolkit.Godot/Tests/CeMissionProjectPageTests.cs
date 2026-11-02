@@ -37,6 +37,13 @@ internal static class CeMissionProjectPageTests
             Text(page.ObjectName, "Escort"); Text(page.Definition, "authored.escort"); Press(page.AddObject);
             string escort = page.Editor.Current.Placements.Single(item => item.Name == "Escort").Id;
             SelectObject(page, beacon);
+            Text(page.MapLevel, "777"); Text(page.MapObject, "AuthoredAnchor"); Press(page.LinkMapObject);
+            SelectObject(page, escort);
+            Text(page.MapObject, "AuthoredEscort"); Press(page.LinkMapObject);
+            check.That(page.Editor.Current.Map?.Level == 777 && page.Editor.Current.Map.Bindings.Count == 2 &&
+                page.MapStatus.Contains("ready for CE", StringComparison.Ordinal),
+                "the page links selected definitions to existing map objects without reading an installation");
+            SelectObject(page, beacon);
             Text(page.Z, "-7.25"); Press(page.Apply);
             Text(page.SourceName, "Arrival"); Press(page.AddSource);
             string arrival = page.Editor.Current.Scripts.Single().Id;
@@ -111,7 +118,7 @@ internal static class CeMissionProjectPageTests
             discard?.Invoke();
             check.That(page.Editor.Current.Placements.Count == 0 && !page.HasUnsavedChanges, "confirmed New starts a clean authored project");
             check.That(await page.OpenFileAsync(path) && CeMissionProjectJson.Write(page.Editor.Current).AsSpan().SequenceEqual(expected) && !page.Editor.CanUndo,
-                "Open restores stable IDs, 3D placements, links and source with a fresh undo history");
+                "Open restores stable IDs, 3D placements, map bindings and source with a fresh undo history");
             string invalidPath = Path.Combine(root, "invalid.ceproject");
             File.WriteAllText(invalidPath, "invalid project");
             CeMissionProject current = page.Editor.Current;
