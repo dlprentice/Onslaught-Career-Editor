@@ -112,11 +112,18 @@ internal static class CeLinkedSceneTests
         CeLinkedSceneSnapshot omitted = CeLinkedSceneLoader.Load(fallback, project);
         check.That(omitted.Objects[1].ModelKey is null && omitted.Notes.Any(note => note.Contains("no stored model reference", StringComparison.Ordinal)),
             "objects whose geometry is selected elsewhere are explicitly reported rather than assigned an invented mesh");
+        other.Init.MeshNumber = 7;
+        File.WriteAllBytes(Path.Combine(worlds, "world777.wrd"), body.Write());
+        CeLinkedSceneSnapshot unresolved = CeLinkedSceneLoader.Load(fallback, project);
+        check.That(unresolved.Objects[1].ModelKey is null && unresolved.Notes.Any(note => note.Contains("outside this world's own model list", StringComparison.Ordinal)) &&
+            !unresolved.Notes.Any(note => note.Contains("no stored model reference", StringComparison.Ordinal)),
+            "a model number beyond the world's own model list is reported as unresolved, not as a missing reference");
         SelectedLevelBindings(root, check);
         if (OperatingSystem.IsLinux())
         {
             string linked = Path.Combine(root, "linked-input"); Directory.CreateSymbolicLink(linked, root);
             Refuses(check, () => CeLinkedSceneLoader.Load(linked, project), "linked input folders are refused");
+            Refuses(check, () => CeLinkedSceneLoader.Load(linked + Path.DirectorySeparatorChar, project), "a final separator does not hide a linked input folder");
             File.WriteAllBytes(Path.Combine(resources, "777_res_pc.aya"), archiveBytes);
             Refuses(check, () => CeLinkedSceneLoader.Load(root, project), "case-ambiguous selected archives are refused");
         }
@@ -323,6 +330,7 @@ internal static class CeLinkedSceneTests
             check.That(view.LinkedModelCount == 2 && actors.Length == 2 && actors[0].Transform.IsEqualApprox(home) &&
                 actors[1].Position.IsEqualApprox(LinkedSceneCoordinates.View(editor.Current.Placements[0].Position)),
                 "a base-world model stays at its installed transform while the selected level's object of that name takes the placement");
+            if (actors.Length != 2) return;
             Vector2 baseAt = camera.UnprojectPosition(actors[0].Position), at = camera.UnprojectPosition(actors[1].Position);
             check.That(layer.RowAt(camera, baseAt) is null && layer.RowAt(camera, at) == 0, "only the bound selected-level model is picked as the placement");
             Button(view, baseAt, true); Motion(view, baseAt, camera.UnprojectPosition(new Vector3(2, 0, -2))); Button(view, baseAt, false); await Frame(tree);

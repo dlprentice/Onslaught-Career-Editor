@@ -115,7 +115,8 @@ public static class CeLinkedSceneLoader
     {
         ArgumentNullException.ThrowIfNull(project);
         CeMissionMapLink map = project.Map ?? throw new InvalidDataException("Link an installed map before loading its preview.");
-        DirectoryInfo root = new(Path.GetFullPath(gameRoot));
+        // A final separator would resolve a linked folder before its link could be seen.
+        DirectoryInfo root = new(Path.TrimEndingDirectorySeparator(Path.GetFullPath(gameRoot)));
         DirectoryInfo data = Directory(root, "data"), resources = Directory(data, "resources");
         FileInfo archive = File(resources, $"{map.Level:D3}_res_pc.aya");
         LevelWorlds worlds = LevelArchive.Read(Read(archive, LevelArchive.MaxFileBytes));
@@ -130,6 +131,7 @@ public static class CeLinkedSceneLoader
 
         List<CeLinkedSceneObject> objects = [];
         HashSet<string> needed = new(StringComparer.OrdinalIgnoreCase);
+        int unreferenced = 0, unresolved = 0;
         foreach ((bool fromBaseWorld, WorldBody body) in bodies)
         {
             if (body.Things.Count > WorldBody.MaxThings) throw new InvalidDataException("The map has too many objects to preview.");
@@ -139,6 +141,8 @@ public static class CeLinkedSceneLoader
                 int number = thing.Init.MeshNumber;
                 string? model = number >= 0 && number < body.NamedMeshes.Count ? MeshKey(body.NamedMeshes[number]) : null;
                 if (model is not null) needed.Add(model);
+                else if (number < 0) unreferenced++;
+                else unresolved++;
                 objects.Add(new((fromBaseWorld ? "base:" : "level:") + i, thing.Init.Name, thing.Definition ?? "", model,
                     thing.Init.Position, thing.Init.Orientation, fromBaseWorld));
             }
@@ -146,8 +150,9 @@ public static class CeLinkedSceneLoader
         if (needed.Count > 512) throw new InvalidDataException("The map references too many preview models.");
         List<CeLinkedSceneModel> models = [];
         List<string> notes = [];
-        int withoutModel = objects.Count(row => row.ModelKey is null);
-        if (withoutModel > 0) notes.Add($"{withoutModel} map object(s) have no stored model reference; their geometry is omitted.");
+        if (unreferenced > 0) notes.Add($"{unreferenced} map object(s) have no stored model reference; their geometry is omitted.");
+        // Installed worlds can leave their own model list empty and number models elsewhere; this preview reads only that list.
+        if (unresolved > 0) notes.Add($"{unresolved} map object(s) refer to models outside this world's own model list, which this preview does not resolve; their geometry is omitted.");
         if (bodies.Any(body => body.Body.TreeGroups.Count > 0)) notes.Add("Tree-group geometry is not included in this preview.");
         if (needed.Count > 0)
         {
