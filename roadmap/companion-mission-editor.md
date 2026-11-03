@@ -2,7 +2,7 @@
 
 Status: design; the reference compiler and read-only scripts view with name links and map paths are built. The C# and Python compiler backends and the script-aware editor model are integrated, and the Level editor's Scripts view edits a script's source, compiles it and makes the open level use it (section 15); the acceptance in section 6 was run once on Linux (section 16) and the Level editor's Play button starts CE at the open level with the changes (section 17); source-preserving staging and native Windows validation remain open. It extends the
 [Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-11-01 (CE-first direction and current source-editing scope)
+Last updated: 2026-11-02 (optional modes and capability proof before product placement)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours checked against the shipped scripts with the documented
 missing-header and stale-source cases, and save the result as a CE mod, which is the world file the loader already serves. It states what
@@ -19,6 +19,17 @@ The [level editor plan](companion-level-editor.md) states the CE-first direction
 custom gameplay are first-class targets, original-game export is optional where practical, and campaign faithfulness
 remains a separate baseline. The workflow below describes the existing world-file/script path; it does not prescribe
 the format or loader for future CE-native missions.
+
+## Optional modes and ordinary play
+
+This is planned direction. Preserve the original campaign and existing modes with their intended rules, keeping
+demonstrated bug fixes and useful quality-of-life improvements. Co-op, Commander and custom modes are optional
+additions; they must not interfere with ordinary play.
+
+First prove the editors and Commander work in useful controlled scenarios. Their availability, product placement and
+packaging can be decided as development progresses; fitting them into the original campaign is not a prerequisite
+for proving they work. The [goal](../GOAL.md) and [program](../PROGRAM.md) own the shared direction. The current
+workflow and its measured limits remain as recorded below.
 
 ## 1. What this is for
 

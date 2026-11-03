@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-11-02 (lobby discovery, invitations, voice and text chat goals made explicit)
+Last updated: 2026-11-02 (ordinary play, optional modes and flexible product placement)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
@@ -22,6 +22,8 @@ archive.
   in-game guidance, window/display choices, 4K readability, performance and useful, privacy-conscious diagnostics.
   Verify the developer console, cheats and free camera through usable controls rather than assuming each path works.
   Keep faithful reference recordings separate from a future way to record and test CE enhancements and controller input.
+  Preserve the ordinary campaign and existing ways of playing with their intended rules, while retaining demonstrated
+  bug fixes and useful quality-of-life improvements. New modes are optional and must not interfere with ordinary play.
 - **Online play should be approachable.** Start with two independently controlled players across Linux and Windows,
   including versus and co-op. Extend co-op to the ordinary campaign with compatible saves and progression; later aim
   for more players, larger maps and compatible Battle Engine customization. Host/Join, failures and content
@@ -30,8 +32,9 @@ archive.
   whose implementation and acceptance remain open. A direct connection or idle synchronization is not completion.
 - **A future real-time 3D commander role** lets a player direct eligible friendly units from a tactical view, including
   an eventual multiplayer mode alongside players piloting Battle Engines. Aim for Linux and Windows and later more than two
-  participants. Ordinary campaign play remains available when the mode is off; missions and game events determine
-  outcomes. This is a goal, not a completed capability.
+  participants. Missions and game events still determine outcomes. Prove this optional role works, including in
+  controlled test scenarios; its availability and final product placement can be decided as development progresses.
+  This is a goal, not a completed capability.
 - **Creation and modding tools** should let players inspect and create levels, missions and compatible modifications
   safely, including 3D map and mission editors. A modern CE-native project format and custom gameplay are first-class
   targets; original-game-compatible export is useful where practical but is not a prerequisite. Faithful behavior
