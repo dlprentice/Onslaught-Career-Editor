@@ -26,6 +26,7 @@ import zlib
 from pathlib import Path
 
 MESH_RECORD, PART_RECORD, VB_RECORD = 372, 316, 296
+MESH_REFERENCE = 309
 
 
 class GrammarError(ValueError):
@@ -117,7 +118,11 @@ def walk_mesh(s: Stream) -> None:
             if i32(s.take(size), 0x40):
                 s.take(4)
     if chained:
-        s.header("chained mesh")
+        # A loose mesh's next-in-chain is a direct PMS2 child; a mesh carried inside a resource archive wraps it as the
+        # resource record does, PMSH holding PMS2 with the 309-byte reference header in front of the mesh.
+        if s.header("chained mesh") == "PMSH":
+            s.header("chained reference")
+            s.take(MESH_REFERENCE)
         walk_mesh(s)
 
 

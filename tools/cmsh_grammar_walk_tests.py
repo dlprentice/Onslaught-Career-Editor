@@ -86,6 +86,22 @@ class WalkTests(unittest.TestCase):
         slots = self.walk(mesh(parts=2, pieces=2))
         self.assertEqual(slots["piece vertices"]["VBUF"], 4)
 
+    def test_a_loose_chain_is_a_direct_pms2_child(self):
+        chained = chunk("CMSH", record(walker.MESH_RECORD, {0x08: 1, 0x15C: 1})) + chunk("CMST") + part() + box()
+        slots = self.walk(chained + chunk("PMS2", mesh()))
+        self.assertEqual(slots["chained mesh"]["PMS2"], 1)
+
+    def test_a_resource_chain_wraps_the_mesh_in_its_reference_record(self):
+        first = chunk("CMSH", record(walker.MESH_RECORD, {0x08: 1, 0x15C: 1})) + chunk("CMST") + part() + box()
+        slots = self.walk(first + chunk("PMSH", chunk("PMS2", bytes(walker.MESH_REFERENCE) + mesh())))
+        self.assertEqual(slots["chained mesh"]["PMSH"], 1)
+        self.assertEqual(slots["chained reference"]["PMS2"], 1)
+
+    def test_a_resource_chain_without_its_reference_record_is_refused(self):
+        first = chunk("CMSH", record(walker.MESH_RECORD, {0x08: 1, 0x15C: 1})) + chunk("CMST") + part() + box()
+        with self.assertRaises(walker.GrammarError):
+            self.walk(first + chunk("PMSH", chunk("PMS2", mesh())))
+
     def test_trailing_bytes_are_refused(self):
         with self.assertRaises(walker.GrammarError):
             self.walk(mesh() + b"\0" * 8)
