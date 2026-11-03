@@ -132,7 +132,7 @@ def texture_reference(chunks: Chunks) -> dict:
     if not 0 <= texture_format < len(FORMATS):
         raise GoodieError(f"texture {name!r} has format {texture_format}")
     return {"name": name, "width": width, "height": height, "frames": frames, "format": FORMATS[texture_format],
-            "compressible": compressible, "levels": levels}
+            "compressible": compressible, "levels": levels, "terminated": b"\0" in raw[8:136]}
 
 
 def texture_candidates(texture: dict, frame: int = 0) -> list[str]:
@@ -179,7 +179,8 @@ def read_goodie(data: bytes) -> dict:
         pms2.closed("PMS2")
         name = raw[:300].split(b"\0", 1)[0].decode("latin-1")
         runtime_id, optional = struct.unpack_from("<2i", raw, 300)
-        goodie["mesh"] = {"name": name, "runtime_id": runtime_id, "optional": optional, "keep_buckets": raw[308]}
+        goodie["mesh"] = {"name": name, "runtime_id": runtime_id, "optional": optional, "keep_buckets": raw[308],
+                          "terminated": b"\0" in raw[:300]}
     elif kind not in (VIDEO, LEVEL):
         raise GoodieError(f"unknown Goodie type {kind}")
     gdat.closed("GDAT")

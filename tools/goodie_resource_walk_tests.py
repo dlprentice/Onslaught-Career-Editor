@@ -47,6 +47,12 @@ class GoodieWalkTests(unittest.TestCase):
         self.assertEqual([t["name"] for t in goodie["textures"]], ["goodies\\bg.tga", "meshtex\\a.tga"])
         self.assertEqual(goodie["mesh"]["name"], "f_be1.msh")
 
+    def test_a_name_that_fills_its_buffer_is_flagged_unterminated(self):
+        goodie = walk.read_goodie(model(8, ["goodies\\bg.tga"], "f_be1.msh"))
+        self.assertEqual((goodie["textures"][0]["terminated"], goodie["mesh"]["terminated"]), (True, True))
+        goodie = walk.read_goodie(model(8, ["t" * 128], "m" * 300))
+        self.assertEqual((goodie["textures"][0]["terminated"], goodie["mesh"]["terminated"]), (False, False))
+
     def test_video_and_level_goodies_carry_nothing_and_map_by_number(self):
         self.assertEqual(walk.read_goodie(stream(201, walk.VIDEO))["textures"], [])
         self.assertEqual((walk.video_file(201), walk.video_file(232), walk.video_file(77)), ("cutscenes/01", "cutscenes/33", "UsTheMovie"))

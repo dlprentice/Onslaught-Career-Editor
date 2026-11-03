@@ -1666,6 +1666,23 @@ class BoundaryTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "not a regular file"):
                 catalog.read_text_tables(game, files)
 
+    def test_a_linked_directory_is_listed_as_non_regular_and_not_entered(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            game = root / "game"
+            (game / "data").mkdir(parents=True)
+            (game / "data/kept.txt").write_bytes(b"kept\n")
+            outside = root / "authored-outside"
+            outside.mkdir()
+            (outside / "inside.txt").write_bytes(b"inside\n")
+            try:
+                (game / "data/linked").symlink_to(outside, target_is_directory=True)
+            except OSError as error:
+                self.skipTest(f"creating a directory symlink is unavailable: {error}")
+            rows = {row["path"]: row for row in catalog.walk_install(game)}
+            self.assertEqual(set(rows), {"data/kept.txt", "data/linked"})
+            self.assertEqual((rows["data/linked"]["family"], rows["data/linked"]["size"]), ("non-regular", None))
+
     def test_case_colliding_text_inputs_are_refused(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             game = Path(temp)

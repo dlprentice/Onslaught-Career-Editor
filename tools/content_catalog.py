@@ -255,10 +255,14 @@ def base_record(asset_id: str, atype: str, name: str, container: str, container_
 
 # ---------------------------------------------------------------------------------------------------------- survey
 def walk_install(game: Path) -> list[dict]:
+    """Every entry below the install. A link or special file, including a link to a directory (which os.walk lists
+    among the directories and does not enter), is a non-regular row: it is listed, never followed."""
     rows = []
     for dirpath, dirnames, filenames in os.walk(game, followlinks=False):
         dirnames.sort()
-        for filename in sorted(filenames):
+        linked = sorted(name for name in dirnames if (Path(dirpath) / name).is_symlink())
+        dirnames[:] = [name for name in dirnames if name not in linked]
+        for filename in sorted(filenames + linked):
             full = Path(dirpath) / filename
             info = full.lstat()
             rel = full.relative_to(game).as_posix()
