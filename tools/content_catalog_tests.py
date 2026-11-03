@@ -1683,6 +1683,25 @@ class BoundaryTests(unittest.TestCase):
             self.assertEqual(set(rows), {"data/kept.txt", "data/linked"})
             self.assertEqual((rows["data/linked"]["family"], rows["data/linked"]["size"]), ("non-regular", None))
 
+    def test_a_folder_the_walk_cannot_list_is_refused_not_dropped(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            hidden = game / "data/hidden"
+            hidden.mkdir(parents=True)
+            (hidden / "inside.txt").write_bytes(b"inside\n")
+            hidden.chmod(0)
+            try:
+                try:
+                    os.listdir(hidden)
+                except PermissionError:
+                    pass
+                else:
+                    self.skipTest("this account can list a folder without permissions (root)")
+                with self.assertRaisesRegex(catalog.CatalogInputError, "data/hidden: a folder the walk cannot list"):
+                    catalog.walk_install(game)
+            finally:
+                hidden.chmod(0o755)
+
     def test_case_colliding_text_inputs_are_refused(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             game = Path(temp)

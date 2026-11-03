@@ -256,9 +256,15 @@ def base_record(asset_id: str, atype: str, name: str, container: str, container_
 # ---------------------------------------------------------------------------------------------------------- survey
 def walk_install(game: Path) -> list[dict]:
     """Every entry below the install. A link or special file, including a link to a directory (which os.walk lists
-    among the directories and does not enter), is a non-regular row: it is listed, never followed."""
+    among the directories and does not enter), is a non-regular row: it is listed, never followed. A folder that cannot
+    be listed is refused (CatalogInputError) rather than its files silently left out."""
+    def unlistable(error: OSError) -> None:
+        where = Path(error.filename) if error.filename else game
+        name = where.relative_to(game).as_posix() if where.is_relative_to(game) else "the selected folder"
+        raise CatalogInputError(f"{name}: a folder the walk cannot list ({error.strerror})") from error
+
     rows = []
-    for dirpath, dirnames, filenames in os.walk(game, followlinks=False):
+    for dirpath, dirnames, filenames in os.walk(game, onerror=unlistable, followlinks=False):
         dirnames.sort()
         linked = sorted(name for name in dirnames if (Path(dirpath) / name).is_symlink())
         dirnames[:] = [name for name in dirnames if name not in linked]
