@@ -383,6 +383,14 @@ class StrictReadingTests(unittest.TestCase):
             self.assertTrue(row["problems"])
         self.assertEqual(texture["stream"], "stored")
 
+    def test_a_texture_that_inflates_to_no_valid_dds_is_referenced(self):
+        row = self.read("dds-texture-dxtn", "data/resources/dxtntextures/blank.tga(0)DXT1.aya", catalog_fixtures.aya(bytes(200)))
+        self.assertEqual((row["class"], row["stream"], row["logicalBytes"]), (inv.REFERENCED, "inflated", 200))
+        self.assertTrue(row["problems"])
+        valid = self.read("dds-texture-dxtn", "data/resources/dxtntextures/valid.tga(0)DXT1.aya",
+                          catalog_fixtures.aya(catalog_fixtures.dds_dxt1_4x4()))
+        self.assertEqual((valid["class"], valid["problems"]), (inv.DECODED, []))
+
     def test_a_reader_that_accounts_for_nothing_or_raises_leaves_the_file_unknown(self):
         def nothing(_data, _ctx, _row):
             return inv.Reading(inv.Account(0), "inflated", "authored")
