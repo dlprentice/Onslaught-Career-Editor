@@ -162,10 +162,11 @@ coordinates, for the gate). [The row schema](content_inventory.schema.json) desc
 and stays in ignored `local-data/`.
 
 [`content_inventory_gate.py`](content_inventory_gate.py) re-derives what only the real install can show, by a path that
-does not run through the reader being checked: an independent walk and hash of the folder, every AYA re-inflated with
-zlib alone, every archive's chunks walked again, every catalogue record that an archive stream places hashed at its
-coordinates, Pillow opening every image, every cached mesh frame composed from its keys, and the independent decoder's
-agreement on every Ogg and Bink file. It exits 0 only when all of them pass.
+does not run through the reader being checked: an independent walk and hash of the folder (any link or special file in
+it fails the gate), every AYA re-inflated with zlib alone, every archive's chunks walked again, every catalogue record
+that an archive stream places hashed at its coordinates, Pillow opening every image, every cached mesh frame composed
+from its keys, and the independent decoder's agreement on every Ogg and Bink file. It exits 0 only when all of them
+pass.
 
 A decoded byte belongs to a reader; that does not give every field a meaning or establish what the game does with it.
 The font records (`FGEN`, `DXFT`), part of each imposter record, a save's career block, the bytes of `Dial.raw` after its
