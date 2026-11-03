@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using Godot;
+using OnslaughtToolkit.Companion.Assets;
+using OnslaughtToolkit.Companion.Levels;
+using Numerics = System.Numerics;
 using OnslaughtToolkit.Companion.Missions;
 using OnslaughtToolkit.Companion.Ui;
 
@@ -48,7 +51,8 @@ public partial class CeMissionProjectCapture : SceneTree
         column.Add(Build.Heading("Mission project", "Title"));
         Control popups = new(); viewport.AddChild(popups);
         StatusLine status = new();
-        CeMissionProjectPage page = new(status, popups, (_, _, _) => throw new InvalidOperationException("Unexpected discard request."));
+        CeMissionProjectPage page = new(status, popups, (_, _, _) => throw new InvalidOperationException("Unexpected discard request."),
+            sceneLoader: (_, project) => AuthoredScene(project.Map?.Level ?? throw new InvalidOperationException("Authored map link required.")));
         column.AddChild(page.Root); page.Root.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
         viewport.AddChild(status.Root); status.Root.Visible = false;
         try
@@ -57,25 +61,30 @@ public partial class CeMissionProjectCapture : SceneTree
             Text(page.ProjectName, "Harbour escort"); Press(page.Apply);
             Text(page.ObjectName, "Rendezvous beacon"); Text(page.Definition, "project.beacon"); Press(page.AddObject);
             string beacon = page.Editor.Current.Placements.Single().Id;
-            Text(page.X, "40"); Text(page.Y, "60"); Press(page.Apply);
+            Text(page.X, Coordinate(40 * Scale)); Text(page.Y, Coordinate(60 * Scale)); Press(page.Apply);
             Text(page.MapLevel, "777"); Text(page.MapObject, "AuthoredBeacon"); Press(page.LinkMapObject);
             Text(page.SourceName, "Arrival"); Press(page.AddSource);
             page.Source.Text = "// Harbour escort: authored mission source\n// The beacon marks the rendezvous.\n// Source is preserved; this placement consumer does not execute it.\n";
             page.Source.EmitSignal(TextEdit.SignalName.TextChanged); Press(page.Apply);
             Press(page.Bind); page.EntrySource.ButtonPressed = true;
             Text(page.ObjectName, "Escort start"); Text(page.Definition, "project.escort"); Press(page.AddObject);
-            Text(page.X, "70"); Text(page.Y, "95"); Press(page.Apply);
+            Text(page.X, Coordinate(70 * Scale)); Text(page.Y, Coordinate(95 * Scale)); Press(page.Apply);
             Text(page.MapObject, "AuthoredEscort"); Press(page.LinkMapObject);
             int row = page.Editor.Current.Placements.ToList().FindIndex(item => item.Id == beacon);
             page.Objects.EmitSignal(ItemList.SignalName.ItemSelected, row);
-            await Frames(3);
+            string sceneRoot = Path.Combine(output, "scene-source.authored");
+            Directory.CreateDirectory(sceneRoot);
+            if (!await page.LoadLinkedSceneAsync(sceneRoot)) throw new InvalidOperationException("The authored linked scene did not load.");
+            await Frames(4);
+            if (page.View.FindChildren("*", nameof(MeshInstance3D), true, false).OfType<MeshInstance3D>().Count() < 3)
+                throw new InvalidOperationException("The linked terrain and both authored object models must be real scene geometry.");
             Camera3D camera = page.View.FindChildren("*", nameof(Camera3D), true, false).OfType<Camera3D>().Single();
             if (!page.View.TryGetMarkerPoint(row, out Vector2 start)) throw new InvalidOperationException("The authored object is not visible.");
-            Vector2 target = camera.UnprojectPosition(new Vector3(96, 0, -88));
+            Vector2 target = camera.UnprojectPosition(new Vector3(96 * Scale, AuthoredGround(96 * Scale, 88 * Scale), -88 * Scale));
             Pointer(page.View, start, start, false); Button(page.View, start, true);
             Pointer(page.View, start, target, true); Button(page.View, target, false);
             var moved = page.Editor.Current.Placement(beacon).Position;
-            if (Math.Abs(moved.X - 96) > 0.03f || Math.Abs(moved.Y - 88) > 0.03f)
+            if (Math.Abs(moved.X - 96 * Scale) > 0.03f || Math.Abs(moved.Y - 88 * Scale) > 0.03f)
                 throw new InvalidOperationException("The real 3D pointer drop did not update the authored object.");
             string label = size.X + "x" + size.Y;
             string path = Path.Combine(output, "authored-" + label + ".ceproject");
@@ -84,6 +93,7 @@ public partial class CeMissionProjectCapture : SceneTree
                 !CeMissionProjectJson.Write(page.Editor.Current).AsSpan().SequenceEqual(expected))
                 throw new InvalidOperationException("The authored project did not save and reopen exactly.");
             page.Objects.EmitSignal(ItemList.SignalName.ItemSelected, row);
+            if (!await page.LoadLinkedSceneAsync(sceneRoot)) throw new InvalidOperationException("The reopened project did not reload its explicit local scene.");
             page.ObjectName.GrabFocus();
             await Shot(viewport, output, "placement-" + label);
             page.MapObject.GrabFocus();
@@ -95,10 +105,60 @@ public partial class CeMissionProjectCapture : SceneTree
                 field.GetParent().GetParent() is not HBoxContainer row || row.GlobalPosition.Y < page.Root.GlobalPosition.Y ||
                 row.GetGlobalRect().End.Y > page.Root.GetGlobalRect().End.Y))
                 throw new InvalidOperationException("The coordinate labels and fields must stay visible while mission source has focus.");
-            GD.Print("CE_PROJECT_CAPTURE verified authored placement, installed-map binding, preserved source and file round trip at " + label);
+            GD.Print("CE_PROJECT_CAPTURE verified linked terrain/model geometry, spatial drag, preserved source and file round trip at " + label);
             return 3;
         }
         finally { viewport.QueueFree(); await Frames(3); }
+    }
+
+    private static float Scale => Heightfield.Size / 128f;
+    private static string Coordinate(float value) => value.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
+
+    private static CeLinkedSceneSnapshot AuthoredScene(int level) => new(level, AuthoredTerrain(),
+        [new("scene_beacon", "AuthoredBeacon", "original.authored.beacon", "authored-pyramid", new(40 * Scale, 60 * Scale, 0), new(0.6f, 0, 0)),
+         new("scene_escort", "AuthoredEscort", "original.authored.escort", "authored-pyramid", new(70 * Scale, 95 * Scale, 0), new(-0.4f, 0.1f, 0))],
+        [CeLinkedSceneModel.FromMesh("authored-pyramid", AuthoredModel())]);
+
+    // The lower half is flat for the actual drag/drop; a sampled hill makes terrain depth visible behind it.
+    private static float AuthoredGround(float x, float y)
+    {
+        float u = x / Scale, v = y / Scale;
+        if (v >= 54) return 0;
+        float a = MathF.Sin(MathF.PI * u / 128), b = MathF.Sin(MathF.PI * v / 54);
+        return 30 * Scale * a * a * b * b;
+    }
+
+    private static TerrainSurface AuthoredTerrain() => TerrainSurface.Build((x, y) => -AuthoredGround(x, y), 32);
+
+    private static CmshMesh AuthoredModel()
+    {
+        Numerics.Vector3[] corners = [new(-7, -5, 0), new(7, -5, 0), new(7, 5, 0), new(-7, 5, 0), new(2, -1, -20)];
+        Numerics.Vector3 centre = corners.Aggregate(Numerics.Vector3.Zero, (sum, point) => sum + point) / corners.Length;
+        List<Numerics.Vector3> positions = [], normals = [];
+        List<uint> colors = [];
+        List<CmshPiece> pieces = [];
+        foreach ((int first, int second, int third) in new[] { (0, 4, 1), (1, 4, 2), (2, 4, 3), (3, 4, 0), (0, 1, 2), (0, 2, 3) })
+        {
+            Numerics.Vector3 a = corners[first], b = corners[second], c = corners[third];
+            Numerics.Vector3 normal = Numerics.Vector3.Normalize(Numerics.Vector3.Cross(b - a, c - a));
+            if (Numerics.Vector3.Dot(normal, (a + b + c) / 3 - centre) < 0) { (b, c) = (c, b); normal = -normal; }
+            int at = positions.Count;
+            positions.AddRange([a * Scale, b * Scale, c * Scale]);
+            normals.AddRange([normal, normal, normal]);
+            uint color = (255u << 24) | (220u << 16) | (150u << 8) | 56u;
+            colors.AddRange([color, color, color]);
+            pieces.Add(new([(ushort)at, (ushort)(at + 1), (ushort)(at + 2)], [-1, -1, -1]));
+        }
+        return new CmshMesh
+        {
+            Name = "Authored beacon model", Textures = [], Modes = [],
+            Parts = [new CmshPart
+            {
+                Index = 0, Name = "Authored pyramid", Type = (int)PartType.Normal, VirtualFrames = 1, CachedFrameCount = 0,
+                Positions = positions.ToArray(), Normals = normals.ToArray(), Colors = colors.ToArray(), UVs = new Numerics.Vector2[positions.Count],
+                Pieces = pieces.ToArray(),
+            }],
+        };
     }
 
     private async Task Shot(SubViewport viewport, string output, string name)
