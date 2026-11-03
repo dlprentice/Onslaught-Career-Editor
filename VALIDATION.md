@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-03 (the Companion's live check against released CE 0.1.13; historical results retain their dates)
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -55,6 +55,70 @@ companion's tests); dated entries below that name them are history.
 | Catalogue or editor Python reference | The affected authored suite, such as `python tools/content_catalog_tests.py`, `python tools/world_resources_encode_tests.py`, `python tools/level_editor_vectors_tests.py` or `python tools/msl_compile_tests.py`; check changed generated C# vectors/tables with the owning generator's `--check`. These need no retail install; [Python package requirements](tools/README.md#python-prerequisites) and schema skips still apply. Retail catalogue, world and compiler comparisons are separate [tools](tools/README.md#editor-references-and-generators); C# changes also owe the Companion runtime gate |
 | Tools | The affected `tools/<name>_tests.py`; `npm run test:tools` runs every registered suite (`worldheaders_decode --self-test` needs the retail `worldheaders.dat`). Its self-test fails for any `*_tests.py` that is neither registered nor excluded with a reason in `tools/run_tool_tests.py`, so a new test file cannot fall outside it. It covers, besides the earlier ones, `dds_census`, `mission_script_inspect`, `worldheaders_decode`, the skinning and matrix contracts, `battle_engine_config_decode`, `gltf_pose_check`, `goodie_resource_walk`, `xap_bank_walk`, `safe_generated_output` and the extractor source audit. A suite that cannot run (a Windows-only one on another host, or the audit when the `AYAResourceExtractor` or `Onslaught` submodule is not initialised: `git submodule update --init`) is a named SKIP in the summary, never a pass. A suite that runs is reported as passed even when some of its tests skipped themselves (tests that need the retail data or a specimen skip one by one): on 2026-10-29 the skipped tests numbered 27 without the retail environment variables and 17 with the retail view and the pinned asset index, so read each suite's own skip lines before citing the summary as evidence for a retail claim. The companion, Godot host and rebuild launcher suites run under their own npm scripts. |
 | Game documentation claim | New findings belong in [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation). Cite the decompilation's function, capture, byte comparison or source line; never paste decompiler output. The local `reverse-engineering/` notes are frozen references |
+
+## Companion with real Onslaught CE 0.1.13 — November 3
+
+The opt-in [CeLiveCheck](companion/OnslaughtToolkit.Godot/Development/CeLiveCheck.cs) ran its prepare, settings, launch
+and restore phases on Linux, one `python tools/companion_godot.py test --script Development/CeLiveCheck.cs` invocation
+per phase, from Toolkit `main` at `443b2b3d921775767a87404d9c6842fc1b275294` (Godot 4.8 beta1 .NET with .NET SDK
+10.0.402; the Companion built with no warnings or errors). It used the production companion controls and file
+services, the released Onslaught CE 0.1.13 Linux package, and a copy of the game-created career in
+`tests_shared/fixtures/gold_career_save.bin` (10,004 bytes, SHA-256
+`0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb`). The copy lived in an isolated owner folder marked
+`.companion-owned`, with its own CE user folder and backups folder and a read-only view of the original game's data as
+CE's game folder. The user folder's `ce.ini` started as `update_check=0`, `record_sessions=0` and one unknown line.
+Inputs, profiles, logs, frames and receipts are private, under the working clone's ignored
+`local-data/ce-live-20261103/`.
+
+The package was `onslaught-ce-0.1.13-linux-i686.tar.gz` (6,869,859 bytes, SHA-256
+`94781e15914bc8d30fc4a85833012a5d191661c8760c2e21174e4cf64a70740d`), downloaded from the release on
+github.com/dlprentice/onslaught-ce and checked against the release's own signed feed before anything ran. The feed
+`ce-update-v2.json` and its detached Ed25519 signature verified over the feed's domain prefix and exact bytes with the
+public key (`b6cf39b7…`) that the Companion and CE's launcher source at v0.1.13 both carry. A separate Python script,
+not the Companion's own verifier, made this check: a feed changed by one bit and the feed without its prefix were both
+refused. The package's size and SHA-256 equal
+the signed feed's entry, the release's published digest and the release's `ASSETS.txt`.
+
+Observed on Linux:
+
+- Production discovery ran the package's actual launcher with `--version` and read
+  `Onslaught CE V0.1.13, build cdc077aa2968`, the version on the first line of the package's `README.txt` and the
+  build named by the release's export commit.
+- Prepare: the Career page changed selected kill counts only. The verified pre-edit backup held the exact original
+  bytes, every unselected and unknown byte was kept, and the result reopened. A Unicode-named career (`CE Élan`) was
+  added and verified. A stale replacement was refused, and so was a write whose backup folder had been made read-only;
+  both left the target unchanged.
+- Settings: the CE settings controls saved both supported switches with an exact verified backup of `ce.ini` and kept
+  the unknown line. A newer external write to `ce.ini` was refused without being overwritten. Both switches went back
+  to disabled and the reopened file kept the unknown line and the externally added one.
+- Launch (offscreen video, dummy audio, no desktop session, update checks off): the actual CE launcher started its own
+  `bea` from the package folder. The Companion's process check found both processes and refused a career write and a
+  CE settings write while they ran, each with no backup and no possible file change. An existing keyboard-only tape of
+  ten key events (SHA-256 `197939966a947ce85f299f7a9f5f833fa6be4c8f6c1d08e80b658d8915f9bc2c`, a file dated 2026-10-16)
+  selected Load and the companion-edited Unicode-named career in CE 0.1.13's own menus; whether it is the tape the
+  October 24 run used is not known. Before the launch the user
+  folder's `defaultoptions.bea` was a copy of the unedited career. Afterwards it equaled every byte of the edited career
+  (SHA-256 `55144d460a3088d83f6447ab8c1594a8a02a22c32e89467c79a2006b40ee0aed`), and the loaded career file itself was
+  unchanged. CE's console reported the offscreen video driver, the dummy audio driver, the ten tape events and the x87
+  control word 007f after CreateDevice. The bounded replay (to Present 1100, game arguments
+  `-skipfmv -forcewindowed -res 640 480`, `BEA_PORT_REPLAY_SLEEP_US=10000`) closed normally with launcher exit 0 and no
+  CE process left. The launch ran twice with the same result: first with DXVK's default adapter (the NVIDIA one), then
+  with `DXVK_FILTER_DEVICE_NAME=Intel` under the Intel iGPU's lock. The Present 1000 frame (640 × 480) of the second
+  run was inspected: it is the SELECT LEVEL page, with its episode heading, level name and level map readable. The
+  first run's frame at the same Present showed the page's emblem and text enlarged and cut off at the frame edge.
+  Nothing compared pixels.
+- Restore: the Backups page put the exact original bytes back into the edited `Companion Pilot` career and reopened
+  it (SHA-256 `0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb`, equal to the preserved baseline and
+  the tracked fixture), after first preserving the displaced edit in its own verified backup. The extracted package
+  matched the tarball file for file after the launches, and the tracked fixture was unchanged.
+
+The Steam install and CE's own user folder show no file changed since the run began, and the original game's data was a
+read-only view. Every path the check wrote lies below the owner folder, and CE ran with `BEA_USER_DIR`, `BEA_GAME_DIR`
+and a private home folder. This is an automated Linux check driven by programmatic production-page actions, with update
+checks off. It proves this copied-career workflow against CE 0.1.13 on Linux, not every career, not the update hand-off
+to a package's `versions` folder, and not a human click-through. Physical mouse and keyboard input, file dialogs,
+listening to the music and voices, a desktop session's rendering and native Windows runs of CE 0.1.7 or later remain
+open.
 
 ## Public Companion setup — November 2
 

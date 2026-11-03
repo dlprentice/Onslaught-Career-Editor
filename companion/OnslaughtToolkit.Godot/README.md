@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-11-03 (Mission project linked-map preview: what it reads, what it binds and its limits)
+Last updated: 2026-11-03 (acceptance of the careers, backups, settings and launch flows against released CE 0.1.13 on Linux; Mission project linked-map preview: what it reads, what it binds and its limits)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -99,10 +99,18 @@ package-header check accepts. **Not read again:** the Windows `files.cpp` career
 line. Between 0.1.4 and 0.1.10 `ce_launch.c`, `package.py` and the Windows `files.cpp` changed a good deal, so what this
 README says about those files is as of 0.1.4 until they are read again.
 
-**No acceptance run of these flows (careers, backups, settings and the hand-off to a CE package) exists against a real
-CE 0.1.7 or later package.** The last recorded runs of them with a real CE package are CE 0.1.4 on Linux and a
-`0.1.6-dev` package on Windows (below). The 0.1.8 hand-off to a package's `versions` folder is covered by tests with
-fixture launchers only, and the 0.1.10 reading above is a reading of files and of one `--version` line, not a launch, a
+**Acceptance of these flows (careers, backups, settings and the hand-off to a CE package) against a real CE 0.1.7 or
+later package: one Linux run, on CE 0.1.13.** On 2026-11-03 the opt-in `CeLiveCheck` ran its prepare, settings, launch
+and restore phases against the released CE 0.1.13 Linux package, checked against the release's signed feed first. On a
+copy of a game-created career in an isolated folder, the production controls edited the career with a verified backup,
+saved both CE settings with verified backups and refused stale writes; the companion refused career and settings
+writes while the real CE launcher and game ran offscreen; CE's own keyboard-driven Load menu loaded the edited career
+byte for byte; and the Backups page put the exact original bytes back. It is an automated Linux check driven by
+programmatic page actions, not a human click-through; see
+[the dated acceptance record](../../VALIDATION.md#companion-with-real-onslaught-ce-0113--november-3). The earlier
+real-package runs are CE 0.1.4 on Linux and a `0.1.6-dev` package on Windows (below), and no run of these flows on
+Windows is newer than that one. The 0.1.8 hand-off to a package's `versions` folder is covered by tests with fixture
+launchers only, and the 0.1.10 reading above is a reading of files and of one `--version` line, not a launch, a
 user-interface session or a career edit. The Level editor's Play button, which starts a real CE package, is a different
 path: its runs are described under "What it does", and they do not stand in for these flows.
 
