@@ -310,8 +310,8 @@ feature parity or retail gameplay acceptance is implied.
 The [content and model/transform catalogue tools](tools/README.md) cover the families their current readers support.
 The [content inventory](tools/README.md#content-inventory) puts every byte of one selected PC install in a class
 (decoded by a reader, framed by a record but unread, or unknown) and lists every model, texture, image, animation,
-sound, film and text asset with what names it; on the read-only retail view its gate re-derived that account by
-independent paths. Its coverage lists what stays framed: the font records, part of each imposter record, the HUD
+sound, film and text asset with what names it; on the read-only retail view its gate checked that account against the
+folder by independent paths. Its coverage lists what stays framed: the font records, part of each imposter record, the HUD
 dial's later frames, the career block, the document a manual's Word file compresses and the executables' code and
 data; a few bytes after that document stay unknown. "Used" means a record, physics value, page link or loader rule
 names the asset; it is not a runtime observation. A second install, Windows and an HD conversion are not covered; the
