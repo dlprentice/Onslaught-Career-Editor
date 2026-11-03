@@ -127,7 +127,7 @@ internal sealed class CeMissionProjectPage : Page
         Definition = Field(inspector, "Definition for new object", "authored.unit");
         AddObject = inspector.Add(Build.Button("Add draft as new object"));
         inspector.Add(Build.Heading("Installed-map link", "Section"));
-        inspector.Add(Build.Text("Reposition one existing named map object per definition. Terrain and assets come from that map.", "Muted"));
+        inspector.Add(Build.Text("Reposition one named object of the selected level per definition; base-world objects stay put. Terrain and assets come from that map.", "Muted"));
         MapLevel = Field(inspector, "Installed map number", "");
         _mapObjectLabel = inspector.Add(Build.Text("Existing map object", "Muted"));
         MapObject = inspector.Add(new LineEdit { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,

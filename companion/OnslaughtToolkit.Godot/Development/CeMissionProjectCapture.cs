@@ -8,7 +8,11 @@ using OnslaughtToolkit.Companion.Ui;
 
 namespace OnslaughtToolkit.Companion.Development;
 
-/// <summary>Offscreen production-page evidence using only authored objects/source. No game/profile discovery or runtime loading.</summary>
+/// <summary>
+/// Offscreen production-page evidence using only authored objects/source. No game/profile discovery or runtime loading; the scene comes from
+/// the authored loader below, so the linked-map file reads are the tests' to prove. Run with
+/// <c>python tools/companion_godot.py capture --capture-script Development/CeMissionProjectCapture.cs --sizes 1280x900,760x800 --beside-gpu-jobs</c>.
+/// </summary>
 public partial class CeMissionProjectCapture : SceneTree
 {
     public override void _Initialize() => _ = RunAsync();
@@ -74,10 +78,14 @@ public partial class CeMissionProjectCapture : SceneTree
             page.Objects.EmitSignal(ItemList.SignalName.ItemSelected, row);
             string sceneRoot = Path.Combine(output, "scene-source.authored");
             Directory.CreateDirectory(sceneRoot);
-            if (!await page.LoadLinkedSceneAsync(sceneRoot)) throw new InvalidOperationException("The authored linked scene did not load.");
+            page.LinkedMapDialog.EmitSignal(FileDialog.SignalName.DirSelected, sceneRoot);
+            await Settled(page);
+            if (page.LinkedScene is null) throw new InvalidOperationException("The authored linked scene did not load: " + page.Notice);
             await Frames(4);
-            if (page.View.FindChildren("*", nameof(MeshInstance3D), true, false).OfType<MeshInstance3D>().Count() < 3)
-                throw new InvalidOperationException("The linked terrain and both authored object models must be real scene geometry.");
+            MeshInstance3D[] geometry = page.View.FindChildren("*", nameof(MeshInstance3D), true, false).OfType<MeshInstance3D>().ToArray();
+            if (page.View.LinkedModelCount != 3 || geometry.Count(item => item.Mesh is { } mesh && mesh.GetSurfaceCount() > 0) < 4)
+                throw new InvalidOperationException("The linked terrain and all three authored object models must be real scene geometry.");
+            Node3D[] models = page.View.FindChildren("*", nameof(Node3D), true, false).OfType<LinkedSceneModelLayer>().Single().GetChildren().OfType<Node3D>().ToArray();
             Camera3D camera = page.View.FindChildren("*", nameof(Camera3D), true, false).OfType<Camera3D>().Single();
             if (!page.View.TryGetMarkerPoint(row, out Vector2 start)) throw new InvalidOperationException("The authored object is not visible.");
             Vector2 target = camera.UnprojectPosition(new Vector3(96 * Scale, AuthoredGround(96 * Scale, 88 * Scale), -88 * Scale));
@@ -86,6 +94,9 @@ public partial class CeMissionProjectCapture : SceneTree
             var moved = page.Editor.Current.Placement(beacon).Position;
             if (Math.Abs(moved.X - 96 * Scale) > 0.03f || Math.Abs(moved.Y - 88 * Scale) > 0.03f)
                 throw new InvalidOperationException("The real 3D pointer drop did not update the authored object.");
+            await Frames(2);
+            if (!models[1].Position.IsEqualApprox(LinkedSceneCoordinates.View(moved)) || !models[0].Position.IsEqualApprox(LinkedSceneCoordinates.View(BaseBeacon)))
+                throw new InvalidOperationException("The drop must move the bound model and leave the base-world model of that name in place.");
             string label = size.X + "x" + size.Y;
             string path = Path.Combine(output, "authored-" + label + ".ceproject");
             byte[] expected = CeMissionProjectJson.Write(page.Editor.Current);
@@ -93,7 +104,9 @@ public partial class CeMissionProjectCapture : SceneTree
                 !CeMissionProjectJson.Write(page.Editor.Current).AsSpan().SequenceEqual(expected))
                 throw new InvalidOperationException("The authored project did not save and reopen exactly.");
             page.Objects.EmitSignal(ItemList.SignalName.ItemSelected, row);
-            if (!await page.LoadLinkedSceneAsync(sceneRoot)) throw new InvalidOperationException("The reopened project did not reload its explicit local scene.");
+            Press(page.ReloadLinkedMap);
+            await Settled(page);
+            if (page.LinkedScene is null) throw new InvalidOperationException("The reopened project did not reload its explicit local scene: " + page.Notice);
             page.ObjectName.GrabFocus();
             await Shot(viewport, output, "placement-" + label);
             page.MapObject.GrabFocus();
@@ -114,8 +127,12 @@ public partial class CeMissionProjectCapture : SceneTree
     private static float Scale => Heightfield.Size / 128f;
     private static string Coordinate(float value) => value.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
 
+    // A base-world object with the bound object's name, so each picture shows which of the two a placement moves.
+    private static Numerics.Vector3 BaseBeacon => new(18 * Scale, 100 * Scale, 0);
+
     private static CeLinkedSceneSnapshot AuthoredScene(int level) => new(level, AuthoredTerrain(),
-        [new("scene_beacon", "AuthoredBeacon", "original.authored.beacon", "authored-pyramid", new(40 * Scale, 60 * Scale, 0), new(0.6f, 0, 0), FromBaseWorld: false),
+        [new("scene_base_beacon", "AuthoredBeacon", "original.authored.base", "authored-pyramid", BaseBeacon, new(0.2f, 0, 0), FromBaseWorld: true),
+         new("scene_beacon", "AuthoredBeacon", "original.authored.beacon", "authored-pyramid", new(40 * Scale, 60 * Scale, 0), new(0.6f, 0, 0), FromBaseWorld: false),
          new("scene_escort", "AuthoredEscort", "original.authored.escort", "authored-pyramid", new(70 * Scale, 95 * Scale, 0), new(-0.4f, 0.1f, 0), FromBaseWorld: false)],
         [CeLinkedSceneModel.FromMesh("authored-pyramid", AuthoredModel())]);
 
@@ -168,6 +185,7 @@ public partial class CeMissionProjectCapture : SceneTree
         using Image image = viewport.GetTexture().GetImage();
         if (image.SavePng(Path.Combine(output, name + ".png")) != Error.Ok) throw new IOException("The capture could not be saved.");
     }
+    private async Task Settled(CeMissionProjectPage page) { while (page.Busy) await Frames(1); }
     private async Task Frames(int count)
     { for (int index = 0; index < count; index++) await ToSignal(this, SignalName.ProcessFrame); }
     private static void Text(LineEdit field, string text) { field.Text = text; field.EmitSignal(LineEdit.SignalName.TextChanged, text); }

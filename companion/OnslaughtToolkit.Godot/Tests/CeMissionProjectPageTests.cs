@@ -264,7 +264,14 @@ internal static class CeMissionProjectPageTests
             check.That(page.LinkedScene is null && page.ReloadLinkedMap.Disabled && ReferenceEquals(page.Editor.Current, edited) &&
                 page.PreviewNotice.Contains("Placement plane only", StringComparison.Ordinal),
                 "closing a preview releases its local source while keeping every authored link and edit");
-            check.That(await page.LoadLinkedSceneAsync(selectedRoot), "the same explicit source can be read again after closing its preview");
+            page.LinkedMapDialog.EmitSignal(FileDialog.SignalName.DirSelected, selectedRoot);
+            while (page.Busy) await Frames(tree, 1);
+            check.That(page.LinkedScene is not null && calls[^1].Root == selectedRoot && calls.Count == 2,
+                "the folder dialog's selection reaches the loader after a preview was closed");
+            Press(page.ReloadLinkedMap);
+            while (page.Busy) await Frames(tree, 1);
+            check.That(page.LinkedScene is not null && calls.Count == 3 && calls[^1].Root == Path.GetFullPath(selectedRoot),
+                "the Reload map button reads the same folder again");
             scene = page.LinkedScene!;
             fail = true;
             check.That(!await page.LoadLinkedSceneAsync(selectedRoot) && ReferenceEquals(page.LinkedScene, scene) && ReferenceEquals(page.Editor.Current, edited),
