@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-11-02 (ordinary play, optional modes and flexible product placement)
+Last updated: 2026-11-02 (Commander as an RTS form of the game, and playing any controllable unit)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
@@ -34,7 +34,12 @@ archive.
   an eventual multiplayer mode alongside players piloting Battle Engines. Aim for Linux and Windows and later more than two
   participants. Missions and game events still determine outcomes. Prove this optional role works, including in
   controlled test scenarios; its availability and final product placement can be decided as development progresses.
-  This is a goal, not a completed capability.
+  David describes it as an RTS form of the game: beyond directing units, a commander should be able to select buildings
+  and act through them, for example to construct units, reusing the game's own logic where it can. Because that changes
+  how a battle plays, Commander will probably need maps of its own. This is a goal, not a completed capability.
+- **Play any controllable unit.** An optional way to take direct control of a tank, a turret or another unit the game can
+  control, beyond the Battle Engine. Like other new modes it must not interfere with ordinary play. This is a goal, not a
+  completed capability, and nobody has tried it yet.
 - **Creation and modding tools** should let players inspect and create levels, missions and compatible modifications
   safely, including 3D map and mission editors. A modern CE-native project format and custom gameplay are first-class
   targets; original-game-compatible export is useful where practical but is not a prerequisite. Faithful behavior
