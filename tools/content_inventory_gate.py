@@ -19,12 +19,19 @@ folder it came from, and checks that:
   decoders   every Ogg and Bink was read by the independent decoder and agreed (a run without one fails here)
   animation  every mesh's cached model-space frames equal its keys composed down the hierarchy
   items      item ids are unique, and every item's file is one of the run's files
-  metadata   every texture, image, model, animation, sound and film item has one asset-metadata row; each names its
-             file's hash; every row but a mesh chain's links, their animations and the terrain mixer mips is placed,
-             and its bytes, cut from the stored file or from the stream inflated here, hash to its SHA-256; and every
-             metadata field equals what the gate reads from those bytes itself (a DDS header, mip chain and, with
-             Pillow, its top mip's alpha; a texture record's fields; an image, Ogg, Bink or bank sample header; an
-             animation record; a damage texture's levels), or, for an unplaced row, what its details give
+  metadata   every texture, image, model, animation, sound and film item has one asset-metadata row, and the row says
+             what its item says (kind, form, name, status, use and identity) and what the catalogue's record says
+             (envelope, coordinates and hash). The row's own claims switch nothing off: its form must be one the file
+             can hold (the file's family, the envelope, the archive chunk the bytes lie in, the stream and the magic
+             the bytes open with, each stated here and read from the file), and a PE resource's type is read from the
+             executable's resource tree. Every row but a mesh chain's links, their animations and the terrain mixer
+             mips is placed, and its bytes, cut from the stored file or from the stream inflated here, hash to its
+             SHA-256. Whether a DDS, texture record, Ogg or Bink is readable is the gate's reading of its bytes, not the
+             row's status: a row that calls a readable asset unparsed fails, as does one that calls an unreadable one
+             parsed. Every metadata field and every detail the bytes show equals what the gate reads from them itself (a
+             DDS header, mip chain and, with Pillow, its top mip's alpha; a texture record's fields; an image, Ogg,
+             Bink or bank sample header; an animation record; a damage texture's levels), or, for an unplaced row,
+             what its details give
   sniffing   every file's own magic agrees with its family
   problems   no reader refused anything
 
@@ -36,6 +43,7 @@ The exit code is 0 only when every check passes.
 from __future__ import annotations
 
 import argparse
+import bisect
 import collections
 import hashlib
 import io
@@ -46,6 +54,7 @@ import re
 import stat
 import struct
 import sys
+import typing
 import zlib
 from pathlib import Path
 
@@ -78,7 +87,7 @@ class WalkError(ValueError):
 def walk_folder(game: Path) -> tuple[dict[str, int], list[str]]:
     """Every regular file below the folder and its size, and every other entry: a link (to a directory too, which
     os.walk lists among the directories and does not enter) or a special file, which no account can hold. A folder
-    that cannot be listed raises WalkError instead of dropping its files."""
+    that cannot be listed, or lists its names but cannot be searched, raises WalkError instead of dropping its files."""
     def unlistable(error: OSError) -> None:
         where = Path(error.filename) if error.filename else game
         name = where.relative_to(game).as_posix() if where.is_relative_to(game) else "the selected folder"
@@ -86,15 +95,19 @@ def walk_folder(game: Path) -> tuple[dict[str, int], list[str]]:
 
     found, irregular = {}, []
     for folder, dirs, names in os.walk(game, onerror=unlistable, followlinks=False):
-        irregular += [(Path(folder) / name).relative_to(game).as_posix() for name in dirs
-                      if (Path(folder) / name).is_symlink()]
-        for name in names:
-            path = Path(folder) / name
-            info = path.lstat()
-            if stat.S_ISREG(info.st_mode):
-                found[path.relative_to(game).as_posix()] = info.st_size
-            else:
-                irregular.append(path.relative_to(game).as_posix())
+        try:
+            irregular += [(Path(folder) / name).relative_to(game).as_posix() for name in dirs
+                          if (Path(folder) / name).is_symlink()]
+            for name in names:
+                path = Path(folder) / name
+                info = path.lstat()
+                if stat.S_ISREG(info.st_mode):
+                    found[path.relative_to(game).as_posix()] = info.st_size
+                else:
+                    irregular.append(path.relative_to(game).as_posix())
+        except OSError as error:  # a folder that lists its names but cannot be searched
+            raise WalkError(f"{Path(folder).relative_to(game).as_posix()}: a folder the walk cannot search "
+                            f"({error.strerror})") from error
     return found, sorted(irregular)
 
 
@@ -200,9 +213,76 @@ def check_records(row: dict, raw: bytes, records: list[dict], report: "Report") 
                 report.count("records touching referenced bytes")
 
 
-def check_metadata_rows(items: list[dict], metadata: list[dict], report: "Report") -> None:
-    """Exactly one asset-metadata row per texture, image, model, animation, sound and film item, and no other."""
-    wanted = {item["id"] for item in items if item["kind"] in inv.METADATA_KINDS}
+# The forms whose identity places no bytes: a mesh chain's links and their animations (the reader lists them without
+# their offsets) and a terrain mixer mip (its item offset is the ERES payload's, not the mip's). Every other row must be
+# placed by an envelope the gate can cut.
+UNPLACED_FORMS = ("chained-mesh", "chained-animation", "terrain-mixer-mip")
+ARCHIVE, MESH_FILE = "lvlr-resource-archive", "cmsh-mesh"
+DDS_FILES = ("dds-texture-dxtn", "dds-texture-uncompressed")
+
+
+class Home(typing.NamedTuple):
+    """Where the file can hold an asset of one form, stated here and checked against the file, never read from a row."""
+    kind: str                       # the item kind every asset of the form has
+    envelopes: dict                 # file family -> the regular expression the row's envelope must match there
+    stream: str                     # "stored" or "inflated": the file's stream its coordinates address
+    chunk: str | None = None        # the archive chunk (top level) its bytes lie in, for a file of the archive family
+    magic: bytes | None = None      # what its bytes open with
+    whole: bool = False             # its coordinates are the whole stream
+
+
+def home(kind: str, families: tuple, envelope: str, stream: str, **rest) -> Home:
+    return Home(kind, {family: envelope for family in families}, stream, **rest)
+
+
+MESH_ENVELOPES = {ARCHIVE: r"lvlr-chunk\(MESH/PMSH/PMS2\)", MESH_FILE: r"aya-zlib-members\(cmsh\)"}
+CHAINED = {family: envelope + r"/chain#\d+" for family, envelope in MESH_ENVELOPES.items()}
+FORM_HOMES = {
+    "dds-file": home("texture", DDS_FILES, r"aya-zlib-members\(dds\)", "inflated", magic=b"DDS ", whole=True),
+    "descriptor-text": home("texture", (ARCHIVE,), r"lvlr-chunk\(TEXT\)", "inflated", chunk="TEXT", magic=b"DXTX"),
+    "descriptor-gdie": home("texture", (ARCHIVE,), r"lvlr-chunk\(GDIE\)", "inflated", chunk="GDIE", magic=b"DXTX"),
+    "descriptor-imps": home("texture", (ARCHIVE,), r"lvlr-chunk\(IMPS\)", "inflated", chunk="IMPS", magic=b"DXTX"),
+    "descriptor-plat": home("texture", (ARCHIVE,), r"lvlr-chunk\(PLAT\)", "inflated", chunk="PLAT", magic=b"DXTX"),
+    "damage-texture": home("texture", (ARCHIVE,), r"lvlr-chunk\(DMKR\)", "inflated", chunk="DMKR"),
+    "static-shadow-maps": home("texture", (ARCHIVE,), r"lvlr-chunk\(SSHD\)", "inflated", chunk="SSHD"),
+    "terrain-mixer-mip": home("texture", (ARCHIVE,), r"lvlr-chunk\(ERES\)", "inflated", chunk="ERES"),
+    "terrain-heightfield": home("model", (ARCHIVE,), r"lvlr-chunk\(ERES\)", "inflated", chunk="ERES"),
+    "surface-strips": home("model", (ARCHIVE,), r"lvlr-chunk\(SURF\)", "inflated", chunk="SURF"),
+    "loose-mesh": home("model", (MESH_FILE,), r"aya-zlib-members\(cmsh\)", "inflated", magic=b"CMSH", whole=True),
+    "embedded-mesh": home("model", (ARCHIVE,), r"lvlr-chunk\(MESH/PMSH/PMS2\)", "inflated", chunk="MESH", magic=b"CMSH"),
+    "chained-mesh": Home("model", CHAINED, "inflated"),
+    "animation": Home("animation", MESH_ENVELOPES, "inflated", chunk="MESH"),
+    "chained-animation": Home("animation", CHAINED, "inflated"),
+    "voice": home("sound", ("ogg-voice",), "ogg", "stored", magic=b"OggS", whole=True),
+    "music": home("sound", ("ogg-music",), "ogg", "stored", magic=b"OggS", whole=True),
+    "bank-sample": home("sound", ("xap-sample-bank",), r"xap\(PCXP\)", "stored"),
+    "video": home("film", ("bink-video",), "bink", "stored", magic=b"BIK", whole=True),
+    "png": home("image", ("manual",), "whole file", "stored", magic=bytes((137, 80, 78, 71, 13, 10, 26, 10)), whole=True),
+    "jpeg": home("image", ("manual",), "whole file", "stored", magic=bytes((255, 216, 255)), whole=True),
+    "tga": home("image", ("splash-tga",), "whole file", "stored", whole=True),
+    "byte-sprite": home("image", ("dial-raw",), "whole file", "stored", whole=True),
+    "pe-icon": home("image", ("executable-code",), r"pe-resource\(icon\)", "stored"),
+    "pe-bitmap": home("image", ("executable-code",), r"pe-resource\(bitmap\)", "stored"),
+}
+# The catalogue lists one record for each asset of these forms (records.jsonl), of the type given; every other form is one
+# a reader finds that the catalogue does not list.
+RECORD_TYPES = {"dds-file": "texture", "descriptor-text": "texture-descriptor", "descriptor-gdie": "texture-descriptor",
+                "descriptor-imps": "texture-descriptor", "descriptor-plat": "texture-descriptor", "loose-mesh": "mesh",
+                "embedded-mesh": "mesh", "animation": "animation", "voice": "audio", "music": "audio",
+                "bank-sample": "audio", "video": "video"}
+ITEM_KEYS = ("kind", "form", "name", "status", "used", "usedBy")
+# Which detail says a form's reader parsed it, and what it says then.
+PARSED_STATUS = {"dds-file": ("ddsStatus", "valid"), "descriptor-text": ("descriptorStatus", "parsed"),
+                 "descriptor-gdie": ("descriptorStatus", "parsed"), "descriptor-imps": ("descriptorStatus", "parsed"),
+                 "descriptor-plat": ("descriptorStatus", "parsed"), "voice": ("audioStatus", "parsed"),
+                 "music": ("audioStatus", "parsed"), "video": ("videoStatus", "parsed")}
+
+
+def check_metadata_rows(items: list[dict], metadata: list[dict], records: dict[str, dict], report: "Report") -> None:
+    """Exactly one asset-metadata row per texture, image, model, animation, sound and film item, and no other; each row
+    says what its item says, and what the catalogue's record says where the catalogue lists the asset."""
+    by_id = {item["id"]: item for item in items}
+    wanted = {name for name, item in by_id.items() if item["kind"] in inv.METADATA_KINDS}
     seen = collections.Counter(asset.get("id") for asset in metadata)
     for name in sorted(wanted - set(seen)):
         report.fail(f"{name}: an asset without an asset-metadata row")
@@ -212,15 +292,47 @@ def check_metadata_rows(items: list[dict], metadata: list[dict], report: "Report
         if count > 1:
             report.fail(f"{name}: {count} asset-metadata rows")
     report.count("asset-metadata rows", len(metadata))
+    for asset in metadata:
+        item = by_id.get(asset.get("id"))
+        if item is not None and item["kind"] in inv.METADATA_KINDS and isinstance(asset.get("identity"), dict):
+            check_against_item(asset, item, records.get(item["id"]), by_id, report)
 
 
-# Where a metadata row's coordinates point: into the stored file, or into the stream the gate inflated itself.
-STORED_ENVELOPES = ("xap(", "ogg", "bink", "whole file", "pe-resource(")
-INFLATED_ENVELOPES = ("lvlr-chunk(", "aya-zlib-members(")
-# The forms whose identity places no bytes: a mesh chain's links and their animations (the reader lists them without
-# their offsets) and a terrain mixer mip (its item offset is the ERES payload's, not the mip's). Every other row must be
-# placed by an envelope the gate can cut.
-UNPLACED_FORMS = ("chained-mesh", "chained-animation", "terrain-mixer-mip")
+def check_against_item(asset: dict, item: dict, record: dict | None, by_id: dict[str, dict], report: "Report") -> None:
+    """A row against its items.jsonl row and its catalogue record: what a row claims about itself (its kind, form,
+    status, use, identity and where it lies) is what the rest of the run says, so a relabelled row fails here."""
+    name, identity, form = asset["id"], asset["identity"], item["form"]
+    for key in ITEM_KEYS:
+        if asset.get(key) != item.get(key):
+            report.fail(f"{name}: its {key} is not its item's")
+    for key in ("file", "length", "sha256", "owner"):
+        if identity.get(key) != item.get(key):
+            report.fail(f"{name}: its identity's {key} is not its item's")
+    placed = identity.get("offset") is not None
+    if placed and identity["offset"] != item["offset"]:
+        report.fail(f"{name}: its identity's offset is not its item's")
+    if placed and form in UNPLACED_FORMS:
+        report.fail(f"{name}: it places a {form}, which no reader places")
+    if not placed and form not in UNPLACED_FORMS:
+        report.fail(f"{name}: it leaves a {form} unplaced")
+    if item.get("owner") is not None:
+        owner = by_id.get(item["owner"])
+        if owner is None or owner["file"] != item["file"] or owner["form"] not in ("loose-mesh", "embedded-mesh"):
+            report.fail(f"{name}: its owner is not a mesh of the same file")
+    wanted_type = RECORD_TYPES.get(form)
+    if record is None and wanted_type is not None:
+        report.fail(f"{name}: a {form} the catalogue does not list")
+    elif record is not None and wanted_type is None:
+        report.fail(f"{name}: the catalogue lists it, which a {form} is not")
+    elif record is not None:
+        source = record["source"]
+        if record["type"] != wanted_type:
+            report.fail(f"{name}: the catalogue lists it as a {record['type']}, not as a {form}")
+        for key in ("envelope", "chunkPath", "offset", "length"):
+            if identity.get(key) != source.get(key):
+                report.fail(f"{name}: its identity's {key} is not its catalogue record's")
+        if identity.get("sha256") != record["sha256"] or str(identity.get("file")).casefold() != source["container"].casefold():
+            report.fail(f"{name}: its identity's hash or file is not its catalogue record's")
 
 
 class Unreadable(ValueError):
@@ -230,9 +342,10 @@ class Unreadable(ValueError):
 NOT_CHECKED = object()  # a field the gate cannot read again here (a DDS alpha without Pillow)
 
 
-def expect(**values) -> dict:
-    """A full set of metadata fields: the given values, every other field null."""
-    return {**dict.fromkeys(inv.METADATA_FIELDS), **values}
+def expect(_details: dict | None = None, **values) -> dict:
+    """A full set of metadata fields: the given values, every other field null; and the details the same bytes show
+    (a key of a row's details the gate can read from them), which the row's details must equal."""
+    return {**dict.fromkeys(inv.METADATA_FIELDS), **values, "_details": _details or {}}
 
 
 def u32(data: bytes, at: int) -> int:
@@ -304,9 +417,8 @@ def dds_alpha(dds: bytes, layout: str, width: int, height: int):
 
 def dds_fields(asset: dict, dds: bytes, report: "Report") -> dict:
     """A DDS file's row: its header's format, size and mip count, each mip's bytes hashed where the header puts them,
-    its format's channels and its top mip's alpha. A texture the inventory did not admit establishes nothing."""
-    if asset["details"].get("ddsStatus") != "valid":
-        return expect()
+    its format's channels and its top mip's alpha. A DDS the gate cannot read is Unreadable, and a row may call it so
+    (compare_fields); the row's status never decides whether the gate reads."""
     layout, width, height, levels = dds_chain(dds)
     mips = [{"index": number, "width": side_w, "height": side_h, "length": length,
              "sha256": hashlib.sha256(dds[at:at + length]).hexdigest()}
@@ -320,8 +432,6 @@ def dds_fields(asset: dict, dds: bytes, report: "Report") -> dict:
 def texture_record_fields(asset: dict, record: bytes, report: "Report") -> dict:
     """A texture record's row: the PC record's own width, height, frame count and format (at the offsets
     tools/aya_texture_fidelity_census.py states) and each frame's mip count. Its format is the one the record names."""
-    if asset["details"].get("descriptorStatus") != "parsed":
-        return expect()
     layout = texture_layout
     if record[:4] != b"DXTX" or record[layout.CTEX_START:layout.CTEX_START + 4] != b"CTEX" or len(record) < layout.CTEX_END:
         raise Unreadable("not a PC texture record")
@@ -350,7 +460,8 @@ PNG_SAMPLES = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}  # samples per pixel by colour type
 def png_fields(data: bytes) -> dict:
     if data[:8] != bytes((137, 80, 78, 71, 13, 10, 26, 10)) or data[12:16] != b"IHDR":
         raise Unreadable("not a PNG")
-    width, height, _depth, colour = struct.unpack_from(">IIBB", data, 16)
+    width, height, depth, colour = struct.unpack_from(">IIBB", data, 16)
+    interlace = data[28]
     at, transparency = 8, False
     while at + 8 <= len(data):
         length, kind = struct.unpack_from(">I4s", data, at)
@@ -359,19 +470,22 @@ def png_fields(data: bytes) -> dict:
         transparency |= kind == b"tRNS"
         at += 12 + length
     alpha = "present" if colour in (4, 6) or transparency else "none"
-    return expect(format="png", width=width, height=height, alpha=alpha, channels=PNG_SAMPLES.get(colour))
+    return expect({"bitDepth": depth, "colourType": colour, "interlace": interlace, "transparencyChunk": transparency},
+                  format="png", width=width, height=height, alpha=alpha, channels=PNG_SAMPLES.get(colour))
 
 
 def tga_fields(data: bytes) -> dict:
     if len(data) < 18:
         raise Unreadable("shorter than a TGA header")
-    width, height, _bits, descriptor = struct.unpack_from("<HHBB", data, 12)
+    width, height, bits, descriptor = struct.unpack_from("<HHBB", data, 12)
     alpha_bits = descriptor & 0x0F
-    return expect(format="tga", width=width, height=height, alpha="present" if alpha_bits else "none",
+    return expect({"bitsPerPixel": bits, "alphaBits": alpha_bits, "firstRowAtTop": bool(descriptor & 0x20)},
+                  format="tga", width=width, height=height, alpha="present" if alpha_bits else "none",
                   channels=4 if alpha_bits else 3)
 
 
 JPEG_FRAMES = frozenset(range(0xC0, 0xD0)) - {0xC4, 0xC8, 0xCC}
+JPEG_PROCESS_NAMES = {0xC0: "baseline", 0xC1: "extended sequential", 0xC2: "progressive", 0xC3: "lossless"}
 
 
 def jpeg_fields(data: bytes) -> dict:
@@ -382,8 +496,9 @@ def jpeg_fields(data: bytes) -> dict:
     while at + 4 <= len(data) and data[at] == 0xFF:
         marker = data[at + 1]
         if marker in JPEG_FRAMES and at + 10 <= len(data):
-            _precision, height, width, components = struct.unpack_from(">BHHB", data, at + 4)
-            return expect(format="jpeg", width=width, height=height, alpha="none", channels=components)
+            precision, height, width, components = struct.unpack_from(">BHHB", data, at + 4)
+            return expect({"precision": precision, "process": JPEG_PROCESS_NAMES.get(marker, "other")},
+                          format="jpeg", width=width, height=height, alpha="none", channels=components)
         if marker == 0xDA:
             break
         at += 2 + struct.unpack_from(">H", data, at + 2)[0]
@@ -393,33 +508,34 @@ def jpeg_fields(data: bytes) -> dict:
 def icon_fields(asset: dict, body: bytes) -> dict:
     """An icon resource: proved when it is a BITMAPINFOHEADER of twice the icon's height, then its palette, colour bits
     and mask, exactly; then its size, and alpha present in 32-bit colour or only a mask below it. A bitmap resource
-    is never proved."""
+    is never proved, whatever its bytes look like: its type comes from the executable's resource tree (check_resource),
+    not from the row."""
+    framed = expect({"bitCount": None, "resourceStatus": "framed"})
     if asset["form"] != "pe-icon" or len(body) < 40:
-        return expect()
+        return framed
     size, width, doubled, planes, bits, compression = struct.unpack_from("<IiiHHI", body, 0)
     used = u32(body, 32)
     if size != 40 or width <= 0 or doubled <= 0 or doubled % 2 or planes != 1 or compression or bits not in (1, 4, 8, 24, 32):
-        return expect()
+        return framed
     palette = 4 * (used or (1 << bits if bits <= 8 else 0))
     colour = ((width * bits + 31) // 32 * 4) * (doubled // 2)
     mask = ((width + 31) // 32 * 4) * (doubled // 2)
     if size + palette + colour + mask != len(body):
-        return expect()
-    return expect(format="icon bitmap", width=width, height=doubled // 2, alpha="present" if bits == 32 else "mask")
+        return framed
+    return expect({"bitCount": bits, "resourceStatus": "decoded"}, format="icon bitmap", width=width, height=doubled // 2,
+                  alpha="present" if bits == 32 else "mask")
 
 
 def ogg_fields(asset: dict, data: bytes) -> dict:
-    """The Vorbis identification header's channels and rate, and the last page's granule position, found by walking the
-    pages forward from the first."""
-    if asset["details"].get("audioStatus") != "parsed":
-        return expect()
+    """The Vorbis identification header's channels, rate and nominal bitrate, and the last page's granule position, found by
+    walking the pages forward from the first."""
     if data[:4] != b"OggS" or len(data) < 27:
         raise Unreadable("not an Ogg stream")
     lacing = data[27:27 + data[26]]
     packet = data[27 + len(lacing):27 + len(lacing) + sum(lacing)]
     if packet[:7] != b"\x01vorbis" or len(packet) < 16:
         raise Unreadable("the first packet is not a Vorbis identification header")
-    channels, rate = packet[11], u32(packet, 12)
+    channels, rate, nominal = packet[11], u32(packet, 12), struct.unpack_from("<i", packet, 20)[0]
     at = granule = 0
     while at < len(data):
         if data[at:at + 4] != b"OggS" or at + 27 > len(data):
@@ -429,7 +545,8 @@ def ogg_fields(asset: dict, data: bytes) -> dict:
         at += 27 + segments + sum(data[at + 27:at + 27 + segments])
     if at != len(data) or not rate:
         raise Unreadable("the pages do not end at the end of the file")
-    return expect(format="vorbis", channels=channels, sampleRate=rate, durationSeconds=round(granule / rate, 3))
+    return expect({"samples": granule, "nominalBitrate": nominal}, format="vorbis", channels=channels, sampleRate=rate,
+                  durationSeconds=round(granule / rate, 3))
 
 
 def bank_sample_fields(stream: bytes, start: int, length: int) -> dict:
@@ -445,16 +562,16 @@ def bank_sample_fields(stream: bytes, start: int, length: int) -> dict:
 
 
 def bink_fields(asset: dict, data: bytes) -> dict:
-    """The Bink header's frame count, size and frame rate."""
-    if asset["details"].get("videoStatus") != "parsed":
-        return expect()
+    """The Bink header's frame count, size, frame rate and audio track count."""
     if data[:3] != b"BIK" or len(data) < 44:
         raise Unreadable("not a Bink file")
     frames = u32(data, 8)
     width, height, numerator, denominator = struct.unpack_from("<4I", data, 20)
     if not (frames and width and height and numerator and denominator):
         raise Unreadable("a zero header field")
-    return expect(format="bink-" + data[:4].decode("latin-1"), width=width, height=height,
+    return expect({"fps": round(numerator / denominator, 3), "fpsRational": [numerator, denominator],
+                   "audioTracks": u32(data, 0x28)},
+                  format="bink-" + data[:4].decode("latin-1"), width=width, height=height,
                   durationSeconds=round(frames * denominator / numerator, 3), frames=frames)
 
 
@@ -470,14 +587,14 @@ def camd_fields(asset: dict, record: bytes, report: "Report") -> dict:
     """A 36-byte animation record: a 16-byte name, then the mode, start, last frame and frame scaler, then the rate."""
     if len(record) != 36:
         raise Unreadable("not a 36-byte animation record")
-    _mode, start, last, scaler = struct.unpack_from("<4i", record, 16)
+    mode, start, last, scaler = struct.unpack_from("<4i", record, 16)
     rate = struct.unpack_from("<f", record, 32)[0]
     rate = rate if math.isfinite(rate) else None
     details = asset["details"]
     if (details.get("startFrame"), details.get("lastFrame"), details.get("frameScaler"), details.get("rate")) != \
             (start, last, scaler, rate):
         report.fail(f"{asset['id']}: its frame range, scaler or rate details are not its record's")
-    return animation_fields(start, last, rate)
+    return {**animation_fields(start, last, rate), "_details": {"mode": mode}}
 
 
 def damage_fields(payload: bytes) -> dict:
@@ -487,8 +604,9 @@ def damage_fields(payload: bytes) -> dict:
     if not -1 <= levels < 16 or 4 + sum(4 ** n for n in range(levels + 1)) != len(payload):
         raise Unreadable("the levels do not fill the payload")
     if levels < 0:
-        return expect(mipLevels=0)
-    return expect(format="one byte per texel", width=1 << levels, height=1 << levels, mipLevels=levels + 1, channels=1)
+        return expect({"levels": levels}, mipLevels=0)
+    return expect({"levels": levels}, format="one byte per texel", width=1 << levels, height=1 << levels,
+                  mipLevels=levels + 1, channels=1)
 
 
 def placed_fields(asset: dict, stream: bytes, start: int, length: int, report: "Report") -> dict | None:
@@ -515,7 +633,8 @@ def placed_fields(asset: dict, stream: bytes, start: int, length: int, report: "
         if body[:4] != b"CMSH":
             raise Unreadable("not a CMSH stream")
         return expect(format="cmsh")
-    constants = {"byte-sprite": expect(format="one-byte indices", width=16, height=16, channels=1),
+    constants = {"byte-sprite": expect({"frameBytes": 256, "framesEstablished": 1, "wholeFramesByLength": length // 256},
+                                       format="one-byte indices", width=16, height=16, channels=1),
                  "terrain-heightfield": expect(format="heightfield"), "surface-strips": expect(format="surface strips"),
                  "static-shadow-maps": expect()}
     return constants.get(form)
@@ -540,64 +659,177 @@ def same(value, wanted) -> bool:
     return type(value) is type(wanted) and value == wanted
 
 
-FIELD_READ_ERRORS = (Unreadable, struct.error, TypeError, KeyError)
+FIELD_READ_ERRORS = (Unreadable, struct.error, TypeError, KeyError, IndexError)
 
 
 def compare_fields(asset: dict, read, report: "Report", counted: str) -> None:
-    """Every metadata field of a row against the gate's own reading (read() returns it, or None for a form the gate
-    has no reader for). A failure names the field, never its value."""
+    """Every metadata field and every detail the bytes show against the gate's own reading (read() returns it, or None for
+    a form the gate has no reader for). Whether the bytes can be read is the gate's call: a row that calls readable
+    bytes unparsed fails, and so does one that calls unreadable bytes parsed or claims fields for them. A failure names
+    the field, never its value."""
+    name, form = asset["id"], asset["form"]
+    status = PARSED_STATUS.get(form)
     try:
-        wanted = read()
+        wanted, unreadable = read(), None
     except FIELD_READ_ERRORS as error:
-        report.fail(f"{asset['id']}: the gate cannot read its fields: {error}")
+        wanted, unreadable = None, error
+    if unreadable is not None and status is not None and asset["details"].get(status[0]) != status[1] \
+            and all(asset[field] is None for field in inv.METADATA_FIELDS):
+        report.count("rows neither the gate nor the row can read")  # the row says so and claims nothing
+        return
+    if unreadable is not None:
+        report.fail(f"{name}: the gate cannot read its fields: {unreadable}")
         return
     if wanted is None:
-        report.fail(f"{asset['id']}: a {asset['form']} row, which the gate has no reader for")
+        report.fail(f"{name}: a {form} row, which the gate has no reader for")
         return
     agrees = True
+    if status is not None and asset["details"].get(status[0]) != status[1]:
+        report.fail(f"{name}: its {status[0]} calls bytes the gate reads unparsed")
+        agrees = False
     for field in inv.METADATA_FIELDS:
         if wanted[field] is NOT_CHECKED:
-            report.count(f"{asset['form']} {field} not read again: Pillow is not installed")
+            report.count(f"{form} {field} not read again: Pillow is not installed")
         elif not same(asset[field], wanted[field]):
-            report.fail(f"{asset['id']}: its {field} is not what the gate reads")
+            report.fail(f"{name}: its {field} is not what the gate reads")
+            agrees = False
+    for key, value in wanted["_details"].items():
+        if not same(asset["details"].get(key), value):
+            report.fail(f"{name}: its {key} detail is not what the gate reads")
             agrees = False
     if agrees:
         report.count(counted)
 
 
-def check_metadata(row: dict, data: bytes, raw: bytes | None, metadata: list[dict], report: "Report") -> None:
-    """A file's asset-metadata rows: each names the file's hash, and each placed row's bytes, cut at its coordinates
-    from the stored file or from the stream inflated here, hash to its SHA-256, and its fields are what the gate reads
-    from them. Only a mesh chain's links, their animations and a mixer mip may be unplaced; their fields follow their
-    details. A row too malformed to check fails (the schema check names what it lacks)."""
+class FileView:
+    """One file as the gate holds it: its row, its stored bytes, the stream it inflated (for an AYA envelope), and what is
+    walked from them on demand: an archive's top-level chunks and an executable's resource tree."""
+
+    def __init__(self, row: dict, data: bytes, raw: bytes | None):
+        self.row, self.data, self.raw = row, data, raw
+        self.stream = raw if row["stream"] == "inflated" else data
+        self._chunks: list | None | bool = False
+        self._resources: list | None | bool = False
+        self._starts: list[int] = []
+
+    def chunks(self) -> list | None:
+        if self._chunks is False:
+            try:
+                self._chunks = walk_chunks(self.stream) if self.stream is not None and self.row["family"] == ARCHIVE else None
+            except ValueError:
+                self._chunks = None  # run() names a stream whose chunks do not close
+            self._starts = [position for _tag, position, _size in self._chunks or []]
+        return self._chunks
+
+    def chunk_tag(self, start: int, end: int) -> bytes | None:
+        """The top-level chunk whose payload holds [start, end), or None."""
+        chunks = self.chunks()
+        index = bisect.bisect_right(self._starts, start) - 1
+        if not chunks or index < 0:
+            return None
+        tag, position, size = chunks[index]
+        return tag if position + 8 <= start and end <= position + 8 + size else None
+
+    def resources(self) -> list | None:
+        if self._resources is False:
+            try:
+                self._resources = inv.media.walk_pe(self.data).facts["resources"]
+            except (inv.media.FormatError, struct.error):
+                self._resources = None
+        return self._resources
+
+
+def check_metadata(view: FileView, metadata: list[dict], report: "Report", items: dict[str, dict]) -> None:
+    """A file's asset-metadata rows: each names the file's hash, is a form the file can hold and lies where that form
+    lies, and each placed row's bytes, cut at its coordinates from the stored file or from the stream inflated here, hash
+    to its SHA-256 and give the fields and details the row carries. Only a mesh chain's links, their animations and a
+    mixer mip may be unplaced; their fields follow their details. A row too malformed to check fails (the schema check
+    names what it lacks)."""
     for asset in metadata:
         try:
-            check_metadata_row(row, data, raw, asset, report)
+            check_metadata_row(view, asset, report, items)
         except (KeyError, TypeError, AttributeError) as error:
             report.fail(f"{asset.get('id')}: an asset-metadata row the gate cannot check ({type(error).__name__})")
 
 
-def check_metadata_row(row: dict, data: bytes, raw: bytes | None, asset: dict, report: "Report") -> None:
-    identity = asset["identity"]
+def check_home(view: FileView, asset: dict, report: "Report") -> Home | None:
+    """The form's home against the file: its kind, the file's family, the envelope and the stream. None, with the
+    failures reported, when the file cannot hold the form."""
+    name, form, row = asset["id"], asset["form"], view.row
+    home_of = FORM_HOMES.get(form)
+    if home_of is None:
+        report.fail(f"{name}: a {form} row, whose place in a file the gate does not know")
+        return None
+    pattern = home_of.envelopes.get(row["family"])
+    problems = []
+    if asset["kind"] != home_of.kind:
+        problems.append(f"a {form} is a {home_of.kind}, not a {asset['kind']}")
+    if pattern is None:
+        problems.append(f"a {form} is not held by a {row['family']} file")
+    elif not re.fullmatch(pattern, asset["identity"]["envelope"] or ""):
+        problems.append(f"its envelope is not a {form}'s in a {row['family']} file")
+    if row["stream"] != home_of.stream:
+        problems.append(f"a {form} lies in a {home_of.stream} stream, which this file's is not")
+    for problem in problems:
+        report.fail(f"{name}: {problem}")
+    return None if problems else home_of
+
+
+def check_resource(view: FileView, asset: dict, start: int, length: int, report: "Report") -> bool:
+    """An executable's resource is an icon or a bitmap as its resource tree says, read here from the file."""
+    resources = view.resources()
+    found = next((r for r in resources or [] if (r["offset"], r["length"]) == (start, length)), None)
+    if found is None:
+        report.fail(f"{asset['id']}: the executable's resource tree lists no resource there")
+        return False
+    if "pe-" + found["type"] != asset["form"]:
+        report.fail(f"{asset['id']}: the executable's resource tree makes it a {found['type']}, not what its form says")
+        return False
+    return True
+
+
+def check_metadata_row(view: FileView, asset: dict, report: "Report", items: dict[str, dict]) -> None:
+    row, identity, name, form = view.row, asset["identity"], asset["id"], asset["form"]
     if identity["fileSha256"] != row["sha256"]:
-        report.fail(f"{asset['id']}: its file hash is not its file's")
+        report.fail(f"{name}: its file hash is not its file's")
         return
-    envelope, start, length = identity["envelope"] or "", identity["offset"], identity["length"]
-    if start is None and asset["form"] in UNPLACED_FORMS:
+    home_of = check_home(view, asset, report)
+    if home_of is None:
+        return
+    start, length = identity["offset"], identity["length"]
+    if form in UNPLACED_FORMS:
+        if start is not None:  # check_against_item has failed it
+            return
+        if form == "terrain-mixer-mip":
+            at = items[name]["offset"]  # the mixer mips' item offset is their ERES chunk's payload
+            if view.chunk_tag(at, at + 1) != b"ERES":
+                report.fail(f"{name}: its item does not lie in an ERES chunk of the archive")
+                return
         compare_fields(asset, lambda: unplaced_fields(asset), report,
                        "unplaced metadata rows whose fields follow their details")
         return
     if start is None or not length:
-        report.fail(f"{asset['id']}: a {asset['form']} row without coordinates")
+        report.fail(f"{name}: a {form} row without coordinates")
         return
-    stream = data if envelope.startswith(STORED_ENVELOPES) else raw if envelope.startswith(INFLATED_ENVELOPES) else None
-    if stream is None:
-        report.fail(f"{asset['id']}: an envelope the gate cannot cut ({envelope})")
-        return
-    if start + length > len(stream) or hashlib.sha256(stream[start:start + length]).hexdigest() != identity["sha256"]:
-        report.fail(f"{asset['id']}: the bytes at its coordinates do not hash to its SHA-256")
+    stream = view.stream
+    if stream is None or start + length > len(stream) \
+            or hashlib.sha256(stream[start:start + length]).hexdigest() != identity["sha256"]:
+        report.fail(f"{name}: the bytes at its coordinates do not hash to its SHA-256")
         return
     report.count("metadata rows whose coordinates hash to their SHA-256")
+    if home_of.whole and (start, length) != (0, len(stream)):
+        report.fail(f"{name}: a {form} covers its whole stream, which its coordinates do not")
+        return
+    if home_of.magic is not None and not stream.startswith(home_of.magic, start):
+        report.fail(f"{name}: its bytes do not open as a {form}'s do")
+        return
+    if home_of.chunk is not None and row["family"] == ARCHIVE \
+            and view.chunk_tag(start, start + length) != home_of.chunk.encode("ascii"):
+        report.fail(f"{name}: its bytes do not lie in a {home_of.chunk} chunk of the archive")
+        return
+    if form in ("pe-icon", "pe-bitmap") and not check_resource(view, asset, start, length, report):
+        return
+    report.count("metadata rows whose form, envelope and place the gate re-derived from the file")
     compare_fields(asset, lambda: placed_fields(asset, stream, start, length, report), report,
                    "metadata rows whose every field equals the gate's reading")
 
@@ -680,8 +912,10 @@ def run(game: Path, inventory: Path, *, compose: bool = True) -> Report:
         return report
     if Image is None:
         report.count("image checks skipped: Pillow is not installed")
-    placed = stream_records([json.loads(line) for line in
-                             (inventory / "records.jsonl").read_text(encoding="utf-8").splitlines()])
+    record_rows = [json.loads(line) for line in (inventory / "records.jsonl").read_text(encoding="utf-8").splitlines()]
+    placed = stream_records(record_rows)
+    records = {record["id"]: record for record in record_rows}
+    items_by_id = {item["id"]: item for item in items}
     metadata_path = inventory / "asset-metadata.jsonl"
     metadata = [json.loads(line) for line in metadata_path.read_text(encoding="utf-8").splitlines()] \
         if metadata_path.is_file() else None
@@ -690,7 +924,7 @@ def run(game: Path, inventory: Path, *, compose: bool = True) -> Report:
     if metadata is None:
         report.fail("the run wrote no asset-metadata.jsonl")
     else:
-        check_metadata_rows(items, metadata, report)
+        check_metadata_rows(items, metadata, records, report)
         for asset in metadata:
             identity = asset.get("identity")
             by_file[identity.get("file") if isinstance(identity, dict) else None].append(asset)
@@ -703,7 +937,7 @@ def run(game: Path, inventory: Path, *, compose: bool = True) -> Report:
         if row["problems"]:
             report.fail(f"{row['path']}: {len(row['problems'])} reader problems")
         if row["stream"] != "inflated":
-            check_metadata(row, data, None, by_file.pop(row["path"], []), report)
+            check_metadata(FileView(row, data, None), by_file.pop(row["path"], []), report, items_by_id)
         if row["stream"] == "inflated":
             try:
                 raw = inflate_members(data)
@@ -713,15 +947,18 @@ def run(game: Path, inventory: Path, *, compose: bool = True) -> Report:
             if len(raw) != row["logicalBytes"]:
                 report.fail(f"{row['path']}: inflated size differs from the run's")
             report.count("envelopes inflated independently")
+            view = FileView(row, data, raw)
             check_records(row, raw, placed.pop(row["path"].casefold(), []), report)
-            check_metadata(row, data, raw, by_file.pop(row["path"], []), report)
+            check_metadata(view, by_file.pop(row["path"], []), report, items_by_id)
             if row["family"] == "lvlr-resource-archive":
                 try:
-                    report.count("archive chunks walked", len(walk_chunks(raw)))
+                    chunks = walk_chunks(raw)
+                    report.count("archive chunks walked", len(chunks))
                 except ValueError as error:
                     report.fail(f"{row['path']}: {error}")
+                    chunks = []
                 if compose:
-                    for chunk_tag, at, size in walk_chunks(raw):
+                    for chunk_tag, at, size in chunks:
                         if chunk_tag == b"MESH" and b"CMSH" in raw[at + 8:at + 8 + size]:
                             stream, _offset = meshcensus._direct_embedded_cmsh_with_offset(raw[at + 8:at + 8 + size])
                             check_compose(stream, totals, worst, report, row["path"])

@@ -60,8 +60,9 @@ def page(flags: int, granule: int, sequence: int, packets: list[bytes], *, conti
     return raw[:22] + struct.pack("<I", media.ogg_crc(raw)) + raw[26:]
 
 
-def identification(channels: int = 1, rate: int = 22050) -> bytes:
-    return b"\x01vorbis" + struct.pack("<IBIiiiBB", 0, channels, rate, 0, 64000, 0, 0xB8, 1)
+def identification(channels: int = 1, rate: int = 22050, blocks: int = 0xB8) -> bytes:
+    """The identification header; blocks holds the block sizes' powers of two (a low and a high nibble: 256 and 2048)."""
+    return b"\x01vorbis" + struct.pack("<IBIiiiBB", 0, channels, rate, 0, 64000, 0, blocks, 1)
 
 
 def comment() -> bytes:
@@ -69,9 +70,157 @@ def comment() -> bytes:
     return b"\x03vorbis" + struct.pack("<I", len(vendor)) + vendor + struct.pack("<II", 1, 3) + b"a=b" + b"\x01"
 
 
+# ------------------------------------------------------------------------------------ authored Vorbis setup headers
+class Bits:
+    """An authored bit string, least significant bit first, as the Vorbis packing writes it."""
+
+    def __init__(self) -> None:
+        self.value, self.count = 0, 0
+
+    def put(self, value: int, width: int) -> "Bits":
+        assert 0 <= value < 1 << width, (value, width)
+        self.value |= value << self.count
+        self.count += width
+        return self
+
+    def add(self, other: "Bits") -> "Bits":
+        self.value |= other.value << self.count
+        self.count += other.count
+        return self
+
+    def data(self) -> bytes:
+        return self.value.to_bytes((self.count + 7) // 8, "little")
+
+
+def ilog(value: int) -> int:
+    return value.bit_length()
+
+
+def codebook(lengths: tuple[int, ...] = (1, 1), *, dimensions: int = 1, lookup: int = 0, value_bits: int = 4,
+             sparse: bool = False, runs: tuple[int, ...] | None = None, first: int = 1, entries: int | None = None,
+             sync: int = 0x564342, table: int | None = None) -> Bits:
+    """One codebook. lengths gives each entry's codeword length (0 leaves an entry unused, in a sparse book); runs
+    writes an ordered book instead, that many entries at first, first + 1, ... bits. A lookup book carries the
+    multiplicands its type needs (table gives another number)."""
+    count = entries if entries is not None else sum(runs) if runs is not None else len(lengths)
+    bits = Bits().put(sync, 24).put(dimensions, 16).put(count, 24)
+    if runs is not None:
+        bits.put(1, 1).put(first - 1, 5)
+        left = count
+        for number in runs:
+            if left > 0:
+                bits.put(number, ilog(left))
+            left -= number
+    else:
+        bits.put(0, 1).put(int(sparse), 1)
+        for length in lengths:
+            if sparse:
+                bits.put(int(length > 0), 1)
+            if length > 0 or not sparse:
+                bits.put(length - 1, 5)
+    bits.put(lookup, 4)
+    if lookup in (1, 2):
+        bits.put(0, 32).put(0, 32).put(value_bits - 1, 4).put(0, 1)
+        values = table if table is not None else media._lookup1_values(count, dimensions) if lookup == 1 \
+            else count * dimensions
+        for number in range(values):
+            bits.put(number % (1 << value_bits), value_bits)
+    return bits
+
+
+def vq_book(**changes) -> Bits:
+    """A four-entry book of two dimensions with a value table (the lookup type 1 reads two multiplicands)."""
+    return codebook(**{"lengths": (2, 2, 2, 2), "dimensions": 2, "lookup": 1, **changes})
+
+
+def floor1(*, partitions: tuple[int, ...] = (0,), classes: tuple[tuple[int, int, int, tuple[int, ...]], ...] = ((1, 0, 0, (1,)),),
+           multiplier: int = 2, range_bits: int = 6, x: tuple[int, ...] = (32,)) -> Bits:
+    """A floor 1: each class is (dimensions, subclass bits, master book, subclass books plus one)."""
+    bits = Bits().put(1, 16).put(len(partitions), 5)
+    for number in partitions:
+        bits.put(number, 4)
+    for dimensions, subclasses, master, books in classes:
+        bits.put(dimensions - 1, 3).put(subclasses, 2)
+        if subclasses:
+            bits.put(master, 8)
+        for book in books:
+            bits.put(book, 8)
+    bits.put(multiplier - 1, 2).put(range_bits, 4)
+    for value in x:
+        bits.put(value, range_bits)
+    return bits
+
+
+def floor0(*, order: int = 8, rate: int = 44100, bark: int = 128, books: tuple[int, ...] = (1,), kind: int = 0) -> Bits:
+    bits = Bits().put(kind, 16).put(order, 8).put(rate, 16).put(bark, 16).put(6, 6).put(8, 8).put(len(books) - 1, 4)
+    for book in books:
+        bits.put(book, 8)
+    return bits
+
+
+def residue(*, kind: int = 1, begin: int = 0, end: int = 128, classbook: int = 0, cascades: tuple[int, ...] = (1,),
+            books: tuple[int, ...] = (1,)) -> Bits:
+    """A residue; each cascade is the class's stage mask (its low three bits, then five more behind a flag), and books
+    lists the book of every stage bit set, class by class."""
+    bits = Bits().put(kind, 16).put(begin, 24).put(end, 24).put(15, 24).put(len(cascades) - 1, 6).put(classbook, 8)
+    for cascade in cascades:
+        bits.put(cascade & 7, 3).put(int(cascade >> 3 > 0), 1)
+        if cascade >> 3:
+            bits.put(cascade >> 3, 5)
+    for book in books:
+        bits.put(book, 8)
+    return bits
+
+
+def mapping(channels: int = 1, *, kind: int = 0, submaps: int = 1, coupling: tuple[tuple[int, int], ...] = (),
+            reserved: int = 0, mux: tuple[int, ...] | None = None, floors: tuple[int, ...] = (0,),
+            residues: tuple[int, ...] = (0,)) -> Bits:
+    bits = Bits().put(kind, 16).put(int(submaps > 1), 1)
+    if submaps > 1:
+        bits.put(submaps - 1, 4)
+    bits.put(int(bool(coupling)), 1)
+    if coupling:
+        bits.put(len(coupling) - 1, 8)
+        for magnitude, angle in coupling:
+            bits.put(magnitude, ilog(channels - 1)).put(angle, ilog(channels - 1))
+    bits.put(reserved, 2)
+    if submaps > 1:
+        for channel in range(channels):
+            bits.put((mux or tuple(range(channels)))[channel], 4)
+    for floor, residue_number in zip(floors, residues):
+        bits.put(0, 8).put(floor, 8).put(residue_number, 8)
+    return bits
+
+
+def mode(*, block: int = 0, window: int = 0, transform: int = 0, mapping_number: int = 0) -> Bits:
+    return Bits().put(block, 1).put(window, 16).put(transform, 16).put(mapping_number, 8)
+
+
+def setup_header(channels: int = 1, *, books=None, times: tuple[int, ...] = (0,), floors=None, residues=None,
+                 mappings=None, modes=None, framing: int = 1, tail: bytes = b"") -> bytes:
+    """A valid setup header for the given channels (a scalar book and a vector book, one floor 1, one residue, one
+    mapping, one mode), or the given parts in its place."""
+    books = books if books is not None else [codebook(), vq_book()]
+    floors = floors if floors is not None else [floor1()]
+    residues = residues if residues is not None else [residue()]
+    mappings = mappings if mappings is not None else [mapping(channels, coupling=((0, 1),) if channels > 1 else ())]
+    modes = modes if modes is not None else [mode()]
+    bits = Bits().put(len(books) - 1, 8)
+    for part in books:
+        bits.add(part)
+    bits.put(len(times) - 1, 6)
+    for kind in times:
+        bits.put(kind, 16)
+    for group in (floors, residues, mappings, modes):
+        bits.put(len(group) - 1, 6)
+        for part in group:
+            bits.add(part)
+    return b"\x05vorbis" + bits.put(framing, 1).data() + tail
+
+
 def ogg_file(audio: list[bytes] | None = None, granule: int = 4410) -> bytes:
     audio = audio if audio is not None else [b"\x00" * 300, b"\x01" * 40]
-    return (page(2, 0, 0, [identification()]) + page(0, 0, 1, [comment(), b"\x05vorbis" + b"\x00" * 9])
+    return (page(2, 0, 0, [identification()]) + page(0, 0, 1, [comment(), setup_header()])
             + page(4, granule, 2, audio))
 
 
@@ -98,15 +247,43 @@ class OggTests(unittest.TestCase):
         self.assertEqual(walk.facts["audioPackets"], 2)
         self.assertEqual(walk.facts["samples"], 4410)
         self.assertEqual(walk.facts["sampleRate"], 22050)
+        self.assertEqual(walk.facts["blockSizes"], [256, 2048])
+        self.assertEqual({key: walk.facts[key] for key in ("codebooks", "floors", "residues", "mappings", "modes")},
+                         {"codebooks": 2, "floors": 1, "residues": 1, "mappings": 1, "modes": 1})
         kinds = {part: kind for _start, _length, kind, part in walk.spans}
         self.assertEqual(kinds["ogg/audio-packets"], media.OPAQUE)
         self.assertEqual(kinds["ogg/vorbis-headers"], media.DECODED)
 
     def test_a_packet_spanning_pages_is_followed(self):
         long = b"\x02" * 600
-        data = (page(2, 0, 0, [identification()]) + page(0, 0, 1, [comment(), b"\x05vorbis"])
+        data = (page(2, 0, 0, [identification()]) + page(0, 0, 1, [comment(), setup_header()])
                 + page(0, -1, 2, [long[:510]], continued_last=True) + page(5, 99, 3, [long[510:]]))
         self.assertEqual(media.walk_ogg(data).facts["audioPackets"], 1)
+
+    def test_a_setup_header_that_is_not_a_setup_is_refused_and_so_is_the_stream(self):
+        # A setup header that is its magic and then bytes no codebook reads as one was once counted as decoded.
+        noise = b"\x05vorbis" + bytes((index * 37 + 11) % 256 for index in range(3000))
+        refusal(self, media.walk_ogg, page(6, 0, 0, [identification(), comment(), noise]), "codebook sync pattern missing")
+        # A setup header whose packet is cut short, and one with a byte past its framing bit.
+        good = setup_header()
+        refusal(self, media.walk_ogg, page(6, 0, 0, [identification(), comment(), good[:-1]]),
+                "setup header ends inside a field")
+        refusal(self, media.walk_ogg, page(6, 0, 0, [identification(), comment(), good + b"\x00"]),
+                "setup header holds bytes after its framing bit")
+        # A stereo stream's setup couples its channels; read as a mono stream's, the same bytes name a channel that is
+        # not there.
+        stereo = page(6, 0, 0, [identification(channels=2), comment(), setup_header(2)])
+        self.assertEqual(media.walk_ogg(stereo).facts["channels"], 2)
+        refusal(self, media.walk_ogg, page(6, 0, 0, [identification(channels=1), comment(), setup_header(2)]),
+                "mapping couples a channel that does not exist or with itself")
+
+    def test_block_sizes_are_64_to_8192_and_the_first_is_not_the_larger(self):
+        for blocks, wanted in ((0x66, [64, 64]), (0xDD, [8192, 8192]), (0xB8, [256, 2048])):
+            walk = media.walk_ogg(page(6, 0, 0, [identification(blocks=blocks), comment(), setup_header()]))
+            self.assertEqual(walk.facts["blockSizes"], wanted)
+        for blocks in (0xB5, 0xE8, 0x8B, 0x00):
+            refusal(self, media.walk_ogg, page(6, 0, 0, [identification(blocks=blocks), comment(), setup_header()]),
+                    "Vorbis block sizes out of range")
 
     def test_refusals(self):
         good = ogg_file()
@@ -151,6 +328,156 @@ class OggTests(unittest.TestCase):
                                                      b"\x05vorbis"]), "truncated Vorbis comment list")
         refusal(self, media.walk_ogg, page(6, 0, 0, [identification(), comment()[:-1] + b"\x00", b"\x05vorbis"]),
                 "Vorbis comment header does not end in its framing bit")
+        # The strings are UTF-8: the vendor's, and each comment's.
+        vendor = b"\x03vorbis" + struct.pack("<I", 2) + b"\xff\xfe" + struct.pack("<I", 0) + b"\x01"
+        refusal(self, media.walk_ogg, page(6, 0, 0, [identification(), vendor, setup_header()]),
+                "Vorbis comment header holds text that is not UTF-8")
+        text = b"\x03vorbis" + struct.pack("<I", 0) + struct.pack("<II", 1, 2) + b"\xc3\x28" + b"\x01"
+        refusal(self, media.walk_ogg, page(6, 0, 0, [identification(), text, setup_header()]),
+                "Vorbis comment header holds text that is not UTF-8")
+        multibyte = b"\x03vorbis" + struct.pack("<I", 3) + "é!".encode() + struct.pack("<II", 1, 4) + "a=\u00e9".encode() + b"\x01"
+        self.assertEqual(media.walk_ogg(page(6, 0, 0, [identification(), multibyte, setup_header()])).facts["comments"], 1)
+
+
+class VorbisSetupTests(unittest.TestCase):
+    """The setup header is read field by field; each rule the Vorbis specification calls an error is refused."""
+
+    def refuses(self, packet: bytes, reason: str, channels: int = 1) -> None:
+        refusal(self, lambda data: media.read_vorbis_setup(data, channels), packet, reason)
+
+    def test_a_setup_header_is_read_to_its_framing_bit(self):
+        counts = {"codebooks": 2, "floors": 1, "residues": 1, "mappings": 1, "modes": 1}
+        self.assertEqual(media.read_vorbis_setup(setup_header(), 1), counts)
+        self.assertEqual(media.read_vorbis_setup(setup_header(2), 2), counts)
+
+    def test_every_construct_the_specification_has_is_read(self):
+        ordered = codebook(runs=(1, 1, 2))  # four entries of 1, 2, 3 and 3 bits: a full tree
+        sparse = codebook(lengths=(1, 0, 2, 0, 2), sparse=True)  # three used entries of 1, 2 and 2 bits
+        explicit = codebook(lengths=(2, 2, 2, 2), dimensions=2, lookup=2)  # entries x dimensions multiplicands
+        single = codebook(lengths=(1,))  # one used entry may leave its tree unfilled, with a one-bit codeword
+        nothing = codebook(lengths=(0, 0), sparse=True)  # no used entry
+        wide = codebook(lengths=(2, 2, 2, 2), dimensions=40, lookup=1, value_bits=16)  # one value per dimension
+        books = [codebook(), vq_book(), ordered, sparse, explicit, single, nothing, wide]
+        classes = ((2, 2, 0, (0, 1, 1, 1)), (1, 0, 0, (2,)))  # a master book, four subclass books (none, 1, 1, 1)
+        floors = [floor0(books=(1, 4)), floor1(partitions=(0, 0, 1), classes=classes, x=(10, 20, 30, 40, 50))]
+        residues = [residue(kind=0), residue(kind=1, cascades=(0b10001, 0b10), books=(1, 1, 4)), residue(kind=2)]
+        mappings = [mapping(2, coupling=((0, 1),)),
+                    mapping(2, submaps=2, mux=(1, 0), floors=(0, 1), residues=(1, 2))]
+        modes = [mode(), mode(block=1, mapping_number=1)]
+        facts = media.read_vorbis_setup(setup_header(2, books=books, floors=floors, residues=residues,
+                                                      mappings=mappings, modes=modes), 2)
+        self.assertEqual(facts, {"codebooks": 8, "floors": 2, "residues": 3, "mappings": 2, "modes": 2})
+
+    def test_floor_1_may_hold_63_values_and_no_more(self):
+        classes = ((8, 0, 0, (1,)), (7, 0, 0, (1,)))
+        at_limit = floor1(partitions=(0,) * 7 + (1,), classes=classes, range_bits=7, x=tuple(range(1, 64)))
+        self.assertEqual(media.read_vorbis_setup(setup_header(floors=[at_limit]), 1)["floors"], 1)
+        over = floor1(partitions=(0,) * 8, classes=classes[:1], range_bits=7, x=tuple(range(1, 65)))
+        self.refuses(setup_header(floors=[over]), "floor 1 has too many X values")
+
+    def test_the_lookup_values_are_the_greatest_root(self):
+        for entries, dimensions, wanted in ((0, 3, 0), (1, 5, 1), (4, 2, 2), (8, 3, 2), (26, 3, 2), (27, 3, 3),
+                                            (63, 3, 3), (64, 3, 4), (16777215, 1, 16777215), (100, 65535, 1)):
+            self.assertEqual(media._lookup1_values(entries, dimensions), wanted, (entries, dimensions))
+
+    def test_refusals(self):
+        self.refuses(b"\x05vorbit" + setup_header()[7:], "third packet is not a Vorbis setup header")
+        self.refuses(setup_header()[:20], "setup header ends inside a field")
+        self.refuses(setup_header()[:-1], "setup header ends inside a field")
+        self.refuses(setup_header(books=[codebook(sync=0x564343), vq_book()]), "codebook sync pattern missing")
+        self.refuses(setup_header(books=[codebook(), codebook(dimensions=0, lookup=1, table=0)]),
+                     "codebook lookup has no dimensions")
+        self.refuses(setup_header(books=[codebook(runs=(5,), entries=4), vq_book()]),
+                     "ordered codebook lengths overrun its entries")
+        self.refuses(setup_header(books=[codebook(runs=(1, 1), first=32), vq_book()]),
+                     "ordered codebook length passes 32 bits")
+        self.refuses(setup_header(books=[codebook(lengths=(1, 1, 1)), vq_book()]), "codebook codewords overfill their tree")
+        self.refuses(setup_header(books=[codebook(runs=(2, 1), first=1), vq_book()]), "codebook codewords overfill their tree")
+        self.refuses(setup_header(books=[codebook(lengths=(1, 2)), vq_book()]), "codebook codewords leave their tree unfilled")
+        self.refuses(setup_header(books=[codebook(lengths=(1, 0, 2), sparse=True), vq_book()]),
+                     "codebook codewords leave their tree unfilled")
+        for single in (codebook(lengths=(2,)), codebook(lengths=(0, 5, 0), sparse=True), codebook(runs=(1,), first=3)):
+            self.refuses(setup_header(books=[single, vq_book()]),
+                         "codebook with one used entry gives it a longer codeword than one bit")
+        self.refuses(setup_header(books=[codebook(lookup=3), vq_book()]), "codebook lookup type is reserved")
+        self.refuses(setup_header(times=(0, 1)), "time domain transform type is not zero")
+        self.refuses(setup_header(floors=[floor0(kind=2)]), "floor type is reserved")
+        for floor in (floor0(order=0), floor0(rate=0), floor0(bark=0)):
+            self.refuses(setup_header(floors=[floor]), "floor 0 has a zero order, rate or bark map size")
+        for floor in (floor0(books=(0,)), floor0(books=(9,))):  # a book with no lookup, and one that is not there
+            self.refuses(setup_header(floors=[floor]), "floor 0 names a codebook that does not give vectors")
+        for floor in (floor1(classes=((2, 1, 9, (1, 1)),)), floor1(classes=((1, 0, 0, (9,)),))):
+            self.refuses(setup_header(floors=[floor]), "floor 1 names a codebook that does not exist")
+        self.refuses(setup_header(floors=[floor1(x=(0,))]), "floor 1 repeats an X value")
+        self.refuses(setup_header(floors=[floor1(classes=((2, 0, 0, (1,)),), x=(5, 5))]), "floor 1 repeats an X value")
+        self.refuses(setup_header(residues=[residue(kind=3)]), "residue type is reserved")
+        self.refuses(setup_header(residues=[residue(begin=10, end=5)]), "residue range runs backwards")
+        for residue_part, books in ((residue(classbook=9), None), (residue(), [codebook(dimensions=0), vq_book()])):
+            self.refuses(setup_header(residues=[residue_part], **({"books": books} if books else {})),
+                         "residue classbook does not exist or has no dimensions")
+        # Three classes need three classwords of a one-dimensional classbook with two entries; four classwords fit four.
+        three = residue(classbook=0, cascades=(1, 1, 1), books=(1, 1, 1))
+        self.refuses(setup_header(books=[codebook(), vq_book()], residues=[three]),
+                     "residue classbook has fewer entries than its classes can need")
+        exact = residue(classbook=0, cascades=(1, 1), books=(1, 1))
+        self.assertEqual(media.read_vorbis_setup(setup_header(books=[codebook(lengths=(2, 2, 2, 2), dimensions=2), vq_book()],
+                                                              residues=[exact]), 1)["residues"], 1)
+        # Two classes name four classwords of a two-dimensional classbook, which has only two entries; one class names one.
+        for classes_count, cascades_count, entries_ok in ((2, 2, False), (1, 1, True)):
+            small = codebook(lengths=(1, 1), dimensions=2)
+            part = residue(classbook=0, cascades=(1,) * cascades_count, books=(1,) * cascades_count)
+            packet = setup_header(books=[small, vq_book()], residues=[part])
+            if entries_ok:
+                self.assertEqual(media.read_vorbis_setup(packet, 1)["residues"], 1)
+            else:
+                self.refuses(packet, "residue classbook has fewer entries than its classes can need")
+        for residue_part in (residue(books=(0,)), residue(books=(9,))):
+            self.refuses(setup_header(residues=[residue_part]), "residue names a codebook that does not give vectors")
+        self.refuses(setup_header(mappings=[mapping(kind=1)]), "mapping type is not zero")
+        for channels, coupling in ((1, ((0, 0),)), (2, ((1, 1),)), (3, ((0, 3),)), (3, ((3, 1),))):
+            self.refuses(setup_header(channels, mappings=[mapping(channels, coupling=coupling)]),
+                         "mapping couples a channel that does not exist or with itself", channels)
+        self.refuses(setup_header(mappings=[mapping(reserved=1)]), "mapping reserved bits are set")
+        self.refuses(setup_header(2, mappings=[mapping(2, submaps=2, mux=(0, 2), floors=(0, 0), residues=(0, 0),
+                                                       coupling=((0, 1),))]),
+                     "mapping assigns a channel to a submap that does not exist", 2)
+        self.refuses(setup_header(mappings=[mapping(floors=(3,))]), "mapping names a floor that does not exist")
+        self.refuses(setup_header(mappings=[mapping(residues=(3,))]), "mapping names a residue that does not exist")
+        for part in (mode(window=1), mode(transform=1)):
+            self.refuses(setup_header(modes=[part]), "mode window or transform type is not zero")
+        self.refuses(setup_header(modes=[mode(mapping_number=5)]), "mode names a mapping that does not exist")
+        # A reference to the last book, floor, residue or mapping is a reference; one past it is not.
+        last = floor1(classes=((1, 1, 1, (1, 2)),))  # a master book 1 and subclass books 0 and 1: the last of two
+        self.assertEqual(media.read_vorbis_setup(setup_header(floors=[last]), 1)["floors"], 1)
+        for floor in (floor1(classes=((1, 1, 2, (1, 1)),)), floor1(classes=((1, 1, 1, (1, 3)),))):
+            self.refuses(setup_header(floors=[floor]), "floor 1 names a codebook that does not exist")
+        self.assertEqual(media.read_vorbis_setup(setup_header(floors=[floor1(partitions=(), classes=(), x=())]), 1)["floors"], 1)
+        self.assertEqual(media.read_vorbis_setup(setup_header(residues=[residue(begin=64, end=64)]), 1)["residues"], 1)
+        two = dict(floors=[floor1(), floor1(x=(20,))], residues=[residue(), residue()])
+        self.assertEqual(media.read_vorbis_setup(setup_header(mappings=[mapping(floors=(1,), residues=(1,))], **two), 1)["mappings"], 1)
+        self.refuses(setup_header(mappings=[mapping(floors=(2,))], **two), "mapping names a floor that does not exist")
+        self.refuses(setup_header(mappings=[mapping(residues=(2,))], **two), "mapping names a residue that does not exist")
+        self.refuses(setup_header(mappings=[mapping(floors=(1,))]), "mapping names a floor that does not exist")
+        self.refuses(setup_header(mappings=[mapping(residues=(1,))]), "mapping names a residue that does not exist")
+        self.assertEqual(media.read_vorbis_setup(setup_header(modes=[mode(mapping_number=0)]), 1)["modes"], 1)
+        self.refuses(setup_header(modes=[mode(mapping_number=1)]), "mode names a mapping that does not exist")
+        self.refuses(setup_header(framing=0), "setup header lacks its framing bit")
+        self.refuses(setup_header(tail=b"\x00"), "setup header holds bytes after its framing bit")
+
+    def test_whether_codewords_fill_a_tree_does_not_depend_on_their_order(self):
+        # The assignment takes each entry the lowest free codeword of its length, so a long length before a short one
+        # still fits when the lengths sum to one.
+        for lengths in ((3, 1, 2, 3), (2, 3, 3, 1), (1, 2, 3, 3), (3, 3, 2, 1)):
+            self.assertEqual(media.read_vorbis_setup(setup_header(books=[codebook(lengths=lengths), vq_book()]), 1)["codebooks"], 2)
+
+    def test_an_unordered_book_equals_the_ordered_one_with_the_same_lengths(self):
+        for lengths, runs, first in (((1, 2, 3, 3), (1, 1, 2), 1), ((2, 2, 2, 2), (4,), 2),
+                                     ((1, 2, 3, 4, 4), (1, 1, 1, 2), 1), ((2, 2, 2, 3, 3), (3, 2), 2)):
+            for book in (codebook(lengths=lengths), codebook(runs=runs, first=first)):
+                self.assertEqual(media.read_vorbis_setup(setup_header(books=[book, vq_book()]), 1)["codebooks"], 2)
+        # Runs that stop short of a full tree, or pass it, are refused as unordered lengths are.
+        self.refuses(setup_header(books=[codebook(runs=(1, 1, 1), first=1), vq_book()]),
+                     "codebook codewords leave their tree unfilled")
 
 
 # -------------------------------------------------------------------------------------------------------------- Bink
@@ -186,6 +513,19 @@ class BinkTests(unittest.TestCase):
         self.assertEqual(walk.facts["keyframes"], 1)
         self.assertEqual(walk.facts["audioPacketBytes"], 12)
         self.assertEqual(walk.facts["videoPacketBytes"], 80)
+
+    def test_the_audio_track_descriptors_count_only_when_a_decoder_read_the_file(self):
+        # No reader here reads a descriptor's words, so their bytes are framed, apart from the header and the index.
+        data = bink_file([([b"\x10" * 8, b"\x12" * 2], b"\x20" * 30), ([b"\x11" * 4, b"\x13" * 6], b"\x21" * 50)], tracks=2)
+        walk = media.walk_bink(data)
+        parts = part_bytes(walk)
+        self.assertEqual(parts[("bink/header", media.DECODED)], 44)
+        self.assertEqual(parts[("bink/audio-track-descriptors", media.OPAQUE)], 24)
+        self.assertEqual(parts[("bink/frame-index", media.DECODED)], 4 * 3)
+        self.assertEqual(covered(walk, len(data)), len(data))
+        # A file with no audio track has no descriptor to frame.
+        self.assertNotIn(("bink/audio-track-descriptors", media.OPAQUE),
+                         part_bytes(media.walk_bink(bink_file([([], b"\x20" * 30)], tracks=0))))
 
     def test_refusals(self):
         frames = [([b"\x10" * 8], b"\x20" * 30), ([b"\x11" * 4], b"\x21" * 50)]
@@ -284,11 +624,26 @@ def segment(marker: int, body: bytes) -> bytes:
     return bytes((255, marker)) + struct.pack(">H", len(body) + 2) + body
 
 
-def jpeg_file(*, frames: int = 1, scan: bytes = b"\x12\x34\xff\x00\x56\xff\xd0\x78", end: bool = True) -> bytes:
-    frame = segment(0xC0, struct.pack(">BHHB", 8, 3, 5, 1) + b"\x01\x11\x00")
-    out = media.JPEG_START[:2] + segment(0xE0, b"JFIF\0\x01\x01\0\0\x01\0\x01\0\0") + frame * frames
-    out += segment(0xDA, b"\x01\x01\x00\x00\x3f\x00") + scan
+def jpeg_file(*, frames: int = 1, scan: bytes = b"\x12\x34\xff\x00\x56\xff\xd0\x78", end: bool = True,
+              before: bytes = b"", marker: int = 0xC0, count: int = 1, components: bytes = b"\x01\x11\x00",
+              header: bytes = b"\x01\x01\x00\x00\x3f\x00") -> bytes:
+    """A one-component image: before is put ahead of its frame header; the frame holds count components, and the scan
+    header is header."""
+    frame = segment(marker, struct.pack(">BHHB", 8, 3, 5, count) + components)
+    out = media.JPEG_START[:2] + segment(0xE0, b"JFIF\0\x01\x01\0\0\x01\0\x01\0\0") + before + frame * frames
+    out += segment(0xDA, header) + scan
     return out + (bytes((255, 0xD9)) if end else b"")
+
+
+DC_COUNTS = bytes([0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0])  # the lengths of a standard DC table's 12 codes
+
+
+def quantization(precision: int = 0, destination: int = 0, element: int = 1) -> bytes:
+    return bytes([precision << 4 | destination]) + element.to_bytes(precision + 1, "big") * 64
+
+
+def huffman(kind: int = 0, destination: int = 0, counts: bytes = DC_COUNTS) -> bytes:
+    return bytes([kind << 4 | destination]) + counts + bytes(range(sum(counts)))
 
 
 class JpegTests(unittest.TestCase):
@@ -298,6 +653,17 @@ class JpegTests(unittest.TestCase):
         self.assertEqual(covered(walk, len(data)), len(data))
         self.assertEqual((walk.facts["width"], walk.facts["height"], walk.facts["scans"]), (5, 3, 1))
         self.assertIn(("jpeg/entropy-coded", media.OPAQUE), {(part, kind) for _s, _l, kind, part in walk.spans})
+
+    def test_the_tables_the_restart_interval_and_the_headers_are_read(self):
+        tables = (segment(0xDB, quantization(0, 0) + quantization(1, 3, 300)) + segment(0xC4, huffman(0, 0) + huffman(1, 2))
+                  + segment(0xDD, b"\x00\x10"))
+        data = jpeg_file(before=tables)
+        self.assertEqual(covered(media.walk_jpeg(data), len(data)), len(data))
+        # Two components, both in the scan; a progressive frame's scan may select part of the spectrum.
+        two = jpeg_file(count=2, components=b"\x01\x22\x00\x02\x11\x01", header=b"\x02\x01\x00\x02\x11\x00\x3f\x00")
+        self.assertEqual(media.walk_jpeg(two).facts["components"], 2)
+        progressive = jpeg_file(marker=0xC2, header=b"\x01\x01\x00\x01\x05\x10")
+        self.assertEqual(media.walk_jpeg(progressive).facts["frameMarker"], 0xC2)
 
     def test_refusals(self):
         good = jpeg_file()
@@ -311,6 +677,65 @@ class JpegTests(unittest.TestCase):
         refusal(self, media.walk_jpeg, jpeg_file(end=False), "entropy-coded data runs past the file")
         refusal(self, media.walk_jpeg, media.JPEG_START[:2] + segment(0xE0, b"x"), "no end of image")
         refusal(self, media.walk_jpeg, media.JPEG_START[:2] + bytes((255, 0xD9)), "no frame or scan")
+
+    def test_quantization_tables_that_do_not_hold_are_refused(self):
+        for body in (quantization(2), quantization(0, 4), quantization()[:-1], quantization() + b"\x00"):
+            refusal(self, media.walk_jpeg, jpeg_file(before=segment(0xDB, body)), "quantization table segment is malformed")
+        refusal(self, media.walk_jpeg, jpeg_file(before=segment(0xDB, quantization(0, 0, 0))),
+                "quantization table holds a zero element")
+        zero_high = bytes([0x10]) + (b"\x00\x01" * 63) + b"\x00\x00"
+        refusal(self, media.walk_jpeg, jpeg_file(before=segment(0xDB, zero_high)), "quantization table holds a zero element")
+
+    def test_huffman_tables_that_do_not_hold_are_refused(self):
+        for body in (huffman(2), huffman(0, 4), bytes([0x00]) + bytes(10), huffman()[:-1], huffman() + b"\x00",
+                     bytes([0x00]) + bytes([3] + [0] * 15) + b"\x00\x01"):
+            refusal(self, media.walk_jpeg, jpeg_file(before=segment(0xC4, body)), "Huffman table segment is malformed")
+        # Two codes of one bit fill the tree; so do four of two bits; the code of all ones is never a symbol's.
+        for counts in (bytes([2] + [0] * 15), bytes([0, 4] + [0] * 14), bytes([1, 1, 1, 1] + [0] * 12)[:3] + bytes([5] + [0] * 12)):
+            refusal(self, media.walk_jpeg, jpeg_file(before=segment(0xC4, huffman(0, 0, counts))),
+                    "Huffman table codes use the all-ones code or overfill their tree")
+        # One code short of that is a table.
+        self.assertEqual(media.walk_jpeg(jpeg_file(before=segment(0xC4, huffman(0, 0, bytes([1, 1, 0, 1] + [0] * 12))))).facts["scans"], 1)
+
+    def test_a_two_byte_quantization_element_is_zero_only_when_both_bytes_are(self):
+        # 1 is stored as 0x0001, whose first byte is zero; 256 as 0x0100, whose second is.
+        for element in (1, 256, 65535):
+            data = jpeg_file(before=segment(0xDB, quantization(1, 0, element)))
+            self.assertEqual(covered(media.walk_jpeg(data), len(data)), len(data))
+
+    def test_a_restart_interval_is_two_bytes(self):
+        for body in (b"\x00", b"\x00\x10\x00"):
+            refusal(self, media.walk_jpeg, jpeg_file(before=segment(0xDD, body)), "restart interval segment is malformed")
+
+    def test_a_frame_header_lists_its_components_exactly(self):
+        for count, components in ((2, b"\x01\x11\x00"), (0, b""), (1, b"\x01\x51\x00"), (1, b"\x01\x10\x00"),
+                                  (1, b"\x01\x11\x04"), (2, b"\x01\x11\x00\x01\x11\x00"), (1, b"\x01\x11\x00\x00")):
+            refusal(self, media.walk_jpeg, jpeg_file(count=count, components=components),
+                    "frame header's component list is malformed")
+
+    def test_a_scan_header_names_the_frame_s_components_and_a_spectrum(self):
+        frame_lacks = "scan names a component the frame lacks"
+        refusal(self, media.walk_jpeg, media.JPEG_START[:2] + segment(0xDA, b"\x01\x01\x00\x00\x3f\x00") + b"\x12\x34"
+                + bytes((255, 0xD9)), "scan before the frame header")
+        for header in (b"\x01\x01\x00\x00\x3f", b"\x00\x00\x3f\x00", b"\x05\x01\x00" * 5 + b"\x00\x3f\x00", b"",
+                       b"\x01\x01\x40\x00\x3f\x00", b"\x01\x01\x04\x00\x3f\x00", b"\x01\x01\x00\x00\x40\x00",
+                       b"\x01\x01\x00\x20\x10\x00", b"\x01\x01\x00\x00\x3f\xe0", b"\x01\x01\x00\x00\x3f\x0e",
+                       b"\x01\x01\x00\x00\x3e\x00", b"\x01\x01\x00\x01\x3f\x00"):
+            refusal(self, media.walk_jpeg, jpeg_file(header=header), "scan header is malformed")
+        five = b"\x05" + b"".join(bytes([number, 0]) for number in range(1, 6)) + b"\x00\x3f\x00"
+        refusal(self, media.walk_jpeg, jpeg_file(header=five), "scan header is malformed")
+        refusal(self, media.walk_jpeg, jpeg_file(header=b"\x01\x01\x00\x00\x3f\x00\x00"), "scan header is malformed")
+        # An extended sequential frame's scan runs the whole spectrum too; a progressive frame's selection is bounded.
+        refusal(self, media.walk_jpeg, jpeg_file(marker=0xC1, header=b"\x01\x01\x00\x01\x05\x00"), "scan header is malformed")
+        self.assertEqual(media.walk_jpeg(jpeg_file(marker=0xC1)).facts["frameMarker"], 0xC1)
+        for header in (b"\x01\x01\x00\x01\x40\x00", b"\x01\x01\x00\x01\x05\xe0", b"\x01\x01\x00\x01\x05\x0e"):
+            refusal(self, media.walk_jpeg, jpeg_file(marker=0xC2, header=header), "scan header is malformed")
+        self.assertEqual(media.walk_jpeg(jpeg_file(marker=0xC2, header=b"\x01\x01\x00\x00\x3f\xdd")).facts["scans"], 1)
+        refusal(self, media.walk_jpeg, jpeg_file(header=b"\x01\x09\x00\x00\x3f\x00"), frame_lacks)
+        refusal(self, media.walk_jpeg, jpeg_file(header=b"\x02\x01\x00\x01\x00\x00\x3f\x00"), frame_lacks)
+        # The same selection that breaks a sequential frame is a progressive frame's.
+        refusal(self, media.walk_jpeg, jpeg_file(header=b"\x01\x01\x00\x01\x05\x10"), "scan header is malformed")
+        refusal(self, media.walk_jpeg, jpeg_file(marker=0xC2, header=b"\x01\x01\x00\x06\x05\x00"), "scan header is malformed")
 
 
 # --------------------------------------------------------------------------------------------------------------- TGA
@@ -629,7 +1054,8 @@ class ReasonsTests(unittest.TestCase):
         """Run last (by name): every FormatError reason the module can give is given by some test above."""
         loader = unittest.TestLoader()
         others = unittest.TestSuite(loader.loadTestsFromTestCase(case) for case in (
-            OggTests, BinkTests, PngTests, JpegTests, TgaTests, PeTests, ActiveMimeTests, TextTests, MarkupTests))
+            OggTests, VorbisSetupTests, BinkTests, PngTests, JpegTests, TgaTests, PeTests, ActiveMimeTests, TextTests,
+            MarkupTests))
         unittest.TextTestRunner(stream=open("/dev/null", "w"), verbosity=0).run(others)
         source = Path(media.__file__).read_text(encoding="utf-8")
         reasons = set(re.findall(r'FormatError\("([^"]+)"\)', source))

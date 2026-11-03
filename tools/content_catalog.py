@@ -257,7 +257,8 @@ def base_record(asset_id: str, atype: str, name: str, container: str, container_
 def walk_install(game: Path) -> list[dict]:
     """Every entry below the install. A link or special file, including a link to a directory (which os.walk lists
     among the directories and does not enter), is a non-regular row: it is listed, never followed. A folder that cannot
-    be listed is refused (CatalogInputError) rather than its files silently left out."""
+    be listed, or lists its names but cannot be searched, is refused (CatalogInputError) rather than its files silently
+    left out."""
     def unlistable(error: OSError) -> None:
         where = Path(error.filename) if error.filename else game
         name = where.relative_to(game).as_posix() if where.is_relative_to(game) else "the selected folder"
@@ -266,16 +267,20 @@ def walk_install(game: Path) -> list[dict]:
     rows = []
     for dirpath, dirnames, filenames in os.walk(game, onerror=unlistable, followlinks=False):
         dirnames.sort()
-        linked = sorted(name for name in dirnames if (Path(dirpath) / name).is_symlink())
-        dirnames[:] = [name for name in dirnames if name not in linked]
-        for filename in sorted(filenames + linked):
-            full = Path(dirpath) / filename
-            info = full.lstat()
-            rel = full.relative_to(game).as_posix()
-            if not stat.S_ISREG(info.st_mode):
-                rows.append({"path": rel, "size": None, "family": "non-regular", "sha256": None})
-                continue
-            rows.append({"path": rel, "size": info.st_size, "family": classify(rel)})
+        try:
+            linked = sorted(name for name in dirnames if (Path(dirpath) / name).is_symlink())
+            dirnames[:] = [name for name in dirnames if name not in linked]
+            for filename in sorted(filenames + linked):
+                full = Path(dirpath) / filename
+                info = full.lstat()
+                rel = full.relative_to(game).as_posix()
+                if not stat.S_ISREG(info.st_mode):
+                    rows.append({"path": rel, "size": None, "family": "non-regular", "sha256": None})
+                    continue
+                rows.append({"path": rel, "size": info.st_size, "family": classify(rel)})
+        except OSError as error:  # a folder that lists its names but cannot be searched, so its entries cannot be examined
+            name = Path(dirpath).relative_to(game).as_posix()
+            raise CatalogInputError(f"{name}: a folder the walk cannot search ({error.strerror})") from error
     return rows
 
 

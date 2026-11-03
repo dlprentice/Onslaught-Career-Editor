@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import contextlib
 import copy
+import hashlib
 import io
 import json
 import os
@@ -136,7 +137,7 @@ def binary_a8r8g8b8() -> bytes:
 def stereo_ogg(granule: int = 88200) -> bytes:
     """Two channels at 44,100 Hz, two seconds long."""
     return (media_fixtures.page(2, 0, 0, [media_fixtures.identification(2, 44100)])
-            + media_fixtures.page(0, 0, 1, [media_fixtures.comment(), b"\x05vorbis" + b"\x00" * 9])
+            + media_fixtures.page(0, 0, 1, [media_fixtures.comment(), media_fixtures.setup_header(2)])
             + media_fixtures.page(4, granule, 2, [b"\x00" * 300, b"\x01" * 40]))
 
 
@@ -318,6 +319,13 @@ class InventoryTests(unittest.TestCase):
         self.assertIn("not run", self.coverage["mediaDecoder"])
         video = self.rows["data/video/intro.vid"]
         self.assertEqual(part_classes(video)["bink/video-packets"], {inv.REFERENCED})
+        # What a reader here reads counts without the decoder: the Vorbis headers (the setup header field by field), the
+        # Bink header and index. What only the decoder's demuxer reads does not: the audio track descriptors.
+        self.assertEqual(part_classes(row)["ogg/vorbis-headers"], {inv.DECODED})
+        self.assertEqual(part_classes(video)["bink/audio-track-descriptors"], {inv.REFERENCED})
+        self.assertEqual((part_classes(video)["bink/header"], part_classes(video)["bink/frame-index"]),
+                         ({inv.DECODED}, {inv.DECODED}))
+        self.assertEqual((self.coverage["proofs"]["oggFilesWalked"], self.coverage["proofs"]["oggCodebooksRead"]), (2, 4))
 
     def test_a_file_its_reader_refuses_is_referenced_with_the_reason(self):
         row = self.rows["data/sounds/english/MessageBox/hello.ogg"]  # the catalogue's header-only fixture
@@ -773,6 +781,28 @@ class StrictReadingTests(unittest.TestCase):
         finally:
             hidden.chmod(0o755)
 
+    def test_a_folder_that_lists_its_names_but_cannot_be_searched_is_refused_and_the_gate_names_it(self):
+        game = self.game / "game"
+        authored(game)
+        out = self.game / "out"
+        inv.write_outputs(out, game, inv.build_inventory(game))
+        closed = game / "data/music"  # mode 0444: its names list, its entries cannot be examined
+        closed.chmod(0o444)
+        try:
+            try:
+                (closed / "track.ogg").lstat()
+            except PermissionError:
+                pass
+            else:
+                self.skipTest("this account can search a folder without permissions (root)")
+            with self.assertRaisesRegex(inv.cc.CatalogInputError, "data/music: a folder the walk cannot search"):
+                inv.build_inventory(game)
+            failures = gate.run(game, out, compose=False).failures
+            self.assertTrue(any(line.startswith("data/music: a folder the walk cannot search") for line in failures),
+                            failures)
+        finally:
+            closed.chmod(0o755)
+
     def test_an_install_holding_a_link_is_refused_and_the_gate_names_it(self):
         game = self.game / "game"
         authored(game)
@@ -880,6 +910,15 @@ class DecoderTests(unittest.TestCase):
         self.assertEqual(rows["data/sounds/english/MessageBox/line.ogg"]["class"], inv.DECODED)
         self.assertEqual(rows["data/video/intro.vid"]["class"], inv.DECODED)
         self.assertEqual(rows["data/video/intro.vid"]["facts"]["decoder"], "agrees")
+
+    def test_the_bytes_that_count_only_on_the_decoder_s_word_are_the_ones_no_reader_reads(self):
+        game = self.root / "game"
+        authored(game)
+        rows = {r["path"]: r for r in inv.build_inventory(game, decoder=str(self.decoder), jobs=2)["files"]}
+        # An Ogg's decoder-only bytes are its two audio packets (300 and 40 bytes): its setup header is read here.
+        self.assertEqual(rows["data/sounds/english/MessageBox/line.ogg"]["facts"][inv.DECODER_ONLY], 340)
+        # A Bink's are its one track's 12-byte descriptor, its audio packets (8 and 4) and its video packets (30 and 50).
+        self.assertEqual(rows["data/video/intro.vid"]["facts"][inv.DECODER_ONLY], 12 + 12 + 80)
 
     def test_the_headline_gives_both_shares_and_the_one_without_matches_a_run_without(self):
         game = self.root / "game"
@@ -1065,20 +1104,29 @@ class MetadataGateTests(unittest.TestCase):
             "mode": 1, "startFrame": 20, "lastFrame": 10, "frameScaler": -10, "rate": 0.25,
             "rateSemantics": "normalized-mode-increment-per-game-tick",
             "skeleton": {"mesh": "mesh:owner", "animatedParts": []}}})
-        row = {"sha256": "1" * 64}
-        asset = {"id": "animation:mesh:owner/chained#0/0", "form": "chained-animation", "details": details, **fields,
+        mesh_file = {"sha256": "1" * 64, "family": "cmsh-mesh", "stream": "inflated"}
+        asset = {"id": "animation:mesh:owner/chained#0/0", "kind": "animation", "form": "chained-animation",
+                 "details": details, **fields,
                  "identity": {"fileSha256": "1" * 64, "envelope": "aya-zlib-members(cmsh)/chain#0", "offset": None,
                               "length": 36}}
         for frames, wanted, agreeing in ((11, [], 1), (-9, [f"{asset['id']}: its frames is not what the gate reads"], 0)):
             report = gate.Report()
-            gate.check_metadata(row, b"", None, [dict(asset, frames=frames)], report)
+            gate.check_metadata(gate.FileView(mesh_file, b"", b""), [dict(asset, frames=frames)], report, {})
             self.assertEqual(report.failures, wanted)
             self.assertEqual(report.counts["unplaced metadata rows whose fields follow their details"], agreeing)
-        mixer = {**asset, **dict.fromkeys(inv.METADATA_FIELDS), "id": "texture:mixer", "form": "terrain-mixer-mip",
-                 "format": "one byte per texel"}
+        archive = {"sha256": "1" * 64, "family": "lvlr-resource-archive", "stream": "inflated"}
+        mixer = {**asset, **dict.fromkeys(inv.METADATA_FIELDS), "id": "texture:mixer", "kind": "texture",
+                 "form": "terrain-mixer-mip", "format": "one byte per texel",
+                 "identity": {**asset["identity"], "envelope": "lvlr-chunk(ERES)"}}
         report = gate.Report()
-        gate.check_metadata(row, b"", None, [mixer], report)  # nothing establishes a mixer mip's fields
+        # The mixer mips' item offset is their ERES chunk's payload; nothing establishes a mixer mip's fields.
+        gate.check_metadata(gate.FileView(archive, b"", catalog_fixtures.chunk(b"ERES", bytes(16))), [mixer], report,
+                            {"texture:mixer": {"offset": 8}})
         self.assertEqual(report.failures, ["texture:mixer: its format is not what the gate reads"])
+        report = gate.Report()
+        gate.check_metadata(gate.FileView(archive, b"", catalog_fixtures.chunk(b"TEXT", bytes(16))),
+                            [dict(mixer, format=None)], report, {"texture:mixer": {"offset": 8}})
+        self.assertEqual(report.failures, ["texture:mixer: its item does not lie in an ERES chunk of the archive"])
 
     def test_a_row_the_gate_cannot_place_fails(self):
         def change(rows: list[dict]) -> None:
@@ -1089,7 +1137,7 @@ class MetadataGateTests(unittest.TestCase):
 
         failures = self.failures_after(change)
         rows = self.rows
-        self.assertIn(f"{self.row(rows, 'video', name='intro')['id']}: an envelope the gate cannot cut (film(bink))",
+        self.assertIn(f"{self.row(rows, 'video', name='intro')['id']}: its envelope is not a video's in a bink-video file",
                       failures)
         for form, where in (("dds-file", {"file": "data/resources/dxtntextures/unused.tga(0)A1R5G5B5.aya"}),
                             ("loose-mesh", {}), ("pe-icon", {"file": "Setup.exe"})):
@@ -1128,6 +1176,249 @@ class MetadataGateTests(unittest.TestCase):
             (out / "asset-metadata.jsonl").unlink()
             self.assertIn("the run wrote no asset-metadata.jsonl", gate.run(self.game, out, compose=False).failures)
 
+    def failures_after_items(self, change_rows, change_items=None, change_records=None) -> list[str]:
+        """The gate's failures once change_rows has edited a copy of the run's asset-metadata rows and change_items
+        (and change_records) the run's item (and catalogue record) rows, as one who tampers with every file would."""
+        with tempfile.TemporaryDirectory() as temp:
+            out = Path(temp) / "out"
+            shutil.copytree(self.out, out)
+            for name, change in (("asset-metadata.jsonl", change_rows), ("items.jsonl", change_items),
+                                 ("records.jsonl", change_records)):
+                if change is not None:
+                    rows = [json.loads(line) for line in (out / name).read_text(encoding="utf-8").splitlines()]
+                    change(rows)
+                    (out / name).write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+            return gate.run(self.game, out, compose=False).failures
+
+    @staticmethod
+    def blank(row: dict, **keep) -> None:
+        for field in inv.METADATA_FIELDS:
+            row[field] = keep.get(field)
+
+    def named(self, failures: list[str], asset_id: str, line: str | None = None) -> bool:
+        return any(failure.startswith(f"{asset_id}: ") and (line is None or failure == f"{asset_id}: {line}")
+                   for failure in failures)
+
+    def test_a_row_that_claims_to_be_another_form_or_unparsed_fails(self):
+        """Single rows tampered with: a form claim that switched the placement and field checks off, and a status claim
+        that dropped every field, each once passed the gate with no failure; so did a changed kind, status or use."""
+        chosen: dict[str, tuple[str, str]] = {}
+
+        def change(rows: list[dict]) -> None:
+            dds = self.row(rows, "dds-file", file="data/resources/dxtntextures/extra%graded.tga(0)DXT2.aya")
+            dds.update(form="chained-mesh")
+            dds["identity"]["offset"] = None
+            self.blank(dds, format="cmsh")
+            chosen["a DDS row claims to be a mesh chain's link"] = (dds["id"], "its form is not its item's")
+            voice = self.row(rows, "voice", name="line")
+            voice.update(form="terrain-mixer-mip")
+            voice["identity"]["offset"] = None
+            self.blank(voice)
+            chosen["a voice row claims to be a terrain mixer mip"] = (voice["id"], "its form is not its item's")
+            icon = self.row(rows, "pe-icon", file="Setup.exe")
+            icon.update(form="pe-bitmap")
+            self.blank(icon)
+            chosen["an icon row claims to be a bitmap"] = (icon["id"], "its form is not its item's")
+            for form, selector, key, value, label in (
+                    ("dds-file", {"file": "data/resources/textures/mustbe_extra%binary.tga(0)A8R8G8B8.aya"}, "ddsStatus",
+                     "malformed", "a DDS"),
+                    ("music", {"name": "track"}, "audioStatus", "refused", "a music track"),
+                    ("video", {"name": "intro"}, "videoStatus", "refused", "a film"),
+                    ("descriptor-text", {"name": "meshtex\\skin.tga"}, "descriptorStatus", "refused", "a texture record")):
+                row = self.row(rows, form, **selector)
+                row["details"][key] = value
+                self.blank(row)
+                chosen[f"{label} row says it was refused and drops every field"] = (
+                    row["id"], f"its {key} calls bytes the gate reads unparsed")
+            music = self.row(rows, "music", name="track")
+            music["status"] = "referenced" if music["status"] == "decoded" else "decoded"
+            chosen["a music row's status is flipped"] = (music["id"], "its status is not its item's")
+            dds_two = self.row(rows, "dds-file", file="data/resources/dxtntextures/unused.tga(0)A1R5G5B5.aya")
+            dds_two["kind"] = "image"
+            chosen["a DDS row's kind is changed"] = (dds_two["id"], "its kind is not its item's")
+            hello = self.row(rows, "voice", name="hello")
+            hello["used"] = not hello["used"]
+            hello["usedBy"] = []
+            chosen["a voice row says nothing uses it"] = (hello["id"], "its used is not its item's")
+
+        failures = self.failures_after(change)
+        for label, (asset_id, line) in chosen.items():
+            self.assertTrue(self.named(failures, asset_id, line), (label, [f for f in failures if asset_id in f]))
+
+    def test_a_row_and_its_item_relabelled_together_still_fail_against_the_file(self):
+        """Tampering with items.jsonl as well as the row leaves the file, which holds what it holds."""
+        rows_file = {}
+
+        def change_rows(rows: list[dict]) -> None:
+            dds = self.row(rows, "dds-file", file="data/resources/dxtntextures/extra%graded.tga(0)DXT2.aya")
+            dds.update(form="chained-mesh")
+            dds["identity"].update(offset=None, envelope="aya-zlib-members(cmsh)/chain#0")
+            self.blank(dds, format="cmsh")
+            voice = self.row(rows, "voice", name="line")
+            voice.update(form="terrain-mixer-mip")
+            voice["identity"]["offset"] = None
+            self.blank(voice)
+            icon = self.row(rows, "pe-icon", file="Setup.exe")
+            icon.update(form="pe-bitmap")
+            icon["identity"]["envelope"] = "pe-resource(bitmap)"
+            self.blank(icon)
+            png = self.row(rows, "png", name="orphan.png")
+            png.update(form="tga")
+            png["identity"]["offset"] = 0
+            rows_file.update(dds=dds["id"], voice=voice["id"], icon=icon["id"], png=png["id"])
+
+        def change_items(rows: list[dict]) -> None:
+            for item in rows:
+                if item["id"] == rows_file["dds"]:
+                    item.update(form="chained-mesh", offset=None)
+                elif item["id"] == rows_file["voice"]:
+                    item.update(form="terrain-mixer-mip")
+                elif item["id"] == rows_file["icon"]:
+                    item.update(form="pe-bitmap")
+                elif item["id"] == rows_file["png"]:
+                    item.update(form="tga")
+
+        failures = self.failures_after_items(change_rows, change_items)
+        for label, line in (("dds", "a chained-mesh is not held by a dds-texture-dxtn file"),
+                            ("voice", "a terrain-mixer-mip is not held by a ogg-voice file"),
+                            ("icon", "the executable's resource tree makes it a icon, not what its form says"),
+                            ("png", "a tga is not held by a manual file")):
+            self.assertTrue(self.named(failures, rows_file[label], line), (label, [f for f in failures if rows_file[label] in f]))
+
+    def test_a_row_that_disagrees_with_the_catalogue_record_fails(self):
+        target = {}
+
+        def change_rows(rows: list[dict]) -> None:
+            dds = self.row(rows, "dds-file", file="data/resources/dxtntextures/extra%graded.tga(0)DXT2.aya")
+            dds["identity"]["envelope"] = "aya-zlib-members(dds)/other"
+            dds["identity"]["chunkPath"] = [3]
+            target["id"] = dds["id"]
+            asset = self.row(rows, "voice", name="line")
+            asset["identity"]["file"] = asset["identity"]["file"].replace("line", "Line")
+            target["voice"] = asset["id"]
+
+        failures = self.failures_after_items(change_rows)
+        self.assertTrue(self.named(failures, target["id"], "its identity's envelope is not its catalogue record's"))
+        self.assertTrue(self.named(failures, target["id"], "its identity's chunkPath is not its catalogue record's"))
+        self.assertTrue(self.named(failures, target["voice"], "its identity's file is not its item's"))
+
+        def drop_record(rows: list[dict]) -> None:
+            rows[:] = [row for row in rows if row["id"] != target["id"]]
+
+        self.assertTrue(self.named(self.failures_after_items(None, None, drop_record), target["id"],
+                                   "a dds-file the catalogue does not list"))
+
+    def test_the_forms_places_are_read_from_the_file_not_the_row(self):
+        """Each rule of a form's home, on a handmade row: the family, the envelope, the stream, the whole stream, the
+        magic and the archive chunk."""
+        data = b"OggS" + bytes(20)
+
+        def check(file_row: dict, asset: dict, raw: bytes | None = None, items: dict | None = None) -> list[str]:
+            report = gate.Report()
+            gate.check_metadata(gate.FileView(file_row, data, raw), [asset], report, items or {})
+            return report.failures
+
+        file_row = {"sha256": "2" * 64, "family": "ogg-voice", "stream": "stored", "path": "v.ogg"}
+        identity = {"fileSha256": "2" * 64, "envelope": "ogg", "chunkPath": [], "offset": 0, "length": len(data),
+                    "sha256": hashlib.sha256(data).hexdigest(), "file": "v.ogg", "sha256Scope": "whole file"}
+        asset = {"id": "sound:v", "kind": "sound", "form": "voice", "name": "v", "status": "decoded", "used": False,
+                 "usedBy": [], "identity": identity, "details": {"audioStatus": "unparsed"},
+                 **dict.fromkeys(inv.METADATA_FIELDS)}
+        # These 24 bytes are no Ogg stream the gate can read, and the row says so and claims nothing: no failure.
+        self.assertEqual(check(file_row, asset), [])
+        # kind, family, envelope and stream
+        self.assertEqual(check(file_row, dict(asset, kind="image"))[:1], ["sound:v: a voice is a sound, not a image"])
+        self.assertIn("sound:v: a voice is not held by a ogg-music file", check(dict(file_row, family="ogg-music"), asset))
+        for envelope in ("whole file", "ogg2", "xogg", "ogg/chain#0"):
+            self.assertIn("sound:v: its envelope is not a voice's in a ogg-voice file",
+                          check(file_row, dict(asset, identity=dict(identity, envelope=envelope))), envelope)
+        self.assertIn("sound:v: a voice lies in a stored stream, which this file's is not",
+                      check(dict(file_row, stream="inflated"), asset, raw=data))
+        # the whole stream, and the magic
+        short = dict(identity, length=8, sha256=hashlib.sha256(data[:8]).hexdigest())
+        self.assertIn("sound:v: a voice covers its whole stream, which its coordinates do not",
+                      check(file_row, dict(asset, identity=short)))
+        wrong = b"RIFF" + data[4:]
+        wrong_identity = dict(identity, sha256=hashlib.sha256(wrong).hexdigest())
+        report = gate.Report()
+        gate.check_metadata(gate.FileView(file_row, wrong, None), [dict(asset, identity=wrong_identity)], report, {})
+        self.assertIn("sound:v: its bytes do not open as a voice's do", report.failures)
+        # a texture record in the wrong archive chunk
+        record = b"DXTX" + bytes(12)
+        raw = catalog_fixtures.chunk(b"DMKR", record)
+        archive = {"sha256": "2" * 64, "family": "lvlr-resource-archive", "stream": "inflated", "path": "a.aya"}
+        text = {"id": "texture:t", "kind": "texture", "form": "descriptor-text", "name": "t", "status": "decoded",
+                "used": False, "usedBy": [], "details": {"descriptorStatus": "unparsed"}, **dict.fromkeys(inv.METADATA_FIELDS),
+                "identity": {"fileSha256": "2" * 64, "envelope": "lvlr-chunk(TEXT)", "chunkPath": [0], "offset": 8,
+                             "length": len(record), "sha256": hashlib.sha256(record).hexdigest(), "file": "a.aya"}}
+        report = gate.Report()
+        gate.check_metadata(gate.FileView(archive, b"", raw), [text], report, {})
+        self.assertIn("texture:t: its bytes do not lie in a TEXT chunk of the archive", report.failures)
+        report = gate.Report()
+        gate.check_metadata(gate.FileView(archive, b"", catalog_fixtures.chunk(b"TEXT", record)), [text], report, {})
+        self.assertNotIn("texture:t: its bytes do not lie in a TEXT chunk of the archive", report.failures)
+
+    def test_whether_bytes_can_be_read_is_the_gate_s_call_both_ways(self):
+        def asset(**changes) -> dict:
+            return {"id": "sound:v", "form": "voice", "details": {"audioStatus": "unparsed"},
+                    **dict.fromkeys(inv.METADATA_FIELDS), **changes}
+
+        def run(row: dict, reads) -> tuple[list[str], int]:
+            report = gate.Report()
+            gate.compare_fields(row, reads, report, "agreed")
+            return report.failures, report.counts["rows neither the gate nor the row can read"]
+
+        def unreadable():
+            raise gate.Unreadable("not an Ogg stream")
+
+        # Bytes the gate cannot read, and a row that says so and claims nothing: fine. A row that claims fields, or
+        # calls them parsed, fails.
+        self.assertEqual(run(asset(), unreadable), ([], 1))
+        self.assertEqual(run(asset(channels=2), unreadable)[0], ["sound:v: the gate cannot read its fields: not an Ogg stream"])
+        self.assertEqual(run(asset(details={"audioStatus": "parsed"}), unreadable)[0],
+                         ["sound:v: the gate cannot read its fields: not an Ogg stream"])
+        # Bytes the gate can read: a row that calls them unparsed fails, whatever fields it drops.
+        readable = lambda: gate.expect({"samples": 1}, format="vorbis", channels=1, sampleRate=8000, durationSeconds=1.0)
+        good = asset(details={"audioStatus": "parsed", "samples": 1}, format="vorbis", channels=1, sampleRate=8000,
+                     durationSeconds=1.0)
+        self.assertEqual(run(good, readable)[0], [])
+        self.assertIn("sound:v: its audioStatus calls bytes the gate reads unparsed", run(asset(), readable)[0])
+        self.assertIn("sound:v: its samples detail is not what the gate reads",
+                      run(dict(good, details={"audioStatus": "parsed", "samples": 2}), readable)[0])
+        # A form with no status of its own is read whatever the row says.
+        self.assertEqual(run(asset(form="png", details={}), unreadable)[0],
+                         ["sound:v: the gate cannot read its fields: not an Ogg stream"])
+
+    def test_png_tga_jpeg_ogg_bink_animation_and_icon_details_are_read_from_their_bytes(self):
+        rows = copy.deepcopy(self.rows)
+        for form, name, key in (("png", "orphan.png", "bitDepth"), ("tga", None, "bitsPerPixel"), ("jpeg", None, "precision"),
+                                ("voice", "line", "nominalBitrate"), ("music", "track", "samples"),
+                                ("video", "intro", "fpsRational"), ("video", "intro", "fps"), ("animation", "ahead", "mode"),
+                                ("pe-icon", None, "bitCount"), ("damage-texture", None, "levels"),
+                                ("byte-sprite", None, "wholeFramesByLength")):
+            row = self.row(rows, form, name=name)
+            row["details"][key] = [9] if isinstance(row["details"].get(key), list) else (row["details"].get(key) or 0) + 9
+            tampered = self.failures_after(lambda changed, target=row, k=key: self.row(changed, target["form"], name=target["name"],
+                                                                                         file=target["identity"]["file"])["details"].update({k: target["details"][k]}))
+            self.assertIn(f"{row['id']}: its {key} detail is not what the gate reads", tampered, (form, key))
+
+    def test_a_catalogue_reader_that_refuses_every_file_is_caught_by_the_gate_reading_the_bytes(self):
+        """A catalogue Ogg reader changed to refuse every file once left every sound row without a field and the retail
+        gate with no failure, because a row that called itself unparsed was not read. The gate reads the bytes."""
+        with tempfile.TemporaryDirectory() as temp:
+            out = Path(temp) / "out"
+            with patch.object(inv.cc, "ogg_metadata", side_effect=ValueError("refused")), \
+                    patch.object(inv.cc, "bink_metadata", side_effect=ValueError("refused")):
+                inv.write_outputs(out, self.game, inv.build_inventory(self.game))
+            rows = [json.loads(line) for line in (out / "asset-metadata.jsonl").read_text(encoding="utf-8").splitlines()]
+            self.assertTrue(all(row["details"]["audioStatus"] == "unparsed" for row in rows if row["form"] in ("voice", "music")))
+            failures = gate.run(self.game, out, compose=False).failures
+        for form, key in (("voice", "audioStatus"), ("music", "audioStatus"), ("video", "videoStatus")):
+            for row in rows:
+                if row["form"] == form and row["name"] in ("line", "track", "intro"):
+                    self.assertTrue(self.named(failures, row["id"], f"its {key} calls bytes the gate reads unparsed"),
+                                    (form, [f for f in failures if row["id"] in f]))
+
     def test_a_row_that_breaks_the_schema_fails_the_gate(self):
         try:
             import jsonschema  # noqa: F401
@@ -1160,9 +1451,205 @@ class MetadataGateTests(unittest.TestCase):
         self.assertTrue(any(line.startswith("data/Dial.raw: a file the gate cannot read") for line in failures), failures)
 
 
+class GateReaderTests(unittest.TestCase):
+    """The gate's own readers on handmade bytes, for decisions no authored install's rows reach."""
+
+    def test_floats_agree_to_a_nanosecond_and_no_nearer(self):
+        self.assertTrue(gate.same(0.1 + 0.2, 0.3))
+        self.assertTrue(gate.same(1, 1))
+        self.assertFalse(gate.same(1.0, 1.0 + 1e-6))
+        self.assertFalse(gate.same(0.5, None))
+        self.assertFalse(gate.same(None, 0.5))
+        self.assertFalse(gate.same(1, True))  # the same value in another type is another value
+
+    def test_an_ogg_s_samples_and_duration_come_from_its_last_page(self):
+        data = (media_fixtures.page(2, 0, 0, [media_fixtures.identification(1, 22050)])
+                + media_fixtures.page(0, 0, 1, [media_fixtures.comment(), media_fixtures.setup_header()])
+                + media_fixtures.page(0, 1000, 2, [b"\x00" * 50]) + media_fixtures.page(4, 4410, 3, [b"\x01" * 30]))
+        fields = gate.ogg_fields({"details": {}}, data)
+        self.assertEqual((fields["durationSeconds"], fields["_details"]["samples"]), (0.2, 4410))
+        self.assertEqual((fields["channels"], fields["sampleRate"], fields["_details"]["nominalBitrate"]), (1, 22050, 64000))
+        with self.assertRaises(gate.Unreadable):
+            gate.ogg_fields({"details": {}}, data[:-3])  # the last page no longer ends at the end of the file
+
+    def test_a_bank_sample_s_length_is_a_quarter_of_its_pcm_size_rounded_up(self):
+        stream = struct.pack("<I", 100) + bytes(25)
+        fields = gate.bank_sample_fields(stream, 4, 25)
+        self.assertEqual((fields["format"], fields["channels"]), ("ima-adpcm-4bit", 1))
+        self.assertEqual(gate.bank_sample_fields(struct.pack("<I", 101) + bytes(26), 4, 26)["format"], "ima-adpcm-4bit")
+        for start, length in ((4, 24), (4, 26), (0, 25)):
+            with self.assertRaises(gate.Unreadable):
+                gate.bank_sample_fields(stream, start, length)
+
+    def test_a_damage_texture_s_levels_fill_its_payload_exactly(self):
+        fields = gate.damage_fields(struct.pack("<i", 2) + bytes(1 + 4 + 16))
+        self.assertEqual((fields["width"], fields["height"], fields["mipLevels"], fields["_details"]), (4, 4, 3, {"levels": 2}))
+        self.assertEqual(gate.damage_fields(struct.pack("<i", -1))["mipLevels"], 0)
+        for payload in (struct.pack("<i", 2) + bytes(20), struct.pack("<i", 2) + bytes(22), struct.pack("<i", 16) + bytes(8)):
+            with self.assertRaises(gate.Unreadable):
+                gate.damage_fields(payload)
+
+    def test_a_tga_has_alpha_when_its_descriptor_has_alpha_bits(self):
+        plain = gate.tga_fields(media_fixtures.tga_file(2, 2, 24))
+        self.assertEqual((plain["alpha"], plain["channels"], plain["_details"]["alphaBits"]), ("none", 3, 0))
+        data = bytearray(media_fixtures.tga_file(2, 2, 32))
+        data[17] = 0x28  # eight alpha bits, the first row at the top
+        alpha = gate.tga_fields(bytes(data))
+        self.assertEqual((alpha["alpha"], alpha["channels"], alpha["_details"]),
+                         ("present", 4, {"bitsPerPixel": 32, "alphaBits": 8, "firstRowAtTop": True}))
+
+    def test_a_form_the_gate_has_no_reader_for_fails(self):
+        report = gate.Report()
+        row = {"id": "x:1", "form": "mystery", "details": {}, **dict.fromkeys(inv.METADATA_FIELDS)}
+        gate.compare_fields(row, lambda: gate.placed_fields(row, b"", 0, 0, report), report, "agreed")
+        self.assertEqual(report.failures, ["x:1: a mystery row, which the gate has no reader for"])
+        self.assertEqual(report.counts["agreed"], 0)
+
+    def test_a_png_s_details_come_from_its_header_and_its_chunks(self):
+        def png(depth: int, colour: int, interlace: int, chunks: bytes) -> bytes:
+            header = struct.pack(">IIBBBBB", 5, 3, depth, colour, 0, 0, interlace)
+            return inv.media.PNG_SIGNATURE + media_fixtures.png_chunk(b"IHDR", header) + chunks \
+                + media_fixtures.png_chunk(b"IEND", b"")
+
+        plain = gate.png_fields(png(8, 2, 0, b""))
+        self.assertEqual(plain["_details"], {"bitDepth": 8, "colourType": 2, "interlace": 0, "transparencyChunk": False})
+        self.assertEqual((plain["alpha"], plain["channels"]), ("none", 3))
+        keyed = gate.png_fields(png(16, 0, 1, media_fixtures.png_chunk(b"tRNS", bytes(2))))
+        self.assertEqual(keyed["_details"], {"bitDepth": 16, "colourType": 0, "interlace": 1, "transparencyChunk": True})
+        self.assertEqual((keyed["alpha"], keyed["channels"]), ("present", 1))
+        self.assertEqual(gate.png_fields(png(8, 6, 0, b""))["alpha"], "present")
+
+    def test_a_jpeg_s_details_come_from_its_frame_header(self):
+        baseline = gate.jpeg_fields(media_fixtures.jpeg_file())
+        self.assertEqual(baseline["_details"], {"precision": 8, "process": "baseline"})
+        progressive = gate.jpeg_fields(media_fixtures.jpeg_file(marker=0xC2))
+        self.assertEqual(progressive["_details"]["process"], "progressive")
+        arithmetic = gate.jpeg_fields(media_fixtures.jpeg_file(marker=0xC9))
+        self.assertEqual(arithmetic["_details"]["process"], "other")
+        twelve = bytearray(media_fixtures.jpeg_file())
+        twelve[twelve.index(b"\xff\xc0") + 4] = 12
+        self.assertEqual(gate.jpeg_fields(bytes(twelve))["_details"]["precision"], 12)
+
+    def test_an_icon_resource_is_proved_only_when_it_holds_and_is_an_icon(self):
+        holds = media_fixtures.pe_file(icon_bits=32)
+        walk = inv.media.walk_pe(holds)
+        icon = next(r for r in walk.facts["resources"] if r["type"] == "icon")
+        body = holds[icon["offset"]:icon["offset"] + icon["length"]]
+        proved = gate.icon_fields({"form": "pe-icon"}, body)
+        self.assertEqual((proved["format"], proved["alpha"], proved["_details"]),
+                         ("icon bitmap", "present", {"bitCount": 32, "resourceStatus": "decoded"}))
+        for asset, data in (({"form": "pe-icon"}, body + b"x"), ({"form": "pe-icon"}, body[:20]),
+                            ({"form": "pe-bitmap"}, body)):  # extra bytes, too few, and a bitmap whatever it looks like
+            framed = gate.icon_fields(asset, data)
+            self.assertEqual((framed["format"], framed["_details"]), (None, {"bitCount": None, "resourceStatus": "framed"}))
+
+    def test_an_archive_chunk_holds_only_the_bytes_of_its_payload(self):
+        chunks = catalog_fixtures.chunk(b"TEXT", bytes(10)) + catalog_fixtures.chunk(b"MESH", bytes(6))
+        view = gate.FileView({"family": "lvlr-resource-archive", "stream": "inflated"}, b"", chunks)
+        self.assertEqual(view.chunk_tag(8, 18), b"TEXT")
+        self.assertEqual(view.chunk_tag(12, 14), b"TEXT")
+        self.assertEqual(view.chunk_tag(26, 32), b"MESH")
+        for start, end in ((4, 12), (0, 8), (8, 19), (17, 27), (18, 20), (32, 33), (100, 101)):
+            self.assertIsNone(view.chunk_tag(start, end), (start, end))  # a header, a span across chunks, past the end
+        self.assertIsNone(gate.FileView({"family": "ogg-voice", "stream": "stored"}, b"x", None).chunk_tag(0, 1))
+        self.assertIsNone(gate.FileView({"family": "lvlr-resource-archive", "stream": "inflated"}, b"", b"TEXT\xff\xff\xff\xff")
+                          .chunk_tag(8, 9))  # chunks that do not close are no chunks
+
+    def test_a_pe_resource_is_found_by_its_offset_and_its_length_and_its_type(self):
+        view = gate.FileView({"family": "executable-code", "stream": "stored"}, b"", None)
+        view._resources = [{"type": "icon", "offset": 100, "length": 40, "status": "decoded"},
+                           {"type": "bitmap", "offset": 100, "length": 80, "status": "framed"}]
+        asset = {"id": "image:x", "form": "pe-icon"}
+        for form, start, length, ok in (("pe-icon", 100, 40, True), ("pe-bitmap", 100, 80, True), ("pe-icon", 100, 80, False),
+                                         ("pe-icon", 100, 41, False), ("pe-icon", 101, 40, False)):
+            report = gate.Report()
+            self.assertEqual(gate.check_resource(view, dict(asset, form=form), start, length, report), ok, (form, start, length))
+            self.assertEqual(bool(report.failures), not ok)
+        view._resources = None  # an executable whose resource tree does not read lists nothing
+        self.assertFalse(gate.check_resource(view, asset, 100, 40, gate.Report()))
+
+    def test_a_row_is_held_to_its_item_and_its_record_one_key_at_a_time(self):
+        record = {"id": "texture:x", "type": "texture", "sha256": "a" * 64,
+                  "source": {"envelope": "aya-zlib-members(dds)", "chunkPath": [], "offset": 0, "length": 70,
+                             "container": "Data/T.aya"}}
+        item = {"id": "texture:x", "kind": "texture", "form": "dds-file", "name": "t", "status": "decoded", "used": True,
+                "usedBy": ["loaded-by-archive"], "file": "data/t.aya", "offset": 0, "length": 70, "sha256": "a" * 64}
+        identity = {"file": "data/t.aya", "envelope": "aya-zlib-members(dds)", "chunkPath": [], "offset": 0, "length": 70,
+                    "sha256": "a" * 64}
+        asset = {"id": "texture:x", "kind": "texture", "form": "dds-file", "name": "t", "status": "decoded", "used": True,
+                 "usedBy": ["loaded-by-archive"], "identity": identity}
+
+        def failures(asset_changes=None, identity_changes=None, item_changes=None, with_record=True, record_changes=None):
+            report = gate.Report()
+            row = dict(asset, **(asset_changes or {}), identity=dict(identity, **(identity_changes or {})))
+            if record_changes:
+                source = {**record["source"], **record_changes.get("source", {})}
+                changed = {**record, **{k: v for k, v in record_changes.items() if k != "source"}, "source": source}
+            else:
+                changed = record
+            gate.check_against_item(row, dict(item, **(item_changes or {})), changed if with_record else None,
+                                    {"texture:x": item, "mesh:m": {"file": "data/t.aya", "form": "loose-mesh"}}, report)
+            return report.failures
+
+        self.assertEqual(failures(), [])
+        for key, value in (("kind", "image"), ("form", "png"), ("name", "u"), ("status", "unknown"), ("used", False),
+                           ("usedBy", [])):
+            self.assertIn(f"texture:x: its {key} is not its item's", failures({key: value}))
+        for key, value in (("file", "data/u.aya"), ("length", 69), ("sha256", "b" * 64), ("owner", "mesh:m")):
+            self.assertIn(f"texture:x: its identity's {key} is not its item's", failures(identity_changes={key: value}), key)
+        self.assertIn("texture:x: its identity's offset is not its item's", failures(identity_changes={"offset": 4}))
+        # an unplaced form is unplaced in both, and no other form is
+        self.assertIn("texture:x: it places a chained-mesh, which no reader places",
+                      failures({"form": "chained-mesh"}, item_changes={"form": "chained-mesh"}))
+        self.assertIn("texture:x: it leaves a dds-file unplaced", failures(identity_changes={"offset": None}))
+        self.assertEqual([f for f in failures({"form": "terrain-mixer-mip"}, {"offset": None},
+                                              {"form": "terrain-mixer-mip", "offset": 8}, with_record=False)
+                          if "unplaced" in f or "places" in f], [])
+        # an owner is a mesh of the same file
+        chained = dict(item_changes={"form": "chained-mesh", "owner": "mesh:m", "offset": None}, with_record=False)
+        self.assertEqual([f for f in failures({"form": "chained-mesh"}, {"offset": None, "owner": "mesh:m"}, **chained)
+                          if "owner" in f], [])
+        for owner, others in (("mesh:gone", {}), ("texture:x", {}), ("mesh:m", {"file": "data/other.aya"})):
+            report = gate.Report()
+            by_id = {"texture:x": item, "mesh:m": {"file": "data/t.aya", "form": "loose-mesh", **others},
+                     "mesh:gone": None}
+            if owner == "mesh:gone":
+                del by_id["mesh:gone"]
+            gate.check_against_item(dict(asset, form="chained-mesh", identity=dict(identity, offset=None, owner=owner)),
+                                    dict(item, form="chained-mesh", owner=owner, offset=None), None, by_id, report)
+            self.assertIn("texture:x: its owner is not a mesh of the same file", report.failures, owner)
+        # the catalogue: a form it lists must have its record, and a form it does not must not
+        self.assertIn("texture:x: a dds-file the catalogue does not list", failures(with_record=False))
+        self.assertIn("texture:x: the catalogue lists it, which a png is not",
+                      failures({"form": "png"}, item_changes={"form": "png"}))
+        self.assertIn("texture:x: the catalogue lists it as a mesh, not as a dds-file", failures(record_changes={"type": "mesh"}))
+        for key, value in (("envelope", "other"), ("chunkPath", [1]), ("offset", 4), ("length", 3)):
+            self.assertIn(f"texture:x: its identity's {key} is not its catalogue record's",
+                          failures(record_changes={"source": {key: value}}), key)
+        self.assertIn("texture:x: its identity's hash or file is not its catalogue record's",
+                      failures(record_changes={"sha256": "c" * 64}))
+        self.assertIn("texture:x: its identity's hash or file is not its catalogue record's",
+                      failures(record_changes={"source": {"container": "data/else.aya"}}))
+        self.assertEqual(failures(record_changes={"source": {"container": "DATA/T.AYA"}}), [])  # the catalogue folds case
+
+    def test_every_form_the_inventory_writes_has_a_home(self):
+        # The forms an authored install's rows carry are forms the gate knows where to find, and each form's kind is
+        # one the metadata file lists.
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            authored(game)
+            built = inv.build_inventory(game)
+        self.assertLessEqual({asset["form"] for asset in built["assets"]}, set(gate.FORM_HOMES))
+        self.assertLessEqual({home.kind for home in gate.FORM_HOMES.values()}, set(inv.METADATA_KINDS))
+        self.assertLessEqual(set(gate.UNPLACED_FORMS), set(gate.FORM_HOMES))
+        self.assertLessEqual(set(gate.RECORD_TYPES), set(gate.FORM_HOMES))
+
+
 class BoundaryTests(unittest.TestCase):
     def test_output_outside_ignored_local_data_is_refused(self):
         with tempfile.TemporaryDirectory() as temp:
+            if inv.cc.output_is_ignored_local_data(Path(temp) / "out"):
+                self.skipTest("TMPDIR lies inside this checkout's ignored local-data, so a temporary folder is not outside it")
             game = Path(temp) / "game"
             authored(game)
             with patch.object(inv, "write_outputs") as write, contextlib.redirect_stderr(io.StringIO()):

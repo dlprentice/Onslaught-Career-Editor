@@ -9,8 +9,10 @@ its loader, or by its format's published layout, and every byte of its stream la
 
   decoded     a reader consumed these bytes in the loader's order and its walk closed exactly. A codec payload counts
               when every bit pattern decodes (raw pixels, DXT blocks, IMA ADPCM, deflate that inflated), or when an
-              independent decoder read it without an error and agreed with the walk's counts (Vorbis, Bink, JPEG; see
-              --media-decoder). A source no loader reads counts when its grammar holds to its end: a mission script
+              independent decoder read it without an error and agreed with the walk's counts (the Vorbis audio packets,
+              the Bink frames and audio track descriptors, the JPEG scans; see --media-decoder). The structure around
+              them is read here: a Vorbis setup header field by field, a JPEG's tables and headers, a Bink header and
+              index. A source no loader reads counts when its grammar holds to its end: a mission script
               when its compile reproduces the shipped copy (or, with none, when it compiles with every include
               present), mission text as [ID] and string entries, a symbol table or header as #define lines, a manual
               page as HTML tokens and a file list as XML. Plain text with no grammar (the install's readme and log)
@@ -1950,6 +1952,7 @@ def media_proofs(ctx: Context, rows: list[dict]) -> None:
             ctx.proofs["oggFilesWalked"] += 1
             ctx.proofs["oggPagesChecksummed"] += facts["pages"]
             ctx.proofs["oggPacketsFramed"] += facts["packets"]
+            ctx.proofs["oggCodebooksRead"] += facts["codebooks"]  # each file's setup header, read to its framing bit
         elif row["family"] == "bink-video" and "frames" in facts:
             ctx.proofs["binkFilesWalked"] += 1
             ctx.proofs["binkFramesWalked"] += facts["frames"]

@@ -6,8 +6,13 @@ saved-web-page ActiveMime container, HTML pages, XML documents and plain text.
 Each walker follows its format's published layout, proves the layout accounts for the file and refuses (FormatError,
 with a reason) whatever does not hold. It returns the spans it can vouch for as (start, length, kind, part), where kind
 is DECODED for bytes the walker read or for a payload every bit pattern of which decodes, and OPAQUE for a payload whose
-extent is proved but which only a real decoder can read (Vorbis audio packets, Bink frames, JPEG entropy-coded scans).
-Bytes it does not claim are not claimed. No retail data or address is held here; a walker reads what it is given.
+extent is proved but which only a real decoder can read (Vorbis audio packets, Bink frames and audio track descriptors,
+JPEG entropy-coded scans). Bytes it does not claim are not claimed. No retail data or address is held here; a walker
+reads what it is given.
+
+The Vorbis setup header (codebooks, floors, residues, mappings and modes) is read field by field as the Vorbis I
+specification gives it, and every rule that specification calls an error is refused. The JPEG quantization and Huffman
+tables, restart interval, frame component list and scan header are read the same way, as ITU T.81 gives them.
 
 The Bink layout is the one libavformat's demuxer reads: a 44-byte header, the audio track descriptors, an index of
 frame count + 1 words (the low bit of each marks a keyframe) and the frames, each holding one sized packet per audio
@@ -15,6 +20,7 @@ track and then the video data.
 """
 from __future__ import annotations
 
+import collections
 import re
 import struct
 import zlib
@@ -61,11 +67,13 @@ def ogg_crc(data: bytes) -> int:
 
 
 def read_vorbis_comment(packet: bytes) -> dict:
-    """The second Vorbis header: the vendor string and comment list, ending in the framing bit."""
+    """The second Vorbis header: the vendor string and comment list, every string UTF-8 as the specification has it,
+    ending in the framing bit. The comments' names and values are not read further."""
     at = 7
     if at + 4 > len(packet):
         raise FormatError("truncated Vorbis comment header")
     (vendor,) = struct.unpack_from("<I", packet, at)
+    strings = [packet[at + 4:at + 4 + vendor]]
     at += 4 + vendor
     if at + 4 > len(packet):
         raise FormatError("truncated Vorbis comment header")
@@ -75,14 +83,227 @@ def read_vorbis_comment(packet: bytes) -> dict:
         if at + 4 > len(packet):
             raise FormatError("truncated Vorbis comment list")
         (size,) = struct.unpack_from("<I", packet, at)
+        strings.append(packet[at + 4:at + 4 + size])
         at += 4 + size
     if at + 1 != len(packet) or not packet[at] & 1:
         raise FormatError("Vorbis comment header does not end in its framing bit")
+    for text in strings:
+        try:
+            text.decode("utf-8")
+        except UnicodeDecodeError:
+            raise FormatError("Vorbis comment header holds text that is not UTF-8") from None
     return {"vendorBytes": vendor, "comments": comments}
 
 
+# The Vorbis I setup header (specification section 4.2.4, with the codebook of 3.2.1, floor 0 of 6.2.1, floor 1 of
+# 7.2.2 and the residue of 8.6.1). Every field is read in the specification's order and the packet must end at its
+# framing bit. The rules the specification calls errors are refused: a reserved type, a codebook whose codewords do not
+# fill a prefix code exactly, a reference to a codebook, floor, residue, mapping or channel that does not exist, and a
+# floor 1 whose X values repeat. Five rules go beyond its text. Three follow libvorbis: a codebook's lone used entry
+# takes a one-bit codeword, a floor 0 or residue stage book needs a value lookup, and a residue's classbook needs an
+# entry for every combination of its classes. One follows FFmpeg: a residue's range does not run backwards (libvorbis
+# reads such a residue as empty). One is the account's own: no byte follows the framing bit, so the walk closes exactly,
+# which neither decoder checks. The codebook's value table and a floor's or residue's plain numbers are read as the
+# integers they are: no bit pattern of them is an error.
+class _Bits:
+    """The Vorbis bit packing: bits come least significant first within each byte. A read past the end is an error."""
+
+    def __init__(self, data: bytes, start: int):
+        self.data, self.position, self.limit = data, 8 * start, 8 * len(data)
+
+    def take(self, count: int) -> int:
+        end = self.position + count
+        if end > self.limit:
+            raise FormatError("setup header ends inside a field")
+        value = int.from_bytes(self.data[self.position >> 3:(end + 7) >> 3], "little") >> (self.position & 7)
+        self.position = end
+        return value & ((1 << count) - 1)
+
+    def skip(self, count: int) -> None:
+        if self.position + count > self.limit:
+            raise FormatError("setup header ends inside a field")
+        self.position += count
+
+
+def _ilog(value: int) -> int:
+    """The specification's ilog: how many bits hold the value (none for zero or less)."""
+    return value.bit_length() if value > 0 else 0
+
+
+def _lookup1_values(entries: int, dimensions: int) -> int:
+    """The greatest integer whose power of the codebook's dimensions is not above its entry count."""
+    value = int(entries ** (1.0 / dimensions)) if entries else 0
+    while value ** dimensions > entries:
+        value -= 1
+    while (value + 1) ** dimensions <= entries:
+        value += 1
+    return value
+
+
+def _read_codebook(bits: _Bits) -> tuple[int, int, int]:
+    """(dimensions, entries, lookup type). The codeword lengths are counted per length: whether they fill a prefix code
+    exactly is the sum of 2^-length over the used entries, which is the same whatever order the entries come in."""
+    if bits.take(24) != 0x564342:
+        raise FormatError("codebook sync pattern missing")
+    dimensions, entries = bits.take(16), bits.take(24)
+    lengths: collections.Counter = collections.Counter()
+    if bits.take(1):  # ordered: a run of entries for each length, lengths growing by one per run
+        at, length = 0, bits.take(5) + 1
+        while at < entries:
+            number = bits.take(_ilog(entries - at))
+            if length > 32:
+                raise FormatError("ordered codebook length passes 32 bits")
+            if number > entries - at:
+                raise FormatError("ordered codebook lengths overrun its entries")
+            lengths[length] += number
+            at, length = at + number, length + 1
+    else:
+        sparse = bits.take(1)
+        for _ in range(entries):
+            if not sparse or bits.take(1):
+                lengths[bits.take(5) + 1] += 1
+    used = sum(lengths.values())
+    if used == 1 and lengths[1] != 1:  # a lone entry is a tree of one node: libvorbis takes it only with a one-bit codeword
+        raise FormatError("codebook with one used entry gives it a longer codeword than one bit")
+    if used > 1:
+        filled = sum(count << (32 - length) for length, count in lengths.items())
+        if filled > 1 << 32:
+            raise FormatError("codebook codewords overfill their tree")
+        if filled < 1 << 32:
+            raise FormatError("codebook codewords leave their tree unfilled")
+    lookup = bits.take(4)
+    if lookup > 2:
+        raise FormatError("codebook lookup type is reserved")
+    if lookup:
+        if not dimensions:
+            raise FormatError("codebook lookup has no dimensions")
+        bits.skip(64)  # the minimum and the delta, two packed floats
+        value_bits = bits.take(4) + 1
+        bits.take(1)  # whether the values accumulate
+        bits.skip(value_bits * (_lookup1_values(entries, dimensions) if lookup == 1 else entries * dimensions))
+    return dimensions, entries, lookup
+
+
+def _read_floor(bits: _Bits, books: list[tuple[int, int, int]]) -> int:
+    """A floor's type; its books must exist, and a floor 0's must give vectors."""
+    kind = bits.take(16)
+    if kind > 1:
+        raise FormatError("floor type is reserved")
+    if kind == 0:
+        order, rate, bark_map = bits.take(8), bits.take(16), bits.take(16)
+        bits.skip(14)  # the amplitude bits and offset
+        if not (order and rate and bark_map):
+            raise FormatError("floor 0 has a zero order, rate or bark map size")
+        for _ in range(bits.take(4) + 1):
+            book = bits.take(8)
+            if book >= len(books) or not books[book][2]:
+                raise FormatError("floor 0 names a codebook that does not give vectors")
+        return 0
+    partitions = [bits.take(4) for _ in range(bits.take(5))]
+    dimensions = []
+    for _ in range(max(partitions, default=-1) + 1):
+        dimensions.append(bits.take(3) + 1)
+        subclasses = bits.take(2)
+        if subclasses and bits.take(8) >= len(books):
+            raise FormatError("floor 1 names a codebook that does not exist")
+        for _ in range(1 << subclasses):
+            if bits.take(8) - 1 >= len(books):  # one less than the number read: none (-1) is allowed
+                raise FormatError("floor 1 names a codebook that does not exist")
+    bits.skip(2)  # the multiplier
+    range_bits = bits.take(4)
+    values = [0]  # the implicit first X value; the implicit last, 2^range_bits, no read value can equal
+    for number in partitions:
+        values += [bits.take(range_bits) for _ in range(dimensions[number])]
+        if len(values) > 64:
+            raise FormatError("floor 1 has too many X values")
+    if len(set(values)) != len(values):
+        raise FormatError("floor 1 repeats an X value")
+    return 1
+
+
+def _read_residue(bits: _Bits, books: list[tuple[int, int, int]]) -> None:
+    if bits.take(16) > 2:
+        raise FormatError("residue type is reserved")
+    begin, end = bits.take(24), bits.take(24)
+    bits.skip(24)  # the partition size, less one
+    if begin > end:
+        raise FormatError("residue range runs backwards")
+    classes, classbook = bits.take(6) + 1, bits.take(8)
+    if classbook >= len(books) or not books[classbook][0]:
+        raise FormatError("residue classbook does not exist or has no dimensions")
+    words = 1  # a classword names one class for each of the classbook's dimensions; its entries must be enough for all
+    for _ in range(books[classbook][0] if classes > 1 else 1):
+        words *= classes
+        if words > books[classbook][1]:
+            raise FormatError("residue classbook has fewer entries than its classes can need")
+    cascades = []
+    for _ in range(classes):
+        low = bits.take(3)
+        cascades.append(low | (bits.take(5) << 3 if bits.take(1) else 0))
+    for cascade in cascades:
+        for stage in range(8):
+            if cascade >> stage & 1:
+                book = bits.take(8)
+                if book >= len(books) or not books[book][2]:
+                    raise FormatError("residue names a codebook that does not give vectors")
+
+
+def _read_mapping(bits: _Bits, channels: int, floors: int, residues: int) -> None:
+    if bits.take(16):
+        raise FormatError("mapping type is not zero")
+    submaps = bits.take(4) + 1 if bits.take(1) else 1
+    if bits.take(1):
+        width = _ilog(channels - 1)
+        for _ in range(bits.take(8) + 1):
+            magnitude, angle = bits.take(width), bits.take(width)
+            if magnitude == angle or magnitude >= channels or angle >= channels:
+                raise FormatError("mapping couples a channel that does not exist or with itself")
+    if bits.take(2):
+        raise FormatError("mapping reserved bits are set")
+    if submaps > 1 and any(bits.take(4) >= submaps for _ in range(channels)):
+        raise FormatError("mapping assigns a channel to a submap that does not exist")
+    for _ in range(submaps):
+        bits.skip(8)  # the time configuration placeholder
+        if bits.take(8) >= floors:
+            raise FormatError("mapping names a floor that does not exist")
+        if bits.take(8) >= residues:
+            raise FormatError("mapping names a residue that does not exist")
+
+
+def read_vorbis_setup(packet: bytes, channels: int) -> dict:
+    """Read a Vorbis setup header for a stream of the given channels, and return how many codebooks, floors, residues,
+    mappings and modes it holds. FormatError says which rule it breaks."""
+    if packet[:7] != b"\x05vorbis":
+        raise FormatError("third packet is not a Vorbis setup header")
+    bits = _Bits(packet, 7)
+    books = [_read_codebook(bits) for _ in range(bits.take(8) + 1)]
+    for _ in range(bits.take(6) + 1):
+        if bits.take(16):
+            raise FormatError("time domain transform type is not zero")
+    floors = [_read_floor(bits, books) for _ in range(bits.take(6) + 1)]
+    residues = bits.take(6) + 1
+    for _ in range(residues):
+        _read_residue(bits, books)
+    mappings = bits.take(6) + 1
+    for _ in range(mappings):
+        _read_mapping(bits, channels, len(floors), residues)
+    modes = bits.take(6) + 1
+    for _ in range(modes):
+        bits.skip(1)  # which of the two block sizes the mode uses
+        if bits.take(16) or bits.take(16):
+            raise FormatError("mode window or transform type is not zero")
+        if bits.take(8) >= mappings:
+            raise FormatError("mode names a mapping that does not exist")
+    if not bits.take(1):
+        raise FormatError("setup header lacks its framing bit")
+    if (bits.position + 7) >> 3 != len(packet):
+        raise FormatError("setup header holds bytes after its framing bit")
+    return {"codebooks": len(books), "floors": len(floors), "residues": residues, "mappings": mappings, "modes": modes}
+
+
 def walk_ogg(data: bytes) -> Walk:
-    """Every page's checksum, sequence and flags, and the three Vorbis headers; audio packets stay OPAQUE."""
+    """Every page's checksum, sequence and flags, and the three Vorbis headers, the setup header read field by field;
+    audio packets stay OPAQUE."""
     walk = Walk()
     if data[:4] != b"OggS":
         raise FormatError("no Ogg capture pattern at the start")
@@ -168,14 +389,19 @@ def walk_ogg(data: bytes) -> Walk:
     (version, channels, rate) = struct.unpack_from("<IBI", identification, 7)
     if version != 0 or channels == 0 or rate == 0 or not identification[29] & 1:
         raise FormatError("invalid Vorbis identification header")
+    small, large = identification[28] & 15, identification[28] >> 4  # the block sizes' powers of two
+    if not 6 <= small <= large <= 13:  # 64 to 8192, the first not above the second
+        raise FormatError("Vorbis block sizes out of range")
     walk.facts = {"pages": pages, "packets": packets, "audioPackets": packets - 3, "channels": channels,
-                  "sampleRate": rate, "samples": granule, **read_vorbis_comment(comment)}
+                  "sampleRate": rate, "samples": granule, "blockSizes": [1 << small, 1 << large],
+                  **read_vorbis_comment(comment), **read_vorbis_setup(setup, channels)}
     return walk
 
 
 # --------------------------------------------------------------------------------------------------------------- Bink
 def walk_bink(data: bytes) -> Walk:
-    """The header, track descriptors, frame index and every frame's audio packet sizes; packets stay OPAQUE."""
+    """The header, frame index and every frame's audio packet sizes; the audio track descriptors and the packets stay
+    OPAQUE."""
     walk = Walk()
     if len(data) < 44 or data[:3] != b"BIK":
         raise FormatError("not a Bink file")
@@ -191,7 +417,11 @@ def walk_bink(data: bytes) -> Walk:
     table_end = index + 4 * (frames + 1)
     if table_end > len(data):
         raise FormatError("frame index runs past the file")
-    walk.add(0, table_end, DECODED, "bink/header-and-index")
+    # The demuxer reads each track's sample rate, flags and identifier from its descriptor and skips the first word of
+    # three; no reader of this repository reads them, so they count only when the decoder read the file.
+    walk.add(0, 44, DECODED, "bink/header")
+    walk.add(44, 12 * tracks, OPAQUE, "bink/audio-track-descriptors")
+    walk.add(index, table_end - index, DECODED, "bink/frame-index")
     offsets = struct.unpack_from(f"<{frames + 1}I", data, index)
     if offsets[0] & ~1 != table_end:
         raise FormatError("first frame does not follow the index")
@@ -308,8 +538,73 @@ JPEG_START = bytes((255, 216, 255))
 _JPEG_FRAMES = frozenset(range(0xC0, 0xD0)) - {0xC4, 0xC8, 0xCC}
 
 
+def _jpeg_quantization_tables(body: bytes) -> None:
+    """DQT: tables of 64 elements, each one byte (precision 0) or two (precision 1), destinations 0 to 3, no zero."""
+    at = 0
+    while at < len(body):
+        precision, destination = body[at] >> 4, body[at] & 15
+        width = precision + 1
+        if precision > 1 or destination > 3 or at + 1 + 64 * width > len(body):
+            raise FormatError("quantization table segment is malformed")
+        table = body[at + 1:at + 1 + 64 * width]
+        if any(int.from_bytes(table[index:index + width], "big") == 0 for index in range(0, len(table), width)):
+            raise FormatError("quantization table holds a zero element")
+        at += 1 + 64 * width
+
+
+def _jpeg_huffman_tables(body: bytes) -> None:
+    """DHT: a class (DC or AC) and destination 0 to 3, the number of codes of each length 1 to 16, then that many
+    symbols. The codes are the shortest first in order; none may be all ones, so they fill less than the whole tree."""
+    at = 0
+    while at < len(body):
+        if at + 17 > len(body) or body[at] >> 4 > 1 or body[at] & 15 > 3:
+            raise FormatError("Huffman table segment is malformed")
+        counts = body[at + 1:at + 17]
+        if sum(counts) > 256 or at + 17 + sum(counts) > len(body):
+            raise FormatError("Huffman table segment is malformed")
+        if sum(count << (16 - length) for length, count in enumerate(counts, 1)) >= 1 << 16:
+            raise FormatError("Huffman table codes use the all-ones code or overfill their tree")
+        at += 17 + sum(counts)
+
+
+def _jpeg_components(body: bytes) -> list[int]:
+    """The component identifiers of a frame header: after its 6 fixed bytes, 3 per component (identifier, horizontal and
+    vertical sampling factors of 1 to 4, quantization table 0 to 3), the identifiers all different."""
+    count = body[5]
+    if not count or len(body) != 6 + 3 * count:
+        raise FormatError("frame header's component list is malformed")
+    identifiers = [body[6 + 3 * index] for index in range(count)]
+    for index in range(count):
+        sampling, table = body[7 + 3 * index], body[8 + 3 * index]
+        if not 1 <= sampling >> 4 <= 4 or not 1 <= sampling & 15 <= 4 or table > 3:
+            raise FormatError("frame header's component list is malformed")
+    if len(set(identifiers)) != count:
+        raise FormatError("frame header's component list is malformed")
+    return identifiers
+
+
+def _jpeg_scan_header(body: bytes, frame_marker: int, components: list[int]) -> None:
+    """SOS: 1 to 4 components of the frame, each once with its two table selectors, then the spectral selection and the
+    successive approximation. A sequential frame's scan runs the whole spectrum with no approximation."""
+    count = body[0] if body else 0
+    if not 1 <= count <= 4 or len(body) != 4 + 2 * count:
+        raise FormatError("scan header is malformed")
+    selected = [body[1 + 2 * index] for index in range(count)]
+    if any(body[2 + 2 * index] >> 4 > 3 or body[2 + 2 * index] & 15 > 3 for index in range(count)):
+        raise FormatError("scan header is malformed")
+    if len(set(selected)) != count or not set(selected) <= set(components):
+        raise FormatError("scan names a component the frame lacks")
+    start, end, approximation = body[1 + 2 * count], body[2 + 2 * count], body[3 + 2 * count]
+    if end > 63 or start > end or approximation >> 4 > 13 or approximation & 15 > 13:
+        raise FormatError("scan header is malformed")
+    if frame_marker in (0xC0, 0xC1) and (start, end, approximation) != (0, 63, 0):
+        raise FormatError("scan header is malformed")
+
+
 def walk_jpeg(data: bytes) -> Walk:
-    """Marker segments and the extent of each entropy-coded scan, which stays OPAQUE."""
+    """Marker segments and the extent of each entropy-coded scan, which stays OPAQUE. The quantization and Huffman
+    tables, the restart interval, the frame header's components and each scan header are read, and a malformed one
+    refused; the application, comment and any other segment are only framed by their lengths."""
     walk = Walk()
     if data[:3] != JPEG_START:
         raise FormatError("no JPEG start of image")
@@ -337,14 +632,26 @@ def walk_jpeg(data: bytes) -> Walk:
         (length,) = struct.unpack_from(">H", data, position)
         if length < 2 or position + length > len(data):
             raise FormatError("segment runs past the file")
+        body = data[position + 2:position + length]
         if marker in _JPEG_FRAMES:
             if length < 8:
                 raise FormatError("truncated frame header")
             if size is not None:
                 raise FormatError("more than one frame header")
+            identifiers = _jpeg_components(body)
             (precision, height, width, components) = struct.unpack_from(">BHHB", data, position + 2)
             size = {"precision": precision, "width": width, "height": height, "components": components,
                     "frameMarker": marker}
+        elif marker == 0xDB:
+            _jpeg_quantization_tables(body)
+        elif marker == 0xC4:
+            _jpeg_huffman_tables(body)
+        elif marker == 0xDD and len(body) != 2:
+            raise FormatError("restart interval segment is malformed")
+        elif marker == 0xDA:
+            if size is None:
+                raise FormatError("scan before the frame header")
+            _jpeg_scan_header(body, size["frameMarker"], identifiers)
         position += length
         walk.add(start, position - start, DECODED, "jpeg/markers")
         if marker == 0xDA:

@@ -1702,6 +1702,25 @@ class BoundaryTests(unittest.TestCase):
             finally:
                 hidden.chmod(0o755)
 
+    def test_a_folder_that_lists_its_names_but_cannot_be_searched_is_refused_not_dropped(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            closed = game / "data/closed"
+            closed.mkdir(parents=True)
+            (closed / "inside.txt").write_bytes(b"inside\n")
+            closed.chmod(0o444)  # its names list; its entries cannot be examined
+            try:
+                try:
+                    (closed / "inside.txt").lstat()
+                except PermissionError:
+                    pass
+                else:
+                    self.skipTest("this account can search a folder without permissions (root)")
+                with self.assertRaisesRegex(catalog.CatalogInputError, "data/closed: a folder the walk cannot search"):
+                    catalog.walk_install(game)
+            finally:
+                closed.chmod(0o755)
+
     def test_case_colliding_text_inputs_are_refused(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             game = Path(temp)
