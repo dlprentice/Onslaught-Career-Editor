@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-11-03 (the content inventory's stricter readers: particle values, page tokens, source grammars; historical results retain their dates)
+Last updated: 2026-11-03 (the content inventory's asset metadata file, its two-number headline and the mission-script judge's unread archives; historical results retain their dates)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -131,7 +131,9 @@ python tools/content_inventory_gate.py --game /path/to/game --inventory local-da
 
 Vorbis audio, Bink video and JPEG scans count as decoded only when an independent decoder (FFmpeg, found on `PATH` or
 named with `--media-decoder`) reads every stream without an error and its frame and sample counts equal the walk's own.
-Without one (`--no-media-decoder`) those payloads stay referenced, and the coverage says so. A particle set counts as
+Without one (`--no-media-decoder`) those payloads stay referenced, and the coverage says so. Those payloads are a large
+share of the content, so the coverage's `headline` (and the run's last summary line) gives the content families'
+decoded share twice, with that decoder and without it; quote both. A particle set counts as
 decoded only when `particle_set_walk.py` reads every value to the last descriptor; the words the game's reader skips
 after a direct number stay referenced. With `--decomp`, a film, particle set or splash image whose name a source string
 literal holds counts as used. An archive's `LVLR`, `TARG` and `AYAD` words count as decoded only when they are the
@@ -140,13 +142,16 @@ its level numbers fit the archive's world layout, and a mesh, goodie texture or 
 imposter's stored label only when it ends inside its buffer; a language table's strings only when each entry points
 inside its pool and each string ends there. Anything else stays referenced and is reported as a problem. A texture
 whose envelope does not inflate stays unknown, as does any file whose reader cannot run, and an install holding a link
-or special file is refused.
+or special file, or a folder the walk cannot list, is refused.
 
 No loader reads the sources, so each is held to its own grammar to its end. A mission script counts as decoded when
-`msl_compile.py`'s compile reproduces the shipped script (`msl_gate.py`'s exact verdict, or exact, assisted: an
-`#include` the install lacks is read as empty and the names it would define come from the shipped constants) or, when
-no level ships it, when it compiles with every include present; a stale source (it compiles to a known older revision),
-one that compiles only with a missing include read as empty and one that does not compile stay referenced. Mission
+`msl_compile.py`'s compile reproduces every shipped script compiled from it (`msl_gate.py`'s exact verdict, or exact,
+assisted: an `#include` the install lacks is read as empty and the names it would define come from the shipped
+constants) or, when no level ships it, when it compiles with every include present; a stale source (it compiles to a
+known older revision), one that compiles only with a missing include read as empty and one that does not compile stay
+referenced, and a shipped copy it does not reproduce is a problem even beside one it does. When the judge cannot read a
+level archive's worlds, which scripts that archive ships, and for which level folders, is unknown: no source in a level
+folder is then judged, each is referenced with a problem, and the gate fails. Mission
 text counts when every line is an `[ID]` line with its quoted string on the next, a `;` comment or blank; a symbol
 table or `textlist.h` when every line is a `#define` of a number, a `//` comment or blank; a manual page when it
 tokenizes as one html element, and its file list when it parses as XML. Plain text with no grammar (the install's
@@ -157,23 +162,36 @@ The run writes `manifest.json`; `coverage.json` (per family, files and stored an
 total; the proofs each reader produced; the installer's log compared with the folder; the physics joins; the assets by
 kind, used and unused, with the texture records an archive loads but nothing names counted apart); `files.jsonl` (each
 file's account, with the spans that are not decoded); `items.jsonl` (one row per asset, including every link of a mesh
-chain and its animations, and its texture slots joined as the parent's are); and `records.jsonl` (the catalogue records'
-coordinates, for the gate). [The row schema](content_inventory.schema.json) describes them. All of it is retail-derived
-and stays in ignored `local-data/`.
+chain and its animations, and its texture slots joined as the parent's are); `asset-metadata.jsonl` (below); and
+`records.jsonl` (the catalogue records' coordinates, for the gate). [The row schema](content_inventory.schema.json)
+describes them. All of it is retail-derived and stays in ignored `local-data/`.
+
+`asset-metadata.jsonl` is the input list for an offline processing batch, such as an AI upscale: one row per texture,
+image, model, animation, sound and film, with its identity (the file, how its bytes are wrapped there, the archive
+chunk, bank sample or resource, the coordinates and the SHA-256 of the asset's own bytes), the format, width, height,
+mip levels, alpha, channels, sample rate, duration and frames its reader established, the records that name it and the
+archives that load it, and the catalogue's usage summary and upscale notes where the catalogue has them. A field no
+reader established is null; nothing is taken from a name. The PC build loads a texture record's pixels from DDS files
+(the catalogue's `pixels-from` evidence), so a record's row names those files, and their own rows give the stored
+format, mips and alpha. An animation's rate is a normalized
+increment per game tick, so it has no duration in seconds, and no pixel format is established for the terrain mixer
+textures or the static shadow cells. The coverage counts, per kind, the rows that establish each field.
 
 [`content_inventory_gate.py`](content_inventory_gate.py) re-derives what only the real install can show, by a path that
-does not run through the reader being checked: an independent walk and hash of the folder (any link or special file in
-it fails the gate), every AYA re-inflated with zlib alone, every archive's chunks walked again, every catalogue record
-that an archive stream places hashed at its coordinates, Pillow opening every image, every cached mesh frame composed
-from its keys, and the independent decoder's agreement on every Ogg and Bink file. It exits 0 only when all of them
-pass.
+does not run through the reader being checked: an independent walk and hash of the folder (any link, special file or
+folder it cannot list fails the gate), every AYA re-inflated with zlib alone, every archive's chunks walked again, every
+catalogue record that an archive stream places hashed at its coordinates, every asset-metadata row's bytes hashed at its
+coordinates in the stored file or the stream inflated there, and each DDS texture's size read again from its header,
+Pillow opening every image, every cached mesh frame composed from its keys, and the independent decoder's agreement on
+every Ogg and Bink file. It also fails when the mission-script judge could not read a level archive's worlds. It exits 0
+only when all of them pass.
 
 A decoded byte belongs to a reader; that does not give every field a meaning or establish what the game does with it.
 The font records (`FGEN`, `DXFT`), part of each imposter record, a save's career block, the bytes of `Dial.raw` after its
 first frame, the language tables' pool strings no entry reaches, the mission scripts that reproduce no shipped copy,
 the words a particle set's reader skips, the document a Word ActiveMime file compresses and everything in the
-executables but their headers and resource tree stay referenced, and the coverage lists each such part. Bytes after an
-ActiveMime file's compressed stream stay unknown: no published layout says what they are.
+executables but their headers, resource tree, icon images and icon groups stay referenced, and the coverage lists each
+such part. Bytes after an ActiveMime file's compressed stream stay unknown: no published layout says what they are.
 
 ## Editor references and generators
 

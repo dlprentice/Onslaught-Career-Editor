@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-03 (the content inventory's stricter readers and what they leave framed)
+Last updated: 2026-11-03 (the content inventory's per-asset metadata file and its two-number headline)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -311,14 +311,18 @@ The [content and model/transform catalogue tools](tools/README.md) cover the fam
 The [content inventory](tools/README.md#content-inventory) puts every byte of one selected PC install in a class
 (decoded by a reader, framed by a record but unread, or unknown) and lists every model, texture, image, animation,
 sound, film and text asset with what names it; on the read-only retail view its gate checked that account against the
-folder by independent paths. Its coverage lists what stays framed: the font records, part of each imposter record, the HUD
-dial's later frames, the career block, the language pool strings no entry reaches, the mission scripts whose compile
-reproduces no shipped copy, the words a particle set's reader skips, the document a manual's Word file compresses and
-the executables' code and data; a few bytes after that document stay unknown. Sources no loader reads (mission scripts
-and text, symbol tables, the manual's pages) count as decoded only when their own grammar holds to the end. "Used"
-means a record, physics value, page link or loader rule names the asset; it is not a runtime observation. A second
-install, Windows and an HD conversion are not covered; the [programme](PROGRAM.md#content-catalogue) owns the remaining
-catalogue work.
+folder by independent paths. Its headline gives the decoded share of the content twice, with FFmpeg reading the audio,
+video and JPEG payloads and without it, because those payloads count as decoded only on that decoder's word. Beside the
+account it writes a per-asset metadata file (identity, format, size, mip levels, alpha, channels, sample rate,
+duration and what names each texture, image, model, animation, sound and film) as the input list for an offline batch
+such as an upscale; nobody has fed it to one yet. Its coverage lists what stays framed: the font records, part of each
+imposter record, the HUD dial's later frames, the career block, the language pool strings no entry reaches, the mission
+scripts whose compile reproduces no shipped copy, the words a particle set's reader skips, the document a manual's Word
+file compresses and the executables' code and data; a few bytes after that document stay unknown. Sources no loader
+reads (mission scripts and text, symbol tables, the manual's pages) count as decoded only when their own grammar holds
+to the end. "Used" means a record, physics value, page link or loader rule names the asset; it is not a runtime
+observation. A second install, Windows and an HD conversion are not covered; the
+[programme](PROGRAM.md#content-catalogue) owns the remaining catalogue work.
 
 ## Retired WinUI toolkit
 
