@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-11-03 (content inventory owners)
+Last updated: 2026-11-03 (content inventory owners, with the particle set walk)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository: the companion, tools, lore and frozen references, with routes to the live game projects.
 
@@ -140,7 +140,8 @@ and [mission editor design](roadmap/companion-mission-editor.md) own their scope
 The [catalogue entry point](tools/README.md#content-catalogue) gives commands, optional public decompilation input
 and private output handling. This is a Python analysis tool; the Companion does not load a generated catalogue.
 [`content_inventory.py`](tools/content_inventory.py) owns the byte account of a selected install and its asset list,
-with the readers in [`media_readers.py`](tools/media_readers.py) and
+with the readers in [`media_readers.py`](tools/media_readers.py),
+[`particle_set_walk.py`](tools/particle_set_walk.py) and
 [`physics_values_decode.py`](tools/physics_values_decode.py); [`content_inventory_tests.py`](tools/content_inventory_tests.py)
 uses authored inputs, and [`content_inventory_gate.py`](tools/content_inventory_gate.py) checks a run against the
 installation it read ([inventory entry point](tools/README.md#content-inventory)).

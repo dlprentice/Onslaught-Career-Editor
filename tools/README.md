@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-11-03 (the content inventory, its readers and its retail gate; historical results retain their dates)
+Last updated: 2026-11-03 (the content inventory's stricter readers: particle values, page tokens, source grammars; historical results retain their dates)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -131,13 +131,27 @@ python tools/content_inventory_gate.py --game /path/to/game --inventory local-da
 
 Vorbis audio, Bink video and JPEG scans count as decoded only when an independent decoder (FFmpeg, found on `PATH` or
 named with `--media-decoder`) reads every stream without an error and its frame and sample counts equal the walk's own.
-Without one (`--no-media-decoder`) those payloads stay referenced, and the coverage says so. A mission script counts as
-decoded when `msl_compile.py` compiles it to the shipped script (`msl_gate.py`'s verdict) or, when no level ships it,
-when it compiles on its own. With `--decomp`, a film, particle set or splash image whose name a source string literal
-holds counts as used. An archive's `LVLR`, `TARG` and `AYAD` words count as decoded only when they are the documented PC
-build's ([the archive contract](../reverse-engineering/asset-formats/lvlr-archive.md)), `WDAT` only when its level
-numbers fit the archive's world layout, and a mesh reference's name or an imposter's stored label only when it ends
-inside its buffer; anything else stays referenced and is reported as a problem.
+Without one (`--no-media-decoder`) those payloads stay referenced, and the coverage says so. A particle set counts as
+decoded only when `particle_set_walk.py` reads every value to the last descriptor; the words the game's reader skips
+after a direct number stay referenced. With `--decomp`, a film, particle set or splash image whose name a source string
+literal holds counts as used. An archive's `LVLR`, `TARG` and `AYAD` words count as decoded only when they are the
+documented PC build's ([the archive contract](../reverse-engineering/asset-formats/lvlr-archive.md)), `WDAT` only when
+its level numbers fit the archive's world layout, and a mesh, goodie texture or goodie mesh reference's name or an
+imposter's stored label only when it ends inside its buffer; a language table's strings only when each entry points
+inside its pool and each string ends there. Anything else stays referenced and is reported as a problem. A texture
+whose envelope does not inflate stays unknown, as does any file whose reader cannot run, and an install holding a link
+or special file is refused.
+
+No loader reads the sources, so each is held to its own grammar to its end. A mission script counts as decoded when
+`msl_compile.py`'s compile reproduces the shipped script (`msl_gate.py`'s exact verdict, or exact, assisted: an
+`#include` the install lacks is read as empty and the names it would define come from the shipped constants) or, when
+no level ships it, when it compiles with every include present; a stale source (it compiles to a known older revision),
+one that compiles only with a missing include read as empty and one that does not compile stay referenced. Mission
+text counts when every line is an `[ID]` line with its quoted string on the next, a `;` comment or blank; a symbol
+table or `textlist.h` when every line is a `#define` of a number, a `//` comment or blank; a manual page when it
+tokenizes as one html element, and its file list when it parses as XML. Plain text with no grammar (the install's
+readme and log, which are not content) counts when every byte is a character of its encoding. An empty file counts as
+decoded; the coverage counts empty files by family.
 
 The run writes `manifest.json`; `coverage.json` (per family, files and stored and logical bytes by class; the unknown
 total; the proofs each reader produced; the installer's log compared with the folder; the physics joins; the assets by
@@ -155,9 +169,10 @@ agreement on every Ogg and Bink file. It exits 0 only when all of them pass.
 
 A decoded byte belongs to a reader; that does not give every field a meaning or establish what the game does with it.
 The font records (`FGEN`, `DXFT`), part of each imposter record, a save's career block, the bytes of `Dial.raw` after its
-first frame, the document a Word ActiveMime file compresses and the executables' code and data sections stay referenced,
-and the coverage lists each such part. Bytes after an ActiveMime file's compressed stream stay unknown: no published
-layout says what they are.
+first frame, the language tables' pool strings no entry reaches, the mission scripts that reproduce no shipped copy,
+the words a particle set's reader skips, the document a Word ActiveMime file compresses and everything in the
+executables but their headers and resource tree stay referenced, and the coverage lists each such part. Bytes after an
+ActiveMime file's compressed stream stay unknown: no published layout says what they are.
 
 ## Editor references and generators
 
@@ -180,9 +195,14 @@ documented below and in the development entry headers. Keep retail-derived table
   reason, whatever does not hold: Ogg (every page checksum, sequence and flag, and the three Vorbis headers), Bink 1 (the
   header, the frame index and each frame's audio packet sizes, as libavformat's demuxer reads them), PNG (chunk
   checksums and the inflated image data's size and row filters), JPEG (markers and the extent of each scan),
-  uncompressed TGA, PE (headers, sections, the resource tree, icon images and COFF symbols) and Word's saved-web-page
-  ActiveMime container (its header and compressed stream; the compound document inside is not walked).
+  uncompressed TGA, PE (the headers, the section table and the resource tree with its icon images; section contents,
+  the DOS stub, header padding, unreached resource bytes and COFF symbol tables are only framed), Word's saved-web-page
+  ActiveMime container (its header and compressed stream; the compound document inside is not walked), HTML pages
+  (tokenized to their end as one html element) and XML documents (parsed by expat).
   `media_readers_tests.py` reaches every refusal reason the module has.
+- `particle_set_walk.py` reads a particle set (`*.par`) value by value in `CParticleSet::ReadData`'s order, with the
+  token grammar of the rebuild's reader (`rebuild/OnslaughtRebuild.Parity/Particles/`), and refuses what that reader
+  would take otherwise than as written. `particle_set_walk_tests.py` checks its tables against that C#.
 - `physics_values_decode.py` reads the compiled physics script value by value with the value classes of the rebuild's
   typed reader (`rebuild/OnslaughtRebuild.Parity/Physics/`) and says which values name a mesh, particle effect, sound
   effect or icon. `physics_values_decode_tests.py` checks its tables against that C#, so the two cannot drift apart.
