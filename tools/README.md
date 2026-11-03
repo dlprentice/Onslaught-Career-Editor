@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-11-03 (the content inventory's asset metadata file, its two-number headline and the mission-script judge's unread archives; historical results retain their dates)
+Last updated: 2026-11-03 (the inventory gate reads every asset-metadata field again from its own bytes and checks every row against the schema; an animation's frames either way and its duration; historical results retain their dates)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -171,20 +171,34 @@ image, model, animation, sound and film, with its identity (the file, how its by
 chunk, bank sample or resource, the coordinates and the SHA-256 of the asset's own bytes), the format, width, height,
 mip levels, alpha, channels, sample rate, duration and frames its reader established, the records that name it and the
 archives that load it, and the catalogue's usage summary and upscale notes where the catalogue has them. A field no
-reader established is null; nothing is taken from a name. The PC build loads a texture record's pixels from DDS files
-(the catalogue's `pixels-from` evidence), so a record's row names those files, and their own rows give the stored
-format, mips and alpha. An animation's rate is a normalized
-increment per game tick, so it has no duration in seconds, and no pixel format is established for the terrain mixer
-textures or the static shadow cells. The coverage counts, per kind, the rows that establish each field.
+reader established is null; nothing is taken from a name. A DDS file's row gives the format its header says it stores,
+with that file's mips and alpha. A texture record's row gives the format the record itself names (the same field names
+its pixel files); the PC build loads the record's pixels from DDS files (the catalogue's `pixels-from` evidence, which
+the row lists), and those can store another format, with another channel count, which their own rows give. One
+texture-record row stands for every byte-identical copy of the record: `details.occurrences` counts the copies, the
+identity places the first, and the catalogue's record lists every copy. An animation's frames are its virtual frames
+from its start to its last frame inclusive, whichever way it runs (a negative frame scaler plays from start down to
+last). Its duration is the time its phase takes from 0 to 1 at its stored rate, 1 / (20 × rate) seconds with a rate up
+to 0.0001 played at 1, the game's rule as
+[the animation keys document](../reverse-engineering/asset-formats/cmsh-animation-keys.md#from-time-to-a-virtual-frame)
+gives it; a looping mode repeats at that period, and a script can choose another speed. No pixel format is established
+for the terrain mixer textures or the static shadow cells. The coverage counts, per kind, the rows that establish each
+field.
 
 [`content_inventory_gate.py`](content_inventory_gate.py) re-derives what only the real install can show, by a path that
-does not run through the reader being checked: an independent walk and hash of the folder (any link, special file or
-folder it cannot list fails the gate), every AYA re-inflated with zlib alone, every archive's chunks walked again, every
-catalogue record that an archive stream places hashed at its coordinates, every asset-metadata row's bytes hashed at its
-coordinates in the stored file or the stream inflated there, and each DDS texture's size read again from its header,
-Pillow opening every image, every cached mesh frame composed from its keys, and the independent decoder's agreement on
-every Ogg and Bink file. It also fails when the mission-script judge could not read a level archive's worlds. It exits 0
-only when all of them pass.
+does not run through the reader being checked: an independent walk and hash of the folder (any link, special file,
+folder it cannot list or file it cannot read fails the gate), every AYA re-inflated with zlib alone, every archive's
+chunks walked again, every catalogue record that an archive stream places hashed at its coordinates, Pillow opening
+every image, every cached mesh frame composed from its keys, and the independent decoder's agreement on every Ogg and
+Bink file. Every row the run wrote must meet [the row schema](content_inventory.schema.json); the gate checks it with
+`jsonschema`, and says so when it skips the check without it. Every asset-metadata row must be placed, except a mesh
+chain's links, their animations and the terrain mixer mips, whose readers give no coordinates. A placed row's bytes, cut
+from the stored file or from the stream the gate inflated, must hash to its SHA-256, and each of its metadata fields
+must equal what the gate reads from those bytes itself: a DDS header and mip chain, each mip hashed, and with Pillow the
+top mip's alpha (DXT2 is decoded as DXT3, whose alpha layout it shares); a texture record's own fields; a PNG, TGA, JPEG,
+icon, Ogg, Bink or bank sample header; an animation record; a damage texture's levels. An unplaced row's fields must
+follow its details. The gate also fails when the mission-script judge could not read a level archive's worlds. It exits
+0 only when all of them pass.
 
 A decoded byte belongs to a reader; that does not give every field a meaning or establish what the game does with it.
 The font records (`FGEN`, `DXFT`), part of each imposter record, a save's career block, the bytes of `Dial.raw` after its

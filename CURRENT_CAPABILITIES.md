@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-03 (Mission project linked-map preview: binding and file rules, evidence and limits; the content inventory's per-asset metadata file and its two-number headline)
+Last updated: 2026-11-03 (Mission project linked-map preview: binding and file rules, evidence and limits; the content inventory's per-asset metadata file, which its gate reads again field by field)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -331,15 +331,17 @@ The [content inventory](tools/README.md#content-inventory) puts every byte of on
 (decoded by a reader, framed by a record but unread, or unknown) and lists every model, texture, image, animation,
 sound, film and text asset with what names it; on the read-only retail view its gate checked that account against the
 folder by independent paths. Its headline gives the decoded share of the content twice, with FFmpeg reading the audio,
-video and JPEG payloads and without it, because those payloads count as decoded only on that decoder's word. Beside the
-account it writes a per-asset metadata file (identity, format, size, mip levels, alpha, channels, sample rate,
+video and JPEG payloads and without it, because those payloads count as decoded only on that decoder's word. Beside
+the account it writes a per-asset metadata file (identity, format, size, mip levels, alpha, channels, sample rate,
 duration and what names each texture, image, model, animation, sound and film) as the input list for an offline batch
-such as an upscale; nobody has fed it to one yet. Its coverage lists what stays framed: the font records, part of each
-imposter record, the HUD dial's later frames, the career block, the language pool strings no entry reaches, the mission
-scripts whose compile reproduces no shipped copy, the words a particle set's reader skips, the document a manual's Word
-file compresses and the executables' code and data; a few bytes after that document stay unknown. Sources no loader
-reads (mission scripts and text, symbol tables, the manual's pages) count as decoded only when their own grammar holds
-to the end. "Used" means a record, physics value, page link or loader rule names the asset; it is not a runtime
+such as an upscale. The gate reads every field of that file again from the asset's own bytes (for the mesh chains and
+terrain mixer mips that no reader places, from their details) and checks every row the run writes against its schema;
+nobody has fed the file to a batch yet. Its coverage lists what stays framed: the font records, part of each imposter
+record, the HUD dial's later frames, the career block, the language pool strings no entry reaches, the mission scripts
+whose compile reproduces no shipped copy, the words a particle set's reader skips, the document a manual's Word file
+compresses and the executables' code and data; a few bytes after that document stay unknown. Sources no loader reads
+(mission scripts and text, symbol tables, the manual's pages) count as decoded only when their own grammar holds to
+the end. "Used" means a record, physics value, page link or loader rule names the asset; it is not a runtime
 observation. A second install, Windows and an HD conversion are not covered; the
 [programme](PROGRAM.md#content-catalogue) owns the remaining catalogue work.
 
