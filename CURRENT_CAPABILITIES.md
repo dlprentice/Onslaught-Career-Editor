@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-03 (Mission project linked-map preview: binding and file rules, evidence and limits; the content inventory's per-asset metadata file, which its gate reads again field by field)
+Last updated: 2026-11-03 (Mission project linked-map preview: binding and file rules, evidence and limits; the content inventory's per-asset metadata file, which its gate reads again field by field, taking each row's form, place and readability from the file and the run's items; the Vorbis setup header read, not framed)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -330,13 +330,17 @@ The [content and model/transform catalogue tools](tools/README.md) cover the fam
 The [content inventory](tools/README.md#content-inventory) puts every byte of one selected PC install in a class
 (decoded by a reader, framed by a record but unread, or unknown) and lists every model, texture, image, animation,
 sound, film and text asset with what names it; on the read-only retail view its gate checked that account against the
-folder by independent paths. Its headline gives the decoded share of the content twice, with FFmpeg reading the audio,
-video and JPEG payloads and without it, because those payloads count as decoded only on that decoder's word. Beside
+folder by independent paths. Its headline gives the decoded share of the content twice, with FFmpeg reading the audio
+packets, video frames and JPEG scans and without it, because those payloads count as decoded only on that decoder's
+word; the Vorbis setup header (its codebooks, floors, residues, mappings and modes) and the JPEG tables are read by this
+repository's own readers and count either way. Beside
 the account it writes a per-asset metadata file (identity, format, size, mip levels, alpha, channels, sample rate,
 duration and what names each texture, image, model, animation, sound and film) as the input list for an offline batch
-such as an upscale. The gate reads every field of that file again from the asset's own bytes (for the mesh chains and
-terrain mixer mips that no reader places, from their details) and checks every row the run writes against its schema;
-nobody has fed the file to a batch yet. Its coverage lists what stays framed: the font records, part of each imposter
+such as an upscale. The gate takes each row's form, place and readability from the file and the run's own items, not from
+the row (a row relabelled to another form, or called unparsed, fails), reads every field of that file again from the
+asset's own bytes (for the mesh chains and terrain mixer mips that no reader places, from their details) and checks every
+row the run writes against its item, its catalogue record and its schema; what the run copies from the catalogue's
+relationships is not recomputed there. Nobody has fed the file to a batch yet. Its coverage lists what stays framed: the font records, part of each imposter
 record, the HUD dial's later frames, the career block, the language pool strings no entry reaches, the mission scripts
 whose compile reproduces no shipped copy, the words a particle set's reader skips, the document a manual's Word file
 compresses and the executables' code and data; a few bytes after that document stay unknown. Sources no loader reads
