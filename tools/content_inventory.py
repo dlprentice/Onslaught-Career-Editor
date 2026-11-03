@@ -340,12 +340,12 @@ def chained_items(chain: list[bytes], owner: str, path: str, envelope: str, read
                                         parts=record["mesh"]["parts"], textureSlots=slots,
                                         metadata=found_metadata(where, record["sha256Scope"], format="cmsh",
                                                                 details=mesh_details(record))))
-        reading.items.extend(asset_item("animation", "chained-animation", animation["name"], offset=None, length=36,
-                                        sha=animation["sha256"], status=DECODED, id=animation["id"], owner=owner,
-                                        metadata=found_metadata(where, animation["sha256Scope"], format="camd",
-                                                                frames=animation["animation"]["frameCount"],
-                                                                details=animation_details(animation)))
-                             for animation in animations)
+        for animation in animations:
+            fields, details = animation_metadata(animation)
+            reading.items.append(asset_item("animation", "chained-animation", animation["name"], offset=None, length=36,
+                                            sha=animation["sha256"], status=DECODED, id=animation["id"], owner=owner,
+                                            metadata=found_metadata(where, animation["sha256Scope"], details=details,
+                                                                    **fields)))
 
 
 def read_mesh_stream(stream: bytes, reading: Reading, ctx: Context, owner: str, path: str, envelope: str) -> bool:
@@ -1627,10 +1627,16 @@ def reader_items(found: list[dict], file_rows: dict[str, dict], known: list[dict
 # summary and upscale notes where the catalogue has them. A field nothing established is null; nothing is inferred
 # from a name. It is the input list for an offline processing batch (an AI upscale, for one), not a claim about how the
 # game renders or plays the asset.
+#
+# A DDS file's row gives the format its header says it stores. A texture record's row gives the format the record
+# itself names (CDXTexture's format field, which also names its pixel files); the DDS files that hold its pixels
+# (details.pixelsFrom) may store another, and their own rows say which. One texture-record row stands for every
+# byte-identical copy of the record: details.occurrences counts the copies, and the identity places the first.
 METADATA_SCHEMA = "onslaught.content-inventory.asset-metadata.v1"
 METADATA_KINDS = ("texture", "image", "model", "animation", "sound", "film")
-# The channels a stored texture format holds. DXT1 is colour, though its blocks can also mark a texel transparent (the
-# alpha field says whether any does); X8R8G8B8's fourth byte is unused.
+# The channels a texture format holds, for a DDS file's stored format and a texture record's named one alike. DXT1 is
+# colour, though its blocks can also mark a texel transparent (the alpha field says whether any does); X8R8G8B8's fourth
+# byte is unused.
 FORMAT_CHANNELS = {"A8R8G8B8": 4, "X8R8G8B8": 3, "R5G6B5": 3, "A1R5G5B5": 4, "A4R4G4B4": 4,
                    "DXT1": 3, "DXT2": 4, "DXT3": 4, "DXT4": 4, "DXT5": 4}
 
@@ -1647,12 +1653,34 @@ def mesh_details(record: dict) -> dict:
 
 
 def animation_details(record: dict) -> dict:
-    """An animation mode's frame range and rate. The rate is a normalized increment per game tick, so no duration in
-    seconds is derived from it."""
+    """An animation mode's frame range, frame scaler and rate as its record stores them."""
     animation = record["animation"]
     return {"mode": animation["mode"], "startFrame": animation["startFrame"], "lastFrame": animation["lastFrame"],
-            "rate": animation["rate"], "rateSemantics": animation["rateSemantics"],
-            "skeletonMesh": animation["skeleton"]["mesh"], "animatedParts": len(animation["skeleton"]["animatedParts"])}
+            "frameScaler": animation["frameScaler"], "rate": animation["rate"],
+            "rateSemantics": animation["rateSemantics"], "skeletonMesh": animation["skeleton"]["mesh"],
+            "animatedParts": len(animation["skeleton"]["animatedParts"])}
+
+
+# A mode's phase runs from 0 to 1, growing by the mode's rate once per game tick, 20 ticks a second, and a rate up to
+# 0.0001 plays at 1 instead (CAnimation::Process and CAnimation::SetAnimMode, as
+# reverse-engineering/asset-formats/cmsh-animation-keys.md documents them and
+# rebuild/OnslaughtRebuild.Parity/Things/Animation.cs follows them).
+TICKS_PER_SECOND = 20
+SLOWEST_RATE = 0.0001
+
+
+def animation_metadata(record: dict) -> tuple[dict, dict]:
+    """(metadata fields, details) of an animation mode. frames counts the virtual frames from its start to its last
+    frame inclusive, whichever way it runs: a negative frame scaler plays from start down to last. durationSeconds is
+    the time its phase takes from 0 to 1 at its stored rate, as the game plays that rate; a looping mode repeats at
+    that period, and a script can choose another speed. A stored rate that is not a finite number (the catalogue gives
+    it as null) gives no duration."""
+    animation = record["animation"]
+    rate = animation["rate"]
+    seconds = None if rate is None else round(1 / (TICKS_PER_SECOND * (rate if rate > SLOWEST_RATE else 1.0)), 3)
+    fields = media_fields(format="camd", frames=abs(animation["lastFrame"] - animation["startFrame"]) + 1,
+                          durationSeconds=seconds)
+    return fields, animation_details(record)
 
 
 def catalogue_metadata(asset: dict) -> tuple[dict, dict]:
@@ -1690,7 +1718,7 @@ def catalogue_metadata(asset: dict) -> tuple[dict, dict]:
     if kind == "mesh":
         return media_fields(format="cmsh"), mesh_details(asset)
     if kind == "animation":
-        return media_fields(format="camd", frames=asset["animation"]["frameCount"]), animation_details(asset)
+        return animation_metadata(asset)
     if kind == "audio":
         audio = asset["audio"]
         fields = media_fields(format=audio.get("codec"), channels=audio.get("channels"),

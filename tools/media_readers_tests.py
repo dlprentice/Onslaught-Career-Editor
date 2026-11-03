@@ -337,10 +337,14 @@ class TgaTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------------------------------------------- PE
-def pe_file(*, resource: bool = True, icon_ok: bool = True, symbols: bool = False, bad_icon_group: bool = False) -> bytes:
-    """A minimal PE32: one code section and, optionally, a resource section with an icon and its group."""
+def pe_file(*, resource: bool = True, icon_ok: bool = True, symbols: bool = False, bad_icon_group: bool = False,
+            icon_bits: int = 8) -> bytes:
+    """A minimal PE32: one code section and, optionally, a resource section with a 2 x 2 icon of the given colour depth
+    (its palette, colour rows and mask) and its group."""
     file_align = 0x200
-    icon = struct.pack("<IiiHHIIiiII", 40, 2, 4, 1, 8, 0, 0, 0, 0, 0, 0) + bytes(4 * 256) + bytes(4 * 2) + bytes(4 * 2)
+    palette = bytes(4 * (1 << icon_bits)) if icon_bits <= 8 else b""
+    icon = (struct.pack("<IiiHHIIiiII", 40, 2, 4, 1, icon_bits, 0, 0, 0, 0, 0, 0) + palette
+            + bytes((2 * icon_bits + 31) // 32 * 4 * 2) + bytes(4 * 2))
     if not icon_ok:
         icon += b"x"
     group = struct.pack("<HHH", 0, 1, 1) + bytes(14)

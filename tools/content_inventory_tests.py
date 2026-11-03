@@ -6,6 +6,7 @@ agreement rule, and that the gate fails when the run and the folder disagree."""
 from __future__ import annotations
 
 import contextlib
+import copy
 import io
 import json
 import os
@@ -17,6 +18,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import cmsh_animation_usage_census_tests as mesh_fixtures
 import content_catalog_tests as catalog_fixtures
 import content_inventory as inv
 import content_inventory_gate as gate
@@ -87,6 +89,57 @@ def nested_imposters(*, views: bytes, label: bytes = b"authored.msh") -> bytes:
     return catalog_fixtures.aya(pc_prefix() + chunk(b"IMPS", chunk(b"IMPS", inner)))
 
 
+def camd(name: str, mode: int, start: int, last: int, scaler: int, rate: float) -> bytes:
+    """One 36-byte animation record: its name, mode, start, last frame, frame scaler and rate."""
+    return name.encode("ascii").ljust(16, b"\0") + struct.pack("<4if", mode, start, last, scaler, rate)
+
+
+# A mesh whose modes run forward, backward (a negative frame scaler: last below start), at a stored rate of 0 and at
+# one below the smallest rate the game plays.
+REVERSE_MODES = (("ahead", 1001, 0, 8, 8, 0.125), ("back", 1002, 20, 10, -10, 0.25), ("still", 1003, 0, 4, 4, 0.0),
+                 ("tiny", 1004, 0, 2, 2, 0.00005))
+
+
+def reverse_mesh() -> bytes:
+    return mesh_fixtures._catalog_stream(name="reverse.msh", animations=b"".join(camd(*mode) for mode in REVERSE_MODES),
+                                         animation_count=len(REVERSE_MODES))
+
+
+def dds_file(layout: str, width: int, height: int, levels: list[bytes]) -> bytes:
+    """A DDS storing the given format, whose mip levels are the given bytes, largest first."""
+    flags = 0x1007 | 0x80000 | (0x20000 if len(levels) > 1 else 0)  # the required flags, linear size, mip count
+    caps = 0x1000 | (0x400008 if len(levels) > 1 else 0)  # a texture, and a complex mipmapped one with levels
+    if layout.startswith("DXT"):
+        pixel = struct.pack("<2I", 32, 0x4) + layout.encode("ascii") + bytes(20)
+    else:
+        bits, masks = {"A1R5G5B5": (16, (0x7C00, 0x3E0, 0x1F, 0x8000)),
+                       "A8R8G8B8": (32, (0xFF0000, 0xFF00, 0xFF, 0xFF000000))}[layout]
+        pixel = struct.pack("<8I", 32, 0x41, 0, bits, *masks)
+    head = (b"DDS " + struct.pack("<7I", 124, flags, height, width, len(levels[0]), 0, len(levels)) + bytes(44) + pixel
+            + struct.pack("<2I", caps, 0) + bytes(12))
+    assert len(head) == 128
+    return head + b"".join(levels)
+
+
+def graded_dxt2() -> bytes:
+    """An 8 x 8 DXT2 with four levels whose top level's explicit alpha is half on."""
+    block = struct.pack("<Q", 0x8888888888888888) + struct.pack("<HHI", 0xF800, 0x001F, 0)
+    return dds_file("DXT2", 8, 8, [block * 4, block, block, block])
+
+
+def binary_a8r8g8b8() -> bytes:
+    """A 4 x 4 A8R8G8B8 with three levels whose top level is half transparent, half opaque."""
+    top = bytes([10, 20, 30, 0]) * 8 + bytes([10, 20, 30, 255]) * 8
+    return dds_file("A8R8G8B8", 4, 4, [top, bytes([1, 2, 3, 255]) * 4, bytes([1, 2, 3, 255])])
+
+
+def stereo_ogg(granule: int = 88200) -> bytes:
+    """Two channels at 44,100 Hz, two seconds long."""
+    return (media_fixtures.page(2, 0, 0, [media_fixtures.identification(2, 44100)])
+            + media_fixtures.page(0, 0, 1, [media_fixtures.comment(), b"\x05vorbis" + b"\x00" * 9])
+            + media_fixtures.page(4, granule, 2, [b"\x00" * 300, b"\x01" * 40]))
+
+
 def authored(game: Path) -> None:
     catalog_fixtures.authored_install(game)
     tables.write_tables(game)
@@ -101,6 +154,16 @@ def authored(game: Path) -> None:
         "Manuals/English/English_files/image001.png": media_fixtures.png_file(),
         "Manuals/Images/orphan.png": media_fixtures.png_file(3, 1),
         "data/resources/101_res_PC.aya": nested_imposters(views=struct.pack("<6f", 0.0, 0.5, 0.0, 0.25, 8.0, 8.0) * 6),
+        # The forms and formats the metadata readers and the gate's own readers must agree on.
+        "data/resources/meshes/m_reverse.msh.aya": catalog_fixtures.aya(reverse_mesh()),
+        "data/resources/dxtntextures/extra%graded.tga(0)DXT2.aya": catalog_fixtures.aya(graded_dxt2()),
+        "data/resources/textures/mustbe_extra%binary.tga(0)A8R8G8B8.aya": catalog_fixtures.aya(binary_a8r8g8b8()),
+        "data/resources/102_res_PC.aya": catalog_fixtures.aya(
+            pc_prefix() + catalog_fixtures.chunk(b"DMKR", catalog_fixtures.dmkr_payload(2))),
+        "data/music/track.ogg": stereo_ogg(),
+        "Manuals/Images/photo.jpg": media_fixtures.jpeg_file(),
+        "Setup.exe": media_fixtures.pe_file(icon_bits=32),
+        "data/sounds/sounds_french_pc.xap": catalog_fixtures.xap_fixtures.bank([("Units\\long", 88200, bytes(22050))]),
     }
     for rel, data in extra.items():
         path = game / rel
@@ -382,9 +445,46 @@ class InventoryTests(unittest.TestCase):
         sprite = self.metadata("byte-sprite")
         self.assertEqual((sprite["width"], sprite["height"], sprite["frames"], sprite["details"]["framesEstablished"]),
                          (16, 16, None, 1))
-        animation = self.metadata("animation")
-        self.assertEqual((animation["format"], animation["durationSeconds"]), ("camd", None))
+        [num, den] = film["details"]["fpsRational"]
+        self.assertEqual(film["durationSeconds"], round(2 * den / num, 3))
+        music = self.metadata("music", name="track")
+        self.assertEqual((music["format"], music["channels"], music["sampleRate"], music["durationSeconds"]),
+                         ("vorbis", 2, 44100, 2.0))
+        sample = self.metadata("bank-sample", name="Units\\long")
+        self.assertEqual((sample["format"], sample["channels"], sample["sampleRate"], sample["durationSeconds"]),
+                         ("ima-adpcm-4bit", 1, 44100, 1.0))
+        jpeg = self.metadata("jpeg", name="photo.jpg")
+        self.assertEqual((jpeg["format"], jpeg["width"], jpeg["height"], jpeg["channels"], jpeg["alpha"]),
+                         ("jpeg", 5, 3, 1, "none"))
+        icon = self.metadata("pe-icon", file="Setup.exe")
+        self.assertEqual((icon["format"], icon["width"], icon["height"], icon["alpha"], icon["channels"]),
+                         ("icon bitmap", 2, 2, "present", None))  # 32-bit colour holds alpha; below it, only a mask
+        animation = self.metadata("animation", name="walk")
+        self.assertEqual((animation["format"], animation["frames"], animation["durationSeconds"]), ("camd", 11, 0.5))
         self.assertEqual(animation["usedByRecords"], [animation["identity"]["owner"]])
+
+    def test_an_animation_s_frames_count_either_way_and_its_duration_follows_its_rate(self):
+        # back runs from frame 20 down to 10 (a negative frame scaler); still stores a rate of 0, which plays at 1.
+        rows = {row["name"]: row for row in self.inventory["assets"]
+                if row["form"] == "animation" and row["identity"]["file"] == "data/resources/meshes/m_reverse.msh.aya"}
+        got = {name: (row["frames"], row["durationSeconds"], row["details"]["frameScaler"]) for name, row in rows.items()}
+        self.assertEqual(got, {"ahead": (9, 0.4, 8), "back": (11, 0.2, -10), "still": (5, 0.05, 4),
+                               "tiny": (3, 0.05, 2)})
+
+    def test_texture_metadata_by_stored_and_named_format(self):
+        graded = self.metadata("dds-file", file="data/resources/dxtntextures/extra%graded.tga(0)DXT2.aya")
+        binary = self.metadata("dds-file", file="data/resources/textures/mustbe_extra%binary.tga(0)A8R8G8B8.aya")
+        fields = ("format", "width", "height", "mipLevels", "alpha", "channels", "frames")
+        self.assertEqual([graded[field] for field in fields], ["DXT2", 8, 8, 4, "graded", 4, None])
+        self.assertEqual([binary[field] for field in fields], ["A8R8G8B8", 4, 4, 3, "binary", 4, None])
+        self.assertEqual([mip["length"] for mip in graded["details"]["mips"]], [64, 16, 16, 16])
+        # A texture record gives the format it names, which also names its pixel file; that DDS stores DXT1.
+        record = next(row for row in self.inventory["assets"] if row["form"] == "descriptor-text"
+                      and row["name"] == "meshtex\\skin.tga")
+        self.assertEqual([record[field] for field in fields], ["A1R5G5B5", 4, 4, 1, None, 4, 1])
+        self.assertEqual(record["details"]["occurrences"], 1)
+        damage = self.metadata("damage-texture")
+        self.assertEqual([damage[field] for field in fields], ["one byte per texel", 4, 4, 3, None, 1, None])
 
     def test_a_mixer_mip_s_identity_claims_no_coordinates(self):
         # Its item offset is the ERES payload's, not where the mip's bytes start.
@@ -691,6 +791,34 @@ class StrictReadingTests(unittest.TestCase):
         self.assertIn("data/linked: a link or special file, which no account holds", failures)
 
 
+class AnimationMetadataTests(unittest.TestCase):
+    def record(self, start: int, last: int, scaler: int, rate: float | None) -> dict:
+        return {"animation": {"mode": 1, "startFrame": start, "lastFrame": last, "frameScaler": scaler, "rate": rate,
+                              "rateSemantics": "normalized-mode-increment-per-game-tick",
+                              "skeleton": {"mesh": "mesh:authored", "animatedParts": []}}}
+
+    def test_frames_count_either_way_and_a_rate_up_to_the_smallest_plays_at_one(self):
+        cases = {(0, 10, 10, 0.1): (11, 0.5), (20, 10, -10, 0.1): (11, 0.5), (5, 5, 0, 0.5): (1, 0.1),
+                 (0, 7, 8, 0.0001): (8, 0.05), (0, 7, 8, -2.0): (8, 0.05), (0, 3, 3, 0.00011): (4, 454.545),
+                 (3, 0, -3, None): (4, None)}
+        for (start, last, scaler, rate), wanted in cases.items():
+            with self.subTest(start=start, last=last, rate=rate):
+                fields, details = inv.animation_metadata(self.record(start, last, scaler, rate))
+                self.assertEqual((fields["frames"], fields["durationSeconds"]), wanted)
+                self.assertEqual((fields["format"], details["frameScaler"]), ("camd", scaler))
+
+    def test_a_chained_mode_that_runs_backwards_counts_its_frames(self):
+        reading = inv.Reading(inv.Account(0), "inflated", "authored")
+        inv.chained_items([reverse_mesh()], "mesh:owner", "data/resources/meshes/m_owner.msh.aya",
+                          "aya-zlib-members(cmsh)", reading)
+        modes = {item["name"]: item["metadata"] for item in reading.items if item["form"] == "chained-animation"}
+        got = {name: (meta["fields"]["frames"], meta["fields"]["durationSeconds"], meta["details"]["frameScaler"])
+               for name, meta in modes.items()}
+        self.assertEqual(got, {"ahead": (9, 0.4, 8), "back": (11, 0.2, -10), "still": (5, 0.05, 4),
+                               "tiny": (3, 0.05, 2)})
+        self.assertEqual({item["offset"] for item in reading.items}, {None})  # a chain's links carry no coordinates
+
+
 class ChainedTextureTests(unittest.TestCase):
     def test_a_chained_mesh_slot_joins_within_its_parent_s_archives(self):
         def descriptor(ident: str, archive: str) -> dict:
@@ -815,30 +943,6 @@ class GateTests(unittest.TestCase):
             self.assertIn("data/Dial.raw: the run's size differs from the folder's", text)
             self.assertIn("added.txt: in the folder only", text)
 
-    def test_the_gate_checks_every_metadata_identity_by_its_own_path(self):
-        with tempfile.TemporaryDirectory() as temp:
-            game = Path(temp) / "game"
-            authored(game)
-            out = Path(temp) / "out"
-            inv.write_outputs(out, game, inv.build_inventory(game))
-            report = gate.run(game, out, compose=False)
-            self.assertFalse([line for line in report.failures if "metadata" in line or "DDS header" in line],
-                             report.failures)
-            self.assertGreater(report.counts["metadata rows whose coordinates hash to their SHA-256"], 0)
-            self.assertGreater(report.counts["texture sizes equal to their DDS header's"], 0)
-            path = out / "asset-metadata.jsonl"
-            rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
-            dds = next(row for row in rows if row["form"] == "dds-file")
-            sample = next(row for row in rows if row["form"] == "bank-sample")
-            dds["width"] += 1
-            sample["identity"]["sha256"] = "0" * 64
-            dropped = rows.pop()
-            path.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
-            failures = gate.run(game, out, compose=False).failures
-            self.assertIn(f"{dds['id']}: its size is not its DDS header's", failures)
-            self.assertIn(f"{sample['id']}: the bytes at its coordinates do not hash to its SHA-256", failures)
-            self.assertIn(f"{dropped['id']}: an asset without an asset-metadata row", failures)
-
     def test_a_tampered_record_hash_is_caught(self):
         with tempfile.TemporaryDirectory() as temp:
             game = Path(temp) / "game"
@@ -852,6 +956,208 @@ class GateTests(unittest.TestCase):
             (out / "records.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
             text = "\n".join(gate.run(game, out, compose=False).failures)
             self.assertIn(f"{target['id']}: the bytes at its coordinates do not hash to its SHA-256", text)
+
+
+class MetadataGateTests(unittest.TestCase):
+    """The gate reads every asset-metadata row's fields again from its own bytes, and fails a row that disagrees, that
+    it cannot place, or that breaks the schema."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.temp = tempfile.TemporaryDirectory()
+        cls.game = Path(cls.temp.name) / "game"
+        authored(cls.game)
+        cls.out = Path(cls.temp.name) / "out"
+        inv.write_outputs(cls.out, cls.game, inv.build_inventory(cls.game))
+        cls.report = gate.run(cls.game, cls.out, compose=False)
+        cls.rows = [json.loads(line) for line in (cls.out / "asset-metadata.jsonl").read_text(encoding="utf-8").splitlines()]
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.temp.cleanup()
+
+    def row(self, rows: list[dict], form: str, name: str | None = None, file: str | None = None) -> dict:
+        return next(row for row in rows if row["form"] == form and (name is None or row["name"] == name)
+                    and (file is None or row["identity"]["file"] == file))
+
+    def failures_after(self, change) -> list[str]:
+        """The gate's failures once change(rows) has edited a copy of the run's asset-metadata rows."""
+        with tempfile.TemporaryDirectory() as temp:
+            out = Path(temp) / "out"
+            shutil.copytree(self.out, out)
+            rows = copy.deepcopy(self.rows)
+            change(rows)
+            (out / "asset-metadata.jsonl").write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+            return gate.run(self.game, out, compose=False).failures
+
+    def test_every_row_is_read_again_and_agrees(self):
+        ids = {row["id"] for row in self.rows}
+        # The imposter atlas's catalogue record lies on the flatly framed IMPS the walk refuses: a records-check
+        # failure of this authored install, not a metadata one.
+        about_rows = [line for line in self.report.failures
+                      if (line.split(": ")[0] in ids or line.startswith("asset-metadata.jsonl"))
+                      and not line.endswith("it lies on bytes the account calls unknown")]
+        self.assertEqual(about_rows, [])
+        counts = self.report.counts
+        self.assertEqual(counts["metadata rows whose every field equals the gate's reading"]
+                         + counts["unplaced metadata rows whose fields follow their details"], len(self.rows))
+        forms = {row["form"] for row in self.rows}
+        self.assertLessEqual({"dds-file", "descriptor-text", "png", "tga", "jpeg", "byte-sprite", "pe-icon", "voice",
+                              "music", "bank-sample", "video", "animation", "loose-mesh", "terrain-heightfield",
+                              "surface-strips", "static-shadow-maps", "terrain-mixer-mip", "damage-texture"}, forms)
+
+    def test_a_field_that_disagrees_with_the_bytes_fails(self):
+        tampered: list[tuple[str, str]] = []
+
+        def change(rows: list[dict]) -> None:
+            edits = [(self.row(rows, "dds-file", file="data/resources/dxtntextures/extra%graded.tga(0)DXT2.aya"),
+                      {"mipLevels": 1, "channels": 3}),
+                     (self.row(rows, "dds-file", file="data/resources/dxtntextures/meshtex%skin.tga(0)A1R5G5B5.aya"),
+                      {"format": "DXT5", "width": 5}),
+                     (self.row(rows, "descriptor-text", name="meshtex\\skin.tga"), {"height": 8, "frames": None}),
+                     (self.row(rows, "png", name="orphan.png"), {"channels": 4}),
+                     (self.row(rows, "tga"), {"alpha": "present"}), (self.row(rows, "jpeg"), {"channels": None}),
+                     (self.row(rows, "pe-icon", file="Setup.exe"), {"alpha": "mask"}),
+                     (self.row(rows, "voice", name="line"), {"channels": 2}),
+                     (self.row(rows, "music", name="track"), {"sampleRate": 22050}),
+                     (self.row(rows, "bank-sample"), {"durationSeconds": 1.0}),
+                     (self.row(rows, "video", name="intro"), {"durationSeconds": None, "frames": 3}),
+                     (self.row(rows, "animation", name="walk"), {"frames": 10}),
+                     (self.row(rows, "animation", name="back"), {"durationSeconds": 0.4}),
+                     (self.row(rows, "loose-mesh"), {"format": None}),
+                     (self.row(rows, "damage-texture"), {"width": None}),
+                     (self.row(rows, "terrain-heightfield"), {"format": "cmsh"}),
+                     (self.row(rows, "static-shadow-maps"), {"alpha": "none"}),
+                     (self.row(rows, "terrain-mixer-mip"), {"format": "DXT1"}),
+                     (self.row(rows, "byte-sprite"), {"channels": 3})]
+            if gate.Image is not None:  # without Pillow the gate cannot read a DDS's alpha again, and says so
+                edits.append((self.row(rows, "dds-file", file="data/resources/textures/mustbe_extra%binary.tga(0)"
+                                                               "A8R8G8B8.aya"), {"alpha": "graded"}))
+            for row, values in edits:
+                row.update(values)
+                tampered.extend((row["id"], field) for field in values)
+
+        failures = self.failures_after(change)
+        for asset_id, field in tampered:
+            self.assertIn(f"{asset_id}: its {field} is not what the gate reads", failures)
+
+    def test_details_that_disagree_with_the_bytes_fail(self):
+        def change(rows: list[dict]) -> None:
+            self.row(rows, "animation", name="ahead")["details"]["startFrame"] = 1
+            self.row(rows, "animation", name="back")["details"]["frameScaler"] = 10
+            self.row(rows, "dds-file", file="data/resources/dxtntextures/extra%graded.tga(0)DXT2.aya")["details"]["mips"][2][
+                "sha256"] = "0" * 64
+            self.row(rows, "descriptor-text", name="meshtex\\skin.tga")["details"]["mipLevelsPerFrame"] = [2]
+
+        failures = self.failures_after(change)
+        rows = self.rows
+        for form, where, line in (("animation", {"name": "ahead"}, "its frame range, scaler or rate details are not its record's"),
+                                  ("animation", {"name": "back"}, "its frame range, scaler or rate details are not its record's"),
+                                  ("dds-file", {"file": "data/resources/dxtntextures/extra%graded.tga(0)DXT2.aya"},
+                                   "its mip details are not its header's chain"),
+                                  ("descriptor-text", {"name": "meshtex\\skin.tga"},
+                                   "its mips per frame are not its frame records'")):
+            self.assertIn(f"{self.row(rows, form, **where)['id']}: {line}", failures)
+
+    def test_an_unplaced_row_follows_its_details(self):
+        # No authored mesh chains (the authored meshes fail the loader grammar), so a chained mode's row is built here.
+        fields, details = inv.animation_metadata({"animation": {
+            "mode": 1, "startFrame": 20, "lastFrame": 10, "frameScaler": -10, "rate": 0.25,
+            "rateSemantics": "normalized-mode-increment-per-game-tick",
+            "skeleton": {"mesh": "mesh:owner", "animatedParts": []}}})
+        row = {"sha256": "1" * 64}
+        asset = {"id": "animation:mesh:owner/chained#0/0", "form": "chained-animation", "details": details, **fields,
+                 "identity": {"fileSha256": "1" * 64, "envelope": "aya-zlib-members(cmsh)/chain#0", "offset": None,
+                              "length": 36}}
+        for frames, wanted, agreeing in ((11, [], 1), (-9, [f"{asset['id']}: its frames is not what the gate reads"], 0)):
+            report = gate.Report()
+            gate.check_metadata(row, b"", None, [dict(asset, frames=frames)], report)
+            self.assertEqual(report.failures, wanted)
+            self.assertEqual(report.counts["unplaced metadata rows whose fields follow their details"], agreeing)
+        mixer = {**asset, **dict.fromkeys(inv.METADATA_FIELDS), "id": "texture:mixer", "form": "terrain-mixer-mip",
+                 "format": "one byte per texel"}
+        report = gate.Report()
+        gate.check_metadata(row, b"", None, [mixer], report)  # nothing establishes a mixer mip's fields
+        self.assertEqual(report.failures, ["texture:mixer: its format is not what the gate reads"])
+
+    def test_a_row_the_gate_cannot_place_fails(self):
+        def change(rows: list[dict]) -> None:
+            self.row(rows, "video", name="intro")["identity"]["envelope"] = "film(bink)"
+            self.row(rows, "dds-file", file="data/resources/dxtntextures/unused.tga(0)A1R5G5B5.aya")["identity"]["offset"] = None
+            self.row(rows, "loose-mesh")["identity"]["length"] = 0
+            self.row(rows, "pe-icon", file="Setup.exe")["identity"]["offset"] = None
+
+        failures = self.failures_after(change)
+        rows = self.rows
+        self.assertIn(f"{self.row(rows, 'video', name='intro')['id']}: an envelope the gate cannot cut (film(bink))",
+                      failures)
+        for form, where in (("dds-file", {"file": "data/resources/dxtntextures/unused.tga(0)A1R5G5B5.aya"}),
+                            ("loose-mesh", {}), ("pe-icon", {"file": "Setup.exe"})):
+            self.assertIn(f"{self.row(rows, form, **where)['id']}: a {form} row without coordinates", failures)
+
+    def test_identities_and_the_row_set_are_checked(self):
+        added: dict = {}
+
+        def change(rows: list[dict]) -> None:
+            self.row(rows, "video", name="intro")["identity"]["sha256"] = "0" * 64
+            self.row(rows, "descriptor-text", name="meshtex\\skin.tga")["identity"]["sha256"] = "0" * 64
+            self.row(rows, "png", name="orphan.png")["identity"]["fileSha256"] = "0" * 64
+            rows.append(copy.deepcopy(self.row(rows, "tga")))
+            stray = copy.deepcopy(self.row(rows, "byte-sprite"))
+            stray["id"] = "image:no-such-item"
+            rows.append(stray)
+            elsewhere = self.row(rows, "animation", name="still")
+            elsewhere["identity"]["file"] = "data/resources/meshes/m_gone.msh.aya"
+            added.update(stray=stray["id"])
+
+        failures = self.failures_after(change)
+        rows = self.rows
+        for form, name, line in (("video", "intro", "the bytes at its coordinates do not hash to its SHA-256"),
+                                 ("descriptor-text", "meshtex\\skin.tga",
+                                  "the bytes at its coordinates do not hash to its SHA-256"),
+                                 ("png", "orphan.png", "its file hash is not its file's"),
+                                 ("tga", None, "2 asset-metadata rows")):
+            self.assertIn(f"{self.row(rows, form, name=name)['id']}: {line}", failures)
+        self.assertIn(f"{added['stray']}: an asset-metadata row for no texture, image, model, animation, sound or film "
+                      "item", failures)
+        self.assertIn("data/resources/meshes/m_gone.msh.aya: 1 asset-metadata rows for a file the gate did not check",
+                      failures)
+        with tempfile.TemporaryDirectory() as temp:
+            out = Path(temp) / "out"
+            shutil.copytree(self.out, out)
+            (out / "asset-metadata.jsonl").unlink()
+            self.assertIn("the run wrote no asset-metadata.jsonl", gate.run(self.game, out, compose=False).failures)
+
+    def test_a_row_that_breaks_the_schema_fails_the_gate(self):
+        try:
+            import jsonschema  # noqa: F401
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        self.assertEqual(self.report.counts["asset-metadata.jsonl rows checked against the schema"], len(self.rows))
+
+        def change(rows: list[dict]) -> None:
+            self.row(rows, "animation", name="back")["frames"] = -9  # what the retail reverse modes once gave
+
+        back = self.row(self.rows, "animation", name="back")["id"]
+        self.assertIn(f"asset-metadata.jsonl: {back}: frames fails the schema's minimum rule", self.failures_after(change))
+
+    def test_a_file_the_gate_cannot_read_is_a_failure(self):
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            shutil.copytree(self.game, game)
+            locked = game / "data/Dial.raw"
+            locked.chmod(0)
+            try:
+                try:
+                    locked.read_bytes()
+                except PermissionError:
+                    pass
+                else:
+                    self.skipTest("this account can read a file without permissions (root)")
+                failures = gate.run(game, self.out, compose=False).failures
+            finally:
+                locked.chmod(0o644)
+        self.assertTrue(any(line.startswith("data/Dial.raw: a file the gate cannot read") for line in failures), failures)
 
 
 class BoundaryTests(unittest.TestCase):
