@@ -48,6 +48,9 @@ public sealed class CeMissionProjectEditor
     public bool TrySetEntry(string? scriptId, long revision, out string message) => Apply(revision,
         project => project.EntryScriptId == scriptId ? project : project.WithEntry(scriptId), out message);
 
+    public bool TrySetMapLink(CeMissionMapLink? map, long revision, out string message) => Apply(revision,
+        project => ReferenceEquals(project.Map, map) ? project : project.WithMap(map), out message);
+
     /// <summary>Keep all pending inspector/source fields as one change, or keep none when a field is invalid.</summary>
     public bool TryApplyDrafts(string? name, IReadOnlyDictionary<string, Vector3> positions,
         IReadOnlyDictionary<string, string> sources, long revision, out string message) => Apply(revision, project =>
@@ -62,7 +65,7 @@ public sealed class CeMissionProjectEditor
         if (!changed) return project;
         return new CeMissionProject(project.Id, name ?? project.Name,
             project.Placements.Select(item => positions.TryGetValue(item.Id, out Vector3 position) ? item with { Position = position } : item),
-            project.Scripts.Select(item => sources.TryGetValue(item.Id, out string? text) ? item with { Text = text } : item), project.EntryScriptId);
+            project.Scripts.Select(item => sources.TryGetValue(item.Id, out string? text) ? item with { Text = text } : item), project.EntryScriptId, project.Map);
     }, out message);
 
     public bool Undo()

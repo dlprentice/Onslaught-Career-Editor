@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using Godot;
 using OnslaughtToolkit.Companion.Files;
+using OnslaughtToolkit.Companion.Levels;
 using OnslaughtToolkit.Companion.Missions;
 using OnslaughtToolkit.Companion.Ui;
 using Position = System.Numerics.Vector3;
@@ -36,6 +37,31 @@ internal static class CeMissionProjectPageTests
             string beacon = page.Editor.Current.Placements.Single().Id;
             Text(page.ObjectName, "Escort"); Text(page.Definition, "authored.escort"); Press(page.AddObject);
             string escort = page.Editor.Current.Placements.Single(item => item.Name == "Escort").Id;
+            SelectObject(page, beacon);
+            check.That(page.ObjectName.Text == "Escort" && page.Definition.Text == "authored.escort" &&
+                page.AddObject.Text == "Add draft as new object" && page.Root.FindChildren("*", nameof(Label), true, false).OfType<Label>()
+                    .Any(label => label.Text == "Definition for new object"),
+                "selection keeps explicitly labelled new-object draft fields separate from the selected placement inspector");
+            long draftRevision = page.Editor.Revision;
+            Text(page.ObjectName, "Next object draft"); Text(page.Definition, "authored.next");
+            check.That(page.Editor.Revision == draftRevision && page.Editor.Current.Placement(beacon).Name == "Beacon" &&
+                page.Editor.Current.Placement(beacon).Definition == "authored.beacon",
+                "editing the new-object draft changes no selected title, definition or document revision");
+            Press(page.AddObject);
+            check.That(page.Editor.Current.Placements.Count == 3 && page.Editor.Current.Placements.Single(item => item.Name == "Next object draft").Id != beacon &&
+                page.Editor.Current.Placement(beacon).Definition == "authored.beacon",
+                "Add consumes the draft into a separate stable placement ID instead of overwriting the selection");
+            Press(page.Undo);
+            check.That(page.Editor.Current.Placements.Count == 2 && page.Editor.Current.Placement(beacon).Name == "Beacon",
+                "one Undo removes only the added draft placement");
+            Text(page.ObjectName, "Escort"); Text(page.Definition, "authored.escort");
+            SelectObject(page, beacon);
+            Text(page.MapLevel, "777"); Text(page.MapObject, "AuthoredAnchor"); Press(page.LinkMapObject);
+            SelectObject(page, escort);
+            Text(page.MapObject, "AuthoredEscort"); Press(page.LinkMapObject);
+            check.That(page.Editor.Current.Map?.Level == 777 && page.Editor.Current.Map.Bindings.Count == 2 &&
+                page.MapStatus.Contains("ready for CE", StringComparison.Ordinal),
+                "the page links selected definitions to existing map objects without reading an installation");
             SelectObject(page, beacon);
             Text(page.Z, "-7.25"); Press(page.Apply);
             Text(page.SourceName, "Arrival"); Press(page.AddSource);
@@ -111,7 +137,7 @@ internal static class CeMissionProjectPageTests
             discard?.Invoke();
             check.That(page.Editor.Current.Placements.Count == 0 && !page.HasUnsavedChanges, "confirmed New starts a clean authored project");
             check.That(await page.OpenFileAsync(path) && CeMissionProjectJson.Write(page.Editor.Current).AsSpan().SequenceEqual(expected) && !page.Editor.CanUndo,
-                "Open restores stable IDs, 3D placements, links and source with a fresh undo history");
+                "Open restores stable IDs, 3D placements, map bindings and source with a fresh undo history");
             string invalidPath = Path.Combine(root, "invalid.ceproject");
             File.WriteAllText(invalidPath, "invalid project");
             CeMissionProject current = page.Editor.Current;
@@ -153,6 +179,8 @@ internal static class CeMissionProjectPageTests
         }
         finally { viewport.QueueFree(); await Frames(tree); }
         await DelayedIo(tree, output, check);
+        await LinkedSceneLifecycle(tree, output, check);
+        await LinkedScenePipe(tree, output, check);
     }
 
     private static async Task DelayedIo(SceneTree tree, string output, Checks check)
@@ -183,6 +211,137 @@ internal static class CeMissionProjectPageTests
             files.Write.SetResult(new(true, "authored delayed write", "snapshot.ceproject"));
             check.That(await saving && page.HasUnsavedChanges && page.Editor.Current.Script(source).Text == "// Newer document source\n" &&
                 page.Notice.Contains("newer changes", StringComparison.Ordinal), "a late write saves its snapshot without marking a newer document saved");
+        }
+        finally { viewport.QueueFree(); await Frames(tree); }
+    }
+
+    private static async Task LinkedSceneLifecycle(SceneTree tree, string output, Checks check)
+    {
+        check.Suite("explicit linked-map scene lifecycle");
+        SubViewport viewport = new() { Size = new Vector2I(1280, 900), GuiEmbedSubwindows = true };
+        tree.Root.AddChild(viewport);
+        Control popups = new(); viewport.AddChild(popups);
+        StatusLine status = new(); viewport.AddChild(status.Root); status.Root.Visible = false;
+        TerrainSurface terrain = TerrainSurface.Flat(-32, -32, 256, 256);
+        TaskCompletionSource<CeLinkedSceneSnapshot>? pending = null;
+        List<(string Root, CeMissionProject Project)> calls = [];
+        bool fail = false, wrongLevel = false;
+        CeLinkedSceneSnapshot Load(string root, CeMissionProject project)
+        {
+            calls.Add((root, project));
+            if (fail) throw new IOException("Authored unavailable-map refusal.");
+            if (pending is { } wait) return wait.Task.GetAwaiter().GetResult();
+            return new((project.Map?.Level ?? 0) + (wrongLevel ? 1 : 0), terrain);
+        }
+        CeMissionProjectPage page = new(status, popups, (_, _, _) => { }, sceneLoader: Load);
+        viewport.AddChild(page.Root); page.Root.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        string selectedRoot = Path.Combine(output, "linked-scene-source.authored");
+        Directory.CreateDirectory(selectedRoot);
+        try
+        {
+            await Frames(tree);
+            check.That(page.LoadLinkedMap.Disabled && !await page.LoadLinkedSceneAsync(selectedRoot) && calls.Count == 0,
+                "an unlinked document cannot read a game folder");
+            page.OpenDocument(CeMissionRuntimeLinkTests.Authored());
+            byte[] before = CeMissionProjectJson.Write(page.Editor.Current);
+            long revision = page.Editor.Revision;
+            check.That(!page.LoadLinkedMap.Disabled && !await page.LoadLinkedSceneAsync("relative-folder") && calls.Count == 0,
+                "scene loading requires an explicit absolute source folder");
+            check.That(await page.LoadLinkedSceneAsync(selectedRoot) && page.LinkedScene is not null &&
+                ReferenceEquals(page.View.LinkedSceneProvider?.Invoke(), page.LinkedScene) &&
+                ReferenceEquals(page.View.PreviewSurfaceProvider?.Invoke(), terrain) &&
+                ReferenceEquals(page.View.LinkedProjectProvider?.Invoke(), page.Editor.Current) && page.PreviewNotice.Contains("untextured", StringComparison.Ordinal),
+                "the explicit loader result reaches the real viewport's scene, surface and live-project providers");
+            check.That(calls.Count == 1 && calls[0].Root == selectedRoot && calls[0].Project.Map?.Level == 777 &&
+                page.Editor.Revision == revision && CeMissionProjectJson.Write(page.Editor.Current).AsSpan().SequenceEqual(before),
+                "reading linked geometry records no document edit or machine-local path in the portable project");
+            CeLinkedSceneSnapshot scene = page.LinkedScene!;
+            Text(page.X, "24"); Text(page.Z, "-8"); Press(page.Apply);
+            check.That(ReferenceEquals(page.LinkedScene, scene) && page.View.LinkedProjectProvider?.Invoke()?.Placement("beacon").Position == new Position(24, -7.25f, -8),
+                "position drafts update the live geometry contract without reopening installed data");
+            CeMissionProject edited = page.Editor.Current;
+            Press(page.ClearLinkedMap);
+            check.That(page.LinkedScene is null && page.ReloadLinkedMap.Disabled && ReferenceEquals(page.Editor.Current, edited) &&
+                page.PreviewNotice.Contains("Placement plane only", StringComparison.Ordinal),
+                "closing a preview releases its local source while keeping every authored link and edit");
+            page.LinkedMapDialog.EmitSignal(FileDialog.SignalName.DirSelected, selectedRoot);
+            while (page.Busy) await Frames(tree, 1);
+            check.That(page.LinkedScene is not null && calls[^1].Root == selectedRoot && calls.Count == 2,
+                "the folder dialog's selection reaches the loader after a preview was closed");
+            Press(page.ReloadLinkedMap);
+            while (page.Busy) await Frames(tree, 1);
+            check.That(page.LinkedScene is not null && calls.Count == 3 && calls[^1].Root == Path.GetFullPath(selectedRoot),
+                "the Reload map button reads the same folder again");
+            scene = page.LinkedScene!;
+            fail = true;
+            check.That(!await page.LoadLinkedSceneAsync(selectedRoot) && ReferenceEquals(page.LinkedScene, scene) && ReferenceEquals(page.Editor.Current, edited),
+                "an unavailable scene keeps the current preview and authored document");
+            fail = false;
+            int beforeRebind = calls.Count;
+            page.Editor.TrySetMapLink(new(778, [new("authored.beacon", "AuthoredAnchor")]), page.Editor.Revision, out _);
+            check.That(page.LinkedScene is null && !page.ReloadLinkedMap.Disabled && calls.Count == beforeRebind,
+                "rebinding a map invalidates old geometry and requires another explicit read");
+            wrongLevel = true;
+            check.That(!await page.LoadLinkedSceneAsync(selectedRoot) && page.LinkedScene is null && page.Editor.Current.Map?.Level == 778,
+                "a loader result for a different map cannot replace the selected map's preview");
+            wrongLevel = false;
+            check.That(await page.LoadLinkedSceneAsync(selectedRoot), "the correctly bound map can be loaded after a refusal");
+            scene = page.LinkedScene!;
+            pending = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            Task<bool> loading = page.LoadLinkedSceneAsync(selectedRoot);
+            check.That(page.Busy && page.LoadLinkedMap.Disabled && page.SaveProject.Disabled && page.ClearLinkedMap.Disabled,
+                "a scene read disables competing file, source and preview actions");
+            page.Editor.TryMovePlacement("beacon", new Position(25, 26, -9), page.Editor.Revision, out _);
+            pending.SetResult(new(778, terrain));
+            check.That(!await loading && ReferenceEquals(page.LinkedScene, scene) && page.Editor.Current.Placement("beacon").Position == new Position(25, 26, -9),
+                "a delayed scene cannot overwrite a newer placement or replace its existing geometry snapshot");
+            pending = null;
+            pending = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            loading = page.LoadLinkedSceneAsync(selectedRoot);
+            page.OpenDocument(CeMissionRuntimeLinkTests.Authored());
+            pending.SetResult(new(778, terrain));
+            check.That(!await loading && page.LinkedScene is null && page.Editor.Current.Map?.Level == 777,
+                "opening another document invalidates an in-flight scene before it can publish");
+            pending = null;
+            string saved = Path.Combine(output, "linked-scene-page.ceproject");
+            check.That(await page.SaveFileAsync(saved) && !System.Text.Encoding.UTF8.GetString(File.ReadAllBytes(saved)).Contains(selectedRoot, StringComparison.Ordinal),
+                "the production Save as path keeps local preview roots out of project JSON");
+        }
+        finally { viewport.QueueFree(); await Frames(tree); }
+    }
+
+    private static async Task LinkedScenePipe(SceneTree tree, string output, Checks check)
+    {
+        if (!OperatingSystem.IsLinux()) return;
+        check.Suite("linked-map pipe on the page");
+        SubViewport viewport = new() { Size = new Vector2I(1280, 900), GuiEmbedSubwindows = true };
+        tree.Root.AddChild(viewport);
+        Control popups = new(); viewport.AddChild(popups);
+        StatusLine status = new(); viewport.AddChild(status.Root); status.Root.Visible = false;
+        CeMissionProjectPage page = new(status, popups, (_, _, _) => { });
+        viewport.AddChild(page.Root); page.Root.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        string root = Path.Combine(output, "linked-scene-pipe"), resources = Path.Combine(root, "data", "resources"),
+            archive = Path.Combine(resources, "777_res_pc.aya");
+        Directory.CreateDirectory(Path.Combine(resources, "meshes"));
+        try
+        {
+            await Frames(tree);
+            page.OpenDocument(CeMissionRuntimeLinkTests.Authored());
+            byte[] before = CeMissionProjectJson.Write(page.Editor.Current);
+            check.That(CeLinkedSceneInputTests.MakePipe(archive), "a named pipe could be made for the test");
+            Task<bool> loading = page.LoadLinkedSceneAsync(root);
+            bool returned = await Task.WhenAny(loading, Task.Delay(TimeSpan.FromSeconds(10))) == loading;
+            if (!returned) CeLinkedSceneInputTests.ReleaseReader(archive);
+            bool loaded = true;
+            try { loaded = await loading; }
+            catch (NotSupportedException) { check.Fail("the page's read of a pipe ended in an unexpected error"); }
+            check.That(returned && !loaded && page.LinkedScene is null && !page.Busy && page.Notice.Contains("could not be loaded", StringComparison.Ordinal) &&
+                CeMissionProjectJson.Write(page.Editor.Current).AsSpan().SequenceEqual(before),
+                "the page's real loader refuses a selected pipe at once, reports it and keeps the project");
+            File.Delete(archive);
+            File.WriteAllBytes(archive, CeLinkedSceneTests.Archive(CeLinkedSceneTests.AnchorBody().Write()));
+            check.That(await page.LoadLinkedSceneAsync(root) && page.LinkedScene is { } scene && scene.Objects.Count == 2,
+                "the same path loads on the page once it is a regular archive");
         }
         finally { viewport.QueueFree(); await Frames(tree); }
     }

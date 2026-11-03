@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-11-02 (authored Mission project workflow, source owners and current limits)
+Last updated: 2026-11-03 (Mission project linked-map preview: what it reads, what it binds and its limits)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -456,18 +456,40 @@ Open **Mission project** in the sidebar to start a new authored project without 
 catalogue. Add objects with a name and definition reference, add mission source, attach a source to an object and
 choose the mission entry source. The project preserves source text and stable object/source IDs together.
 
-The 3D view displays a flat placement plane and object markers. Drag empty space to orbit, use the wheel to zoom,
+The 3D view starts as a flat placement plane with object markers. Drag empty space to orbit, use the wheel to zoom,
 or choose **Frame all**. Drag a marker to change X/Y while preserving its stored Z; Z is separately editable and
 positive down. Coordinate, name and source drafts can be applied together and undone/redone. **Save as…** writes
 a new `.ceproject` JSON file and verifies it; existing files are not replaced. **Open…** restores the placements,
-source text and links with a fresh undo history, after confirmation when current work would be discarded.
+source text, links and map bindings with a fresh undo history, after confirmation when current work would be discarded.
 
-Definition references are names, not resolved game models. This page has no terrain or model rendering, source
-compilation/execution, CE runtime loader or playable-level export. It is an integrated authoring preview; complete
-mission authoring, physical-input use and native Windows acceptance remain open. The
-[document](Tests/CeMissionProjectTests.cs), [file](Tests/CeMissionProjectFilesTests.cs) and
-[page-input](Tests/CeMissionProjectPageTests.cs) tests cover authored data and programmatic controls; the
-[capability record](../../CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore) owns the executed evidence.
+**Installed-map link** ties a placement's definition to one existing named object of an installed level, so a
+project-enabled CE can start that object at the authored position. **Load linked map…** asks for a game folder and
+reads that level's terrain and the models its objects reference into a read-only preview: sampled terrain and static,
+untextured models at their installed orientation, which drag like markers. Tree groups, animation, models chosen by
+game code and models the folder lacks are not shown, and the page reports what it left out. The folder stays out of
+the project file. **Reload map** reads it again and **Close map preview** releases it.
+
+The preview finds a model only through the world's own model list. In the installed levels checked, that list is empty
+while objects still carry model numbers, so an installed map shows its terrain and object markers but no models yet.
+
+The preview binds as CE's project loader does. A placement moves the one object of the selected level with the bound
+name. Base-world objects are shown where the map puts them and never move, even when one shares that name. A name only
+the base world has, or that two objects of the level share, refuses the preview and keeps the project; a binding no
+placement uses is ignored. Only regular files are read, each within a byte limit: a link, a named pipe or another
+special file where a map file should be is refused at once.
+
+Definition references are names, not resolved game models. This page edits no terrain, compiles or runs no source and
+exports no playable level, and no released CE reads these projects. It is an authoring preview; complete mission
+authoring, physical-input use and native Windows acceptance remain open. The [document](Tests/CeMissionProjectTests.cs),
+[file](Tests/CeMissionProjectFilesTests.cs), [page-input](Tests/CeMissionProjectPageTests.cs),
+[linked-scene](Tests/CeLinkedSceneTests.cs) and [selected-file](Tests/CeLinkedSceneInputTests.cs) tests cover authored
+data and programmatic controls. This command renders the page offscreen from an authored scene:
+
+```sh
+npm run capture:companion-godot -- --capture-script Development/CeMissionProjectCapture.cs --sizes 1280x900,760x800
+```
+
+The [capability record](../../CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore) owns the executed evidence.
 
 ## Known limits
 
