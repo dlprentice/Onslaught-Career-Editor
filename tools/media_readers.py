@@ -252,7 +252,7 @@ def walk_png(data: bytes) -> Walk:
         raise FormatError("no PNG signature")
     walk.add(0, 8, DECODED, "png/structure")
     position, header, idat, ended = 8, None, bytearray(), False
-    chunks = 0
+    chunks, transparency = 0, False
     while position < len(data) and not ended:
         if position + 12 > len(data):
             raise FormatError("truncated chunk")
@@ -274,6 +274,7 @@ def walk_png(data: bytes) -> Walk:
             idat += body
         elif kind == b"IEND":
             ended = True
+        transparency = transparency or kind == b"tRNS"
         walk.add(position, end - position, DECODED, "png/structure")
         chunks += 1
         position = end
@@ -297,7 +298,8 @@ def walk_png(data: bytes) -> Walk:
                 raise FormatError("unknown row filter")
             at += size + 1
     walk.facts = {"width": width, "height": height, "bitDepth": depth, "colourType": colour, "interlace": interlace,
-                  "chunks": chunks, "decodedBytes": len(pixels), "trailingBytes": len(data) - position}
+                  "channels": PNG_CHANNELS[colour], "transparencyChunk": transparency, "chunks": chunks,
+                  "decodedBytes": len(pixels), "trailingBytes": len(data) - position}
     return walk
 
 
@@ -529,8 +531,13 @@ def walk_pe(data: bytes) -> Walk:
             for row in resources:
                 start, size = row["offset"], row["length"]
                 body = data[start:start + size]
-                proved = row["type"] in ("icon", "cursor") and icon_image_holds(body) or \
+                # Only an icon image and an icon group are proved. Every other resource stays framed, a cursor too:
+                # its image follows a hotspot this walk does not read.
+                proved = row["type"] == "icon" and icon_image_holds(body) or \
                     row["type"] == "group-icon" and icon_group_holds(body)
+                if proved and row["type"] == "icon":
+                    (_header, width, doubled, _planes, bits) = struct.unpack_from("<IiiHH", body, 0)
+                    row.update(width=width, height=doubled // 2, bitCount=bits)
                 row["status"] = "decoded" if proved else "framed"
                 walk.add(start, size, DECODED if proved else OPAQUE,
                          f"pe/resource {row['type']}" if proved else f"pe/resource {row['type']} (framed)")

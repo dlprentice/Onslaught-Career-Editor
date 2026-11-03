@@ -240,6 +240,14 @@ class PngTests(unittest.TestCase):
         walk = media.walk_png(data)
         self.assertEqual(covered(walk, len(data)), len(data))
         self.assertEqual((walk.facts["width"], walk.facts["height"]), (2, 2))
+        self.assertEqual((walk.facts["channels"], walk.facts["transparencyChunk"]), (3, False))
+        self.assertEqual(media.walk_png(png_file(colour=6)).facts["channels"], 4)
+
+    def test_a_transparency_chunk_is_noted(self):
+        good = png_file()
+        data = good.index(b"IDAT") - 4  # tRNS goes before the image data; this is the data chunk's length word
+        keyed = good[:data] + png_chunk(b"tRNS", bytes(6)) + good[data:]
+        self.assertTrue(media.walk_png(keyed).facts["transparencyChunk"])
 
     def test_an_interlaced_image_has_its_passes(self):
         # Adam7 on 3 x 3 grey: passes of 1, 1, 1, 2 (x2 rows), 1 (x1), 3 ... sized by the pass geometry.
@@ -403,6 +411,8 @@ class PeTests(unittest.TestCase):
         types = sorted(r["type"] for r in walk.facts["resources"])
         self.assertEqual(types, ["group-icon", "icon"])
         self.assertTrue(all(r["status"] == "decoded" for r in walk.facts["resources"]))
+        icon = next(r for r in walk.facts["resources"] if r["type"] == "icon")
+        self.assertEqual((icon["width"], icon["height"], icon["bitCount"]), (2, 2, 8))  # the header's doubled height, halved
         parts = part_bytes(walk)
         self.assertEqual(parts[("pe/section .text", media.OPAQUE)], 0x200)
         # The DOS header, then the PE signature, file and optional headers and two section rows; the rest of the
@@ -437,9 +447,28 @@ class PeTests(unittest.TestCase):
         self.assertEqual(parts[("pe/resource-tree", media.DECODED)], (16 + 8 * 2) + 4 * (16 + 8) + 2 * 16 + 6)
         self.assertEqual(covered(walk, len(data)), len(data))
 
+    def assert_resources_framed(self, walk: media.Walk, types: list[str]) -> None:
+        """Every resource is framed, in its status and in the kind of the span that holds its bytes."""
+        resources = walk.facts["resources"]
+        self.assertEqual(sorted(r["type"] for r in resources), types)
+        self.assertTrue(all(r["status"] == "framed" for r in resources))
+        parts = part_bytes(walk)
+        for resource in resources:
+            self.assertEqual(parts.get((f"pe/resource {resource['type']} (framed)", media.OPAQUE)), resource["length"])
+        decoded = [part for (part, kind) in parts if kind == media.DECODED and part.startswith("pe/resource ")]
+        self.assertEqual(decoded, [])
+
     def test_a_resource_that_does_not_hold_stays_framed(self):
-        walk = media.walk_pe(pe_file(icon_ok=False, bad_icon_group=True))
-        self.assertTrue(all(r["status"] == "framed" for r in walk.facts["resources"]))
+        self.assert_resources_framed(media.walk_pe(pe_file(icon_ok=False, bad_icon_group=True)), ["group-icon", "icon"])
+
+    def test_resources_other_than_icons_and_icon_groups_stay_framed(self):
+        # The fixture's icon image and icon group, retyped as a cursor (whose image would follow a hotspot) and a
+        # version resource: bytes that would prove as an icon and a group prove nothing under another type.
+        data = bytearray(pe_file())
+        rsrc = 0x400 + 0x200
+        struct.pack_into("<I", data, rsrc + 16, 1)
+        struct.pack_into("<I", data, rsrc + 24, 16)
+        self.assert_resources_framed(media.walk_pe(bytes(data)), ["cursor", "version"])
 
     def test_coff_symbols_are_framed_not_read(self):
         data = pe_file(symbols=True)
