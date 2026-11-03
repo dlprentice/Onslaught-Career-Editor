@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
 """Walkers for the public container formats a game install holds: Ogg Vorbis, Bink 1, PNG, JPEG, TGA, PE, Word's
-ActiveMime drawing data, and plain text.
+saved-web-page ActiveMime container, and plain text.
 
 Each walker follows its format's published layout, proves the layout accounts for the file and refuses (FormatError,
 with a reason) whatever does not hold. It returns the spans it can vouch for as (start, length, kind, part), where kind

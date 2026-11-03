@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-02 (authored mission project integration and placement/source/file scope)
+Last updated: 2026-11-03 (the content inventory's byte account of one install)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -308,8 +308,14 @@ The companion does not patch
 feature parity or retail gameplay acceptance is implied.
 
 The [content and model/transform catalogue tools](tools/README.md) cover the families their current readers support.
-They are not a complete asset inventory or an HD conversion; the [programme](PROGRAM.md#content-catalogue) owns the
-remaining catalogue work.
+The [content inventory](tools/README.md#content-inventory) puts every byte of one selected PC install in a class
+(decoded by a reader, framed by a record but unread, or unknown) and lists every model, texture, image, animation,
+sound, film and text asset with what names it; on the read-only retail view its gate re-derived that account by
+independent paths. Its coverage lists what stays framed: the font records, part of each imposter record, the HUD
+dial's later frames, the career block, the document a manual's Word file compresses and the executables' code and
+data; a few bytes after that document stay unknown. "Used" means a record, physics value, page link or loader rule
+names the asset; it is not a runtime observation. A second install, Windows and an HD conversion are not covered; the
+[programme](PROGRAM.md#content-catalogue) owns the remaining catalogue work.
 
 ## Retired WinUI toolkit
 
