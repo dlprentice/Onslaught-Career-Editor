@@ -76,8 +76,8 @@ github.com/dlprentice/onslaught-ce and checked against the release's own signed 
 `ce-update-v2.json` and its detached Ed25519 signature verified over the feed's domain prefix and exact bytes with the
 public key (`b6cf39b7…`) that the Companion and CE's launcher source at v0.1.13 both carry. A separate Python script,
 not the Companion's own verifier, made this check: a feed changed by one bit and the feed without its prefix were both
-refused. The package's size and SHA-256 equal
-the signed feed's entry, the release's published digest and the release's `ASSETS.txt`.
+refused. The package's size and SHA-256 equal the signed feed's entry, the release's published digest and the release's
+`ASSETS.txt`.
 
 Observed on Linux:
 
@@ -92,33 +92,41 @@ Observed on Linux:
   the unknown line. A newer external write to `ce.ini` was refused without being overwritten. Both switches went back
   to disabled and the reopened file kept the unknown line and the externally added one.
 - Launch (offscreen video, dummy audio, no desktop session, update checks off): the actual CE launcher started its own
-  `bea` from the package folder. The Companion's process check found both processes and refused a career write and a
-  CE settings write while they ran, each with no backup and no possible file change. An existing keyboard-only tape of
-  ten key events (SHA-256 `197939966a947ce85f299f7a9f5f833fa6be4c8f6c1d08e80b658d8915f9bc2c`, a file dated 2026-10-16)
-  selected Load and the companion-edited Unicode-named career in CE 0.1.13's own menus; whether it is the tape the
-  October 24 run used is not known. Before the launch the user
-  folder's `defaultoptions.bea` was a copy of the unedited career. Afterwards it equaled every byte of the edited career
-  (SHA-256 `55144d460a3088d83f6447ab8c1594a8a02a22c32e89467c79a2006b40ee0aed`), and the loaded career file itself was
-  unchanged. CE's console reported the offscreen video driver, the dummy audio driver, the ten tape events and the x87
-  control word 007f after CreateDevice. The bounded replay (to Present 1100, game arguments
-  `-skipfmv -forcewindowed -res 640 480`, `BEA_PORT_REPLAY_SLEEP_US=10000`) closed normally with launcher exit 0 and no
-  CE process left. The launch ran twice with the same result: first with DXVK's default adapter (the NVIDIA one), then
-  with `DXVK_FILTER_DEVICE_NAME=Intel` under the Intel iGPU's lock. The Present 1000 frame (640 × 480) of the second
-  run was inspected: it is the SELECT LEVEL page, with its episode heading, level name and level map readable. The
-  first run's frame at the same Present showed the page's emblem and text enlarged and cut off at the frame edge.
-  Nothing compared pixels.
+  `bea` from the package folder. The Companion's process check found both processes and refused a career write and a CE
+  settings write while they ran, each with no backup and no possible file change. A keyboard-only tape of ten key events
+  (SHA-256 `197939966a947ce85f299f7a9f5f833fa6be4c8f6c1d08e80b658d8915f9bc2c`) selected Load and the companion-edited
+  Unicode-named career in CE 0.1.13's own menus. The October 24 run used the same file (identical SHA-256), and copies
+  of it are dated 2026-10-16. Before the launch the user folder's `defaultoptions.bea` was a copy of the unedited
+  career. Afterwards it equaled every byte of the edited career (SHA-256
+  `55144d460a3088d83f6447ab8c1594a8a02a22c32e89467c79a2006b40ee0aed`), and the loaded career file itself was unchanged.
+  CE's console reported the offscreen video driver, the dummy audio driver, the ten tape events and the x87 control word
+  007f after CreateDevice. The bounded replay (to Present 1100, game arguments `-skipfmv -forcewindowed -res 640 480`,
+  `BEA_PORT_REPLAY_SLEEP_US=10000`) closed normally with launcher exit 0 and no CE process left. The launch ran twice
+  with the same result: first with DXVK's default adapter (the NVIDIA one), then with `DXVK_FILTER_DEVICE_NAME=Intel`
+  under the Intel iGPU's lock. The Present 1000 frame (640 × 480) of the second run was inspected: it is the SELECT
+  LEVEL page, with its episode heading, level name and level map readable. The first run's frame at the same Present
+  showed the page's emblem and text enlarged and cut off at the frame edge. Nothing compared pixels.
 - Restore: the Backups page put the exact original bytes back into the edited `Companion Pilot` career and reopened
   it (SHA-256 `0c17e47db9d666e9b26ef88d43d0a25e7cbfbf4f88c8005cc748965050e506fb`, equal to the preserved baseline and
   the tracked fixture), after first preserving the displaced edit in its own verified backup. The extracted package
   matched the tarball file for file after the launches, and the tracked fixture was unchanged.
 
 The Steam install and CE's own user folder show no file changed since the run began, and the original game's data was a
-read-only view. Every path the check wrote lies below the owner folder, and CE ran with `BEA_USER_DIR`, `BEA_GAME_DIR`
-and a private home folder. This is an automated Linux check driven by programmatic production-page actions, with update
-checks off. It proves this copied-career workflow against CE 0.1.13 on Linux, not every career, not the update hand-off
-to a package's `versions` folder, and not a human click-through. Physical mouse and keyboard input, file dialogs,
-listening to the music and voices, a desktop session's rendering and native Windows runs of CE 0.1.7 or later remain
-open.
+read-only view. Every path the check itself wrote lies below the owner folder. CE ran with `BEA_USER_DIR`,
+`BEA_GAME_DIR` and the test runner's private home and cache folders, which are per-run folders under the repository's
+ignored `local-data/companion/`. CE's graphics layers (DXVK, Mesa and the NVIDIA driver) wrote 6 cache files there in
+the first launch and 156 in the second. This is an automated Linux check driven by programmatic production-page
+actions, with update checks off. It proves this copied-career workflow against CE 0.1.13 on Linux, not every career,
+not the update hand-off to a package's `versions` folder, and not a human click-through. Physical mouse and keyboard
+input, file dialogs, listening to the music and voices, a desktop session's rendering and native Windows runs of CE
+0.1.7 or later remain open.
+
+Repeating the check needs exclusive game ownership. The Companion's running-game scan reads every process on the
+machine, so an original-game or Onslaught CE process anywhere on it makes a phase refuse at its start ("A game is
+already running; acceptance must have exclusive game ownership") before it changes a career or a setting, and one that
+appears during a launch fails that phase's closing "Game process no longer running" wait. A private PID namespace with
+its own `/proc`, such as `unshare --user --map-user=$(id -u) --pid --fork --mount-proc` around the phase command, shows
+the scan only the processes the check starts.
 
 ## Public Companion setup — November 2
 
