@@ -6,8 +6,8 @@ not run through the reader being checked, and fail on any disagreement.
 tools/content_inventory_tests.py checks the rules on authored data. This reads a finished run's output and the game
 folder it came from, and checks that:
 
-  files      an independent walk of the folder finds exactly the run's files and sizes, and each file still has the
-             hash the run recorded
+  files      an independent walk of the folder finds exactly the run's files and sizes and no link or special file,
+             and each file still has the hash the run recorded
   account    every file's parts and spans sum to its logical size and its classes agree with its bytes
   envelope   every AYA, inflated here member by member with zlib alone, has the logical size the run reports
   chunks     every archive's top-level chunks, walked here, close exactly and reach the end of the stream
@@ -59,16 +59,21 @@ STREAM_ENVELOPE_RE = re.compile(r"^lvlr-chunk\([A-Z0-9]{4}(?:/PMSH/PMS2)?\)$")
 IMAGE_SUFFIXES = (".png", ".jpg", ".tga")
 
 
-def walk_folder(game: Path) -> dict[str, int]:
-    """Every regular file below the folder and its size; a link or special file is reported by the caller's mismatch."""
-    found = {}
-    for folder, _dirs, names in os.walk(game, followlinks=False):
+def walk_folder(game: Path) -> tuple[dict[str, int], list[str]]:
+    """Every regular file below the folder and its size, and every other entry: a link (to a directory too, which
+    os.walk lists among the directories and does not enter) or a special file, which no account can hold."""
+    found, irregular = {}, []
+    for folder, dirs, names in os.walk(game, followlinks=False):
+        irregular += [(Path(folder) / name).relative_to(game).as_posix() for name in dirs
+                      if (Path(folder) / name).is_symlink()]
         for name in names:
             path = Path(folder) / name
             info = path.lstat()
             if stat.S_ISREG(info.st_mode):
                 found[path.relative_to(game).as_posix()] = info.st_size
-    return found
+            else:
+                irregular.append(path.relative_to(game).as_posix())
+    return found, sorted(irregular)
 
 
 def inflate_members(data: bytes) -> bytes:
@@ -105,9 +110,11 @@ def spans_cover(spans: list, start: int, end: int) -> bool:
 
 
 def check_files(game: Path, rows: list[dict], report: "Report") -> None:
-    found = walk_folder(game)
+    found, irregular = walk_folder(game)
     listed = {row["path"]: row["storedBytes"] for row in rows}
     report.count("files walked", len(found))
+    for path in irregular:
+        report.fail(f"{path}: a link or special file, which no account holds")
     for path in sorted(set(found) ^ set(listed)):
         report.fail(f"{path}: in {'the folder' if path in found else 'the run'} only")
     for path in sorted(set(found) & set(listed)):

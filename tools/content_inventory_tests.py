@@ -21,7 +21,11 @@ import content_catalog_tests as catalog_fixtures
 import content_inventory as inv
 import content_inventory_gate as gate
 import game_tables_decode_tests as tables
+import goodie_resource_walk_tests as goodie_fixtures
 import media_readers_tests as media_fixtures
+import particle_set_walk_tests as particle_fixtures
+
+ROOT = Path(__file__).resolve().parents[1]
 
 FAKE_DECODER = '''#!/usr/bin/env python3
 import sys
@@ -316,6 +320,201 @@ class InventoryTests(unittest.TestCase):
             row = next(r for r in inv.build_inventory(game)["files"] if r["path"] == "data/language/english.dat")
             self.assertEqual(row["bytes"][inv.UNKNOWN], 4)
             self.assertEqual(row["class"], inv.PARTIAL)
+
+
+def account_of(reading: inv.Reading) -> dict:
+    closed = reading.account.close()
+    return {"totals": closed["totals"], "parts": part_classes({"parts": closed["parts"]}),
+            "class": inv.file_class(reading.account.size, closed["totals"])}
+
+
+def language(text: bytes, text_offset_words: int = 0) -> bytes:
+    """A one-entry language table whose text pool holds the given UTF-16 bytes and whose audio pool is empty."""
+    return (struct.pack("<III", 0xFFFFFFBB, 3, 1) + struct.pack("<III", 123, text_offset_words, 0xFFFFFFFF)
+            + struct.pack("<I", len(text)) + text + struct.pack("<I", 0))
+
+
+class StrictReadingTests(unittest.TestCase):
+    """What a reader must read before its bytes count as decoded, and how a file it cannot read is accounted."""
+
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.game = Path(self.temp.name)
+        self.ctx = inv.Context(self.game)
+
+    def tearDown(self) -> None:
+        self.temp.cleanup()
+
+    def read(self, family: str, rel: str, data: bytes) -> dict:
+        path = self.game / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+        account, _items = inv.read_file(self.game, {"path": rel, "family": family}, self.ctx)
+        return account
+
+    def test_a_particle_set_is_read_value_by_value(self):
+        fixtures = particle_fixtures
+        data = fixtures.particle_set(fixtures.SPRITE, fixtures.COLOURS, fixtures.EMITTER, fixtures.WOBBLE)
+        reading = inv.read_particle_set(data, self.ctx, {})
+        account = account_of(reading)
+        # The words after Velocity_Randomness's value are never read: referenced, not decoded.
+        self.assertEqual(account["totals"], {inv.DECODED: len(data) - 5, inv.REFERENCED: 5, inv.UNKNOWN: 0})
+        self.assertEqual(account["parts"]["particle-set/words-the-reader-skips"], {inv.REFERENCED})
+        self.assertEqual((reading.facts["descriptors"], reading.problems), (4, []))
+
+    def test_garbage_shuffled_or_trailing_particle_lines_are_not_decoded(self):
+        fixtures = particle_fixtures
+        garbage = fixtures.particle_set((1, "Spark", ["Radius zz NONE", "Life ?"]))
+        lines = fixtures.particle_set(fixtures.SPRITE, fixtures.COLOURS).split(b"\r\n")
+        shuffled = b"\r\n".join([lines[0]] + lines[1:-1][::-1] + [b""])
+        for data in (garbage, shuffled):
+            reading = inv.read_particle_set(data, self.ctx, {})
+            self.assertEqual(account_of(reading)["class"], inv.REFERENCED)
+            self.assertEqual(len(reading.problems), 1)
+        tail = fixtures.particle_set(fixtures.COLOURS, tail="Life 3\r\n")
+        self.assertEqual(account_of(inv.read_particle_set(tail, self.ctx, {}))["totals"][inv.UNKNOWN], len(b"Life 3\r\n"))
+
+    def test_a_texture_whose_envelope_does_not_inflate_stays_unknown(self):
+        broken = bytes(range(16))
+        texture = self.read("dds-texture-dxtn", "data/resources/dxtntextures/broken.tga(0)DXT1.aya", broken)
+        mesh = self.read("cmsh-mesh", "data/resources/meshes/m_broken.msh.aya", broken)
+        for row in (texture, mesh):
+            self.assertEqual((row["class"], row["logicalBytes"], row["bytes"][inv.UNKNOWN]), (inv.UNKNOWN, 16, 16))
+            self.assertTrue(row["problems"])
+        self.assertEqual(texture["stream"], "stored")
+
+    def test_a_reader_that_accounts_for_nothing_or_raises_leaves_the_file_unknown(self):
+        def nothing(_data, _ctx, _row):
+            return inv.Reading(inv.Account(0), "inflated", "authored")
+
+        def raises(_data, _ctx, _row):
+            raise ValueError("authored refusal")
+
+        for reader, problem in ((nothing, "the reader's stream holds none of the file's bytes"),
+                                (raises, "ValueError: authored refusal")):
+            with patch.dict(inv.READERS, {"authored-family": reader}):
+                row = self.read("authored-family", "data/authored.bin", b"twelve bytes")
+            self.assertEqual((row["class"], row["bytes"][inv.UNKNOWN]), (inv.UNKNOWN, 12))
+            self.assertIn(problem, row["problems"])
+        with patch.dict(inv.READERS, {"authored-family": nothing}):
+            row = self.read("authored-family", "data/empty.bin", b"")  # an empty file has nothing to lose
+        self.assertEqual((row["class"], row["problems"]), (inv.DECODED, []))
+
+    def test_an_unterminated_goodie_name_is_referenced(self):
+        for mesh, klass, problems in (("f_be1.msh", inv.DECODED, []),
+                                      ("m" * 300, inv.REFERENCED, ["GDIE: a texture or mesh reference's name has no terminator"])):
+            goodie = goodie_fixtures.model(8, ["goodies\\bg.tga"], mesh)
+            stream = pc_prefix() + goodie[goodie.index(b"GDIE"):]  # the documented prefix: only GDIE is in question
+            reading = inv.read_archive(catalog_fixtures.aya(stream), self.ctx, {"path": "data/resources/goodie_08_res_PC.aya"})
+            self.assertEqual(account_of(reading)["parts"]["GDIE"], {klass})
+            self.assertEqual(reading.problems, problems)
+
+    def test_language_entries_outside_their_pool_or_unterminated_are_problems(self):
+        reading = inv.read_language_table(language("Hello\0".encode("utf-16le"), text_offset_words=100), self.ctx, {})
+        self.assertEqual(reading.problems, ["language/text-pool: an entry points outside its pool"])
+        reading = inv.read_language_table(language("Hello".encode("utf-16le")), self.ctx, {})
+        self.assertEqual(reading.problems, ["language/text-pool: a string runs to the end of its pool without a terminator"])
+        self.assertEqual(account_of(reading)["parts"]["language/text-pool (no terminator)"], {inv.REFERENCED})
+        self.assertEqual(inv.read_language_table(language("Hello\0".encode("utf-16le")), self.ctx, {}).problems, [])
+
+    def test_a_record_takes_the_class_of_its_own_bytes(self):
+        row = {"class": inv.PARTIAL, "stream": "inflated", "logicalBytes": 100, "referencedSpans": [[10, 20]],
+               "unknownSpans": [[50, 60, "unclaimed"]]}
+        rows = {"data/resources/100_res_pc.aya": row}
+
+        def record(kind: str, offset: int, length: int, *, envelope: str = "lvlr-chunk(MESH/PMSH/PMS2)",
+                   status: str | None = None) -> dict:
+            details = {} if status is None else {"status": status}
+            return {"type": kind, kind: details, "source": {"container": "data/resources/100_res_PC.aya",
+                                                            "envelope": envelope, "offset": offset, "length": length}}
+
+        cases = [(record("animation", 0, 10), inv.DECODED), (record("animation", 10, 10), inv.REFERENCED),
+                 (record("animation", 15, 10), inv.PARTIAL), (record("animation", 50, 5), inv.UNKNOWN),
+                 (record("animation", 95, 10), inv.UNKNOWN),
+                 (record("textureDescriptor", 0, 10, status="parsed"), inv.DECODED),
+                 (record("textureDescriptor", 0, 10, status="malformed"), inv.REFERENCED),
+                 (record("animation", 0, 10, envelope="xap(PCXP)"), inv.PARTIAL)]
+        for asset, expected in cases:
+            with self.subTest(asset=asset["source"], kind=asset["type"]):
+                self.assertEqual(inv.record_status(asset, False, rows), expected)
+        self.assertEqual(inv.record_status(record("animation", 0, 10), True, rows), inv.PARTIAL)
+        self.assertEqual(inv.record_status(record("animation", 0, 10), False, {}), inv.UNKNOWN)
+
+    def test_line_grammars_refuse_what_does_not_hold(self):
+        text = inv.READERS["mission-text-txt"]
+        good = b"; a comment\r\n[TEXT_ONE] note\r\n\"Hello\"\r\n\r\n[TEXT_TWO]\r\n\t\"World\"\r\n"
+        self.assertEqual(account_of(text(good, self.ctx, {"family": "mission-text-txt"}))["class"], inv.DECODED)
+        for data, problem in ((good + b"\xb5\xe9 soup \xff\r\n", "a line that is no [ID], string, comment or blank line"),
+                              (b"[TEXT_ONE]\r\n\r\n\"late\"\r\n", "an [ID] line without its quoted string on the next line"),
+                              (b"[text_one]\r\n\"lower case\"\r\n", "a line that is no [ID], string, comment or blank line")):
+            reading = text(data, self.ctx, {"family": "mission-text-txt"})
+            self.assertEqual((account_of(reading)["class"], reading.problems), (inv.REFERENCED, [problem]))
+        defines = inv.READERS["stf-text-table"]
+        self.assertEqual(account_of(defines(b"// x\r\n#define TEXT_ONE 12\r\n\r\n", self.ctx,
+                                            {"family": "stf-text-table"}))["class"], inv.DECODED)
+        reading = defines(b"#define 1TEXT 12\r\n#define TEXT 1 // trailing\r\n", self.ctx, {"family": "stf-text-table"})
+        self.assertEqual(reading.problems, ["2 lines that are no #define, comment or blank line"])
+        self.assertEqual(account_of(defines(b"", self.ctx, {"family": "stf-text-table"}))["class"], inv.DECODED)
+
+    def test_the_career_block_is_referenced(self):
+        save = (ROOT / "tests_shared" / "fixtures" / "gold_career_save.bin").read_bytes()  # the one tracked save
+        account = account_of(inv.read_career_file(save, self.ctx, {}))
+        self.assertEqual(account["parts"]["career/career-block"], {inv.REFERENCED})
+        self.assertEqual(account["parts"]["career/options-entries"], {inv.DECODED})
+        self.assertEqual(account["totals"][inv.REFERENCED], inv.options.OPTIONS_START)
+        self.assertEqual(account["class"], inv.PARTIAL)
+
+    def test_manual_pages_are_tokenized_and_file_lists_parsed(self):
+        manual = lambda rel, data: inv.read_manual_file(data, self.ctx, {"path": rel, "family": "manual"})
+        page = manual("Manuals/English/English.htm", media_fixtures.PAGE)
+        self.assertEqual((account_of(page)["class"], page.items[0]["status"]), (inv.DECODED, inv.DECODED))
+        soup = manual("Manuals/English/Soup.htm", bytes(v for v in range(32, 256) if v not in b"<&"))
+        self.assertEqual((account_of(soup)["class"], soup.items[0]["status"]), (inv.REFERENCED, inv.REFERENCED))
+        self.assertEqual(soup.problems, ["not one html element"])
+        listing = manual("Manuals/English/English_files/filelist.xml", b'<xml><o:File HRef="a.png"/></xml>')
+        self.assertEqual(account_of(listing)["class"], inv.DECODED)
+        self.assertEqual(self.ctx.links["Manuals/English/English_files/filelist.xml"], ["a.png"])
+        broken = manual("Manuals/English/English_files/broken.xml", b"<xml><o:File></xml>")
+        self.assertEqual((account_of(broken)["class"], broken.problems), (inv.REFERENCED, ["not well-formed XML"]))
+
+    def test_a_mission_script_counts_only_when_its_compile_reproduces_the_shipped_copy(self):
+        script = lambda rel, data: inv.read_mission_script(data, self.ctx, {"path": rel, "family": "mission-script-msl"})
+        source = b"init()\r\n{\r\n\tPause(2);\r\n}\r\n"
+        verdicts = {"exact": (inv.DECODED, []), "exact, assisted": (inv.DECODED, []), "stale source": (inv.REFERENCED, []),
+                    "different": (inv.REFERENCED, ["no compiled copy reproduces a shipped script"])}
+        for verdict, (klass, problems) in verdicts.items():
+            rel = "data/MissionScripts/level100/" + verdict.replace(" ", "").replace(",", "") + ".msl"
+            self.ctx.msl[rel.casefold()] = [verdict]
+            reading = script(rel, source)
+            self.assertEqual((account_of(reading)["class"], reading.problems), (klass, problems), verdict)
+        self.assertEqual(account_of(script("data/MissionScripts/level999/alone.msl", source))["class"], inv.DECODED)
+        missing = b"#include data\\gone\\defs.msl\r\n" + source
+        reading = script("data/MissionScripts/level999/missing.msl", missing)
+        self.assertEqual((account_of(reading)["class"], reading.facts["compiled"]),
+                         (inv.REFERENCED, "compiles only with a missing include read as empty"))
+        reading = script("data/MissionScripts/level999/broken.msl", b"init(\r\n")
+        self.assertEqual((account_of(reading)["class"], reading.facts["compiled"]), (inv.REFERENCED, "does not compile alone"))
+        header = script("data/MissionScripts/textlist.h", b"// ids\r\n#define TEXT_ONE 12\r\n")
+        self.assertEqual((account_of(header)["class"], header.facts["compiled"]), (inv.DECODED, "a header"))
+        header = script("data/MissionScripts/textlist.h", b"int x;\r\n")
+        self.assertEqual(account_of(header)["class"], inv.REFERENCED)
+
+    def test_an_install_holding_a_link_is_refused_and_the_gate_names_it(self):
+        game = self.game / "game"
+        authored(game)
+        out = self.game / "out"
+        inv.write_outputs(out, game, inv.build_inventory(game))
+        outside = self.game / "authored-outside"
+        outside.mkdir()
+        (outside / "inside.txt").write_bytes(b"inside\n")
+        try:
+            (game / "data/linked").symlink_to(outside, target_is_directory=True)
+        except OSError as error:
+            self.skipTest(f"creating a directory symlink is unavailable: {error}")
+        with self.assertRaisesRegex(inv.AccountError, "data/linked: a link or special file"):
+            inv.build_inventory(game)
+        failures = gate.run(game, out, compose=False).failures
+        self.assertIn("data/linked: a link or special file, which no account holds", failures)
 
 
 class ChainedTextureTests(unittest.TestCase):

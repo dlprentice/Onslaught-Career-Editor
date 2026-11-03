@@ -94,7 +94,8 @@
     "coverage": {
       "type": "object",
       "required": ["schema", "installFiles", "installBytes", "logicalBytes", "filesByClass", "logicalBytesByClass",
-                   "unknownLogicalBytes", "emptyFiles", "sniffDisagreements", "problems", "families", "notDecodedParts",
+                   "unknownLogicalBytes", "emptyFiles", "emptyFilesByFamily", "sniffDisagreements", "problems", "families",
+                   "notDecodedParts",
                    "items", "proofs", "mediaDecoder", "installManifest", "physicsJoins", "namedButAbsent", "rules"],
       "properties": {
         "schema": {"const": "onslaught.content-inventory.coverage.v1"},
@@ -102,6 +103,7 @@
         "installBytes": {"$ref": "#/$defs/count"},
         "logicalBytes": {"$ref": "#/$defs/count"},
         "logicalBytesByClass": {"$ref": "#/$defs/classBytes"},
+        "emptyFilesByFamily": {"type": "object", "additionalProperties": {"$ref": "#/$defs/count"}},
         "unknownLogicalBytes": {
           "type": "object",
           "required": ["content", "notContent", "all"],

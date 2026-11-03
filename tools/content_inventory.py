@@ -10,8 +10,12 @@ its loader, or by its format's published layout, and every byte of its stream la
   decoded     a reader consumed these bytes in the loader's order and its walk closed exactly. A codec payload counts
               when every bit pattern decodes (raw pixels, DXT blocks, IMA ADPCM, deflate that inflated), or when an
               independent decoder read it without an error and agreed with the walk's counts (Vorbis, Bink, JPEG; see
-              --media-decoder). A decoded byte means a reader owns it; it does not claim that every field has a known
-              meaning, and it says nothing about how the game behaves.
+              --media-decoder). A source no loader reads counts when its grammar holds to its end: a mission script
+              when its compile reproduces the shipped copy (or, with none, when it compiles with every include
+              present), mission text as [ID] and string entries, a symbol table or header as #define lines, a manual
+              page as HTML tokens and a file list as XML. Plain text with no grammar (the install's readme and log)
+              counts when every byte is a character of its encoding. A decoded byte means a reader owns it; it does
+              not claim that every field has a known meaning, and it says nothing about how the game behaves.
   referenced  a record or reader establishes what these bytes are and how long they are, but nothing has read their
               contents.
   unknown     neither. A gap in a walk falls here by construction, so a reader cannot lose bytes silently.
@@ -68,6 +72,7 @@ import msl_compile as mc  # noqa: E402
 import msl_gate  # noqa: E402
 import named_things as nt  # noqa: E402
 import options_entries_decode as options  # noqa: E402
+import particle_set_walk as psw  # noqa: E402
 import physics_values_decode as physics  # noqa: E402
 import world_resources_decode as wrd  # noqa: E402
 import world_resources_encode as wre  # noqa: E402
@@ -92,32 +97,7 @@ NOT_CONTENT_FAMILIES = ("executable-code", "install-metadata", "save-game")
 NAMING_STATUSES = frozenset({"resolved", "resolved-per-archive", "name-match", "code-site", "code-rule", "runtime-name"})
 MEDIA_TIMEOUT = 900
 MEDIA_FAMILIES = ("ogg-music", "ogg-voice", "bink-video")
-MSL_COMPILED = ("exact", "exact, assisted", "stale source")
 NO_AUDIO = 0xFFFFFFFF  # a language entry's audio offset when it names no voice file
-
-# Particle set keys in token order (rebuild/OnslaughtRebuild.Parity/Particles/TokenArchive.cs, the file format's own keys).
-PARTICLE_TOKENS = frozenset((
-    "File_Version", "Num_Particle_Descriptors", "Particle_Descriptor_Type", "Particle_Descriptor_Name",
-    "*****************************************************************", "Radius", "Final_Radius", "Gravity", "Bounce",
-    "Fade_Col", "Texture", "Modifier", "Blend_Mode", "Texture_Number", "Axis_Aligned", "Colour_Range", "Anim_Type",
-    "End_Frame", "Anim_Speed", "Texture_Size", "Velocity_Damp", "Life_Pct", "Random_Start_Frame", "Length", "2D",
-    "Emit_Per_Turn", "Life", "Particle_Descriptor", "Initial_Velocity_X", "Initial_Velocity_Y", "Initial_Velocity_Z",
-    "Velocity_Randomness", "Transmit_Life", "Transmit_FoR", "Transmit_Velocity", "Interpolated_Emission", "Shape",
-    "Pass_Num_Particles", "Outward_Velocity", "Mover", "Particle_Descriptor_0", "Particle_Descriptor_1",
-    "Particle_Descriptor_2", "Particle_Descriptor_3", "Probability_0", "Probability_1", "Probability_2", "Probability_3",
-    "Start_Red", "Start_Green", "Start_Blue", "End_Red", "End_Green", "End_Blue", "Transition_Red", "Transition_Green",
-    "Transition_Blue", "Use_End", "Use_Transition", "Transition_Point", "Num_Entries", "Time", "Type", "Ring_Axis",
-    "Hemisphere", "Num_Particles", "Hollow", "RandomSX", "RandomSY", "RandomSZ", "Width", "Num_Points", "Start_Width",
-    "Wiggle_Factor", "Disperse_Rate", "Taper_Start", "Width_With_Life", "Fade_Point", "Use_Segment_Length",
-    "SegmentLength", "Manual_Wiggle_Enabled", "Wiggle_Length", "Yaw_Length", "Flat", "GravityPC", "Yaw", "Pitch", "Roll",
-    "Yaw_Function", "Pitch_Function", "Roll_Function", "Param_A", "Param_B", "Param_C", "Param_D", "Param_Function",
-    "Clip", "Value_Type", "Gameturn_Scale", "Offset_Gameturn", "Mesh", "Angular_Momentum", "Impact_Spawnee",
-    "Auto_Centre", "Initial", "Death", "Tile_U", "Tile_V", "Scroll_U", "Scroll_V", "Cylinder_NumPtsAxial",
-    "Cylinder_NumPtsRadial", "Cylinder_Radius", "Cylinder_Radius2", "Cylinder_Length", "Colour_Range2",
-    "Sphere_NumPtsAx", "Sphere_NumPtsRad", "Sphere_RadiusTime", "Sphere_Latitude_Start", "Sphere_Latitude_End",
-    "Sphere_Longitude_Start", "Sphere_Longitude_End"))
-PARTICLE_HEADER = b"ParticleSystemEd_File_"
-
 
 class AccountError(ValueError):
     """A reader claimed bytes that do not exist or that another part already holds."""
@@ -575,12 +555,19 @@ def read_archive(data: bytes, ctx: Context, row: dict) -> Reading:
             reading.items.extend(payload_items(tag, payload, decoded, base))
         elif tag == "GDIE":
             try:
-                goodies.read_goodie(raw)
+                goodie = goodies.read_goodie(raw)
             except (goodies.GoodieError, struct.error) as error:
                 reading.problems.append(f"GDIE: {error}")
                 account.add(chunk.offset, 8 + chunk.size, REFERENCED, tag)
                 continue
-            account.add(chunk.offset, 8 + chunk.size, DECODED, tag)
+            names = [texture["terminated"] for texture in goodie["textures"]]
+            if goodie["mesh"]:
+                names.append(goodie["mesh"]["terminated"])
+            if all(names):
+                account.add(chunk.offset, 8 + chunk.size, DECODED, tag)
+            else:
+                account.add(chunk.offset, 8 + chunk.size, REFERENCED, tag)
+                reading.problems.append("GDIE: a texture or mesh reference's name has no terminator")
         elif tag in ("IMPS", "PLAT"):
             account.add(chunk.offset, 8, DECODED, tag + "/framing")
             try:
@@ -602,10 +589,16 @@ def read_mesh_file(data: bytes, ctx: Context, row: dict) -> Reading:
 
 
 def read_texture_file(data: bytes, _ctx: Context, _row: dict) -> Reading:
+    """The DDS an AYA envelope inflates to. An envelope the census cannot inflate or will not admit leaves the stored
+    bytes unknown: the reader never reached a texture, as with a mesh whose envelope does not inflate."""
+    reader = "tools/dds_census.py:texture_metadata"
     meta = dds_census.texture_metadata(data, envelope="aya")
-    dds = meta.get("dds") or {}
-    size = dds.get("size") or 0
-    reading = Reading(Account(size), "inflated", "tools/dds_census.py:texture_metadata")
+    if meta["dds"] is None:
+        reading = whole_file(data, UNKNOWN, "DDS/not-reached", reader)
+        reading.problems.extend(meta.get("problems") or [meta["status"]])
+        return reading
+    size = meta["dds"]["size"]
+    reading = Reading(Account(size), "inflated", reader)
     if meta["status"] == "valid":
         reading.account.add(0, size, DECODED, "DDS")
     else:
@@ -742,37 +735,49 @@ def read_language_table(data: bytes, _ctx: Context, _row: dict) -> Reading:
     account = reading.account
     pool, size = table.text_pool_off, table.uvar7
     account.add(0, pool, DECODED, "language/entries")
-    claim_strings(account, data, pool, size, [entry.text_off_words * 2 for entry in table.entries], 2, "language/text-pool")
+    reading.problems += claim_strings(account, data, pool, size, [entry.text_off_words * 2 for entry in table.entries],
+                                      2, "language/text-pool")
     account.add(pool + size, table.audio_pool_off - pool - size, DECODED, "language/pool-header")
-    claim_strings(account, data, table.audio_pool_off, table.audio_pool_size,
-                  [entry.audio_off_bytes for entry in table.entries if entry.audio_off_bytes != NO_AUDIO], 1,
-                  "language/audio-pool")
+    reading.problems += claim_strings(account, data, table.audio_pool_off, table.audio_pool_size,
+                                      [entry.audio_off_bytes for entry in table.entries if entry.audio_off_bytes != NO_AUDIO],
+                                      1, "language/audio-pool")
     reading.facts = {"entries": table.count}
     return reading
 
 
-def claim_strings(account: Account, data: bytes, pool: int, size: int, offsets: list[int], width: int, part: str) -> None:
-    """Claim the zero-terminated strings a table's entries reach: a pool byte no entry reaches stays unclaimed."""
+def claim_strings(account: Account, data: bytes, pool: int, size: int, offsets: list[int], width: int, part: str) -> list[str]:
+    """Claim the zero-terminated strings a table's entries reach: a pool byte no entry reaches stays unclaimed, unless
+    it is whole strings, which are referenced. Returns the problems: an entry that points outside its pool, and a string
+    that runs to the pool's end without its terminator (whose bytes are referenced, not decoded)."""
     terminator = b"\0" * width
-    reached = bytearray(size)
+    reached = bytearray(size)  # 0 reached by no entry, 1 a terminated string, 2 one that runs to the end
+    problems: set[str] = set()
     for at in offsets:
+        if not 0 <= at < size or at % width:
+            problems.add(f"{part}: an entry points outside its pool")
+            continue
         end = at
         while end + width <= size and data[pool + end:pool + end + width] != terminator:
             end += width
-        stop = min(end + width, size)
-        if at < stop:
-            reached[at:stop] = b"\1" * (stop - at)
+        if end + width > size:
+            problems.add(f"{part}: a string runs to the end of its pool without a terminator")
+            reached[at:size] = b"\2" * (size - at)
+        else:
+            reached[at:end + width] = bytes(max(1, mark) for mark in reached[at:end + width])
     position = 0
     while position < size:
         on = reached[position]
         end = position
         while end < size and reached[end] == on:
             end += 1
-        if on:
+        if on == 1:
             account.add(pool + position, end - position, DECODED, part)
+        elif on == 2:
+            account.add(pool + position, end - position, REFERENCED, part + " (no terminator)")
         elif data[pool + end - width:pool + end] == terminator and (end - position) % width == 0:
             account.add(pool + position, end - position, REFERENCED, part + " (reached by no entry)")
         position = end
+    return sorted(problems)
 
 
 def read_exact_table(parse, reader: str):
@@ -835,86 +840,148 @@ def read_text_file(data: bytes, _ctx: Context, row: dict) -> Reading:
         return refused(data, row["family"], reader, error)
 
 
-def read_page(data: bytes, ctx: Context, row: dict) -> Reading:
-    """A manual page or file list: text, and the local files it names."""
-    reading = read_text_file(data, ctx, row)
+def read_page(data: bytes, ctx: Context, row: dict, walker=media.walk_html) -> Reading:
+    """A manual page (tokenized to its end) or a saved page's XML file list (parsed): its text and the local files it
+    names. A page or list that does not hold is referenced, with the reason."""
+    reader = "tools/media_readers.py:" + walker.__name__
+    try:
+        reading = from_walk(walker(data), data, reader)
+    except media.FormatError as error:
+        reading = refused(data, row["family"], reader, error)
     ctx.links[row["path"]] = media.html_links(data)
     reading.facts["links"] = len(ctx.links[row["path"]])
     return reading
 
 
-TEXT_SHAPE_RE = re.compile(rb'^\s*(?:|\[.*|".*"\s*|;.*)$')
-STF_LINE_RE = re.compile(rb"^\s*(?:|#define\s+\S+\s+-?\d+|//.*)\s*$")
+# A line-oriented source no loader reads, held to its grammar: every line of a known kind and, for mission text, every
+# entry whole. An empty file is decoded, as every empty file is.
+DEFINE_LINE_RE = re.compile(rb"[ \t]*(?:#define[ \t]+[A-Za-z_][A-Za-z0-9_]*[ \t]+-?[0-9]+|//.*)?[ \t]*")
+TEXT_BLANK_RE = re.compile(rb"[ \t]*(?:;.*)?")
+TEXT_ID_RE = re.compile(rb"\[[A-Z0-9_]+\](?:[ \t][^\"]*)?")
+TEXT_STRING_RE = re.compile(rb'[ \t]*".*"[ \t]*')
 
 
-def read_line_grammar(pattern, part: str):
-    """A line-oriented text file, every line of which must have a known shape."""
+def source_lines(data: bytes) -> list[bytes]:
+    """The lines of a text file without their terminators (CRLF or LF)."""
+    return data.replace(b"\r\n", b"\n").split(b"\n")
+
+
+def define_lines_hold(lines: list[bytes]) -> str | None:
+    """A header of #define NAME number lines (with blank and // comment lines): None, or what does not hold."""
+    strange = sum(1 for line in lines if not DEFINE_LINE_RE.fullmatch(line))
+    return f"{strange} lines that are no #define, comment or blank line" if strange else None
+
+
+def mission_text_holds(lines: list[bytes]) -> str | None:
+    """Mission text: entries of an [ID] line (an upper-case text id, then an optional note) and the quoted string on
+    the next line, with blank and ; comment lines between entries. None, or what does not hold."""
+    position = 0
+    while position < len(lines):
+        line = lines[position]
+        if TEXT_ID_RE.fullmatch(line):
+            if position + 1 >= len(lines) or not TEXT_STRING_RE.fullmatch(lines[position + 1]):
+                return "an [ID] line without its quoted string on the next line"
+            position += 2
+        elif TEXT_BLANK_RE.fullmatch(line):
+            position += 1
+        else:
+            return "a line that is no [ID], string, comment or blank line"
+    return None
+
+
+def read_line_grammar(holds, part: str):
+    """A line-oriented source no loader reads: decoded when its grammar holds, else referenced with the reason."""
     def read(data: bytes, ctx: Context, row: dict) -> Reading:
         reading = read_text_file(data, ctx, row)
         if reading.problems or not data:
             return reading
-        lines = data.replace(b"\r\n", b"\n").split(b"\n")
-        strange = sum(1 for line in lines if not pattern.match(line))
-        if strange:
-            reading = whole_file(data, REFERENCED, part, reading.reader)
-            reading.problems.append(f"{strange} lines of no known shape")
+        lines = source_lines(data)
+        problem = holds(lines)
+        reader = reading.reader + " + tools/content_inventory.py:" + holds.__name__
+        if problem:
+            reading = whole_file(data, REFERENCED, part, reader)
+            reading.problems.append(problem)
+        reading.reader = reader
         reading.facts["lines"] = len(lines)
         return reading
     return read
 
 
-def read_particle_set(data: bytes, ctx: Context, row: dict) -> Reading:
-    """CTokenArchive's file: the signature, then one token per line; every token must be one the archive knows."""
-    reader = "tools/content_inventory.py:read_particle_set"
-    if not data.startswith(PARTICLE_HEADER):
-        return refused(data, "particle-set", reader, ValueError("no particle file signature"))
-    lines = data.decode("latin-1").splitlines()
-    tokens = collections.Counter(line.split(" ", 1)[0] for line in lines[1:] if line.strip())
-    strange = sum(count for token, count in tokens.items() if token not in PARTICLE_TOKENS)
-    declared = next((line.split()[1] for line in lines if line.startswith("Num_Particle_Descriptors")), None)
-    if strange or declared is None or int(declared) != tokens["Particle_Descriptor_Type"]:
-        return refused(data, "particle-set", reader, ValueError(
-            f"{strange} unknown tokens or a descriptor count that does not close"))
-    reading = whole_file(data, DECODED, "particle-set", reader)
-    reading.facts = {"lines": len(lines), "descriptors": tokens["Particle_Descriptor_Type"], "tokensSeen": len(tokens)}
+def read_particle_set(data: bytes, _ctx: Context, _row: dict) -> Reading:
+    """CParticleSet::ReadData's file, value by value (tools/particle_set_walk.py). The words after a direct number,
+    which the reader never looks at, are referenced; lines after the last descriptor, which it never reaches, are left
+    unclaimed."""
+    reader = "tools/particle_set_walk.py:walk"
+    try:
+        walk = psw.walk(data)
+    except psw.ParticleSetError as error:
+        return refused(data, "particle-set", reader, error)
+    reading = Reading(Account(len(data)), "stored", reader)
+    position = 0
+    for start, length in walk["skipped"]:
+        reading.account.add(position, start - position, DECODED, "particle-set")
+        reading.account.add(start, length, REFERENCED, "particle-set/words-the-reader-skips")
+        position = start + length
+    reading.account.add(position, walk["end"] - position, DECODED, "particle-set")
+    reading.facts = {key: walk[key] for key in ("lines", "descriptors", "types", "nameSlots", "slotRebinds", "references",
+                                                "linesAfterTheWalk")}
     return reading
 
 
 def read_mission_script(data: bytes, ctx: Context, row: dict) -> Reading:
-    """A mission script: compiled by tools/msl_compile.py and compared with the shipped script of its name.
-
-    A script no level ships is decoded if it compiles on its own; onsldef.msl and textlist.h are text.
+    """A mission script source, compiled by tools/msl_compile.py. No loader reads a source; the game runs the compiled
+    copy its level's world file ships. So a script counts as decoded when its compile reproduces that copy
+    (tools/msl_gate.py's exact verdict, or exact, assisted: an #include the install lacks read as empty and the names it
+    would define taken from the shipped constants), or, when no level ships it, when it compiles with every include
+    present. A stale source (it compiles to a known older revision), one that compiles only when a missing include is
+    read as empty, and one that does not compile are referenced. A header of #define lines (textlist.h) is held to
+    that grammar, and onsldef.msl, which the game's C++ includes, to its compile.
     """
     reader = "tools/msl_compile.py + tools/msl_gate.py"
     verdicts = ctx.msl.get(row["path"].casefold())
-    if verdicts is None:
-        reading = read_text_file(data, ctx, row)
-        reading.facts["compiled"] = "no verdict"
-        if not row["path"].casefold().endswith(".msl") or not data:
-            return reading
-        read_include = mc.includes_from(ctx.game)
-
-        def tolerant(path: str) -> str:
-            try:
-                return read_include(path)
-            except mc.MissingInclude:
-                return ""
-
-        try:
-            mc.compile_script(PurePosixPath(row["path"]).stem, data.decode("latin-1"), tolerant)
-        except mc.CompileError as error:
-            # The fact's value stays a fixed phrase so it can be counted; the compiler's message goes beside it.
+    if verdicts is not None:
+        statuses = set(verdicts)
+        if statuses & {"exact", "exact, assisted"}:
+            reading = whole_file(data, DECODED, "msl/compiled", reader)
+        elif "stale source" in statuses:
+            reading = whole_file(data, REFERENCED, "msl/stale-source", reader)
+        else:
             reading = whole_file(data, REFERENCED, "msl/not-compiled", reader)
-            reading.facts = {"compiled": "does not compile alone", "compileError": str(error)[:200]}
-            return reading
-        reading.facts["compiled"] = "compiles alone"
+            reading.problems.append("no compiled copy reproduces a shipped script")
+        reading.facts = {"verdicts": dict(sorted(collections.Counter(verdicts).items()))}
         return reading
-    if any(status in MSL_COMPILED for status in verdicts):
-        reading = whole_file(data, DECODED, "msl/compiled", reader)
-    else:
+    if not row["path"].casefold().endswith(".msl"):
+        reading = read_line_grammar(define_lines_hold, "msl/header")(data, ctx, row)
+        reading.facts["compiled"] = "a header"
+        return reading
+    reading = read_text_file(data, ctx, row)
+    if reading.problems or not data:
+        reading.facts["compiled"] = "no verdict"
+        return reading
+    read_include = mc.includes_from(ctx.game)
+    missing: list[str] = []
+
+    def tolerant(path: str) -> str:
+        try:
+            return read_include(path)
+        except mc.MissingInclude:
+            missing.append(path)
+            return ""
+
+    name = PurePosixPath(row["path"]).stem
+    try:
+        mc.compile_script(name, data.decode("latin-1"), tolerant)
+    except mc.CompileError as error:
+        # The fact's value stays a fixed phrase so it can be counted; the compiler's message goes beside it.
         reading = whole_file(data, REFERENCED, "msl/not-compiled", reader)
-        reading.problems.append("no compiled copy reproduces a shipped script")
-    reading.facts = {"verdicts": dict(sorted(collections.Counter(verdicts).items()))}
+        reading.facts = {"compiled": "does not compile alone", "compileError": str(error)[:200]}
+        return reading
+    if missing:
+        reading = whole_file(data, REFERENCED, "msl/compiles-only-without-a-missing-include", reader)
+        reading.facts = {"compiled": "compiles only with a missing include read as empty"}
+        return reading
+    reading.reader = reader
+    reading.facts["compiled"] = "compiles alone"
     return reading
 
 
@@ -967,7 +1034,7 @@ def read_manual_file(data: bytes, ctx: Context, row: dict) -> Reading:
         return read_jpeg(data, ctx, row)
     if suffix == ".mso":
         return read_active_mime(data, ctx, row)
-    reading = read_page(data, ctx, row)
+    reading = read_page(data, ctx, row, media.walk_xml if suffix == ".xml" else media.walk_html)
     if suffix in (".htm", ".html"):
         # A manual page is a text asset of its own; a saved page's file list is only its support.
         reading.items.append(asset_item("text", "manual-page", PurePosixPath(row["path"]).name, offset=0,
@@ -994,8 +1061,8 @@ READERS = {
     "default-physics-dat": read_physics_table,
     "particle-set-par": read_particle_set,
     "mission-script-msl": read_mission_script,
-    "mission-text-txt": read_line_grammar(TEXT_SHAPE_RE, "mission-text"),
-    "stf-text-table": read_line_grammar(STF_LINE_RE, "stf"),
+    "mission-text-txt": read_line_grammar(mission_text_holds, "mission-text"),
+    "stf-text-table": read_line_grammar(define_lines_hold, "stf"),
     "splash-tga": read_tga,
     "dial-raw": read_byte_sprite,
     "manual": read_manual_file,
@@ -1049,6 +1116,10 @@ def read_file(game: Path, row: dict, ctx: Context) -> tuple[dict, list[dict]]:
         except (ValueError, struct.error, zlib.error) as error:
             reading = whole_file(data, UNKNOWN, row["family"], "refused")
             problems.append(f"{type(error).__name__}: {error}")
+        if data and not reading.account.size:
+            # A logical stream of nothing would drop the file's bytes from the account without a trace.
+            problems += reading.problems + ["the reader's stream holds none of the file's bytes"]
+            reading = whole_file(data, UNKNOWN, row["family"], reading.reader)
     closed = reading.account.close()
     account = {"schema": FILE_SCHEMA, "path": row["path"], "family": row["family"], "storedBytes": len(data),
                "sha256": cc.sha256(data), "sniff": sniff(data), "stream": reading.stream,
@@ -1303,20 +1374,45 @@ def record_form(asset: dict) -> str:
     return kind
 
 
-def record_status(asset: dict, whole_file_record: bool, file_class_of: dict[str, str]) -> str:
-    """A whole file stands or falls with its account; a record inside one with its own parser's status."""
-    container = file_class_of.get(asset["source"]["container"].casefold(), UNKNOWN)
+# Where a catalogue envelope places a record: in an archive's or mesh's inflated stream, or in the stored file.
+ENVELOPE_STREAMS = (("lvlr-chunk(", "inflated"), ("aya-zlib-members(", "inflated"), ("xap(", "stored"), ("ogg", "stored"))
+PARSER_STATUSES = ("parsed", "valid")
+
+
+def bytes_class(row: dict, start: int, length: int) -> str:
+    """The class of a record's own bytes in its file's account, as file_class gives a file's."""
+    end = start + length
+    if start < 0 or end > row["logicalBytes"]:
+        return UNKNOWN
+    referenced = sum(max(0, min(end, b) - max(start, a)) for a, b in row["referencedSpans"])
+    unknown = sum(max(0, min(end, b) - max(start, a)) for a, b, _part in row["unknownSpans"])
+    return file_class(length, {DECODED: length - referenced - unknown, REFERENCED: referenced, UNKNOWN: unknown})
+
+
+def record_status(asset: dict, whole_file_record: bool, file_rows: dict[str, dict]) -> str:
+    """A whole file stands or falls with its account. A record inside one takes the class of its own bytes in that
+    account, and is at best referenced when its own parser refused it. A record the catalogue gives no parser status
+    ("not-recorded": an animation) is decided by its bytes alone; a record alone does not establish a reading."""
+    row = file_rows.get(asset["source"]["container"].casefold())
+    if row is None:
+        return UNKNOWN
     if whole_file_record:
-        return container
-    if cc.asset_report_status(asset) in ("parsed", "valid", "not-recorded") and container != UNKNOWN:
-        return DECODED
-    return REFERENCED
+        return row["class"]
+    source = asset["source"]
+    stream = next((kind for prefix, kind in ENVELOPE_STREAMS if source["envelope"].startswith(prefix)), None)
+    if stream == row["stream"] and source["offset"] is not None and source["length"]:
+        klass = bytes_class(row, source["offset"], source["length"])
+    else:
+        klass = row["class"]
+    status = cc.asset_report_status(asset)
+    if status not in PARSER_STATUSES and status != "not-recorded":
+        return UNKNOWN if klass == UNKNOWN else REFERENCED
+    return klass
 
 
 def catalogue_items(catalog: dict, incoming: dict[str, set[str]], file_rows: dict[str, dict]) -> list[dict]:
     """One row per model, texture, animation, sound, film and text record of the catalogue."""
     rows = []
-    file_class_of = {path: row["class"] for path, row in file_rows.items()}
     owner_used: dict[str, bool] = {}
     for asset in catalog["assets"]:
         kind = KIND_OF_RECORD.get(asset["type"])
@@ -1344,7 +1440,7 @@ def catalogue_items(catalog: dict, incoming: dict[str, set[str]], file_rows: dic
         row = {"schema": ITEM_SCHEMA, "id": asset["id"], "kind": kind, "form": record_form(asset), "name": asset["name"],
                "file": asset["source"]["container"], "offset": asset["source"]["offset"],
                "length": asset["source"]["length"], "sha256": asset["sha256"],
-               "status": record_status(asset, whole_file_record, file_class_of), "used": bool(evidence),
+               "status": record_status(asset, whole_file_record, file_rows), "used": bool(evidence),
                "usedBy": evidence}
         if asset["type"] in ("mesh", "texture-descriptor"):
             row["loadedByArchive"] = bool(loaded)
@@ -1454,6 +1550,8 @@ def build_coverage(rows: list[dict], install_files: int, install_bytes: int, *, 
                                     "notContent": total("logicalBytesByClass", UNKNOWN, False),
                                     "all": total("logicalBytesByClass", UNKNOWN, None)},
             "emptyFiles": sum(1 for row in rows if not row["storedBytes"]),
+            "emptyFilesByFamily": dict(sorted(collections.Counter(row["family"] for row in rows
+                                                                  if not row["storedBytes"]).items())),
             "sniffDisagreements": sum(1 for row in rows if not sniff_agrees(row["family"], row["sniff"])),
             "problems": sum(len(row["problems"]) for row in rows),
             "filesWithProblems": sum(1 for row in rows if row["problems"]),
@@ -1469,7 +1567,9 @@ def build_coverage(rows: list[dict], install_files: int, install_bytes: int, *, 
             "rules": {
                 DECODED: "a reader consumed these bytes in the loader's order and its walk closed exactly, or a codec "
                          "payload every bit pattern of which decodes, or one an independent decoder read with no error "
-                         "and agreed with; a decoded byte is owned by a reader, which does not claim every field's "
+                         "and agreed with, or a source no loader reads whose grammar holds to its end (a mission script "
+                         "only when its compile reproduces the shipped copy, or compiles with every include present "
+                         "when none ships); a decoded byte is owned by a reader, which does not claim every field's "
                          "meaning or any runtime behaviour",
                 REFERENCED: "a record or reader establishes what these bytes are and how long they are, but nothing "
                             "has read their contents",
@@ -1514,7 +1614,7 @@ def build_inventory(game: Path, decomp: Path | None = None, *, decoder: str | No
     rows, found = [], []
     for row in catalog["files"]:
         if row["size"] is None:
-            continue
+            raise AccountError(f"{row['path']}: a link or special file, which no account holds")
         account, items = read_file(game, row, ctx)
         rows.append(account)
         found.extend(items)
@@ -1591,6 +1691,9 @@ def summary_lines(coverage: dict) -> list[str]:
     unknown = coverage["unknownLogicalBytes"]
     lines.append(f"unknown logical bytes: content={unknown['content']} not-content={unknown['notContent']} "
                  f"all={unknown['all']}; problems={coverage['problems']}")
+    empty = coverage["emptyFilesByFamily"]
+    lines.append(f"empty files (decoded, as every empty file is): {coverage['emptyFiles']}"
+                 + "".join(f" {family}={count}" for family, count in empty.items()))
     return lines
 
 
