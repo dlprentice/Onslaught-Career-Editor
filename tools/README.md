@@ -138,9 +138,11 @@ holds counts as used.
 
 The run writes `manifest.json`; `coverage.json` (per family, files and stored and logical bytes by class; the unknown
 total; the proofs each reader produced; the installer's log compared with the folder; the physics joins; the assets by
-kind, used and unused); `files.jsonl` (each file's account, with the spans that are not decoded); `items.jsonl` (one row
-per asset); and `records.jsonl` (the catalogue records' coordinates, for the gate). All of it is retail-derived and stays
-in ignored `local-data/`.
+kind, used and unused, with the texture records an archive loads but nothing names counted apart); `files.jsonl` (each
+file's account, with the spans that are not decoded); `items.jsonl` (one row per asset, including every link of a mesh
+chain and its animations, and its texture slots joined as the parent's are); and `records.jsonl` (the catalogue records'
+coordinates, for the gate). [The row schema](content_inventory.schema.json) describes them. All of it is retail-derived
+and stays in ignored `local-data/`.
 
 [`content_inventory_gate.py`](content_inventory_gate.py) re-derives what only the real install can show, by a path that
 does not run through the reader being checked: an independent walk and hash of the folder, every AYA re-inflated with
