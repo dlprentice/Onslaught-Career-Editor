@@ -102,6 +102,12 @@ class WalkTests(unittest.TestCase):
         with self.assertRaises(walker.GrammarError):
             self.walk(first + chunk("PMSH", chunk("PMS2", mesh())))
 
+    def test_a_chained_reference_whose_name_has_no_terminator_is_refused(self):
+        first = chunk("CMSH", record(walker.MESH_RECORD, {0x08: 1, 0x15C: 1})) + chunk("CMST") + part() + box()
+        reference = b"n" * walker.MESH_NAME + bytes(walker.MESH_REFERENCE - walker.MESH_NAME)
+        with self.assertRaisesRegex(walker.GrammarError, "terminator"):
+            self.walk(first + chunk("PMSH", chunk("PMS2", reference + mesh())))
+
     def test_trailing_bytes_are_refused(self):
         with self.assertRaises(walker.GrammarError):
             self.walk(mesh() + b"\0" * 8)

@@ -27,6 +27,7 @@ from pathlib import Path
 
 MESH_RECORD, PART_RECORD, VB_RECORD = 372, 316, 296
 MESH_REFERENCE = 309
+MESH_NAME = 300  # the reference's name buffer, read as tools/goodie_resource_walk.py reads a Goodie's mesh reference
 
 
 class GrammarError(ValueError):
@@ -122,7 +123,8 @@ def walk_mesh(s: Stream) -> None:
         # resource record does, PMSH holding PMS2 with the 309-byte reference header in front of the mesh.
         if s.header("chained mesh") == "PMSH":
             s.header("chained reference")
-            s.take(MESH_REFERENCE)
+            if b"\0" not in s.take(MESH_REFERENCE)[:MESH_NAME]:
+                raise GrammarError("the chained reference's name has no terminator")
         walk_mesh(s)
 
 

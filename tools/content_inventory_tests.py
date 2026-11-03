@@ -64,17 +64,23 @@ def media_fixtures_free_physics(statements) -> bytes:
     return bytes(out + struct.pack("<i", -1))
 
 
-def nested_imposters(*, views: bytes) -> bytes:
+def pc_prefix() -> bytes:
+    """LVLR, TARG and AYAD holding the documented PC build's words."""
+    chunk = catalog_fixtures.chunk
+    return b"".join(chunk(tag.encode("ascii"), struct.pack(f"<{len(words)}I", *words))
+                    for tag, words in inv.PREFIX_VALUES.items())
+
+
+def nested_imposters(*, views: bytes, label: bytes = b"authored.msh") -> bytes:
     """A level archive whose imposters are framed as retail frames them: IMPS holding IMPS, then DATA, the atlas
     texture and the IMPO list."""
     chunk = catalog_fixtures.chunk
-    label = bytearray(76)
-    label[4:4 + 12] = b"authored.msh"
-    impt = chunk(b"CIMP", bytes(label)) + chunk(b"IMSH", struct.pack("<i", 7)) + chunk(b"VIEW", views)
+    record = bytearray(76)
+    record[4:4 + len(label)] = label
+    impt = chunk(b"CIMP", bytes(record)) + chunk(b"IMSH", struct.pack("<i", 7)) + chunk(b"VIEW", views)
     inner = (chunk(b"DATA", bytes(8)) + catalog_fixtures.text_record("Imposters_101", tag=b"BTXT")
              + chunk(b"IMPO", struct.pack("<I", 1) + chunk(b"IMPT", impt)))
-    return catalog_fixtures.aya(chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1))
-                                + chunk(b"AYAD", bytes(24)) + chunk(b"IMPS", chunk(b"IMPS", inner)))
+    return catalog_fixtures.aya(pc_prefix() + chunk(b"IMPS", chunk(b"IMPS", inner)))
 
 
 def authored(game: Path) -> None:
@@ -187,6 +193,44 @@ class InventoryTests(unittest.TestCase):
         self.assertEqual(parts["IMPS/atlas-texture"], {inv.DECODED})
         self.assertEqual(parts["IMPS/DATA"], {inv.REFERENCED})
         self.assertEqual(row["bytes"][inv.UNKNOWN], 0)
+        self.assertEqual((parts["LVLR"], parts["TARG"], parts["AYAD"]), ({inv.DECODED},) * 3)
+        self.assertEqual(row["problems"], [])
+
+    def test_a_prefix_that_is_not_the_documented_pc_build_s_is_referenced(self):
+        # The catalogue's authored archives carry zero AYAD guard words.
+        row = self.rows["data/resources/100_res_PC.aya"]
+        self.assertEqual(part_classes(row)["AYAD"], {inv.REFERENCED})
+        self.assertIn("AYAD: its values are not the documented PC build's", row["problems"])
+        chunk = catalog_fixtures.chunk
+        short = catalog_fixtures.aya(chunk(b"LVLR", struct.pack("<H", 103)) + chunk(b"TARG", struct.pack("<I", 2)))
+        reading = inv.read_archive(short, inv.Context(self.game), {"path": "data/resources/base_res_PC.aya"})
+        self.assertEqual(reading.problems, ["LVLR: its size is not the documented PC build's",
+                                            "TARG: its values are not the documented PC build's"])
+        self.assertEqual(reading.account.close()["totals"][inv.DECODED], 0)
+
+    def test_wdat_is_decoded_only_when_it_names_the_archive_s_own_level(self):
+        world = catalog_fixtures.world_archive()  # WDAT names no base world and real world 200
+        ctx = inv.Context(self.game)
+        own = inv.read_archive(world, ctx, {"path": "data/resources/200_res_PC.aya"})
+        other = inv.read_archive(world, ctx, {"path": "data/resources/201_res_PC.aya"})
+        self.assertEqual(part_classes({"parts": own.account.close()["parts"]})["WRES/WDAT"], {inv.DECODED})
+        self.assertFalse([p for p in own.problems if p.startswith("WRLD")])
+        self.assertEqual(part_classes({"parts": other.account.close()["parts"]})["WRES/WDAT"], {inv.REFERENCED})
+        self.assertIn("WRLD: the world layout does not close: WDAT", other.problems)
+
+    def test_names_without_a_terminator_are_referenced(self):
+        chunk = catalog_fixtures.chunk
+        reference = b"n" * inv.MESH_NAME + struct.pack("<ii", 7, 0) + b"\0"
+        mesh = catalog_fixtures.aya(pc_prefix() + chunk(b"MESH", chunk(b"PMSH", chunk(b"PMS2", reference))))
+        reading = inv.read_archive(mesh, inv.Context(self.game), {"path": "data/resources/base_res_PC.aya"})
+        self.assertEqual(part_classes({"parts": reading.account.close()["parts"]})["MESH/reference"], {inv.REFERENCED})
+        self.assertEqual(reading.problems, ["MESH: the reference's name has no terminator"])
+        views = struct.pack("<6f", 0.0, 0.5, 0.0, 0.25, 8.0, 8.0) * 6
+        label = b"x" * (inv.IMPOSTER_LABEL[1] - inv.IMPOSTER_LABEL[0])
+        reading = inv.read_archive(nested_imposters(views=views, label=label), inv.Context(self.game),
+                                   {"path": "data/resources/101_res_PC.aya"})
+        self.assertEqual(part_classes({"parts": reading.account.close()["parts"]})["IMPS/label"], {inv.REFERENCED})
+        self.assertEqual(reading.problems, ["IMPS: an imposter's stored label has no terminator"])
 
     def test_imposters_without_their_inner_chunk_are_refused(self):
         # The catalogue's fixture frames IMPS flatly; the walk refuses it and leaves its bytes unknown.

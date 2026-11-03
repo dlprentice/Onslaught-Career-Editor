@@ -261,7 +261,13 @@ def asset_item(kind: str, form: str, name: str, *, offset: int | None, length: i
 
 
 # ---------------------------------------------------------------------------------------- archives (LVLR tag streams)
-FIXED_PREFIX = {"LVLR": 4, "TARG": 4, "AYAD": 24}
+# The prefix every archive opens with, read as reverse-engineering/asset-formats/lvlr-archive.md documents the PC loader
+# reading it: LVLR's resource-format version and TARG's target, one u32 each, read and ignored, and AYAD's six guard
+# words, the first five compared with the build's own record sizes. A size or value other than the documented PC build's
+# leaves the chunk referenced: what it would mean is not established.
+PREFIX_VALUES = {"LVLR": (103,), "TARG": (1,), "AYAD": (344, 372, 316, 5084, 92, 1)}
+MESH_NAME = 300  # the reference's name buffer; a runtime id, a flag word and a byte follow (tools/goodie_resource_walk.py)
+IMPOSTER_LABEL = (4, 68)  # the CIMP bytes the catalogue reads as an imposter's stored label (content_catalog.parse_imposters)
 PAYLOAD_DECODERS = {"ERES": wrd.parse_eres, "SURF": wrd.parse_surf, "SSHD": wrd.parse_sshd, "VSDS": wrd.parse_vsds,
                     "PMIB": wrd.parse_pmib, "DMKR": wrd.parse_dmkr}
 DECODE_ERRORS = (wrd.DecodeError, struct.error, ValueError)
@@ -350,7 +356,11 @@ def read_mesh_record(raw: bytes, at: int, end: int, reading: Reading, ctx: Conte
         body += 8
     if body + goodies.MESH_REFERENCE > end:
         raise ValueError("a mesh record is shorter than its reference")
-    account.add(body, goodies.MESH_REFERENCE, DECODED, "MESH/reference")
+    if b"\0" in raw[body:body + MESH_NAME]:
+        account.add(body, goodies.MESH_REFERENCE, DECODED, "MESH/reference")
+    else:
+        account.add(body, goodies.MESH_REFERENCE, REFERENCED, "MESH/reference")
+        reading.problems.append("MESH: the reference's name has no terminator")
     rest = body + goodies.MESH_REFERENCE
     if rest == end:
         return
@@ -364,17 +374,31 @@ def read_mesh_record(raw: bytes, at: int, end: int, reading: Reading, ctx: Conte
         account.add(rest, end - rest, UNKNOWN, "MESH/tail")
 
 
-def read_world_chunk(raw: bytes, base: int, size: int, ctx: Context, reading: Reading) -> None:
-    """WRES: WRLD holding WDAT and the world bodies, each read by CWorld::LoadWorld's order."""
+def read_world_chunk(raw: bytes, base: int, size: int, ctx: Context, reading: Reading, level: int | None) -> None:
+    """WRES: WRLD holding WDAT and the world bodies, each read by CWorld::LoadWorld's order.
+
+    WDAT's two level numbers (the base world's, then the real world's) count as decoded only when they fit the layout
+    CWorld::Deserialize reads (content_catalog.world_layout_parts): the real world is this archive's level, and a named
+    base world has its body. Any other layout is a problem, since which worlds the archive supplies is then unknown.
+    """
     account = reading.account
     for tag, body, length in chunks_in(raw, base, base + size):
         if tag != "WRLD":
             account.add(body - 8, 8 + length, UNKNOWN, "WRES/" + tag)
             continue
         account.add(body - 8, 8, DECODED, "WRES/framing")
-        for child, at, child_size in chunks_in(raw, body, body + length):
-            if child == "WDAT" and child_size == 8:
+        children = chunks_in(raw, body, body + length)
+        wdat = [at for child, at, child_size in children if child == "WDAT" and child_size == 8]
+        base_level, real_level = struct.unpack_from("<ii", raw, wdat[0]) if len(wdat) == 1 else (None, None)
+        layout = cc.world_layout_parts([child for child, _at, _size in children], base_level, real_level,
+                                       real_level if level is None else level)
+        if layout:
+            reading.problems.append("WRLD: the world layout does not close: " + ", ".join(layout))
+        for child, at, child_size in children:
+            if child == "WDAT" and child_size == 8 and "WDAT" not in layout:
                 account.add(at - 8, 16, DECODED, "WRES/WDAT")
+            elif child == "WDAT":
+                account.add(at - 8, 8 + child_size, REFERENCED, "WRES/WDAT")
             elif child in cc.WORLD_KINDS:
                 try:
                     wrd.parse_world_body(raw[at:at + child_size], ctx.world_lookup(), base=child == "BSWD")
@@ -438,10 +462,14 @@ def read_imposters(raw: bytes, base: int, size: int, reading: Reading) -> None:
                 account.add(record - 8, 8, DECODED, "IMPS/framing")
                 for child, inner, inner_size in chunks_in(raw, record, record + record_size):
                     account.add(inner - 8, 8, DECODED, "IMPS/framing")
-                    if child == "CIMP" and inner_size >= 68:
-                        account.add(inner, 4, REFERENCED, "IMPS/CIMP-fields")
-                        account.add(inner + 4, 64, DECODED, "IMPS/label")
-                        account.add(inner + 68, inner_size - 68, REFERENCED, "IMPS/CIMP-fields")
+                    if child == "CIMP" and inner_size >= IMPOSTER_LABEL[1]:
+                        first, last = IMPOSTER_LABEL
+                        terminated = b"\0" in raw[inner + first:inner + last]
+                        account.add(inner, first, REFERENCED, "IMPS/CIMP-fields")
+                        account.add(inner + first, last - first, DECODED if terminated else REFERENCED, "IMPS/label")
+                        account.add(inner + last, inner_size - last, REFERENCED, "IMPS/CIMP-fields")
+                        if not terminated:
+                            reading.problems.append("IMPS: an imposter's stored label has no terminator")
                     elif child == "IMSH" and inner_size == 4:
                         account.add(inner, 4, DECODED, "IMPS/mesh-id")
                     elif child == "VIEW" and views_hold(raw[inner:inner + inner_size]):
@@ -494,6 +522,23 @@ def payload_items(tag: str, payload: bytes, decoded: dict, offset: int) -> list[
     return []
 
 
+def read_prefix(raw: bytes, chunk, reading: Reading) -> None:
+    """LVLR, TARG or AYAD: decoded only when it holds exactly the documented PC build's words."""
+    expected = PREFIX_VALUES[chunk.tag]
+    fits = chunk.size == 4 * len(expected)
+    if fits and struct.unpack_from(f"<{len(expected)}I", raw, chunk.offset + 8) == expected:
+        reading.account.add(chunk.offset, 8 + chunk.size, DECODED, chunk.tag)
+        return
+    reading.account.add(chunk.offset, 8 + chunk.size, REFERENCED, chunk.tag)
+    reading.problems.append(f"{chunk.tag}: " + ("its values are" if fits else "its size is") + " not the documented PC build's")
+
+
+def archive_level(path: str) -> int | None:
+    """A numbered level archive's level (content_catalog.ARCHIVE_RE); None for the other archives."""
+    match = cc.ARCHIVE_RE.match(PurePosixPath(path).name)
+    return int(match.group("level")) if match and match.group("level") else None
+
+
 def read_archive(data: bytes, ctx: Context, row: dict) -> Reading:
     raw, chunks, members, _envelope = aai.decode_archive_envelope(data, "pc-chunked-zlib")
     reading = Reading(Account(len(raw)), "inflated", "tools/aya_archive_inventory.py:decode_archive_envelope")
@@ -502,8 +547,8 @@ def read_archive(data: bytes, ctx: Context, row: dict) -> Reading:
     for chunk in chunks:
         base = chunk.offset + 8
         tag = chunk.tag
-        if tag in FIXED_PREFIX:
-            account.add(chunk.offset, 8 + chunk.size, DECODED if chunk.size == FIXED_PREFIX[tag] else REFERENCED, tag)
+        if tag in PREFIX_VALUES:
+            read_prefix(raw, chunk, reading)
         elif tag == "LNDS":
             account.add(chunk.offset, 8 + chunk.size, DECODED if chunk.size == 0 else REFERENCED, tag)
         elif tag == "TEXT":
@@ -517,7 +562,7 @@ def read_archive(data: bytes, ctx: Context, row: dict) -> Reading:
                 reading.problems.append(f"MESH: {error}")
         elif tag == "WRES":
             account.add(chunk.offset, 8, DECODED, "WRES/framing")
-            read_world_chunk(raw, base, chunk.size, ctx, reading)
+            read_world_chunk(raw, base, chunk.size, ctx, reading, archive_level(row["path"]))
         elif tag in PAYLOAD_DECODERS:
             payload = raw[base:base + chunk.size]
             try:
@@ -858,8 +903,9 @@ def read_mission_script(data: bytes, ctx: Context, row: dict) -> Reading:
         try:
             mc.compile_script(PurePosixPath(row["path"]).stem, data.decode("latin-1"), tolerant)
         except mc.CompileError as error:
+            # The fact's value stays a fixed phrase so it can be counted; the compiler's message goes beside it.
             reading = whole_file(data, REFERENCED, "msl/not-compiled", reader)
-            reading.facts = {"compiled": "does not compile alone: " + str(error)[:60]}
+            reading.facts = {"compiled": "does not compile alone", "compileError": str(error)[:200]}
             return reading
         reading.facts["compiled"] = "compiles alone"
         return reading

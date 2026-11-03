@@ -537,9 +537,12 @@ ACTIVE_MIME_MAGIC = b"ActiveMime"
 
 
 def walk_active_mime(data: bytes) -> Walk:
-    """Word's saved-web-page drawing data: a header whose 16-bit field at 0x1E gives the zlib stream's offset less 46.
+    """Word's saved-web-page ActiveMime container: a header whose 16-bit field at 0x1E gives the zlib stream's offset
+    less 46, then the stream.
 
-    The stream must inflate and end at the end of the file. What it inflates to is not walked, so it stays OPAQUE.
+    The stream must inflate completely. What it inflates to (an OLE compound file, which can hold a document's macro
+    project) is not walked, so it stays OPAQUE; bytes after the stream's end are left unclaimed, since no published
+    layout says what they are.
     """
     walk = Walk()
     if data[:10] != ACTIVE_MIME_MAGIC or len(data) < 0x20:

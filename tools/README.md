@@ -134,7 +134,10 @@ named with `--media-decoder`) reads every stream without an error and its frame 
 Without one (`--no-media-decoder`) those payloads stay referenced, and the coverage says so. A mission script counts as
 decoded when `msl_compile.py` compiles it to the shipped script (`msl_gate.py`'s verdict) or, when no level ships it,
 when it compiles on its own. With `--decomp`, a film, particle set or splash image whose name a source string literal
-holds counts as used.
+holds counts as used. An archive's `LVLR`, `TARG` and `AYAD` words count as decoded only when they are the documented PC
+build's ([the archive contract](../reverse-engineering/asset-formats/lvlr-archive.md)), `WDAT` only when its level
+numbers fit the archive's world layout, and a mesh reference's name or an imposter's stored label only when it ends
+inside its buffer; anything else stays referenced and is reported as a problem.
 
 The run writes `manifest.json`; `coverage.json` (per family, files and stored and logical bytes by class; the unknown
 total; the proofs each reader produced; the installer's log compared with the folder; the physics joins; the assets by
@@ -152,7 +155,9 @@ agreement on every Ogg and Bink file. It exits 0 only when all of them pass.
 
 A decoded byte belongs to a reader; that does not give every field a meaning or establish what the game does with it.
 The font records (`FGEN`, `DXFT`), part of each imposter record, a save's career block, the bytes of `Dial.raw` after its
-first frame and the executables' code and data sections stay referenced, and the coverage lists each such part.
+first frame, the document a Word ActiveMime file compresses and the executables' code and data sections stay referenced,
+and the coverage lists each such part. Bytes after an ActiveMime file's compressed stream stay unknown: no published
+layout says what they are.
 
 ## Editor references and generators
 
@@ -175,8 +180,9 @@ documented below and in the development entry headers. Keep retail-derived table
   reason, whatever does not hold: Ogg (every page checksum, sequence and flag, and the three Vorbis headers), Bink 1 (the
   header, the frame index and each frame's audio packet sizes, as libavformat's demuxer reads them), PNG (chunk
   checksums and the inflated image data's size and row filters), JPEG (markers and the extent of each scan),
-  uncompressed TGA, PE (headers, sections, the resource tree, icon images and COFF symbols) and Word's ActiveMime drawing
-  data. `media_readers_tests.py` reaches every refusal reason the module has.
+  uncompressed TGA, PE (headers, sections, the resource tree, icon images and COFF symbols) and Word's saved-web-page
+  ActiveMime container (its header and compressed stream; the compound document inside is not walked).
+  `media_readers_tests.py` reaches every refusal reason the module has.
 - `physics_values_decode.py` reads the compiled physics script value by value with the value classes of the rebuild's
   typed reader (`rebuild/OnslaughtRebuild.Parity/Physics/`) and says which values name a mesh, particle effect, sound
   effect or icon. `physics_values_decode_tests.py` checks its tables against that C#, so the two cannot drift apart.
