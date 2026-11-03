@@ -967,7 +967,13 @@ def read_manual_file(data: bytes, ctx: Context, row: dict) -> Reading:
         return read_jpeg(data, ctx, row)
     if suffix == ".mso":
         return read_active_mime(data, ctx, row)
-    return read_page(data, ctx, row)
+    reading = read_page(data, ctx, row)
+    if suffix in (".htm", ".html"):
+        # A manual page is a text asset of its own; a saved page's file list is only its support.
+        reading.items.append(asset_item("text", "manual-page", PurePosixPath(row["path"]).name, offset=0,
+                                        length=len(data), sha=cc.sha256(data),
+                                        status=REFERENCED if reading.problems else DECODED))
+    return reading
 
 
 READERS = {

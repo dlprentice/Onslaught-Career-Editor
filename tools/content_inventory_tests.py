@@ -266,6 +266,11 @@ class InventoryTests(unittest.TestCase):
         self.assertIn("page:link", linked["usedBy"])
         self.assertFalse(orphan["used"])
 
+    def test_a_manual_page_is_a_text_item(self):
+        page = self.item("manual-page", "English.htm")
+        self.assertEqual((page["kind"], page["status"], page["file"]), ("text", inv.DECODED, "Manuals/English/English.htm"))
+        self.assertFalse(page["used"])  # nothing in the authored install links to the page itself
+
     def test_the_byte_sprite_proves_only_its_first_frame(self):
         row = self.rows["data/Dial.raw"]
         self.assertEqual(row["bytes"], {inv.DECODED: 256, inv.REFERENCED: 256, inv.UNKNOWN: 0})
