@@ -242,6 +242,16 @@ class InventoryTests(unittest.TestCase):
         self.assertEqual(len(unused), 1)
         self.assertFalse(unused[0]["used"])
 
+    def test_a_mesh_the_loader_grammar_refuses_is_referenced_with_the_reason(self):
+        # The catalogue's authored mesh fixture is shorter than the loader's vertex buffer record.
+        row = self.rows["data/resources/meshes/m_authored.msh.aya"]
+        self.assertEqual(row["class"], inv.REFERENCED)
+        self.assertTrue(any(problem.startswith("CMSH: ") for problem in row["problems"]))
+
+    def test_an_imposter_atlas_is_used_by_its_role(self):
+        atlas = self.item("descriptor-imps", "Imposters_101")
+        self.assertIn("imposter:atlas", atlas["usedBy"])
+
     def test_items_have_unique_ids_and_known_kinds(self):
         ids = [item["id"] for item in self.items]
         self.assertEqual(len(ids), len(set(ids)))
@@ -257,6 +267,28 @@ class InventoryTests(unittest.TestCase):
             row = next(r for r in inv.build_inventory(game)["files"] if r["path"] == "data/language/english.dat")
             self.assertEqual(row["bytes"][inv.UNKNOWN], 4)
             self.assertEqual(row["class"], inv.PARTIAL)
+
+
+class ChainedTextureTests(unittest.TestCase):
+    def test_a_chained_mesh_slot_joins_within_its_parent_s_archives(self):
+        def descriptor(ident: str, archive: str) -> dict:
+            return {"id": ident, "type": "texture-descriptor", "name": "meshtex\\Skin.tga", "relationships": [],
+                    "textureDescriptor": {"status": "parsed", "levels": -1, "requestedFormat": 1,
+                                          "occurrences": [{"archive": archive}]}}
+
+        catalog = {"assets": [
+            descriptor("texture-descriptor:here", "data/resources/100_res_PC.aya"),
+            descriptor("texture-descriptor:elsewhere", "data/resources/200_res_PC.aya"),
+            {"id": "mesh:parent", "type": "mesh", "relationships": [
+                {"type": "loaded-by-archive", "target": "archive:data/resources/100_res_pc.aya"}]}]}
+        found = [{"form": "chained-mesh", "owner": "mesh:parent", "textureSlots": [
+            ["MESHTEX\\skin.tga", "utf8-decoded", 1], ["", "empty", None], ["meshtex\\gone.tga", "utf8-decoded", 1],
+            ["meshtex\\Skin.tga", "invalid-utf8", 1]]}]
+        incoming: dict = __import__("collections").defaultdict(set)
+        outcome = inv.join_chained_textures(found, catalog, incoming)
+        self.assertEqual(dict(incoming), {"texture-descriptor:here": {"chained-mesh:uses-texture"}})
+        self.assertEqual(outcome, {"slots joined": 1, "slots unresolved": 1, "slots without a joinable name": 2})
+        self.assertNotIn("textureSlots", found[0])
 
 
 class DecoderTests(unittest.TestCase):
@@ -353,6 +385,27 @@ class BoundaryTests(unittest.TestCase):
                 with self.assertRaises(SystemExit):
                     inv.main(["--game", str(game), "--out", str(Path(temp) / "out"), "--no-media-decoder"])
             write.assert_not_called()
+
+    def test_every_output_row_meets_the_schema(self):
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        schema = json.loads((Path(inv.__file__).parent / "content_inventory.schema.json").read_text(encoding="utf-8"))
+        validator = jsonschema.Draft202012Validator(schema)
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            authored(game)
+            out = Path(temp) / "out"
+            inv.write_outputs(out, game, inv.build_inventory(game))
+            rows = [json.loads(line) for name in ("files.jsonl", "items.jsonl")
+                    for line in (out / name).read_text(encoding="utf-8").splitlines()]
+            rows.append(json.loads((out / "coverage.json").read_text(encoding="utf-8")))
+            for row in rows:
+                errors = sorted(validator.iter_errors(row), key=str)
+                self.assertEqual(errors, [], row.get("id") or row.get("path") or "coverage")
+            broken = dict(rows[0], **{"class": "guessed"})
+            self.assertTrue(list(validator.iter_errors(broken)))
 
     def test_every_output_row_carries_the_retail_marker(self):
         with tempfile.TemporaryDirectory() as temp:

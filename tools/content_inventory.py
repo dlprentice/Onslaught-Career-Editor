@@ -311,9 +311,10 @@ def chained_items(chain: list[bytes], owner: str, path: str, envelope: str, read
         record, animations, _uv = cc.catalog_mesh(stream, asset_id=asset_id, name="", container=path,
                                                   container_sha=cc.sha256(stream), envelope=envelope, offset=0,
                                                   chunk_path=[])
+        slots = [[slot["name"], slot["nameStatus"], slot["requestedFormat"]] for slot in record["mesh"]["textures"]]
         reading.items.append(asset_item("model", "chained-mesh", record["name"], offset=None, length=len(stream),
                                         sha=cc.sha256(stream), status=DECODED, id=asset_id, owner=owner, link=link,
-                                        parts=record["mesh"]["parts"]))
+                                        parts=record["mesh"]["parts"], textureSlots=slots))
         reading.items.extend(asset_item("animation", "chained-animation", animation["name"], offset=None, length=36,
                                         sha=animation["sha256"], status=DECODED, id=animation["id"], owner=owner)
                              for animation in animations)
@@ -1201,6 +1202,35 @@ def join_physics(catalog: dict, ctx: Context, incoming: dict[str, set[str]]) -> 
                                                                         in sorted(unresolved.items())}}
 
 
+def join_chained_textures(found: list[dict], catalog: dict, incoming: dict[str, set[str]]) -> dict:
+    """A chained mesh's texture slots, joined as the catalogue joins its parent's (CMesh::FindTexture: the stricmp name
+    and the requested format among loaded texture records with every mip level), within the archives that load the parent
+    or, for a parent no archive loads, in any archive. A slot whose name is unreadable or too short joins nothing."""
+    by_key: dict[tuple, list[dict]] = collections.defaultdict(list)
+    for asset in catalog["assets"]:
+        record = asset.get("textureDescriptor") or {}
+        if asset["type"] == "texture-descriptor" and record.get("status") == "parsed" and record.get("levels") == -1:
+            by_key[(cc.fold(asset["name"]), record["requestedFormat"])].append(asset)
+    loading = {asset["id"]: {r["target"].split(":", 1)[1] for r in asset["relationships"]
+                             if r["type"] == "loaded-by-archive" and r["target"]}
+               for asset in catalog["assets"] if asset["type"] == "mesh"}
+    outcome: collections.Counter = collections.Counter()
+    for item in found:
+        if item["form"] != "chained-mesh":
+            continue
+        scope = loading.get(item["owner"], set())
+        for name, status, requested in item.pop("textureSlots", []):
+            if status not in cc.KNOWN_NAME_STATUSES or requested is None:
+                outcome["slots without a joinable name"] += 1
+                continue
+            hits = [d for d in by_key.get((cc.fold(name), requested), [])
+                    if not scope or {o["archive"].casefold() for o in d["textureDescriptor"]["occurrences"]} & scope]
+            outcome["slots joined" if hits else "slots unresolved"] += 1
+            for descriptor in hits:
+                incoming[descriptor["id"]].add("chained-mesh:uses-texture")
+    return dict(sorted(outcome.items()))
+
+
 # -------------------------------------------------------------------------------------------------------------- items
 KIND_OF_RECORD = {"mesh": "model", "texture": "texture", "texture-descriptor": "texture", "animation": "animation",
                   "audio": "sound", "video": "film", "text-table": "text", "text-symbols": "text",
@@ -1246,6 +1276,12 @@ def catalogue_items(catalog: dict, incoming: dict[str, set[str]], file_rows: dic
             or asset["source"]["envelope"] == "ogg" or (asset["type"] == "mesh" and not asset["mesh"].get("embedded"))
         loaded = sorted({r["type"] for r in asset["relationships"] if r["type"] == "loaded-by-archive"
                          and file_rows.get(r["target"].split(":", 1)[1], {}).get("used")})
+        if asset["type"] == "texture-descriptor":
+            # an imposter atlas and a font texture are used by their system, which names them by role, not by a record
+            if any(r["type"] == "imposter-of-mesh" for r in asset["relationships"]):
+                names = sorted(set(names) | {"imposter:atlas"})
+            if any(o.get("via") == "PLAT" for o in asset["textureDescriptor"].get("occurrences", [])):
+                names = sorted(set(names) | {"platform:font"})
         owner = []
         if asset["type"] == "animation":
             names = [n for n in names if n != "mesh:has-animation"]
@@ -1297,6 +1333,8 @@ def item_summary(items: list[dict]) -> dict:
             bucket["used" if item["used"] else "unused"] += 1
             statuses = bucket.setdefault("status", {})
             statuses[item["status"]] = statuses.get(item["status"], 0) + 1
+            if item["used"] and set(item["usedBy"]) <= {"loaded-by-archive"}:
+                bucket["loadedButNamedByNothing"] = bucket.get("loadedButNamedByNothing", 0) + 1
             if item.get("loadedByArchive") is False:
                 bucket["namedButNotLoadedByAnArchive"] = bucket.get("namedButNotLoadedByAnArchive", 0) + 1
     return dict(sorted(summary.items()))
@@ -1430,6 +1468,7 @@ def build_inventory(game: Path, decomp: Path | None = None, *, decoder: str | No
         found.extend(items)
     incoming = relationship_index(catalog)
     joins = join_physics(catalog, ctx, incoming)
+    joins["chainedMeshTextures"] = join_chained_textures(found, catalog, incoming)
     used = file_use(catalog, incoming, ctx, code_words(decomp))
     for account in rows:
         evidence = sorted(used.get(account["path"].casefold(), ()))

@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dlprentice/Onslaught-Career-Editor/tools/content_inventory.schema.json",
+  "title": "Content inventory rows",
+  "description": "The rows tools/content_inventory.py writes: a file's byte account (files.jsonl), an asset (items.jsonl) and the coverage summary (coverage.json). Generated rows are retail-derived and carry generatedRetailDerived; they are never committed.",
+  "oneOf": [
+    {"$ref": "#/$defs/file"},
+    {"$ref": "#/$defs/item"},
+    {"$ref": "#/$defs/coverage"}
+  ],
+  "$defs": {
+    "byteClass": {"enum": ["decoded", "referenced", "unknown"]},
+    "fileClass": {"enum": ["decoded", "partial", "referenced", "unknown"]},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "count": {"type": "integer", "minimum": 0},
+    "classBytes": {
+      "type": "object",
+      "required": ["decoded", "referenced", "unknown"],
+      "additionalProperties": false,
+      "properties": {
+        "decoded": {"$ref": "#/$defs/count"},
+        "referenced": {"$ref": "#/$defs/count"},
+        "unknown": {"$ref": "#/$defs/count"}
+      }
+    },
+    "file": {
+      "type": "object",
+      "required": ["schema", "path", "family", "storedBytes", "sha256", "sniff", "stream", "logicalBytes", "class",
+                   "bytes", "parts", "unknownSpans", "referencedSpans", "reader", "problems", "facts", "used", "usedBy"],
+      "properties": {
+        "schema": {"const": "onslaught.content-inventory.file.v1"},
+        "path": {"type": "string", "minLength": 1},
+        "family": {"type": "string", "minLength": 1},
+        "storedBytes": {"$ref": "#/$defs/count"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "sniff": {"type": "string"},
+        "stream": {"enum": ["stored", "inflated"]},
+        "logicalBytes": {"$ref": "#/$defs/count"},
+        "class": {"$ref": "#/$defs/fileClass"},
+        "bytes": {"$ref": "#/$defs/classBytes"},
+        "parts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["part", "class", "bytes"],
+            "additionalProperties": false,
+            "properties": {
+              "part": {"type": "string"},
+              "class": {"$ref": "#/$defs/byteClass"},
+              "bytes": {"$ref": "#/$defs/count"}
+            }
+          }
+        },
+        "unknownSpans": {
+          "type": "array",
+          "items": {"type": "array", "prefixItems": [{"$ref": "#/$defs/count"}, {"$ref": "#/$defs/count"},
+                                                     {"type": "string"}], "items": false, "minItems": 3}
+        },
+        "referencedSpans": {
+          "type": "array",
+          "items": {"type": "array", "prefixItems": [{"$ref": "#/$defs/count"}, {"$ref": "#/$defs/count"}],
+                    "items": false, "minItems": 2}
+        },
+        "reader": {"type": "string"},
+        "problems": {"type": "array", "items": {"type": "string"}},
+        "facts": {"type": "object"},
+        "used": {"type": "boolean"},
+        "usedBy": {"type": "array", "items": {"type": "string"}},
+        "generatedRetailDerived": {"const": true}
+      }
+    },
+    "item": {
+      "type": "object",
+      "required": ["schema", "id", "kind", "form", "name", "file", "offset", "length", "sha256", "status", "used",
+                   "usedBy"],
+      "properties": {
+        "schema": {"const": "onslaught.content-inventory.item.v1"},
+        "id": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["model", "texture", "image", "animation", "sound", "film", "text"]},
+        "form": {"type": "string", "minLength": 1},
+        "name": {"type": ["string", "null"]},
+        "file": {"type": "string", "minLength": 1},
+        "offset": {"type": ["integer", "null"], "minimum": 0},
+        "length": {"type": ["integer", "null"], "minimum": 0},
+        "sha256": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+        "status": {"$ref": "#/$defs/fileClass"},
+        "used": {"type": "boolean"},
+        "usedBy": {"type": "array", "items": {"type": "string"}},
+        "owner": {"type": "string"},
+        "loadedByArchive": {"type": "boolean"},
+        "generatedRetailDerived": {"const": true}
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "required": ["schema", "installFiles", "installBytes", "logicalBytes", "filesByClass", "logicalBytesByClass",
+                   "unknownLogicalBytes", "emptyFiles", "sniffDisagreements", "problems", "families", "notDecodedParts",
+                   "items", "proofs", "mediaDecoder", "installManifest", "physicsJoins", "namedButAbsent", "rules"],
+      "properties": {
+        "schema": {"const": "onslaught.content-inventory.coverage.v1"},
+        "installFiles": {"$ref": "#/$defs/count"},
+        "installBytes": {"$ref": "#/$defs/count"},
+        "logicalBytes": {"$ref": "#/$defs/count"},
+        "logicalBytesByClass": {"$ref": "#/$defs/classBytes"},
+        "unknownLogicalBytes": {
+          "type": "object",
+          "required": ["content", "notContent", "all"],
+          "properties": {"content": {"$ref": "#/$defs/count"}, "notContent": {"$ref": "#/$defs/count"},
+                         "all": {"$ref": "#/$defs/count"}}
+        },
+        "families": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["family", "content", "files", "storedBytes", "logicalBytes", "filesByClass", "storedBytesByClass",
+                         "logicalBytesByClass", "usedFiles", "usedStoredBytes"],
+            "properties": {"logicalBytesByClass": {"$ref": "#/$defs/classBytes"}, "content": {"type": "boolean"}}
+          }
+        },
+        "generatedRetailDerived": {"const": true}
+      }
+    }
+  }
+}
