@@ -6,8 +6,9 @@ not run through the reader being checked, and fail on any disagreement.
 tools/content_inventory_tests.py checks the rules on authored data. This reads a finished run's output and the game
 folder it came from, and checks that:
 
-  files      an independent walk of the folder finds exactly the run's files and sizes and no link or special file,
-             and each file still has the hash the run recorded
+  files      an independent walk of the folder finds exactly the run's files and sizes and no link, special file or
+             folder it cannot list, and each file still has the hash the run recorded
+  judge      the mission-script judge read every level archive's worlds (otherwise no level folder's source was judged)
   account    every file's parts and spans sum to its logical size and its classes agree with its bytes
   envelope   every AYA, inflated here member by member with zlib alone, has the logical size the run reports
   chunks     every archive's top-level chunks, walked here, close exactly and reach the end of the stream
@@ -17,6 +18,9 @@ folder it came from, and checks that:
   decoders   every Ogg and Bink was read by the independent decoder and agreed (a run without one fails here)
   animation  every mesh's cached model-space frames equal its keys composed down the hierarchy
   items      item ids are unique, and every item's file is one of the run's files
+  metadata   every texture, image, model, animation, sound and film item has one asset-metadata row; each names its
+             file's hash, each placed row's bytes, cut from the stored file or from the stream inflated here, hash to
+             its SHA-256, and each DDS texture's size is its header's
   sniffing   every file's own magic agrees with its family
   problems   no reader refused anything
 
@@ -59,11 +63,21 @@ STREAM_ENVELOPE_RE = re.compile(r"^lvlr-chunk\([A-Z0-9]{4}(?:/PMSH/PMS2)?\)$")
 IMAGE_SUFFIXES = (".png", ".jpg", ".tga")
 
 
+class WalkError(ValueError):
+    """The independent walk met a folder it cannot list, so the folder's files are not known."""
+
+
 def walk_folder(game: Path) -> tuple[dict[str, int], list[str]]:
     """Every regular file below the folder and its size, and every other entry: a link (to a directory too, which
-    os.walk lists among the directories and does not enter) or a special file, which no account can hold."""
+    os.walk lists among the directories and does not enter) or a special file, which no account can hold. A folder
+    that cannot be listed raises WalkError instead of dropping its files."""
+    def unlistable(error: OSError) -> None:
+        where = Path(error.filename) if error.filename else game
+        name = where.relative_to(game).as_posix() if where.is_relative_to(game) else "the selected folder"
+        raise WalkError(f"{name}: a folder the walk cannot list ({error.strerror})") from error
+
     found, irregular = {}, []
-    for folder, dirs, names in os.walk(game, followlinks=False):
+    for folder, dirs, names in os.walk(game, onerror=unlistable, followlinks=False):
         irregular += [(Path(folder) / name).relative_to(game).as_posix() for name in dirs
                       if (Path(folder) / name).is_symlink()]
         for name in names:
@@ -109,8 +123,8 @@ def spans_cover(spans: list, start: int, end: int) -> bool:
     return any(a < end and start < b for a, b in spans)
 
 
-def check_files(game: Path, rows: list[dict], report: "Report") -> None:
-    found, irregular = walk_folder(game)
+def check_files(game: Path, rows: list[dict], walked: tuple[dict[str, int], list[str]], report: "Report") -> None:
+    found, irregular = walked
     listed = {row["path"]: row["storedBytes"] for row in rows}
     report.count("files walked", len(found))
     for path in irregular:
@@ -174,6 +188,52 @@ def check_records(row: dict, raw: bytes, records: list[dict], report: "Report") 
                 report.count("records touching referenced bytes")
 
 
+def check_metadata_rows(items: list[dict], metadata: list[dict], report: "Report") -> None:
+    """Exactly one asset-metadata row per texture, image, model, animation, sound and film item, and no other."""
+    wanted = {item["id"] for item in items if item["kind"] in inv.METADATA_KINDS}
+    seen = collections.Counter(asset["id"] for asset in metadata)
+    for name in sorted(wanted - set(seen)):
+        report.fail(f"{name}: an asset without an asset-metadata row")
+    for name in sorted(set(seen) - wanted):
+        report.fail(f"{name}: an asset-metadata row for no texture, image, model, animation, sound or film item")
+    for name, count in sorted(seen.items()):
+        if count > 1:
+            report.fail(f"{name}: {count} asset-metadata rows")
+    report.count("asset-metadata rows", len(metadata))
+
+
+# Where a metadata row's coordinates point: into the stored file, or into the stream the gate inflated itself.
+STORED_ENVELOPES = ("xap(", "ogg", "bink", "whole file", "pe-resource(")
+INFLATED_ENVELOPES = ("lvlr-chunk(", "aya-zlib-members(")
+
+
+def check_metadata(row: dict, data: bytes, raw: bytes | None, metadata: list[dict], report: "Report") -> None:
+    """A file's asset-metadata rows: each names the file's hash, and each placed row's bytes, cut at its coordinates
+    from the stored file or from the stream inflated here, hash to its SHA-256. A DDS texture's size is read again from
+    its header."""
+    for asset in metadata:
+        identity = asset["identity"]
+        if identity["fileSha256"] != row["sha256"]:
+            report.fail(f"{asset['id']}: its file hash is not its file's")
+            continue
+        envelope, start, length = identity["envelope"] or "", identity["offset"], identity["length"]
+        stream = data if envelope.startswith(STORED_ENVELOPES) else raw if envelope.startswith(INFLATED_ENVELOPES) else None
+        if start is None or not length or stream is None:
+            report.count("metadata rows without coordinates to check")
+            continue
+        if start + length > len(stream) or hashlib.sha256(stream[start:start + length]).hexdigest() != identity["sha256"]:
+            report.fail(f"{asset['id']}: the bytes at its coordinates do not hash to its SHA-256")
+            continue
+        report.count("metadata rows whose coordinates hash to their SHA-256")
+        if asset["form"] == "dds-file" and asset["width"] is not None:
+            magic, _size, _flags, height, width = struct.unpack_from("<4sIIII", stream, start) if length >= 20 \
+                else (b"", 0, 0, 0, 0)
+            if magic != b"DDS " or (width, height) != (asset["width"], asset["height"]):
+                report.fail(f"{asset['id']}: its size is not its DDS header's")
+            else:
+                report.count("texture sizes equal to their DDS header's")
+
+
 def check_image(row: dict, data: bytes, report: "Report") -> None:
     if Image is None:
         return
@@ -218,18 +278,39 @@ def run(game: Path, inventory: Path, *, compose: bool = True) -> Report:
     items = [json.loads(line) for line in (inventory / "items.jsonl").read_text(encoding="utf-8").splitlines()]
     if sum(row["storedBytes"] for row in rows) != coverage["installBytes"] or len(rows) != coverage["installFiles"]:
         report.fail("the run's files do not sum to its install")
+    unread = coverage["proofs"].get(inv.MSL_UNREAD)
+    if unread != 0:
+        report.fail(f"the mission-script judge could not read {unread} level archives' worlds" if unread else
+                    "the run does not say whether the mission-script judge read every level archive's worlds")
+    try:
+        walked = walk_folder(game)
+    except WalkError as error:
+        report.fail(str(error))
+        return report
     if Image is None:
         report.count("image checks skipped: Pillow is not installed")
     placed = stream_records([json.loads(line) for line in
                              (inventory / "records.jsonl").read_text(encoding="utf-8").splitlines()])
+    metadata_path = inventory / "asset-metadata.jsonl"
+    metadata = [json.loads(line) for line in metadata_path.read_text(encoding="utf-8").splitlines()] \
+        if metadata_path.is_file() else None
+    by_file: dict[str, list[dict]] = collections.defaultdict(list)
+    if metadata is None:
+        report.fail("the run wrote no asset-metadata.jsonl")
+    else:
+        check_metadata_rows(items, metadata, report)
+        for asset in metadata:
+            by_file[asset["identity"]["file"]].append(asset)
     totals: collections.Counter = collections.Counter()
     worst = [0.0, 0.0]
-    for row, data in check_files(game, rows, report):
+    for row, data in check_files(game, rows, walked, report):
         check_account(row, report)
         if not inv.sniff_agrees(row["family"], inv.sniff(data)):
             report.fail(f"{row['path']}: its magic disagrees with its family {row['family']}")
         if row["problems"]:
             report.fail(f"{row['path']}: {len(row['problems'])} reader problems")
+        if row["stream"] != "inflated":
+            check_metadata(row, data, None, by_file.pop(row["path"], []), report)
         if row["stream"] == "inflated":
             try:
                 raw = inflate_members(data)
@@ -240,6 +321,7 @@ def run(game: Path, inventory: Path, *, compose: bool = True) -> Report:
                 report.fail(f"{row['path']}: inflated size differs from the run's")
             report.count("envelopes inflated independently")
             check_records(row, raw, placed.pop(row["path"].casefold(), []), report)
+            check_metadata(row, data, raw, by_file.pop(row["path"], []), report)
             if row["family"] == "lvlr-resource-archive":
                 try:
                     report.count("archive chunks walked", len(walk_chunks(raw)))
@@ -261,6 +343,8 @@ def run(game: Path, inventory: Path, *, compose: bool = True) -> Report:
             check_image(row, data, report)
     for container, left in sorted(placed.items()):
         report.fail(f"{container}: {len(left)} records placed in a stream the gate did not inflate")
+    for container, left in sorted(by_file.items()):
+        report.fail(f"{container}: {len(left)} asset-metadata rows for a file the gate did not check")
     if compose:
         report.count("cached positions equal to composed keys", totals["position frames"])
         report.count("cached orientations equal to composed keys", totals["orientation frames"])

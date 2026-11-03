@@ -2,10 +2,11 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/dlprentice/Onslaught-Career-Editor/tools/content_inventory.schema.json",
   "title": "Content inventory rows",
-  "description": "The rows tools/content_inventory.py writes: a file's byte account (files.jsonl), an asset (items.jsonl) and the coverage summary (coverage.json). Generated rows are retail-derived and carry generatedRetailDerived; they are never committed.",
+  "description": "The rows tools/content_inventory.py writes: a file's byte account (files.jsonl), an asset (items.jsonl), an asset's metadata for an offline processing batch (asset-metadata.jsonl) and the coverage summary (coverage.json). Generated rows are retail-derived and carry generatedRetailDerived; they are never committed.",
   "oneOf": [
     {"$ref": "#/$defs/file"},
     {"$ref": "#/$defs/item"},
+    {"$ref": "#/$defs/assetMetadata"},
     {"$ref": "#/$defs/coverage"}
   ],
   "$defs": {
@@ -13,6 +14,14 @@
     "fileClass": {"enum": ["decoded", "partial", "referenced", "unknown"]},
     "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "count": {"type": "integer", "minimum": 0},
+    "nullableCount": {"type": ["integer", "null"], "minimum": 0},
+    "share": {
+      "type": "object",
+      "required": ["decodedBytes", "percent"],
+      "additionalProperties": false,
+      "properties": {"decodedBytes": {"$ref": "#/$defs/count"},
+                     "percent": {"type": ["number", "null"], "minimum": 0, "maximum": 100}}
+    },
     "classBytes": {
       "type": "object",
       "required": ["decoded", "referenced", "unknown"],
@@ -91,11 +100,59 @@
         "generatedRetailDerived": {"const": true}
       }
     },
+    "assetMetadata": {
+      "type": "object",
+      "description": "One texture, image, model, animation, sound or film: its identity, the metadata a reader established (null where none did; nothing is inferred from a name) and what names it. Not a claim about how the game renders or plays it.",
+      "required": ["schema", "id", "kind", "form", "name", "status", "identity", "format", "width", "height",
+                   "mipLevels", "alpha", "channels", "sampleRate", "durationSeconds", "frames", "details", "used",
+                   "usedBy", "usedByRecords", "usage", "upscale"],
+      "additionalProperties": false,
+      "properties": {
+        "schema": {"const": "onslaught.content-inventory.asset-metadata.v1"},
+        "id": {"type": "string", "minLength": 1, "description": "The asset's items.jsonl id."},
+        "kind": {"enum": ["model", "texture", "image", "animation", "sound", "film"]},
+        "form": {"type": "string", "minLength": 1},
+        "name": {"type": ["string", "null"]},
+        "status": {"$ref": "#/$defs/fileClass", "description": "The class of the asset's own bytes, as in items.jsonl."},
+        "identity": {
+          "type": "object",
+          "required": ["file", "fileSha256", "envelope", "chunkPath", "sha256Scope", "offset", "length", "sha256"],
+          "additionalProperties": false,
+          "properties": {
+            "file": {"type": "string", "minLength": 1, "description": "Install-relative path of the file holding the asset."},
+            "fileSha256": {"$ref": "#/$defs/sha256"},
+            "envelope": {"type": "string", "minLength": 1, "description": "How the asset's bytes are wrapped in the file: a whole file, an AYA's inflated stream, an archive chunk, a sample bank, a resource."},
+            "chunkPath": {"type": "array", "items": {"type": "integer", "minimum": 0}, "description": "The archive's top-level chunk, a bank's sample or a resource's ordinal, where one applies."},
+            "sha256Scope": {"type": "string", "minLength": 1, "description": "What sha256 covers."},
+            "offset": {"$ref": "#/$defs/nullableCount", "description": "Where the hashed bytes start in the stream the envelope names; null when no reader placed them."},
+            "length": {"$ref": "#/$defs/nullableCount"},
+            "sha256": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+            "owner": {"type": "string", "description": "The record a chained mesh or an animation belongs to."}
+          }
+        },
+        "format": {"type": ["string", "null"], "description": "The stored format or codec a reader read."},
+        "width": {"$ref": "#/$defs/nullableCount"},
+        "height": {"$ref": "#/$defs/nullableCount"},
+        "mipLevels": {"$ref": "#/$defs/nullableCount"},
+        "alpha": {"enum": ["none", "binary", "graded", "present", "mask", "unknown", null], "description": "none, binary or graded: a texture's top-mip alpha as dds_census classified it; present: the stored format holds alpha whose values were not classified; mask: an icon's 1-bit transparency mask."},
+        "channels": {"$ref": "#/$defs/nullableCount", "description": "For a texture, the channels its stored format holds (DXT1 counts as colour; its blocks can also mark a texel transparent, which alpha reports)."},
+        "sampleRate": {"$ref": "#/$defs/nullableCount"},
+        "durationSeconds": {"type": ["number", "null"], "minimum": 0},
+        "frames": {"$ref": "#/$defs/nullableCount"},
+        "details": {"type": "object", "description": "The kind's own fields: mips, texture slots, an animation's rate and its meaning, a sound's role."},
+        "used": {"type": "boolean"},
+        "usedBy": {"type": "array", "items": {"type": "string"}, "description": "As in items.jsonl."},
+        "usedByRecords": {"type": "array", "items": {"type": "string"}, "description": "The records that name the asset, the archives that load it and a chained or owned asset's owner."},
+        "usage": {"type": ["object", "null"], "description": "The catalogue's usage summary, where it has one."},
+        "upscale": {"type": ["object", "null"], "description": "The catalogue's upscale notes, where it has them."},
+        "generatedRetailDerived": {"const": true}
+      }
+    },
     "coverage": {
       "type": "object",
       "required": ["schema", "installFiles", "installBytes", "logicalBytes", "filesByClass", "logicalBytesByClass",
                    "unknownLogicalBytes", "emptyFiles", "emptyFilesByFamily", "sniffDisagreements", "problems", "families",
-                   "notDecodedParts",
+                   "notDecodedParts", "headline", "assetMetadata",
                    "items", "proofs", "mediaDecoder", "installManifest", "physicsJoins", "namedButAbsent", "rules"],
       "properties": {
         "schema": {"const": "onslaught.content-inventory.coverage.v1"},
@@ -103,6 +160,29 @@
         "installBytes": {"$ref": "#/$defs/count"},
         "logicalBytes": {"$ref": "#/$defs/count"},
         "logicalBytesByClass": {"$ref": "#/$defs/classBytes"},
+        "headline": {
+          "type": "object",
+          "description": "The content families' decoded share with the independent media decoder and without it.",
+          "required": ["contentLogicalBytes", "mediaDecoder", "withMediaDecoder", "withoutMediaDecoder",
+                       "decodedOnlyByTheMediaDecoder"],
+          "additionalProperties": false,
+          "properties": {
+            "contentLogicalBytes": {"$ref": "#/$defs/count"},
+            "mediaDecoder": {"type": ["string", "null"]},
+            "withMediaDecoder": {"anyOf": [{"$ref": "#/$defs/share"}, {"type": "null"}]},
+            "withoutMediaDecoder": {"$ref": "#/$defs/share"},
+            "decodedOnlyByTheMediaDecoder": {"$ref": "#/$defs/count"}
+          }
+        },
+        "assetMetadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["rows", "fieldsEstablished"],
+            "properties": {"rows": {"$ref": "#/$defs/count"},
+                           "fieldsEstablished": {"type": "object", "additionalProperties": {"$ref": "#/$defs/count"}}}
+          }
+        },
         "emptyFilesByFamily": {"type": "object", "additionalProperties": {"$ref": "#/$defs/count"}},
         "unknownLogicalBytes": {
           "type": "object",

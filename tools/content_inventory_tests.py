@@ -311,6 +311,87 @@ class InventoryTests(unittest.TestCase):
         self.assertLessEqual({item["kind"] for item in self.items},
                              {"model", "texture", "image", "animation", "sound", "film", "text"})
 
+    def test_a_level_archive_the_judge_cannot_read_leaves_no_level_source_decoded(self):
+        # The authored level 200 archive is read by the inventory's archive reader, but its one member inflates past the
+        # judge's limit: which scripts it ships, and for which folders, is not known, so no level folder's source counts.
+        self.assertEqual(self.coverage["proofs"][inv.MSL_UNREAD], 1)
+        archive = self.rows["data/resources/200_res_PC.aya"]
+        self.assertTrue(any(p.startswith("the mission-script judge could not read this archive's worlds")
+                            for p in archive["problems"]))
+        for rel in ("data/MissionScripts/level100/main.msl", "data/MissionScripts/level200/main.msl"):
+            row = self.rows[rel]
+            self.assertEqual((row["class"], len(row["problems"])), (inv.REFERENCED, 1), rel)
+        self.assertEqual(self.coverage["proofs"]["mslSourcesNotJudged"], 2)
+        summary = "\n".join(inv.summary_lines(self.coverage))
+        self.assertIn("level archives whose worlds the judge could not read=1", summary)
+
+    def test_the_headline_gives_the_share_without_a_media_decoder(self):
+        head = self.coverage["headline"]
+        content = [f for f in self.coverage["families"] if f["content"]]
+        self.assertEqual(head["contentLogicalBytes"], sum(f["logicalBytes"] for f in content))
+        decoded = sum(f["logicalBytesByClass"][inv.DECODED] for f in content)
+        self.assertEqual((head["withMediaDecoder"], head["withoutMediaDecoder"]["decodedBytes"],
+                          head["decodedOnlyByTheMediaDecoder"]), (None, decoded, 0))
+        self.assertIn("with no independent media decoder run", inv.summary_lines(self.coverage)[-1])
+
+    def metadata(self, form: str, name: str | None = None, file: str | None = None) -> dict:
+        return next(row for row in self.inventory["assets"] if row["form"] == form
+                    and (name is None or row["name"] == name) and (file is None or row["identity"]["file"] == file))
+
+    def test_every_texture_image_model_animation_sound_and_film_has_one_metadata_row(self):
+        wanted = [item["id"] for item in self.items if item["kind"] in inv.METADATA_KINDS]
+        self.assertEqual([row["id"] for row in self.inventory["assets"]], wanted)
+        self.assertGreater(len(wanted), 0)
+        self.assertFalse([row for row in self.inventory["assets"] if row["kind"] == "text"])
+        summary = self.coverage["assetMetadata"]
+        self.assertEqual(sum(kind["rows"] for kind in summary.values()), len(wanted))
+        self.assertEqual(summary["texture"]["fieldsEstablished"]["width"],
+                         sum(1 for row in self.inventory["assets"] if row["kind"] == "texture" and row["width"]))
+
+    def test_a_dds_texture_s_metadata_comes_from_its_own_header(self):
+        rel = "data/resources/dxtntextures/meshtex%skin.tga(0)A1R5G5B5.aya"
+        row = self.metadata("dds-file", file=rel)
+        dds = catalog_fixtures.dds_dxt1_4x4()
+        self.assertEqual({field: row[field] for field in ("format", "width", "height", "mipLevels", "alpha", "channels")},
+                         {"format": "DXT1", "width": 4, "height": 4, "mipLevels": 1, "alpha": "none", "channels": 3})
+        identity = row["identity"]
+        self.assertEqual((identity["envelope"], identity["offset"], identity["length"], identity["sha256"]),
+                         ("aya-zlib-members(dds)", 0, len(dds), inv.cc.sha256(dds)))
+        self.assertEqual(identity["fileSha256"], self.rows[rel]["sha256"])
+        self.assertEqual(row["details"]["sourceFormatFromName"], "A1R5G5B5")  # the name's request, not the stored format
+        descriptor = next(r for r in self.inventory["assets"] if r["form"] == "descriptor-text"
+                          and r["name"] == "meshtex\\skin.tga")
+        self.assertEqual(row["usedByRecords"], [descriptor["id"]])  # the texture record that takes its pixels
+        self.assertEqual(descriptor["details"]["pixelsFrom"], [row["id"]])
+        self.assertIn("mesh:data/resources/meshes/m_authored.msh.aya", descriptor["usedByRecords"])
+        self.assertIsNotNone(row["upscale"])
+
+    def test_image_sound_and_film_metadata(self):
+        png = self.metadata("png", name="orphan.png")
+        self.assertEqual((png["format"], png["width"], png["height"], png["channels"], png["alpha"]),
+                         ("png", 3, 1, 3, "none"))
+        self.assertEqual((png["identity"]["sha256Scope"], png["identity"]["sha256"]),
+                         ("whole file", self.rows["Manuals/Images/orphan.png"]["sha256"]))
+        tga = self.metadata("tga")
+        self.assertEqual((tga["width"], tga["height"], tga["channels"], tga["alpha"]), (2, 2, 3, "none"))
+        voice = self.metadata("voice", name="line")
+        self.assertEqual((voice["format"], voice["channels"], voice["sampleRate"], voice["durationSeconds"]),
+                         ("vorbis", 1, 22050, 0.2))
+        film = self.metadata("video", name="intro")
+        self.assertEqual((film["width"], film["height"], film["frames"]), (64, 48, 2))
+        sprite = self.metadata("byte-sprite")
+        self.assertEqual((sprite["width"], sprite["height"], sprite["frames"], sprite["details"]["framesEstablished"]),
+                         (16, 16, None, 1))
+        animation = self.metadata("animation")
+        self.assertEqual((animation["format"], animation["durationSeconds"]), ("camd", None))
+        self.assertEqual(animation["usedByRecords"], [animation["identity"]["owner"]])
+
+    def test_a_mixer_mip_s_identity_claims_no_coordinates(self):
+        # Its item offset is the ERES payload's, not where the mip's bytes start.
+        row = self.metadata("terrain-mixer-mip")
+        self.assertEqual((row["identity"]["envelope"], row["identity"]["offset"]), ("lvlr-chunk(ERES)", None))
+        self.assertEqual(len(row["identity"]["chunkPath"]), 1)
+
     def test_trailing_bytes_after_a_table_are_unknown(self):
         with tempfile.TemporaryDirectory() as temp:
             game = Path(temp) / "game"
@@ -485,17 +566,21 @@ class StrictReadingTests(unittest.TestCase):
         broken = manual("Manuals/English/English_files/broken.xml", b"<xml><o:File></xml>")
         self.assertEqual((account_of(broken)["class"], broken.problems), (inv.REFERENCED, ["not well-formed XML"]))
 
+    def script(self, rel: str, data: bytes) -> inv.Reading:
+        return inv.read_mission_script(data, self.ctx, {"path": rel, "family": "mission-script-msl"})
+
     def test_a_mission_script_counts_only_when_its_compile_reproduces_the_shipped_copy(self):
-        script = lambda rel, data: inv.read_mission_script(data, self.ctx, {"path": rel, "family": "mission-script-msl"})
+        script = self.script
         source = b"init()\r\n{\r\n\tPause(2);\r\n}\r\n"
         verdicts = {"exact": (inv.DECODED, []), "exact, assisted": (inv.DECODED, []), "stale source": (inv.REFERENCED, []),
-                    "different": (inv.REFERENCED, ["no compiled copy reproduces a shipped script"])}
+                    "different": (inv.REFERENCED, ["1 of 1 shipped copies compiled from this source: different"])}
         for verdict, (klass, problems) in verdicts.items():
             rel = "data/MissionScripts/level100/" + verdict.replace(" ", "").replace(",", "") + ".msl"
             self.ctx.msl[rel.casefold()] = [verdict]
             reading = script(rel, source)
             self.assertEqual((account_of(reading)["class"], reading.problems), (klass, problems), verdict)
         self.assertEqual(account_of(script("data/MissionScripts/level999/alone.msl", source))["class"], inv.DECODED)
+        self.assertEqual(self.ctx.msl_unread, {})  # every archive read: a source no level ships counts on its compile
         missing = b"#include data\\gone\\defs.msl\r\n" + source
         reading = script("data/MissionScripts/level999/missing.msl", missing)
         self.assertEqual((account_of(reading)["class"], reading.facts["compiled"]),
@@ -506,6 +591,87 @@ class StrictReadingTests(unittest.TestCase):
         self.assertEqual((account_of(header)["class"], header.facts["compiled"]), (inv.DECODED, "a header"))
         header = script("data/MissionScripts/textlist.h", b"int x;\r\n")
         self.assertEqual(account_of(header)["class"], inv.REFERENCED)
+
+    def test_a_shipped_copy_a_source_does_not_reproduce_is_reported_beside_one_it_does(self):
+        source = b"init()\r\n{\r\n\tPause(2);\r\n}\r\n"
+        cases = {("exact", "different"): (inv.REFERENCED, ["1 of 2 shipped copies compiled from this source: different"]),
+                 ("stale source", "different"): (inv.REFERENCED,
+                                                 ["1 of 2 shipped copies compiled from this source: different"]),
+                 ("exact", "refused", "refused"): (inv.REFERENCED,
+                                                   ["2 of 3 shipped copies compiled from this source: refused"]),
+                 ("exact", "stale source"): (inv.REFERENCED, []),
+                 ("exact", "exact, assisted"): (inv.DECODED, [])}
+        for number, (verdicts, (klass, problems)) in enumerate(cases.items()):
+            rel = f"data/MissionScripts/level100/mixed{number}.msl"
+            self.ctx.msl[rel.casefold()] = list(verdicts)
+            reading = self.script(rel, source)
+            self.assertEqual((account_of(reading)["class"], reading.problems), (klass, problems), verdicts)
+
+    def test_no_level_folder_source_is_judged_when_a_level_archive_s_worlds_do_not_read(self):
+        source = b"init()\r\n{\r\n\tPause(2);\r\n}\r\n"
+        self.ctx.msl_unread["data/resources/300_res_PC.aya"] = "EncodeError: authored refusal"
+        self.ctx.msl["data/missionscripts/level300/judged.msl"] = ["exact"]
+        # A source with a verdict and one no readable archive ships are both in level folders: the unread archive's
+        # base world could be either folder, so neither is decoded, and each says why.
+        for rel in ("data/MissionScripts/level300/judged.msl", "data/MissionScripts/level301/alone.msl"):
+            reading = self.script(rel, source)
+            self.assertEqual((account_of(reading)["class"], len(reading.problems)), (inv.REFERENCED, 1), rel)
+            self.assertIn("could not read 1 level archives' worlds", reading.problems[0])
+        outside = self.script("data/MissionScripts/shared.msl", source)  # no level ships a source outside a level folder
+        self.assertEqual((account_of(outside)["class"], outside.problems), (inv.DECODED, []))
+        archive = inv.read_archive(catalog_fixtures.world_archive(), self.ctx, {"path": "data/resources/300_res_PC.aya"})
+        self.assertIn("the mission-script judge could not read this archive's worlds (EncodeError: authored refusal)",
+                      archive.problems)
+
+    def test_image_metadata_reads_the_stored_alpha(self):
+        png = inv.read_png(media_fixtures.png_file(colour=6), self.ctx, {"path": "Manuals/a.png", "family": "manual"})
+        fields = png.items[0]["metadata"]["fields"]
+        self.assertEqual((fields["alpha"], fields["channels"]), ("present", 4))
+        tga = bytearray(media_fixtures.tga_file(bits=32))
+        tga[17] = 0x28  # the image descriptor: eight alpha bits, the first row at the top
+        meta = inv.read_tga(bytes(tga), self.ctx, {"path": "data/textures/a.tga", "family": "splash-tga"}).items[0]["metadata"]
+        self.assertEqual((meta["fields"]["alpha"], meta["fields"]["channels"], meta["details"]["firstRowAtTop"]),
+                         ("present", 4, True))
+        plain = inv.read_tga(media_fixtures.tga_file(bits=32), self.ctx, {"path": "data/textures/b.tga",
+                                                                          "family": "splash-tga"})
+        self.assertEqual(plain.items[0]["metadata"]["fields"]["alpha"], "none")  # 32 bits, but no alpha bits declared
+
+    def test_pe_resources_other_than_icons_stay_referenced_and_an_icon_has_its_size(self):
+        row = {"path": "BEA.exe", "family": "executable-code"}
+        [icon] = inv.read_pe(media_fixtures.pe_file(), self.ctx, row).items
+        fields = icon["metadata"]["fields"]
+        self.assertEqual((icon["status"], fields["format"], fields["width"], fields["height"], fields["alpha"]),
+                         (inv.DECODED, "icon bitmap", 2, 2, "mask"))
+        data = bytearray(media_fixtures.pe_file())  # the icon and its group retyped as a cursor and a version resource
+        struct.pack_into("<I", data, 0x600 + 16, 1)
+        struct.pack_into("<I", data, 0x600 + 24, 16)
+        parts = account_of(inv.read_pe(bytes(data), self.ctx, row))["parts"]
+        self.assertEqual((parts["pe/resource cursor (framed)"], parts["pe/resource version (framed)"]),
+                         ({inv.REFERENCED}, {inv.REFERENCED}))
+        self.assertFalse([part for part, classes in parts.items()
+                          if part.startswith("pe/resource ") and inv.DECODED in classes])
+
+    def test_a_folder_the_walk_cannot_list_is_refused_and_the_gate_names_it(self):
+        game = self.game / "game"
+        authored(game)
+        out = self.game / "out"
+        inv.write_outputs(out, game, inv.build_inventory(game))
+        hidden = game / "data/sounds/english"
+        hidden.chmod(0)
+        try:
+            try:
+                os.listdir(hidden)
+            except PermissionError:
+                pass
+            else:
+                self.skipTest("this account can list a folder without permissions (root)")
+            with self.assertRaisesRegex(inv.cc.CatalogInputError, "data/sounds/english: a folder the walk cannot list"):
+                inv.build_inventory(game)
+            failures = gate.run(game, out, compose=False).failures
+            self.assertTrue(any(line.startswith("data/sounds/english: a folder the walk cannot list") for line in failures),
+                            failures)
+        finally:
+            hidden.chmod(0o755)
 
     def test_an_install_holding_a_link_is_refused_and_the_gate_names_it(self):
         game = self.game / "game"
@@ -587,17 +753,49 @@ class DecoderTests(unittest.TestCase):
         self.assertEqual(rows["data/video/intro.vid"]["class"], inv.DECODED)
         self.assertEqual(rows["data/video/intro.vid"]["facts"]["decoder"], "agrees")
 
+    def test_the_headline_gives_both_shares_and_the_one_without_matches_a_run_without(self):
+        game = self.root / "game"
+        authored(game)
+        with_decoder = inv.build_inventory(game, decoder=str(self.decoder), jobs=2)["coverage"]
+        without = inv.build_inventory(game)["coverage"]
+        head = with_decoder["headline"]
+        self.assertEqual(head["mediaDecoder"], with_decoder["mediaDecoder"])
+        self.assertGreater(head["decodedOnlyByTheMediaDecoder"], 0)
+        self.assertEqual(head["withoutMediaDecoder"], without["headline"]["withoutMediaDecoder"])
+        self.assertEqual(head["withMediaDecoder"]["decodedBytes"] - head["decodedOnlyByTheMediaDecoder"],
+                         head["withoutMediaDecoder"]["decodedBytes"])
+        line = inv.summary_lines(with_decoder)[-1]
+        self.assertIn(f"{head['withMediaDecoder']['percent']}% of {head['contentLogicalBytes']} logical bytes", line)
+        self.assertIn(f"; {head['withoutMediaDecoder']['percent']}% ({head['withoutMediaDecoder']['decodedBytes']}) "
+                      "without it", line)
+
 
 class GateTests(unittest.TestCase):
-    def test_an_archive_without_a_world_is_counted_not_fatal(self):
-        unread = __import__("collections").Counter()
+    def test_an_archive_whose_worlds_do_not_read_is_recorded_not_fatal(self):
+        unread: dict = {}
         with tempfile.TemporaryDirectory() as temp:
             game = Path(temp) / "game"
             authored(game)
             inv.judge_mission_scripts(game, unread)
-        # The authored levels 100 and 101 have no WRES; level 200's authored world exceeds world_resources_encode's
-        # member limit. None of the three stops the run.
-        self.assertEqual(unread["mslArchivesWithoutReadableWorlds"], 3)
+        # The authored levels 100 and 101 hold no WRES, so they ship no script. Level 200's authored world is one zlib
+        # member that inflates past world_resources_encode's member limit, which the inventory's own archive reader
+        # does not have: the judge records it and the run goes on.
+        self.assertEqual(list(unread), ["data/resources/200_res_PC.aya"])
+        self.assertIn("member limit", unread["data/resources/200_res_PC.aya"])
+
+    def test_the_gate_fails_while_the_judge_could_not_read_an_archive(self):
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            authored(game)
+            out = Path(temp) / "out"
+            inv.write_outputs(out, game, inv.build_inventory(game))
+            self.assertIn("the mission-script judge could not read 1 level archives' worlds",
+                          gate.run(game, out, compose=False).failures)
+            coverage = json.loads((out / "coverage.json").read_text(encoding="utf-8"))
+            del coverage["proofs"][inv.MSL_UNREAD]
+            (out / "coverage.json").write_text(json.dumps(coverage), encoding="utf-8")
+            self.assertIn("the run does not say whether the mission-script judge read every level archive's worlds",
+                          gate.run(game, out, compose=False).failures)
 
     def test_the_gate_reports_what_disagrees(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -616,6 +814,30 @@ class GateTests(unittest.TestCase):
             text = "\n".join(gate.run(game, out, compose=False).failures)
             self.assertIn("data/Dial.raw: the run's size differs from the folder's", text)
             self.assertIn("added.txt: in the folder only", text)
+
+    def test_the_gate_checks_every_metadata_identity_by_its_own_path(self):
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            authored(game)
+            out = Path(temp) / "out"
+            inv.write_outputs(out, game, inv.build_inventory(game))
+            report = gate.run(game, out, compose=False)
+            self.assertFalse([line for line in report.failures if "metadata" in line or "DDS header" in line],
+                             report.failures)
+            self.assertGreater(report.counts["metadata rows whose coordinates hash to their SHA-256"], 0)
+            self.assertGreater(report.counts["texture sizes equal to their DDS header's"], 0)
+            path = out / "asset-metadata.jsonl"
+            rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            dds = next(row for row in rows if row["form"] == "dds-file")
+            sample = next(row for row in rows if row["form"] == "bank-sample")
+            dds["width"] += 1
+            sample["identity"]["sha256"] = "0" * 64
+            dropped = rows.pop()
+            path.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+            failures = gate.run(game, out, compose=False).failures
+            self.assertIn(f"{dds['id']}: its size is not its DDS header's", failures)
+            self.assertIn(f"{sample['id']}: the bytes at its coordinates do not hash to its SHA-256", failures)
+            self.assertIn(f"{dropped['id']}: an asset without an asset-metadata row", failures)
 
     def test_a_tampered_record_hash_is_caught(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -654,14 +876,18 @@ class BoundaryTests(unittest.TestCase):
             authored(game)
             out = Path(temp) / "out"
             inv.write_outputs(out, game, inv.build_inventory(game))
-            rows = [json.loads(line) for name in ("files.jsonl", "items.jsonl")
+            rows = [json.loads(line) for name in ("files.jsonl", "items.jsonl", "asset-metadata.jsonl")
                     for line in (out / name).read_text(encoding="utf-8").splitlines()]
             rows.append(json.loads((out / "coverage.json").read_text(encoding="utf-8")))
+            self.assertTrue(any(row["schema"] == inv.METADATA_SCHEMA for row in rows))
             for row in rows:
                 errors = sorted(validator.iter_errors(row), key=str)
                 self.assertEqual(errors, [], row.get("id") or row.get("path") or "coverage")
             broken = dict(rows[0], **{"class": "guessed"})
             self.assertTrue(list(validator.iter_errors(broken)))
+            asset = next(row for row in rows if row["schema"] == inv.METADATA_SCHEMA)
+            self.assertTrue(list(validator.iter_errors(dict(asset, alpha="guessed"))))
+            self.assertTrue(list(validator.iter_errors({k: v for k, v in asset.items() if k != "identity"})))
 
     def test_every_output_row_carries_the_retail_marker(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -670,7 +896,8 @@ class BoundaryTests(unittest.TestCase):
             out = Path(temp) / "out"
             written = inv.write_outputs(out, game, inv.build_inventory(game))
             self.assertEqual({p.name for p in written},
-                             {"manifest.json", "coverage.json", "files.jsonl", "items.jsonl", "records.jsonl"})
+                             {"manifest.json", "coverage.json", "files.jsonl", "items.jsonl", "records.jsonl",
+                              "asset-metadata.jsonl"})
             for path in written:
                 text = path.read_text(encoding="utf-8")
                 rows = [json.loads(line) for line in text.splitlines()] if path.suffix == ".jsonl" else [json.loads(text)]

@@ -26,7 +26,13 @@ that a catalogue record, a physics value, a page link or a loader rule names the
 observation.
 
 Bytes are logical: an AYA envelope's inflated stream, and a plain file's own bytes. The stored size of every file is
-reported beside them, and the stored sizes sum to the install's size or the run fails.
+reported beside them, and the stored sizes sum to the install's size or the run fails. The coverage's headline gives the
+content families' decoded share twice: with the independent media decoder and without it.
+
+Beside the byte account, asset-metadata.jsonl holds one row per texture, image, model, animation, sound and film: its
+identity (file, wrapping, coordinates, SHA-256), the format, size, mip levels, alpha, channels, sample rate, duration and
+frames a reader established (null where none did), and the records that name it: the input list for an offline
+processing batch such as an upscale.
 
 The install is only read. Run output is retail-derived (names, sizes, hashes, never payload bytes), so it is written
 only below this checkout's ignored local-data/ directory and carries the generatedRetailDerived marker.
@@ -179,11 +185,14 @@ def file_class(size: int, totals: dict) -> str:
 class Context:
     """What the readers share: the selected game, the lookups a world body needs and the per-run proofs."""
 
-    def __init__(self, game: Path, *, media_results: dict | None = None, msl_verdicts: dict | None = None):
+    def __init__(self, game: Path, *, media_results: dict | None = None, msl_verdicts: dict | None = None,
+                 msl_unread: dict[str, str] | None = None):
         self.game = game
         self.lookup: dict | None = None
         self.media = media_results if media_results is not None else {}
         self.msl = msl_verdicts if msl_verdicts is not None else {}
+        # The level archives whose worlds the mission-script judge could not read: install path -> reason.
+        self.msl_unread = msl_unread if msl_unread is not None else {}
         self.proofs: collections.Counter = collections.Counter()
         self.links: dict[str, list[str]] = {}
         self.install_manifest: list[str] | None = None
@@ -224,13 +233,19 @@ def refused(data: bytes, part: str, reader: str, error: Exception) -> Reading:
     return reading
 
 
+DECODER_ONLY = "bytesDecodedOnlyByTheMediaDecoder"
+
+
 def from_walk(walk: media.Walk, data: bytes, reader: str, *, opaque_decoded: bool = False) -> Reading:
-    """A public-format walk as an account: what it read is decoded, and what it framed only if a decoder read it."""
+    """A public-format walk as an account: what it read is decoded, and what it framed only if a decoder read it. The
+    framed bytes a decoder turned decoded are counted in the facts, so the coverage can say what it is without one."""
     reading = Reading(Account(len(data)), "stored", reader)
     for start, length, kind, part in walk.spans:
         klass = DECODED if kind == media.DECODED or opaque_decoded else REFERENCED
         reading.account.add(start, length, klass, part)
     reading.facts = dict(walk.facts)
+    if opaque_decoded:
+        reading.facts[DECODER_ONLY] = sum(length for _start, length, kind, _part in walk.spans if kind != media.DECODED)
     return reading
 
 
@@ -238,6 +253,27 @@ def asset_item(kind: str, form: str, name: str, *, offset: int | None, length: i
                **extra) -> dict:
     return {"kind": kind, "form": form, "name": name, "offset": offset, "length": length, "sha256": sha,
             "status": status, **extra}
+
+
+# The metadata every asset-metadata row carries (asset_metadata), null where nothing establishes the value.
+METADATA_FIELDS = ("format", "width", "height", "mipLevels", "alpha", "channels", "sampleRate", "durationSeconds",
+                   "frames")
+
+
+def media_fields(**values) -> dict:
+    unknown = set(values) - set(METADATA_FIELDS)
+    if unknown:
+        raise ValueError(f"not a metadata field: {sorted(unknown)}")
+    return {**dict.fromkeys(METADATA_FIELDS), **values}
+
+
+def found_metadata(envelope: str, scope: str, *, chunk_path: list[int] | None = None, details: dict | None = None,
+                   placed: bool = True, **fields) -> dict:
+    """What a reader establishes about an asset no catalogue record lists: how its bytes are wrapped and what its hash
+    covers (its identity), its metadata fields and its kind's details. asset_metadata writes it; items.jsonl does not.
+    placed is False when the item's offset is not where the hashed bytes start (the identity then gives no offset)."""
+    return {"envelope": envelope, "chunkPath": chunk_path or [], "sha256Scope": scope, "fields": media_fields(**fields),
+            "details": details or {}, "placed": placed}
 
 
 # ---------------------------------------------------------------------------------------- archives (LVLR tag streams)
@@ -298,11 +334,17 @@ def chained_items(chain: list[bytes], owner: str, path: str, envelope: str, read
                                                   container_sha=cc.sha256(stream), envelope=envelope, offset=0,
                                                   chunk_path=[])
         slots = [[slot["name"], slot["nameStatus"], slot["requestedFormat"]] for slot in record["mesh"]["textures"]]
+        where = f"{envelope}/chain#{link}"
         reading.items.append(asset_item("model", "chained-mesh", record["name"], offset=None, length=len(stream),
                                         sha=cc.sha256(stream), status=DECODED, id=asset_id, owner=owner, link=link,
-                                        parts=record["mesh"]["parts"], textureSlots=slots))
+                                        parts=record["mesh"]["parts"], textureSlots=slots,
+                                        metadata=found_metadata(where, record["sha256Scope"], format="cmsh",
+                                                                details=mesh_details(record))))
         reading.items.extend(asset_item("animation", "chained-animation", animation["name"], offset=None, length=36,
-                                        sha=animation["sha256"], status=DECODED, id=animation["id"], owner=owner)
+                                        sha=animation["sha256"], status=DECODED, id=animation["id"], owner=owner,
+                                        metadata=found_metadata(where, animation["sha256Scope"], format="camd",
+                                                                frames=animation["animation"]["frameCount"],
+                                                                details=animation_details(animation)))
                              for animation in animations)
 
 
@@ -480,25 +522,53 @@ def read_platform(raw: bytes, base: int, size: int, reading: Reading) -> None:
                 account.add(at, child_size, UNKNOWN, "PLAT/" + child)
 
 
-def payload_items(tag: str, payload: bytes, decoded: dict, offset: int) -> list[dict]:
-    """The assets a level payload holds that no catalogue record lists one by one."""
+def payload_items(tag: str, payload: bytes, decoded: dict, offset: int, chunk_index: int | None = None) -> list[dict]:
+    """The assets a level payload holds that no catalogue record lists one by one. Their metadata says only what the
+    payload's parser read: no pixel format is established for the terrain mixers or the shadow cells."""
     sha = cc.sha256(payload)
+    envelope = f"lvlr-chunk({tag})"
+    chunk_path = [] if chunk_index is None else [chunk_index]
+    whole = "the chunk's payload"
     if tag == "ERES":
         rows = [asset_item("texture", "terrain-mixer-mip", f"mixer mip {m['mip']}", offset=offset, length=m["textures"]
                            * m["textureBytes"], sha=m["pixelSha256"] or sha, status=DECODED, textures=m["textures"],
-                           textureSize=m["size"]) for m in decoded["mixerMips"]]
+                           textureSize=m["size"],
+                           metadata=found_metadata(envelope, "the mip's texture bytes" if m["pixelSha256"] else whole,
+                                                   chunk_path=chunk_path, placed=False,
+                                                   details={"mip": m["mip"], "set": m["set"], "textures": m["textures"],
+                                                            "textureBytes": m["textureBytes"],
+                                                            "storedSizeField": m["size"]}))
+                for m in decoded["mixerMips"]]
+        field = decoded["heightField"]
         rows.append(asset_item("model", "terrain-heightfield", "heightfield", offset=offset, length=len(payload), sha=sha,
-                               status=DECODED, samples=decoded["heightField"]["sampleCount"]))
+                               status=DECODED, samples=field["sampleCount"],
+                               metadata=found_metadata(envelope, whole, chunk_path=chunk_path, format="heightfield",
+                                                       details={"samples": field["sampleCount"], "tiles": field["tiles"],
+                                                                "samplesPerTile": field["samplesPerTile"]})))
         return rows
     if tag == "SURF":
         return [asset_item("model", "surface-strips", "surface strips", offset=offset, length=len(payload), sha=sha,
-                           status=DECODED, strips=decoded.get("strips"))]
+                           status=DECODED, strips=decoded.get("strips"),
+                           metadata=found_metadata(envelope, whole, chunk_path=chunk_path, format="surface strips",
+                                                   details={"strips": decoded.get("strips"),
+                                                            "vertices": decoded.get("vertices")}))]
     if tag == "SSHD":
         return [asset_item("texture", "static-shadow-maps", "static shadows", offset=offset, length=len(payload), sha=sha,
-                           status=DECODED, shadows=decoded.get("shadows"), cells=decoded.get("cells"))]
+                           status=DECODED, shadows=decoded.get("shadows"), cells=decoded.get("cells"),
+                           metadata=found_metadata(envelope, whole, chunk_path=chunk_path,
+                                                   details={key: decoded.get(key) for key in
+                                                            ("shadows", "partMaps", "shadowedMaps", "cells")}))]
     if tag == "DMKR":
+        mips = decoded.get("mips") or []
+        texel = all(mip["bytes"] == mip["side"] ** 2 for mip in mips)
+        top = max((mip["side"] for mip in mips), default=None)
         return [asset_item("texture", "damage-texture", "landscape damage", offset=offset, length=len(payload), sha=sha,
-                           status=DECODED, levels=decoded.get("levels"))]
+                           status=DECODED, levels=decoded.get("levels"),
+                           metadata=found_metadata(envelope, whole, chunk_path=chunk_path,
+                                                   format="one byte per texel" if mips and texel else None,
+                                                   width=top, height=top, mipLevels=len(mips),
+                                                   channels=1 if mips and texel else None,
+                                                   details={"levels": decoded.get("levels")}))]
     return []
 
 
@@ -552,7 +622,7 @@ def read_archive(data: bytes, ctx: Context, row: dict) -> Reading:
                 account.add(chunk.offset, 8 + chunk.size, REFERENCED, tag)
                 continue
             account.add(chunk.offset, 8 + chunk.size, DECODED, tag)
-            reading.items.extend(payload_items(tag, payload, decoded, base))
+            reading.items.extend(payload_items(tag, payload, decoded, base, chunk.index))
         elif tag == "GDIE":
             try:
                 goodie = goodies.read_goodie(raw)
@@ -576,6 +646,9 @@ def read_archive(data: bytes, ctx: Context, row: dict) -> Reading:
                 reading.problems.append(f"{tag}: {error}")
         else:
             account.add(chunk.offset, 8 + chunk.size, UNKNOWN, tag)
+    for path, reason in ctx.msl_unread.items():
+        if path.casefold() == row["path"].casefold():
+            reading.problems.append(f"the mission-script judge could not read this archive's worlds ({reason})")
     return reading
 
 
@@ -651,15 +724,26 @@ def read_with_decoder(walker, part: str, reader: str):
     return read
 
 
+WHOLE_FILE = "whole file"
+JPEG_PROCESSES = {0xC0: "baseline", 0xC1: "extended sequential", 0xC2: "progressive", 0xC3: "lossless"}
+
+
 def read_png(data: bytes, _ctx: Context, row: dict) -> Reading:
     reader = "tools/media_readers.py:walk_png"
     try:
         reading = from_walk(media.walk_png(data), data, reader)
     except media.FormatError as error:
         return refused(data, "png", reader, error)
+    facts = reading.facts
+    # An alpha channel (grey or colour with alpha) or a transparency chunk stores alpha; its values are not classified.
+    alpha = "present" if facts["colourType"] in (4, 6) or facts["transparencyChunk"] else "none"
+    metadata = found_metadata(WHOLE_FILE, WHOLE_FILE, format="png", width=facts["width"], height=facts["height"],
+                              alpha=alpha, channels=facts["channels"],
+                              details={key: facts[key] for key in ("bitDepth", "colourType", "interlace",
+                                                                   "transparencyChunk")})
     reading.items.append(asset_item("image", "png", PurePosixPath(row["path"]).name, offset=0, length=len(data),
-                                    sha=cc.sha256(data), status=DECODED, width=reading.facts["width"],
-                                    height=reading.facts["height"]))
+                                    sha=cc.sha256(data), status=DECODED, width=facts["width"], height=facts["height"],
+                                    metadata=metadata))
     return reading
 
 
@@ -669,18 +753,31 @@ def read_tga(data: bytes, _ctx: Context, row: dict) -> Reading:
         reading = from_walk(media.walk_tga(data), data, reader)
     except media.FormatError as error:
         return refused(data, "tga", reader, error)
+    facts = reading.facts
+    alpha_bits = facts["descriptor"] & 0x0F  # the image descriptor's low four bits: alpha bits per pixel
+    metadata = found_metadata(WHOLE_FILE, WHOLE_FILE, format="tga", width=facts["width"], height=facts["height"],
+                              alpha="present" if alpha_bits else "none", channels=4 if alpha_bits else 3,
+                              details={"bitsPerPixel": facts["bitsPerPixel"], "alphaBits": alpha_bits,
+                                       "firstRowAtTop": bool(facts["descriptor"] & 0x20)})
     reading.items.append(asset_item("image", "tga", PurePosixPath(row["path"]).name, offset=0, length=len(data),
-                                    sha=cc.sha256(data), status=DECODED, width=reading.facts["width"],
-                                    height=reading.facts["height"]))
+                                    sha=cc.sha256(data), status=DECODED, width=facts["width"], height=facts["height"],
+                                    metadata=metadata))
     return reading
 
 
 def read_jpeg(data: bytes, ctx: Context, row: dict) -> Reading:
     reading = read_with_decoder(media.walk_jpeg, "jpeg", "tools/media_readers.py:walk_jpeg")(data, ctx, row)
     agreed = reading.facts.get("decoder") == "agrees"
+    facts = reading.facts
+    walked = "components" in facts
+    metadata = found_metadata(WHOLE_FILE, WHOLE_FILE, format="jpeg", width=facts.get("width"), height=facts.get("height"),
+                              alpha="none" if walked else None, channels=facts.get("components"),
+                              details={"precision": facts.get("precision"),
+                                       "process": JPEG_PROCESSES.get(facts.get("frameMarker"), "other") if walked else None,
+                                       "decoder": facts.get("decoder")})
     reading.items.append(asset_item("image", "jpeg", PurePosixPath(row["path"]).name, offset=0, length=len(data),
                                     sha=cc.sha256(data), status=DECODED if agreed else REFERENCED,
-                                    width=reading.facts.get("width"), height=reading.facts.get("height")))
+                                    width=facts.get("width"), height=facts.get("height"), metadata=metadata))
     return reading
 
 
@@ -693,8 +790,12 @@ def read_byte_sprite(data: bytes, _ctx: Context, row: dict) -> Reading:
     reading.account.add(0, min(DIAL_FRAME, len(data)), DECODED, "byte-sprite/frame-0")
     reading.account.add(DIAL_FRAME, max(0, len(data) - DIAL_FRAME), REFERENCED, "byte-sprite/further-bytes")
     reading.facts = {"frameBytes": DIAL_FRAME, "wholeFrames": len(data) // DIAL_FRAME}
+    # One frame of 16 x 16 one-byte indices is established; the length holds more, which nothing has read as frames.
+    metadata = found_metadata(WHOLE_FILE, WHOLE_FILE, format="one-byte indices", width=16, height=16, channels=1,
+                              details={"frameBytes": DIAL_FRAME, "framesEstablished": 1,
+                                       "wholeFramesByLength": len(data) // DIAL_FRAME})
     reading.items.append(asset_item("image", "byte-sprite", PurePosixPath(row["path"]).name, offset=0, length=len(data),
-                                    sha=cc.sha256(data), status=PARTIAL, width=16, height=16))
+                                    sha=cc.sha256(data), status=PARTIAL, width=16, height=16, metadata=metadata))
     return reading
 
 
@@ -709,9 +810,17 @@ def read_pe(data: bytes, _ctx: Context, row: dict) -> Reading:
     for number, resource in enumerate(walk.facts["resources"]):
         if resource["type"] in ("icon", "bitmap"):
             body = data[resource["offset"]:resource["offset"] + resource["length"]]
+            proved = resource["status"] == "decoded"
+            bits = resource.get("bitCount")
+            # A proved icon image is a bitmap of its stated size; below 32 bits only its 1-bit mask marks transparency.
+            metadata = found_metadata(f"pe-resource({resource['type']})", "the resource's data", chunk_path=[number],
+                                      format="icon bitmap" if proved else None, width=resource.get("width"),
+                                      height=resource.get("height"),
+                                      alpha=("present" if bits == 32 else "mask") if proved else None,
+                                      details={"bitCount": bits, "resourceStatus": resource["status"]})
             reading.items.append(asset_item("image", "pe-" + resource["type"], f"{row['path']} resource {number}",
                                             offset=resource["offset"], length=resource["length"], sha=cc.sha256(body),
-                                            status=DECODED if resource["status"] == "decoded" else REFERENCED))
+                                            status=DECODED if proved else REFERENCED, metadata=metadata))
     return reading
 
 
@@ -928,27 +1037,49 @@ def read_particle_set(data: bytes, _ctx: Context, _row: dict) -> Reading:
     return reading
 
 
+# tools/msl_gate.py's verdicts: the two that reproduce the shipped copy, and the one more that it accepts (a known older
+# revision of the source). Any other verdict is a failure there and a problem here.
+REPRODUCES = frozenset({"exact", "exact, assisted"})
+ACCEPTED_VERDICTS = REPRODUCES | {"stale source"}
+# Where the judge looks for the source of a shipped script (data\MissionScripts\level<NNN>\<name>.msl, any case).
+LEVEL_SOURCE_RE = re.compile(r"data/missionscripts/level-?[0-9]+/[^/]+\.msl")
+MSL_UNREAD = "mslArchivesWithoutReadableWorlds"
+
+
 def read_mission_script(data: bytes, ctx: Context, row: dict) -> Reading:
     """A mission script source, compiled by tools/msl_compile.py. No loader reads a source; the game runs the compiled
-    copy its level's world file ships. So a script counts as decoded when its compile reproduces that copy
-    (tools/msl_gate.py's exact verdict, or exact, assisted: an #include the install lacks read as empty and the names it
-    would define taken from the shipped constants), or, when no level ships it, when it compiles with every include
-    present. A stale source (it compiles to a known older revision), one that compiles only when a missing include is
-    read as empty, and one that does not compile are referenced. A header of #define lines (textlist.h) is held to
+    copy its level's world file ships. So a script counts as decoded when its compile reproduces every shipped copy
+    compiled from it (tools/msl_gate.py's exact verdict, or exact, assisted: an #include the install lacks read as empty
+    and the names it would define taken from the shipped constants), or, when no level ships it, when it compiles with
+    every include present. A stale source (it compiles to a known older revision), one that compiles only when a missing
+    include is read as empty, and one that does not compile are referenced; a shipped copy it does not reproduce (any
+    other verdict, alone or beside an exact one) is also a problem. A header of #define lines (textlist.h) is held to
     that grammar, and onsldef.msl, which the game's C++ includes, to its compile.
+
+    When the judge could not read some level archive's worlds, which scripts that archive ships, and for which level
+    folders, is not known: no source in a level folder can then be shown to reproduce every shipped copy, or to be one
+    no level ships, so each is referenced with a problem.
     """
     reader = "tools/msl_compile.py + tools/msl_gate.py"
     verdicts = ctx.msl.get(row["path"].casefold())
+    if ctx.msl_unread and LEVEL_SOURCE_RE.fullmatch(row["path"].casefold()):
+        reading = whole_file(data, REFERENCED, "msl/not-judged", reader)
+        reading.problems.append(f"the mission-script judge could not read {len(ctx.msl_unread)} level archives' "
+                                "worlds, so which shipped scripts this source compiles to is not known")
+        reading.facts = {"notJudged": True}
+        return reading
     if verdicts is not None:
-        statuses = set(verdicts)
-        if statuses & {"exact", "exact, assisted"}:
+        statuses = collections.Counter(verdicts)
+        failing = sorted(set(statuses) - ACCEPTED_VERDICTS)
+        if failing:
+            reading = whole_file(data, REFERENCED, "msl/not-reproduced", reader)
+            reading.problems += [f"{statuses[status]} of {len(verdicts)} shipped copies compiled from this source: "
+                                 f"{status}" for status in failing]
+        elif set(statuses) <= REPRODUCES:
             reading = whole_file(data, DECODED, "msl/compiled", reader)
-        elif "stale source" in statuses:
-            reading = whole_file(data, REFERENCED, "msl/stale-source", reader)
         else:
-            reading = whole_file(data, REFERENCED, "msl/not-compiled", reader)
-            reading.problems.append("no compiled copy reproduces a shipped script")
-        reading.facts = {"verdicts": dict(sorted(collections.Counter(verdicts).items()))}
+            reading = whole_file(data, REFERENCED, "msl/stale-source", reader)
+        reading.facts = {"verdicts": dict(sorted(statuses.items()))}
         return reading
     if not row["path"].casefold().endswith(".msl"):
         reading = read_line_grammar(define_lines_hold, "msl/header")(data, ctx, row)
@@ -1164,29 +1295,40 @@ def decode_all_media(game: Path, files: list[dict], decoder: str, jobs: int) -> 
         return dict(zip(wanted, pool.map(lambda rel: decode_media(game / rel, decoder), wanted)))
 
 
-def shipped_scripts(game: Path, unread: collections.Counter):
+def shipped_scripts(game: Path, unread: dict[str, str]):
     """(folder level, record) for each compiled script of each level archive's world bodies, as tools/msl_gate.py's
-    scripts_of reads them; an archive whose worlds do not read is counted in unread instead of stopping the run."""
+    scripts_of reads them. An archive whose top-level chunks hold no WRES ships no world, so no script. An archive whose
+    worlds this reader (tools/world_resources_encode.py, with its member and size limits) cannot read goes into unread,
+    its install path mapped to the reason, instead of stopping the run; read_mission_script then judges no level
+    folder's source."""
     for _level, path in wre.level_archives(game).items():
         try:
-            worlds = wre.level_worlds(b"".join(wre.inflate(wre.read_members(wre.read_retail(path)))))
+            raw = b"".join(wre.inflate(wre.read_members(wre.read_retail(path))))
+            if not any(tag == "WRES" for tag, _at, _size in wre.chunks(raw)):
+                continue
+            worlds = wre.level_worlds(raw)
             for tag, body in sorted(worlds["bodies"].items()):
                 folder = worlds["realLevel"] if tag == "RLWD" else worlds["baseLevel"]
                 for record in wre.read_world_model(body)["scripts"]:
                     yield folder, record
-        except (wre.EncodeError, ValueError, struct.error):
-            unread["mslArchivesWithoutReadableWorlds"] += 1
+        except (wre.EncodeError, ValueError, struct.error) as error:
+            unread[path.relative_to(game).as_posix()] = f"{type(error).__name__}: {error}"
 
 
-def judge_mission_scripts(game: Path, unread: collections.Counter | None = None) -> dict[str, list[str]]:
-    """Per .msl file (folded path): tools/msl_gate.py's verdict on each shipped script compiled from it."""
+def judge_mission_scripts(game: Path, unread: dict[str, str] | None = None) -> dict[str, list[str]]:
+    """Per .msl file (folded path): tools/msl_gate.py's verdict on each shipped script compiled from it. The archives
+    whose worlds cannot be read go into unread (shipped_scripts)."""
     verdicts: dict[str, list[str]] = collections.defaultdict(list)
     read_include = mc.includes_from(game)
-    for folder, record in shipped_scripts(game, unread if unread is not None else collections.Counter()):
+    for folder, record in shipped_scripts(game, unread if unread is not None else {}):
         status, _detail, compiled = msl_gate.judge_record(game, read_include, folder, record)
         key = (folder, record["name"])
         if status == "different" and key in msl_gate.STALE_SOURCES and compiled is not None:
-            if msl_gate.stale_identity(record, compiled) == msl_gate.STALE_SOURCES[key][1]:
+            try:
+                pinned = msl_gate.stale_identity(record, compiled) == msl_gate.STALE_SOURCES[key][1]
+            except (wre.EncodeError, ValueError, TypeError, KeyError, OverflowError):
+                pinned = False  # as tools/msl_gate.py: an identity that cannot be computed is not the pinned one
+            if pinned:
                 status = "stale source"
         verdicts[f"data/missionscripts/level{folder:03d}/{record['name']}.msl".casefold()].append(status)
     return verdicts
@@ -1325,10 +1467,12 @@ def join_physics(catalog: dict, ctx: Context, incoming: dict[str, set[str]]) -> 
                                                                         in sorted(unresolved.items())}}
 
 
-def join_chained_textures(found: list[dict], catalog: dict, incoming: dict[str, set[str]]) -> dict:
+def join_chained_textures(found: list[dict], catalog: dict, incoming: dict[str, set[str]],
+                          users: dict[str, set[str]] | None = None) -> dict:
     """A chained mesh's texture slots, joined as the catalogue joins its parent's (CMesh::FindTexture: the stricmp name
     and the requested format among loaded texture records with every mip level), within the archives that load the parent
-    or, for a parent no archive loads, in any archive. A slot whose name is unreadable or too short joins nothing."""
+    or, for a parent no archive loads, in any archive. A slot whose name is unreadable or too short joins nothing. Each
+    joined texture record gets the chained mesh among its users."""
     by_key: dict[tuple, list[dict]] = collections.defaultdict(list)
     for asset in catalog["assets"]:
         record = asset.get("textureDescriptor") or {}
@@ -1351,6 +1495,8 @@ def join_chained_textures(found: list[dict], catalog: dict, incoming: dict[str, 
             outcome["slots joined" if hits else "slots unresolved"] += 1
             for descriptor in hits:
                 incoming[descriptor["id"]].add("chained-mesh:uses-texture")
+                if users is not None:
+                    users[descriptor["id"]].add(item["id"])
     return dict(sorted(outcome.items()))
 
 
@@ -1456,18 +1602,172 @@ def catalogue_items(catalog: dict, incoming: dict[str, set[str]], file_rows: dic
     return rows
 
 
-def reader_items(found: list[dict], file_rows: dict[str, dict], known: list[dict]) -> list[dict]:
-    """The assets the readers found that no catalogue record lists. One with an owner is used when its owner is; any
-    other stands or falls with its file."""
+def reader_items(found: list[dict], file_rows: dict[str, dict], known: list[dict]) -> tuple[list[dict], dict[str, dict]]:
+    """The assets the readers found that no catalogue record lists, and their readers' metadata by item id. One with an
+    owner is used when its owner is; any other stands or falls with its file."""
     owners = {item["id"]: item for item in known}
-    rows = []
-    for number, item in enumerate(found):
+    rows, metadata = [], {}
+    for number, found_item in enumerate(found):
+        item = dict(found_item)
+        details = item.pop("metadata", None)
         row = file_rows[item["file"].casefold()]
         owner = owners.get(item.get("owner"))
         used, used_by = (owner["used"], ["owner-mesh"] if owner["used"] else []) if owner else (row["used"], row["usedBy"])
         rows.append({"schema": ITEM_SCHEMA, **item, "id": item.get("id") or f"{item['form']}:{item['file'].casefold()}#{number}",
                      "used": used, "usedBy": used_by})
+        if details is not None:
+            metadata[rows[-1]["id"]] = details
+    return rows, metadata
+
+
+# ------------------------------------------------------------------------------------------------------ asset metadata
+# One row per texture, image, model, animation, sound and film (asset-metadata.jsonl): the asset's identity (its file,
+# how its bytes are wrapped there, its coordinates and the SHA-256 of its own bytes), the metadata a reader established
+# (format, size, mip levels, alpha, channels, sample rate, duration, frames), what names it, and the catalogue's usage
+# summary and upscale notes where the catalogue has them. A field nothing established is null; nothing is inferred
+# from a name. It is the input list for an offline processing batch (an AI upscale, for one), not a claim about how the
+# game renders or plays the asset.
+METADATA_SCHEMA = "onslaught.content-inventory.asset-metadata.v1"
+METADATA_KINDS = ("texture", "image", "model", "animation", "sound", "film")
+# The channels a stored texture format holds. DXT1 is colour, though its blocks can also mark a texel transparent (the
+# alpha field says whether any does); X8R8G8B8's fourth byte is unused.
+FORMAT_CHANNELS = {"A8R8G8B8": 4, "X8R8G8B8": 3, "R5G6B5": 3, "A1R5G5B5": 4, "A4R4G4B4": 4,
+                   "DXT1": 3, "DXT2": 4, "DXT3": 4, "DXT4": 4, "DXT5": 4}
+
+
+def mesh_details(record: dict) -> dict:
+    """A catalogue mesh record's structure, and its texture slots by name (CMesh::FindTexture's lookup key)."""
+    mesh = record["mesh"]
+    return {"meshStatus": mesh["status"], "embedded": mesh.get("embedded"), "parts": mesh["parts"],
+            "vertices": mesh["vertices"], "triangles": mesh["triangles"], "skinnedParts": mesh.get("skinnedParts"),
+            "boneParts": mesh.get("boneParts"), "lodChildren": mesh.get("lodChildren"),
+            "textureSlots": [{key: slot.get(key) for key in ("slot", "name", "nameStatus", "requestedFormat", "frames")}
+                             for slot in mesh["textures"]],
+            "animations": sorted(r["target"] for r in record["relationships"] if r["type"] == "has-animation")}
+
+
+def animation_details(record: dict) -> dict:
+    """An animation mode's frame range and rate. The rate is a normalized increment per game tick, so no duration in
+    seconds is derived from it."""
+    animation = record["animation"]
+    return {"mode": animation["mode"], "startFrame": animation["startFrame"], "lastFrame": animation["lastFrame"],
+            "rate": animation["rate"], "rateSemantics": animation["rateSemantics"],
+            "skeletonMesh": animation["skeleton"]["mesh"], "animatedParts": len(animation["skeleton"]["animatedParts"])}
+
+
+def catalogue_metadata(asset: dict) -> tuple[dict, dict]:
+    """(metadata fields, details) of a catalogue record of a metadata kind."""
+    kind = asset["type"]
+    if kind == "texture":
+        texture, upscale = asset["texture"], asset.get("upscale") or {}
+        valid = texture["status"] == "valid"
+        stored = texture.get("storedFormat") if valid else None
+        fields = media_fields(format=stored, width=texture.get("width") if valid else None,
+                              height=texture.get("height") if valid else None,
+                              mipLevels=len(texture.get("mips") or []) if valid else None,
+                              alpha=upscale.get("alpha") if valid else None, channels=FORMAT_CHANNELS.get(stored))
+        details = {"ddsStatus": texture["status"], "sourceFormatFromName": texture.get("sourceFormatFromName"),
+                   "frame": texture.get("frame"), "shelf": texture.get("shelf"), "mustbe": texture.get("mustbe"),
+                   "premultipliedAlpha": upscale.get("premultipliedAlpha"), "compressed": upscale.get("compressed"),
+                   "mips": [{key: mip[key] for key in ("index", "width", "height", "length", "sha256")}
+                            for mip in texture.get("mips") or []]}
+        return fields, details
+    if kind == "texture-descriptor":
+        descriptor = asset["textureDescriptor"]
+        parsed = descriptor["status"] == "parsed"
+        per_frame = descriptor.get("mipLevelsPerFrame") or []
+        stored = descriptor.get("texFormatName") if parsed else None
+        fields = media_fields(format=stored, width=descriptor.get("width") if parsed else None,
+                              height=descriptor.get("height") if parsed else None,
+                              mipLevels=per_frame[0] if parsed and len(set(per_frame)) == 1 else None,
+                              channels=FORMAT_CHANNELS.get(stored), frames=descriptor.get("frames") if parsed else None)
+        details = {"descriptorStatus": descriptor["status"], "requestedFormat": descriptor.get("requestedFormat"),
+                   "levels": descriptor.get("levels"), "mipLevelsPerFrame": per_frame,
+                   "occurrences": len(descriptor.get("occurrences") or []),
+                   "pixelsFrom": sorted(r["target"] for r in asset["relationships"]
+                                        if r["type"] == "pixels-from" and r["status"] in NAMING_STATUSES)}
+        return fields, details
+    if kind == "mesh":
+        return media_fields(format="cmsh"), mesh_details(asset)
+    if kind == "animation":
+        return media_fields(format="camd", frames=asset["animation"]["frameCount"]), animation_details(asset)
+    if kind == "audio":
+        audio = asset["audio"]
+        fields = media_fields(format=audio.get("codec"), channels=audio.get("channels"),
+                              sampleRate=audio.get("sampleRate"), durationSeconds=audio.get("seconds"))
+        details = {"audioStatus": audio["status"], "role": audio["role"], "samples": audio.get("samples"),
+                   "nominalBitrate": audio.get("nominalBitrate"), "languageLane": audio.get("languageLane")}
+        return fields, details
+    if kind == "video":
+        video = asset["video"]
+        fields = media_fields(format=video.get("codec"), width=video.get("width"), height=video.get("height"),
+                              durationSeconds=video.get("seconds"), frames=video.get("frames"))
+        return fields, {"videoStatus": video["status"], "fps": video.get("fps"), "fpsRational": video.get("fpsRational"),
+                        "audioTracks": video.get("audioTracks")}
+    raise AccountError(f"{asset['id']}: no metadata reader for a {kind} record")
+
+
+def record_users(catalog: dict) -> dict[str, set[str]]:
+    """Per record id: the records that name it with a naming status (the relationships relationship_index counts), and
+    the archives that load it. An animation's link back to its mesh does not make it the mesh's user."""
+    users: dict[str, set[str]] = collections.defaultdict(set)
+    for asset in catalog["assets"]:
+        for relation in asset["relationships"]:
+            if relation["status"] not in NAMING_STATUSES or relation["type"] == "animates":
+                continue
+            for target in cc.relationship_ids(relation):
+                if target == asset["id"]:
+                    continue
+                if relation["type"] == "loaded-by-archive":
+                    users[asset["id"]].add(target)
+                else:
+                    users[target].add(asset["id"])
+    return users
+
+
+def asset_metadata(items: list[dict], catalog: dict, file_rows: dict[str, dict], users: dict[str, set[str]],
+                   found: dict[str, dict]) -> list[dict]:
+    """One row per item of a metadata kind, in item order."""
+    records = {asset["id"]: asset for asset in catalog["assets"]}
+    rows = []
+    for item in items:
+        if item["kind"] not in METADATA_KINDS:
+            continue
+        record = records.get(item["id"])
+        if record is not None:
+            fields, details = catalogue_metadata(record)
+            wrapping = {"envelope": record["source"]["envelope"], "chunkPath": record["source"]["chunkPath"],
+                        "sha256Scope": record["sha256Scope"]}
+            usage, upscale = record.get("usage"), record.get("upscale")
+        elif item["id"] in found:
+            reader = found[item["id"]]
+            fields, details = reader["fields"], reader["details"]
+            wrapping = {key: reader[key] for key in ("envelope", "chunkPath", "sha256Scope")}
+            usage = upscale = None
+        else:
+            raise AccountError(f"{item['id']}: an asset with neither a catalogue record nor its reader's metadata")
+        placed = record is not None or found[item["id"]]["placed"]
+        identity = {"file": item["file"], "fileSha256": file_rows[item["file"].casefold()]["sha256"], **wrapping,
+                    "offset": item["offset"] if placed else None, "length": item["length"], "sha256": item["sha256"]}
+        if item.get("owner"):
+            identity["owner"] = item["owner"]
+        named_by = set(users.get(item["id"], ())) | ({item["owner"]} if item.get("owner") else set())
+        rows.append({"schema": METADATA_SCHEMA, "id": item["id"], "kind": item["kind"], "form": item["form"],
+                     "name": item["name"], "status": item["status"], "identity": identity, **fields,
+                     "details": details, "used": item["used"], "usedBy": item["usedBy"],
+                     "usedByRecords": sorted(named_by), "usage": usage, "upscale": upscale})
     return rows
+
+
+def metadata_summary(rows: list[dict]) -> dict:
+    """Per kind: the rows, and how many establish each metadata field."""
+    summary: dict[str, dict] = {}
+    for row in rows:
+        kind = summary.setdefault(row["kind"], {"rows": 0, "fieldsEstablished": dict.fromkeys(METADATA_FIELDS, 0)})
+        kind["rows"] += 1
+        for field in METADATA_FIELDS:
+            kind["fieldsEstablished"][field] += row[field] is not None
+    return dict(sorted(summary.items()))
 
 
 # ----------------------------------------------------------------------------------------------------------- coverage
@@ -1509,9 +1809,37 @@ def install_manifest_check(ctx: Context, rows: list[dict]) -> dict:
             "presentButNotListed": sorted(present[name] for name in set(present) - set(listed))}
 
 
+def percent(part: int, whole: int) -> float | None:
+    return round(100 * part / whole, 3) if whole else None
+
+
+def headline(content: int, decoded: int, decoder_only: int, decoder: str | None) -> dict:
+    """The content families' decoded share with the independent media decoder and without it. The Vorbis, Bink and JPEG
+    payloads count as decoded only when that decoder read them and agreed with the walk, so one number alone overstates
+    what the readers of this repository read (with it) or what is understood (without it)."""
+    without = decoded - decoder_only
+    return {"contentLogicalBytes": content, "mediaDecoder": decoder,
+            "withMediaDecoder": {"decodedBytes": decoded, "percent": percent(decoded, content)} if decoder else None,
+            "withoutMediaDecoder": {"decodedBytes": without, "percent": percent(without, content)},
+            "decodedOnlyByTheMediaDecoder": decoder_only}
+
+
+def headline_line(head: dict) -> str:
+    without = head["withoutMediaDecoder"]
+    if head["withMediaDecoder"] is None:
+        return (f"content decoded: {without['percent']}% of {head['contentLogicalBytes']} logical bytes "
+                f"({without['decodedBytes']}) with no independent media decoder run, so the Vorbis, Bink and JPEG "
+                "payloads stay referenced")
+    with_decoder = head["withMediaDecoder"]
+    return (f"content decoded: {with_decoder['percent']}% of {head['contentLogicalBytes']} logical bytes "
+            f"({with_decoder['decodedBytes']}) with {head['mediaDecoder']} decoding the audio, video and JPEG "
+            f"payloads; {without['percent']}% ({without['decodedBytes']}) without it, since "
+            f"{head['decodedOnlyByTheMediaDecoder']} bytes count as decoded only because that decoder read them")
+
+
 def build_coverage(rows: list[dict], install_files: int, install_bytes: int, *, items: list[dict] | None = None,
                    proofs: dict | None = None, manifest: dict | None = None, physics_joins: dict | None = None,
-                   absent: dict | None = None, decoder: str | None = None) -> dict:
+                   absent: dict | None = None, decoder: str | None = None, assets: list[dict] | None = None) -> dict:
     families: dict[str, dict] = {}
     for row in rows:
         fam = families.setdefault(row["family"], {
@@ -1542,7 +1870,11 @@ def build_coverage(rows: list[dict], install_files: int, install_bytes: int, *, 
         for part in row["parts"]:
             if part["class"] != DECODED:
                 parts[(part["class"], row["family"], part["part"])] += part["bytes"]
+    content = sum(f["logicalBytes"] for f in table if f["content"])
+    decoded = total("logicalBytesByClass", DECODED, True)
+    decoder_only = sum(row["facts"].get(DECODER_ONLY, 0) for row in rows if row["family"] not in NOT_CONTENT_FAMILIES)
     return {"schema": COVERAGE_SCHEMA, GENERATED_MARKER: True, "installFiles": install_files,
+            "headline": headline(content, decoded, decoder_only, decoder),
             "installBytes": install_bytes, "logicalBytes": sum(f["logicalBytes"] for f in table),
             "filesByClass": {klass: sum(f["filesByClass"][klass] for f in table) for klass in FILE_CLASSES},
             "logicalBytesByClass": {klass: total("logicalBytesByClass", klass, None) for klass in BYTE_CLASSES},
@@ -1559,6 +1891,7 @@ def build_coverage(rows: list[dict], install_files: int, install_bytes: int, *, 
             "notDecodedParts": [{"class": klass, "family": family, "part": part, "bytes": count}
                                 for (klass, family, part), count in sorted(parts.items(), key=lambda kv: -kv[1])],
             "items": item_summary(items or []),
+            "assetMetadata": metadata_summary(assets or []),
             "proofs": dict(sorted((proofs or {}).items())),
             "mediaDecoder": decoder or "not run: Vorbis, Bink and JPEG payloads stay referenced",
             "installManifest": manifest or {"status": "not compared"},
@@ -1576,7 +1909,10 @@ def build_coverage(rows: list[dict], install_files: int, install_bytes: int, *, 
                 UNKNOWN: "neither; a gap in a walk falls here by construction",
                 "used": "a catalogue record, physics value, page link or loader rule names the file or asset; not a "
                         "runtime observation",
-                "logicalBytes": "an AYA envelope's inflated stream, or the plain file itself"}}
+                "logicalBytes": "an AYA envelope's inflated stream, or the plain file itself",
+                "headline": "the content families' decoded logical bytes with the independent media decoder (the "
+                            "Vorbis, Bink and JPEG payloads count only when it read them and agreed with the walk) "
+                            "and without it"}}
 
 
 def media_proofs(ctx: Context, rows: list[dict]) -> None:
@@ -1603,14 +1939,16 @@ def media_proofs(ctx: Context, rows: list[dict]) -> None:
                 ctx.proofs["mslVerdict " + status] += count
             if facts.get("compiled"):
                 ctx.proofs["mslNoShippedCopy " + facts["compiled"]] += 1
+            if facts.get("notJudged"):
+                ctx.proofs["mslSourcesNotJudged"] += 1
 
 
 def build_inventory(game: Path, decomp: Path | None = None, *, decoder: str | None = None, jobs: int = 8) -> dict:
     catalog = cc.build_catalog(game, decomp)
     media_results = decode_all_media(game, catalog["files"], decoder, jobs) if decoder else {}
-    unread: collections.Counter = collections.Counter()
-    ctx = Context(game, media_results=media_results, msl_verdicts=judge_mission_scripts(game, unread))
-    ctx.proofs.update(unread)
+    unread: dict[str, str] = {}
+    ctx = Context(game, media_results=media_results, msl_verdicts=judge_mission_scripts(game, unread), msl_unread=unread)
+    ctx.proofs[MSL_UNREAD] = len(unread)  # recorded even when 0: the gate requires it to be 0
     rows, found = [], []
     for row in catalog["files"]:
         if row["size"] is None:
@@ -1619,8 +1957,9 @@ def build_inventory(game: Path, decomp: Path | None = None, *, decoder: str | No
         rows.append(account)
         found.extend(items)
     incoming = relationship_index(catalog)
+    users = record_users(catalog)
     joins = join_physics(catalog, ctx, incoming)
-    joins["chainedMeshTextures"] = join_chained_textures(found, catalog, incoming)
+    joins["chainedMeshTextures"] = join_chained_textures(found, catalog, incoming, users)
     used = file_use(catalog, incoming, ctx, code_words(decomp))
     for account in rows:
         evidence = sorted(used.get(account["path"].casefold(), ()))
@@ -1628,17 +1967,19 @@ def build_inventory(game: Path, decomp: Path | None = None, *, decoder: str | No
         account["usedBy"] = evidence
     file_rows = {row["path"].casefold(): row for row in rows}
     items = catalogue_items(catalog, incoming, file_rows)
-    items += reader_items(found, file_rows, items)
+    found_rows, found_metadata_by_id = reader_items(found, file_rows, items)
+    items += found_rows
     ids = collections.Counter(item["id"] for item in items)
     duplicates = [name for name, count in ids.items() if count > 1]
     if duplicates:
         raise AccountError(f"duplicate item ids: {duplicates[:3]}")
+    assets = asset_metadata(items, catalog, file_rows, users, found_metadata_by_id)
     media_proofs(ctx, rows)
     coverage = build_coverage(rows, catalog["survey"]["files"], catalog["survey"]["bytes"], items=items,
                               proofs=dict(ctx.proofs), manifest=install_manifest_check(ctx, rows),
                               physics_joins=joins, absent=named_but_absent(catalog),
-                              decoder=decoder_identity(decoder) if decoder else None)
-    return {"files": rows, "items": items, "coverage": coverage, "catalog": catalog}
+                              decoder=decoder_identity(decoder) if decoder else None, assets=assets)
+    return {"files": rows, "items": items, "assets": assets, "coverage": coverage, "catalog": catalog}
 
 
 def decoder_identity(decoder: str) -> str:
@@ -1658,13 +1999,15 @@ def write_outputs(out: Path, game: Path, inventory: dict, *, decomp: Path | None
                 "tool": TOOL, "toolCommit": cc.git_head(),
                 "install": {"files": coverage["installFiles"], "bytes": coverage["installBytes"],
                             "pathSizeFingerprint": cc.install_fingerprint(game, inventory["catalog"]["files"])},
-                "itemCount": len(items),
+                "itemCount": len(items), "assetMetadataCount": len(inventory["assets"]),
                 "boundary": "retail-derived metadata including names, sizes and hashes; no retail payload bytes; "
                             "never commit"}
     outputs = {"manifest.json": json.dumps(manifest, indent=2, sort_keys=True) + "\n",
                "coverage.json": json.dumps(coverage, indent=2, sort_keys=True) + "\n",
                "files.jsonl": "".join(json.dumps({**row, GENERATED_MARKER: True}, sort_keys=True) + "\n" for row in rows),
                "items.jsonl": "".join(json.dumps({**row, GENERATED_MARKER: True}, sort_keys=True) + "\n" for row in items),
+               "asset-metadata.jsonl": "".join(json.dumps({**row, GENERATED_MARKER: True}, sort_keys=True) + "\n"
+                                               for row in inventory["assets"]),
                "records.jsonl": "".join(json.dumps({"id": asset["id"], "type": asset["type"], "source": asset["source"],
                                                     "sha256": asset["sha256"], GENERATED_MARKER: True}, sort_keys=True) + "\n"
                                         for asset in inventory["catalog"]["assets"])}
@@ -1679,7 +2022,8 @@ def write_outputs(out: Path, game: Path, inventory: dict, *, decomp: Path | None
 
 
 def summary_lines(coverage: dict) -> list[str]:
-    """Counts only: one line per family, the assets by kind, then the totals."""
+    """Counts only: one line per family, the assets by kind and the metadata rows' established fields, then the totals
+    and the headline share."""
     lines = []
     for fam in coverage["families"]:
         classes = " ".join(f"{klass}={fam['filesByClass'][klass]}" for klass in FILE_CLASSES)
@@ -1688,12 +2032,21 @@ def summary_lines(coverage: dict) -> list[str]:
                      f"logical={fam['logicalBytes']} [{classes}] [{logical}] used={fam['usedFiles']}")
     for kind, row in coverage["items"].items():
         lines.append(f"items {kind}: {row['items']} used={row['used']} unused={row['unused']}")
+    for kind, row in coverage.get("assetMetadata", {}).items():
+        fields = " ".join(f"{field}={count}" for field, count in row["fieldsEstablished"].items())
+        lines.append(f"asset metadata {kind}: rows={row['rows']} [{fields}]")
     unknown = coverage["unknownLogicalBytes"]
     lines.append(f"unknown logical bytes: content={unknown['content']} not-content={unknown['notContent']} "
                  f"all={unknown['all']}; problems={coverage['problems']}")
     empty = coverage["emptyFilesByFamily"]
     lines.append(f"empty files (decoded, as every empty file is): {coverage['emptyFiles']}"
                  + "".join(f" {family}={count}" for family, count in empty.items()))
+    proofs = coverage["proofs"]
+    verdicts = " ".join(f"{key[len('mslVerdict '):].replace(', ', '-').replace(' ', '-')}={count}"
+                        for key, count in proofs.items() if key.startswith("mslVerdict "))
+    lines.append(f"mission scripts: shipped-copy verdicts [{verdicts}]; level archives whose worlds the judge could not "
+                 f"read={proofs.get(MSL_UNREAD, 'not recorded')}")
+    lines.append(headline_line(coverage["headline"]))
     return lines
 
 
