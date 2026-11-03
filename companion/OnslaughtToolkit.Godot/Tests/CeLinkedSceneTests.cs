@@ -13,22 +13,12 @@ namespace OnslaughtToolkit.Companion.Tests;
 /// <summary>Selected-map reads and actual Godot model instances on authored terrain/CMSH only.</summary>
 internal static class CeLinkedSceneTests
 {
-    private static CeMissionProject Project(Position position) => new("linked_preview", "Authored linked preview",
+    internal static CeMissionProject Project(Position position) => new("linked_preview", "Authored linked preview",
         [new("anchor", "Authored anchor", "authored.anchor", position)], [], map: new(777, [new("authored.anchor", "AuthoredAnchor")]));
 
-    internal static async Task RunAsync(SceneTree tree, string output, Checks check)
+    /// <summary>A world of two authored objects that keep their own names, positions and mesh reference.</summary>
+    internal static WorldBody AnchorBody()
     {
-        check.Suite("linked-map scene");
-        await Loader(Path.Combine(output, "linked-scene-input"), check);
-        Coordinates(check);
-        await Viewport(tree, check);
-    }
-
-    private static async Task Loader(string root, Checks check)
-    {
-        string resources = Path.Combine(root, "DaTa", "Resources");
-        string meshes = Path.Combine(resources, "MeShEs");
-        Directory.CreateDirectory(meshes);
         WorldBody body = WorldBody.Read(LevelTests.Body("authored-v50"));
         PlacedObject anchor = body.Things[0].Clone();
         anchor.Init.Name = "AuthoredAnchor";
@@ -40,6 +30,25 @@ internal static class CeLinkedSceneTests
         body.Things.Clear(); body.Things.Add(anchor);
         PlacedObject other = anchor.Clone(); other.Init.Name = "OtherAnchor"; other.Init.Position = new(11, 12, -3);
         body.Things.Add(other);
+        return body;
+    }
+
+    internal static async Task RunAsync(SceneTree tree, string output, Checks check)
+    {
+        check.Suite("linked-map scene");
+        await Loader(Path.Combine(output, "linked-scene-input"), check);
+        Coordinates(check);
+        await Viewport(tree, check);
+        await BaseWorldModel(tree, check);
+    }
+
+    private static async Task Loader(string root, Checks check)
+    {
+        string resources = Path.Combine(root, "DaTa", "Resources");
+        string meshes = Path.Combine(resources, "MeShEs");
+        Directory.CreateDirectory(meshes);
+        WorldBody body = AnchorBody();
+        PlacedObject anchor = body.Things[0], other = body.Things[1];
         string archive = Path.Combine(resources, "777_res_PC.aya"), modelFile = Path.Combine(meshes, "M_Authored.MSH.AYA");
         byte[] archiveBytes = Archive(body.Write());
         File.WriteAllBytes(archive, archiveBytes);
@@ -101,6 +110,7 @@ internal static class CeLinkedSceneTests
         CeLinkedSceneSnapshot omitted = CeLinkedSceneLoader.Load(fallback, project);
         check.That(omitted.Objects[1].ModelKey is null && omitted.Notes.Any(note => note.Contains("no stored model reference", StringComparison.Ordinal)),
             "objects whose geometry is selected elsewhere are explicitly reported rather than assigned an invented mesh");
+        SelectedLevelBindings(root, check);
         if (OperatingSystem.IsLinux())
         {
             string linked = Path.Combine(root, "linked-input"); Directory.CreateSymbolicLink(linked, root);
@@ -108,6 +118,61 @@ internal static class CeLinkedSceneTests
             File.WriteAllBytes(Path.Combine(resources, "777_res_pc.aya"), archiveBytes);
             Refuses(check, () => CeLinkedSceneLoader.Load(root, project), "case-ambiguous selected archives are refused");
         }
+    }
+
+    /// <summary>
+    /// The binding rule CE's PortCeProjectApplyPlacement and PortCeProjectEndWorld apply: base-world objects are skipped,
+    /// a placement's object must appear exactly once in the selected level, and a binding no placement uses is never read.
+    /// </summary>
+    private static void SelectedLevelBindings(string root, Checks check)
+    {
+        string game = Path.Combine(root, "selected-level"), resources = Path.Combine(game, "data", "resources"),
+            archive = Path.Combine(resources, "777_res_pc.aya");
+        Directory.CreateDirectory(Path.Combine(resources, "meshes"));
+        WorldBody level = AnchorBody(), baseWorld = AnchorBody();
+        PlacedObject sharedBase = baseWorld.Things[0], baseOnly = baseWorld.Things[1];
+        sharedBase.Init.Position = new(30, 31, -6); sharedBase.Init.Orientation = new(0.2f, 0.1f, -0.3f);
+        baseOnly.Init.Name = "BaseOnly"; baseOnly.Init.Position = new(33, 34, -7);
+        File.WriteAllBytes(archive, Archive(level.Write(), baseWorld.Write()));
+        CeMissionProject Bound(string sourceObject, params CeMissionObjectBinding[] others) => new("linked_preview", "Authored linked preview",
+            [new("anchor", "Authored anchor", "authored.anchor", new(12, 13, -4))], [], map: new(777, [new("authored.anchor", sourceObject), .. others]));
+        CeLinkedSceneSnapshot? Loaded(CeMissionProject project)
+        {
+            try { return CeLinkedSceneLoader.Load(game, project); }
+            catch (InvalidDataException) { return null; }
+        }
+
+        CeLinkedSceneSnapshot? levelOnly = Loaded(Bound("OtherAnchor"));
+        check.That(levelOnly is not null && levelOnly.Objects.Count == 4 && levelOnly.Instances(Bound("OtherAnchor"))
+            .Single(item => item.Source.Id == "level:1").PlacementIndex == 0, "a selected-level object with a unique name is bound");
+
+        check.That(Loaded(Bound("BaseOnly")) is null, "a base-world object is not a placement target, so CE's missing-object refusal is reported here too");
+        if (levelOnly is not null) Refuses(check, () => levelOnly.Instances(Bound("BaseOnly")), "a loaded preview cannot be rebound to a base-world object");
+
+        CeMissionProject shared = Bound("AuthoredAnchor");
+        CeLinkedSceneSnapshot? both = Loaded(shared);
+        check.That(both is not null, "a selected-level object may share its name with a base-world object");
+        if (both is not null)
+        {
+            IReadOnlyList<CeLinkedSceneInstance> items = both.Instances(shared);
+            CeLinkedSceneInstance own = items.Single(item => item.Source.Id == "level:0"), installed = items.Single(item => item.Source.Id == "base:0");
+            check.That(own.PlacementIndex == 0 && own.Position == shared.Placements[0].Position, "the shared name binds the selected level's object");
+            check.That(installed.PlacementIndex is null && installed.Position == sharedBase.Init.Position && installed.Source.Orientation == sharedBase.Init.Orientation,
+                "the base-world object of that name keeps its installed position and orientation");
+            check.That(items.Count(item => item.PlacementIndex is not null) == 1 && items.Where(item => item.PlacementIndex is null).All(item => item.Position == item.Source.Position),
+                "every object except the one bound keeps its installed position");
+        }
+
+        CeMissionProject unplaced = Bound("OtherAnchor", new CeMissionObjectBinding("authored.unplaced", "NoSuchObject"));
+        CeLinkedSceneSnapshot? loose = Loaded(unplaced);
+        check.That(loose is not null && loose.Instances(unplaced).Count(item => item.PlacementIndex is not null) == 1,
+            "a binding no placement uses is ignored, as CE ignores it");
+        CeMissionProject placedAgain = new(unplaced.Id, unplaced.Name, unplaced.Placements.Append(new("second", "Second", "authored.unplaced", Position.One)), [], map: unplaced.Map);
+        if (loose is not null) Refuses(check, () => loose.Instances(placedAgain), "a binding becomes checked as soon as a placement uses it");
+
+        level.Things[1].Init.Name = "AuthoredAnchor";
+        File.WriteAllBytes(archive, Archive(level.Write(), baseWorld.Write()));
+        check.That(Loaded(shared) is null, "two selected-level objects of one name are refused, as CE refuses a second match");
     }
 
     private static void Coordinates(Checks check)
@@ -136,10 +201,8 @@ internal static class CeLinkedSceneTests
     {
         TerrainSurface surface = TerrainSurface.Flat(0, 0, 24, 24).WithVertexHeight(3, 3);
         CeMissionProjectEditor editor = new(Project(new(9, 11, -4)));
-        CmshMesh mesh = CmshReader.Read(AssetTests.TwoPartMesh())[0];
-        foreach (CmshPart part in mesh.Parts) { part.Positions = part.Positions.Select(v => v * 3).ToArray(); part.KeyPositions = part.KeyPositions.Select(v => v * 3).ToArray(); }
-        mesh.Parts[1].ReferenceTo = 0;
-        CeLinkedSceneObject original = new("level:0", "AuthoredAnchor", "authored.anchor", "authored", new(5, 7, -3), new(0.37f, -0.22f, 0.41f));
+        CmshMesh mesh = ViewportMesh();
+        CeLinkedSceneObject original = new("level:0", "AuthoredAnchor", "authored.anchor", "authored", new(5, 7, -3), new(0.37f, -0.22f, 0.41f), FromBaseWorld: false);
         CeLinkedSceneSnapshot? scene = new(777, surface, [original], [CeLinkedSceneModel.FromMesh("authored", mesh)]);
         IReadOnlyList<ObjectRow> Rows() => editor.Current.Placements.Select((item, index) => new ObjectRow(index, "unit", item.Name, item.Definition,
             item.Position, item.Position)).ToArray();
@@ -220,6 +283,59 @@ internal static class CeLinkedSceneTests
         finally { sandbox.QueueFree(); await Frame(tree); }
     }
 
+    private static CmshMesh ViewportMesh()
+    {
+        CmshMesh mesh = CmshReader.Read(AssetTests.TwoPartMesh())[0];
+        foreach (CmshPart part in mesh.Parts) { part.Positions = part.Positions.Select(v => v * 3).ToArray(); part.KeyPositions = part.KeyPositions.Select(v => v * 3).ToArray(); }
+        mesh.Parts[1].ReferenceTo = 0;
+        return mesh;
+    }
+
+    /// <summary>A base-world model of the bound name, in the real viewport: it stays visible at its installed transform and cannot be picked or dragged.</summary>
+    private static async Task BaseWorldModel(SceneTree tree, Checks check)
+    {
+        TerrainSurface surface = TerrainSurface.Flat(0, 0, 24, 24);
+        CeMissionProjectEditor editor = new(Project(new(6, 7, -3)));
+        CeLinkedSceneObject installed = new("base:0", "AuthoredAnchor", "authored.base", "authored", new(18, 17, -3), new(0.37f, -0.22f, 0.41f), FromBaseWorld: true),
+            own = new("level:0", "AuthoredAnchor", "authored.anchor", "authored", new(12, 12, -3), Position.Zero, FromBaseWorld: false);
+        CeLinkedSceneSnapshot scene = new(777, surface, [installed, own], [CeLinkedSceneModel.FromMesh("authored", ViewportMesh())]);
+        IReadOnlyList<ObjectRow> Rows() => editor.Current.Placements.Select((item, index) => new ObjectRow(index, "unit", item.Name, item.Definition,
+            item.Position, item.Position)).ToArray();
+        IReadOnlyList<ObjectRow> rows = Rows(); int? selected = null; int requests = 0;
+        LevelTerrainViewport view = new() { Size = new(640, 480), UseAuthoredSurface = true,
+            PreviewSurfaceProvider = () => scene.Terrain, LinkedSceneProvider = () => scene, LinkedProjectProvider = () => editor.Current,
+            RowsProvider = () => rows, SelectedRowProvider = () => selected };
+        view.RowPicked += row => selected = row;
+        view.MoveRequested += (row, x, y) => { requests++; CeMissionPlacement item = editor.Current.Placements[row];
+            editor.TryMovePlacement(item.Id, new(x, y, item.Position.Z), editor.Revision, out _); rows = Rows(); };
+        await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame);
+        SubViewport sandbox = new() { Size = new(640, 480), GuiEmbedSubwindows = true };
+        tree.Root.AddChild(sandbox); sandbox.AddChild(view);
+        try
+        {
+            await Frame(tree);
+            LinkedSceneModelLayer layer = view.FindChildren("*", nameof(Node3D), true, false).OfType<LinkedSceneModelLayer>().Single();
+            Camera3D camera = view.FindChildren("*", nameof(Camera3D), true, false).OfType<Camera3D>().Single();
+            Node3D[] actors = layer.GetChildren().OfType<Node3D>().ToArray();
+            Transform3D home = LinkedSceneCoordinates.Transform(installed.Orientation, installed.Position);
+            check.That(view.LinkedModelCount == 2 && actors.Length == 2 && actors[0].Transform.IsEqualApprox(home) &&
+                actors[1].Position.IsEqualApprox(LinkedSceneCoordinates.View(editor.Current.Placements[0].Position)),
+                "a base-world model stays at its installed transform while the selected level's object of that name takes the placement");
+            Vector2 baseAt = camera.UnprojectPosition(actors[0].Position), at = camera.UnprojectPosition(actors[1].Position);
+            check.That(layer.RowAt(camera, baseAt) is null && layer.RowAt(camera, at) == 0, "only the bound selected-level model is picked as the placement");
+            Button(view, baseAt, true); Motion(view, baseAt, camera.UnprojectPosition(new Vector3(2, 0, -2))); Button(view, baseAt, false); await Frame(tree);
+            check.That(requests == 0 && actors[0].Transform.IsEqualApprox(home), "pressing on the base-world model starts no placement drag");
+            // That press orbited the camera, so both points are projected again.
+            at = camera.UnprojectPosition(actors[1].Position);
+            Vector2 drop = camera.UnprojectPosition(new Vector3(16, 0, -4));
+            Button(view, at, true); Motion(view, at, drop); Button(view, drop, false); await Frame(tree);
+            check.That(requests == 1 && actors[1].Position.IsEqualApprox(LinkedSceneCoordinates.View(editor.Current.Placements[0].Position)) &&
+                editor.Current.Placements[0].Position != new Position(6, 7, -3) && actors[0].Transform.IsEqualApprox(home),
+                "dragging the bound model leaves the base-world model untouched");
+        }
+        finally { sandbox.QueueFree(); await Frame(tree); }
+    }
+
     private static async Task Frame(SceneTree tree) { await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame); await tree.ToSignal(tree, SceneTree.SignalName.ProcessFrame); }
     private static void Button(LevelTerrainViewport view, Vector2 at, bool pressed) => view._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Left, Position = at, Pressed = pressed });
     private static void Motion(LevelTerrainViewport view, Vector2 from, Vector2 to) => view._GuiInput(new InputEventMouseMotion { Position = to, Relative = to - from, ButtonMask = MouseButtonMask.Left });
@@ -230,7 +346,7 @@ internal static class CeLinkedSceneTests
         check.That(refused, message);
     }
 
-    private static byte[] Archive(byte[]? body, byte[]? baseBody = null, int? baseLevel = null)
+    internal static byte[] Archive(byte[]? body, byte[]? baseBody = null, int? baseLevel = null)
     {
         byte[] world = [.. Chunk("WDAT", [.. BitConverter.GetBytes(baseLevel ?? (baseBody is null ? -1 : 123)), .. BitConverter.GetBytes(body is null ? -1 : 777)]),
             .. (baseBody is null ? [] : Chunk("BSWD", baseBody)), .. (body is null ? [] : Chunk("RLWD", body))];

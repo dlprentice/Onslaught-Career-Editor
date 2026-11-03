@@ -6,8 +6,9 @@ using OnslaughtToolkit.Companion.Levels;
 
 namespace OnslaughtToolkit.Companion.Missions;
 
+/// <summary>One object as the selected map installs it. Base-world objects are displayed but are never placement targets.</summary>
 public sealed record CeLinkedSceneObject(string Id, string SourceObject, string Definition, string? ModelKey,
-    Vector3 Position, Vector3 Orientation);
+    Vector3 Position, Vector3 Orientation, bool FromBaseWorld);
 
 /// <summary>An independently owned, static frame-zero model. Its bytes are local preview data, never project content.</summary>
 public sealed class CeLinkedSceneModel
@@ -70,27 +71,33 @@ public sealed class CeLinkedSceneSnapshot
         Notes = Array.AsReadOnly(warnings);
     }
 
+    /// <summary>
+    /// Where each object appears for this project, by the rule CE applies as the map loads: a placement moves the one selected-level
+    /// object its definition is bound to, the base world is left alone, and a binding no placement uses is not read. Drafts CE would refuse
+    /// stay previewable: a placement without a binding moves nothing, and a definition placed twice keeps its object where it was.
+    /// </summary>
     public IReadOnlyList<CeLinkedSceneInstance> Instances(CeMissionProject project)
     {
         if (project.Map is not { } map || map.Level != Level)
             throw new InvalidDataException("The preview belongs to a different linked map.");
-        Dictionary<string, (CeMissionPlacement Placement, int Index)> placements = new(StringComparer.Ordinal);
-        HashSet<string> ambiguous = new(StringComparer.Ordinal);
+        const int PlacedTwice = -1;
+        Dictionary<string, int> rows = new(StringComparer.Ordinal);
         for (int i = 0; i < project.Placements.Count; i++)
-            if (!placements.TryAdd(project.Placements[i].Definition, (project.Placements[i], i)))
-                ambiguous.Add(project.Placements[i].Definition);
-        foreach (string definition in ambiguous) placements.Remove(definition);
-        Dictionary<string, string> definitions = new(StringComparer.Ordinal);
+            rows[project.Placements[i].Definition] = rows.ContainsKey(project.Placements[i].Definition) ? PlacedTwice : i;
+        Dictionary<string, int> named = new(StringComparer.Ordinal);
+        foreach (CeLinkedSceneObject item in Objects)
+            if (!item.FromBaseWorld) named[item.SourceObject] = named.GetValueOrDefault(item.SourceObject) + 1;
+        Dictionary<string, int> targets = new(StringComparer.Ordinal);
         foreach (CeMissionObjectBinding binding in map.Bindings)
         {
-            if (Objects.Count(row => row.SourceObject == binding.SourceObject) != 1)
-                throw new InvalidDataException("A named map-object binding is missing or ambiguous.");
-            definitions.Add(binding.SourceObject, binding.Definition);
+            if (!rows.TryGetValue(binding.Definition, out int row)) continue;
+            if (named.GetValueOrDefault(binding.SourceObject) != 1)
+                throw new InvalidDataException("A placement's map object must be exactly one object of the selected level; base-world objects are not moved.");
+            if (row != PlacedTwice) targets.Add(binding.SourceObject, row);
         }
-        return Objects.Select(row => definitions.TryGetValue(row.SourceObject, out string? definition) &&
-            placements.TryGetValue(definition, out var placement)
-                ? new CeLinkedSceneInstance(row, placement.Placement.Position, placement.Index)
-                : new CeLinkedSceneInstance(row, row.Position, null)).ToArray();
+        return Objects.Select(item => !item.FromBaseWorld && targets.TryGetValue(item.SourceObject, out int row)
+            ? new CeLinkedSceneInstance(item, project.Placements[row].Position, row)
+            : new CeLinkedSceneInstance(item, item.Position, null)).ToArray();
     }
 
     private static bool Finite(Vector3 v) => float.IsFinite(v.X) && float.IsFinite(v.Y) && float.IsFinite(v.Z);
@@ -99,7 +106,8 @@ public sealed class CeLinkedSceneSnapshot
 /// <summary>Loads only the selected map and its referenced models. No Godot calls, writes, catalogue or staging operations.</summary>
 public static class CeLinkedSceneLoader
 {
-    private const int MaxEntries = 8192, MaxWorldBytes = 16 << 20, MaxMeshBytes = 32 << 20;
+    internal const int MaxWorldBytes = 16 << 20, MaxMeshBytes = 32 << 20;
+    private const int MaxEntries = 8192;
 
     public static CeLinkedSceneSnapshot Load(string gameRoot, CeMissionProject project)
     {
@@ -111,16 +119,16 @@ public static class CeLinkedSceneLoader
         LevelWorlds worlds = LevelArchive.Read(Read(archive, LevelArchive.MaxFileBytes));
         TerrainSurface surface = TerrainSurface.Build(Heightfield.Read(worlds.Terrain ??
             throw new InvalidDataException("The selected map has no terrain.")));
-        List<(string Id, WorldBody Body)> bodies = [];
-        if (worlds.BaseBody is not null && worlds.BaseLevel >= 0) bodies.Add(("base", WorldBody.Read(worlds.BaseBody)));
+        List<(bool FromBaseWorld, WorldBody Body)> bodies = [];
+        if (worlds.BaseBody is not null && worlds.BaseLevel >= 0) bodies.Add((true, WorldBody.Read(worlds.BaseBody)));
         else if (worlds.BaseLevel >= 0 && worlds.BaseLevel != map.Level)
-            bodies.Add(("base", ReadLoose(data, worlds.BaseLevel)));
-        bodies.Add(("level", worlds.RealLevel == map.Level && worlds.RealBody is not null
+            bodies.Add((true, ReadLoose(data, worlds.BaseLevel)));
+        bodies.Add((false, worlds.RealLevel == map.Level && worlds.RealBody is not null
             ? WorldBody.Read(worlds.RealBody) : ReadLoose(data, map.Level)));
 
         List<CeLinkedSceneObject> objects = [];
         HashSet<string> needed = new(StringComparer.OrdinalIgnoreCase);
-        foreach ((string id, WorldBody body) in bodies)
+        foreach ((bool fromBaseWorld, WorldBody body) in bodies)
         {
             if (body.Things.Count > WorldBody.MaxThings) throw new InvalidDataException("The map has too many objects to preview.");
             for (int i = 0; i < body.Things.Count; i++)
@@ -129,8 +137,8 @@ public static class CeLinkedSceneLoader
                 int number = thing.Init.MeshNumber;
                 string? model = number >= 0 && number < body.NamedMeshes.Count ? MeshKey(body.NamedMeshes[number]) : null;
                 if (model is not null) needed.Add(model);
-                objects.Add(new(id + ":" + i, thing.Init.Name, thing.Definition ?? "", model,
-                    thing.Init.Position, thing.Init.Orientation));
+                objects.Add(new((fromBaseWorld ? "base:" : "level:") + i, thing.Init.Name, thing.Definition ?? "", model,
+                    thing.Init.Position, thing.Init.Orientation, fromBaseWorld));
             }
         }
         if (needed.Count > 512) throw new InvalidDataException("The map references too many preview models.");

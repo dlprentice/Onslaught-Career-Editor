@@ -115,8 +115,8 @@ public partial class CeMissionProjectCapture : SceneTree
     private static string Coordinate(float value) => value.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
 
     private static CeLinkedSceneSnapshot AuthoredScene(int level) => new(level, AuthoredTerrain(),
-        [new("scene_beacon", "AuthoredBeacon", "original.authored.beacon", "authored-pyramid", new(40 * Scale, 60 * Scale, 0), new(0.6f, 0, 0)),
-         new("scene_escort", "AuthoredEscort", "original.authored.escort", "authored-pyramid", new(70 * Scale, 95 * Scale, 0), new(-0.4f, 0.1f, 0))],
+        [new("scene_beacon", "AuthoredBeacon", "original.authored.beacon", "authored-pyramid", new(40 * Scale, 60 * Scale, 0), new(0.6f, 0, 0), FromBaseWorld: false),
+         new("scene_escort", "AuthoredEscort", "original.authored.escort", "authored-pyramid", new(70 * Scale, 95 * Scale, 0), new(-0.4f, 0.1f, 0), FromBaseWorld: false)],
         [CeLinkedSceneModel.FromMesh("authored-pyramid", AuthoredModel())]);
 
     // The lower half is flat for the actual drag/drop; a sampled hill makes terrain depth visible behind it.
