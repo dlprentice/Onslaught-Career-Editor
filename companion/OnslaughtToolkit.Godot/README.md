@@ -99,13 +99,13 @@ package-header check accepts. **Not read again:** the Windows `files.cpp` career
 line. Between 0.1.4 and 0.1.10 `ce_launch.c`, `package.py` and the Windows `files.cpp` changed a good deal, so what this
 README says about those files is as of 0.1.4 until they are read again.
 
-**Acceptance of these flows (careers, backups, settings and the hand-off to a CE package) against a real CE 0.1.7 or
-later package: one Linux run, on CE 0.1.13.** On 2026-11-03 the opt-in `CeLiveCheck` ran its prepare, settings, launch
-and restore phases against the released CE 0.1.13 Linux package, checked against the release's signed feed first. On a
-copy of a game-created career in an isolated folder, the production controls edited the career with a verified backup,
-saved both CE settings with verified backups and refused stale writes; the companion refused career and settings
-writes while the real CE launcher and game ran offscreen; CE's own keyboard-driven Load menu loaded the edited career
-byte for byte; and the Backups page put the exact original bytes back. It is an automated Linux check driven by
+**Acceptance of these flows (careers, backups and settings, with the companion starting the real CE launcher) against a
+real CE 0.1.7 or later package: one Linux run, on CE 0.1.13.** On 2026-11-03 the opt-in `CeLiveCheck` ran its prepare,
+settings, launch and restore phases against the released CE 0.1.13 Linux package, checked against the release's signed
+feed first. On a copy of a game-created career in an isolated folder, the production controls edited the career with a
+verified backup, saved both CE settings with verified backups and refused stale writes; the companion refused career and
+settings writes while the real CE launcher and game ran offscreen; CE's own keyboard-driven Load menu loaded the edited
+career byte for byte; and the Backups page put the exact original bytes back. It is an automated Linux check driven by
 programmatic page actions, not a human click-through; see
 [the dated acceptance record](../../VALIDATION.md#companion-with-real-onslaught-ce-0113--november-3). The earlier
 real-package runs are CE 0.1.4 on Linux and a `0.1.6-dev` package on Windows (below), and no run of these flows on
