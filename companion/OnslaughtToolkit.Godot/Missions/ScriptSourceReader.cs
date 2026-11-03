@@ -212,11 +212,13 @@ internal static class ScriptSourceReader
     {
         WindowsFileIdentity identity = FileMutationSafety.GetWindowsIdentity(handle, "Script source");
         if (identity.IsReparsePoint) throw Link(shown);
-        if (GetFileType(handle) != 1) throw NotFile(shown); // FILE_TYPE_DISK
+        if (!IsDiskFile(handle)) throw NotFile(shown);
         using FileStream stream = new(handle, FileAccess.Read);
         if (stream.Length > ScriptCompiler.MaxSource) throw new CompileError($"{filename} is longer than a million bytes");
         return ReadBounded(stream, shown, filename);
     }
+
+    internal static bool IsDiskFile(SafeFileHandle handle) => GetFileType(handle) == 1; // FILE_TYPE_DISK
 
     private static string ReadBounded(FileStream stream, string shown, string filename)
     {

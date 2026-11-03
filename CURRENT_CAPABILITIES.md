@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-03 (the content inventory's per-asset metadata file and its two-number headline)
+Last updated: 2026-11-03 (Mission project linked-map preview: binding and file rules, evidence and limits; the content inventory's per-asset metadata file and its two-number headline)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -226,19 +226,38 @@ Its sidebar:
   Parsed-object source offsets describe positions in the original input buffer; they do not automatically
   follow later edits. To use offsets with edited or serialized bytes, parse those bytes again or use an independently
   verified mapping. This metadata does not establish catalogue-to-model identity, a complete 3D editor, or a completed museum.
-- **Mission project** creates an authored document without an installed level, career or catalogue. Its flat 3D
-  placement plane shows object markers with orbit, zoom, selection, dragging and undo/redo; a drag changes X/Y while
-  preserving stored Z. Objects keep stable IDs and definition-reference names. Preserved mission source can be edited,
-  attached to objects and selected as the mission entry source. Save as writes a new `.ceproject` JSON file; Open
-  restores placements, source and links with a fresh undo history. Existing project files are not replaced.
+- **Mission project** creates an authored document without an installed level, career or catalogue. Its 3D view
+  starts as a flat placement plane of object markers with orbit, zoom, selection, dragging and undo/redo; a drag
+  changes X/Y while preserving stored Z. Objects keep stable IDs and definition-reference names. Preserved mission
+  source can be edited, attached to objects and selected as the mission entry source. Save as writes a new
+  `.ceproject` JSON file; Open restores placements, source, links and installed-map bindings with a fresh undo
+  history. Existing project files are not replaced.
   [Document tests](companion/OnslaughtToolkit.Godot/Tests/CeMissionProjectTests.cs),
   [file tests](companion/OnslaughtToolkit.Godot/Tests/CeMissionProjectFilesTests.cs) and
   [page-input tests](companion/OnslaughtToolkit.Godot/Tests/CeMissionProjectPageTests.cs) cover those authored paths,
   invalid inputs, stale edits and delayed I/O. Focused authored checks and the composed full `npm test` passed on
   Linux on 2026-11-02 against [integrated source](https://github.com/dlprentice/Onslaught-Career-Editor/tree/f4f832c7d2b63f42b9837d96e4a3912808f770c4).
-  The [workflow and limits](companion/OnslaughtToolkit.Godot/README.md#mission-project) distinguish
-  this integrated authoring preview from terrain/model rendering, source compilation, CE runtime loading and complete
-  mission authoring. Human use and native Windows acceptance remain open.
+  An installed-map link binds a placement's definition to one named object of the selected level; Load linked map
+  reads that level into a read-only preview of sampled terrain and static, untextured models, which drag like
+  markers. Base-world objects stay where the map puts them. A name only the base world has, or that two objects of
+  the level share, refuses the preview and keeps the project; a binding no placement uses is ignored. Only regular
+  files are read, each within a byte limit; a link, named pipe or other special file is refused before any read.
+  [Linked-scene](companion/OnslaughtToolkit.Godot/Tests/CeLinkedSceneTests.cs),
+  [selected-file](companion/OnslaughtToolkit.Godot/Tests/CeLinkedSceneInputTests.cs) and
+  [runtime-link](companion/OnslaughtToolkit.Godot/Tests/CeMissionRuntimeLinkTests.cs) tests cover these rules with
+  authored data, and the full `npm test` passed on Linux on 2026-11-03 against the
+  [source merged into main](https://github.com/dlprentice/Onslaught-Career-Editor/tree/2d0bfd308e9553d45d54e21d7aafef951eea49e3).
+  Offscreen captures at two window sizes, loading through the folder dialog's selection signal and reloading with the
+  Reload control, were inspected: an authored scene's models on its sampled terrain, a base-world copy left at its
+  installed place and the bound model at the drop. A read-only pass over the levels of one Steam install loaded every
+  linked map with no unexpected binding outcome and found no world that lists models of its own, so an installed map
+  previews as terrain and the project's markers; nobody has viewed one in the preview. The binding rules follow CE's
+  project loader as read from its source: no project saved by this page has run in CE, and no released CE reads these
+  projects. The Windows branch of the regular-file open is compiled but has never run, and nobody has used the page or
+  its folder dialog by hand. The page edits no terrain, compiles or runs no source and exports no playable level. The
+  [workflow and limits](companion/OnslaughtToolkit.Godot/README.md#mission-project) distinguish this integrated
+  authoring preview from source compilation, CE runtime loading and complete mission authoring. Human use and native
+  Windows acceptance remain open.
 - **Advanced**, folded away: Career bytes (the open career's stored values, or the bytes that
   differ from another career).
 
