@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-03 (the content inventory, its readers and its retail gate; historical results retain their dates)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -113,6 +113,45 @@ ignored `local-data/`. They contain retail-derived metadata and stay private. Th
 catalogue. [The asset schema](content_catalog.schema.json), the detailed format descriptions below and
 [source-file coverage](#catalogue-source-file-coverage) explain the records and their limits.
 
+## Content inventory
+
+[`content_inventory.py`](content_inventory.py) accounts for every byte of a selected install and lists every model,
+texture, image, animation, sound, film and text asset in it, used or not. It runs the catalogue, then walks each file
+with the reader that follows its loader, or with its format's published layout, and puts each byte of the file's stream
+in one class: decoded (a reader consumed it in the loader's order and its walk closed exactly), referenced (a record or
+reader establishes what the bytes are and how long they are, but nothing has read their contents) or unknown. A gap in a
+walk is unknown by construction, so a reader cannot lose bytes silently. Used means that a catalogue record, a physics
+value, a manual page's link or a loader rule names the file or asset; it is not a runtime observation.
+
+```bash
+python tools/content_inventory_tests.py
+python tools/content_inventory.py --game /path/to/game [--decomp /path/to/onslaught-decomp] --out local-data/content-inventory
+python tools/content_inventory_gate.py --game /path/to/game --inventory local-data/content-inventory
+```
+
+Vorbis audio, Bink video and JPEG scans count as decoded only when an independent decoder (FFmpeg, found on `PATH` or
+named with `--media-decoder`) reads every stream without an error and its frame and sample counts equal the walk's own.
+Without one (`--no-media-decoder`) those payloads stay referenced, and the coverage says so. A mission script counts as
+decoded when `msl_compile.py` compiles it to the shipped script (`msl_gate.py`'s verdict) or, when no level ships it,
+when it compiles on its own. With `--decomp`, a film, particle set or splash image whose name a source string literal
+holds counts as used.
+
+The run writes `manifest.json`; `coverage.json` (per family, files and stored and logical bytes by class; the unknown
+total; the proofs each reader produced; the installer's log compared with the folder; the physics joins; the assets by
+kind, used and unused); `files.jsonl` (each file's account, with the spans that are not decoded); `items.jsonl` (one row
+per asset); and `records.jsonl` (the catalogue records' coordinates, for the gate). All of it is retail-derived and stays
+in ignored `local-data/`.
+
+[`content_inventory_gate.py`](content_inventory_gate.py) re-derives what only the real install can show, by a path that
+does not run through the reader being checked: an independent walk and hash of the folder, every AYA re-inflated with
+zlib alone, every archive's chunks walked again, every catalogue record that an archive stream places hashed at its
+coordinates, Pillow opening every image, every cached mesh frame composed from its keys, and the independent decoder's
+agreement on every Ogg and Bink file. It exits 0 only when all of them pass.
+
+A decoded byte belongs to a reader; that does not give every field a meaning or establish what the game does with it.
+The font records (`FGEN`, `DXFT`), part of each imposter record, a save's career block, the bytes of `Dial.raw` after its
+first frame and the executables' code and data sections stay referenced, and the coverage lists each such part.
+
 ## Editor references and generators
 
 The Companion's [level and mission editor owners](../PROJECT-INDEX.md#level-and-mission-editor) use these Python references:
@@ -130,6 +169,15 @@ documented below and in the development entry headers. Keep retail-derived table
 
 ## Assets and formats
 
+- `media_readers.py` walks the install's public container formats with their published layouts and refuses, with a
+  reason, whatever does not hold: Ogg (every page checksum, sequence and flag, and the three Vorbis headers), Bink 1 (the
+  header, the frame index and each frame's audio packet sizes, as libavformat's demuxer reads them), PNG (chunk
+  checksums and the inflated image data's size and row filters), JPEG (markers and the extent of each scan),
+  uncompressed TGA, PE (headers, sections, the resource tree, icon images and COFF symbols) and Word's ActiveMime drawing
+  data. `media_readers_tests.py` reaches every refusal reason the module has.
+- `physics_values_decode.py` reads the compiled physics script value by value with the value classes of the rebuild's
+  typed reader (`rebuild/OnslaughtRebuild.Parity/Physics/`) and says which values name a mesh, particle effect, sound
+  effect or icon. `physics_values_decode_tests.py` checks its tables against that C#, so the two cannot drift apart.
 - `aya_archive_inventory.py`, `aya_cross_platform_compare.py`, and
   `aya_texture_fidelity_census.py` provide fail-closed AYA inventory,
   cross-platform pairing, and stored-texture geometry/block comparison. The
@@ -543,6 +591,7 @@ Omitting the archive options leaves the existing catalog publication unchanged.
 ## Catalogue source-file coverage
 
 The counts describe logical source-file paths. Different paths can count separately even when their file contents are identical.
+For byte counts by what a reader decoded, see [the content inventory](#content-inventory).
 
 The `coverage.json` produced by `content_catalog.py` separates a family’s advertised parser support from what the
 selected input actually yielded. `sourceFileCoverage` counts regular input files and their stored sizes by family,
@@ -594,7 +643,9 @@ writes at all, to ignored local paths. New game findings belong in
   `heightfield_node_array_probe.py` (checks whether any shipped heightfield header fills the per-node array).
 - Meshes: `cmsh_grammar_walk.py` walks PC CMSH streams with the grammar in
   [`asset-formats/cmsh-fields.md`](../reverse-engineering/asset-formats/cmsh-fields.md) and proves it accounts for
-  every byte (with `--compose`, it also checks every cached frame against the composed keys);
+  every byte (with `--compose`, it also checks every cached frame against the composed keys). A loose mesh's chained
+  mesh is a direct `PMS2` child; a resource archive's wraps it in `PMSH`, `PMS2` and the 309-byte reference, and the
+  walk follows both;
   `dds_census.py` checks every installed texture's DDS header against its stored mip chain, classifies its alpha and, with `--mips`, checks every lower level
   (see [`asset-formats/dds-texture.md`](../reverse-engineering/asset-formats/dds-texture.md));
   `goodie_resource_walk.py` walks the Goodie archives and resolves what each Goodie shows (see

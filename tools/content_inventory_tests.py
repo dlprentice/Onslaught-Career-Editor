@@ -1,0 +1,373 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-only
+"""Checks tools/content_inventory.py and its retail gate on an authored install (no game bytes): the byte account's
+rules, what each reader claims and refuses, the joins that make a file or asset used, the independent decoder's
+agreement rule, and that the gate fails when the run and the folder disagree."""
+from __future__ import annotations
+
+import contextlib
+import io
+import json
+import os
+import shutil
+import stat
+import struct
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+import content_catalog_tests as catalog_fixtures
+import content_inventory as inv
+import content_inventory_gate as gate
+import game_tables_decode_tests as tables
+import media_readers_tests as media_fixtures
+
+FAKE_DECODER = '''#!/usr/bin/env python3
+import sys
+path = sys.argv[sys.argv.index("-i") + 1]
+if path.endswith("broken.ogg"):
+    sys.stderr.write("error while decoding\\n")
+    sys.exit(1)
+print("#tb 0: 1/25")
+if path.endswith(".ogg"):
+    print("0,          0,          0,     4410,     8820, 0x00000000")
+elif path.endswith(".vid"):
+    print("0,          0,          0,        1,     9216, 0x00000000")
+    print("0,          1,          1,        1,     9216, 0x00000000")
+    print("1,          0,          0,     1024,     2048, 0x00000000")
+'''
+
+
+def physics_script() -> bytes:
+    """A unit naming its mesh and an engine noise, an explosion naming a particle effect and a sound, a weapon naming
+    an icon no texture carries."""
+    def text(value: str) -> bytes:
+        return value.encode("ascii") + b"\0"
+
+    return media_fixtures_free_physics([
+        (1, "Tank", [(8, struct.pack("<I", 3)), (9, text("authored.msh")), (54, text("Engine"))]),
+        (8, "Rock", [(2, text("authored.msh"))]),
+        (6, "Boom", [(2, text("Spark")), (10, text("engine")), (5, text("NoSuchEffect"))]),
+        (2, "Gun", [(5, text("gun_icon"))]),
+    ])
+
+
+def media_fixtures_free_physics(statements) -> bytes:
+    out = bytearray(struct.pack("<H", 18))
+    for kind, name, values in statements:
+        body = bytearray(name.encode("ascii") + b"\0")
+        for number, (value_id, value) in enumerate(values):
+            body += struct.pack("<II", value_id, len(value)) + value
+            body += struct.pack("<i", -1 if number + 1 == len(values) else 0)
+        out += struct.pack("<II", kind, len(body)) + body
+    return bytes(out + struct.pack("<i", -1))
+
+
+def nested_imposters(*, views: bytes) -> bytes:
+    """A level archive whose imposters are framed as retail frames them: IMPS holding IMPS, then DATA, the atlas
+    texture and the IMPO list."""
+    chunk = catalog_fixtures.chunk
+    label = bytearray(76)
+    label[4:4 + 12] = b"authored.msh"
+    impt = chunk(b"CIMP", bytes(label)) + chunk(b"IMSH", struct.pack("<i", 7)) + chunk(b"VIEW", views)
+    inner = (chunk(b"DATA", bytes(8)) + catalog_fixtures.text_record("Imposters_101", tag=b"BTXT")
+             + chunk(b"IMPO", struct.pack("<I", 1) + chunk(b"IMPT", impt)))
+    return catalog_fixtures.aya(chunk(b"LVLR", struct.pack("<I", 103)) + chunk(b"TARG", struct.pack("<I", 1))
+                                + chunk(b"AYAD", bytes(24)) + chunk(b"IMPS", chunk(b"IMPS", inner)))
+
+
+def authored(game: Path) -> None:
+    catalog_fixtures.authored_install(game)
+    tables.write_tables(game)
+    extra = {
+        "data/default physics.dat": physics_script(),
+        "data/language/english.dat": catalog_fixtures.authored_language(),
+        "data/sounds/english/MessageBox/line.ogg": media_fixtures.ogg_file(),
+        "data/video/intro.vid": media_fixtures.bink_file([([b"\x10" * 8], b"\x20" * 30), ([b"\x11" * 4], b"\x21" * 50)]),
+        "data/textures/splash.tga": media_fixtures.tga_file(),
+        "data/Dial.raw": bytes(512),
+        "Manuals/English/English.htm": b'<html><img src="English_files/image001.png"></html>\r\n',
+        "Manuals/English/English_files/image001.png": media_fixtures.png_file(),
+        "Manuals/Images/orphan.png": media_fixtures.png_file(3, 1),
+        "data/resources/101_res_PC.aya": nested_imposters(views=struct.pack("<6f", 0.0, 0.5, 0.0, 0.25, 8.0, 8.0) * 6),
+    }
+    for rel, data in extra.items():
+        path = game / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+
+
+def part_classes(row: dict) -> dict[str, set[str]]:
+    out: dict[str, set[str]] = {}
+    for part in row["parts"]:
+        out.setdefault(part["part"], set()).add(part["class"])
+    return out
+
+
+class AccountTests(unittest.TestCase):
+    def test_a_gap_is_unknown_and_the_parts_sum(self):
+        account = inv.Account(10)
+        account.add(0, 4, inv.DECODED, "head")
+        account.add(6, 2, inv.REFERENCED, "body")
+        closed = account.close()
+        self.assertEqual(closed["totals"], {inv.DECODED: 4, inv.REFERENCED: 2, inv.UNKNOWN: 4})
+        self.assertEqual(closed["unknownSpans"], [[4, 6, "unclaimed"], [8, 10, "unclaimed"]])
+        self.assertEqual(account.spans_of(inv.REFERENCED), [(6, 8)])
+
+    def test_overlapping_or_outside_claims_are_refused(self):
+        account = inv.Account(8)
+        account.add(0, 4, inv.DECODED, "a")
+        account.add(3, 2, inv.DECODED, "b")
+        with self.assertRaises(inv.AccountError):
+            account.close()
+        with self.assertRaises(inv.AccountError):
+            inv.Account(4).add(2, 3, inv.DECODED, "c")
+        with self.assertRaises(inv.AccountError):
+            inv.Account(4).add(0, 1, "guessed", "d")
+
+    def test_file_classes(self):
+        self.assertEqual(inv.file_class(0, {inv.DECODED: 0, inv.REFERENCED: 0, inv.UNKNOWN: 0}), inv.DECODED)
+        self.assertEqual(inv.file_class(3, {inv.DECODED: 3, inv.REFERENCED: 0, inv.UNKNOWN: 0}), inv.DECODED)
+        self.assertEqual(inv.file_class(3, {inv.DECODED: 0, inv.REFERENCED: 3, inv.UNKNOWN: 0}), inv.REFERENCED)
+        self.assertEqual(inv.file_class(3, {inv.DECODED: 0, inv.REFERENCED: 0, inv.UNKNOWN: 3}), inv.UNKNOWN)
+        self.assertEqual(inv.file_class(3, {inv.DECODED: 2, inv.REFERENCED: 0, inv.UNKNOWN: 1}), inv.PARTIAL)
+
+    def test_a_pool_string_no_entry_reaches_is_referenced_and_a_fragment_unknown(self):
+        pool = "lost\0kept\0".encode("utf-16le") + b"x\0"
+        account = inv.Account(len(pool))
+        inv.claim_strings(account, pool, 0, len(pool), [10], 2, "pool")
+        closed = account.close()
+        self.assertEqual(closed["totals"], {inv.DECODED: 10, inv.REFERENCED: 10, inv.UNKNOWN: 2})
+
+    def test_the_sniff_reads_the_bytes_not_the_name(self):
+        self.assertEqual(inv.sniff(media_fixtures.ogg_file()), "ogg")
+        self.assertEqual(inv.sniff(media_fixtures.png_file()), "png")
+        self.assertEqual(inv.sniff(catalog_fixtures.aya(b"LVLR")), "aya")
+        self.assertEqual(inv.sniff(b"plain words\r\n"), "text")
+        self.assertEqual(inv.sniff(b""), "empty")
+        self.assertFalse(inv.sniff_agrees("ogg-voice", "png"))
+
+
+class InventoryTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.temp = tempfile.TemporaryDirectory()
+        cls.game = Path(cls.temp.name) / "game"
+        authored(cls.game)
+        cls.inventory = inv.build_inventory(cls.game)
+        cls.rows = {row["path"]: row for row in cls.inventory["files"]}
+        cls.items = cls.inventory["items"]
+        cls.coverage = cls.inventory["coverage"]
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.temp.cleanup()
+
+    def item(self, form: str, name: str) -> dict:
+        return next(item for item in self.items if item["form"] == form and item["name"] == name)
+
+    def test_every_file_is_accounted_once_and_the_bytes_sum(self):
+        on_disk = sum(path.stat().st_size for path in self.game.rglob("*") if path.is_file())
+        self.assertEqual(self.coverage["installBytes"], on_disk)
+        self.assertEqual(len(self.rows), sum(1 for path in self.game.rglob("*") if path.is_file()))
+        for row in self.rows.values():
+            self.assertEqual(sum(row["bytes"].values()), row["logicalBytes"], row["path"])
+
+    def test_an_archive_is_walked_chunk_by_chunk(self):
+        parts = part_classes(self.rows["data/resources/100_res_PC.aya"])
+        self.assertEqual(parts["TEXT"], {inv.DECODED})
+        self.assertEqual(parts["MESH/reference"], {inv.DECODED})
+
+    def test_imposters_framed_as_retail_frames_them(self):
+        row = self.rows["data/resources/101_res_PC.aya"]
+        parts = part_classes(row)
+        self.assertEqual(parts["IMPS/label"], {inv.DECODED})
+        self.assertEqual(parts["IMPS/views"], {inv.DECODED})
+        self.assertEqual(parts["IMPS/atlas-texture"], {inv.DECODED})
+        self.assertEqual(parts["IMPS/DATA"], {inv.REFERENCED})
+        self.assertEqual(row["bytes"][inv.UNKNOWN], 0)
+
+    def test_imposters_without_their_inner_chunk_are_refused(self):
+        # The catalogue's fixture frames IMPS flatly; the walk refuses it and leaves its bytes unknown.
+        row = self.rows["data/resources/100_res_PC.aya"]
+        self.assertIn("IMPS: IMPS does not hold its own IMPS chunk", row["problems"])
+        self.assertGreater(row["bytes"][inv.UNKNOWN], 0)
+
+    def test_views_that_are_not_atlas_rectangles_stay_framed(self):
+        zero = inv.views_hold(bytes(144))
+        good = inv.views_hold(struct.pack("<6f", 0.0, 0.5, 0.0, 0.25, 8.0, 8.0))
+        self.assertEqual((zero, good, inv.views_hold(bytes(25))), (False, True, False))
+
+    def test_media_without_a_decoder_stays_referenced(self):
+        row = self.rows["data/sounds/english/MessageBox/line.ogg"]
+        self.assertEqual(row["class"], inv.PARTIAL)
+        self.assertEqual(part_classes(row)["ogg/audio-packets"], {inv.REFERENCED})
+        self.assertEqual(row["facts"]["decoder"], "not run")
+        self.assertIn("not run", self.coverage["mediaDecoder"])
+        video = self.rows["data/video/intro.vid"]
+        self.assertEqual(part_classes(video)["bink/video-packets"], {inv.REFERENCED})
+
+    def test_a_file_its_reader_refuses_is_referenced_with_the_reason(self):
+        row = self.rows["data/sounds/english/MessageBox/hello.ogg"]  # the catalogue's header-only fixture
+        self.assertEqual(row["class"], inv.REFERENCED)
+        self.assertTrue(row["problems"])
+        self.assertEqual(self.rows["BEA.exe"]["class"], inv.REFERENCED)
+
+    def test_images_are_decoded_and_a_page_link_uses_one(self):
+        self.assertEqual(self.rows["data/textures/splash.tga"]["class"], inv.DECODED)
+        linked = self.item("png", "image001.png")
+        orphan = self.item("png", "orphan.png")
+        self.assertTrue(linked["used"])
+        self.assertIn("page:link", linked["usedBy"])
+        self.assertFalse(orphan["used"])
+
+    def test_the_byte_sprite_proves_only_its_first_frame(self):
+        row = self.rows["data/Dial.raw"]
+        self.assertEqual(row["bytes"], {inv.DECODED: 256, inv.REFERENCED: 256, inv.UNKNOWN: 0})
+        self.assertIn("loader:CByteSprite::Load", row["usedBy"])
+
+    def test_physics_values_are_read_and_joined(self):
+        self.assertEqual(self.rows["data/default physics.dat"]["class"], inv.DECODED)
+        joins = self.coverage["physicsJoins"]
+        self.assertEqual(joins["joins"]["sound-effect:resolved"], 2)  # Engine, and engine by stricmp
+        self.assertEqual(joins["joins"]["particle-effect:resolved"], 1)
+        self.assertEqual(joins["unresolvedNames"]["particle-effect"], ["NoSuchEffect"])
+        self.assertEqual(joins["unresolvedNames"]["icon"], ["gun_icon"])
+        mesh = self.rows["data/resources/meshes/m_authored.msh.aya"]
+        self.assertIn("physics:mesh", mesh["usedBy"])
+
+    def test_a_texture_nothing_loads_is_listed_unused(self):
+        unused = [i for i in self.items if i["form"] == "dds-file" and i["file"].endswith("unused.tga(0)A1R5G5B5.aya")]
+        self.assertEqual(len(unused), 1)
+        self.assertFalse(unused[0]["used"])
+
+    def test_items_have_unique_ids_and_known_kinds(self):
+        ids = [item["id"] for item in self.items]
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertLessEqual({item["kind"] for item in self.items},
+                             {"model", "texture", "image", "animation", "sound", "film", "text"})
+
+    def test_trailing_bytes_after_a_table_are_unknown(self):
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            shutil.copytree(self.game, game)
+            path = game / "data/language/english.dat"
+            path.write_bytes(path.read_bytes() + b"tail")
+            row = next(r for r in inv.build_inventory(game)["files"] if r["path"] == "data/language/english.dat")
+            self.assertEqual(row["bytes"][inv.UNKNOWN], 4)
+            self.assertEqual(row["class"], inv.PARTIAL)
+
+
+class DecoderTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+        self.decoder = self.root / "fake-decoder"
+        self.decoder.write_text(FAKE_DECODER, encoding="utf-8")
+        self.decoder.chmod(self.decoder.stat().st_mode | stat.S_IXUSR)
+
+    def tearDown(self) -> None:
+        self.temp.cleanup()
+
+    def test_the_decoder_s_frame_lines_become_stream_counts(self):
+        (self.root / "a.vid").write_bytes(b"x")
+        result = inv.decode_media(self.root / "a.vid", str(self.decoder))
+        self.assertTrue(result["clean"])
+        self.assertEqual(result["streams"], {"0": {"frames": 2, "bytes": 18432}, "1": {"frames": 1, "bytes": 2048}})
+
+    def test_an_error_is_not_clean(self):
+        (self.root / "broken.ogg").write_bytes(b"x")
+        self.assertFalse(inv.decode_media(self.root / "broken.ogg", str(self.decoder))["clean"])
+
+    def test_agreement_needs_the_walk_s_own_counts(self):
+        ogg = {"channels": 1, "samples": 4410}
+        good = {"clean": True, "streams": {"0": {"frames": 3, "bytes": 8820}}}
+        self.assertTrue(inv.decoder_agrees(good, ogg, "ogg-voice"))
+        self.assertFalse(inv.decoder_agrees({**good, "streams": {"0": {"frames": 3, "bytes": 8818}}}, ogg, "ogg-voice"))
+        self.assertFalse(inv.decoder_agrees({**good, "clean": False}, ogg, "ogg-voice"))
+        bink = {"frames": 2, "audioTracks": 1}
+        self.assertFalse(inv.decoder_agrees({"clean": True, "streams": {"0": {"frames": 2, "bytes": 1}}}, bink,
+                                            "bink-video"))
+        self.assertFalse(inv.decoder_agrees(None, bink, "bink-video"))
+
+    def test_an_agreeing_decoder_turns_the_payload_decoded(self):
+        game = self.root / "game"
+        authored(game)
+        rows = {r["path"]: r for r in inv.build_inventory(game, decoder=str(self.decoder), jobs=2)["files"]}
+        self.assertEqual(rows["data/sounds/english/MessageBox/line.ogg"]["class"], inv.DECODED)
+        self.assertEqual(rows["data/video/intro.vid"]["class"], inv.DECODED)
+        self.assertEqual(rows["data/video/intro.vid"]["facts"]["decoder"], "agrees")
+
+
+class GateTests(unittest.TestCase):
+    def test_an_archive_without_a_world_is_counted_not_fatal(self):
+        unread = __import__("collections").Counter()
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            authored(game)
+            inv.judge_mission_scripts(game, unread)
+        # The authored levels 100 and 101 have no WRES; level 200's authored world exceeds world_resources_encode's
+        # member limit. None of the three stops the run.
+        self.assertEqual(unread["mslArchivesWithoutReadableWorlds"], 3)
+
+    def test_the_gate_reports_what_disagrees(self):
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            authored(game)
+            out = Path(temp) / "out"
+            inv.write_outputs(out, game, inv.build_inventory(game))
+            report = gate.run(game, out, compose=False)
+            text = "\n".join(report.failures)
+            self.assertIn("BEA.exe: 1 reader problems", text)
+            self.assertIn("the independent decoder did not agree (not run)", text)
+            self.assertGreater(report.counts["records whose coordinates hash to their SHA-256"], 0)
+            self.assertEqual(report.counts["accounts checked"], sum(1 for p in game.rglob("*") if p.is_file()))
+            (game / "data/Dial.raw").write_bytes(bytes(511))
+            (game / "added.txt").write_bytes(b"new\n")
+            text = "\n".join(gate.run(game, out, compose=False).failures)
+            self.assertIn("data/Dial.raw: the run's size differs from the folder's", text)
+            self.assertIn("added.txt: in the folder only", text)
+
+    def test_a_tampered_record_hash_is_caught(self):
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            authored(game)
+            out = Path(temp) / "out"
+            inv.write_outputs(out, game, inv.build_inventory(game))
+            lines = (out / "records.jsonl").read_text(encoding="utf-8").splitlines()
+            rows = [json.loads(line) for line in lines]
+            target = next(r for r in rows if gate.STREAM_ENVELOPE_RE.match(r["source"]["envelope"]))
+            target["sha256"] = "0" * 64
+            (out / "records.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+            text = "\n".join(gate.run(game, out, compose=False).failures)
+            self.assertIn(f"{target['id']}: the bytes at its coordinates do not hash to its SHA-256", text)
+
+
+class BoundaryTests(unittest.TestCase):
+    def test_output_outside_ignored_local_data_is_refused(self):
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            authored(game)
+            with patch.object(inv, "write_outputs") as write, contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit):
+                    inv.main(["--game", str(game), "--out", str(Path(temp) / "out"), "--no-media-decoder"])
+            write.assert_not_called()
+
+    def test_every_output_row_carries_the_retail_marker(self):
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp) / "game"
+            authored(game)
+            out = Path(temp) / "out"
+            written = inv.write_outputs(out, game, inv.build_inventory(game))
+            self.assertEqual({p.name for p in written},
+                             {"manifest.json", "coverage.json", "files.jsonl", "items.jsonl", "records.jsonl"})
+            for path in written:
+                text = path.read_text(encoding="utf-8")
+                rows = [json.loads(line) for line in text.splitlines()] if path.suffix == ".jsonl" else [json.loads(text)]
+                self.assertTrue(all(row[inv.GENERATED_MARKER] for row in rows), path.name)
+
+
+if __name__ == "__main__":
+    os.environ.pop("DISPLAY", None)
+    unittest.main()

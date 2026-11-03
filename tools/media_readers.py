@@ -227,7 +227,7 @@ def walk_bink(data: bytes) -> Walk:
 
 
 # ---------------------------------------------------------------------------------------------------------------- PNG
-PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+PNG_SIGNATURE = bytes((137, 80, 78, 71, 13, 10, 26, 10))
 PNG_CHANNELS = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}
 _ADAM7 = ((0, 0, 8, 8), (4, 0, 8, 8), (0, 4, 4, 8), (2, 0, 4, 4), (0, 2, 2, 4), (1, 0, 2, 2), (0, 1, 1, 2))
 
@@ -302,13 +302,14 @@ def walk_png(data: bytes) -> Walk:
 
 
 # --------------------------------------------------------------------------------------------------------------- JPEG
+JPEG_START = bytes((255, 216, 255))
 _JPEG_FRAMES = frozenset(range(0xC0, 0xD0)) - {0xC4, 0xC8, 0xCC}
 
 
 def walk_jpeg(data: bytes) -> Walk:
     """Marker segments and the extent of each entropy-coded scan, which stays OPAQUE."""
     walk = Walk()
-    if data[:3] != b"\xff\xd8\xff":
+    if data[:3] != JPEG_START:
         raise FormatError("no JPEG start of image")
     walk.add(0, 2, DECODED, "jpeg/markers")
     position, size, scans, ended = 2, None, 0, False
@@ -472,7 +473,9 @@ def walk_pe(data: bytes) -> Walk:
         nodes = [0]
 
         def descend(directory: int, depth: int, path: tuple) -> None:
-            if depth > MAX_RESOURCE_DEPTH or directory + 16 > rsrc_size:
+            if depth > MAX_RESOURCE_DEPTH:
+                raise FormatError("resource tree is deeper than its limit")
+            if directory + 16 > rsrc_size:
                 raise FormatError("resource directory runs past its section")
             (named, ids) = struct.unpack_from("<HH", data, base + directory + 12)
             for entry in range(named + ids):

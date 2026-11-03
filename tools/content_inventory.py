@@ -968,8 +968,8 @@ def sniff(data: bytes) -> str:
     """What a file's own bytes say it is, whatever its path says."""
     if not data:
         return "empty"
-    for magic, name in ((b"OggS", "ogg"), (b"BIK", "bink"), (b"PCXP", "xap"), (b"\x89PNG", "png"), (b"\xff\xd8\xff", "jpeg"),
-                        (b"MZ", "pe"), (b"ActiveMime", "active-mime")):
+    for magic, name in ((b"OggS", "ogg"), (b"BIK", "bink"), (b"PCXP", "xap"), (media.PNG_SIGNATURE, "png"),
+                        (media.JPEG_START, "jpeg"), (b"MZ", "pe"), (media.ACTIVE_MIME_MAGIC, "active-mime")):
         if data.startswith(magic):
             return name
     if data[-18:] == media.TGA_FOOTER:
@@ -1040,11 +1040,25 @@ def decode_all_media(game: Path, files: list[dict], decoder: str, jobs: int) -> 
         return dict(zip(wanted, pool.map(lambda rel: decode_media(game / rel, decoder), wanted)))
 
 
-def judge_mission_scripts(game: Path) -> dict[str, list[str]]:
+def shipped_scripts(game: Path, unread: collections.Counter):
+    """(folder level, record) for each compiled script of each level archive's world bodies, as tools/msl_gate.py's
+    scripts_of reads them; an archive whose worlds do not read is counted in unread instead of stopping the run."""
+    for _level, path in wre.level_archives(game).items():
+        try:
+            worlds = wre.level_worlds(b"".join(wre.inflate(wre.read_members(wre.read_retail(path)))))
+            for tag, body in sorted(worlds["bodies"].items()):
+                folder = worlds["realLevel"] if tag == "RLWD" else worlds["baseLevel"]
+                for record in wre.read_world_model(body)["scripts"]:
+                    yield folder, record
+        except (wre.EncodeError, ValueError, struct.error):
+            unread["mslArchivesWithoutReadableWorlds"] += 1
+
+
+def judge_mission_scripts(game: Path, unread: collections.Counter | None = None) -> dict[str, list[str]]:
     """Per .msl file (folded path): tools/msl_gate.py's verdict on each shipped script compiled from it."""
     verdicts: dict[str, list[str]] = collections.defaultdict(list)
     read_include = mc.includes_from(game)
-    for _level, _tag, folder, record in msl_gate.scripts_of(game):
+    for folder, record in shipped_scripts(game, unread if unread is not None else collections.Counter()):
         status, _detail, compiled = msl_gate.judge_record(game, read_include, folder, record)
         key = (folder, record["name"])
         if status == "different" and key in msl_gate.STALE_SOURCES and compiled is not None:
@@ -1404,7 +1418,9 @@ def media_proofs(ctx: Context, rows: list[dict]) -> None:
 def build_inventory(game: Path, decomp: Path | None = None, *, decoder: str | None = None, jobs: int = 8) -> dict:
     catalog = cc.build_catalog(game, decomp)
     media_results = decode_all_media(game, catalog["files"], decoder, jobs) if decoder else {}
-    ctx = Context(game, media_results=media_results, msl_verdicts=judge_mission_scripts(game))
+    unread: collections.Counter = collections.Counter()
+    ctx = Context(game, media_results=media_results, msl_verdicts=judge_mission_scripts(game, unread))
+    ctx.proofs.update(unread)
     rows, found = [], []
     for row in catalog["files"]:
         if row["size"] is None:
@@ -1457,7 +1473,10 @@ def write_outputs(out: Path, game: Path, inventory: dict, *, decomp: Path | None
     outputs = {"manifest.json": json.dumps(manifest, indent=2, sort_keys=True) + "\n",
                "coverage.json": json.dumps(coverage, indent=2, sort_keys=True) + "\n",
                "files.jsonl": "".join(json.dumps({**row, GENERATED_MARKER: True}, sort_keys=True) + "\n" for row in rows),
-               "items.jsonl": "".join(json.dumps({**row, GENERATED_MARKER: True}, sort_keys=True) + "\n" for row in items)}
+               "items.jsonl": "".join(json.dumps({**row, GENERATED_MARKER: True}, sort_keys=True) + "\n" for row in items),
+               "records.jsonl": "".join(json.dumps({"id": asset["id"], "type": asset["type"], "source": asset["source"],
+                                                    "sha256": asset["sha256"], GENERATED_MARKER: True}, sort_keys=True) + "\n"
+                                        for asset in inventory["catalog"]["assets"])}
     written = []
     protected = [game] + ([decomp] if decomp is not None else [])
     with SecuredOutputRoot(out, protected_sources=protected) as secured:
