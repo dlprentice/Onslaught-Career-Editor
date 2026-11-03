@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using System.Collections.ObjectModel;
 using System.Numerics;
+using Microsoft.Win32.SafeHandles;
 using OnslaughtToolkit.Companion.Assets;
+using OnslaughtToolkit.Companion.Files;
 using OnslaughtToolkit.Companion.Levels;
 
 namespace OnslaughtToolkit.Companion.Missions;
@@ -214,12 +216,33 @@ public static class CeLinkedSceneLoader
     private static byte[] Read(FileInfo file, int maximum)
     {
         if (file.LinkTarget is not null) throw new InvalidDataException("A preview input may not be a link.");
-        using FileStream stream = new(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using FileStream stream = OpenRegular(file.FullName);
         long size = stream.Length;
         if (size <= 0 || size > maximum) throw new InvalidDataException("A preview input exceeds its byte limit.");
         byte[] bytes = new byte[checked((int)size)];
         stream.ReadExactly(bytes);
         if (stream.Length != size) throw new InvalidDataException("A preview input changed while it was read.");
         return bytes;
+    }
+
+    /// <summary>
+    /// Decides the file's kind on an open handle, before any byte is read. An ordinary open of a named pipe waits for a writer and
+    /// cannot be cancelled, so the Linux open does not block; neither open follows a final link.
+    /// </summary>
+    private static FileStream OpenRegular(string path)
+    {
+        SafeFileHandle handle = OperatingSystem.IsLinux()
+            ? LinuxSaveNative.OpenAt(LinuxSaveNative.AtCurrentDirectory, path, LinuxSaveNative.ReadFile, 0)
+            : OperatingSystem.IsWindows() ? FileMutationSafety.OpenNoFollowReadHandle(path, "Map preview input")
+            : throw new PlatformNotSupportedException("Protected map reads support Linux and Windows.");
+        try
+        {
+            bool regular = OperatingSystem.IsLinux()
+                ? (LinuxSaveNative.Inspect(handle).Mode & 0xF000) == 0x8000
+                : !FileMutationSafety.GetWindowsIdentity(handle, "Map preview input").IsReparsePoint && ScriptSourceReader.IsDiskFile(handle);
+            if (!regular) throw new InvalidDataException("A preview input must be a regular file.");
+            return new FileStream(handle, FileAccess.Read);
+        }
+        catch { handle.Dispose(); throw; }
     }
 }

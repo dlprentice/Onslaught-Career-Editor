@@ -180,6 +180,7 @@ internal static class CeMissionProjectPageTests
         finally { viewport.QueueFree(); await Frames(tree); }
         await DelayedIo(tree, output, check);
         await LinkedSceneLifecycle(tree, output, check);
+        await LinkedScenePipe(tree, output, check);
     }
 
     private static async Task DelayedIo(SceneTree tree, string output, Checks check)
@@ -298,6 +299,42 @@ internal static class CeMissionProjectPageTests
             string saved = Path.Combine(output, "linked-scene-page.ceproject");
             check.That(await page.SaveFileAsync(saved) && !System.Text.Encoding.UTF8.GetString(File.ReadAllBytes(saved)).Contains(selectedRoot, StringComparison.Ordinal),
                 "the production Save as path keeps local preview roots out of project JSON");
+        }
+        finally { viewport.QueueFree(); await Frames(tree); }
+    }
+
+    private static async Task LinkedScenePipe(SceneTree tree, string output, Checks check)
+    {
+        if (!OperatingSystem.IsLinux()) return;
+        check.Suite("linked-map pipe on the page");
+        SubViewport viewport = new() { Size = new Vector2I(1280, 900), GuiEmbedSubwindows = true };
+        tree.Root.AddChild(viewport);
+        Control popups = new(); viewport.AddChild(popups);
+        StatusLine status = new(); viewport.AddChild(status.Root); status.Root.Visible = false;
+        CeMissionProjectPage page = new(status, popups, (_, _, _) => { });
+        viewport.AddChild(page.Root); page.Root.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        string root = Path.Combine(output, "linked-scene-pipe"), resources = Path.Combine(root, "data", "resources"),
+            archive = Path.Combine(resources, "777_res_pc.aya");
+        Directory.CreateDirectory(Path.Combine(resources, "meshes"));
+        try
+        {
+            await Frames(tree);
+            page.OpenDocument(CeMissionRuntimeLinkTests.Authored());
+            byte[] before = CeMissionProjectJson.Write(page.Editor.Current);
+            check.That(CeLinkedSceneInputTests.MakePipe(archive), "a named pipe could be made for the test");
+            Task<bool> loading = page.LoadLinkedSceneAsync(root);
+            bool returned = await Task.WhenAny(loading, Task.Delay(TimeSpan.FromSeconds(10))) == loading;
+            if (!returned) CeLinkedSceneInputTests.ReleaseReader(archive);
+            bool loaded = true;
+            try { loaded = await loading; }
+            catch (NotSupportedException) { check.Fail("the page's read of a pipe ended in an unexpected error"); }
+            check.That(returned && !loaded && page.LinkedScene is null && !page.Busy && page.Notice.Contains("could not be loaded", StringComparison.Ordinal) &&
+                CeMissionProjectJson.Write(page.Editor.Current).AsSpan().SequenceEqual(before),
+                "the page's real loader refuses a selected pipe at once, reports it and keeps the project");
+            File.Delete(archive);
+            File.WriteAllBytes(archive, CeLinkedSceneTests.Archive(CeLinkedSceneTests.AnchorBody().Write()));
+            check.That(await page.LoadLinkedSceneAsync(root) && page.LinkedScene is { } scene && scene.Objects.Count == 2,
+                "the same path loads on the page once it is a regular archive");
         }
         finally { viewport.QueueFree(); await Frames(tree); }
     }

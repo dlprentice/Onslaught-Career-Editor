@@ -37,6 +37,8 @@ internal static class CeLinkedSceneTests
     {
         check.Suite("linked-map scene");
         await Loader(Path.Combine(output, "linked-scene-input"), check);
+        CeLinkedSceneInputTests.Run(output, check);
+        check.Suite("linked-map scene");
         Coordinates(check);
         await Viewport(tree, check);
         await BaseWorldModel(tree, check);
