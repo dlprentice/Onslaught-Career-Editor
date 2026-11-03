@@ -388,6 +388,13 @@ def pe_file(*, resource: bool = True, icon_ok: bool = True, symbols: bool = Fals
     return bytes(out)
 
 
+def part_bytes(walk: media.Walk) -> dict[tuple[str, str], int]:
+    out: dict[tuple[str, str], int] = {}
+    for _start, length, kind, part in walk.spans:
+        out[(part, kind)] = out.get((part, kind), 0) + length
+    return out
+
+
 class PeTests(unittest.TestCase):
     def test_headers_sections_and_resources(self):
         data = pe_file()
@@ -396,18 +403,50 @@ class PeTests(unittest.TestCase):
         types = sorted(r["type"] for r in walk.facts["resources"])
         self.assertEqual(types, ["group-icon", "icon"])
         self.assertTrue(all(r["status"] == "decoded" for r in walk.facts["resources"]))
-        parts = {part: kind for _s, _l, kind, part in walk.spans}
-        self.assertEqual(parts["pe/section .text"], media.OPAQUE)
+        parts = part_bytes(walk)
+        self.assertEqual(parts[("pe/section .text", media.OPAQUE)], 0x200)
+        # The DOS header, then the PE signature, file and optional headers and two section rows; the rest of the
+        # 0x400 header bytes is padding, framed.
+        self.assertEqual(parts[("pe/headers", media.DECODED)], 0x40 + 24 + 224 + 2 * 40)
+        self.assertEqual(parts[("pe/header-padding", media.OPAQUE)], 0x400 - (0x40 + 24 + 224 + 2 * 40))
+        # The tree's five directories and their entries and two data entries are read; the section's padding is not.
+        tree = (16 + 8 * 2) + 4 * (16 + 8) + 2 * 16
+        self.assertEqual(parts[("pe/resource-tree", media.DECODED)], tree)
+        icon_and_group = sum(r["length"] for r in walk.facts["resources"])
+        self.assertEqual(parts[("pe/resource-section (not reached by the tree)", media.OPAQUE)],
+                         0x200 * 3 - tree - icon_and_group)
+
+    def test_a_dos_stub_and_named_resources(self):
+        data = bytearray(pe_file())
+        stub = b"stub" * 16
+        data[0x40:0x40] = stub  # the PE header moves along; every offset after it does too
+        struct.pack_into("<I", data, 0x3C, 0x40 + len(stub))
+        moved = len(stub)
+        for index in range(2):  # the section rows' file offsets
+            at = 0x40 + moved + 24 + 224 + 40 * index + 20
+            struct.pack_into("<I", data, at, struct.unpack_from("<I", data, at)[0] + moved)
+        struct.pack_into("<I", data, 0x40 + moved + 24 + 60, 0x400 + moved)  # SizeOfHeaders
+        rsrc = 0x600 + moved
+        name_at = 0x600 - 8  # a name in the resource section's padding: a length of two, then two UTF-16 units
+        struct.pack_into("<HH", data, rsrc + 12, 1, 1)
+        struct.pack_into("<I", data, rsrc + 16, 0x80000000 | name_at)
+        struct.pack_into("<H2s2s", data, rsrc + name_at, 2, b"A\0", b"B\0")
+        walk = media.walk_pe(bytes(data))
+        parts = part_bytes(walk)
+        self.assertEqual(parts[("pe/dos-stub", media.OPAQUE)], moved)
+        self.assertEqual(parts[("pe/resource-tree", media.DECODED)], (16 + 8 * 2) + 4 * (16 + 8) + 2 * 16 + 6)
+        self.assertEqual(covered(walk, len(data)), len(data))
 
     def test_a_resource_that_does_not_hold_stays_framed(self):
         walk = media.walk_pe(pe_file(icon_ok=False, bad_icon_group=True))
         self.assertTrue(all(r["status"] == "framed" for r in walk.facts["resources"]))
 
-    def test_coff_symbols_are_claimed(self):
+    def test_coff_symbols_are_framed_not_read(self):
         data = pe_file(symbols=True)
         walk = media.walk_pe(data)
         self.assertEqual(covered(walk, len(data)), len(data))
         self.assertEqual(walk.facts["overlayBytes"], 0)
+        self.assertEqual(part_bytes(walk)[("pe/coff-symbols", media.OPAQUE)], 18 + 4)
 
     def test_refusals(self):
         good = pe_file()
@@ -423,8 +462,14 @@ class PeTests(unittest.TestCase):
         struct.pack_into("<I", bad, 0x58 + 60, len(good) + 1)
         refusal(self, media.walk_pe, bytes(bad), "headers run past the file")
         bad = bytearray(good)
+        struct.pack_into("<I", bad, 0x58 + 60, 0x100)
+        refusal(self, media.walk_pe, bytes(bad), "the section table runs past the headers")
+        bad = bytearray(good)
         struct.pack_into("<I", bad, 0x58 + 224 + 20, len(good))
         refusal(self, media.walk_pe, bytes(bad), "a section runs past the file")
+        bad = bytearray(good)
+        struct.pack_into("<I", bad, 0x58 + 224 + 20, 0x300)  # the code section's bytes inside the headers
+        refusal(self, media.walk_pe, bytes(bad), "the file's parts overlap")
         symbols = bytearray(pe_file(symbols=True))
         refusal(self, media.walk_pe, bytes(symbols[:-4]), "symbol table runs past the file")
         struct.pack_into("<I", symbols, len(symbols) - 4, 99)
@@ -456,6 +501,13 @@ def pe_resource_edits(good: bytes) -> list[tuple[str, bytes]]:
     struct.pack_into("<I", data, entries + 4, 0x10000)
     edits.append(("a resource runs past the file", bytes(data)))
     edits.append(("resource tree is deeper than its limit", deep_resource_tree(good)))
+    data = bytearray(good)
+    struct.pack_into("<HH", data, rsrc + 12, 1, 1)
+    struct.pack_into("<I", data, rsrc + 16, 0x80000000 | 0x7FFF0)
+    edits.append(("resource name runs past its section", bytes(data)))
+    data = bytearray(good)
+    struct.pack_into("<HH", data, rsrc + 12, 0, 0x7FF)
+    edits.append(("resource directory runs past its section", bytes(data)))
     return edits
 
 
@@ -508,12 +560,43 @@ class TextTests(unittest.TestCase):
         self.assertEqual(media.html_links(page_text), ["a_files/image001.png", "b.htm", "c.css"])
 
 
+PAGE = (b'<!DOCTYPE html>\r\n<html xmlns:o="urn:x">\r\n<head><!--[if gte mso 9]><xml><o:x/></xml><![endif]-->'
+        b'<style><!-- p {margin:0} a<b --></style></head>\r\n<body lang=EN-GB><p class=MsoNormal>Fish &amp; chips'
+        b'&nbsp;&#169;&#xA9;<![if !supportLists]>1.<![endif]><o:p></o:p><br/><img src="a.png" width=10></p>'
+        b'<?xml:namespace prefix = o ?>\r\n</body>\r\n</html>\r\n')
+
+
+class MarkupTests(unittest.TestCase):
+    def test_a_page_tokenizes_to_its_end(self):
+        walk = media.walk_html(PAGE)
+        self.assertEqual(covered(walk, len(PAGE)), len(PAGE))
+        self.assertEqual(walk.facts["tags"], 13)  # a style element's end tag is part of its raw text
+
+    def test_byte_soup_is_no_page(self):
+        refusal(self, media.walk_html, bytes(v for v in range(32, 256) if v not in b"<&"), "not one html element")
+        refusal(self, media.walk_html, bytes(range(32, 256)), "a character reference that does not close")
+        refusal(self, media.walk_html, b"<html>" + bytes(v for v in range(32, 256) if v != 38) + b"</html>",
+                "markup that is no HTML token")
+        refusal(self, media.walk_html, b"plain words, no markup\r\n", "not one html element")
+        refusal(self, media.walk_html, b"<html><p>a & b</p></html>", "a character reference that does not close")
+        refusal(self, media.walk_html, b"<html><style>p {}</html>", "a script or style element that does not close")
+        refusal(self, media.walk_html, b"<html></html> trailing words", "not one html element")
+        refusal(self, media.walk_html, b"<body></body>", "not one html element")
+        refusal(self, media.walk_html, b"<html><p x=\"1></p></html>", "markup that is no HTML token")
+
+    def test_xml_is_parsed(self):
+        data = b'<xml xmlns:o="urn:x">\r\n <o:MainFile HRef="../a.htm"/>\r\n <o:File HRef="b.png"/>\r\n</xml>\r\n'
+        self.assertEqual(media.walk_xml(data).facts["elements"], 3)
+        refusal(self, media.walk_xml, b"<xml><o:File HRef=b.png></xml>", "not well-formed XML")
+        refusal(self, media.walk_xml, bytes(range(32, 256)), "not well-formed XML")
+
+
 class ReasonsTests(unittest.TestCase):
     def test_every_refusal_reason_is_reached(self):
         """Run last (by name): every FormatError reason the module can give is given by some test above."""
         loader = unittest.TestLoader()
         others = unittest.TestSuite(loader.loadTestsFromTestCase(case) for case in (
-            OggTests, BinkTests, PngTests, JpegTests, TgaTests, PeTests, ActiveMimeTests, TextTests))
+            OggTests, BinkTests, PngTests, JpegTests, TgaTests, PeTests, ActiveMimeTests, TextTests, MarkupTests))
         unittest.TextTestRunner(stream=open("/dev/null", "w"), verbosity=0).run(others)
         source = Path(media.__file__).read_text(encoding="utf-8")
         reasons = set(re.findall(r'FormatError\("([^"]+)"\)', source))

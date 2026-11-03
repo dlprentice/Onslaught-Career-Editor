@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
 """Walkers for the public container formats a game install holds: Ogg Vorbis, Bink 1, PNG, JPEG, TGA, PE, Word's
-saved-web-page ActiveMime container, and plain text.
+saved-web-page ActiveMime container, HTML pages, XML documents and plain text.
 
 Each walker follows its format's published layout, proves the layout accounts for the file and refuses (FormatError,
 with a reason) whatever does not hold. It returns the spans it can vouch for as (start, length, kind, part), where kind
@@ -424,17 +424,21 @@ def icon_group_holds(body: bytes) -> bool:
 
 
 def walk_pe(data: bytes) -> Walk:
-    """Headers, section extents and the resource tree. A section's bytes stay OPAQUE: code and data are not content."""
+    """The structures a PE loader reads: the DOS header, the PE headers and section table, and the resource tree
+    (its directories, entries, names and data entries) with the icons and icon groups that hold. Everything else is
+    framed (OPAQUE): the DOS stub, the header padding, section contents (code and data are not content), resource
+    bytes the tree does not reach, the certificate and the COFF symbol and string tables, whose records are not read."""
     walk = Walk()
     if len(data) < 0x40 or data[:2] != b"MZ":
         raise FormatError("no MZ header")
     (pe_at,) = struct.unpack_from("<I", data, 0x3C)
-    if pe_at + 24 > len(data) or data[pe_at:pe_at + 4] != b"PE\0\0":
+    if pe_at < 0x40 or pe_at + 24 > len(data) or data[pe_at:pe_at + 4] != b"PE\0\0":
         raise FormatError("no PE header")
     (_machine, sections, _stamp, symbol_at, symbols, optional_size, _chars) = struct.unpack_from("<HHIIIHH", data, pe_at + 4)
     optional = pe_at + 24
     table = optional + optional_size
-    if table + 40 * sections > len(data) or optional_size < 96 or sections > 96:
+    table_end = table + 40 * sections
+    if table_end > len(data) or optional_size < 96 or sections > 96:
         raise FormatError("section table runs past the file")
     (magic,) = struct.unpack_from("<H", data, optional)
     if magic == 0x10B:
@@ -449,7 +453,13 @@ def walk_pe(data: bytes) -> Walk:
     (cert_at, cert_size) = struct.unpack_from("<II", data, directories + 4 * 8)
     if headers_size > len(data):
         raise FormatError("headers run past the file")
-    walk.add(0, headers_size, DECODED, "pe/headers")
+    if headers_size < table_end:
+        raise FormatError("the section table runs past the headers")
+    walk.add(0, 0x40, DECODED, "pe/headers")
+    walk.add(0x40, pe_at - 0x40, OPAQUE, "pe/dos-stub")
+    walk.add(pe_at, table_end - pe_at, DECODED, "pe/headers")
+    padding = data[table_end:headers_size]
+    walk.add(table_end, len(padding), OPAQUE, "pe/header-padding" if not padding.strip(b"\0") else "pe/header-tail")
     rows = []
     for index in range(sections):
         at = table + 40 * index
@@ -459,6 +469,7 @@ def walk_pe(data: bytes) -> Walk:
             raise FormatError("a section runs past the file")
         rows.append((raw_at, raw_size, rva, virtual_size, name))
     resources: list[dict] = []
+    tree: list[tuple[int, int]] = []  # the bytes the tree walk reads: directories and their entries, names, data entries
 
     def file_offset(rva: int) -> int:
         for raw_at, raw_size, base, _virtual, _name in rows:
@@ -470,26 +481,39 @@ def walk_pe(data: bytes) -> Walk:
         if rsrc_rva else None
     if resource_section is not None:
         base = file_offset(rsrc_rva)
+        section_end = resource_section[0] + resource_section[1]
         nodes = [0]
+
+        def within(offset: int, length: int) -> bool:
+            return offset + length <= rsrc_size and base + offset + length <= section_end
 
         def descend(directory: int, depth: int, path: tuple) -> None:
             if depth > MAX_RESOURCE_DEPTH:
                 raise FormatError("resource tree is deeper than its limit")
-            if directory + 16 > rsrc_size:
+            if not within(directory, 16):
                 raise FormatError("resource directory runs past its section")
             (named, ids) = struct.unpack_from("<HH", data, base + directory + 12)
+            if not within(directory, 16 + 8 * (named + ids)):
+                raise FormatError("resource directory runs past its section")
+            tree.append((base + directory, 16 + 8 * (named + ids)))
             for entry in range(named + ids):
                 nodes[0] += 1
                 if nodes[0] > MAX_RESOURCE_NODES:
                     raise FormatError("resource tree limit exceeded")
                 at = base + directory + 16 + 8 * entry
                 (name_field, target) = struct.unpack_from("<II", data, at)
+                if entry < named:
+                    name_at = name_field & 0x7FFFFFFF
+                    if not within(name_at, 2) or not within(name_at, 2 + 2 * struct.unpack_from("<H", data, base + name_at)[0]):
+                        raise FormatError("resource name runs past its section")
+                    tree.append((base + name_at, 2 + 2 * struct.unpack_from("<H", data, base + name_at)[0]))
                 key = name_field if entry >= named else "named"
                 if target & 0x80000000:
                     descend(target & 0x7FFFFFFF, depth + 1, path + (key,))
                     continue
-                if target + 16 > rsrc_size:
+                if not within(target, 16):
                     raise FormatError("resource entry runs past its section")
+                tree.append((base + target, 16))
                 (data_rva, size) = struct.unpack_from("<II", data, base + target)
                 start = file_offset(data_rva)
                 if start + size > len(data):
@@ -500,19 +524,17 @@ def walk_pe(data: bytes) -> Walk:
         descend(0, 0, ())
     for raw_at, raw_size, rva, _virtual, name in rows:
         if resource_section is not None and rva == resource_section[2]:
-            cursor = raw_at
-            for row in sorted(resources, key=lambda item: item["offset"]):
+            for start, length in _merged(tree):
+                walk.add(start, length, DECODED, "pe/resource-tree")
+            for row in resources:
                 start, size = row["offset"], row["length"]
-                if start > cursor:
-                    walk.add(cursor, start - cursor, DECODED, "pe/resource-tree")
                 body = data[start:start + size]
                 proved = row["type"] in ("icon", "cursor") and icon_image_holds(body) or \
                     row["type"] == "group-icon" and icon_group_holds(body)
                 row["status"] = "decoded" if proved else "framed"
                 walk.add(start, size, DECODED if proved else OPAQUE,
                          f"pe/resource {row['type']}" if proved else f"pe/resource {row['type']} (framed)")
-                cursor = max(cursor, start + size)
-            walk.add(cursor, raw_at + raw_size - cursor, DECODED, "pe/resource-tree")
+            _frame_gaps(walk, raw_at, raw_at + raw_size, "pe/resource-section (not reached by the tree)")
         else:
             walk.add(raw_at, raw_size, OPAQUE, f"pe/section {name}")
     last = max([headers_size] + [raw_at + raw_size for raw_at, raw_size, *_ in rows])
@@ -526,10 +548,40 @@ def walk_pe(data: bytes) -> Walk:
         (string_bytes,) = struct.unpack_from("<I", data, strings)
         if string_bytes < 4 or strings + string_bytes > len(data):
             raise FormatError("string table runs past the file")
-        walk.add(symbol_at, strings + string_bytes - symbol_at, DECODED, "pe/coff-symbols")
+        walk.add(symbol_at, strings + string_bytes - symbol_at, OPAQUE, "pe/coff-symbols")
         last = strings + string_bytes
+    position = 0
+    for start, length, _kind, _part in sorted(walk.spans):
+        if start < position:
+            raise FormatError("the file's parts overlap")
+        position = start + length
+    walk.spans.sort()
     walk.facts = {"sections": [row[4] for row in rows], "resources": resources, "overlayBytes": len(data) - last}
     return walk
+
+
+def _merged(spans: list[tuple[int, int]]) -> list[tuple[int, int]]:
+    """Spans as (start, length), sorted, with overlapping or touching ones joined."""
+    out: list[list[int]] = []
+    for start, length in sorted(spans):
+        if out and start <= out[-1][1]:
+            out[-1][1] = max(out[-1][1], start + length)
+        else:
+            out.append([start, start + length])
+    return [(start, end - start) for start, end in out]
+
+
+def _frame_gaps(walk: Walk, start: int, end: int, part: str) -> None:
+    """Frame (OPAQUE) every byte of [start, end) no span holds yet."""
+    position = start
+    for span_start, length, _kind, _part in sorted(walk.spans):
+        if span_start + length <= start or span_start >= end:
+            continue
+        if span_start > position:
+            walk.add(position, span_start - position, OPAQUE, part)
+        position = max(position, span_start + length)
+    if position < end:
+        walk.add(position, end - position, OPAQUE, part)
 
 
 # ---------------------------------------------------------------------------------------------------------- ActiveMime
@@ -590,6 +642,79 @@ def walk_text(data: bytes) -> Walk:
     crlf = data.count(b"\r\n")
     walk.facts = {"encoding": encoding, "lines": data.count(b"\n") + (0 if data.endswith(b"\n") else 1),
                   "lineEnding": "crlf" if crlf and crlf == data.count(b"\n") else "lf" if not crlf else "mixed"}
+    return walk
+
+
+# ---------------------------------------------------------------------------------------------------- HTML and XML
+_HTML_NAME = rb"[A-Za-z][A-Za-z0-9:._-]*"
+_HTML_ATTRIBUTE = rb"""(?:\s+[^\s"'<>/=]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'<>=`]+))?)"""
+_HTML_PIECES = (
+    ("comment", re.compile(rb"<!--.*?-->", re.S)),
+    ("conditional", re.compile(rb"<!\[[^<>\]]*\]>")),
+    ("declaration", re.compile(rb"<![A-Za-z][^<>]*>")),
+    ("instruction", re.compile(rb"<\?[^<>]*\?>")),
+    ("end-tag", re.compile(rb"</" + _HTML_NAME + rb"\s*>")),
+    ("start-tag", re.compile(rb"<(" + _HTML_NAME + rb")" + _HTML_ATTRIBUTE + rb"*\s*/?>")),
+)
+_HTML_TEXT = re.compile(rb"[^<&]+|&(?:[A-Za-z][A-Za-z0-9]*|#[0-9]+|#[xX][0-9A-Fa-f]+);")
+_HTML_RAW = (b"script", b"style")
+
+
+def walk_html(data: bytes) -> Walk:
+    """An HTML page tokenized to its end: every byte is a comment, a conditional or other declaration, a processing
+    instruction, a well-formed start or end tag, a script or style element's raw text, character data or a character
+    reference, and the page is an html element (after any declarations) with nothing but white space after its end.
+    The tokens are not checked against an HTML schema, and nothing renders the page."""
+    walk = walk_text(data)
+    position, first, last_end, tags = 0, None, None, 0
+    while position < len(data):
+        if data[position:position + 1] != b"<":
+            match = _HTML_TEXT.match(data, position)
+            if not match:
+                raise FormatError("a character reference that does not close")
+            position = match.end()
+            continue
+        for kind, pattern in _HTML_PIECES:
+            match = pattern.match(data, position)
+            if match:
+                break
+        else:
+            raise FormatError("markup that is no HTML token")
+        if kind in ("start-tag", "end-tag"):
+            tags += 1
+            name = (match.group(1) if kind == "start-tag" else data[position + 2:match.end() - 1].strip()).lower()
+            first = first or (kind, name)
+            last_end = name if kind == "end-tag" else None
+            if kind == "start-tag" and name in _HTML_RAW and not match.group(0).endswith(b"/>"):
+                close = re.compile(rb"</" + name + rb"\s*>", re.I).search(data, match.end())
+                if not close:
+                    raise FormatError("a script or style element that does not close")
+                position = close.end()
+                last_end = name
+                continue
+        position = match.end()
+    if first != ("start-tag", b"html") or last_end != b"html" or data[data.rfind(b">") + 1:].strip():
+        raise FormatError("not one html element")
+    walk.facts["tags"] = tags
+    return walk
+
+
+def walk_xml(data: bytes) -> Walk:
+    """A well-formed XML document, as expat parses it to its end."""
+    import xml.parsers.expat
+    walk = walk_text(data)
+    parser = xml.parsers.expat.ParserCreate()
+    elements = [0]
+
+    def start(_name, _attributes):
+        elements[0] += 1
+
+    parser.StartElementHandler = start
+    try:
+        parser.Parse(data, True)
+    except xml.parsers.expat.ExpatError as error:
+        raise FormatError("not well-formed XML") from error
+    walk.facts["elements"] = elements[0]
     return walk
 
 
