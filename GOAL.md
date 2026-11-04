@@ -21,8 +21,9 @@ archive.
   Preserve a faithful baseline while fixing demonstrated defects and improving reliability, input, controller support,
   in-game guidance, window/display choices, 4K readability, performance and useful, privacy-conscious diagnostics.
   Prefer high ordinary visual settings and supported extra effects on capable hardware, while preserving saved
-  preferences and the faithful reference path. Keep a separate optional maximum-distance/LOD/full-model mode;
-  that more demanding mode is not requested as the default yet. Verify actual capability selection and image quality.
+  preferences and the faithful reference path. Offer controls for terrain detail/LOD, pop-in and extended draw distance,
+  alongside a separate optional maximum-distance/full-model mode; that more demanding mode is not requested as the
+  default yet. Verify actual capability selection, image quality and performance before choosing defaults.
   Verify the developer console, cheats and free camera through usable controls rather than assuming each path works.
   Keep faithful reference recordings separate from a future way to record and test CE enhancements and controller input.
   Preserve the ordinary campaign and existing ways of playing with their intended rules, while retaining demonstrated
@@ -77,7 +78,10 @@ archive.
   such as modern creation tools, HD assets and expanded multiplayer. `rebuild/` here is a frozen copy.
 - **Unify Companion's player capabilities within CE and eventually phase out the separate app.** CE should include
   its lore, game-content exploration, career/save editing, backups, settings and installation-management workflows,
-  alongside native authoring and play. Migrate in verified stages; keep the working Companion, its tools and evidence
+  alongside native authoring and play. Every current Companion workflow and its subflows belong in the native CE
+  migration, including media browsing/playback/exports, recovery, read-only inspection and authoring; the
+  [migration checklist](PROGRAM.md#native-ce-migration-checklist) records their source owners and remaining requirements.
+  Migrate in verified stages; keep the working Companion, its tools and evidence
   until the replacement preserves their useful capabilities and safety. This supersedes the earlier plan to retain
   a separate offline-management product, without prescribing an engine/runtime embedding architecture.
   The current standalone Godot .NET app for Linux and Windows still provides careers, Goodies, settings, backups,
