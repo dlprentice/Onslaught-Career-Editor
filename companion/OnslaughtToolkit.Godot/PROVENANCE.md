@@ -1,7 +1,7 @@
 # Companion provenance and license
 
 Status: active independent GPL-3.0-only application boundary
-Last updated: 2026-10-29 (the signed-feed verifier described as kept for tests, not called by the app; earlier: BouncyCastle.Cryptography 2.7.0 disclosed for signed CE update verification, with its pin and export notice)
+Last updated: 2026-11-04 (installed model-definition preview lookup and its existing public-tool contracts)
 Evidence: SOURCE — code-built C# application, project source moved in from the retired AppCore library, and embedded project lore; executed package boundaries are recorded in VALIDATION.md.
 Summary: the companion's C# derives only from the project's own application code and the RE lane's published contracts; it bundles the project's own lore, reads the game's files and manual art from the player's install at run time, and keeps retail data and GPL reconstruction out.
 
@@ -56,6 +56,14 @@ header). Those documents describe the private byte-matching decompilation's load
 prose; no decompiled or reconstructed code is copied into the companion, and only numbers (counts and
 composed transforms) are compared between the two. The DXT block decoding is the standard
 public algorithm.
+
+`Assets/InstalledModelReferences.cs` implements the public Toolkit tools' bounded definition/resource contracts:
+[`cmsh_animation_usage_census.py`](../../tools/cmsh_animation_usage_census.py) (`_physics_mesh_definitions`),
+[`aya_cross_platform_compare.py`](../../tools/aya_cross_platform_compare.py) (`logical_key`) and
+[`content_catalog.py`](../../tools/content_catalog.py) (`catalog_world`). It reads unit/feature mesh references and
+requires a unique named resource in the selected archive. This is a static editor preview, not a copy of the game's
+object initialization or simulation. Authored records test the lookup; local installed-map comparisons retain their
+asset identities, hashes and captures only in private evidence.
 
 The game's own material is never bundled. Mission names, Goodie titles and voice-line
 transcripts are read from the player's `data/language/*.dat` and `text.stf`; music and voice

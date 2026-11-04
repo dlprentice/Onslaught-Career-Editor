@@ -21,6 +21,8 @@ internal static class CeLinkedSceneTests
     {
         WorldBody body = WorldBody.Read(LevelTests.Body("authored-v50"));
         PlacedObject anchor = body.Things[0].Clone();
+        anchor.ObjectId = 11; // Explicit named-mesh object, not a unit whose model comes from a definition.
+        anchor.Definition = null;
         anchor.Init.Name = "AuthoredAnchor";
         anchor.Init.Position = new(8, 9, -2);
         anchor.Init.Orientation = new(0.37f, -0.22f, 0.41f);
@@ -37,6 +39,7 @@ internal static class CeLinkedSceneTests
     {
         check.Suite("linked-map scene");
         await Loader(Path.Combine(output, "linked-scene-input"), check);
+        InstalledModelReferenceTests.Run(output, check);
         CeLinkedSceneInputTests.Run(output, check);
         check.Suite("linked-map scene");
         Coordinates(check);

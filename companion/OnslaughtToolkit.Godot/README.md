@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-11-04 (saved project also checked locally in the network-enabled 0.1.99 checkpoint; multiplayer and Windows limits retained)
+Last updated: 2026-11-04 (installed definition models in the linked 3D preview; separate frozen 0.1.99 checkpoint and platform limits retained)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -479,8 +479,19 @@ untextured models at their installed orientation, which drag like markers. Tree 
 game code and models the folder lacks are not shown, and the page reports what it left out. The folder stays out of
 the project file. **Reload map** reads it again and **Close map preview** releases it.
 
-The preview finds a model only through the world's own model list. In the installed levels checked, that list is empty
-while objects still carry model numbers, so an installed map shows its terrain and object markers but no models yet.
+The preview resolves explicit world mesh references and installed unit/feature definitions. Unit, building and squad
+records use the unit definition's model; feature records use the feature definition's model. The selected map archive
+must name the model exactly once. Missing or ambiguous references are reported and omitted rather than replaced with
+a guessed model. This uses the content catalogue's documented definition-to-resource lookup without requiring a
+generated catalogue file. The preview retains each loaded model's local source hashes; these do not enter the saved project.
+
+The authored linked-scene tests cover definition kinds, exact names, missing and ambiguous resources, malformed inputs,
+placement identity and source fingerprints. A November 4 Linux offscreen check read level 221 through the production
+page and displayed 35 instances of 16 installed meshes; the catalogue's existing Python readers independently produced
+the same mesh identities and hashes. The selected model followed a scripted edit, Undo and Redo, and Save/Open preserved
+its identity and position. The two inspected images show an overview and a close view of that model. The close image uses
+capture-specific camera framing. Models remain untextured, and that map's 27 unsupported object references remain omitted.
+This does not establish animation, a complete scene, physical-input usability, CE gameplay or native Windows acceptance.
 
 The preview binds as CE's project loader does. A placement moves the one object of the selected level with the bound
 name. Base-world objects are shown where the map puts them and never move, even when one shares that name. A name only
@@ -488,7 +499,8 @@ the base world has, or that two objects of the level share, refuses the preview 
 placement uses is ignored. Only regular files are read, each within a byte limit: a link, a named pipe or another
 special file where a map file should be is refused at once.
 
-Definition references are names, not resolved game models. This page edits no terrain, compiles or runs no source and
+Project definition references remain names. Geometry comes from the linked installed object, not an arbitrary new
+object of that definition. This page edits no terrain, compiles or runs no source and
 exports no new playable level. CE development source now reads linked projects: a 2026-11-03 controlled run and
 independent review saved projects through this page's production Save as path and ran those files in default Linux
 CE on level 221. One existing boat reached the authored X/Y; its own initialization set its height. A moved placement
