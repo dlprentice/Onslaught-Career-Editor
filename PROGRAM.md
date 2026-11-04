@@ -186,7 +186,10 @@ multiplayer requirements are tracked separately below.
 ### Onslaught CE player experience and online play
 
 Prioritize real player reports and a reliable corrective release while keeping the faithful reference path separate.
-Fix reproduced retail bugs and improve performance while preserving the game's look and feel. Investigate the report
+Fix reproduced retail bugs and improve performance while preserving the game's look and feel. The age of an API
+is not a measured bottleneck: separate CPU simulation, draw submission, geometry/detail work, resource allocation,
+GPU rendering and frame pacing before choosing an optimization. Keep inherited retail defects distinct from CE
+regressions, and demonstrate the corrected behavior and its cost on each claimed platform. Investigate the report
 of floaty mouse input in the original game; CE behavior is unknown. Reproduce the report and compare the original
 and CE with matched input, frame timing and display conditions before choosing a correction; no mouse fix is claimed.
 Check actual release packages on each claimed platform, and distinguish an authored fixture, Wine, a software-rendered
@@ -218,7 +221,10 @@ The retained log has SHA-256 `81f2de49e62165489abf8356821f52d76148d55e547e805e42
 **Deferred graphics ideas (November 4):** evaluate DLSS and ray-traced effects as optional future enhancements,
 with supported-hardware checks, useful fallbacks and a way to retain the original look. David explicitly placed
 both on the back burner: record the ideas, but do not start implementation while the current work is being finished.
-No integration, hardware acceptance or performance benefit is claimed.
+No integration, hardware acceptance or performance benefit is claimed. Neural texture compression is another
+possible future option, not an automatic benefit of updating DirectX. The [Microsoft DirectX ML update](https://devblogs.microsoft.com/directx/evolving-directx-for-the-ml-era-on-windows/)
+and [NVIDIA neural-rendering introduction](https://developer.nvidia.com/blog/get-started-with-neural-rendering-using-nvidia-rtx-kit/)
+describe integration-dependent capabilities; their demonstrations do not establish memory or frame-rate gains for CE.
 
 For the reported Windows issues, Jeppi identified the screenshot as the tutorial map; a separate log records a Blackout
 session but does not establish the screenshot's level or cause. Training and Blackout are comparison cases. Verify whether
@@ -260,9 +266,9 @@ The future controls and HUD must fit what is being played:
 
 | Type | Required experience; not a current feature claim |
 | --- | --- |
-| Infantry | Usable weapon selection, ammunition and reload feedback, with the unit's own movement and firing behavior. |
+| Infantry | A viewpoint appropriate to the soldier, usable weapon selection, ammunition and reload feedback, with the unit's own movement and firing behavior. |
 | Tanks and artillery | Native aiming/traverse limits, firing arcs and applicable trajectory feedback, ammunition and reload state. |
-| Mounted/fixed guns and controllable structures | Appropriate traverse/aim controls and a clear way to leave control; only actions the controlled type supports. |
+| Mounted/fixed guns, turrets and controllable structures | Appropriate viewpoint, traverse/aim controls and a clear way to leave control; only actions the controlled type supports. |
 
 Crosshairs, aim/trajectory indicators and firing feedback must agree with the native weapon's actual firing state and
 obstructions. A displayed target or a fire input alone is not proof that a round was fired or that its path is clear.
