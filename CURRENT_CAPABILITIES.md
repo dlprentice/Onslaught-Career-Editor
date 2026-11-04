@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-03 (Mission project linked-map preview: binding and file rules, evidence and limits)
+Last updated: 2026-11-04 (Mission project Save as to Linux CE runtime evidence and remaining limits)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -251,13 +251,24 @@ Its sidebar:
   Reload control, were inspected: an authored scene's models on its sampled terrain, a base-world copy left at its
   installed place and the bound model at the drop. A read-only pass over the levels of one Steam install loaded every
   linked map with no unexpected binding outcome and found no world that lists models of its own, so an installed map
-  previews as terrain and the project's markers; nobody has viewed one in the preview. The binding rules follow CE's
-  project loader as read from its source: no project saved by this page has run in CE, and no released CE reads these
-  projects. The Windows branch of the regular-file open is compiled but has never run, and nobody has used the page or
-  its folder dialog by hand. The page edits no terrain, compiles or runs no source and exports no playable level. The
-  [workflow and limits](companion/OnslaughtToolkit.Godot/README.md#mission-project) distinguish this integrated
-  authoring preview from source compilation, CE runtime loading and complete mission authoring. Human use and native
-  Windows acceptance remain open.
+  previews as terrain and the project's markers; nobody has viewed one in the preview.
+  A separate 2026-11-03 controlled run and independent review exercised the production
+  [Save as path](https://github.com/dlprentice/Onslaught-Career-Editor/blob/443b2b3d921775767a87404d9c6842fc1b275294/companion/OnslaughtToolkit.Godot/Ui/Pages/CeMissionProjectPage.cs)
+  through its file-selection signal, then loaded the saved documents in a clean, default Linux CE development build.
+  One existing boat on level 221 reached each authored X/Y placement at its first update. Its own initialization
+  replaced stored Z; runtime height therefore remains object-dependent. A same-position control matched ordinary
+  play. One moved case kept changes confined to that object through the observed window; another later caused
+  mission and AI reactions, so the result does not promise that moving an object leaves the rest of a mission
+  unchanged. Deliberately broken writer and coordinate-reader variants were refused by the check. The controlled
+  career-write case left the protected save unchanged; it does not establish every save path. The retained independent
+  review receipt has SHA-256 `9b9871ca08f689f63c2e8a1aa0c678a0ba36f13a0c7671f0027bbd68abcb6525`.
+  This is page-to-runtime evidence for an existing-object placement in CE development source. No released CE reads
+  these projects. No person operated the Save as dialog or 3D drag for this check, and it does not cover a network
+  build, native Windows, mission completion or additional object kinds. The Windows branch of the regular-file open
+  is compiled but has never run. The page edits no terrain, compiles or runs no source and exports no new playable
+  level. The [workflow and limits](companion/OnslaughtToolkit.Godot/README.md#mission-project) distinguish this
+  bounded runtime path from source compilation and complete mission authoring. Human use and native Windows
+  acceptance remain open.
 - **Advanced**, folded away: Career bytes (the open career's stored values, or the bytes that
   differ from another career).
 
