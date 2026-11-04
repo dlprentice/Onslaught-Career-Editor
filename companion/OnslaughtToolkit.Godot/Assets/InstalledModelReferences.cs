@@ -11,7 +11,7 @@ namespace OnslaughtToolkit.Companion.Assets;
 /// </summary>
 internal sealed class InstalledModelReferences
 {
-    private readonly Dictionary<(int Kind, string Name), List<string>> _definitions = [];
+    private readonly Dictionary<(int Kind, string Name), List<string?>> _definitions = [];
     private readonly Dictionary<string, List<string>> _archiveNames = new(StringComparer.OrdinalIgnoreCase);
 
     internal static bool DefinedKind(int kind) => kind is 8 or 25 or 28 or 35;
@@ -25,11 +25,10 @@ internal sealed class InstalledModelReferences
     /// <summary>Null means absent or ambiguous. Definition names are case-sensitive, mesh names are not.</summary>
     internal string? Resolve(int kind, string definition)
     {
-        if (!DefinedKind(kind) || !_definitions.TryGetValue((kind == 35 ? 35 : 8, definition), out List<string>? names)) return null;
-        List<string> matches = [];
-        foreach (string name in names)
-            if (_archiveNames.TryGetValue(Key(name), out List<string>? records)) matches.AddRange(records);
-        return matches.Count == 1 ? matches[0] : null;
+        if (!DefinedKind(kind) || !_definitions.TryGetValue((kind == 35 ? 35 : 8, definition), out List<string?>? names) ||
+            names.Count != 1 || string.IsNullOrEmpty(names[0])) return null;
+        // Availability cannot disambiguate duplicate definitions, including ones without a mesh field.
+        return _archiveNames.TryGetValue(Key(names[0]!), out List<string>? records) && records.Count == 1 ? records[0] : null;
     }
 
     /// <summary>The installed shelf spelling, preserving directory flattening rather than choosing a basename.</summary>
@@ -79,10 +78,10 @@ internal sealed class InstalledModelReferences
                 if (continuation == -1) break;
                 if (continuation != 0) throw new InvalidDataException("A model definition has an invalid continuation.");
             }
-            if (!string.IsNullOrEmpty(mesh))
+            if (fieldNumber >= 0)
             {
                 (int, string) key = (type == 8 ? 35 : 8, name);
-                if (!_definitions.TryGetValue(key, out List<string>? values)) _definitions.Add(key, values = []);
+                if (!_definitions.TryGetValue(key, out List<string?>? values)) _definitions.Add(key, values = []);
                 values.Add(mesh);
             }
         }

@@ -149,8 +149,8 @@ public static class CeLinkedSceneLoader
             {
                 PlacedObject thing = body.Things[i];
                 int number = thing.Init.MeshNumber;
-                bool usesDefinition = definitions is not null && InstalledModelReferences.DefinedKind(thing.ObjectId);
-                string? resolved = usesDefinition ? definitions!.Resolve(thing.ObjectId, thing.Definition ?? "") :
+                bool usesDefinition = InstalledModelReferences.DefinedKind(thing.ObjectId);
+                string? resolved = usesDefinition ? definitions?.Resolve(thing.ObjectId, thing.Definition ?? "") :
                     number >= 0 && number < body.NamedMeshes.Count ? body.NamedMeshes[number] : null;
                 string? model = resolved is null ? null : InstalledModelReferences.Key(resolved);
                 if (model is not null) needed.Add(model);
@@ -167,7 +167,9 @@ public static class CeLinkedSceneLoader
         if (unreferenced > 0) notes.Add($"{unreferenced} map object(s) have no stored model reference; their geometry is omitted.");
         // Installed worlds can leave their own model list empty and number models elsewhere; this preview reads only that list.
         if (unresolved > 0) notes.Add($"{unresolved} map object(s) refer to models outside this world's own model list, which this preview does not resolve; their geometry is omitted.");
-        if (unresolvedDefinitions > 0) notes.Add($"{unresolvedDefinitions} map object(s) have no unique definition-to-model reference in this archive; their geometry is omitted.");
+        if (unresolvedDefinitions > 0) notes.Add(definitions is null
+            ? "The model-definition table is missing; defined-object geometry is omitted."
+            : $"{unresolvedDefinitions} map object(s) have no unique definition-to-model reference in this archive; their geometry is omitted.");
         if (bodies.Any(body => body.Body.TreeGroups.Count > 0)) notes.Add("Tree-group geometry is not included in this preview.");
         if (needed.Count > 0)
         {

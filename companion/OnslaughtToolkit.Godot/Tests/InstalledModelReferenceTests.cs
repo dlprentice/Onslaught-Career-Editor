@@ -73,7 +73,35 @@ internal static class InstalledModelReferenceTests
             Definition(8, "SharedDefinition", "authored-feature.msh")));
         check.That(Load().Objects[0].ModelKey is null && Load().Objects[1].ModelKey is not null,
             "duplicate definitions cannot silently choose a model and do not confuse a feature of the same name");
+        foreach (byte[] second in new[] { Definition(1, "SharedDefinition", "absent.msh"),
+            Definition(1, "SharedDefinition", ""), DefinitionWithoutMesh(1, "SharedDefinition") })
+        {
+            File.WriteAllBytes(physics, Physics(Definition(1, "SharedDefinition", "authored-unit.msh"), second,
+                Definition(8, "SharedDefinition", "authored-feature.msh")));
+            check.That(Load().Objects[0].ModelKey is null && Load().Objects[1].ModelKey == "authored-feature",
+                "unavailable, empty or absent mesh fields cannot make duplicate definition identities unique");
+        }
         File.WriteAllBytes(physics, definitionBytes);
+
+        File.Delete(physics);
+        body.NamedMeshes.Add("authored-feature.msh");
+        body.Things[0].Init.MeshNumber = 0;
+        body.Things[1].ObjectId = 11; body.Things[1].Definition = null; body.Things[1].Init.MeshNumber = 0;
+        foreach (int kind in new[] { 8, 25, 28, 35 })
+        {
+            body.Things[0].ObjectId = kind;
+            body.Things[0].Init.Squad = kind == 28 ? new SquadInit() : null;
+            Both();
+            CeLinkedSceneSnapshot missingTable = Load();
+            check.That(missingTable.Objects[0].ModelKey is null && missingTable.Objects[1].ModelKey == "authored-feature" &&
+                missingTable.Models.Count == 1 && missingTable.Notes.Any(n => n.Contains("model-definition table is missing", StringComparison.Ordinal)),
+                "a missing definition table never substitutes a plausible world mesh; explicit named-mesh objects still resolve");
+        }
+        body.Things[0].ObjectId = 8; body.Things[0].Init.Squad = null; body.Things[0].Init.MeshNumber = -1;
+        body.Things[1].ObjectId = 35; body.Things[1].Definition = "SharedDefinition"; body.Things[1].Init.MeshNumber = -1;
+        body.NamedMeshes.Clear();
+        File.WriteAllBytes(physics, definitionBytes);
+        Both();
 
         // The 'm_' shelf prefix is not part of the requested model name. A requested name may itself begin with m_.
         File.WriteAllBytes(Path.Combine(shelves, "m_m_prefixed.msh.aya"), packed);
@@ -104,6 +132,9 @@ internal static class InstalledModelReferenceTests
     }
 
     internal static byte[] Physics(params byte[][] records) => [18, 0, .. records.SelectMany(r => r), .. BitConverter.GetBytes(-1)];
+    private static byte[] DefinitionWithoutMesh(int type, string name) =>
+        [.. BitConverter.GetBytes(type), .. BitConverter.GetBytes(0), .. Encoding.ASCII.GetBytes(name + "\0"),
+            .. BitConverter.GetBytes(100), .. BitConverter.GetBytes(0), .. BitConverter.GetBytes(-1)];
     internal static byte[] Definition(int type, string name, string mesh, bool duplicateMesh = false)
     {
         byte[] value = Encoding.ASCII.GetBytes(mesh + "\0");
