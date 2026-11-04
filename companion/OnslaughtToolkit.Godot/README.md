@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-11-04 (Mission project Save as reaches Linux CE development source, with object-dependent height; CE 0.1.13 acceptance limits)
+Last updated: 2026-11-04 (saved project also checked locally in the network-enabled 0.1.99 checkpoint; multiplayer and Windows limits retained)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -493,8 +493,12 @@ exports no new playable level. CE development source now reads linked projects: 
 independent review saved projects through this page's production Save as path and ran those files in default Linux
 CE on level 221. One existing boat reached the authored X/Y; its own initialization set its height. A moved placement
 can change later mission and AI behavior. The page was driven programmatically, not by a person operating its dialog
-or dragging a marker. No released CE reads these projects, and complete mission authoring, physical-input use,
-network-build behavior and native Windows acceptance remain open. The [document](Tests/CeMissionProjectTests.cs),
+or dragging a marker. A November 4 local smoke check loaded one of those saved projects in the final network-enabled
+0.1.99 Linux checkpoint package; its placement-marker/gameplay frames were inspected with no active network session.
+No publicly released CE reads these projects. Complete mission authoring, physical-input use, multiplayer project
+loading/replication and native Windows acceptance remain open; the
+[capability record](../../CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore) gives the
+dated evidence and limits. The [document](Tests/CeMissionProjectTests.cs),
 [file](Tests/CeMissionProjectFilesTests.cs), [page-input](Tests/CeMissionProjectPageTests.cs),
 [linked-scene](Tests/CeLinkedSceneTests.cs) and [selected-file](Tests/CeLinkedSceneInputTests.cs) tests cover authored
 data and programmatic controls. This command renders the page offscreen from an authored scene:

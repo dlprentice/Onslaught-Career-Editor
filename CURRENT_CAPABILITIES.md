@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-04 (Mission project Save as to Linux CE runtime; copied-career acceptance with released CE 0.1.13; content inventory and per-asset metadata checks)
+Last updated: 2026-11-04 (bounded Companion and local project acceptance with the unreleased CE 0.1.99 checkpoint; prior results retain their scope)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -180,6 +180,17 @@ the game ran, refused stale writes, and restored the original career from its ve
 Linux workflow driven through programmatic production-page actions, not human UI input, an update hand-off,
 complete campaign play or native Windows acceptance. The [October 24 CE 0.1.4 run](VALIDATION.md#companion-with-real-onslaught-ce--october-24)
 remains a separate dated record.
+
+The November 4 Linux checkpoint check used the same pinned production pages with the unreleased CE 0.1.99 package.
+Discovery read its actual launcher version; copied-career backup/edit/restore and the two supported settings controls
+passed. Fresh Home/version, settings and restored-backup images, plus authored 3D project/map-link/source views,
+were inspected. Both capture processes exited normally and the pinned source/runtime inputs read back unchanged.
+The retained checkpoint acceptance receipt has SHA-256
+`2f267eb8df39c78028729fddeaf468307c1f74d56464229dfabb3f7fc25ff367`.
+This adds bounded automated workflow and image acceptance, not human input, audible output, an update hand-off or
+native Windows acceptance. A separate local playtest is prepared for the maintainer's feedback; 0.1.99 is not a
+public release. The earlier CE 0.1.13 career-load result remains the dated acceptance described above.
+
 [Data-folder tests](companion/OnslaughtToolkit.Godot/Tests/CeGameDataTests.cs) exercise the two-file validation and
 folder selection using owned tiny inputs; these are not a game-content or launch acceptance test.
 [Update tests](companion/OnslaughtToolkit.Godot/Tests/CeUpdateFeedTests.cs) check signature verification and refused
@@ -266,11 +277,15 @@ Its sidebar:
   unchanged. Deliberately broken writer and coordinate-reader variants were refused by the check. The controlled
   career-write case left the protected save unchanged; it does not establish every save path. The retained independent
   review receipt has SHA-256 `9b9871ca08f689f63c2e8a1aa0c678a0ba36f13a0c7671f0027bbd68abcb6525`.
-  This is page-to-runtime evidence for an existing-object placement in CE development source. No released CE reads
-  these projects. No person operated the Save as dialog or 3D drag for this check, and it does not cover a network
-  build, native Windows, mission completion or additional object kinds. The Windows branch of the regular-file open
-  is compiled but has never run. The page edits no terrain, compiles or runs no source and exports no new playable
-  level. The [workflow and limits](companion/OnslaughtToolkit.Godot/README.md#mission-project) distinguish this
+  On November 4, the final unreleased 0.1.99 Linux package, built with networking enabled, also loaded one of those
+  page-saved level-221 projects locally. Its placement-marker and gameplay frames were inspected; no network session
+  was active. The retained exact-package smoke receipt has SHA-256
+  `e4a7f4daf13dd8e442f52a894452870880aeeb45ea4a50d2ea2614b279070e81`.
+  This is page-to-runtime evidence for an existing-object placement in CE development source. No publicly released CE
+  reads these projects. No person operated the Save as dialog or 3D drag for these checks, and they do not establish
+  multiplayer project loading/replication, native Windows, mission completion or additional object kinds. The Windows
+  branch of the regular-file open is compiled but has never run. The page edits no terrain, compiles or runs no source
+  and exports no new playable level. The [workflow and limits](companion/OnslaughtToolkit.Godot/README.md#mission-project) distinguish this
   bounded runtime path from source compilation and complete mission authoring. Human use and native Windows
   acceptance remain open.
 - **Advanced**, folded away: Career bytes (the open career's stored values, or the bytes that
