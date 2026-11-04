@@ -278,7 +278,7 @@ Its sidebar:
   career-write case left the protected save unchanged; it does not establish every save path. The retained independent
   review receipt has SHA-256 `9b9871ca08f689f63c2e8a1aa0c678a0ba36f13a0c7671f0027bbd68abcb6525`.
   On November 4, the final unreleased 0.1.99 Linux package, built with networking enabled, also loaded one of those
-  page-saved level-221 projects locally. Its placement-marker and gameplay frames were inspected; no network session
+  page-saved level-221 projects locally. Its placement log entry and gameplay image were inspected; no network session
   was active. The retained exact-package smoke receipt has SHA-256
   `e4a7f4daf13dd8e442f52a894452870880aeeb45ea4a50d2ea2614b279070e81`.
   This is page-to-runtime evidence for an existing-object placement in CE development source. No publicly released CE

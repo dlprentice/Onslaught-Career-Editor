@@ -211,7 +211,7 @@ compilation or new playable-level export. CE development source now reads linked
 saved through the production page's Save as path moved one existing object's X/Y on level 221 in default Linux CE;
 an independent review reproduced the path. The object initializes its own height, so stored Z is not a promise of
 runtime height. On November 4, the network-enabled 0.1.99 Linux package also passed a local smoke check of one of
-those page-saved projects, with inspected placement-marker/gameplay frames and no active network session. These
+those page-saved projects, with an inspected placement log entry and gameplay image and no active network session. These
 checks use programmatic page signals, not human dialog or drag input, and establish neither Windows nor multiplayer
 project loading/replication, mission completion or general object support. No publicly released CE reads these
 projects. The [capability record](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore)

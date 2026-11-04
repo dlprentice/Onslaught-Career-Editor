@@ -494,7 +494,7 @@ independent review saved projects through this page's production Save as path an
 CE on level 221. One existing boat reached the authored X/Y; its own initialization set its height. A moved placement
 can change later mission and AI behavior. The page was driven programmatically, not by a person operating its dialog
 or dragging a marker. A November 4 local smoke check loaded one of those saved projects in the final network-enabled
-0.1.99 Linux checkpoint package; its placement-marker/gameplay frames were inspected with no active network session.
+0.1.99 Linux checkpoint package; its placement log entry and gameplay image were inspected with no active network session.
 No publicly released CE reads these projects. Complete mission authoring, physical-input use, multiplayer project
 loading/replication and native Windows acceptance remain open; the
 [capability record](../../CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore) gives the
