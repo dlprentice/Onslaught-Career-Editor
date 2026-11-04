@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-04 (content inventory, metadata and media coverage; independent checks distinguished from run-consistency checks; historical results retain their dates)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -113,6 +113,129 @@ ignored `local-data/`. They contain retail-derived metadata and stay private. Th
 catalogue. [The asset schema](content_catalog.schema.json), the detailed format descriptions below and
 [source-file coverage](#catalogue-source-file-coverage) explain the records and their limits.
 
+## Content inventory
+
+[`content_inventory.py`](content_inventory.py) accounts for every byte of a selected install and lists every model,
+texture, image, animation, sound, film and text asset in it, used or not. It runs the catalogue, then walks each file
+with the reader that follows its loader, or with its format's published layout, and puts each byte of the file's stream
+in one class: decoded (a reader consumed it in the loader's order and its walk closed exactly), referenced (a record or
+reader establishes what the bytes are and how long they are, but nothing has read their contents) or unknown. A gap in a
+walk is unknown by construction, so a reader cannot lose bytes silently. Used means that a catalogue record, a physics
+value, a manual page's link or a loader rule names the file or asset; it is not a runtime observation.
+
+```bash
+python tools/content_inventory_tests.py
+python tools/content_inventory.py --game /path/to/game [--decomp /path/to/onslaught-decomp] --out local-data/content-inventory
+python tools/content_inventory_gate.py --game /path/to/game --inventory local-data/content-inventory
+```
+
+Vorbis audio packets, Bink frames and audio track descriptors and JPEG scans count as decoded only when an independent
+decoder (FFmpeg, found on `PATH` or named with `--media-decoder`) reads every stream without an error and its frame and
+sample counts equal the walk's own. Without one (`--no-media-decoder`) those payloads stay referenced, and the coverage
+says so. Those payloads are a large share of the content, so the coverage's `headline` (and the run's last summary line)
+gives the content families' decoded share twice, with that decoder and without it; quote both. The Vorbis setup
+header, the JPEG tables and headers and a Bink file's header and frame index are read by this repository's readers and
+count as decoded either way (a Bink header's version letter and flags are reported, not constrained, and its second
+frame count is skipped); a JPEG's application, comment and other segments and a PNG's ancillary chunks count on their
+lengths and checksums alone, and a Vorbis comment header's strings must be UTF-8 but its comments are not read
+further. A particle set counts as
+decoded only when `particle_set_walk.py` reads every value to the last descriptor; the words the game's reader skips
+after a direct number stay referenced. With `--decomp`, a film, particle set or splash image whose name a source string
+literal holds counts as used. An archive's `LVLR`, `TARG` and `AYAD` words count as decoded only when they are the
+documented PC build's ([the archive contract](../reverse-engineering/asset-formats/lvlr-archive.md)), `WDAT` only when
+its level numbers fit the archive's world layout, and a mesh, goodie texture or goodie mesh reference's name or an
+imposter's stored label only when it ends inside its buffer; a language table's strings only when each entry points
+inside its pool and each string ends there. Anything else stays referenced and is reported as a problem. A texture
+whose envelope does not inflate stays unknown, as does any file whose reader cannot run, and an install holding a link
+or special file, or a folder the walk cannot list, is refused.
+
+No loader reads the sources, so each is held to its own grammar to its end. A mission script counts as decoded when
+`msl_compile.py`'s compile reproduces every shipped script compiled from it (`msl_gate.py`'s exact verdict, or exact,
+assisted: an `#include` the install lacks is read as empty and the names it would define come from the shipped
+constants) or, when no level ships it, when it compiles with every include present; a stale source (it compiles to a
+known older revision), one that compiles only with a missing include read as empty and one that does not compile stay
+referenced, and a shipped copy it does not reproduce is a problem even beside one it does. When the judge cannot read a
+level archive's worlds, which scripts that archive ships, and for which level folders, is unknown: no source in a level
+folder is then judged, each is referenced with a problem, and the gate fails. Mission
+text counts when every line is an `[ID]` line with its quoted string on the next, a `;` comment or blank; a symbol
+table or `textlist.h` when every line is a `#define` of a number, a `//` comment or blank; a manual page when it
+tokenizes as one html element, and its file list when it parses as XML. Plain text with no grammar (the install's
+readme and log, which are not content) counts when every byte is a character of its encoding. An empty file counts as
+decoded; the coverage counts empty files by family.
+
+The run writes `manifest.json`; `coverage.json` (per family, files and stored and logical bytes by class; the unknown
+total; the proofs each reader produced; the installer's log compared with the folder; the physics joins; the assets by
+kind, used and unused, with the texture records an archive loads but nothing names counted apart); `files.jsonl` (each
+file's account, with the spans that are not decoded); `items.jsonl` (one row per asset, including every link of a mesh
+chain and its animations, and its texture slots joined as the parent's are); `asset-metadata.jsonl` (below); and
+`records.jsonl` (the catalogue records' coordinates, for the gate). [The row schema](content_inventory.schema.json)
+describes them. All of it is retail-derived and stays in ignored `local-data/`.
+
+`asset-metadata.jsonl` is the input list for an offline processing batch, such as an AI upscale: one row per texture,
+image, model, animation, sound and film, with its identity (the file, how its bytes are wrapped there, the archive
+chunk, bank sample or resource, the coordinates and the SHA-256 of the asset's own bytes), the format, width, height,
+mip levels, alpha, channels, sample rate, duration and frames its reader established, the records that name it and the
+archives that load it, and the catalogue's usage summary and upscale notes where the catalogue has them. A field no
+reader established is null; nothing is taken from a name. A DDS file's row gives the format its header says it stores,
+with that file's mips and alpha. A texture record's row gives the format the record itself names (the same field names
+its pixel files); the PC build loads the record's pixels from DDS files (the catalogue's `pixels-from` evidence, which
+the row lists), and those can store another format, with another channel count, which their own rows give. One
+texture-record row stands for every byte-identical copy of the record: `details.occurrences` counts the copies, the
+identity places the first, and the catalogue's record lists every copy. An animation's frames are its virtual frames
+from its start to its last frame inclusive, whichever way it runs (a negative frame scaler plays from start down to
+last). That is the span the record states: the animation keys document's frame formula places a frame from the phase,
+the scaler and the start and does not use the last frame, and the count is one more than the scaler's magnitude in a
+mode whose last frame is the start plus the scaler. Its duration is the time its phase takes from 0 to 1 at its stored
+rate, 1 / (20 × rate) seconds with a rate up to 0.0001 played at 1, the game's rule as
+[the animation keys document](../reverse-engineering/asset-formats/cmsh-animation-keys.md#from-time-to-a-virtual-frame)
+gives it; a looping mode repeats at that period, and a script can choose another speed. No pixel format is established
+for the terrain mixer textures or the static shadow cells. The coverage counts, per kind, the rows that establish each
+field.
+
+[`content_inventory_gate.py`](content_inventory_gate.py) combines independent checks of the selected install with
+consistency checks of the run: an independent walk and hash of the folder (any link, special file,
+folder it cannot list or search, or file it cannot read fails the gate), every AYA re-inflated with zlib alone, every
+archive's chunks walked again, every catalogue record that an archive stream places hashed at its coordinates, Pillow
+opening every image, every cached mesh frame composed from its keys, and the independent decoder's agreement on every
+Ogg and Bink file. Every row the run wrote must meet [the row schema](content_inventory.schema.json); the gate checks it
+with `jsonschema`, and says so when it skips the check without it. PE resource-tree lookup reuses the inventory's PE
+walker, and decoder agreement is the result recorded by the inventory. These parts are consistency checks, not
+separate decoder implementations or repeat decoder runs.
+
+A row of `asset-metadata.jsonl` claims nothing the rest of the run, or the file, does not bear out. It must say what its
+`items.jsonl` row says (kind, form, name, status, use, owner and identity) and, where the catalogue lists the asset,
+what that record says (envelope, chunk path, coordinates, hash and container). Its form is then held to the file:
+the gate states, apart from the inventory, which kind each form is, which file families hold it, which envelope its
+identity names, whether its coordinates address the stored file or the stream inflated here, which top-level archive
+chunk its bytes lie in (read from its own chunk walk), whether its coordinates are the whole stream, and what its bytes
+open with; a PE resource is an icon or a bitmap as the executable's resource tree says. A row relabelled to another form
+therefore fails, and so does a row and its item relabelled together, because the file does not hold what the new label
+needs. Every row but a mesh chain's links, their animations and the terrain mixer mips (whose readers give no
+coordinates, and whose item must lie in an `ERES` chunk) is placed, and its bytes, cut from the stored file or from the
+stream inflated here, must hash to its SHA-256. Whether a DDS, texture record, Ogg or Bink is readable is the gate's
+reading of its bytes, never the row's status: a row that calls readable bytes unparsed fails, as does one that calls
+unreadable bytes parsed or claims fields for them. Each metadata field must equal what the gate reads from the bytes
+itself: a DDS header and mip chain, each mip hashed, and with Pillow the top mip's alpha (DXT2 is decoded as DXT3, whose
+alpha layout it shares); a texture record's own fields; a PNG, TGA, JPEG, icon, Ogg, Bink or bank sample header; an
+animation record; a damage texture's levels. So must the details those bytes show: a PNG's bit depth, colour type,
+interlacing and transparency chunk, a TGA's bits per pixel and alpha bits, a JPEG's precision and process, an animation's
+mode, an Ogg's samples and nominal bitrate, a Bink's frame rate and audio tracks, an icon's bit count and the
+Dial.raw byte sprite's frames. An unplaced row's fields must follow its details. What the run copies from the
+catalogue's records is not recomputed: a texture record's occurrence count and pixel files, a mesh's structure counts,
+a sound's role, a bank sample's details, the usage summaries and upscale notes, and the records that name an asset are
+checked against the item and the record's coordinates, not against the relationships that gave them, which the
+catalogue's own gate owns; and a chained animation's rate and duration follow its details because no coordinate places
+it. For some placed rows the gate's reading adds little beyond the chunk the bytes lie in: the terrain, surface and
+shadow payloads and the byte sprite have constant fields, and a mesh is read only for its magic. The gate also fails
+when the mission-script judge could not read a level archive's worlds. It exits 0 only when all of them pass.
+
+A decoded byte belongs to a reader; that does not give every field a meaning or establish what the game does with it.
+The font records (`FGEN`, `DXFT`), part of each imposter record, a save's career block, the bytes of `Dial.raw` after its
+first frame, the language tables' pool strings no entry reaches, the mission scripts that reproduce no shipped copy,
+the words a particle set's reader skips, the document a Word ActiveMime file compresses and everything in the
+executables but their headers, resource tree, icon images and icon groups stay referenced, and the coverage lists each
+such part. Bytes after an ActiveMime file's compressed stream stay unknown: no published layout says what they are.
+
 ## Editor references and generators
 
 The Companion's [level and mission editor owners](../PROJECT-INDEX.md#level-and-mission-editor) use these Python references:
@@ -130,6 +253,26 @@ documented below and in the development entry headers. Keep retail-derived table
 
 ## Assets and formats
 
+- `media_readers.py` walks the install's public container formats with their published layouts and refuses, with a
+  reason, whatever does not hold: Ogg (every page checksum, sequence and flag, the identification and comment headers,
+  and the setup header read field by field as the Vorbis I specification gives it: codebooks, floors, residues,
+  mappings and modes, with each rule the specification calls an error, and libvorbis's rules for a codebook's lone
+  entry, a residue classbook's entries and a vector book's lookup refused too; the audio packets are only framed), Bink 1
+  (the header, the frame index and each frame's audio packet sizes, as libavformat's demuxer reads them; the audio
+  track descriptors and the packets are framed), PNG (chunk checksums and the inflated image data's size and row
+  filters), JPEG (markers, the quantization and Huffman tables, the restart interval, the frame header's components,
+  each scan header and the extent of each scan; application, comment and any other segment are framed by their lengths),
+  uncompressed TGA, PE (the headers, the section table and the resource tree with its icon images; section contents,
+  the DOS stub, header padding, unreached resource bytes and COFF symbol tables are only framed), Word's saved-web-page
+  ActiveMime container (its header and compressed stream; the compound document inside is not walked), HTML pages
+  (tokenized to their end as one html element) and XML documents (parsed by expat).
+  `media_readers_tests.py` reaches every refusal reason the module has.
+- `particle_set_walk.py` reads a particle set (`*.par`) value by value in `CParticleSet::ReadData`'s order, with the
+  token grammar of the rebuild's reader (`rebuild/OnslaughtRebuild.Parity/Particles/`), and refuses what that reader
+  would take otherwise than as written. `particle_set_walk_tests.py` checks its tables against that C#.
+- `physics_values_decode.py` reads the compiled physics script value by value with the value classes of the rebuild's
+  typed reader (`rebuild/OnslaughtRebuild.Parity/Physics/`) and says which values name a mesh, particle effect, sound
+  effect or icon. `physics_values_decode_tests.py` checks its tables against that C#, so the two cannot drift apart.
 - `aya_archive_inventory.py`, `aya_cross_platform_compare.py`, and
   `aya_texture_fidelity_census.py` provide fail-closed AYA inventory,
   cross-platform pairing, and stored-texture geometry/block comparison. The
@@ -543,6 +686,7 @@ Omitting the archive options leaves the existing catalog publication unchanged.
 ## Catalogue source-file coverage
 
 The counts describe logical source-file paths. Different paths can count separately even when their file contents are identical.
+For byte counts by what a reader decoded, see [the content inventory](#content-inventory).
 
 The `coverage.json` produced by `content_catalog.py` separates a family’s advertised parser support from what the
 selected input actually yielded. `sourceFileCoverage` counts regular input files and their stored sizes by family,
@@ -594,7 +738,9 @@ writes at all, to ignored local paths. New game findings belong in
   `heightfield_node_array_probe.py` (checks whether any shipped heightfield header fills the per-node array).
 - Meshes: `cmsh_grammar_walk.py` walks PC CMSH streams with the grammar in
   [`asset-formats/cmsh-fields.md`](../reverse-engineering/asset-formats/cmsh-fields.md) and proves it accounts for
-  every byte (with `--compose`, it also checks every cached frame against the composed keys);
+  every byte (with `--compose`, it also checks every cached frame against the composed keys). A loose mesh's chained
+  mesh is a direct `PMS2` child; a resource archive's wraps it in `PMSH`, `PMS2` and the 309-byte reference, and the
+  walk follows both;
   `dds_census.py` checks every installed texture's DDS header against its stored mip chain, classifies its alpha and, with `--mips`, checks every lower level
   (see [`asset-formats/dds-texture.md`](../reverse-engineering/asset-formats/dds-texture.md));
   `goodie_resource_walk.py` walks the Goodie archives and resolves what each Goodie shows (see

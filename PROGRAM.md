@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-11-04 (Mission project Save as reaches the Linux CE development runtime; isolated playtest checkpoint next)
+Last updated: 2026-11-04 (Mission project Save as reaches the Linux CE development runtime; content inventory and physics joins; isolated playtest checkpoint next)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
@@ -228,8 +228,14 @@ which things are predicted to join on load and in which order, so a script's thi
 `tools/named_things.py`, with the retail gate `tools/content_catalog_gate.py`), the battle engine configurations (with
 the weapons, explosion, cockpit and description each names, and the levels that offer each) and the `sounds.sfx`
 effects (with their chains and the bank samples they play; `tools/game_tables_decode.py`) are decoded in their
-loaders' order. Next: the physics definitions' other fields (the sound effects, particles and HUD icons they name). A
-catalogue is a foundation, not the mod system or an HD conversion.
+loaders' order, and the physics script value by value with the rebuild's value classes, joined to the particle
+effects, sound effects and HUD icons its values name (`tools/physics_values_decode.py`). `tools/content_inventory.py`,
+with its retail gate `tools/content_inventory_gate.py`, accounts for every byte of a selected install as decoded,
+framed by a record but unread, or unknown, and lists every model, texture, image, animation, sound, film and text
+asset, used or not ([inventory entry point](tools/README.md#content-inventory)). Next: readers for what stays framed
+(the font records, part of each imposter record and the HUD dial's later frames) once their loaders' layouts are
+established, and the inventory of a second install. A catalogue is a foundation, not the mod system or an HD
+conversion.
 
 ### Decompilation and native port
 
