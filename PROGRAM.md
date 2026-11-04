@@ -12,8 +12,8 @@ the campaign's records are in the private historical maintainer archive.
 
 ## Cross-project progress and priorities
 
-This is the single cross-project chart. Multiplayer status and the public contributor routes were rechecked
-**2026-11-02**; older measurements retain their dates in the linked owners. Verify the owner and current release
+This is the single cross-project chart. Multiplayer engineering status was updated **2026-11-04**; the public
+contributor routes were rechecked **2026-11-02**. Older measurements retain their dates in the linked owners. Verify the owner and current release
 before relying on a row.
 A development branch is not a released feature. Update the affected row at a
 material milestone rather than keeping a second live dashboard in a handoff. The [goal](GOAL.md#how-progress-is-measured)
@@ -23,7 +23,7 @@ defines progress and what a completion claim requires.
 | --- | --- | --- |
 | CE release and player experience | Latest public release: 0.1.13 (published 2026-10-31). Its release notes describe shipped changes, checks and limits; physical Windows retesting remains open. The initial and refreshed unreleased 0.1.99 snapshots are preserved. The refresh passed both platform builds and package-content checks, a Linux main-menu render and local edited-project smoke, bounded Companion workflow checks and reviewed manual-launch routes. David has now tried CE and the museum construction test; his observations are recorded below. Development is resumed. This is not the 0.2 release; native Windows runtime and the online game path remain unaccepted. | [0.1.13 release notes](https://github.com/dlprentice/onslaught-ce/releases/tag/v0.1.13), [Manual feedback](#onslaught-ce-player-experience-and-online-play), [checkpoint order](#order-after-0113) |
 | Reported Windows issues | One reproduced cause of double music is fixed in 0.1.12, with software-VM evidence, and Jeppi reports the audio fixed in 0.1.13 on their own Windows PC (a player's report; no log has been read). 0.1.13 adds changes aimed at the pause-menu mouse, the game clock after Alt-Tab and the system cursor in fullscreen; none has been seen on a real Windows PC. The reporter's physical AMD/input retest, separate stutter and reported graphics artifacts remain open. | [CE releases](https://github.com/dlprentice/onslaught-ce/releases/latest) |
-| Online multiplayer | Unreleased multiplayer engineering is not player-ready. The public CE README still lists Internet multiplayer as planned; public 0.1.13 is unchanged. Ordinary in-game host/join, native Windows hosting, independent-machine networks and campaign progression remain acceptance gaps. Deliver independently controlled players, compatible content, reliable session lifecycle and approachable connections, then validate actual networks. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play), [CE README](https://github.com/dlprentice/onslaught-ce) |
+| Online multiplayer | On November 4, a bounded test used two actual Linux CE processes through the authorized TURN relay: both entered a session, exchanged traffic and confirmed 1,000 simulation ticks; the guest closed and the host handled departure, returned to the frontend and quit normally. Independent raw-record review confirmed this result. This was one machine and automated input, not two physical players or proof of moving and shooting together. The test services were disabled afterwards. Player-ready host/join, native Windows, independent-machine networks and campaign progression remain acceptance gaps. The public CE README still lists Internet multiplayer as planned; public 0.1.13 is unchanged. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play), [CE README](https://github.com/dlprentice/onslaught-ce) |
 | Campaign co-op and scale | Ordinary-campaign objectives, transitions, deaths, rejoin and safe progression are not established online. Opposing-team versus/skirmish maps, larger matches, team colours and compatible Battle Engine/unit customization remain goals. Players should be able to pilot Battle Engines or play eligible infantry, vehicles, guns and controllable structures. Temporary control needs identity/team/squad preservation, AI hand-back with current valid orders and controls/HUD appropriate to the type. The solo tank prototype does not prove these full outcomes or network control. Local split-screen is not online co-op. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play) |
 | Controls, display and guidance | Improve understandable dodge/zoom and free-camera help, controllers, accessible menus, window/display choices and performance while preserving the game's look and feel. David's manual r2 report found photo mode fine, dodge difficult despite some successes, Commander janky and tank control jerky. Graphics reported Extra unavailable on an RTX 4060 with Geometry Medium and anti-aliasing None. These observations need focused reproduction; no cause or fix is established. Prefer supported high ordinary graphics separately from the requested optional maximum-distance/LOD/full-model mode. Floaty mouse and 4K HUD/UI remain in scope. Real devices and representative Windows graphics remain acceptance gaps. | [Player experience work below](#onslaught-ce-player-experience-and-online-play), [CE README](https://github.com/dlprentice/onslaught-ce) |
 | Level and mission tools | Required: usable 3D map and mission authoring inside native CE through its menus. Current integrated authoring runs in Companion, with JSON Save/Open, 3D placement and linked-map preview; it does not complete the in-game requirement. Unambiguous object definitions resolve to same-archive meshes, with inspected static, untextured level-221 models and unsupported references reported. The page's Save as path produced projects that moved one existing object's X/Y in CE; initialization still controls height. Both unreleased 0.1.99 Linux packages passed local edited-project smokes without a network session. No publicly released CE reads these projects. Reuse this working data/tooling while building native CE controls and workflow. Textures, animation, terrain editing, new playable levels, full mission authoring, human use, multiplayer loading and native Windows validation remain open; older installed-level candidates retain their separate scope. | [Mission project evidence](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore), [Mission project workflow and limits](companion/OnslaughtToolkit.Godot/README.md#mission-project), [Installed-level workflow](roadmap/companion-level-editor.md#2-what-exists-today), [Remaining candidates](roadmap/companion-level-editor.md#unreleased-editor-candidates) |
@@ -215,6 +215,11 @@ The retained log has SHA-256 `81f2de49e62165489abf8356821f52d76148d55e547e805e42
 | Museum construction test | David reported that it loaded. This is a human launch observation for the small separate test, not acceptance of the complete museum, collisions or all controls. |
 | Companion | David has not tried it. Its workflow/editor evidence remains automated; no human Companion or editor acceptance is added by this CE playtest. |
 
+**Deferred graphics ideas (November 4):** evaluate DLSS and ray-traced effects as optional future enhancements,
+with supported-hardware checks, useful fallbacks and a way to retain the original look. David explicitly placed
+both on the back burner: record the ideas, but do not start implementation while the current work is being finished.
+No integration, hardware acceptance or performance benefit is claimed.
+
 For the reported Windows issues, Jeppi identified the screenshot as the tutorial map; a separate log records a Blackout
 session but does not establish the screenshot's level or cause. Training and Blackout are comparison cases. Verify whether
 his reported fly mode was aircraft flight or the detached/free camera, then compare that view with retail and the port;
@@ -270,14 +275,21 @@ and private lobbies, including a private invite/join path. Voice and text chat a
 Voice should offer proximity/local, squad and team channels, speaking indicators above participating units, and mute
 controls. The voice backend, channel rules and indicator visibility still need design and validation; no voice
 implementation is claimed. Optional LAN discovery plus an online directory and relay is one preliminary connection
-design; the current two-player admission is an experiment, not a permanent cap. Cloudflare TURN is selected for relay
-experimentation within the approved scope. Public lobby discovery and admission/broker hosting remain unselected;
-their operators, recipients, information sent and data handling still need design. These experiments do not establish
+design; the current two-player admission is an experiment, not a permanent cap. Cloudflare TURN and an experimental
+Cloudflare Worker provide the authorized bounded relay and private-room signaling tests. Public lobby discovery and
+production admission remain unfinished; their data handling and player workflows still need design and validation. These experiments do not establish
 a shipped CE multiplayer service or player-ready automatic connections. Private lobby access controls must be
 designed and validated: being unlisted alone does not establish private access.
 
 The older [original-binary feasibility note](roadmap/original-binary-online-multiplayer-feasibility.md) concerns a
 separate historical route, not a statement that CE already has online play.
+
+The November 4 TURN test's retained summary has SHA-256
+`48bca4f415db38b90ebef4cdb7820368c3e37d0cac6d4c333e6c8c09ea3f8c3f`; its independent raw-record review has SHA-256
+`d78d6246061361a6ec38d66ba25ac3babeec300d5dd15e5f027f8f30e649991f`.
+It proves the bounded Linux session lifecycle above, not active movement/fire, Windows, two physical machines,
+voice, a campaign win or a publicly available service. The next active-input check must observe both player
+movement and actual shot creation in both game processes, first with a direct test and then through TURN.
 
 Multiplayer engineering results remain separate from public source and release acceptance. The
 [published CE README](https://github.com/dlprentice/onslaught-ce/blob/bb4fa1f899db0d1826216b89a59c50781bb9cc9b/README.md#L721-L722)
