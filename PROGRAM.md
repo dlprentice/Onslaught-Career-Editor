@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-11-04 (native CE workflow requirements and manual feedback; internally complete, tested 0.2 remains the target)
+Last updated: 2026-11-04 (unified CE migration supersedes a separate Companion end state; existing tools remain until verified replacement)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
@@ -32,7 +32,7 @@ defines progress and what a completion claim requires.
 | Commander | Required: continuous real-time 3D RTS Commander inside native CE, with usable camera, selection, orders and status UI. CE 0.1.13's opt-in map pauses the battle; development adds a live 3D strategic view. These partial controls do not complete the required mode. On one level, scripted Move, Advance and Fall back took one tank squad to the ordered place and Hold stopped it; a longer Move stalled for an unknown reason. David's manual r2 report is janky, so usability remains open. Buildings/production and eventual multiplayer remain goals; direct unit play is distinct. Preserve ordinary play while proving the full workflow, other units/scenarios and native Windows behavior. | [Goal](GOAL.md), [Mission-editor direction](roadmap/companion-mission-editor.md#optional-modes-and-ordinary-play), [CE commander map](https://github.com/dlprentice/onslaught-ce#commander-map-experimental) |
 | Godot rebuild | Selected recorded level-100 comparisons exist; complete gameplay, audio and presentation parity and a finished playable replacement are not established. HD assets and expanded gameplay follow a faithful baseline. | [Godot parity record](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md) |
 | Decompilation and baseline | The private mapped-function check uses a disclosed one-byte compiled-object concession; without it one mapped function remains unmatched. Stand-ins and full linked/runtime equivalence remain separate work. The corrected public [overview](https://github.com/dlprentice/onslaught-decomp/blob/9169f28862ebda0b768cbcc7ec354734af013f5e/README.md#L14-L18) and [score-write documentation](https://github.com/dlprentice/onslaught-decomp/blob/9169f28862ebda0b768cbcc7ec354734af013f5e/tools/README.md#L7-L10) are exported. | [Public decompilation](https://github.com/dlprentice/onslaught-decomp) |
-| Companion | Automated Linux acceptance against released CE 0.1.13 covers the real launcher/career load, copied-career edits/backups/settings, running-game refusal and restoration. The initial unreleased 0.1.99 snapshot passed bounded copied-career/settings and inspected workflow/project checks. The refreshed stage also passed actual version discovery, copied-career backup/edit/restore, settings writes and stale-write refusal; fresh workflow and installed-model images were inspected. David has not tried Companion in his November 4 playtest. These remain programmatic checks, not human use or an update hand-off. Broader Windows UI/device acceptance, listening and safe release remain. | [Companion README](companion/OnslaughtToolkit.Godot/README.md), [current evidence](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore), [dated 0.1.13 acceptance](VALIDATION.md#companion-with-real-onslaught-ce-0113--november-3) |
+| Companion | Required end state: its player capabilities move into CE and the separate app is phased out after verified replacement. Current standalone tools and evidence remain preserved. Automated Linux acceptance against released CE 0.1.13 covers the real launcher/career load, copied-career edits/backups/settings, running-game refusal and restoration. The initial unreleased 0.1.99 snapshot passed bounded copied-career/settings and inspected workflow/project checks. The refreshed stage also passed actual version discovery, copied-career backup/edit/restore, settings writes and stale-write refusal; fresh workflow and installed-model images were inspected. David has not tried Companion in his November 4 playtest. These remain programmatic checks, not human use or an update hand-off. Broader Windows UI/device acceptance, listening and safe release remain. | [Companion README](companion/OnslaughtToolkit.Godot/README.md), [current evidence](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore), [dated 0.1.13 acceptance](VALIDATION.md#companion-with-real-onslaught-ce-0113--november-3) |
 | Diagnostics and recording | Useful bounded logs and manual, informed reporting are available. Preserve faithful reference tapes and develop separate coverage for CE features and controller input; avoid telemetry or automatic uploads. | [CE reporting guidance](https://github.com/dlprentice/onslaught-ce#report-a-problem) |
 | Special Thanks | Stuart Gillam, Jeppi and BermudaMaster are acknowledged in 0.1.12. Keep acknowledgements accurate as further contributors are identified. | [CE credits](https://github.com/dlprentice/onslaught-ce#credits-and-special-thanks) |
 | Documentation, repositories and recovery | Public setup and contribution workflows are published. Owner reconciliation and indexing of retained evidence and handoffs remain open. The verified restore covers one selected snapshot; restoration of the full corpus and recovery on a replacement machine remain unproven. | [Contributor workflow](CONTRIBUTING.md), [Recovery scope](#recovery-and-repository), [Project index](PROJECT-INDEX.md) |
@@ -76,13 +76,13 @@ manual feedback below as observations within the tested scope, and retain each s
 1. Online co-op for the initial two-player path: validate Windows hosting, the Windows guest rows and controls, message pages and a played win reaching the career writer. Windows hosting, a played win and Internet play remain unproven. Then more of it: opposing-team versus/skirmish maps, larger matches as the networking design permits, and play across the Internet without manual port forwarding. The initial pair is a validation step, not the final player limit.
 2. The split-screen gamepad layer: a pad for each player in ordinary two-player split screen, with the menus and pause, and with faithful modes and recordings kept as retail. It comes first of the input lanes because the next lane uses it.
 3. Complete continuous real-time 3D RTS Commander inside native CE with appropriate UI, then prove the uncovered controls/scenarios, native Windows behavior and a co-op commander seat. Commander design should explore a Battle Engine pilot who can issue battlefield orders and an optional dedicated commander role; these are future proposals, not implemented roles. The team commander role is optional: an eligible player may take a vacant team role and step down, and teammates, including the commander, may vote to remove them; a tie does not remove them. The proposed recall requires a majority of eligible team members, with eligibility, timeouts and disconnections to be defined. The commander role and its voting are proposed, not implemented. AI-controlled Battle Engines and expanded unit AI are planned; reuse of suitable existing unit behavior is to be explored, and no new AI behavior is claimed as implemented.
-4. The remaining player-experience lanes: the CE Settings page as a table (pad navigation, a Windows run), a split-screen HUD scale per viewport (off in faithful modes), the fix for the crash on Retry in levels whose static shadows are bound to things that cannot hold one, the second phase of the sharper UI art, and launcher polish (a prompt that fits 1,280 pixels, a calmer line when a signature does not match). A unified CE entry must make Play, Create and Multiplayer discoverable. Create must provide usable 3D map/mission authoring inside CE; launching the separate Companion is not completion. Keep useful offline Companion tools available alongside CE, reuse their data/contracts, and verify the contents and entry points of any combined release package.
+4. The remaining player-experience lanes: the CE Settings page as a table (pad navigation, a Windows run), a split-screen HUD scale per viewport (off in faithful modes), the fix for the crash on Retry in levels whose static shadows are bound to things that cannot hold one, the second phase of the sharper UI art, and launcher polish (a prompt that fits 1,280 pixels, a calmer line when a signature does not match). A unified CE entry must make Play, Create and Multiplayer discoverable. Create must provide usable 3D map/mission authoring inside CE; launching the separate Companion is not completion. Migrate Companion capabilities into the unified CE experience, retaining the current app and reusable data/contracts until their replacements are verified; check the contents and entry points of the delivered package.
 5. The post-release review of every Onslaught repository: stale documents and how the products describe each other.
 6. Mods toward the platform David describes: Windows support for the existing world-mod route first (without it, a custom level reaches only Linux players), then replacing any asset, then adding content and a scripting interface, each designed before it is built; the approved 3D map and mission editor work, with prototypes and independent work proceeding where their dependencies allow. The tools that replace walker meshes continue with chains, bounds, skeletal and camera parts and skinned meshes. Independent CE-native authoring may progress in parallel.
 7. Done 2026-10-30, ahead of this order at David's request: CE ran editor changes in the bounded cases documented in the [level editor plan](roadmap/companion-level-editor.md). A comparison with the original is recorded privately and does not establish complete equivalence. Next, a writer that builds a level from scratch (terrain, world and mission), whose first targets are a two-unit test level that CE runs and the museum world, walked or flown around in the Battle Engine. Retail-compatible test levels are optional where useful.
 8. The content catalogue to a complete inventory (every model, texture and image, used or not), alongside the museum's art boards, turntables, lighting, signs and a main-menu entry. The first CE exhibition can progress in parallel with catalogue work.
 9. Level and mission authoring from scratch: usable 3D map and mission editors inside CE, including save/reopen and a connected playtest workflow, custom levels for players and small test levels CE can run. Reuse the existing tools and project contracts; retail-compatible export remains optional where useful.
-10. The Companion's Windows acceptance: release invocation, input, dialogs, rendering and its UI as validation cases.
+10. Migrate Companion's player capabilities into CE, with Windows acceptance for the resulting invocation, input, dialogs, rendering and workflows. Retain the current standalone implementation and its evidence until its verified replacement is usable; do not silently discard its remaining acceptance work.
 11. Windows validation of every lane before release, the release path's own script, and the reported Windows issues retested on real hardware.
 12. The decompilation's last unmatched function and the Godot rebuild continue alongside as separate products, not part of the CE package.
 
@@ -98,18 +98,25 @@ copy.
 
 The companion is a C# application built in code on Godot 4.8 beta1 .NET and .NET 10, and organised around players: careers
 with a campaign map, Goodies, career editing, cheats, game settings, automatic backups that can be put back, music
-and voices, and lore (see its [README](companion/OnslaughtToolkit.Godot/README.md)). Every write into the game is a
-choice made after a verified backup, never while the game runs.
+and voices, and lore (see its [README](companion/OnslaughtToolkit.Godot/README.md)). In this current standalone app,
+every write into the game is a choice made after a verified backup, never while the game runs.
 [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore) records
 what is proven. Players can choose the original game or CE, manage careers and backups, and use CE's two supported
 launcher settings and the steps for updating CE (the companion contacts nothing). The CE launcher checks its own signed
 feed and installs an update only when the player chooses Update.
 
-Companion retains its own offline career-editing, backup and installation-management role. CE is the primary
-play/create/experiment product: move gameplay, content authoring, mod selection and in-game catalogue workflows
-into CE where appropriate. Preserve and reuse the existing tools and shared formats/contracts while implementing
-those native workflows. This requirement does not prescribe embedding Godot or C# in CE, replacing the working
-Companion wholesale, or making the faithful baseline depend on the editor UI.
+The required end state is one CE player product, with the separate Companion eventually phased out. Move its lore,
+game-content exploration, career/save editing, backups, settings and installation-management capabilities into CE
+alongside gameplay, content authoring, mod selection and the in-game catalogue. This supersedes the separate
+offline-management end state. Preserve and reuse the working Companion, tools, data/contracts and evidence during
+the migration; retire the separate app only after its useful capabilities have verified replacements. No embedding
+of Godot, C# or another runtime is prescribed by this product decision.
+
+Save editing inside CE needs an explicit coordination contract with loaded careers. Retain verified backups,
+changed-source refusal, preservation of unknown data and read-back checks. Protect an in-use career, and arrange
+the safe save/reload hand-off before enabling edits: a frontend screen may still have cached career state that could
+overwrite a file edit. Simply removing the standalone app's running-process refusal would not provide that safety.
+This integrated workflow remains required work, not a delivered capability.
 
 Public contributor setup is implemented. A fresh anonymous public clone installed verified official tools,
 compiled the Companion and passed its authored runtime gate without maintainer files or game data on 2026-11-02.
@@ -137,8 +144,9 @@ Remaining acceptance and release work:
 Any future media replacement would be a CE option (for example a CE user-data override folder), not a file swap
 in an install.
 
-Keep the companion's application code, the rebuild and private retail data separate. Beyond launching and managing
-Onslaught CE, no store, account or community features are planned.
+Keep public application code and private retail data separate throughout migration, with the faithful baseline
+independently testable. The current standalone Companion has no store, account or community features; CE's broader
+multiplayer requirements are tracked separately below.
 
 ### Onslaught CE player experience and online play
 

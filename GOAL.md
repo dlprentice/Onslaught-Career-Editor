@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-11-04 (resumed work; complete native CE play/create workflows required before considering 0.2)
+Last updated: 2026-11-04 (unified CE product required; phase out standalone Companion after verified migration)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
@@ -75,9 +75,13 @@ archive.
   the presentation; parity is measured against retail and native-port recordings Present by Present, and
   onslaught-godot records it. The longer-term aim is a faithful full-game baseline, followed by optional enhancements
   such as modern creation tools, HD assets and expanded multiplayer. `rebuild/` here is a frozen copy.
-- **Onslaught Companion remains its own offline-management product**, including career editing, backups and
-  installation management. Its current Godot .NET app for Linux and Windows provides careers, Goodies, settings,
-  backups, music, voices and lore, with protected writes and verified backups, and can launch Onslaught CE.
+- **Unify Companion's player capabilities within CE and eventually phase out the separate app.** CE should include
+  its lore, game-content exploration, career/save editing, backups, settings and installation-management workflows,
+  alongside native authoring and play. Migrate in verified stages; keep the working Companion, its tools and evidence
+  until the replacement preserves their useful capabilities and safety. This supersedes the earlier plan to retain
+  a separate offline-management product, without prescribing an engine/runtime embedding architecture.
+  The current standalone Godot .NET app for Linux and Windows still provides careers, Goodies, settings, backups,
+  music, voices and lore, with protected writes and verified backups, and can launch Onslaught CE.
   It supports original-game and CE careers and backups, CE launcher settings and the steps for updating CE (the companion
   contacts nothing). For older CE installations, follow the [current release's migration guidance](https://github.com/dlprentice/onslaught-ce/releases/latest).
   Its [known limits](companion/OnslaughtToolkit.Godot/README.md#known-limits) distinguish
@@ -141,6 +145,10 @@ Unknowns are written as open questions with the cheapest falsifier.
   already modified file as the original.
 - Never destroy saves as a side effect. Use real save baselines and preserve length, reserved fields and unknown
   bytes; do not synthesize `.bes` saves.
+- Career editing inside CE must retain verified backups, stale-write refusal and read-back checks, and coordinate
+  with the game's loaded career state. An in-use career is protected; merely being on a frontend page does not make
+  an edit safe, because CE may still hold a profile that would overwrite it. Design and test the save/reload hand-off
+  before replacing the standalone editor's process-based guards.
 - Keep retail material, Ghidra databases and decompiler output out of this repository (`npm run test:safety`).
 - Preserve unique evidence and unrelated changes; follow [AGENTS.md](AGENTS.md) for storage, publication and
   cleanup rules.

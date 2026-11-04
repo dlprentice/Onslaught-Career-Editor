@@ -1,12 +1,12 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-04 (native CE requirements distinguished from current Companion tools and bounded checkpoint acceptance)
+Last updated: 2026-11-04 (standalone Companion is current implementation; unified CE migration is required, not delivered)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
 
-The companion, Onslaught Companion, lets players choose the original game or Onslaught CE. It supports finding
+The current standalone Onslaught Companion lets players choose the original game or Onslaught CE. It supports finding
 CE's launcher, protected career writes, two launcher settings and the steps for updating CE (the companion
 contacts nothing; CE checks its own signed feed and installs an update only when the player chooses Update).
 See its [README](companion/OnslaughtToolkit.Godot/README.md) for the contract and platform limits.
@@ -15,6 +15,11 @@ required native CE experience, not completed in-game editors. Continuous 3D RTS 
 through CE's menus also remain incomplete; the map/preview controls and separate gallery/construction test retain
 their narrower evidence. [GOAL.md](GOAL.md) and [PROGRAM.md](PROGRAM.md#order-after-0113) own the new requirements
 and the hold on 0.2 until its agreed player workflows are internally complete and tested.
+The latest product decision also moves Companion's lore, content exploration, career/save editing, backups,
+settings and installation-management workflows into CE, eventually retiring the separate app. The present tools
+and evidence remain until that replacement is verified. This is a migration requirement; no completed in-process
+career editor or unified frontend is claimed here. Integrated career editing still needs verified recovery and
+coordination with CE's loaded profile state, not just removal of the current running-game refusal.
 The byte-matching decompilation is the reverse-engineering authority. Its private function check matches every mapped
 game function with a guarded one-byte correction to a compiled object; without that correction, one function remains
 unmatched. Its public export, [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), records its own
