@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-04 (bounded Companion and local project acceptance with the unreleased CE 0.1.99 checkpoint; prior results retain their scope)
+Last updated: 2026-11-04 (refreshed Companion and local project checks; earlier checkpoint acceptance retains its scope)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -181,15 +181,24 @@ Linux workflow driven through programmatic production-page actions, not human UI
 complete campaign play or native Windows acceptance. The [October 24 CE 0.1.4 run](VALIDATION.md#companion-with-real-onslaught-ce--october-24)
 remains a separate dated record.
 
-The November 4 Linux checkpoint check used the same pinned production pages with the unreleased CE 0.1.99 package.
+The initial November 4 Linux checkpoint check used the same pinned production pages with the unreleased CE 0.1.99 package.
 Discovery read its actual launcher version; copied-career backup/edit/restore and the two supported settings controls
 passed. Fresh Home/version, settings and restored-backup images, plus authored 3D project/map-link/source views,
 were inspected. Both capture processes exited normally and the pinned source/runtime inputs read back unchanged.
 The retained checkpoint acceptance receipt has SHA-256
 `2f267eb8df39c78028729fddeaf468307c1f74d56464229dfabb3f7fc25ff367`.
 This adds bounded automated workflow and image acceptance, not human input, audible output, an update hand-off or
-native Windows acceptance. A separate local playtest is prepared for the maintainer's feedback; 0.1.99 is not a
-public release. The earlier CE 0.1.13 career-load result remains the dated acceptance described above.
+native Windows acceptance. This first local snapshot remains preserved; neither it nor the separate 0.1.99 refresh
+is a public release. The earlier CE 0.1.13 career-load result remains the dated acceptance described above.
+
+The refreshed November 4 Companion stage uses the accepted installed-model editor source described below and the
+newer unreleased CE 0.1.99 package. Fresh scripted production-page checks passed actual launcher-version discovery,
+copied-career backup/edit/restore, settings writes and refusal to overwrite a changed settings snapshot. The process
+exited normally; package and preserved baseline read back unchanged. Home/version, settings, restored-career and
+static installed-model images were inspected. The retained combined receipt has SHA-256
+`60ce7544b472c5380e58a3c813abecf4bf179aba61e510b0595943642c052009`.
+This is bounded Linux workflow/image acceptance, with no new human-input, audio, game-load, update hand-off or
+native Windows claim. The checkpoint's remaining reviews are tracked in [PROGRAM.md](PROGRAM.md#order-after-0113).
 
 [Data-folder tests](companion/OnslaughtToolkit.Godot/Tests/CeGameDataTests.cs) exercise the two-file validation and
 folder selection using owned tiny inputs; these are not a game-content or launch acceptance test.
@@ -272,7 +281,9 @@ Its sidebar:
   tables refuse that geometry instead
   of selecting an unrelated model. Move, Undo/Redo and Save/Open retain the project and source identities. Authored
   reader and scene checks and independent review cover those paths; textures, animation, complete-scene rendering,
-  human input and native Windows remain unverified. This is later development source, not the frozen 0.1.99 stage.
+  human input and native Windows remain unverified. This source was added after the initial 0.1.99 Companion stage
+  and is included in the refreshed stage, whose fresh installed-model images were also inspected; the initial stage
+  remains preserved.
   A separate 2026-11-03 controlled run and independent review exercised the production
   [Save as path](https://github.com/dlprentice/Onslaught-Career-Editor/blob/443b2b3d921775767a87404d9c6842fc1b275294/companion/OnslaughtToolkit.Godot/Ui/Pages/CeMissionProjectPage.cs)
   through its file-selection signal, then loaded the saved documents in a clean, default Linux CE development build.
@@ -283,10 +294,13 @@ Its sidebar:
   unchanged. Deliberately broken writer and coordinate-reader variants were refused by the check. The controlled
   career-write case left the protected save unchanged; it does not establish every save path. The retained independent
   review receipt has SHA-256 `9b9871ca08f689f63c2e8a1aa0c678a0ba36f13a0c7671f0027bbd68abcb6525`.
-  On November 4, the final unreleased 0.1.99 Linux package, built with networking enabled, also loaded one of those
+  On November 4, the initial unreleased 0.1.99 Linux package, built with networking enabled, also loaded one of those
   page-saved level-221 projects locally. Its placement log entry and gameplay image were inspected; no network session
   was active. The retained exact-package smoke receipt has SHA-256
   `e4a7f4daf13dd8e442f52a894452870880aeeb45ea4a50d2ea2614b279070e81`.
+  The refreshed November 4 package also loaded the saved project locally, rendered gameplay and exited cleanly;
+  the project and package read back unchanged. Its gameplay frame was inspected. The retained smoke receipt has
+  SHA-256 `f03720cef8d15f9e09f7d75661beaabccd4fb08d2d87e07cfb4ea76ebe2c1370`.
   This is page-to-runtime evidence for an existing-object placement in CE development source. No publicly released CE
   reads these projects. No person operated the Save as dialog or 3D drag for these checks, and they do not establish
   multiplayer project loading/replication, native Windows, mission completion or additional object kinds. The Windows

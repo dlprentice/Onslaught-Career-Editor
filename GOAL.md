@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-11-04 (development continues across the requested scope while the delivered playtest checkpoint stays unchanged)
+Last updated: 2026-11-04 (authorized refresh of the local playtest checkpoint; broader development remains paused)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
@@ -49,9 +49,10 @@ archive.
   fallback behavior for a last survivor, a missing squad, a destroyed target or an invalid destination. Give each type
   usable controls and HUD: infantry weapons/ammunition/reloading; vehicle and artillery aiming, traverse, firing arcs,
   trajectory, ammunition and reload; fixed-gun traverse and leaving the position. Indicators must reflect actual native
-  firing conditions and obstructions. These are requested outcomes: the solo tank prototype lacks squad restoration
-  and a unit HUD, and does not establish network control or prescribe how future online roles work. Like other new
-  modes, these roles must not interfere with ordinary campaign play; availability and final placement remain flexible.
+  firing conditions and obstructions. The solo tank prototype now has bounded squad-membership/current-AI hand-back,
+  but exact formation/waypoint restoration, a unit HUD and network control remain open. It does not prescribe how
+  future online roles work. Like other new modes, these roles must not interfere with ordinary campaign play;
+  availability and final placement remain flexible.
 - **Creation and modding tools** should let players inspect and create levels, missions and compatible modifications
   safely, including 3D map and mission editors. A modern CE-native project format and custom gameplay are first-class
   targets; original-game-compatible export is useful where practical but is not a prerequisite. Faithful behavior
@@ -99,12 +100,12 @@ release, design and evidence records; [CURRENT_CAPABILITIES.md](CURRENT_CAPABILI
 demonstrated capabilities. A handoff is a dated continuity snapshot, not a competing roadmap: verify current refs,
 claims and evidence before acting, and update the existing owner when a material milestone changes.
 
-David's current direction is to continue work across the requested areas while he prepares to try the local 0.1.99
-checkpoint. Waiting for his feedback does not block independent development. Agents must preserve that checkpoint's
-accepted packages/builds, staged Companion runtime, launch setup/profile and copied user data so he can test the
-delivered version. Subsequent work uses separate worktrees, outputs, profiles and copied test data; its evidence and
-capability claims remain separate from the frozen checkpoint. [PROGRAM.md](PROGRAM.md#order-after-0113) owns the
-current order and remaining work.
+David has authorized a refreshed local 0.1.99 checkpoint containing the recent integrated work. This bounded refresh
+may proceed while broader development remains paused. Preserve the earlier snapshot's packages, accepted builds,
+Companion stage, launch setup/profile and copied user data; assemble and validate the refresh separately. Retaining
+the earlier snapshot does not forbid providing an updated one. Each checkpoint's capability claims must follow its
+own source, package and runtime evidence, with unfinished work stated plainly. The wider goals remain in scope;
+[PROGRAM.md](PROGRAM.md#order-after-0113) owns the current order and remaining work.
 
 Do not publish 0.2 while working multiplayer or the other agreed release requirements remain incomplete. Working
 multiplayer must be part of that larger release. Internal playtest checkpoints and continued development do not lift
