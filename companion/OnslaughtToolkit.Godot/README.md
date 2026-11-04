@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-11-03 (acceptance of the careers, backups, settings and launch flows against released CE 0.1.13 on Linux; Mission project linked-map preview: what it reads, what it binds and its limits)
+Last updated: 2026-11-04 (Mission project Save as reaches Linux CE development source, with object-dependent height; CE 0.1.13 acceptance limits)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -448,7 +448,8 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   (adding and deleting things) are in
   [`roadmap/companion-level-editor.md`](../../roadmap/companion-level-editor.md). The [mission-editor roadmap](../../roadmap/companion-mission-editor.md) describes current limitations and planned work.
 - **Mission project** creates authored placements and source independently of an installed level. Its
-  [workflow and limits](#mission-project) distinguish the flat 3D placement preview and project Save/Open from CE play.
+  [workflow and limits](#mission-project) describe 3D placement, the linked-map preview, project Save/Open and the
+  bounded placement path into CE development source.
 - **Advanced**: **Career bytes** shows, read-only, either the open career's stored values
   (including both players' god flags) or, after you choose another career, every byte that
   differs between the two, named by region.
@@ -471,7 +472,8 @@ a new `.ceproject` JSON file and verifies it; existing files are not replaced. *
 source text, links and map bindings with a fresh undo history, after confirmation when current work would be discarded.
 
 **Installed-map link** ties a placement's definition to one existing named object of an installed level, so a
-project-enabled CE can start that object at the authored position. **Load linked map…** asks for a game folder and
+project-enabled CE can apply the authored placement before the object initializes. The object's initialization can
+replace its height: stored Z is not a guarantee of runtime height. **Load linked map…** asks for a game folder and
 reads that level's terrain and the models its objects reference into a read-only preview: sampled terrain and static,
 untextured models at their installed orientation, which drag like markers. Tree groups, animation, models chosen by
 game code and models the folder lacks are not shown, and the page reports what it left out. The folder stays out of
@@ -487,8 +489,12 @@ placement uses is ignored. Only regular files are read, each within a byte limit
 special file where a map file should be is refused at once.
 
 Definition references are names, not resolved game models. This page edits no terrain, compiles or runs no source and
-exports no playable level, and no released CE reads these projects. It is an authoring preview; complete mission
-authoring, physical-input use and native Windows acceptance remain open. The [document](Tests/CeMissionProjectTests.cs),
+exports no new playable level. CE development source now reads linked projects: a 2026-11-03 controlled run and
+independent review saved projects through this page's production Save as path and ran those files in default Linux
+CE on level 221. One existing boat reached the authored X/Y; its own initialization set its height. A moved placement
+can change later mission and AI behavior. The page was driven programmatically, not by a person operating its dialog
+or dragging a marker. No released CE reads these projects, and complete mission authoring, physical-input use,
+network-build behavior and native Windows acceptance remain open. The [document](Tests/CeMissionProjectTests.cs),
 [file](Tests/CeMissionProjectFilesTests.cs), [page-input](Tests/CeMissionProjectPageTests.cs),
 [linked-scene](Tests/CeLinkedSceneTests.cs) and [selected-file](Tests/CeLinkedSceneInputTests.cs) tests cover authored
 data and programmatic controls. This command renders the page offscreen from an authored scene:
@@ -501,8 +507,9 @@ The [capability record](../../CURRENT_CAPABILITIES.md#godot-companion--careers-s
 
 ## Known limits
 
-- Linux CE 0.1.4 launch, version reading and loading an edited copy of a real career passed the
-  isolated check above. This does not establish complete campaign play or every save variant.
+- Linux CE 0.1.13 launch, version reading, copied-career edits and loading, settings, running-game refusals and
+  backup restoration passed the automated isolated check above. This does not establish human use, update hand-off,
+  complete campaign play or every save variant.
 - The selected Windows development UI workflow above passed with inspected screenshots. Ordinary release
   invocation, physical input and file dialogs remain open. The production file/settings backend also ran
   natively on Windows 11 using [NativeChecks](../OnslaughtToolkit.NativeChecks/README.md): real-career backup,

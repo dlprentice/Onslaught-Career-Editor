@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-04 (Mission project Save as to Linux CE runtime evidence and remaining limits)
+Last updated: 2026-11-04 (Mission project Save as to Linux CE runtime; copied-career acceptance with released CE 0.1.13)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -172,10 +172,14 @@ search order; the companion's separate pictures-and-music choice does not overri
 [original-career browsing tests](companion/OnslaughtToolkit.Godot/Tests/CeOverlayTests.cs) use owned copies
 of the tracked real-save fixture in isolated folders. [Launcher and settings tests](companion/OnslaughtToolkit.Godot/Tests/CeSettingsTests.cs)
 check the launch request and capture a tiny fixture script's version reply. In addition, the
-[real Linux CE acceptance](VALIDATION.md#companion-with-real-onslaught-ce--october-24) read CE 0.1.4's version,
-started its launcher, edited and backed up a copy of a game-created career, and loaded the edited Unicode-named
-career through CE's own menu. The game's successful-load output equals the edited file byte for byte;
-its level-selection screen was inspected. This does not establish complete campaign play.
+[November 3 Linux acceptance](VALIDATION.md#companion-with-real-onslaught-ce-0113--november-3) read CE 0.1.13's version,
+started its actual launcher, edited and backed up a copy of a game-created career, saved the two supported CE settings,
+and loaded the edited Unicode-named career through CE's own menu. The loaded options file equals the edited career
+byte for byte; the selected level-selection frame was inspected. The check also refused career/settings writes while
+the game ran, refused stale writes, and restored the original career from its verified backup. It is an automated
+Linux workflow driven through programmatic production-page actions, not human UI input, an update hand-off,
+complete campaign play or native Windows acceptance. The [October 24 CE 0.1.4 run](VALIDATION.md#companion-with-real-onslaught-ce--october-24)
+remains a separate dated record.
 [Data-folder tests](companion/OnslaughtToolkit.Godot/Tests/CeGameDataTests.cs) exercise the two-file validation and
 folder selection using owned tiny inputs; these are not a game-content or launch acceptance test.
 [Update tests](companion/OnslaughtToolkit.Godot/Tests/CeUpdateFeedTests.cs) check signature verification and refused
