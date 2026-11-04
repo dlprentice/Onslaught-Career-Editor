@@ -9,12 +9,27 @@ from pathlib import Path
 import struct
 import tempfile
 import unittest
+import zlib
 from unittest.mock import patch
 
 import ce_museum_stage as museum
 import content_catalog_tests as fixtures
 import world_resources_encode as world
 import world_resources_decode as schema
+
+BASE_LEVEL = 90
+
+
+def chunk(tag, body):
+    return tag.encode("ascii") + struct.pack("<I", len(body)) + body
+
+
+def pack_archive(raw):
+    parts = []
+    for offset in range(0, len(raw), world.MAX_INFLATED_MEMBER_BYTES):
+        compressed = zlib.compress(raw[offset:offset + world.MAX_INFLATED_MEMBER_BYTES], 9)
+        parts.append(struct.pack("<I", len(compressed)) + compressed)
+    return b"".join(parts)
 
 
 def fixture():
@@ -24,29 +39,30 @@ def fixture():
     init["spawnScript"] = "original-spawn-must-not-run"
     start_oid = next(oid for oid, kind in schema.OID_NAMES.items() if kind == "start")
     model["things"].append({"oid": start_oid, "kind": "start", "init": init})
+    model["baseLevel"] = BASE_LEVEL
     models = {"BSWD": copy.deepcopy(model), "RLWD": model}
+    models["BSWD"]["baseLevel"] = -1
     bodies = {tag: world.write_world_body(m) for tag, m in models.items()}
-    inner = museum.chunk("WDAT", struct.pack("<ii", 100, 100))
-    inner += b"".join(museum.chunk(tag, body) for tag, body in bodies.items())
-    raw = museum.chunk("LVLR", struct.pack("<i", 100))
-    raw += museum.chunk("TARG", b"TEST") + museum.chunk("TEXT", b"authored-resource-data")
-    raw += museum.chunk("WRES", museum.chunk("WRLD", inner))
-    archive = museum.pack_archive(raw)
+    inner = chunk("WDAT", struct.pack("<ii", BASE_LEVEL, 100))
+    inner += b"".join(chunk(tag, body) for tag, body in bodies.items())
+    raw = chunk("LVLR", struct.pack("<I", museum.LEVEL_RESOURCE_VERSION))
+    raw += chunk("TARG", b"TEST") + chunk("TEXT", b"authored-resource-data")
+    raw += chunk("WRES", chunk("WRLD", inner))
+    archive = pack_archive(raw)
 
     def source(index):
         return {"world": "RLWD", "ordinal": index, "sha256": museum.record_digest(model["things"][index])}
 
     project = {"format": museum.FORMAT, "id": "authored-room", "name": "Authored exhibition",
-               "targetLevel": 889, "carrier": {"level": 100, "sha256": museum.digest(archive)},
+               "carrier": {"level": 100, "sha256": museum.digest(archive)},
                "start": {"source": source(len(model["things"]) - 1), "offset": [0, 0, 0], "orientation": [0, 0, 0]},
                "exhibits": [{"id": "first", "source": source(4), "offset": [12, 0, 0], "orientation": [0, 0, 0]},
                             {"id": "second", "source": source(4), "offset": [0, 12, 0], "orientation": [0, 0, 1]}]}
     return project, archive, models
 
 
-def decoded(archive):
-    raw = b"".join(world.inflate(world.read_members(archive)))
-    return {tag: world.read_world_model(body) for tag, body in world.level_worlds(raw)["bodies"].items()}
+def decoded(bodies):
+    return {"BSWD": world.read_world_model(bodies[BASE_LEVEL]), "RLWD": world.read_world_model(bodies[100])}
 
 
 class MuseumContentTests(unittest.TestCase):
@@ -59,8 +75,8 @@ class MuseumContentTests(unittest.TestCase):
         self.assertEqual([t["init"]["name"] for t in models["RLWD"]["things"]],
                          ["ce.museum.visitor", "ce.museum.first", "ce.museum.second"])
         self.assertEqual(models["RLWD"]["things"][1]["init"]["position"], [112.0, 100.0, 0.0])
-        for model in models.values():
-            self.assertEqual(model["baseLevel"], project["targetLevel"])
+        for tag, model in models.items():
+            self.assertEqual(model["baseLevel"], -1 if tag == "BSWD" else BASE_LEVEL)
             for field in ("scripts", "namedMeshes", "treeGroups", "treeTypes", "waypointPaths"):
                 self.assertEqual(model[field], [])
             self.assertEqual(model["influenceMap"]["nodes"], 0)
@@ -72,18 +88,35 @@ class MuseumContentTests(unittest.TestCase):
                 self.assertEqual(thing["init"]["attachScriptsToUnits"], 0)
         self.assertEqual(receipt["sourceScriptsCarried"], 0)
         self.assertEqual(receipt["sourceActorsCarried"], 0)
+        self.assertEqual(models["RLWD"]["things"][0]["init"]["start"], {"planeMode": 0, "playerNumber": 1})
 
-    def test_exact_resource_bytes_preserved_and_world_bytes_replaced(self):
+    def test_visitor_requires_a_primary_player_start(self):
+        project, _, models = fixture()
+        binding = project["start"]["source"]
+        record = models[binding["world"]]["things"][binding["ordinal"]]
+        for player in (0, 2):
+            record["init"]["start"]["playerNumber"] = player
+            binding["sha256"] = museum.record_digest(record)
+            with self.assertRaises(museum.MuseumError): museum.make_worlds(project, models, BASE_LEVEL)
+
+    def test_resources_stay_read_only_and_only_two_world_bodies_are_generated(self):
         project, source, _ = fixture()
+        before = museum.digest(source)
         artifact, _ = museum.build(project, source)
-        def sections(blob):
-            raw = b"".join(world.inflate(world.read_members(blob)))
-            return {tag: raw[at:at + size] for tag, at, size in world.chunks(raw)}
-        before, after = sections(source), sections(artifact)
-        self.assertEqual(before["TEXT"], after["TEXT"])
-        self.assertEqual(before["TARG"], after["TARG"])
-        self.assertNotEqual(before["WRES"], after["WRES"])
-        self.assertNotEqual(before["LVLR"], after["LVLR"])
+        self.assertEqual(museum.digest(source), before)
+        self.assertEqual(set(artifact), {BASE_LEVEL, 100})
+        for body in artifact.values():
+            self.assertNotIn(b"authored-resource-data", body)
+            self.assertEqual(world.read_world_model(body)["format"], world.MODEL_FORMAT)
+
+    def test_mission_slot_is_not_a_resource_format_marker(self):
+        project, source, _ = fixture()
+        raw = b"".join(world.inflate(world.read_members(source)))
+        wrong = bytearray(raw)
+        struct.pack_into("<I", wrong, 8, 889)
+        carrier = pack_archive(bytes(wrong))
+        project["carrier"]["sha256"] = museum.digest(carrier)
+        with self.assertRaises(museum.MuseumError): museum.build(project, carrier)
 
     def test_repeated_build_is_byte_identical(self):
         project, source, _ = fixture()
@@ -91,8 +124,8 @@ class MuseumContentTests(unittest.TestCase):
 
     def test_output_audit_catches_carried_source_behaviour(self):
         project, source, models = fixture()
-        baseline = museum.make_worlds(project, models)
-        for mutation in ("actor", "script", "attachment", "navigation", "automatic-mesh", "progression"):
+        baseline = museum.make_worlds(project, models, BASE_LEVEL)
+        for mutation in ("actor", "script", "attachment", "navigation", "automatic-mesh", "progression", "visitor"):
             with self.subTest(mutation=mutation):
                 wrong = world.read_world_model(baseline["RLWD"])
                 if mutation == "actor": wrong["things"].append(models["RLWD"]["things"][0])
@@ -100,6 +133,7 @@ class MuseumContentTests(unittest.TestCase):
                 elif mutation == "attachment": wrong["things"][0]["init"]["script"] = "authored-bad-script"
                 elif mutation == "navigation": wrong["waypointPaths"] = [{"name": "bad-path", "slots": []}]
                 elif mutation == "automatic-mesh": wrong["namedMeshes"] = ["bad-auto-spawn"]
+                elif mutation == "visitor": wrong["things"][0]["init"]["start"]["playerNumber"] = 0
                 else: wrong["baseLevel"] = 100
                 changed = {**baseline, "RLWD": world.write_world_body(wrong)}
                 with patch.object(museum, "make_worlds", return_value=changed):
@@ -122,7 +156,7 @@ class MuseumContentTests(unittest.TestCase):
         project, _, _ = fixture()
         edits = []
         edit = copy.deepcopy(project); edit["runScript"] = "anything"; edits.append(edit)
-        edit = copy.deepcopy(project); edit["targetLevel"] = 100; edits.append(edit)
+        edit = copy.deepcopy(project); edit["targetLevel"] = 889; edits.append(edit)
         edit = copy.deepcopy(project); edit["start"]["offset"][0] = float("nan"); edits.append(edit)
         edit = copy.deepcopy(project); edit["start"]["offset"][0] = True; edits.append(edit)
         edit = copy.deepcopy(project); edit["exhibits"][1]["id"] = "first"; edits.append(edit)
@@ -131,15 +165,18 @@ class MuseumContentTests(unittest.TestCase):
             with self.subTest(edit=edits.index(edit)):
                 with self.assertRaises(museum.MuseumError): museum.validate(edit)
 
-    def test_unsupported_carrier_section_is_not_copied(self):
+    def test_equal_world_ids_or_wrong_real_id_are_refused_before_filename_mapping(self):
         project, source, _ = fixture()
-        raw = b"".join(world.inflate(world.read_members(source))) + museum.chunk("CODE", b"not-supported")
-        changed = museum.pack_archive(raw); project["carrier"]["sha256"] = museum.digest(changed)
-        with self.assertRaises(museum.MuseumError): museum.build(project, changed)
+        raw = b"".join(world.inflate(world.read_members(source)))
+        offset = world.level_worlds(raw)["wdatOffset"]
+        for base, real in ((100, 100), (BASE_LEVEL, 101)):
+            wrong = bytearray(raw); struct.pack_into("<ii", wrong, offset, base, real)
+            changed = pack_archive(bytes(wrong)); project["carrier"]["sha256"] = museum.digest(changed)
+            with self.assertRaises(museum.MuseumError): museum.build(project, changed)
 
     def test_multi_member_pack_round_trip(self):
         raw = b"authored" * (world.MAX_INFLATED_MEMBER_BYTES // 4)
-        packed = museum.pack_archive(raw)
+        packed = pack_archive(raw)
         self.assertGreater(len(world.read_members(packed)), 1)
         self.assertEqual(b"".join(world.inflate(world.read_members(packed))), raw)
 
@@ -151,22 +188,25 @@ class MuseumContentTests(unittest.TestCase):
             result = museum.stage(project, game, root / "out")
             output = Path(result["root"])
             manifest = json.loads((output / "mod.json").read_text())
-            entry = manifest["files"][0]; archived = (output / entry["path"]).read_bytes()
-            self.assertEqual(museum.digest(archived), entry["sha256"])
-            self.assertEqual(len(archived), entry["size"])
+            self.assertEqual(len(manifest["files"]), 2)
+            snapshots = {}
+            for entry in manifest["files"]:
+                encoded = (output / entry["path"]).read_bytes()
+                self.assertEqual(museum.digest(encoded), entry["sha256"])
+                self.assertEqual(len(encoded), entry["size"])
+                self.assertTrue(entry["path"].startswith("data/worlds/world"))
+                snapshots[entry["path"]] = encoded
             self.assertEqual(original.read_bytes(), source)
             with self.assertRaises(museum.MuseumError): museum.stage(project, game, root / "out")
-            self.assertEqual((output / entry["path"]).read_bytes(), archived)
+            for path, encoded in snapshots.items(): self.assertEqual((output / path).read_bytes(), encoded)
             with self.assertRaises(museum.MuseumError): museum.stage(project, game, game / "mods")
             self.assertEqual(original.read_bytes(), source)
 
-    def test_existing_target_and_symlinked_input_are_refused(self):
+    def test_symlinked_input_is_refused(self):
         project, source, _ = fixture()
         with tempfile.TemporaryDirectory(prefix="museum-authored-") as temporary:
             root = Path(temporary); resources = root / "game/data/resources"; resources.mkdir(parents=True)
             original = resources / "100_res_PC.aya"; original.write_bytes(source)
-            (resources / "889_res_PC.aya").write_bytes(source)
-            with self.assertRaises(museum.MuseumError): museum.stage(project, root / "game", root / "out")
             linked = root / "project.json"; real = root / "real.json"; real.write_text(json.dumps(project)); linked.symlink_to(real)
             with self.assertRaises((OSError, ValueError)): museum.load_project(linked)
 
