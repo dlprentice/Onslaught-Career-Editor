@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-04 (refreshed Companion and local project checks; earlier checkpoint acceptance retains its scope)
+Last updated: 2026-11-04 (native CE requirements distinguished from current Companion tools and bounded checkpoint acceptance)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private RE archive; they are not current operating instructions.
@@ -10,6 +10,11 @@ The companion, Onslaught Companion, lets players choose the original game or Ons
 CE's launcher, protected career writes, two launcher settings and the steps for updating CE (the companion
 contacts nothing; CE checks its own signed feed and installs an update only when the player chooses Update).
 See its [README](companion/OnslaughtToolkit.Godot/README.md) for the contract and platform limits.
+The map/mission authoring capabilities described here currently run in Companion. They are reusable work toward the
+required native CE experience, not completed in-game editors. Continuous 3D RTS Commander and an explorable museum
+through CE's menus also remain incomplete; the map/preview controls and separate gallery/construction test retain
+their narrower evidence. [GOAL.md](GOAL.md) and [PROGRAM.md](PROGRAM.md#order-after-0113) own the new requirements
+and the hold on 0.2 until its agreed player workflows are internally complete and tested.
 The byte-matching decompilation is the reverse-engineering authority. Its private function check matches every mapped
 game function with a guarded one-byte correction to a compiled object; without that correction, one function remains
 unmatched. Its public export, [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), records its own
@@ -198,7 +203,9 @@ exited normally; package and preserved baseline read back unchanged. Home/versio
 static installed-model images were inspected. The retained combined receipt has SHA-256
 `60ce7544b472c5380e58a3c813abecf4bf179aba61e510b0595943642c052009`.
 This is bounded Linux workflow/image acceptance, with no new human-input, audio, game-load, update hand-off or
-native Windows claim. The checkpoint's remaining reviews are tracked in [PROGRAM.md](PROGRAM.md#order-after-0113).
+native Windows claim. The checkpoint status and remaining work are tracked in [PROGRAM.md](PROGRAM.md#order-after-0113).
+David's subsequent November 4 manual CE playtest did not include Companion. Human use of its workflow and 3D editor
+therefore remains unverified; the CE and museum feedback is recorded in [PROGRAM.md](PROGRAM.md#onslaught-ce-player-experience-and-online-play).
 
 [Data-folder tests](companion/OnslaughtToolkit.Godot/Tests/CeGameDataTests.cs) exercise the two-file validation and
 folder selection using owned tiny inputs; these are not a game-content or launch acceptance test.

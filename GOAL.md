@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-11-04 (authorized refresh of the local playtest checkpoint; broader development remains paused)
+Last updated: 2026-11-04 (resumed work; complete native CE play/create workflows required before considering 0.2)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
@@ -20,6 +20,9 @@ archive.
   as [Onslaught CE](https://github.com/dlprentice/onslaught-ce): GPL-3.0-only source and binaries, no game files.
   Preserve a faithful baseline while fixing demonstrated defects and improving reliability, input, controller support,
   in-game guidance, window/display choices, 4K readability, performance and useful, privacy-conscious diagnostics.
+  Prefer high ordinary visual settings and supported extra effects on capable hardware, while preserving saved
+  preferences and the faithful reference path. Keep a separate optional maximum-distance/LOD/full-model mode;
+  that more demanding mode is not requested as the default yet. Verify actual capability selection and image quality.
   Verify the developer console, cheats and free camera through usable controls rather than assuming each path works.
   Keep faithful reference recordings separate from a future way to record and test CE enhancements and controller input.
   Preserve the ordinary campaign and existing ways of playing with their intended rules, while retaining demonstrated
@@ -33,10 +36,12 @@ archive.
   chat. Voice should provide proximity/local, squad and team channels, visible speaking indicators above participating
   units, and mute controls. These are planned workflows whose implementation and acceptance remain open. A direct
   connection or idle synchronization is not completion.
-- **A future real-time 3D commander role** lets a player direct eligible friendly units from a tactical view, including
-  an eventual multiplayer mode alongside players piloting Battle Engines. Aim for Linux and Windows and later more than two
-  participants. Missions and game events still determine outcomes. Prove this optional role works, including in
-  controlled test scenarios; its availability and final product placement can be decided as development progresses.
+- **Continuous real-time 3D RTS Commander inside native CE** lets a player direct eligible friendly units with
+  appropriate camera, selection, order and status controls. A map or a toggle into a 3D preview is partial work,
+  not completion of this mode. Include an eventual multiplayer role alongside players piloting Battle Engines.
+  Aim for Linux and Windows and later more than two participants. Missions and game events still determine outcomes.
+  Prove this optional mode through a usable in-game workflow and controlled scenarios; its availability within
+  particular modes and scenarios can develop without changing ordinary campaign play.
   David describes it as an RTS form of the game: beyond directing units, a commander should be able to select buildings
   and act through them, for example to construct units, reusing the game's own logic where it can. Because that changes
   how a battle plays, Commander will probably need maps of its own. This is a goal, not a completed capability.
@@ -53,20 +58,26 @@ archive.
   but exact formation/waypoint restoration, a unit HUD and network control remain open. It does not prescribe how
   future online roles work. Like other new modes, these roles must not interfere with ordinary campaign play;
   availability and final placement remain flexible.
-- **Creation and modding tools** should let players inspect and create levels, missions and compatible modifications
-  safely, including 3D map and mission editors. A modern CE-native project format and custom gameplay are first-class
-  targets; original-game-compatible export is useful where practical but is not a prerequisite. Faithful behavior
-  for the existing campaign remains a separate baseline. David approved a Goodies-style museum as a world of its own, alongside
-  custom test levels. An evidence-based catalogue of textures, models, animations, audio and other content should
-  support editors, modding and future HD successors without distributing the game's proprietary assets.
+- **3D map and mission editors usable inside native CE**, reached through its menus, should let players author,
+  inspect, save, reopen and test maps and mission experiences in game. A button that launches an external editor does
+  not meet this requirement. A modern CE-native project format and custom gameplay are first-class targets;
+  original-game-compatible export is useful where practical but is not a prerequisite. Faithful behavior for the
+  existing campaign remains a separate baseline. **An actual explorable 3D museum reached through CE's menus** is a
+  separate required experience; the Goodies gallery and the small construction test are not museum completion.
+  An evidence-based catalogue of textures, models, animations, audio and other content should support these tools,
+  modding and future HD successors without distributing the game's proprietary assets.
+  CE is the primary place to play, create and experiment. Move gameplay, content authoring, mod selection and
+  in-game catalogue capabilities into CE where appropriate. Reuse the working tools, validated data and contracts;
+  this player-experience requirement does not prescribe embedding another engine or runtime in CE.
 - **The Godot rebuild**, developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot), currently has
   a scoped proof of concept: a C# reimplementation aiming for startup through level 100 completion (win, loss and
   retry), with compatible career data. `OnslaughtRebuild.Parity` owns the simulation and `OnslaughtRebuild.Host`
   the presentation; parity is measured against retail and native-port recordings Present by Present, and
   onslaught-godot records it. The longer-term aim is a faithful full-game baseline, followed by optional enhancements
   such as modern creation tools, HD assets and expanded multiplayer. `rebuild/` here is a frozen copy.
-- **The companion, Onslaught Companion, is the player app that can launch Onslaught CE.** A Godot .NET app for Linux
-  and Windows, for careers, Goodies, settings, backups, music, voices and lore, with protected writes and verified backups.
+- **Onslaught Companion remains its own offline-management product**, including career editing, backups and
+  installation management. Its current Godot .NET app for Linux and Windows provides careers, Goodies, settings,
+  backups, music, voices and lore, with protected writes and verified backups, and can launch Onslaught CE.
   It supports original-game and CE careers and backups, CE launcher settings and the steps for updating CE (the companion
   contacts nothing). For older CE installations, follow the [current release's migration guidance](https://github.com/dlprentice/onslaught-ce/releases/latest).
   Its [known limits](companion/OnslaughtToolkit.Godot/README.md#known-limits) distinguish
@@ -100,16 +111,20 @@ release, design and evidence records; [CURRENT_CAPABILITIES.md](CURRENT_CAPABILI
 demonstrated capabilities. A handoff is a dated continuity snapshot, not a competing roadmap: verify current refs,
 claims and evidence before acting, and update the existing owner when a material milestone changes.
 
-David has authorized a refreshed local 0.1.99 checkpoint containing the recent integrated work. This bounded refresh
-may proceed while broader development remains paused. Preserve the earlier snapshot's packages, accepted builds,
-Companion stage, launch setup/profile and copied user data; assemble and validate the refresh separately. Retaining
-the earlier snapshot does not forbid providing an updated one. Each checkpoint's capability claims must follow its
-own source, package and runtime evidence, with unfinished work stated plainly. The wider goals remain in scope;
-[PROGRAM.md](PROGRAM.md#order-after-0113) owns the current order and remaining work.
+David has resumed development across the requested areas after trying the refreshed local 0.1.99 checkpoint. Work
+from the reported problems and current evidence while keeping the earlier and refreshed checkpoints reproducible.
+Preserve their packages, accepted builds, Companion stages, launch profiles and copied user data until their
+preservation has been verified; subsequent implementation and tests use separate outputs and profiles. Each
+checkpoint's capability claims must follow its own evidence. A player's report adds useful acceptance or a problem
+to investigate within the scope actually tried; it does not certify untried features. [PROGRAM.md](PROGRAM.md#order-after-0113)
+owns the current order and remaining work.
 
-Do not publish 0.2 while working multiplayer or the other agreed release requirements remain incomplete. Working
-multiplayer must be part of that larger release. Internal playtest checkpoints and continued development do not lift
-this release hold.
+Complete and test the agreed 0.2 player workflows internally before considering that release. Working multiplayer,
+continuous native CE RTS Commander, usable in-game 3D map/mission editors, the explorable in-game museum and the other
+agreed requirements remain part of that larger outcome. An experimental or alpha label does not authorize shipping
+unfinished pieces in their place. Do not publish 0.2 while those requirements remain incomplete; internal playtest
+checkpoints and continued development do not lift this release hold. Publishing 0.2 also requires David's further
+explicit go-ahead. The wider foundation, rebuild, quality, documentation and recovery goals remain in scope.
 
 ## Evidence
 
