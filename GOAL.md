@@ -106,6 +106,10 @@ delivered version. Subsequent work uses separate worktrees, outputs, profiles an
 capability claims remain separate from the frozen checkpoint. [PROGRAM.md](PROGRAM.md#order-after-0113) owns the
 current order and remaining work.
 
+Do not publish 0.2 while working multiplayer or the other agreed release requirements remain incomplete. Working
+multiplayer must be part of that larger release. Internal playtest checkpoints and continued development do not lift
+this release hold.
+
 ## Evidence
 
 Every behaviour claim needs a capture, byte comparison, focused test, or pinned source reference. The decompilation

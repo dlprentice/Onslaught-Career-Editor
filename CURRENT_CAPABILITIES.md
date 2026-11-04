@@ -264,9 +264,15 @@ Its sidebar:
   [source merged into main](https://github.com/dlprentice/Onslaught-Career-Editor/tree/2d0bfd308e9553d45d54e21d7aafef951eea49e3).
   Offscreen captures at two window sizes, loading through the folder dialog's selection signal and reloading with the
   Reload control, were inspected: an authored scene's models on its sampled terrain, a base-world copy left at its
-  installed place and the bound model at the drop. A read-only pass over the levels of one Steam install loaded every
-  linked map with no unexpected binding outcome and found no world that lists models of its own, so an installed map
-  previews as terrain and the project's markers; nobody has viewed one in the preview.
+  installed place and the bound model at the drop. The earlier read-only survey found no world listing models of its
+  own, so that version showed installed terrain and project markers only. Development on November 4 now resolves
+  unambiguous object definitions to meshes in the same resource archive. Fresh offscreen Linux captures of level 221
+  were inspected: 16 static, untextured meshes supplied 35 model instances over sampled terrain, while geometry for
+  27 unsupported object references was omitted and reported. Duplicate definitions and missing model-definition
+  tables refuse that geometry instead
+  of selecting an unrelated model. Move, Undo/Redo and Save/Open retain the project and source identities. Authored
+  reader and scene checks and independent review cover those paths; textures, animation, complete-scene rendering,
+  human input and native Windows remain unverified. This is later development source, not the frozen 0.1.99 stage.
   A separate 2026-11-03 controlled run and independent review exercised the production
   [Save as path](https://github.com/dlprentice/Onslaught-Career-Editor/blob/443b2b3d921775767a87404d9c6842fc1b275294/companion/OnslaughtToolkit.Godot/Ui/Pages/CeMissionProjectPage.cs)
   through its file-selection signal, then loaded the saved documents in a clean, default Linux CE development build.
@@ -357,6 +363,11 @@ The companion does not patch
 feature parity or retail gameplay acceptance is implied.
 
 The [content and model/transform catalogue tools](tools/README.md) cover the families their current readers support.
+On November 4, the catalogue gained individual framed imposter identities, source hashes and coordinates, bounded
+labels and view rectangles, and unambiguous links to meshes and texture atlases in the same resource archive.
+A read-only installed-data run produced 1,999 identities; authored checks and independent review cover truncation,
+invalid views, ambiguity and the existing metadata consumers. Unread fields remain labelled unread. These are
+metadata relationships, not new decoded-byte coverage, rendered-image acceptance or a tested HD conversion.
 The [content inventory](tools/README.md#content-inventory) puts every byte of one selected PC install in a class
 (decoded by a reader, framed by a record but unread, or unknown) and lists every model, texture, image, animation,
 sound, film and text asset with what names it; on the read-only retail view its gate checked that account against the
