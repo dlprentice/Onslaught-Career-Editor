@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-11-02 (Commander as an RTS form of the game, and playing any controllable unit)
+Last updated: 2026-11-04 (opposing-team play, direct unit roles, team appearance and voice channels)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
@@ -24,12 +24,15 @@ archive.
   Keep faithful reference recordings separate from a future way to record and test CE enhancements and controller input.
   Preserve the ordinary campaign and existing ways of playing with their intended rules, while retaining demonstrated
   bug fixes and useful quality-of-life improvements. New modes are optional and must not interfere with ordinary play.
-- **Online play should be approachable.** Start with two independently controlled players across Linux and Windows,
-  including versus and co-op. Extend co-op to the ordinary campaign with compatible saves and progression; later aim
-  for more players, larger maps and compatible Battle Engine customization. Host/Join, failures and content
-  compatibility need understandable in-game workflows. Offer a browser of public lobbies, creation and joining for
-  public and private lobbies, a private invitation path, and in-game voice and text chat. These are planned workflows
-  whose implementation and acceptance remain open. A direct connection or idle synchronization is not completion.
+- **Online play should be approachable.** Prove independently controlled players across Linux and Windows, including
+  co-op and opposing-team versus/skirmish maps. Extend co-op to the ordinary campaign with compatible saves and
+  progression; support larger matches and maps as the implementation is validated, without fixing a final player
+  limit here. Team colours and compatible Battle Engine/unit customization should make teams and players recognizable.
+  Host/Join, failures and content compatibility need understandable in-game workflows. Offer a browser of public
+  lobbies, creation and joining for public and private lobbies, a private invitation path, and in-game voice and text
+  chat. Voice should provide proximity/local, squad and team channels, visible speaking indicators above participating
+  units, and mute controls. These are planned workflows whose implementation and acceptance remain open. A direct
+  connection or idle synchronization is not completion.
 - **A future real-time 3D commander role** lets a player direct eligible friendly units from a tactical view, including
   an eventual multiplayer mode alongside players piloting Battle Engines. Aim for Linux and Windows and later more than two
   participants. Missions and game events still determine outcomes. Prove this optional role works, including in
@@ -38,8 +41,11 @@ archive.
   and act through them, for example to construct units, reusing the game's own logic where it can. Because that changes
   how a battle plays, Commander will probably need maps of its own. This is a goal, not a completed capability.
 - **Play any controllable unit.** An optional way to take direct control of a tank, a turret or another unit the game can
-  control, beyond the Battle Engine. Like other new modes it must not interfere with ordinary play. This is a goal, not a
-  completed capability, and nobody has tried it yet.
+  control, beyond the Battle Engine. In team matches, players should be able to pilot a Battle Engine or directly play
+  an eligible other unit; spawning as a unit and temporarily taking one over remain possible designs. Match rules
+  determine eligibility. Direct play is a separate role from a commander issuing orders to units. The solo tank
+  prototype does not establish network unit control or prescribe how future online roles work. Like other new modes,
+  these roles must not interfere with ordinary campaign play; their availability and final placement remain flexible.
 - **Creation and modding tools** should let players inspect and create levels, missions and compatible modifications
   safely, including 3D map and mission editors. A modern CE-native project format and custom gameplay are first-class
   targets; original-game-compatible export is useful where practical but is not a prerequisite. Faithful behavior
