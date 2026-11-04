@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-11-04 (opposing-team play, direct unit roles, team appearance and voice channels)
+Last updated: 2026-11-04 (infantry and other unit roles, AI hand-back, controls/HUD, team play and voice direction)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
@@ -40,12 +40,18 @@ archive.
   David describes it as an RTS form of the game: beyond directing units, a commander should be able to select buildings
   and act through them, for example to construct units, reusing the game's own logic where it can. Because that changes
   how a battle plays, Commander will probably need maps of its own. This is a goal, not a completed capability.
-- **Play any controllable unit.** An optional way to take direct control of a tank, a turret or another unit the game can
-  control, beyond the Battle Engine. In team matches, players should be able to pilot a Battle Engine or directly play
-  an eligible other unit; spawning as a unit and temporarily taking one over remain possible designs. Match rules
-  determine eligibility. Direct play is a separate role from a commander issuing orders to units. The solo tank
-  prototype does not establish network unit control or prescribe how future online roles work. Like other new modes,
-  these roles must not interfere with ordinary campaign play; their availability and final placement remain flexible.
+- **Play any controllable unit.** An optional way to directly play infantry, vehicles, mounted/fixed guns and eligible
+  controllable structures, beyond the Battle Engine. In team matches, players should be able to pilot a Battle Engine
+  or play another eligible unit; spawning as a unit and temporarily taking one over remain possible designs. Match
+  rules determine eligibility. Direct play is a separate role from a commander issuing orders to units.
+  Temporary control must preserve the unit's identity, team and squad membership. Release or disconnection should
+  restore its AI with the latest valid orders, including orders received while a human controlled it. Define explicit
+  fallback behavior for a last survivor, a missing squad, a destroyed target or an invalid destination. Give each type
+  usable controls and HUD: infantry weapons/ammunition/reloading; vehicle and artillery aiming, traverse, firing arcs,
+  trajectory, ammunition and reload; fixed-gun traverse and leaving the position. Indicators must reflect actual native
+  firing conditions and obstructions. These are requested outcomes: the solo tank prototype lacks squad restoration
+  and a unit HUD, and does not establish network control or prescribe how future online roles work. Like other new
+  modes, these roles must not interfere with ordinary campaign play; availability and final placement remain flexible.
 - **Creation and modding tools** should let players inspect and create levels, missions and compatible modifications
   safely, including 3D map and mission editors. A modern CE-native project format and custom gameplay are first-class
   targets; original-game-compatible export is useful where practical but is not a prerequisite. Faithful behavior

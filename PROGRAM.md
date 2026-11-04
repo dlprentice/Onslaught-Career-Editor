@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-11-04 (opposing-team maps, direct unit roles and voice direction; isolated playtest order preserved)
+Last updated: 2026-11-04 (infantry/unit roles, AI hand-back and type-specific controls; isolated playtest order preserved)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
@@ -24,7 +24,7 @@ defines progress and what a completion claim requires.
 | CE release and player experience | Latest public release: 0.1.13 (published 2026-10-31). Its release notes describe shipped changes, checks and limits; physical Windows retesting remains open. Later public contributor setup and documentation corrections are exported. Validate exact packages and updates before shipping. | [0.1.13 release notes](https://github.com/dlprentice/onslaught-ce/releases/tag/v0.1.13), [CE README](https://github.com/dlprentice/onslaught-ce) |
 | Reported Windows issues | One reproduced cause of double music is fixed in 0.1.12, with software-VM evidence, and Jeppi reports the audio fixed in 0.1.13 on their own Windows PC (a player's report; no log has been read). 0.1.13 adds changes aimed at the pause-menu mouse, the game clock after Alt-Tab and the system cursor in fullscreen; none has been seen on a real Windows PC. The reporter's physical AMD/input retest, separate stutter and reported graphics artifacts remain open. | [CE releases](https://github.com/dlprentice/onslaught-ce/releases/latest) |
 | Online multiplayer | Unreleased multiplayer engineering is not player-ready. The public CE README still lists Internet multiplayer as planned; public 0.1.13 is unchanged. Ordinary in-game host/join, native Windows hosting, independent-machine networks and campaign progression remain acceptance gaps. Deliver independently controlled players, compatible content, reliable session lifecycle and approachable connections, then validate actual networks. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play), [CE README](https://github.com/dlprentice/onslaught-ce) |
-| Campaign co-op and scale | Ordinary-campaign objectives, transitions, deaths, rejoin and safe progression are not established online. Opposing-team versus/skirmish maps, larger matches, team colours and compatible Battle Engine/unit customization remain goals. Players should be able to pilot Battle Engines or directly control eligible other units; the solo tank prototype does not prove network control. Local split-screen is not online co-op. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play) |
+| Campaign co-op and scale | Ordinary-campaign objectives, transitions, deaths, rejoin and safe progression are not established online. Opposing-team versus/skirmish maps, larger matches, team colours and compatible Battle Engine/unit customization remain goals. Players should be able to pilot Battle Engines or play eligible infantry, vehicles, guns and controllable structures. Temporary control needs identity/team/squad preservation, AI hand-back with current valid orders and controls/HUD appropriate to the type. The solo tank prototype does not prove these full outcomes or network control. Local split-screen is not online co-op. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play) |
 | Controls, display and guidance | Improve understandable dodge/zoom and free-camera help, controllers, accessible menus, window/display choices and performance while preserving the game's look and feel. Investigate the reported floaty mouse feel in the original game; CE behavior remains unknown. Scale the ordinary full-screen HUD and UI for 4K and other high-resolution displays; split-screen scaling is a separate requirement. Real devices and representative Windows graphics remain acceptance gaps. | [Player experience work below](#onslaught-ce-player-experience-and-online-play), [CE README](https://github.com/dlprentice/onslaught-ce) |
 | Level and mission tools | Integrated Toolkit source provides authored mission projects with JSON Save/Open, a 3D placement view and a read-only preview of a linked installed map: sampled terrain, plus models only where a world lists its own. No installed level checked does, so installed maps preview as terrain and markers. CE development source now reads linked projects. The production page's Save as path produced projects that moved one existing level-221 object's X/Y in default Linux CE, independently reproduced; the object's initialization still controls its height. No released CE reads these projects. Existing installed-level mod edits retain bounded Linux acceptance. Terrain editing, source compilation, new playable levels, full mission authoring, human use and native Windows validation remain open; older installed-level project and waypoint candidates remain separate. | [Mission project evidence](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore), [Mission project workflow and limits](companion/OnslaughtToolkit.Godot/README.md#mission-project), [Installed-level workflow](roadmap/companion-level-editor.md#2-what-exists-today), [Remaining candidates](roadmap/companion-level-editor.md#unreleased-editor-candidates) |
 | Mods and content catalogue | Released mods override existing files and supply worlds on Linux; Windows remains disabled. CE development source includes the reviewed Windows loading contract, integrated November 3, with the normal-build switch OFF. Native filesystem acceptance remains open; integration does not enable Windows mods for players. The complete mod platform and verified catalogue remain open; catalogue path counts do not establish complete asset coverage. | [CE mods](https://github.com/dlprentice/onslaught-ce#mods-experimental), [Creation scope](#level-and-mission-tools), [Catalogue work](#content-catalogue), [Coverage limits](tools/README.md#catalogue-source-file-coverage) |
@@ -138,12 +138,33 @@ then tutorial/early-campaign co-op, save-safe progression and broader campaign c
 latency, loss, disconnects and rejoin. Versus and skirmish should support maps with opposing teams. Players may pilot
 Battle Engines or directly control eligible other units under the match's rules, with team colours and compatible
 customization. Spawning as a unit and temporarily taking control of one are both open design options; directly
-playing it is distinct from a commander giving it orders. The current tank work is a solo prototype whose parked
-Battle Engine remains vulnerable, not a required rule for future online roles. Network unit ownership/control and
-combinations with commander play remain unimplemented goals.
+playing it is distinct from a commander giving it orders. Infantry, vehicles, mounted/fixed guns and eligible
+controllable structures are in scope. The current tank work is a solo prototype whose parked Battle Engine remains
+vulnerable, not a required rule for future online roles. It lacks squad restoration and a unit HUD. Network unit
+ownership/control and combinations with commander play remain unimplemented goals.
 These optional match rules must not change the ordinary campaign. Larger player counts, custom maps and
 Battle Engine/unit customization must not be claimed as available merely because a protocol or menu anticipates them.
 Do not assume a transport, paid service, new recipient or cross-platform determinism without evidence and authorization.
+
+For temporary control, preserve the same unit identity, team and squad membership rather than replacing the unit or
+silently removing it from its group. Track valid new orders received while it is human-controlled. On release or
+disconnect, restore AI using the latest valid orders, not just an entry-time snapshot. The design and checks must
+cover a last surviving member, a squad that no longer exists, a destroyed target and an invalid destination, with an
+explicit fallback appropriate to the unit. This hand-back contract is separate from how a match lets a player spawn
+as a unit. Neither network possession nor complete AI/squad restoration is claimed for the current prototype.
+
+The future controls and HUD must fit what is being played:
+
+| Type | Required experience; not a current feature claim |
+| --- | --- |
+| Infantry | Usable weapon selection, ammunition and reload feedback, with the unit's own movement and firing behavior. |
+| Tanks and artillery | Native aiming/traverse limits, firing arcs and applicable trajectory feedback, ammunition and reload state. |
+| Mounted/fixed guns and controllable structures | Appropriate traverse/aim controls and a clear way to leave control; only actions the controlled type supports. |
+
+Crosshairs, aim/trajectory indicators and firing feedback must agree with the native weapon's actual firing state and
+obstructions. A displayed target or a fire input alone is not proof that a round was fired or that its path is clear.
+These requirements stay in the broader unit-role work; they do not hold the isolated 0.1.99 checkpoint for infantry,
+all-unit controls, full HUDs or online possession.
 
 The intended menu is **Multiplayer → Local or Online**. Local should clearly distinguish split-screen from
 local-network play. Online should offer a browser of available public lobbies and options to create or join public
