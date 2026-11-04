@@ -78,9 +78,10 @@ def imposter_chunk() -> bytes:
     texture = text_record("Imposters_100", tag=b"BTXT")
     label = bytearray(76)
     label[4:4 + 12] = b"authored.msh"
-    impt = chunk(b"CIMP", bytes(label)) + chunk(b"IMSH", struct.pack("<i", 7)) + chunk(b"VIEW", bytes(144))
+    rectangles = struct.pack("<6f", 0, .5, 0, 1, 2, 4) * 6
+    impt = chunk(b"CIMP", bytes(label)) + chunk(b"IMSH", struct.pack("<i", 7)) + chunk(b"VIEW", rectangles)
     impo = struct.pack("<I", 1) + chunk(b"IMPT", impt)
-    return chunk(b"IMPS", chunk(b"DATA", bytes(8)) + texture + chunk(b"IMPO", impo))
+    return chunk(b"IMPS", chunk(b"IMPS", chunk(b"DATA", bytes(8)) + texture + chunk(b"IMPO", impo)))
 
 
 def goodie_archive() -> bytes:
@@ -422,6 +423,19 @@ def authored_install(root: Path) -> None:
         path.write_bytes(data)
 
 
+def catalogue_with_imposter(replacement: bytes) -> dict:
+    """Replace only the authored install's imposter set, preserving other lookup evidence."""
+    with tempfile.TemporaryDirectory() as temp:
+        game = Path(temp)
+        authored_install(game)
+        archive = game / "data/resources/100_res_PC.aya"
+        raw = catalog.aai.inflate_aya_bytes(archive.read_bytes())
+        original = imposter_chunk()
+        assert raw.count(original) == 1
+        archive.write_bytes(aya(raw.replace(original, replacement, 1)))
+        return catalog.build_catalog(game)
+
+
 class AuthoredInstallTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -554,6 +568,140 @@ class AuthoredInstallTests(unittest.TestCase):
         [imp] = [r for r in desc["relationships"] if r["type"] == "imposter-of-mesh"]
         self.assertEqual((imp["status"], imp["target"]), ("resolved", "mesh:data/resources/meshes/m_authored.msh.aya"))
         self.assertEqual(desc["textureDescriptor"]["occurrences"][0]["via"], "IMPS")
+
+    def test_imposter_has_its_own_identity_and_resolved_mesh_atlas_links(self) -> None:
+        [imposter] = [a for a in self.catalog["assets"] if a["type"] == "imposter"]
+        self.assertTrue(imposter["id"].startswith("imposter:data/resources/100_res_pc.aya#"))
+        self.assertEqual(imposter["name"], "authored.msh")
+        self.assertEqual(imposter["imposter"]["status"], "partial")
+        views = imposter["imposter"]["viewMetadata"]
+        self.assertEqual((views["status"], views["countByLength"], len(views["views"])), ("parsed", 6, 6))
+        self.assertEqual((views["views"][0]["right"], views["views"][0]["height"]), (.5, 4))
+        mesh, = self.relation(imposter["id"], "imposter-of-mesh")
+        atlas, = self.relation(imposter["id"], "uses-texture")
+        owner, = self.relation(imposter["id"], "loaded-by-archive")
+        self.assertEqual(mesh["target"], "mesh:data/resources/meshes/m_authored.msh.aya")
+        self.assertEqual(self.assets[atlas["target"]]["name"], "Imposters_100")
+        self.assertEqual(atlas["role"], "imposter-atlas")
+        [forward] = self.relation(owner["target"], "has-imposter")
+        self.assertEqual(forward["target"], imposter["id"])
+        self.assertTrue(all(r["status"] == "resolved" for r in (mesh, atlas, owner, forward)))
+
+    def test_imposter_coordinates_and_hash_bind_the_owning_record(self) -> None:
+        [imposter] = [a for a in self.catalog["assets"] if a["type"] == "imposter"]
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            packed = (game / imposter["source"]["container"]).read_bytes()
+        raw = catalog.aai.inflate_aya_bytes(packed)
+        source = imposter["source"]
+        self.assertEqual(hashlib.sha256(packed).hexdigest(), source["containerSha256"])
+        framed = raw[source["offset"]:source["offset"] + source["length"]]
+        self.assertEqual(framed[:4], b"IMPT")
+        self.assertEqual(hashlib.sha256(framed).hexdigest(), imposter["sha256"])
+        self.assertEqual(len(framed), struct.unpack_from("<I", framed, 4)[0] + 8)
+        for field in imposter["imposter"]["uninterpreted"]:
+            self.assertGreaterEqual(field["offset"], source["offset"])
+            self.assertLessEqual(field["offset"] + field["length"], source["offset"] + source["length"])
+
+    def test_imposter_schema_refuses_invalid_view_fields_and_missing_identity(self) -> None:
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        schema = json.loads((catalog.TOOLS / "content_catalog.schema.json").read_text())
+        validator = jsonschema.Draft202012Validator(schema)
+        [imposter] = [a for a in self.catalog["assets"] if a["type"] == "imposter"]
+        good = {**imposter, catalog.GENERATED_MARKER: True}
+        self.assertTrue(validator.is_valid(good))
+        for name, value in [("width", 0), ("height", -1), ("right", 2), ("left", -.5)]:
+            bad = json.loads(json.dumps(good))
+            bad["imposter"]["viewMetadata"]["views"][0][name] = value
+            self.assertFalse(validator.is_valid(bad))
+        bad = json.loads(json.dumps(good))
+        del bad["imposter"]["labelStatus"]
+        self.assertFalse(validator.is_valid(bad))
+        bad = json.loads(json.dumps(good))
+        del bad["imposter"]
+        self.assertFalse(validator.is_valid(bad))
+
+    def test_imposter_atlas_link_ignores_parseable_texture_inside_opaque_data(self) -> None:
+        original = imposter_chunk()
+        # Replace the first DATA chunk, retaining the real framed BTXT sibling.
+        body = chunk(b"DATA", text_record("decoy.tga")) + original[32:]
+        data = catalogue_with_imposter(chunk(b"IMPS", chunk(b"IMPS", body)))
+        by_id = {a["id"]: a for a in data["assets"]}
+        [item] = [a for a in data["assets"] if a["type"] == "imposter"]
+        [atlas] = [r for r in item["relationships"] if r["type"] == "uses-texture"]
+        self.assertEqual(by_id[atlas["target"]]["name"], "Imposters_100")
+        [decoy] = [a for a in data["assets"] if a["type"] == "texture-descriptor" and a["name"] == "decoy.tga"]
+        self.assertFalse([r for r in decoy["relationships"] if r["type"] == "imposter-of-mesh"])
+
+    def test_imposter_mesh_link_never_guesses_from_the_display_label(self) -> None:
+        replacement = bytearray(imposter_chunk())
+        struct.pack_into("<i", replacement, replacement.index(b"IMSH") + 8, 999)
+        data = catalogue_with_imposter(bytes(replacement))
+        [item] = [a for a in data["assets"] if a["type"] == "imposter"]
+        [mesh] = [r for r in item["relationships"] if r["type"] == "imposter-of-mesh"]
+        self.assertEqual(item["name"], "authored.msh")
+        self.assertEqual((mesh["status"], mesh["target"]), ("unresolved", None))
+        self.assertEqual(catalog.dangling_targets(data["assets"]), [])
+
+    def test_imposter_duplicate_mesh_id_is_unresolved_even_if_only_one_file_exists(self) -> None:
+        for second_file_exists in (False, True):
+            with self.subTest(second_file_exists=second_file_exists), tempfile.TemporaryDirectory() as temp:
+                game = Path(temp)
+                authored_install(game)
+                if second_file_exists:
+                    (game / "data/resources/meshes/m_other.msh.aya").write_bytes(aya(mesh_stream()))
+                path = game / "data/resources/100_res_PC.aya"
+                raw = catalog.aai.inflate_aya_bytes(path.read_bytes())
+                path.write_bytes(aya(raw + named_mesh_record("other.msh")))
+                data = catalog.build_catalog(game)
+            links = [r for a in data["assets"] for r in a["relationships"] if r["type"] == "imposter-of-mesh"]
+            self.assertEqual(len(links), 2)  # individual imposter and the existing atlas edge
+            self.assertTrue(all((r["status"], r["target"]) == ("unresolved", None) for r in links))
+            self.assertTrue(all("duplicated" in r["evidence"][0]["rule"] for r in links))
+
+    def test_imposter_same_mesh_id_in_different_archives_resolves_locally(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            authored_install(game)
+            (game / "data/resources/meshes/m_other.msh.aya").write_bytes(aya(mesh_stream()))
+            (game / "data/resources/101_res_PC.aya").write_bytes(resource_archive(
+                named_mesh_record("other.msh"), imposter_chunk()))
+            data = catalog.build_catalog(game)
+        imposters = [a for a in data["assets"] if a["type"] == "imposter"]
+        self.assertEqual(len(imposters), 2)
+        targets = {}
+        for item in imposters:
+            [link] = [r for r in item["relationships"] if r["type"] == "imposter-of-mesh"]
+            self.assertEqual(link["status"], "resolved")
+            targets[item["source"]["container"]] = link["target"]
+        self.assertEqual(targets, {
+            "data/resources/100_res_PC.aya": "mesh:data/resources/meshes/m_authored.msh.aya",
+            "data/resources/101_res_PC.aya": "mesh:data/resources/meshes/m_other.msh.aya"})
+
+    def test_imposter_bad_views_keep_identity_without_claiming_usable_rectangles(self) -> None:
+        replacement = bytearray(imposter_chunk())
+        struct.pack_into("<f", replacement, replacement.index(b"VIEW") + 8, float("nan"))
+        data = catalogue_with_imposter(bytes(replacement))
+        [item] = [a for a in data["assets"] if a["type"] == "imposter"]
+        self.assertEqual(item["imposter"]["viewMetadata"]["status"], "unparsed")
+        self.assertEqual(item["imposter"]["viewMetadata"]["views"], [])
+        self.assertEqual(item["imposter"]["meshResourceId"], 7)
+        self.assertIn("VIEW", [s["field"] for s in item["imposter"]["uninterpreted"]])
+        json.dumps(data, allow_nan=False)
+
+    def test_imposter_unknown_label_is_not_an_empty_known_name(self) -> None:
+        replacement = bytearray(imposter_chunk())
+        start = replacement.index(b"CIMP") + 12
+        replacement[start:start + 64] = b"X" * 64
+        data = catalogue_with_imposter(bytes(replacement))
+        [item] = [a for a in data["assets"] if a["type"] == "imposter"]
+        self.assertEqual(item["name"], "")
+        self.assertIsNone(item["imposter"]["storedLabel"])
+        self.assertEqual(item["imposter"]["labelStatus"], "unterminated")
 
     def test_goodie_image_shows_its_texture(self) -> None:
         goodie = self.assets["goodie:003"]
