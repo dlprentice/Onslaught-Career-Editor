@@ -71,7 +71,12 @@ public static class LevelArchive
     /// <exception cref="InvalidDataException">The bytes are not a level archive with a world.</exception>
     public static LevelWorlds Read(ReadOnlySpan<byte> file)
     {
-        byte[] stream = Inflate(file);
+        return ReadInflated(Inflate(file));
+    }
+
+    /// <summary>Shares one bounded inflation with local preview readers of the archive's model references.</summary>
+    internal static LevelWorlds ReadInflated(byte[] stream)
+    {
         byte[]? terrain = null;
         foreach ((string tag, int at, int size) in Chunks(stream, 0, stream.Length))
         {

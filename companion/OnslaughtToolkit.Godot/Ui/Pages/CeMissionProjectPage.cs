@@ -338,7 +338,7 @@ internal sealed class CeMissionProjectPage : Page
                 : "Sampled linked terrain · static, untextured object models · source files stay read-only." +
                   (_linkedScene.Notes.Count == 0 ? "" : " " + _linkedScene.Notes.Count + " model reference note(s); hover for details.");
             _previewNotice.TooltipText = _linkedScene is null ? _linkedRoot ?? "" :
-                string.Join("\n", new[] { _linkedRoot ?? "", "Only explicit map mesh references are shown; code-created models and animation are outside this preview." }
+                string.Join("\n", new[] { _linkedRoot ?? "", "Explicit map meshes and uniquely resolved unit/feature definitions are shown; inline resources, code-created models and animation are outside this preview." }
                     .Concat(_linkedScene.Notes.Take(8).Select(PreviewNote)));
             if (!project.Placements.Any(item => item.Id == _selectedObject)) _selectedObject = project.Placements.FirstOrDefault()?.Id;
             if (!project.Scripts.Any(item => item.Id == _selectedSource)) _selectedSource = project.Scripts.FirstOrDefault()?.Id;

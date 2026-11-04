@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 using System.Collections.ObjectModel;
 using System.Numerics;
+using System.Security.Cryptography;
 using Microsoft.Win32.SafeHandles;
 using OnslaughtToolkit.Companion.Assets;
 using OnslaughtToolkit.Companion.Files;
@@ -12,26 +13,31 @@ namespace OnslaughtToolkit.Companion.Missions;
 public sealed record CeLinkedSceneObject(string Id, string SourceObject, string Definition, string? ModelKey,
     Vector3 Position, Vector3 Orientation, bool FromBaseWorld);
 
+/// <summary>Catalogue-compatible local identity of the mesh bytes used by a preview, never embedded in a project.</summary>
+public sealed record CeLinkedModelSource(string AssetId, string ContainerSha256, string ContentSha256);
+
 /// <summary>An independently owned, static frame-zero model. Its bytes are local preview data, never project content.</summary>
 public sealed class CeLinkedSceneModel
 {
     private readonly byte[] _glb;
     public string Key { get; }
     public ReadOnlyMemory<byte> Glb => _glb;
+    public CeLinkedModelSource? Source { get; }
 
-    public CeLinkedSceneModel(string key, ReadOnlyMemory<byte> glb)
+    public CeLinkedSceneModel(string key, ReadOnlyMemory<byte> glb, CeLinkedModelSource? source = null)
     {
         if (string.IsNullOrWhiteSpace(key) || glb.Length is < 12 or > (32 << 20))
             throw new InvalidDataException("The linked model exceeds the preview bounds.");
         Key = key;
+        Source = source;
         _glb = glb.ToArray();
     }
 
-    public static CeLinkedSceneModel FromMesh(string key, CmshMesh mesh)
+    public static CeLinkedSceneModel FromMesh(string key, CmshMesh mesh, CeLinkedModelSource? source = null)
     {
         // A map editor needs the installed rest pose, not every animation sample.
         CmshMesh rest = new() { Name = mesh.Name, Textures = mesh.Textures, Parts = mesh.Parts, Modes = [] };
-        return new(key, GltfExport.Write(rest, _ => null, _ => throw new InvalidOperationException()));
+        return new(key, GltfExport.Write(rest, _ => null, _ => throw new InvalidOperationException()), source);
     }
 }
 
@@ -119,7 +125,8 @@ public static class CeLinkedSceneLoader
         DirectoryInfo root = new(Path.TrimEndingDirectorySeparator(Path.GetFullPath(gameRoot)));
         DirectoryInfo data = Directory(root, "data"), resources = Directory(data, "resources");
         FileInfo archive = File(resources, $"{map.Level:D3}_res_pc.aya");
-        LevelWorlds worlds = LevelArchive.Read(Read(archive, LevelArchive.MaxFileBytes));
+        byte[] archiveStream = LevelArchive.Inflate(Read(archive, LevelArchive.MaxFileBytes), LevelArchive.MaxInflatedBytes);
+        LevelWorlds worlds = LevelArchive.ReadInflated(archiveStream);
         TerrainSurface surface = TerrainSurface.Build(Heightfield.Read(worlds.Terrain ??
             throw new InvalidDataException("The selected map has no terrain.")));
         List<(bool FromBaseWorld, WorldBody Body)> bodies = [];
@@ -131,7 +138,10 @@ public static class CeLinkedSceneLoader
 
         List<CeLinkedSceneObject> objects = [];
         HashSet<string> needed = new(StringComparer.OrdinalIgnoreCase);
-        int unreferenced = 0, unresolved = 0;
+        FileInfo? definitionsFile = bodies.Any(body => body.Body.Things.Any(thing => InstalledModelReferences.DefinedKind(thing.ObjectId)))
+            ? OptionalFile(data, "default physics.dat") : null;
+        InstalledModelReferences? definitions = definitionsFile is null ? null : new(Read(definitionsFile, 16 << 20), archiveStream);
+        int unreferenced = 0, unresolved = 0, unresolvedDefinitions = 0;
         foreach ((bool fromBaseWorld, WorldBody body) in bodies)
         {
             if (body.Things.Count > WorldBody.MaxThings) throw new InvalidDataException("The map has too many objects to preview.");
@@ -139,8 +149,12 @@ public static class CeLinkedSceneLoader
             {
                 PlacedObject thing = body.Things[i];
                 int number = thing.Init.MeshNumber;
-                string? model = number >= 0 && number < body.NamedMeshes.Count ? MeshKey(body.NamedMeshes[number]) : null;
+                bool usesDefinition = definitions is not null && InstalledModelReferences.DefinedKind(thing.ObjectId);
+                string? resolved = usesDefinition ? definitions!.Resolve(thing.ObjectId, thing.Definition ?? "") :
+                    number >= 0 && number < body.NamedMeshes.Count ? body.NamedMeshes[number] : null;
+                string? model = resolved is null ? null : InstalledModelReferences.Key(resolved);
                 if (model is not null) needed.Add(model);
+                else if (usesDefinition) unresolvedDefinitions++;
                 else if (number < 0) unreferenced++;
                 else unresolved++;
                 objects.Add(new((fromBaseWorld ? "base:" : "level:") + i, thing.Init.Name, thing.Definition ?? "", model,
@@ -153,23 +167,27 @@ public static class CeLinkedSceneLoader
         if (unreferenced > 0) notes.Add($"{unreferenced} map object(s) have no stored model reference; their geometry is omitted.");
         // Installed worlds can leave their own model list empty and number models elsewhere; this preview reads only that list.
         if (unresolved > 0) notes.Add($"{unresolved} map object(s) refer to models outside this world's own model list, which this preview does not resolve; their geometry is omitted.");
+        if (unresolvedDefinitions > 0) notes.Add($"{unresolvedDefinitions} map object(s) have no unique definition-to-model reference in this archive; their geometry is omitted.");
         if (bodies.Any(body => body.Body.TreeGroups.Count > 0)) notes.Add("Tree-group geometry is not included in this preview.");
         if (needed.Count > 0)
         {
             DirectoryInfo meshes = Directory(resources, "meshes");
             Dictionary<string, FileInfo> files = new(StringComparer.OrdinalIgnoreCase);
             foreach (FileInfo file in Entries(meshes).OfType<FileInfo>().Where(file => file.Name.EndsWith(".aya", StringComparison.OrdinalIgnoreCase)))
-                if (!files.TryAdd(MeshKey(file.Name), file)) throw new InvalidDataException("Model filenames are ambiguous.");
+                if (!files.TryAdd(InstalledModelReferences.ShelfKey(file.Name), file)) throw new InvalidDataException("Model filenames are ambiguous.");
             long vertices = 0, bytes = 0, instancedParts = 0;
             foreach (string name in needed.Order(StringComparer.OrdinalIgnoreCase))
             {
                 if (!files.TryGetValue(name, out FileInfo? file)) { notes.Add("A referenced model is unavailable: " + name); continue; }
-                CmshMesh mesh = CmshReader.Read(AyaContainer.Inflate(Read(file, MaxMeshBytes), 64 << 20))[0];
+                byte[] packed = Read(file, MaxMeshBytes), stream = AyaContainer.Inflate(packed, 64 << 20);
+                CmshMesh mesh = CmshReader.Read(stream)[0];
                 vertices += mesh.Parts.Sum(part => (long)part.Positions.Length);
                 instancedParts += mesh.Parts.Count * (long)objects.Count(row => string.Equals(row.ModelKey, name, StringComparison.OrdinalIgnoreCase));
                 if (mesh.Parts.Count > 4096 || vertices > 2_000_000 || instancedParts > 50_000)
                     throw new InvalidDataException("Model geometry exceeds the linked-preview limit.");
-                CeLinkedSceneModel model = CeLinkedSceneModel.FromMesh(name, mesh);
+                CeLinkedModelSource source = new("mesh:" + Path.GetRelativePath(root.FullName, file.FullName).Replace('\\', '/').ToLowerInvariant(),
+                    Convert.ToHexStringLower(SHA256.HashData(packed)), Convert.ToHexStringLower(SHA256.HashData(stream)));
+                CeLinkedSceneModel model = CeLinkedSceneModel.FromMesh(name, mesh, source);
                 bytes += model.Glb.Length;
                 if (bytes > 128L << 20) throw new InvalidDataException("Model geometry exceeds the linked-preview byte limit.");
                 models.Add(model);
@@ -182,17 +200,6 @@ public static class CeLinkedSceneLoader
 
     private static WorldBody ReadLoose(DirectoryInfo data, int level) =>
         WorldBody.Read(Read(File(Directory(data, "worlds"), $"world{level:D3}.wrd"), MaxWorldBytes));
-
-    private static string MeshKey(string name)
-    {
-        string key = name.Replace('\\', '%').Replace('/', '%');
-        if (key.EndsWith(".aya", StringComparison.OrdinalIgnoreCase)) key = key[..^4];
-        if (key.EndsWith(".msh", StringComparison.OrdinalIgnoreCase)) key = key[..^4];
-        if (key.StartsWith("m_", StringComparison.OrdinalIgnoreCase)) key = key[2..];
-        if (string.IsNullOrWhiteSpace(key) || key.Length > 512 || key.Any(c => char.IsControl(c)))
-            throw new InvalidDataException("A map model reference cannot be previewed.");
-        return key;
-    }
 
     private static FileSystemInfo[] Entries(DirectoryInfo folder)
     {
@@ -211,11 +218,14 @@ public static class CeLinkedSceneLoader
     }
 
     private static FileInfo File(DirectoryInfo parent, string name)
+        => OptionalFile(parent, name) ?? throw new FileNotFoundException("A required map-data file is missing.");
+
+    private static FileInfo? OptionalFile(DirectoryInfo parent, string name)
     {
         FileInfo[] matches = Entries(parent).OfType<FileInfo>()
             .Where(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase)).Take(2).ToArray();
         if (matches.Length > 1) throw new InvalidDataException("Map-data filenames are ambiguous.");
-        return matches.SingleOrDefault() ?? throw new FileNotFoundException("A required map-data file is missing.");
+        return matches.SingleOrDefault();
     }
 
     private static byte[] Read(FileInfo file, int maximum)
