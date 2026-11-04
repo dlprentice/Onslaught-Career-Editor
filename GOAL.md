@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-11-04 (infantry and other unit roles, AI hand-back, controls/HUD, team play and voice direction)
+Last updated: 2026-11-04 (development continues across the requested scope while the delivered playtest checkpoint stays unchanged)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
@@ -98,6 +98,13 @@ invent a project-wide percentage or promise universal parity from bounded checks
 release, design and evidence records; [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) owns this repository's
 demonstrated capabilities. A handoff is a dated continuity snapshot, not a competing roadmap: verify current refs,
 claims and evidence before acting, and update the existing owner when a material milestone changes.
+
+David's current direction is to continue work across the requested areas while he prepares to try the local 0.1.99
+checkpoint. Waiting for his feedback does not block independent development. Agents must preserve that checkpoint's
+accepted packages/builds, staged Companion runtime, launch setup/profile and copied user data so he can test the
+delivered version. Subsequent work uses separate worktrees, outputs, profiles and copied test data; its evidence and
+capability claims remain separate from the frozen checkpoint. [PROGRAM.md](PROGRAM.md#order-after-0113) owns the
+current order and remaining work.
 
 ## Evidence
 

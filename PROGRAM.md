@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-11-04 (isolated 0.1.99 checkpoint prepared; bounded Companion/project checks and integrated tank/gallery prototypes)
+Last updated: 2026-11-04 (independent development resumed; delivered 0.1.99 checkpoint stays frozen for the planned playtest)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
@@ -21,7 +21,7 @@ defines progress and what a completion claim requires.
 
 | Area | Current state and remaining outcome | Detailed owner |
 | --- | --- | --- |
-| CE release and player experience | Latest public release: 0.1.13 (published 2026-10-31). Its release notes describe shipped changes, checks and limits; physical Windows retesting remains open. A separate, unreleased 0.1.99 Linux playtest checkpoint is prepared with bounded package/Companion checks and copied user data; maintainer feedback is next. This is not the 0.2 release. Validate exact packages and updates before public shipping. | [0.1.13 release notes](https://github.com/dlprentice/onslaught-ce/releases/tag/v0.1.13), [CE README](https://github.com/dlprentice/onslaught-ce), [checkpoint order](#order-after-0113) |
+| CE release and player experience | Latest public release: 0.1.13 (published 2026-10-31). Its release notes describe shipped changes, checks and limits; physical Windows retesting remains open. A separate, unreleased 0.1.99 Linux playtest checkpoint is ready with bounded package/Companion checks and copied user data. It stays unchanged for the planned manual test while independent development continues. This is not the 0.2 release. Validate exact packages and updates before public shipping. | [0.1.13 release notes](https://github.com/dlprentice/onslaught-ce/releases/tag/v0.1.13), [CE README](https://github.com/dlprentice/onslaught-ce), [checkpoint order](#order-after-0113) |
 | Reported Windows issues | One reproduced cause of double music is fixed in 0.1.12, with software-VM evidence, and Jeppi reports the audio fixed in 0.1.13 on their own Windows PC (a player's report; no log has been read). 0.1.13 adds changes aimed at the pause-menu mouse, the game clock after Alt-Tab and the system cursor in fullscreen; none has been seen on a real Windows PC. The reporter's physical AMD/input retest, separate stutter and reported graphics artifacts remain open. | [CE releases](https://github.com/dlprentice/onslaught-ce/releases/latest) |
 | Online multiplayer | Unreleased multiplayer engineering is not player-ready. The public CE README still lists Internet multiplayer as planned; public 0.1.13 is unchanged. Ordinary in-game host/join, native Windows hosting, independent-machine networks and campaign progression remain acceptance gaps. Deliver independently controlled players, compatible content, reliable session lifecycle and approachable connections, then validate actual networks. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play), [CE README](https://github.com/dlprentice/onslaught-ce) |
 | Campaign co-op and scale | Ordinary-campaign objectives, transitions, deaths, rejoin and safe progression are not established online. Opposing-team versus/skirmish maps, larger matches, team colours and compatible Battle Engine/unit customization remain goals. Players should be able to pilot Battle Engines or play eligible infantry, vehicles, guns and controllable structures. Temporary control needs identity/team/squad preservation, AI hand-back with current valid orders and controls/HUD appropriate to the type. The solo tank prototype does not prove these full outcomes or network control. Local split-screen is not online co-op. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play) |
@@ -49,11 +49,17 @@ tracks dependencies, not dates.
 The local **0.1.99 playtest checkpoint is prepared**, not publicly released and not completion of 0.2. Reviewed
 interrupted-lane changes are integrated; both CE platform builds/packages were produced, with final Linux package
 smokes and bounded Companion workflow/image checks. The normal CE user folder was backed up and copied to a separate
-checkpoint folder, and the manual launch routes and short guide are ready. **David's feedback is next.** Windows
-packaging does not establish Windows gameplay. The next Windows online gate and bounded Internet pilot follow that
-checkpoint feedback unless he changes the order. Keep broader outcomes below in scope.
-The opposing-team, direct-unit and voice direction below does not expand or delay that checkpoint: do not force an
-unfinished combination into 0.1.99 or start a new feature lane before the agreed feedback point.
+checkpoint folder, and the manual launch routes and short guide are ready. David plans to try this delivered build.
+Agents keep its packages, accepted build outputs, staged Companion runtime, manual helper/configuration/profile and
+copied user folder unchanged; new development uses separate worktrees, outputs and test profiles/data.
+
+**Development across the requested areas is resumed now; feedback is not a blanket hold.** Continue independent
+implementation, review and validation from current evidence, including preparation for the next Windows online gate
+and bounded Internet pilot under the existing resource and service protections. Windows packaging alone does not
+establish Windows gameplay, and a prepared pilot is not a successful online match. Use David's eventual feedback to
+guide subsequent fixes without replacing the version he is about to test.
+The opposing-team, direct-unit and voice direction below belongs to that continuing work. Preserve the frozen
+0.1.99 checkpoint rather than forcing new combinations into it; broader outcomes remain in scope.
 
 1. Online co-op for the initial two-player path: validate Windows hosting, the Windows guest rows and controls, message pages and a played win reaching the career writer. Windows hosting, a played win and Internet play remain unproven. Then more of it: opposing-team versus/skirmish maps, larger matches as the networking design permits, and play across the Internet without manual port forwarding. The initial pair is a validation step, not the final player limit.
 2. The split-screen gamepad layer: a pad for each player in ordinary two-player split screen, with the menus and pause, and with faithful modes and recordings kept as retail. It comes first of the input lanes because the next lane uses it.
@@ -142,7 +148,9 @@ latency, loss, disconnects and rejoin. Versus and skirmish should support maps w
 Battle Engines or directly control eligible other units under the match's rules, with team colours and compatible
 customization. Spawning as a unit and temporarily taking control of one are both open design options; directly
 playing it is distinct from a commander giving it orders. Infantry, vehicles, mounted/fixed guns and eligible
-controllable structures are in scope. An opt-in solo tank prototype is now integrated into CE development source and
+controllable structures are in scope. This combined-arms direction needs coherent team/squad identity across direct
+control, commander orders and the planned voice channels; it is not a currently implemented combination.
+An opt-in solo tank prototype is now integrated into CE development source and
 the unreleased 0.1.99 checkpoint. Its bounded independent Linux review demonstrated movement, native firing and
 camera/control return on Aquila Prototype; the retained review receipt has SHA-256
 `ba94fe981d4e95860e1b7112753596b9f070b4cebfda846c328c7c2d64dfa730`.
