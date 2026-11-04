@@ -1,18 +1,22 @@
 # Authored CE museum room projects
 
-Status: experimental content adapter; native room acceptance pending
+Status: experimental content adapter; bounded Linux room check, independent acceptance pending
 Last updated: 2026-11-04
 Summary: a CE-first exhibition description, exact local resource bindings and private generated content
-Evidence: MEASURED — authored content checks in `tools/ce_museum_stage_tests.py`; UNKNOWN — native room behaviour
+Evidence: MEASURED — authored content checks in `tools/ce_museum_stage_tests.py` and one isolated Linux launcher run; UNKNOWN — complete museum experience
 
-`tools/ce_museum_stage.py` turns an authored exhibition description into an added-level mod folder. It uses
-the existing world codecs as an internal adapter. The project describes exhibition intent; it is not an
-original-game level format or a requirement that future CE rooms remain compatible with the original game.
+`tools/ce_museum_stage.py` turns an authored exhibition description into two loose-world overrides in a CE
+mod folder. It uses an existing level's terrain and resources, replacing that level's base and real world
+contents only in a separate museum user folder. The existing world codecs are an internal adapter: the
+project describes exhibition intent, without requiring future CE rooms to remain compatible with the original game.
 
 This first implementation binds an existing static-feature record and a player start from the selected local
 installation. It does not support arbitrary catalogue meshes, animated exhibits, signs, turntables, a museum
-menu entry or a complete model collection. A staged archive is not proof that a player can enter or walk through
-the room. Native movement, rendering, exit, collision, damage behaviour and career isolation still need acceptance.
+menu entry or a complete model collection. One local Linux launcher run reached 900 rendered frames and closed
+normally, with inspected views showing forward movement toward three instances of one static feature. Its
+isolated profile created no careers, and the installation and package stayed byte-identical. This sparse
+arrangement is a prototype, not the complete museum. Collision, damage behaviour, mouse feel, audible sound and
+Windows runtime remain unvalidated; the offscreen driver reported unsupported relative-mouse mode.
 
 ## The project
 
@@ -23,7 +27,6 @@ The JSON object has exactly these fields:
 | `format` | `onslaught.ce.museum.v1` |
 | `id` | A simple lowercase identifier for the generated mod folder. |
 | `name` | An authored display name. |
-| `targetLevel` | An unused CE added-level slot, from 850 through 899. |
 | `carrier` | The local resource level and its complete archive SHA-256. |
 | `start` | An exact source start binding, an authored offset and orientation. |
 | `exhibits` | One to 64 authored exhibit placements, each with a unique `id`. |
@@ -36,7 +39,8 @@ developer format has not yet acquired friendly 3D editor controls or a degree-ba
 A `source` contains `world` (`BSWD` or `RLWD`), the zero-based `ordinal` in that world's decoded `things` array,
 and `sha256`. The record hash is SHA-256 of the complete decoded record serialized as sorted-key, compact,
 ASCII JSON with non-finite JSON numbers refused. The public helper `record_digest` computes it. The archive
-pin and record pin must both match. The source start must have kind `start`; every exhibit must have kind
+pin and record pin must both match. The source start must have kind `start` and select the primary player;
+the generated visitor uses the native one-based primary-player identity. Every exhibit must have kind
 `feature` and a nonempty feature definition. A name, basename or display label is never a substitute for that
 binding. Catalogue mesh identities are not guessed or changed by this adapter.
 
@@ -47,21 +51,23 @@ not rewritten or certified by the content adapter.
 
 ## Generated content and limits
 
-Both generated world bodies exclude the source campaign's actors, scripts, navigation paths, tree populations,
-automatic named-mesh spawns and progression-level references. The real body contains only the authored visitor
-start and exhibit placements; the base body contains no actors. The packer reads its result back and checks
+Both generated world bodies exclude the source campaign's actors, scripts, navigation paths, tree populations
+and automatic named-mesh spawns. The real body contains only the authored visitor start and exhibit placements;
+the base body contains no actors. Its parent-world and map references keep the carrier's resource context.
+The adapter reads its encoded result back and checks
 these invariants independently of the composition path. These are content checks, not evidence that every native
 runtime system is inactive. Ordinary physics and input still need to run for a visit to be usable.
 
-Terrain and other supported resource sections are retained from the locally owned carrier. Unknown resource
-sections are refused. The output is therefore an authored arrangement using existing terrain and assets, not a
-newly modelled room or redistributed asset pack. Generated archives contain game content: keep them private and
-out of Git, issue attachments and releases.
+Terrain and resources are read from the locally owned installation; the adapter does not copy or rewrite the
+resource archive. The carrier's resource-format marker, distinct base/real world filenames and parent bindings
+are checked before staging. The output is an authored arrangement using existing terrain and assets, not a
+newly modelled room or redistributed asset pack. Generated worlds contain game-derived bindings: keep them
+private and out of Git, issue attachments and releases.
 
-The adapter reads the selected installation and writes only a new output folder. It refuses an existing target
-level, an output in the selected game tree, symlinked input files and replacement of existing output. It writes
-the archive first and `mod.json` last, using the shared protected-output helper. It does not launch the game,
-change an enabled-mod list, access careers or modify the installation. Its archive declares a minimum CE version;
+The adapter reads the selected installation and writes only a new output folder. It refuses an output in the
+selected game tree, symlinked input files and replacement of existing output. It writes the two world files
+first and `mod.json` last, using the shared protected-output helper. It does not launch the game,
+change an enabled-mod list, access careers or modify the installation. Its mod declares a minimum CE version;
 do not remove that check to make an unversioned diagnostic build load it.
 
 ## Developer commands
@@ -78,7 +84,20 @@ With a locally prepared and pinned project, stage into a new private folder outs
 python3 tools/ce_museum_stage.py --project museum.json --game path/to/owned-game --out private-generated
 ```
 
-The current stage is for an isolated CE user folder and the supported added-level mod route. It is not exposed
-as a normal campaign option. Windows content generation and Windows runtime have not been validated by this
-lane; Linux staging checks alone establish neither. A usable-room menu entry must wait for native room and
-career-safety acceptance.
+The stage summary gives `launchLevel`, the carrier level to open. Place the generated mod under a **new,
+museum-only** CE user folder's `mods/` directory and enable only its `id` with `mods=<id>` in that folder's
+`ce.ini`. Leave ordinary CE profiles untouched. Use the regular launcher's argument forwarding:
+
+```sh
+BEA_USER_DIR=path/to/museum-only-user BEA_GAME_DIR=path/to/owned-game \
+  path/to/onslaught-ce --no-update-check -- -level CARRIER_LEVEL -skipfmv
+```
+
+Substitute the stage's numeric `launchLevel` for `CARRIER_LEVEL`. This launches the experimental exhibition
+directly; it is not a campaign menu option. Do not start a career or another level using this profile: the
+overridden base world may also be shared by other levels. A production museum entry needs its own runtime
+context and must not expose these profile restrictions to ordinary play.
+
+This lane has not validated Windows content generation or Windows runtime; the current CE mod path is Linux
+only. Linux staging checks alone establish neither. A usable-room menu entry must wait for independent runtime
+and career-safety acceptance and removal of the developer profile restrictions above.
