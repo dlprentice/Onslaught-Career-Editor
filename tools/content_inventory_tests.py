@@ -301,10 +301,14 @@ class InventoryTests(unittest.TestCase):
         self.assertEqual(reading.problems, ["IMPS: an imposter's stored label has no terminator"])
 
     def test_imposters_without_their_inner_chunk_are_refused(self):
-        # The catalogue's fixture frames IMPS flatly; the walk refuses it and leaves its bytes unknown.
-        row = self.rows["data/resources/100_res_PC.aya"]
-        self.assertIn("IMPS: IMPS does not hold its own IMPS chunk", row["problems"])
-        self.assertGreater(row["bytes"][inv.UNKNOWN], 0)
+        # Remove the valid fixture's inner wrapper explicitly; do not depend on
+        # another suite's positive fixture being malformed.
+        framed = catalog_fixtures.imposter_chunk()
+        flat = catalog_fixtures.chunk(b"IMPS", framed[16:])
+        data = catalog_fixtures.aya(pc_prefix() + flat)
+        reading = inv.read_archive(data, inv.Context(self.game), {"path": "data/resources/100_res_PC.aya"})
+        self.assertIn("IMPS: IMPS does not hold its own IMPS chunk", reading.problems)
+        self.assertGreater(reading.account.close()["totals"][inv.UNKNOWN], 0)
 
     def test_views_that_are_not_atlas_rectangles_stay_framed(self):
         zero = inv.views_hold(bytes(144))

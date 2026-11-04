@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-11-04 (content inventory, metadata and media coverage; independent checks distinguished from run-consistency checks; historical results retain their dates)
+Last updated: 2026-11-04 (individual imposter identities and view metadata; content inventory, metadata and media coverage; independent checks distinguished from run-consistency checks; historical results retain their dates)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
 `tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
@@ -102,6 +102,7 @@ The generator and separate read-only retail gate need your own lawfully obtained
 
 ```bash
 python tools/content_catalog_tests.py
+python tools/imposter_records_tests.py
 python tools/content_catalog.py --game /path/to/game --out local-data/content-catalog
 python tools/content_catalog_gate.py --game /path/to/game
 ```
@@ -112,6 +113,32 @@ The generator writes `manifest.json`, `survey.json`, `coverage.json` and `assets
 ignored `local-data/`. They contain retail-derived metadata and stay private. The Companion does not consume this
 catalogue. [The asset schema](content_catalog.schema.json), the detailed format descriptions below and
 [source-file coverage](#catalogue-source-file-coverage) explain the records and their limits.
+
+### Imposter models and atlas references
+
+The catalogue records each framed imposter separately as `type: imposter`. Its ID uses the owning archive,
+top-level chunk and record ordinal; its source coordinates and SHA-256 bind the whole framed `IMPT` record.
+Existing mesh IDs are unchanged. `imposter-of-mesh` resolves its stored mesh resource ID in that same archive,
+`uses-texture` names the enclosing set's atlas descriptor, and `loaded-by-archive` and `has-imposter` connect it
+to its owner. An unresolved mesh or atlas stays unresolved; duplicate mesh IDs in one archive are ambiguous, so no
+first- or last-record precedence is assumed. The stored label is display text, never a path to open.
+The descriptor's existing atlas-to-mesh relationships remain available.
+
+[`imposter_records.py`](imposter_records.py) walks the nested chunk lengths and refuses truncated, contradictory
+or duplicate identity fields. It reads each stored `VIEW` rectangle's normalized atlas edges and positive dimensions,
+rejecting non-finite values, empty or reversed rectangles and invalid sizes. A malformed view array retains the
+imposter's identity but publishes no valid-looking prefix of view metadata. Missing, truncated or unterminated labels
+are explicit, and bytes outside the fixed label are not treated as part of its name. The reader never searches opaque
+fields for tags. [Authored controls](imposter_records_tests.py) exercise these cases without game files; catalogue
+tests cover the actual identity, coordinate/hash and mesh/atlas relationships.
+
+Full metadata and relationships are available in the catalogue's `assets.jsonl` for editor or renderer consumers.
+The inventory's `records.jsonl` retains only their ID, type, source and hash, as it does for other catalogue assets.
+They are not extra pixel assets or new `asset-metadata.jsonl` processing rows. The overall
+record stays partial: the other `CIMP` fields and set-level `DATA` remain uninterpreted. The number of complete
+view rectangles does not establish runtime angle selection, a mesh's live rendering, or whether a mission uses it.
+Stored dimensions are not relabelled as pixels or world units. This adds usable identities and relationships;
+it does not increase the inventory's decoded-byte coverage or mean the Companion already renders these imposters.
 
 ## Content inventory
 

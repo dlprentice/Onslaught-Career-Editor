@@ -19,6 +19,7 @@
     "generatedRetailDerived"
   ],
   "additionalProperties": false,
+  "allOf": [{"if": {"properties": {"type": {"const": "imposter"}}}, "then": {"required": ["imposter"]}}],
   "properties": {
     "schema": {
       "const": "onslaught.content-catalog.asset.v1"
@@ -29,12 +30,13 @@
     },
     "id": {
       "type": "string",
-      "pattern": "^(archive|texture|texture-descriptor|mesh|animation|audio|video|level|level-payload|definition|placement|marker|waypoint-path|script-code|goodie|effect|script|mission-text|text-symbols|text-table|sound-table|configuration|sound-effect):.+",
+      "pattern": "^(archive|imposter|texture|texture-descriptor|mesh|animation|audio|video|level|level-payload|definition|placement|marker|waypoint-path|script-code|goodie|effect|script|mission-text|text-symbols|text-table|sound-table|configuration|sound-effect):.+",
       "description": "Stable id. Files: <type>:<lower-cased install-relative path>; archive members: the container plus #chunk or #ordinal; texture records: name plus a payload-hash prefix; animations: <mesh id>/<ordinal>. Levels: level:NNN; placements: placement:<level>:<world>@<record offset>; definitions: definition:<lower-cased name>; goodies: goodie:NNN; effects: effect:<file>#<ordinal>. Markers: marker:<level>:<world>@<record offset>; waypoint paths: waypoint-path:<level>:<world>#<ordinal>; compiled scripts: script-code:<level>:<world>#<ordinal>; battle engine configurations: configuration:<file>#<record>; sound effects: sound-effect:<file>#<effect>."
     },
     "type": {
       "enum": [
         "resource-archive",
+        "imposter",
         "texture",
         "texture-descriptor",
         "mesh",
@@ -279,6 +281,150 @@
         },
         "schemaVersion": {
           "const": 1
+        }
+      }
+    },
+    "imposter": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "One framed IMPT identity with mesh and atlas relationships. Stored view rectangles are available for editor/renderer consumers; unknown CIMP and set-level DATA semantics remain explicit. This is not runtime-use or view-angle selection evidence.",
+      "required": [
+        "status",
+        "ordinal",
+        "meshResourceId",
+        "storedLabel",
+        "labelStatus",
+        "viewMetadata",
+        "uninterpreted",
+        "limits"
+      ],
+      "properties": {
+        "status": {
+          "const": "partial"
+        },
+        "ordinal": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "meshResourceId": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "storedLabel": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "labelStatus": {
+          "enum": [
+            "terminated-latin1",
+            "empty",
+            "missing",
+            "truncated",
+            "unterminated"
+          ]
+        },
+        "viewMetadata": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "countByLength",
+            "views",
+            "reason"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "parsed",
+                "unparsed"
+              ]
+            },
+            "countByLength": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1
+            },
+            "views": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/imposterView"
+              }
+            },
+            "reason": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "parsed"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "countByLength": {
+                    "type": "integer"
+                  },
+                  "views": {
+                    "minItems": 1
+                  },
+                  "reason": {
+                    "type": "null"
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "views": {
+                    "maxItems": 0
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "uninterpreted": {
+          "type": "array",
+          "description": "Uninterpreted spans in this IMPT record; offsets address the inflated archive stream. No field values are guessed.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "field",
+              "offset",
+              "length"
+            ],
+            "properties": {
+              "field": {
+                "type": "string"
+              },
+              "offset": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "length": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "limits": {
+          "type": "string"
         }
       }
     },
@@ -802,6 +948,54 @@
     }
   },
   "$defs": {
+    "imposterView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ordinal",
+        "left",
+        "right",
+        "top",
+        "bottom",
+        "width",
+        "height"
+      ],
+      "description": "Six stored floats per VIEW entry: normalized atlas edges and positive stored dimensions. The reader rejects non-finite values and empty/reversed rectangles; dimensions are not labelled as pixels or world units.",
+      "properties": {
+        "ordinal": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "left": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "right": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "top": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "bottom": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
     "namedThing": {
       "type": "object",
       "description": "A source-modelled prediction of a named placement or marker and WORLD.mNamedThings (tools/named_things.py), assuming successful initialization: how many objects join under its name (joins, 0 when none), which (object), their entries (orders, indexes into the level's namedThings.entries), whether its own name finds it immediately after loading (foundByName) and, for a base-world record, the career's condition (keep). It is not an observation of runtime names or changes.",
@@ -879,6 +1073,7 @@
             "animates",
             "briefing-for-level",
             "imposter-of-mesh",
+            "has-imposter",
             "shows-texture",
             "shows-mesh",
             "plays-video",

@@ -4,8 +4,9 @@
 
 It surveys every file of a selected install (container families, counts, sizes, the loader that reads each family
 and whether a repository parser already reads it) and catalogues: loose DDS textures; the texture records in the
-resource archives (TEXT, and those inside imposter IMPS, font PLAT and goodie GDIE chunks); loose and embedded CMSH
-meshes with their animation modes; levels with their decoded world bodies (WRES: placements of units, squads and
+resource archives (TEXT, and those inside imposter IMPS, font PLAT and goodie GDIE chunks); individual imposter
+identities with validated atlas rectangles and mesh/atlas links; loose and embedded CMSH meshes with their animation
+modes; levels with their decoded world bodies (WRES: placements of units, squads and
 features, markers for every other thing, waypoint paths, the compiled mission scripts and what their literal call
 arguments name, with the thing names joined on the level's registry of named things, tools/named_things.py) and terrain
 payloads (ERES heightfield and mixers, SURF, SSHD; tools/world_resources_decode.py), the base archive's vertex shaders
@@ -54,6 +55,7 @@ import aya_texture_fidelity_census as packed  # noqa: E402
 import cmsh_animation_usage_census as meshcensus  # noqa: E402
 import dds_census  # noqa: E402
 import game_tables_decode as gtd  # noqa: E402
+import imposter_records  # noqa: E402
 import language_dat_decode  # noqa: E402
 import named_things  # noqa: E402
 import world_resources_decode as wrd  # noqa: E402
@@ -524,8 +526,9 @@ def catalog_archives(game: Path, files: list[dict], texture_index: dict[str, dic
                 collect_chunk(collect, rel, rec, source_sha, chunk, payload, descriptors, texture_index, stats)
         rec["archive"]["meshChunks"] = mesh_rows
         if collect is not None:
+            counts = collections.Counter(m.get("runtimeId") for m in mesh_rows if m.get("runtimeId") is not None)
             collect["meshIds"][rel] = {m["runtimeId"]: m["target"] for m in mesh_rows
-                                       if m.get("runtimeId") is not None and m.get("target")}
+                                       if counts[m.get("runtimeId")] == 1 and m.get("target")}
         for mrow in mesh_rows:
             if mrow.get("target"):
                 rule = ("a named MESH record opens data\\resources\\meshes\\m_<name>.aya" if mrow.get("name")
@@ -1071,26 +1074,8 @@ def chunk_list(data: bytes) -> list[tuple[str, int, bytes]] | None:
 
 
 def parse_imposters(payload: bytes) -> list[dict]:
-    """IMPS: the IMPO list of IMPT records, each with its mesh resource id (IMSH) and view frames (VIEW)."""
-    at = payload.find(b"IMPO")
-    if at < 0:
-        return []
-    body = payload[at + 8:at + 8 + struct.unpack_from("<I", payload, at + 4)[0]]
-    count = struct.unpack_from("<I", body, 0)[0]
-    rows = chunk_list(body[4:]) or []
-    out = []
-    for tag, _pos, impt in rows:
-        if tag != "IMPT":
-            continue
-        inner = {t: d for t, _p, d in (chunk_list(impt) or [])}
-        if "IMSH" not in inner or len(inner["IMSH"]) != 4:
-            continue
-        label = inner.get("CIMP", b"")[4:68].split(b"\0", 1)[0].decode("latin-1")
-        out.append({"meshResourceId": struct.unpack("<i", inner["IMSH"])[0], "storedLabel": label,
-                    "viewBytes": len(inner.get("VIEW", b""))})
-    if len(out) != count:
-        raise ValueError(f"IMPO declares {count} imposters, {len(out)} framed")
-    return out
+    """Framed IMPT identities and validated VIEW metadata, never a tag search inside opaque fields."""
+    return imposter_records.parse_imposter_set(payload)["records"]
 
 
 def collect_chunk(collect: dict, rel: str, rec: dict, source_sha: str, chunk, payload: bytes, descriptors: dict,
@@ -1102,12 +1087,24 @@ def collect_chunk(collect: dict, rel: str, rec: dict, source_sha: str, chunk, pa
                for at, record in scan_dxtx(payload)]
         stats[f"nestedTextures{tag}"] += len(ids)
         if tag == "IMPS":
+            atlas_ids = []
             try:
-                imposters = parse_imposters(payload)
+                parsed = imposter_records.parse_imposter_set(payload)
+                imposters = parsed["records"]
+                atlas = parsed["atlas"]
+                if atlas is not None:
+                    atlas_sha = sha256(payload[atlas["offset"]:atlas["offset"] + atlas["length"]])
+                    descriptor = descriptors.get(atlas_sha)
+                    if descriptor is not None and descriptor["id"] in ids:
+                        atlas_ids = [descriptor["id"]]
+                for imp in imposters:
+                    imp["sha256"] = sha256(payload[imp["offset"]:imp["offset"] + imp["length"]])
             except (ValueError, struct.error) as error:
                 imposters, stats["imposterUnparsed"] = [], stats["imposterUnparsed"] + 1
                 rec["archive"]["imposterError"] = str(error)
-            collect["imposters"].append({"archive": rel, "archiveRec": rec, "descriptors": ids, "imposters": imposters})
+            collect["imposters"].append({"archive": rel, "archiveRec": rec, "descriptors": atlas_ids,
+                                         "imposters": imposters, "sha": source_sha, "base": base,
+                                         "chunk": chunk.index})
         elif tag == "PLAT":
             collect["platform"].append({"archive": rel, "descriptors": ids})
         else:
@@ -1234,19 +1231,58 @@ def goodie_titles(text: dict) -> dict[int, str]:
     return titles
 
 
-def link_imposters(collect: dict, descriptors_by_id: dict) -> None:
+def link_imposters(collect: dict, descriptors_by_id: dict) -> list[dict]:
+    """Keep existing atlas-to-mesh edges and add individually located imposter records.
+
+    The label is display metadata, never a filename to open or a mesh lookup key.
+    The atlas link names only the framed BTXT record, not any DXTX-looking bytes
+    elsewhere in the imposter set. The mesh id is resolved in the owning archive.
+    """
+    records = []
     for row in collect["imposters"]:
         mesh_ids = collect["meshIds"].get(row["archive"], {})
+        def mesh_relation(imp: dict) -> dict:
+            target = mesh_ids.get(imp["meshResourceId"])
+            occurrences = sum(m.get("runtimeId") == imp["meshResourceId"]
+                              for m in row["archiveRec"]["archive"]["meshChunks"])
+            detail = ("IMSH resource id matched to a unique runtime id in this archive's MESH records"
+                      if target else "MESH runtime id is duplicated; no lookup precedence is assumed"
+                      if occurrences > 1 else "no unique available mesh matches this archive's IMSH resource id")
+            return relation(
+                "imposter-of-mesh", target, "resolved" if target else "unresolved",
+                [evidence("loader-code", L_IMPOSTERS + " -> " + L_IMPOSTER_CREATE + " -> " + L_MESH_BY_ID, detail)],
+                archive=row["archive"].casefold(), meshResourceId=imp["meshResourceId"])
+        for imp in row["imposters"]:
+            asset_id = f"imposter:{row['archive'].casefold()}#{row['chunk']}/{imp['ordinal']}"
+            asset = base_record(asset_id, "imposter", imp["storedLabel"] or "", row["archive"], row["sha"],
+                                envelope="lvlr-chunk(IMPS/IMPS/IMPO/IMPT)", offset=row["base"] + imp["offset"],
+                                length=imp["length"], raw_sha=imp["sha256"], sha_scope="framed IMPT record",
+                                parser="tools/imposter_records.py:parse_imposter_set", chunk_path=[row["chunk"]])
+            asset["imposter"] = {
+                "status": "partial", "ordinal": imp["ordinal"], "meshResourceId": imp["meshResourceId"],
+                "storedLabel": imp["storedLabel"], "labelStatus": imp["labelStatus"],
+                "viewMetadata": imp["viewMetadata"],
+                "uninterpreted": [{**part, "offset": row["base"] + part["offset"]} for part in imp["uninterpreted"]],
+                "limits": "CIMP fields outside the label and set-level DATA remain uninterpreted; "
+                          "view count is by length, not runtime angle selection or observed use"}
+            asset["relationships"].append(mesh_relation(imp))
+            asset["relationships"].append(relation(
+                "loaded-by-archive", row["archiveRec"]["id"], "resolved",
+                [evidence("loader-code", L_IMPOSTERS, "framed IMPT in this archive's IMPS set")]))
+            atlas = row["descriptors"][0] if row["descriptors"] else None
+            asset["relationships"].append(relation(
+                "uses-texture", atlas, "resolved" if atlas else "unresolved",
+                [evidence("loader-code", L_IMPOSTERS, "the enclosing IMPS set's framed BTXT atlas record")],
+                role="imposter-atlas"))
+            row["archiveRec"]["relationships"].append(relation(
+                "has-imposter", asset_id, "resolved",
+                [evidence("data", row["archive"], "length-delimited IMPO record order")]))
+            records.append(asset)
         for did in row["descriptors"]:
             desc = descriptors_by_id[did]
             for imp in row["imposters"]:
-                target = mesh_ids.get(imp["meshResourceId"])
-                desc["relationships"].append(relation(
-                    "imposter-of-mesh", target, "resolved" if target else "unresolved",
-                    [evidence("loader-code", L_IMPOSTERS + " -> " + L_IMPOSTER_CREATE + " -> " + L_MESH_BY_ID,
-                              "IMSH resource id matched to the runtime id in this archive's MESH record (PMS2 +300)"),
-                     evidence("data", row["archive"], f"IMPT label {imp['storedLabel']!r}")],
-                    archive=row["archive"].casefold(), meshResourceId=imp["meshResourceId"]))
+                desc["relationships"].append(mesh_relation(imp))
+    return records
 
 
 # EPhysicsStatement (CPhysicsScriptStatements.h): PST_UNIT, PST_WEAPON, PST_EXPLOSION, PST_FEATURE, PST_HAZARD
@@ -2761,7 +2797,7 @@ def build_catalog(game: Path, decomp: Path | None = None) -> dict:
     apply_tiling(meshes, descriptors, textures)
     dindex = DescriptorIndex(descriptors)
     descriptors_by_id = {d["id"]: d for d in descriptors}
-    link_imposters(collect, descriptors_by_id)
+    imposters = link_imposters(collect, descriptors_by_id)
     audio = catalog_audio(game, files)
     video = catalog_video(game, files)
     text = read_text_tables(game, files)
@@ -2793,7 +2829,7 @@ def build_catalog(game: Path, decomp: Path | None = None) -> dict:
     rule_names = link_rule_textures(levels, terrain, dindex, descriptors_by_id, archive_stats)
     assets = (levels + archives + payloads + descriptors + textures + meshes + animations + definitions + placements
               + world["markers"] + world["paths"] + world["scripts"] + goodies + effects + audio + video + inventory
-              + configurations + sound_effects)
+              + configurations + sound_effects + imposters)
     compute_usage(assets)
     dangling = dangling_targets(assets)
     if dangling:
@@ -2818,7 +2854,7 @@ def build_catalog(game: Path, decomp: Path | None = None) -> dict:
 def asset_report_status(asset: dict) -> str:
     """Report an explicit parser status; a record alone does not establish parsing."""
     details = (asset.get("texture") or asset.get("textureDescriptor") or asset.get("mesh") or
-               asset.get("audio") or asset.get("video") or asset.get("animation") or {})
+               asset.get("audio") or asset.get("video") or asset.get("animation") or asset.get("imposter") or {})
     status = details.get("status") if isinstance(details, dict) else None
     return status if isinstance(status, str) and status else "not-recorded"
 
