@@ -1,7 +1,7 @@
 # Local lab overlay
 
 Status: active — the ignored-directory boundary
-Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-05 (the retained rebuild materializer is marked reference-only; historical results retain their dates)
 Summary: which local paths own retail inputs and bulky generated work, and what
 may be promoted out of them into tracked evidence.
 
@@ -42,7 +42,8 @@ Fresh clones and Git child worktrees do not receive ignored content. A worktree
 must set `BEA_LOCAL_LAB` to the canonical absolute path or pass that path through
 the owning tool's explicit lab option; do not create a per-worktree copy.
 
-The rebuild materializer detects a linked worktree and verifies the canonical
+The retained rebuild materializer (a reference-only copy here; rebuild work belongs in
+[onslaught-godot](https://github.com/dlprentice/onslaught-godot)) detects a linked worktree and verifies the canonical
 materialized files against its current source pins, then creates individual
 file links in the worktree's ignored `Assets/` paths. The explicit equivalent is
 `python rebuild/tools/materialize_retail_assets.py --reuse-canonical-assets`.

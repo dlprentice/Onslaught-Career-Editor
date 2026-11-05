@@ -1,11 +1,12 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-11-02 (public setup and baseline-to-PR workflow)
+Last updated: 2026-11-05 (the companion's capabilities are moving into CE; the executable-write and aggregate-test wording corrected)
 Summary: what a focused change looks like here, what must never be added to the
 repository, and which checks a change owes.
 
-This public repository holds Onslaught Companion for the original game and Onslaught CE, the lore, our tools, a
+This public repository holds the current standalone Onslaught Companion for the original game and Onslaught CE (its
+capabilities are moving into native CE; see [GOAL.md](GOAL.md)), the lore, our tools, a
 frozen copy of the game documentation (`reverse-engineering/`), whose home is
 [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation), and a frozen copy of the Godot
 rebuild, which is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot). The byte-matching decompilation's public export is
@@ -72,7 +73,10 @@ New code files start with an `SPDX-License-Identifier: GPL-3.0-only` comment.
 
 ## Ownership
 
-- The companion owns its career codec, file safety, game text, lore and every screen.
+- Today the companion (`companion/`) owns its career codec, file safety, game text and screens. Every Companion
+  capability is moving into native Onslaught CE, and the standalone app is phased out only after each replacement is
+  verified ([GOAL.md](GOAL.md); [PROGRAM.md](PROGRAM.md#companion--ce-integration)); route new player-facing work
+  accordingly.
 - The rebuild's simulation, `OnslaughtRebuild.Parity`, is deterministic given its inputs (the tape, the
   retail data and options files it reads as the game does, and the virtual clock) and has no presentation,
   process, network or GPU dependency; `OnslaughtRebuild.Host` owns presentation. The earlier
@@ -98,8 +102,9 @@ normal-user promise without corresponding proven behavior.
 Never commit retail binaries, arbitrary saves, copied executables, Ghidra databases or
 backups, decompiler output, decomp source, debugger logs, private captures, credentials, or
 `.env*` files.
-Use the ignored locations described in [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md)
-for retail inputs, extraction, conversions, and experiments. Do not commit or
+Keep your own licensed copy under the ignored `local-data/` folder and never commit it; use ignored locations for
+retail inputs, extraction, conversions, and experiments ([`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) describes the
+maintainer's workspace). Do not commit or
 package retail game assets or derived copies. Contribute the smallest exact
 recipe a current product or rebuild path consumes, with credits, provenance,
 and third-party terms intact.
@@ -113,16 +118,16 @@ allowance is listed in
 
 File extensions are not provenance. Small project-authored or specifically
 developer-provided assets may be committed in their owning source path when
-their origin, license, and attribution are clear. The rebuild materialization
-owners are reserved for local retail-derived outputs; large opaque additions
+their origin, license, and attribution are clear. The ignored `rebuild/**/Assets/` paths listed in `.gitignore` are
+reserved for local retail-derived outputs; large opaque additions
 require a reviewed hash exception in the existing public-safety check.
 
-Save edits must start from a real baseline and preserve unknown bytes. An
-installed executable may be changed only when its owner explicitly chooses it
-and the write path has already made and verified a pre-write backup; otherwise
-use a verified copy. The pristine specimen is never a mutation target. The
-full three-principle contract is [`AGENTS.md`](AGENTS.md); this is the
-contributor-facing summary, not a second owner.
+Save edits must start from a real baseline and preserve unknown bytes. No shipped
+code writes a game executable. The companion writes into an installed game only a
+career or `defaultoptions.bea` the player chose, through `GameWrites`, after a
+verified backup. The pristine specimen is never a mutation target. The save,
+installed-game and pristine-specimen rules are in [`AGENTS.md`](AGENTS.md), under
+Ground rules; this is the contributor-facing summary, not a second owner.
 Exporters must require explicit local inputs and a separate local output root.
 
 ## Game documentation and the rebuild
@@ -153,4 +158,4 @@ npm run test:safety
 npm test
 ```
 
-Do not run a root aggregate merely for ceremony.
+Run `npm test` only when a change reaches the Companion C# or tooling; documentation-only changes need `npm run test:docs`.
