@@ -1,10 +1,10 @@
 # Onslaught Companion
 
-Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-11-04 (installed definition models in the linked 3D preview; separate frozen 0.1.99 checkpoint and platform limits retained)
+Status: active — the current standalone app for the original game and Onslaught CE; every Companion capability is required to move into native Onslaught CE, and the separate app stays supported until each replacement is verified, then is phased out ([GOAL.md](../../GOAL.md); [migration checklist](../../PROGRAM.md#native-ce-migration-checklist))
+Last updated: 2026-11-05 (the Companion is the current standalone app whose capabilities move into CE; the 0.1.99 r1 and r2 smoke checks named; maintainer-machine routing removed; wording corrections; earlier: installed definition models in the linked 3D preview, unreleased 0.1.99 r1 and r2 checkpoints and platform limits retained)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
-Onslaught Companion is for players. It opens on their game and careers, and everything it
+Onslaught Companion is the current standalone player app. It opens on their game and careers, and everything it
 changes in the game is backed up first and can be put back. Retail reverse engineering, the
 faithful game (the native source port, published separately as
 [Onslaught CE](https://github.com/dlprentice/onslaught-ce)) and the GPL Godot rebuild ([onslaught-godot](https://github.com/dlprentice/onslaught-godot)) have separate owners; this project neither launches nor
@@ -25,7 +25,7 @@ then `ce.ini`'s `gamedir`, and finally searches CE's Steam locations. Choosing a
 folder for pictures and music does not change that CE career source.
 
 **CE launcher safety.** Released Onslaught CE launchers 0.1.0–0.1.6 can delete neighbouring
-`<program folder>.old-*` files and folders when they start, even with update checks off; CE's
+`<program folder>.old-*` files and folders when they start; CE's
 [manual migration](https://github.com/dlprentice/onslaught-ce#manual-migration-from-affected-launchers)
 says not to start them at all. Before executing a launcher, the companion reads the version on the first
 line of the package's `README.txt` and refuses Play and the version query for 0.1.0–0.1.6, for a missing or
@@ -34,7 +34,7 @@ difference is a 0.1.8 or later package whose launcher reports a newer version: C
 under the package's own `versions` folder and the launcher hands off to it. Install 0.1.8 or later by hand into a
 new empty folder.
 
-CE's Play button uses `onslaught-ce` (Linux) or `onslaught-ce.exe` (Windows). The companion looks
+With CE selected, the companion's Play button starts CE's launcher: `onslaught-ce` (Linux) or `onslaught-ce.exe` (Windows). The companion looks
 for a launcher among installed commands and remembers a launcher you choose; portable CE packages
 can live elsewhere. For a package that passes the safety check it asks that launcher for its version
 with `--version`, without starting the game. An isolated Linux acceptance run read CE 0.1.4's actual
@@ -63,8 +63,9 @@ Unknown lines stay intact; invalid text encoding is refused. Saving makes a veri
 outside CE's user folder, holds and checks the copy through publication, prepares the new file beside the existing one,
 replaces it in one step and checks the saved bytes. These settings backups are named `onslaught-ce-settings-*` and are kept
 separately from career backup sets; automatic backups and the Backups page manage careers, not
-these settings copies. Backup binding and its race controls have run on Linux's native and portable writer paths;
-the new settings-backup binding has not been exercised on Windows. Close CE and the original game before saving and
+these settings copies. Backup binding and its race controls have run on Linux's native and portable writer paths.
+The settings-backup hold added on 2026-10-28 (the copy is held and checked through publication) has not run on Windows;
+the 2026-10-25 Windows run (companion source `b4b32d0f`) predates it. Close CE and the original game before saving and
 wait for the save to finish before starting either. The process checks do not lock out a start immediately after the
 last check; CE's own settings writer can
 replace a successful companion change with an older snapshot. A shared cross-process writer protocol remains open.
@@ -189,7 +190,7 @@ python tools/companion_toolchain.py setup
 python tools/companion_toolchain.py verify
 ```
 
-The default installs below ignored `local-data/toolchains/companion/` in the canonical checkout. Engine and SDK
+The default installs below ignored `local-data/toolchains/companion/` in your clone. Engine and SDK
 downloads total about 318 MiB; allow about 1.2 GiB for the retained archives and installation, plus build outputs.
 The setup reuses matching downloads and refuses changed installations instead of overwriting them. It does not
 modify system tools, PATH or shell startup files. Build commands select the verified local SDK themselves. For a
@@ -211,7 +212,7 @@ A maintainer can still explicitly select an existing shared installation with `-
 selects the public installation even if a shared-lock environment variable is set. Neither route silently falls
 back to a different engine. `--engine PATH`, if provided, must match the selected verified executable.
 
-A game installation is unnecessary for the authored Companion gate. The [documentation and Python checks](../../README.MD#build-and-run)
+A game installation is unnecessary for the authored-data checks. The [documentation and Python checks](../../README.MD#build-and-run)
 also work without Godot. With public setup complete, use the commands in [package.json](../../package.json):
 
 ```bash
@@ -230,13 +231,13 @@ Each check, build, test, run and audit leaves an output folder; the runner keeps
 of each per worktree and removes older ones. Export and capture folders are never removed.
 
 Build, test, capture and export never open a window on the desktop. **Run opens a
-window**; use it when the desktop is available. Each command stages the project and the lore into a unique canonical `local-data/companion/`
-directory with isolated imports, profiles, scratch and logs, and prints that directory.
-Worktrees use the [canonical lab rules](../../LOCAL_LAB_OVERLAY.md); no research corpus
+window**; use it when the desktop is available. Each command stages the project and the lore into a new folder under the ignored
+`local-data/companion/` directory, with isolated imports, profiles, scratch and logs, and prints that folder.
+Worktrees follow the overlay rules in [LOCAL_LAB_OVERLAY.md](../../LOCAL_LAB_OVERLAY.md); no research corpus
 is copied.
 
-On machines with the shared wrapper, `ONSLAUGHT_GODOT_HEADLESS=godot-headless npm test` routes engine checks
-through it. Tests and captures use a private HOME and clear inherited CE user-folder overrides.
+To route engine checks through your own headless wrapper, set `ONSLAUGHT_GODOT_HEADLESS` to its command (it receives
+`--path PROJECT` and the engine's arguments). Tests and captures use a private HOME and clear inherited CE user-folder overrides.
 
 `npm test` runs `Tests/CompanionTestRunner.cs` against an owned copy of the one tracked
 [real-save fixture](../../tests_shared/fixtures/README.md) and a game-shaped folder built
@@ -254,25 +255,26 @@ the interface driving its real controls: saving into the game, putting files bac
 catching up after the game closes, and asking before unsaved changes are dropped.
 
 The automatic capture route is an optional maintainer workflow, separate from public build/test setup. It requires
-a compatible hidden-output wrapper selected with `--offscreen PATH`; the bootstrap does not install a desktop
-compositor or this machine-specific wrapper. Contributors can inspect the application through `npm run dev` on their
-own desktop. Automated agents must follow their user's rules before opening a window.
+a compatible hidden-output Godot wrapper selected with `--offscreen PATH`; the bootstrap does not install one, a
+desktop compositor or any machine-specific wrapper. Contributors can inspect the application through `npm run dev` on
+their own desktop.
 
 With that wrapper available, `npm run capture:companion-godot` renders every page and state at 1280×800 and
-1920×1080 through `godot-offscreen`: first a machine without the game, then a fake install
+1920×1080 through that wrapper: first a machine without the game, then a fake install
 built from the fixture. Add `--capture-arg=--steam-root=DIR` to render against a real Steam
-library instead; that library is only read, and nothing is saved into it in that mode. Add
-`--beside-gpu-jobs` to render next to a job on the NVIDIA card instead of queuing behind the
-machine-wide GPU lock: the run gets its own hidden output and queues on the lanes' shared Intel
-GPU lock, `/var/tmp/godot-igpu.lock`. The companion's Compatibility renderer runs on the laptop's
-Intel GPU through Mesa, so it does not compete with a film rendering on the NVIDIA card, and it
-never overlaps another job on the Intel GPU (David allowed this on 2026-09-26).
+library instead; that library is only read, and nothing is saved into it in that mode. `--beside-gpu-jobs`
+captures on its own hidden output, queued on a second GPU's lock instead of the default one (see the runner's
+`--help`).
 
 ## What it does
 
+Each page below is the current standalone implementation. Native Onslaught CE replacements are required and tracked in
+the [migration checklist](../../PROGRAM.md#native-ce-migration-checklist); the Level editor and Mission project are
+working prototypes for the in-CE map and mission editors, not their final home.
+
 The sidebar groups the pages the way a player thinks about them: **Home**; **Your
 career** (Summary, Goodies, Edit career, Cheats); **Your game** (Game settings, Backups);
-**Extras** (Music & voices, Lore, Art & sound, Level editor); and **Advanced**, folded away
+**Extras** (Music & voices, Lore, Art & sound, Level editor, Mission project); and **Advanced**, folded away
 (Career bytes). The header names the page, shows **Game running** while the original game
 or Onslaught CE is open, and switches careers (or opens a career file, Ctrl+O). While Edit career or Game
 settings has unsaved changes, a bar under the page counts them and offers Save (Ctrl+S)
@@ -426,7 +428,7 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   notes (how a mixed chain of operators was grouped, a handler the game never calls, a variable declared twice) are shown with the
   result, and so is one warning about the script the level now uses: a call to `Damage` beyond the shipped script's can crash a level in
   the game as it is, when the damaged unit has a script of its own and the call is inside a running handler, because the game's script
-  machine cannot be entered twice (the design document's section 8 has what is and is not known; Undo takes the warning away with the
+  machine cannot be entered twice (section 8 of the [mission editor design](../../roadmap/companion-mission-editor.md) has what is and is not known; Undo takes the warning away with the
   script). "Your changes" says "1 script replaced: NAME (what differs)" beside the
   objects moved. Text that was typed and is not in use (the level's script is not what it compiled to) stays with its script while
   another is chosen, counts as a change when the companion, the level or the game is left (the page asks first), is named in "Your
@@ -434,13 +436,18 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   file with the replaced script, and only when every replaced script passes the structural check (`ScriptChecker`: the opcodes,
   operands, jump targets, game functions and their argument counts, entry points, handlers, symbol tables and stack balance the game's
   loader and script machine assume); the mod holds the world file only, so the edited source is not kept beside it. **Play this level with the changes** starts Onslaught CE at the
-  open level with the changes as they are (nothing is saved), in a temporary CE folder of its own: a copy of your ce.ini with only this mod switched on and recording and the update check off,
+  open level with the changes as they are (nothing is saved), in a temporary CE folder of its own: a copy of your ce.ini with only this mod enabled, recording off and the update check off,
   your options file (never a career) and the mod. It is designed to leave your own CE folder, ce.ini and careers untouched. In one offscreen run the scratch player's settings, stand-in career and tape were unchanged and the temporary folder was removed. The Play feature needs Linux and CE 0.1.11 or later,
   and a recorded session switches mods off, which the copy of ce.ini avoids. The page was driven
   by events in tests and looked at in offscreen captures, and its `scriptmod` capture staged one edit (a tutorial message of level 100) as a mod that Onslaught CE ran on
-  Linux, offscreen and live, with the edited subtitle on screen beside control runs (the mission editor design's section 16 says how and what it does not show); nobody has used
-  it or the Play button by hand (the button ran once offscreen through the released 0.1.12 launcher, section 17 of the design), no other script edit has been run, and there has been no native Windows run. Onslaught CE switches mods off under a deterministic clock, a tape, probes, a
-  recording, a pilot or a network session, so a run that should load a mod is a live one.
+  Linux, offscreen and live, with the edited subtitle on screen beside control runs (section 16 of the [mission editor design](../../roadmap/companion-mission-editor.md) says how and what it does not show); nobody has used
+  it or the Play button by hand (the button ran once offscreen through the released 0.1.12 launcher, section 17 of the [mission editor design](../../roadmap/companion-mission-editor.md)), no other script edit has been run, and there has been no native Windows run. Onslaught CE switches mods off under a deterministic clock, a tape, probes, a
+  recording, a pilot or a network session, so a run shows a mod loading only when it is live (none of those is active).
+
+  The page also has a **3D** switch (sampled terrain with object marks), guarded 3D object dragging and a **Terrain preview**
+  button for reversible, in-memory terrain changes. Terrain-preview changes cannot be saved or played: Save as mod and
+  Play are disabled while they exist. These controls are integrated source, not accepted features; the
+  [level editor plan](../../roadmap/companion-level-editor.md#unreleased-editor-candidates) owns their scope and gates.
 
   The page is laid out for a window of about 1366 by 800 or more. In a smaller one, down to the Companion's 1024 by 700
   minimum, the map is a small overview, the table is narrower, the right-hand column scrolls and the notice a save leaves is
@@ -486,7 +493,7 @@ a guessed model. This uses the content catalogue's documented definition-to-reso
 generated catalogue file. The preview retains each loaded model's local source hashes; these do not enter the saved project.
 
 The authored linked-scene tests cover definition kinds, exact names, missing and ambiguous resources, malformed inputs,
-placement identity and source fingerprints. A November 4 Linux offscreen check read level 221 through the production
+placement identity and source fingerprints. A 2026-11-04 Linux offscreen check read level 221 through the production
 page and displayed 35 instances of 16 installed meshes; the catalogue's existing Python readers independently produced
 the same mesh identities and hashes. The selected model followed a scripted edit, Undo and Redo, and Save/Open preserved
 its identity and position. The two inspected images show an overview and a close view of that model. The close image uses
@@ -502,11 +509,12 @@ special file where a map file should be is refused at once.
 Project definition references remain names. Geometry comes from the linked installed object, not an arbitrary new
 object of that definition. This page edits no terrain, compiles or runs no source and
 exports no new playable level. CE development source now reads linked projects: a 2026-11-03 controlled run and
-independent review saved projects through this page's production Save as path and ran those files in default Linux
-CE on level 221. One existing boat reached the authored X/Y; its own initialization set its height. A moved placement
+independent review saved projects through this page's production Save as path and ran those files in a default,
+unreleased Linux CE development build on level 221. One existing boat reached the authored X/Y; its own initialization set its height. A moved placement
 can change later mission and AI behavior. The page was driven programmatically, not by a person operating its dialog
-or dragging a marker. A November 4 local smoke check loaded one of those saved projects in the final network-enabled
-0.1.99 Linux checkpoint package; its placement log entry and gameplay image were inspected with no active network session.
+or dragging a marker. On 2026-11-04 the unreleased 0.1.99 r1 Linux package (built with networking enabled) loaded one
+of those saved projects locally, and the r2 package repeated it ([CURRENT_CAPABILITIES.md](../../CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore)
+records both smoke receipts); the placement log entry and gameplay image were inspected with no active network session.
 No publicly released CE reads these projects. Complete mission authoring, physical-input use, multiplayer project
 loading/replication and native Windows acceptance remain open; the
 [capability record](../../CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore) gives the
@@ -522,6 +530,8 @@ npm run capture:companion-godot -- --capture-script Development/CeMissionProject
 The [capability record](../../CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore) owns the executed evidence.
 
 ## Known limits
+
+This is the player-facing summary; [CURRENT_CAPABILITIES.md](../../CURRENT_CAPABILITIES.md) owns the dated evidence and limits.
 
 - Linux CE 0.1.13 launch, version reading, copied-career edits and loading, settings, running-game refusals and
   backup restoration passed the automated isolated check above. This does not establish human use, update hand-off,
@@ -540,7 +550,7 @@ The [capability record](../../CURRENT_CAPABILITIES.md#godot-companion--careers-s
   2026-10-16, playing the exported animations inside a headless Godot (a development check, not the
   app) aborted the engine with an internal error and then crashed its crash handler, so the
   development probe only counts the animations and skins Godot's importer reads, and the pose
-  check runs outside Godot (`tools/gltf_pose_check.py`). Copies play in Blender.
+  check runs outside Godot (`tools/gltf_pose_check.py`). glTF files open in common 3D tools; Blender playback was not checked.
 - The handedness conversion follows the game's culling convention; no mirrored text on a model
   has been checked against it.
 - Behavior after a power loss during a write is not proven (see below).
@@ -572,8 +582,8 @@ Home describes three safeguards for your original game (its Steam or retail inst
   Linux creates and publishes them relative to protected directory handles; Windows reuses its
   ancestor and file sharing locks. Directory or recovery-file changes refuse a write before the
   swap; a change detected afterwards reports that the career may have changed and that the backup
-  needs inspection. These race controls ran on Linux through both writer paths; this new binding
-  has not run on Windows. A file being
+  needs inspection. These race controls ran on Linux through both writer paths; holding the backup directory through
+  the game-file operation has not run on Windows. A file being
   replaced must be one of the backed-up files and still match its fresh backup, and a career
   or settings file you opened must still match what you opened: if the game saved it since,
   nothing is written. The new file is staged, verified, swapped in
@@ -598,8 +608,8 @@ Home describes three safeguards for your original game (its Steam or retail inst
   CE program replaced while it runs (`/proc/PID/exe` ending in ` (deleted)`) still counts. On
   2026-10-22 the check found a running Onslaught CE 0.1 on Linux (comm `bea`, its program in the
   extracted package beside `onslaught-ce-launch`), before and after its `bea` file was replaced,
-  and stopped finding it once CE exited (`Development/RunningCheck.cs` output saved in the ignored
-  `local-data/companion/evidence/ce-running-check-2026-10-22.log` beside the harness that ran it);
+  and stopped finding it once CE exited (`Development/RunningCheck.cs` output kept in the maintainer's ignored local data,
+  not in this repository);
   native Windows checks on 2026-10-24 also detected the selected package's actual `bea.exe` and
   refused both career and CE-settings writes with the running-game reason, without changing files
   or creating backups ([NativeChecks](../OnslaughtToolkit.NativeChecks/README.md)). On 2026-09-26, with the Steam
@@ -623,7 +633,9 @@ release only when its `BEA.exe` is exactly 2,506,752 bytes with SHA-256
 (`ExecutableIdentity.RetailSha256` in [GameFolder](Game/GameFolder.cs)), the pristine retail
 specimen's identity.
 
-Everything else only reads. Careers and settings open read-only as verified snapshots. A
+In the game folder nothing else is written. Outside it the companion writes CE careers and settings (each with a verified
+backup), new copies, Onslaught CE mod folders, temporary test-play folders, `.ceproject` files and its own settings; everything else only reads.
+Careers and settings open read-only as verified snapshots. A
 copy saved elsewhere is always a **new** file: publication re-checks the source's identity
 and content, stages and verifies every byte, publishes without replacing any existing file,
 and reopens the result to compare it with the plan. Malformed inputs, changed sources,
@@ -648,7 +660,7 @@ exchange report itself unsupported, and a failure is raised just after the file 
 on both the Linux and the portable path. No drive that really lacks the exchange has been
 tried.
 
-A receipt concerns that operation, not later changes by another program or what the game
+The verified result covers that operation only, not later changes by another program or what the game
 does with the file. These checks do not prove behavior after power loss.
 
 ## File-safety boundary
@@ -667,7 +679,7 @@ described above for other systems. The Windows copy path locks ancestors and ver
 identity, but releases its staging quarantine and closes the handle before a path-based
 move, then verifies the published identity. Native Windows checks exercised protected reads,
 Unicode publication/discovery and stale-source refusal. An adversarial race at every publication
-boundary remains untested; neither these backend checks nor a cross-export validate the Windows UI.
+boundary remains untested; neither the backend checks nor an export validates the Windows UI.
 
 The level data layer adds one writer of folders: [ModStager](Levels/ModStager.cs) writes an Onslaught CE mod folder
 (`mod.json` and `data/worlds/worldNNN.wrd`) through the same guarded publication, one new file at a time, the world files
@@ -681,7 +693,7 @@ process during the run is not guaranteed to stay outside the game folder (the li
 
 [toolchain.json](toolchain.json) records the measured engine, SDK and template hashes and
 the shared lock revision; `tools/companion_godot.py` verifies the installation and refuses
-mismatches. `global.json` pins .NET SDK 10.0.402 (latest patch of that band; the runner accepts only
+mismatches. `global.json` pins .NET SDK 10.0.402 (the latest patch of that band when it was pinned on 2026-10-30; the runner accepts only
 10.0.402); the Godot SDK is `4.8.0-beta.1`, the target `net10.0` and the runtime 10.0.13, the
 one that SDK ships. The runtime packs Godot's export bundles
 (`microsoft.netcore.app.runtime.linux-x64` and `win-x64` 10.0.13) are pinned by nuget.org's
