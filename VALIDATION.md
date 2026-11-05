@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-11-03 (the Companion's live check against released CE 0.1.13; historical results retain their dates)
+Last updated: 2026-11-05 (the 2026-10-24 native Windows companion checks moved here from the NativeChecks README; earlier: the Companion's live check against released CE 0.1.13; historical results retain their dates)
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -251,6 +251,27 @@ existing actual-CE receipts already meet those conditions. Evidence is in the wo
 `local-data/ce-live-20261024/hook-negatives-1.log` and
 `local-data/companion/godot-dotnet-test-uhq6q57e/test-output/ce-hook-negatives/`.
 The successful game-load route was not repeated for these development-only failure-path corrections.
+
+## Native Windows companion checks — October 24
+
+Native Windows 11 Enterprise Evaluation (build 26300) was exercised on 2026-10-24 with the pinned .NET runtime.
+The file/settings workflow and actual CE process refusal passed. A separate CE replay loaded the restored baseline;
+its written options container matched the baseline exactly. A second replay loaded the production-written edited
+`CE Élan 日本語.bes` from a fresh copied profile, reached level selection and exited normally. CE's written options
+container matched the edited career exactly, and the career itself was unchanged. The capture was inspected. These
+backend and game-load checks do not validate the Godot UI, hardware audio or complete campaign play.
+
+Repeated standalone version queries, including the final check, hit the production five-second deadline. Queries
+through the same production implementation inside a small diagnostic succeeded, as did independent native and .NET
+subprocess controls; one intervening standalone query also passed. The version phase is therefore not reliably
+passing in the 2026-10-24 evaluation environment. An external observer captured a recurring failure without modifying the launcher:
+one thread waited in Windows loader initialization while another thread remained in `NtOpenFile` at both
+samples. A further ABI-checked, read-only observation identified that open as the package's `SDL3.dll`.
+This narrows the observed stall to startup outside the launcher's version-output path; why Windows delayed that
+file open remains unresolved. It does not establish a bug in SDL code or identify a filesystem filter.
+The observer resumed each briefly suspended thread, and the production
+five-second deadline cleaned up its owned child. No timeout workaround was applied. Preserve failed and successful
+reports together; the passing controls do not cancel the observed refusals.
 
 ## Earlier engine and RE checks
 

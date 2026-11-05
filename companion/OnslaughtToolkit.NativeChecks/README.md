@@ -1,7 +1,7 @@
 # Native Windows companion checks
 
 Status: active development check
-Last updated: 2026-10-25
+Last updated: 2026-11-05 (the 2026-10-24 evaluation narrative moved to VALIDATION.md; wording corrections; earlier: 2026-10-25)
 Summary: exercises native file/process/launcher boundaries and records the separate bounded development Godot UI workflow gate.
 
 This console executable compile-links the app's production implementations. It does not carry a second save codec,
@@ -16,13 +16,15 @@ dotnet publish companion/OnslaughtToolkit.NativeChecks/OnslaughtToolkit.NativeCh
   -p:UseSharedCompilation=false -m:8 --output local-data/native-check/win-x64
 ```
 
-On a shared development machine, apply its resource and heavy-job lock rules around that command. The result includes
+On a shared machine, run it when no other heavy job is running. The result includes
 its runtime; no .NET installation or Godot is needed on Windows. Copy the entire output directory to the test machine.
 
-Use an admitted **copy of a real game-created career**, with an independently recorded SHA-256. Never synthesize one.
+Use an admitted **copy of a real game-created career** (admitted means the companion's `CareerSave.Inspect` accepts the file
+as a career), with an independently recorded SHA-256. Never synthesize one.
 Keep the fixture outside the disposable root. Keep the root outside the actual user profile and CE package; the `files`
 phase refuses any existing root. The launcher must be a real `onslaught-ce.exe` from the selected CE package. The harness
-does not launch a game or terminate processes. It launches only `onslaught-ce.exe --version` in the `version` phase.
+does not launch a game. The `version` phase starts only `onslaught-ce.exe --version`, and the production code stops that
+child, and only that child, at its five-second deadline.
 
 Run in a Windows command prompt, substituting the absolute paths, fixture hash and expected package version:
 
@@ -53,24 +55,12 @@ fixture provenance/hash, selected launcher hash/version, Windows version and act
 `local-data/`. These reports contain local paths and do not belong in Git. A failing phase stops at its first failure
 and preserves its private root for diagnosis; use a new root for another file-phase run.
 
-Native Windows 11 Enterprise Evaluation (build 26300) was exercised on 2026-10-24 with the pinned .NET runtime.
-The file/settings workflow and actual CE process refusal passed. A separate CE replay loaded the restored baseline;
-its written options container matched the baseline exactly. A second replay loaded the production-written edited
-`CE Élan 日本語.bes` from a fresh copied profile, reached level selection and exited normally. CE's written options
-container matched the edited career exactly, and the career itself was unchanged. The capture was inspected. These
-backend and game-load checks do not validate the Godot UI, hardware audio or complete campaign play.
-
-Repeated standalone version queries, including the final check, hit the production five-second deadline. Queries
-through the same production implementation inside a small diagnostic succeeded, as did independent native and .NET
-subprocess controls; one intervening standalone query also passed. The version phase is therefore not reliably
-passing in this environment. An external observer captured a recurring failure without modifying the launcher:
-one thread waited in Windows loader initialization while another thread remained in `NtOpenFile` at both
-samples. A further ABI-checked, read-only observation identified that open as the package's `SDL3.dll`.
-This narrows the observed stall to startup outside the launcher's version-output path; why Windows delayed that
-file open remains unresolved. It does not establish a bug in SDL code or identify a filesystem filter.
-The observer resumed each briefly suspended thread, and the production
-five-second deadline cleaned up its owned child. No timeout workaround was applied. Preserve failed and successful
-reports together; the passing controls do not cancel the observed refusals.
+The 2026-10-24 native Windows evaluation (the file and settings workflow, actual CE process refusal, two CE replays that
+loaded the restored baseline and the edited Unicode career, and a recurring standalone version-query deadline that an external
+observer narrowed to the package's `SDL3.dll` open during loader startup; why Windows delayed that open remains unresolved) is recorded in
+[VALIDATION.md](../../VALIDATION.md#native-windows-companion-checks--october-24). These backend and game-load checks do not
+validate the Godot UI, hardware audio or complete campaign play; the open launcher-version work is in
+[PROGRAM.md](../../PROGRAM.md#companion--ce-integration).
 
 The later selected CE `0.1.6-dev` launcher, source `9ed8c56e81d3`, returned its actual version through
 production discovery in the October 25 rendered development workflow. This is a passing observation for
@@ -80,13 +70,13 @@ native process evidence, byte assertions and inspected screenshots are recorded 
 
 ## Godot UI workflow gate
 
-`Development/CeLiveCheck.cs` also accepts an explicit `workflow` phase in a **development** Godot build.
+`companion/OnslaughtToolkit.Godot/Development/CeLiveCheck.cs` also accepts an explicit `workflow` phase in a **development** Godot build.
 Normal release exports exclude this entry. Use a copied CE package and profile below a new disposable owner,
 outside the real Windows profile; keep the admitted real baseline byte-identical. Prepare an existing empty
 backup folder, `user/savegames/Companion Pilot.bes` copied from that baseline, and `user/ce.ini` containing
 `update_check=0`, `record_sessions=0` and `future_kept=acceptance`. The original game folder is read-only input.
-Place the `.companion-owned` marker below the owner and supply this private JSON through
-`ONSLAUGHT_CE_LIVE_CHECK`:
+Place the `.companion-owned` marker below the owner and set `ONSLAUGHT_CE_LIVE_CHECK` to the path of this private
+JSON file:
 
 ```json
 {
