@@ -1,7 +1,7 @@
 # Local lab overlay
 
 Status: active — the ignored-directory boundary
-Last updated: 2026-11-05 (the retained rebuild materializer is marked reference-only; historical results retain their dates)
+Last updated: 2026-11-05 (the retained rebuild materializer is marked reference-only; the duplicate folder list and the machine's install state are removed; historical results retain their dates)
 Summary: which local paths own retail inputs and bulky generated work, and what
 may be promoted out of them into tracked evidence.
 
@@ -70,13 +70,8 @@ implementation or contract. Retail binaries/assets, real saves, raw debugger
 logs, screenshots, captures, and generated catalogs remain local.
 
 The machine-local RE campaign generations and READY bundles are history: the campaign ended on 2026-10-15 and
-its selector, `developer_state.json`, is in the private RE archive. On this workstation open `local-lab/INDEX.md`
-for the retained corpus. The retained
-`local-lab/hermes-kanban-campaign-2026-08-18/` material is dated operational
-history, not a liveness oracle. The DeepSeek drop remains at
-`local-lab/ds-deep-review/` and `local-lab/ds-deep-review-extended/`; the
-3,211-line historical catalog is `local-lab/INDEX-CATALOG-2026-08-17.md`.
+its selector, `developer_state.json`, is in the private RE archive. `local-lab/INDEX.md` indexes the retained corpus;
+the dated campaign folders it lists are history, not a liveness oracle.
 
-OpenJDK 21.0.12.1 and the verified Ghidra 12.1.3 distribution remain installed (activation receipt under
-`local-lab/ghidra-linux-12.1.3-activation-20260830-v1/receipts/`). No Ghidra work is planned; the working project
-and the independent cold recovery on the maintainer's archive storage stay as preservation copies.
+No Ghidra work is planned; the working project and the independent cold recovery on the maintainer's archive storage
+stay as preservation copies.
