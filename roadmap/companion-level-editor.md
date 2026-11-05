@@ -80,15 +80,14 @@ still only on branches; none is released.
 **Candidate-only, on branches (not on main):**
 
 - The spherical-trigger radius inspector, commit [2b1527eb](https://github.com/dlprentice/Onslaught-Career-Editor/tree/2b1527eb1bd5bb9cd5457b76fdaf1bff7a88d1e1)
-  (branch `codex/trigger-radius-inspector-20261101`): a control and authored tests, with no Level editor page wiring or
-  normal-runner registration.
-- The editor-only project workflow, commit 33f66dd and later (branch `codex/project-workflow-save-dialog-fix-20261101`): it
+  (on a branch): a control and authored tests, with no Level editor page wiring or normal-runner registration.
+- The editor-only project workflow, commit 33f66dd and later (on a branch): it
   integrates the inspector with the page and saves and reopens the sampled terrain-preview draft, the world snapshot, installed
   source and script drafts, with a fresh undo history. Unapplied radius and coordinate fields must be applied or restored
   before project save/open; terrain edits remain fenced from CE export and play. Focused authored checks and safety pass, and
   full-app offscreen captures were inspected; full normal-suite acceptance remains open.
 - The source waypoint-rule audit, commit [636e3b10](https://github.com/dlprentice/Onslaught-Career-Editor/commit/636e3b100e1b24d04048fa973e73041d948a9f3f)
-  (branch `codex/mission-waypoint-audit-20261101`): read-only checks of literal waypoint names in the selected script against
+  (on a branch): read-only checks of literal waypoint names in the selected script against
   level and base-world data. Dynamic expressions, includes, macros and runtime behavior remain unchecked. Focused authored checks
   and safety pass, and wide and compact page captures were inspected. Its normal test registry is unchanged.
 
