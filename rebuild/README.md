@@ -1,7 +1,7 @@
 # Onslaught Rebuild
 
-Status: active — scoped proof of concept (reactivated 2026-10-15): startup to exit 1:1 with retail, level 100 playable to completion
-Last updated: 2026-10-22 (the decompilation named as onslaught-decomp; the reference environment as a table of variables, values kept outside the repository; earlier entries keep their dates)
+Status: frozen copy — development continues in onslaught-godot; the rebuild's scoped proof-of-concept aim (reactivated 2026-10-15) was startup to exit 1:1 with retail, level 100 playable to completion
+Last updated: 2026-11-05 (marked a frozen copy; earlier, 2026-10-22: the decompilation named as onslaught-decomp; the reference environment as a table of variables, values kept outside the repository; earlier entries keep their dates)
 Summary: the Godot/C# reconstruction: the new float-exact parity core and its harness, and the earlier fixed-point rebuild kept as reference.
 [`PROVENANCE.md`](PROVENANCE.md) is the authority for its evidence boundary.
 [`DETERMINISM.md`](DETERMINISM.md) is the determinism contract (the first

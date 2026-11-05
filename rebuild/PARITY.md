@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
-Status: active — proof-of-concept milestones (2026-10-15); the tables after them grade the earlier fixed-point rebuild
-Last updated: 2026-10-22 (private evidence named by its store, not a machine path; earlier, 2026-10-21: whole-game host slices 1-4: the front end drawn page by page against the port, the level inside the flow through a parked-run inspect, the level's 2D and HUD target passes; earlier rows keep their dates)
+Status: frozen copy — development and the live parity record continue in onslaught-godot; this copy holds the proof-of-concept milestones of 2026-10-15, and the tables after them grade the earlier fixed-point rebuild
+Last updated: 2026-11-05 (marked a frozen copy; earlier, 2026-10-22: private evidence named by its store, not a machine path; earlier, 2026-10-21: whole-game host slices 1-4: the front end drawn page by page against the port, the level inside the flow through a parked-run inspect, the level's 2D and HUD target passes; earlier rows keep their dates)
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
