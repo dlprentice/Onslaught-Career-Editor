@@ -329,16 +329,16 @@ Its sidebar:
 - **Advanced**, folded away: Career bytes (the open career's stored values, or the bytes that
   differ from another career).
 
-The authored Mission project page uses the integrated shared viewport foundation. Older installed-level development
-candidates remain separate and unreleased. The
-[3D drag candidate](https://github.com/dlprentice/Onslaught-Career-Editor/tree/8aacbb23577ce57397a5319282bf33cd5f742494)
-binds a drag to the current edit session and object; authored page-input and offscreen capture assertions cover
-motion without changing the world or undo history, one undoable move on release, preserved height and an unchanged camera. The
-[spherical-trigger radius backend](https://github.com/dlprentice/Onslaught-Career-Editor/tree/6d2c3e4f949f3f4885ec7cb74e5654dfed4d6a33)
-adds undo/redo, validation and change summaries, with a passing authored-data fixture; that branch has no inspector
-control. A separate inspector component candidate remains unwired.
+The authored Mission project page uses the integrated shared viewport foundation. The installed-level editor's 3D drag
+(bound to the current edit session and object; authored page-input and offscreen capture assertions cover motion without
+changing the world or undo history, one undoable move on release, preserved height and an unchanged camera), its in-memory
+terrain preview and the spherical-trigger radius core (undo/redo, validation and change summaries, with a passing
+authored-data fixture and no inspector control) have been on main since commit
+[78d3831](https://github.com/dlprentice/Onslaught-Career-Editor/commit/78d3831ef290281e0b97503254e3091349544ef4), which records
+that its focused and aggregate runtime gates had not run. The radius inspector, the waypoint-rule audit and the editor-only
+project workflow remain on unreleased branches.
 The [level editor owner](roadmap/companion-level-editor.md#unreleased-editor-candidates) records their scope.
-Those older candidate checks do not establish their full Companion-suite acceptance, human use, new-edit acceptance
+Those checks do not establish full Companion-suite acceptance, human use, new-edit acceptance
 in CE or native Windows acceptance. In the installed-level editor, world/terrain project Save/Open and script-draft
 restoration remain unwired. Derived terrain/snapshot save and play remain disabled, and the unsaved terrain draft
 remains a preview rather than published content. The authored `.ceproject` document does not add those installed-level

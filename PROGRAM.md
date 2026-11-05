@@ -349,8 +349,8 @@ complete content coverage and HD successors remain open, and this page tracks th
 The Companion's Level editor can inspect and move placed objects (typed, dragged on the map or nudged with the arrow keys), list only the moved ones, copy a unit (appended after every row so existing row, path and target indices do not shift; the copy retains its script and target), show a map and mission scripts, and edit a script's
 source (compile it, make the level use it, undo it); it saves changed world files as new CE mods and starts CE at the open level with the changes in a temporary folder of its own (its Play button). The page is covered by
 tests and offscreen captures on Linux; a script edit, a unit copy and two moved Target Tanks were staged by it and run in CE on Linux (section 16 of the mission
-editor design and the level editor plan); nobody has used it by hand, and the mod does not preserve the edited source beside the world file. The [older installed-level candidates](roadmap/companion-level-editor.md#unreleased-editor-candidates)
-record their scope separately from the new authored-project workflow. Installed-level world/terrain project Save/Open,
+editor design and the level editor plan); nobody has used it by hand, and the mod does not preserve the edited source beside the world file. The [installed-level editor's candidates](roadmap/companion-level-editor.md#unreleased-editor-candidates), some on main and
+some on branches, record their scope separately from the new authored-project workflow. Installed-level world/terrain project Save/Open,
 script-draft restoration and the waypoint-check workflow remain outside that integration. The [level editor plan](roadmap/companion-level-editor.md)
 and [mission editor design](roadmap/companion-mission-editor.md) own their remaining gates, including source-preserving
 staging, hand use and gameplay acceptance. CE's released world-mod route remains Linux-only. The reviewed Windows

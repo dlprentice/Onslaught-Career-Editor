@@ -1,16 +1,24 @@
 # Companion Level Editor: Design and Prototype Plan
 
-Status: M0 (the data layer), M1 (the mod stager and the edit session) and M2 (the first page: a level picker, an object table, typed X, Y and Z, Save as mod) are built and on main; M3 (the map: terrain relief, marks, select, drag, zoom, pan) is built and on main; M4's arrow-key nudges and list of only the moved objects and M6's play button ("Play this level with the changes", section 17 of the mission editor design) are built; M5's first increment (copy a unit) is built, and its other parts (adding other kinds, deleting) and M6's persistent enable toggle are plan; the mission editor that would follow is in [companion-mission-editor.md](companion-mission-editor.md). Its edits have been run in CE on Linux, offscreen, through a private CE build and the released 0.1.12 package and launcher (section 3 and the mission editor design's sections 16 and 17); nobody has used the page or its play button by hand. The C# and Python mission compilers and the script-aware editor model are integrated backend components; the Level editor's Scripts view can edit and compile a script's source and make the open level use it; source-preserving mod staging and complete 3D mission authoring remain future work.
-Last updated: 2026-11-02 (separate authored mission projects and installed-level candidate scope)
-Summary: how the Companion can grow a visual level editor on top of the Toolkit's world tools and Onslaught CE's mod
-loader: list a level's objects, select one, move it by typing coordinates or dragging it on a top-down map, and save
+Status: active prototype; its end state moves into native CE ([PROGRAM.md](../PROGRAM.md), 2026-11-04). Milestone state lives in [CURRENT_CAPABILITIES.md](../CURRENT_CAPABILITIES.md) and the section 10 table; nobody has used the page or its play button by hand, and source-preserving mod staging and complete 3D mission authoring remain future work.
+Last updated: 2026-11-05 (the editor's end state is native CE; candidates sorted into on-main and branch-only; Windows loading and run-version wording; references corrected; earlier: separate authored mission projects and installed-level candidate scope)
+Summary: how the Companion's working prototype of a visual level editor is built on the Toolkit's world tools and
+Onslaught CE's mod loader (the required end state is the editor inside native CE): list a level's objects, select one, move it by typing coordinates or dragging it on a top-down map, and save
 the result as a CE mod that CE loads without hand editing. It states what exists, what the measurements say, the
 layers and files to add, a minimal first prototype (typing a coordinate, saving a mod, seeing it in game) and the
 milestones after it.
 Evidence: MEASURED for section 3 (each item names its method and limits), SOURCE for the cited code, INFERRED where
 the text says so; the rest is plan.
 
-> **Future direction — 2026-10-31:** David requested a 3D map editor and approved a Goodies-style museum and custom test levels. The current map workflow and any existing model previews remain as described below; a complete 3D map-authoring workflow is not established. Its design and acceptance must address safe game-data handling and the loader contract. See the project [goal](../GOAL.md) and [program](../PROGRAM.md).
+> **Direction (2026-11-04):** the Companion page described here is the working prototype and measurement reference. The
+> required end state is the 3D map and mission editor inside native CE, reached through its menus ([GOAL.md](../GOAL.md);
+> [PROGRAM.md](../PROGRAM.md#level-and-mission-tools)). The Play button and the `ce.ini` writer below are bridges until CE owns
+> them; the format and loader facts do not depend on where the editor lives.
+
+> **Future direction:** [GOAL.md](../GOAL.md) requires an explorable 3D museum reached through CE's menus, separate from the
+> Goodies gallery ([PROGRAM.md](../PROGRAM.md), Museum and custom levels); the map and mission work below is one input to it.
+> The current map workflow and any existing model previews remain as described below; a complete 3D map-authoring workflow
+> is not established. Its design and acceptance must address safe game-data handling and the loader contract.
 
 A modern CE-native project format and custom gameplay are first-class targets. Original-game-compatible export is useful
 where practical but is not a prerequisite; faithful behavior for the existing campaign remains a separate baseline.
@@ -25,7 +33,8 @@ It saves the changed world as a CE mod; staging and temporary play follow the sa
 described below.
 
 The current world-file workflow follows this split: the Toolkit's Python tools are the reference implementation and
-oracle for that format; the Companion is the player's interface; Onslaught CE is the engine that loads the result.
+oracle for that format; the Companion is the player's interface today (the working prototype; the required end state is native CE);
+Onslaught CE is the engine that loads the result.
 
 ## 2. What exists today
 
@@ -45,47 +54,47 @@ states the authored-test scope and remaining acceptance.
 | The Companion's data layer: world bodies, level archives, the mod stager, an edit session with undo | [`companion/OnslaughtToolkit.Godot/Levels/`](../companion/OnslaughtToolkit.Godot/Levels) (M0, M1) | on main, reviewed; checked against the Python reference on generated vectors and, locally, on every retail world body |
 | The Level editor page (M2) | `Ui/Pages/LevelEditorPage.cs`, `Ui/SaveAsModDialog.cs`, `Levels/LevelEditorModel.cs`, `Levels/CoordinateInput.cs` | on main, reviewed (it asks before an unsaved move is dropped); the mod it saves for a move of one Target Tank is byte for byte the one the Toolkit pipeline stages for the same move, and a mod it saved was looked at in a private CE build, offscreen |
 | The level map (M3) | `Ui/LevelMap.cs`, `Levels/MapView.cs`, `Levels/TerrainRelief.cs`, `Levels/Heightfield.cs`, `tools/heightfield_lookup.py` | on main, reviewed; the terrain lookup is checked against the Python port on generated vectors and on every installed level, and the drag gives the Toolkit pipeline's world file for the same coordinates |
-| CE loading a world file from a mod (a mod may add `data/worlds/worldNNN.wrd`) | Onslaught CE's mod loader and its world-file override | released: CE 0.1.11 (published 2026-10-29) first added world-file mods; the public 0.1.13 route remains Linux-only. A Windows read-only/base-fallback contract candidate is outside main and public export; native Windows acceptance remains open |
+| CE loading a world file from a mod (a mod may add `data/worlds/worldNNN.wrd`) | Onslaught CE's mod loader and its world-file override | released: CE 0.1.11 (published 2026-10-29) first added world-file mods; the public 0.1.13 route remains Linux-only. The reviewed Windows loading contract is in CE development source (integrated 2026-11-03, off-by-default build switch); native Windows acceptance is open |
 | Copying a unit (M5, first increment) | `Levels/EditSession.cs` (`DuplicateObject` and the validator's rule for added rows), `Levels/WorldBody.cs` (`PlacedObject.Clone`, `SameExceptPlace`), `Levels/LevelEditorModel.cs`, the page's **Copy this unit** | built: a copy is appended after every row, only units, only as a copy; the C# edit gives the Python reference writer's bytes for six copy edits; the Play button ran a level with a copy in CE on Linux (the acceptance below); nobody has used the page by hand |
 | A code-built Godot C# interface, a game library, verified file safety | `companion/OnslaughtToolkit.Godot/` | on main |
 
 ### Unreleased editor candidates
 
-These are older installed-level candidate workflows, separate from the authored Mission project page. Some shared
-viewport and edit-session foundation code is now integrated; that does not integrate the complete candidate branches
-or their later fixes described below.
+These are installed-level editor workflows, separate from the authored Mission project page. Some are on main and some are
+still only on branches; none is released.
 
-The pushed [3D drag candidate](https://github.com/dlprentice/Onslaught-Career-Editor/blob/8aacbb23577ce57397a5319282bf33cd5f742494/companion/OnslaughtToolkit.Godot/Ui/Pages/LevelTerrainViewport.cs#L341)
-binds a gesture to its captured edit session and object, so a replaced session or record cannot receive a stale drag.
-Its authored-data page-input and offscreen capture assertions passed on Linux: motion leaves the world and undo
-history unchanged, release makes one undoable move while preserving height, the camera stays unchanged, and Undo/Redo
-works. Those are fixture observations, not a judgment of physical drag feel or acceptance in a real CE world.
-The prototype also contains terrain preview, existing-unit grid controls and mission/source navigation; complete
-3D authoring is not established.
+**On main since commit [78d3831](https://github.com/dlprentice/Onslaught-Career-Editor/commit/78d3831ef290281e0b97503254e3091349544ef4)**
+(the commit records that its focused and aggregate runtime gates had not run):
 
-The pushed [spherical-trigger radius backend](https://github.com/dlprentice/Onslaught-Career-Editor/blob/6d2c3e4f949f3f4885ec7cb74e5654dfed4d6a33/companion/OnslaughtToolkit.Godot/Levels/TriggerEdit.cs)
-adds a command tied to the existing trigger record, undo/redo, validation and change summaries. Its
-[authored-data fixture](https://github.com/dlprentice/Onslaught-Career-Editor/blob/6d2c3e4f949f3f4885ec7cb74e5654dfed4d6a33/companion/OnslaughtToolkit.Godot/Tests/LevelTriggerEditTests.cs)
-passed without invoking the compiler or mod stager. In that backend branch, an inspector control is not wired, and a resized trigger has not
-been staged or played in CE. A separate [inspector component candidate](https://github.com/dlprentice/Onslaught-Career-Editor/tree/2b1527eb1bd5bb9cd5457b76fdaf1bff7a88d1e1)
-adds a control and authored tests; that candidate has no Level editor page wiring or normal-runner registration.
+- A 3D terrain view with object marks, and a guarded 3D object drag that binds a gesture to its captured edit session and
+  object, so a replaced session or record cannot receive a stale drag. Authored-data page-input and offscreen capture
+  assertions passed on Linux for the drag when it was a branch candidate: motion leaves the world and undo history unchanged,
+  release makes one undoable move while preserving height, the camera stays unchanged, and Undo/Redo works. Those are fixture
+  observations, not a judgment of physical drag feel or acceptance in a real CE world.
+- An in-memory, reversible terrain preview that cannot be saved or played.
+- The spherical-trigger radius core ([`TriggerEdit.cs`](../companion/OnslaughtToolkit.Godot/Levels/TriggerEdit.cs)): an
+  undoable command tied to the existing trigger record, with validation and change summaries; its
+  [authored-data fixture](../companion/OnslaughtToolkit.Godot/Tests/LevelTriggerEditTests.cs) passed without invoking the
+  compiler or mod stager. It has no inspector control on main, and a resized trigger has not been staged or played in CE.
 
-These candidate branches are outside main and unreleased. Their full Companion-suite acceptance, human use, real-world
-CE acceptance of these edit kinds and Windows validation remain open. In the installed-level editor, derived-world previews and terrain/snapshot drafts cannot
-be saved or played, project save/open and script-draft restoration remain unwired, and source-preserving CE staging
-remains unfinished. The preview's terrain pairing is unverified.
+**Candidate-only, on branches (not on main):**
 
-A later pushed [editor-only project workflow](https://github.com/dlprentice/Onslaught-Career-Editor/commit/ac54cb070228a2109e9ca64e91e0f2bcd9197b40)
-integrates the inspector with the page and saves and reopens the sampled terrain-preview draft, world snapshot, installed
-source and script drafts, with a fresh undo history. Unapplied radius and coordinate fields must be applied or restored
-before project save/open; terrain edits remain fenced from CE export and play. Focused authored checks and safety pass,
-and full-app offscreen captures were inspected. This candidate is not on main or released; lead full normal-suite
-acceptance remains open.
+- The spherical-trigger radius inspector, commit [2b1527eb](https://github.com/dlprentice/Onslaught-Career-Editor/tree/2b1527eb1bd5bb9cd5457b76fdaf1bff7a88d1e1)
+  (branch `codex/trigger-radius-inspector-20261101`): a control and authored tests, with no Level editor page wiring or
+  normal-runner registration.
+- The editor-only project workflow, commit 33f66dd and later (branch `codex/project-workflow-save-dialog-fix-20261101`): it
+  integrates the inspector with the page and saves and reopens the sampled terrain-preview draft, the world snapshot, installed
+  source and script drafts, with a fresh undo history. Unapplied radius and coordinate fields must be applied or restored
+  before project save/open; terrain edits remain fenced from CE export and play. Focused authored checks and safety pass, and
+  full-app offscreen captures were inspected; full normal-suite acceptance remains open.
+- The source waypoint-rule audit, commit [636e3b10](https://github.com/dlprentice/Onslaught-Career-Editor/commit/636e3b100e1b24d04048fa973e73041d948a9f3f)
+  (branch `codex/mission-waypoint-audit-20261101`): read-only checks of literal waypoint names in the selected script against
+  level and base-world data. Dynamic expressions, includes, macros and runtime behavior remain unchecked. Focused authored checks
+  and safety pass, and wide and compact page captures were inspected. Its normal test registry is unchanged.
 
-A separate pushed [waypoint-rule candidate](https://github.com/dlprentice/Onslaught-Career-Editor/commit/636e3b100e1b24d04048fa973e73041d948a9f3f)
-adds read-only checks of literal waypoint names in the selected script against level and base-world data. Dynamic
-expressions, includes, macros and runtime behavior remain unchecked. Focused authored checks and safety pass, and
-wide and compact page captures were inspected. Its normal test registry is unchanged; it is not integrated or released.
+Full Companion-suite acceptance, human use, real-world CE acceptance of these edit kinds and Windows validation remain open for
+all of them. In the installed-level editor, project save/open and script-draft restoration are not wired on main, and
+source-preserving CE staging remains unfinished. The terrain preview's pairing with the stored world is unverified.
 
 Parts of the Companion the editor can reuse as they are:
 
@@ -159,8 +168,9 @@ base-world edit against an existing career, and any Windows run (mods are refuse
   one change, and a copy put or moved outside the 0 to 512 square gets the same warning as a moved original; Undo takes it back, and the table, the map, the changes box and the unsaved-change count all know it. Adding a unit from nothing is not offered: a copy carries every field the game needs. It also carries the original's script and target: a unit whose script counts deaths or ends the level
   does the same for its copy, and the editor does not know what a script does (the Target Tank copied in the acceptance below has a script; only the first seconds of that play were seen).
 - **Z stays editable and honest.** The inspector shows the stored height, the terrain height under it and the
-  difference, and says plainly what has been observed (a ground unit is placed on the ground in the runs so far; air
-  units, the start point and air-route waypoints use their stored height). No rule is enforced on that evidence.
+  difference, and says plainly what has been observed (a ground unit, the Target Tank, is placed on the ground in the runs so
+  far; for air units, the start point and air-route waypoints the stored height is shown and has not been tested in game). No
+  rule is enforced on that evidence.
 - **Separate mod folders.** The saving path is designed to reject an existing destination or one inside a game folder and leave `ce.ini` unchanged; the page shows the exact `mods=` line to add. A test play (M6) uses a temporary CE folder. One offscreen run left the scratch player's settings, stand-in career and tape unchanged, as recorded in the [mission editor design](companion-mission-editor.md). Enabling a mod in the player's own `ce.ini` from the Companion is a later step through its existing settings writer, with its backups and its game-running check.
 - **No retail bytes enter the repository.** The editor reads the player's own install at run time. Test vectors are
   authored bodies generated by a committed script; retail conformance is a local gate, never tracked.
@@ -201,6 +211,9 @@ reader and the model; the Godot-free host runs these too), `Tests/LevelTerrainTe
 
 ## 6. The screen
 
+The mock below is an older layout. The current page's checkbox is **List only the moved objects**, its status sentence reads
+"1 object moved: NAME (row N), D units", and its toolbar also has **Play this level with the changes**.
+
 ```
 +------------------------------------------------------------------------------------------+
 | Level editor    Level [100  Aquila Prototype v]      Undo  Redo   Show changed   [Save as mod...] |
@@ -229,7 +242,7 @@ Behaviour, in the Companion's plain-words tone:
   axis lands on the hundredth as a drop does (a first press on an off-grid position, 100.123456 minus 0.5, gives 99.62, a step of 0.5035; a press that lands within half a hundredth below zero stores a negative zero, as a drop can).
 - **Moving by dragging.** Left-drag on the selected mark moves X and Y; Esc cancels the drag; one drag is one undo step.
   Z is left as it was unless the player edits it.
-- **Undo, redo, reset.** Every change is a command; "Reset this object" and "Show changed" make a long session
+- **Undo, redo, reset.** Every change is a command; "Reset this object" and "List only the moved objects" make a long session
   reviewable.
 - **Warnings** (never silent, and never blocking unless the saved file would be broken): a position outside the 0 to 512
   square, of a moved object or of a copy (the terrain lookup answers 0 there); a changed base world (careers remember which of a base world's buildings
@@ -255,7 +268,7 @@ A custom `Control` like `CampaignMap`:
 - **Input.** `_GuiInput` handles mouse button, motion and wheel: wheel zooms about the pointer, middle-drag or
   space-drag pans, left-click selects the nearest mark within a pixel radius, left-drag on the selection moves it.
   Pixel and world conversions are one tested pair of functions (X right, Y up, from section 3 item 4).
-- **Cost and limits.** A level stores tens of rows up to a few hundred (the loader's arrays hold 1000); redrawing
+- **Cost and limits.** A level stores tens of rows up to a few hundred (the loader's arrays are reported to hold 1000; no source line is cited here, so that limit is unverified); redrawing
   everything on each motion event is cheap. Dragging only edits the in-memory body; nothing is written until Save as mod.
 - **Feasibility.** Every piece (custom drawing, pointer events, an `ImageTexture` from a byte array, a `SubViewport`)
   is in use elsewhere in the Companion. The one new risk is the drag feel, which is judged by running it (section 9).
@@ -294,16 +307,19 @@ A custom `Control` like `CampaignMap`:
   does change while CE is running is checked again when the level loads and, if it no longer matches what CE checked at
   start-up, the level's own world is read instead and the log says so (the loader's behaviour from the world-file override
   on; it is not something the page relies on).
-- No telemetry, no network. The page reads the installed game's data and says so on first use.
-- Mods are refused on Windows by the CE that supports them first; the page says that rather than staging something
-  that cannot load.
+- No telemetry, no network. The page reads the installed game's data; the Save as mod dialog says "Nothing in your game
+  changes", and there is no first-use notice.
+- Mods do not load on Windows in the current public CE (0.1.13; see the Mods row of the
+  [PROGRAM.md chart](../PROGRAM.md#cross-project-progress-and-priorities)). The page does not yet say so or block saving
+  there; adding that notice is open work.
 
 ## 9. Tests and acceptance
 
 Headless unit tests (the repository's launcher, authored data only):
 
 - `WorldBody` read and write against vectors generated by a committed Python script from the encoder's own authored
-  bodies for every version it handles: reading gives the same fields, writing gives the same bytes.
+  bodies for every version it handles (`tools/level_editor_vectors.py`, which writes
+  `companion/OnslaughtToolkit.Godot/Tests/LevelVectors.g.cs`): reading gives the same fields, writing gives the same bytes.
 - `Heightfield` against the same Python rule on an authored terrain chunk, including the edge cases (tile and sample
   boundaries, the 512 limit, negative and fractional input).
 - `EditSession` commands, undo and redo, validation findings.
@@ -314,14 +330,16 @@ Headless unit tests (the repository's launcher, authored data only):
 - A local conformance gate, not in Git: every retail world body round-trips in C#, and the move that the Toolkit tool
   makes to Target Tank 12 of level 100 gives the same hash from the C# edit.
 
-Looking at it (the standing rule is to judge the artefact, not the checks): a capture of the page offscreen with an
+Looking at it (look at the rendered output, not only the passing tests): a capture of the page offscreen with an
 authored level and one with the retail view, looked at at real size; then the acceptance below in a CE build with the
 world-file override.
 
 **Acceptance of the minimal prototype (milestone M2):** in the Level editor page, select Target Tank 12 of level 100, type
 the coordinates of the Toolkit's acceptance edit (276.49, 265.07, -12.1), press Save as mod, add the line to a scratch `ce.ini`, start CE on level 100, and
 see the tank near the crosshair; the saved mod's world file has the same SHA-256 as the Toolkit pipeline's for that
-edit. **Acceptance of M3:** the same result by dragging the mark, and the numbers shown afterwards match the file. Run on the
+edit. **Acceptance of M3:** the same place by dragging the mark, and the numbers shown afterwards match the file; the drag changes X and Y
+only and keeps Z at the stored -0, so its world file differs from the M2 file (which types Z = -12.1), and only the M3 file's size and
+SHA-256 are recorded below. Run on the
 retail view at 1920 x 1080, 1280 x 800 and 1024 x 700: a click on Target Tank 12's mark selects it, a drag to the pixel of
 276.49, 265.07 moves it with Z kept (its stored -0), the page shows 276.49, 265.07 and -0, and the saved world file (108,502 bytes,
 SHA-256 5f40f82f08e058a39458f9807b710318dbc00dccc0ecbd3d9a2d921ffac6d48a) is the one the Toolkit's move tool previews for the same
@@ -329,7 +347,7 @@ coordinates, its row 12 holding the numbers the page showed. The pointer is push
 engine's own route to the control. The in-game half of M3 is the mirror check (section 3 item 4).
 
 **Acceptance of copying a unit (M5, first increment):** the capture's `copyplay` mode opens level 100, selects Target Tank 12, copies it on the page (the copy is row 45, 10 units to its right), types the copy
-to 276.49, 265.07, -12.1 (the typed acceptance's place straight ahead of the player's start), presses **Play this level with the changes** with the released Onslaught CE 0.1.12 package as the launcher
+to 276.49, 265.07, -12.1 (the typed acceptance's place straight ahead of the player's start), presses **Play this level with the changes** with the 0.1.12 package (the then-current release; no run against 0.1.13 is recorded here) as the launcher
 (offscreen, a scratch CE folder standing for the player's, dummy audio, the key presses by environment; section 17 of the mission editor design) and then saves the edit as a mod. The page's checks, the play's
 checks (CE exit 0, the mod's world file served once, the player's folder, the package folder and the game folder unchanged, the temporary folder gone, the edit still unsaved) and the saved file's checks all
 pass: 108,581 bytes (SHA-256 7dcefc84...), 46 things where the level has 45, the original row where the level has it bit for bit, the last row a copy of row 12 at the typed place, and the same bytes as the mod CE was given.
@@ -352,7 +370,7 @@ piece, not part of the minimum. Effort figures are rough working days for one en
 | M3 map | `Heightfield`, `LevelMap` (relief, marks, select, drag, pan, zoom), coordinate tests | the M3 acceptance; a capture of the map looked at | 4 to 5 | done: on main, reviewed; the acceptance passed at three window sizes and the mirror check passed (section 3 item 4); the drag's feel has been tried only by scripted pointer events |
 | M4 safer editing | warnings panel, "show changed", reset, base-world caution, keyboard nudges | each warning has a test and a message a player can act on | 2 to 3 | done in part: arrow-key nudges on the map (0.5, Shift 5, Ctrl 0.05, one undo step each) and "List only the moved objects"; reset, undo and the warning lines in the changes box were already there; no base-world caution is built because the editor offers no base-world edit; nobody has used them by hand |
 | M5 add, duplicate, delete | append-only add and duplicate with the slot rules; delete only where no path or target names the row | the stager refuses what would break a path or a career index | 4 to 5 | done in part: **Copy this unit** (units only, appended after every row, the validator accepts exactly copies; the C# result equals the Python reference writer's, and CE ran a level with a copy); adding other kinds and deleting are not built |
-| M6 play | "Play this level with the changes": CE started at the level through its launcher in a temporary user folder of its own (a changed copy of the player's ce.ini, their options, the mod), never in the player's own folder; enabling a mod in the player's own ce.ini through the settings writer with its backups is a later, separate step | CE runs the level with the changes, and the player's CE folder, careers and the game's files are untouched | 3 to 4 | done: the button is built (route checks and a mutation sweep) and a capture ran it through the released 0.1.12 launcher offscreen (mission editor design, section 17); the persistent enable toggle is not built; nobody has used it by hand |
+| M6 play | "Play this level with the changes": CE started at the level through its launcher in a temporary user folder of its own (a changed copy of the player's ce.ini, their options, the mod), never in the player's own folder; enabling a mod in the player's own ce.ini through the settings writer with its backups is a later, separate step | CE runs the level with the changes, and the player's CE folder, careers and the game's files are untouched | 3 to 4 | done: the button is built (route checks and a mutation sweep) and a capture ran it through the 0.1.12 launcher, the then-current release, offscreen (mission editor design, section 17; no run against 0.1.13 is recorded here); the persistent enable toggle is not built; nobody has used it by hand |
 
 Dependencies: CE with the world-file override released (0.1.11 is the first, published 2026-10-29); the stager reviewed and on main; the Python
 oracle kept in step with any format change.
@@ -362,7 +380,7 @@ oracle kept in step with any format change.
 | Risk | Check |
 | --- | --- |
 | The C# port reads or writes a field differently | the differential tests and the local all-bodies gate, before any UI exists (M0) |
-| The terrain rule is ported wrongly | the same-input tests against the Python port, and the stored start-point height as a live sanity value; done: generated edge vectors, every installed level's terrain, and an independent port by the reviewer agree |
+| The terrain rule is ported wrongly | the same-input tests against the Python port, and the stored start-point height as a live sanity value; done: generated edge vectors and every installed level's terrain agree with the Python port (`tools/heightfield_lookup.py`), and a review's independent port agreed |
 | What a kind does with its stored height is guessed wrong | edit one object of each kind at several heights and look (the Target Tank is done; features, buildings and air units are not) |
 | The map is mirrored | the marker test in section 3 item 4; done: it is not mirrored (one level, one heading) |
 | Moving a base-world object confuses an old career | a base-world edit against a mid-campaign save, in a scratch user folder, before M4 offers the edit without a caution |
@@ -372,6 +390,11 @@ oracle kept in step with any format change.
 
 ## 12. Not in scope
 
-Terrain and shadow editing (no writer exists for them), a mission-script source editor (designed in [companion-mission-editor.md](companion-mission-editor.md)), new unit or model types,
-model replacement, multiplayer map identity and distribution of mods, and an in-game placement mode on the free camera
-and console (a separate CE-side track that can use the same mod folders).
+Terrain and shadow editing (no writer exists for them), a script editor beyond the Scripts view (see
+[companion-mission-editor.md](companion-mission-editor.md) section 15), new unit or model types and model replacement are not
+part of this Companion prototype. Multiplayer map identity and the distribution of mods are tracked in the Mods and Online
+multiplayer rows of the [PROGRAM.md chart](../PROGRAM.md#cross-project-progress-and-priorities).
+
+**Required in CE, not in this plan:** usable 3D map and mission editors inside native CE are required work ([GOAL.md](../GOAL.md);
+[PROGRAM.md](../PROGRAM.md#order-after-0113), item 9), and an in-game placement mode on the free camera and console is a CE-side
+track that can use the same mod folders.
