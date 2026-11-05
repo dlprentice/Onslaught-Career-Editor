@@ -244,8 +244,10 @@ Behaviour, in the Companion's plain-words tone:
 - **Undo, redo, reset.** Every change is a command; "Reset this object" and "List only the moved objects" make a long session
   reviewable.
 - **Warnings** (never silent, and never blocking unless the saved file would be broken): a position outside the 0 to 512
-  square, of a moved object or of a copy (the terrain lookup answers 0 there); a changed base world (careers remember which of a base world's buildings
-  stand; edit it by appending, not by moving what a career may have destroyed); a value the format cannot hold.
+  square, of a moved object or of a copy (the terrain lookup answers 0 there); a value the format cannot hold. The validator
+  also warns about a changed base world (careers remember which of a base world's buildings stand, so a career may not agree
+  with one whose things were moved) and refuses extra rows in one, but the page never opens a base world, so it shows no such
+  warning (milestone M4 in section 10).
 - **Save as mod.** Defaults: name "Level N edit", an id derived from it (lowercase letters, digits, `-` and `_`, at most
   48), version "1", the player's name as author, the destination `<CE user folder>/mods`. On success the page says
   exactly what was written and shows `mods=<id>` with a Copy button. It refuses a no-change edit, a folder that
