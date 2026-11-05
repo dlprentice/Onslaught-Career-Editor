@@ -1,24 +1,29 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-04 (standalone Companion is current implementation; unified CE migration is required, not delivered)
+Last updated: 2026-11-05 (the 0.2 hold points to GOAL.md; every Companion capability named in the migration; status wording and pre-flatten pointers corrected)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
-in Git and the private RE archive; they are not current operating instructions.
+in Git when they were removed after the public root commit of 2026-10-15, and otherwise in the private historical
+maintainer archive; they are not current operating instructions.
 
 The current standalone Onslaught Companion lets players choose the original game or Onslaught CE. It supports finding
 CE's launcher, protected career writes, two launcher settings and the steps for updating CE (the companion
 contacts nothing; CE checks its own signed feed and installs an update only when the player chooses Update).
 See its [README](companion/OnslaughtToolkit.Godot/README.md) for the contract and platform limits.
 The map/mission authoring capabilities described here currently run in Companion. They are reusable work toward the
-required native CE experience, not completed in-game editors. Continuous 3D RTS Commander and an explorable museum
-through CE's menus also remain incomplete; the map/preview controls and separate gallery/construction test retain
-their narrower evidence. [GOAL.md](GOAL.md) and [PROGRAM.md](PROGRAM.md#order-after-0113) own the new requirements
-and the hold on 0.2 until its agreed player workflows are internally complete and tested.
-The latest product decision also moves Companion's lore, content exploration, career/save editing, backups,
-settings and installation-management workflows into CE, eventually retiring the separate app. The present tools
-and evidence remain until that replacement is verified. This is a migration requirement; no completed in-process
-career editor or unified frontend is claimed here. Integrated career editing still needs verified recovery and
+required native CE experience, not completed in-game editors. Online play, continuous 3D RTS Commander, direct play
+of every eligible unit type with its own controls and HUD, usable in-game map and mission editors, an explorable
+museum and the Companion's migration into CE remain incomplete ([GOAL.md](GOAL.md);
+[PROGRAM.md](PROGRAM.md#order-after-0113)); the map/preview controls and the separate gallery and museum construction
+test ([PROGRAM.md](PROGRAM.md#level-and-mission-tools)) retain their narrower evidence. [GOAL.md](GOAL.md) owns the
+new requirements and the 0.2 release hold (0.2 is not published until David's whole agreed program is complete and he
+gives a further explicit go-ahead; internal checkpoints do not lift it).
+The latest product decision moves every Companion capability (careers, saves and backups, settings, lore, content
+exploration and the catalogue, the editors, installation management) into native CE; the separate Companion stays
+supported until each replacement is verified, then is retired (the
+[migration checklist](PROGRAM.md#native-ce-migration-checklist) is the inventory). This is a migration requirement; no
+completed in-process career editor or unified frontend is claimed here. Integrated career editing still needs verified recovery and
 coordination with CE's loaded profile state, not just removal of the current running-game refusal.
 The byte-matching decompilation is the reverse-engineering authority. Its private function check matches every mapped
 game function with a guarded one-byte correction to a compiled object; without that correction, one function remains
@@ -33,7 +38,7 @@ safe launch are retired and not planned; their code (the AppCore library and the
 
 ## Retail behaviour findings — save, settings and startup
 
-The [current compatibility recheck](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md)
+The [bounded save and settings compatibility contract (comprehensive recheck in progress)](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md)
 executes selected unchanged retail bodies with preserved inputs and explicit
 OS/heap/device boundaries. It establishes startup read versus write filenames,
 campaign reset after settings load, menu-load forwarding to the next startup,
@@ -84,7 +89,7 @@ and [executed checks](VALIDATION.md#original-sample-decode-and-quality-conversio
 A further 25 original caller controls resolve sample reuse, list insertion,
 name truncation and suffix selection. They distinguish a filename-route stub
 from the working buffer loader, correcting the meaning implied by inherited
-names. The four-function metadata correction (private RE archive: `reverse-engineering/ghidra/README.md`)
+names. The four-function metadata correction (private historical maintainer archive)
 is now saved, independently read back and protected by a restored recovery copy on the maintainer's archive storage;
 all types, storage and unrelated functions are unchanged. A sample
 can be inserted after a supplied device-creation failure, so list presence alone
@@ -191,18 +196,17 @@ Linux workflow driven through programmatic production-page actions, not human UI
 complete campaign play or native Windows acceptance. The [October 24 CE 0.1.4 run](VALIDATION.md#companion-with-real-onslaught-ce--october-24)
 remains a separate dated record.
 
-The initial November 4 Linux checkpoint check used the same pinned production pages with the unreleased CE 0.1.99 package.
+The November 4 0.1.99 r1 Linux checkpoint check used the same pinned production pages with the unreleased r1 CE package.
 Discovery read its actual launcher version; copied-career backup/edit/restore and the two supported settings controls
 passed. Fresh Home/version, settings and restored-backup images, plus authored 3D project/map-link/source views,
 were inspected. Both capture processes exited normally and the pinned source/runtime inputs read back unchanged.
 The retained checkpoint acceptance receipt has SHA-256
 `2f267eb8df39c78028729fddeaf468307c1f74d56464229dfabb3f7fc25ff367`.
 This adds bounded automated workflow and image acceptance, not human input, audible output, an update hand-off or
-native Windows acceptance. This first local snapshot remains preserved; neither it nor the separate 0.1.99 refresh
-is a public release. The earlier CE 0.1.13 career-load result remains the dated acceptance described above.
+native Windows acceptance. r1 remains preserved; neither r1 nor r2 is a public release. The earlier CE 0.1.13 career-load result remains the dated acceptance described above.
 
-The refreshed November 4 Companion stage uses the accepted installed-model editor source described below and the
-newer unreleased CE 0.1.99 package. Fresh scripted production-page checks passed actual launcher-version discovery,
+The November 4 0.1.99 r2 Companion stage uses the accepted installed-model editor source described below and the
+newer unreleased r2 CE package. Fresh scripted production-page checks passed actual launcher-version discovery,
 copied-career backup/edit/restore, settings writes and refusal to overwrite a changed settings snapshot. The process
 exited normally; package and preserved baseline read back unchanged. Home/version, settings, restored-career and
 static installed-model images were inspected. The retained combined receipt has SHA-256
@@ -219,10 +223,12 @@ responses. [Native Windows checks](companion/OnslaughtToolkit.NativeChecks/READM
 process detection, protected career/settings writes and actual-game running refusals. CE also loads the edited
 Unicode career and writes exactly its bytes as options. A separate [native Windows development UI workflow](VALIDATION.md#companion-native-windows-development-ui--october-25)
 exercised selected production-page actions and its screenshots were inspected; ordinary release invocation,
-physical input, file dialogs, hardware rendering and broader UI acceptance remain open. Version
-queries still intermittently time out while Windows opens SDL3.dll during loader startup. Separate native
-launcher checks reproduced CE 0.1.4 sending redirected output to an attached console; Onslaught CE 0.1.5
-publishes that correction, which does not resolve the distinct startup wait. See the
+physical input, file dialogs, hardware rendering and broader UI acceptance remain open. Earlier
+standalone version queries intermittently hit their five-second deadline while Windows opened SDL3.dll during loader
+startup, even with the launcher output correction; the selected `9ed8c56e81d3` launcher passed its production version
+query in the October 25 development gate, which does not resolve that wait for other builds or invocations. Separate
+native launcher checks reproduced CE 0.1.4 sending redirected output to an attached console; Onslaught CE 0.1.5
+publishes that correction. See the
 [companion README](companion/OnslaughtToolkit.Godot/README.md#which-game-it-works-with).
 
 Its sidebar:
@@ -245,8 +251,8 @@ Its sidebar:
   Backups offers automatic backups when the companion opens and after the game closes, only
   when something changed; Back up now; and every set, with Put back for each file.
 - **Extras**: Music & voices plays the soundtrack and voice lines from the install with
-  the game's transcripts (Bink cutscenes are listed only); Lore reads the repository's lore
-  offline with search, the map of Allium from the player's manual and the manual itself;
+  the game's transcripts (Bink cutscenes are listed only); Lore reads the lore library built into the companion,
+  offline, with search, the map of Allium from the player's manual and the manual itself;
   Art & sound lists the install's models, textures and bank sound effects, previews them and
   saves copies (models as glTF, textures as PNG, sounds as WAV). The Level editor shows placed objects and a map,
   lets the player move objects (by typing, dragging on the map or the arrow keys, with undo and a list of only the moved ones), copy a unit (appended after every row so existing row, path and target indices do not shift; the copy retains its script and target; only units, only as copies, undoable) and save the changed world as a new CE mod, and shows mission scripts. For a script of the
@@ -254,7 +260,7 @@ Its sidebar:
   with a warning when an edit adds calls to `Damage`); Save as mod then writes the world file with the replaced script, and a Play button starts Onslaught CE (Linux, CE 0.1.11 or later) at the open level
   with the changes as they are, in a temporary CE folder of its own. One offscreen run through the released 0.1.12 launcher left the scratch player's CE folder, settings, stand-in career and tape unchanged (section 17 of the mission editor design). The page is
   covered by event-driven tests and offscreen captures on Linux, and one edit of one script (a tutorial message of level 100) was staged by
-  it and run in CE on Linux, offscreen and live, with the edited subtitle on screen beside control runs (the [mission editor design](roadmap/companion-mission-editor.md)'s
+  it and run in CE on Linux, offscreen and on the real clock (not replayed), with the edited subtitle on screen beside control runs (the [mission editor design](roadmap/companion-mission-editor.md)'s
   section 16, which also says what that does not show); one copy of one Target Tank of level 100 was staged by it and run in CE on Linux, offscreen, through the Play button, and a second tank stood at the crosshair
   (the [level editor plan](roadmap/companion-level-editor.md)'s M5 acceptance). Two moved Target Tanks were also run in CE on level 100. Nobody has used the page or its Play button by hand; beyond those moves, the copy and the script edit, no other kind of edit has been run (nothing is added from nothing and nothing is deleted). The mod holds the world file only (the
   edited source is not kept beside it), and there has been no native Windows run. The documented CE world-mod loader is Linux-only. See the [level editor description](companion/OnslaughtToolkit.Godot/README.md#what-it-does),
@@ -293,8 +299,8 @@ Its sidebar:
   tables refuse that geometry instead
   of selecting an unrelated model. Move, Undo/Redo and Save/Open retain the project and source identities. Authored
   reader and scene checks and independent review cover those paths; textures, animation, complete-scene rendering,
-  human input and native Windows remain unverified. This source was added after the initial 0.1.99 Companion stage
-  and is included in the refreshed stage, whose fresh installed-model images were also inspected; the initial stage
+  human input and native Windows remain unverified. This source was added after the 0.1.99 r1 Companion stage
+  and is included in the r2 stage, whose fresh installed-model images were also inspected; the r1 stage
   remains preserved.
   A separate 2026-11-03 controlled run and independent review exercised the production
   [Save as path](https://github.com/dlprentice/Onslaught-Career-Editor/blob/443b2b3d921775767a87404d9c6842fc1b275294/companion/OnslaughtToolkit.Godot/Ui/Pages/CeMissionProjectPage.cs)
@@ -306,11 +312,11 @@ Its sidebar:
   unchanged. Deliberately broken writer and coordinate-reader variants were refused by the check. The controlled
   career-write case left the protected save unchanged; it does not establish every save path. The retained independent
   review receipt has SHA-256 `9b9871ca08f689f63c2e8a1aa0c678a0ba36f13a0c7671f0027bbd68abcb6525`.
-  On November 4, the initial unreleased 0.1.99 Linux package, built with networking enabled, also loaded one of those
+  On November 4, the unreleased 0.1.99 r1 Linux package, built with networking enabled, also loaded one of those
   page-saved level-221 projects locally. Its placement log entry and gameplay image were inspected; no network session
   was active. The retained exact-package smoke receipt has SHA-256
   `e4a7f4daf13dd8e442f52a894452870880aeeb45ea4a50d2ea2614b279070e81`.
-  The refreshed November 4 package also loaded the saved project locally, rendered gameplay and exited cleanly;
+  The November 4 0.1.99 r2 package also loaded the saved project locally, rendered gameplay and exited cleanly;
   the project and package read back unchanged. Its gameplay frame was inspected. The retained smoke receipt has
   SHA-256 `f03720cef8d15f9e09f7d75661beaabccd4fb08d2d87e07cfb4ea76ebe2c1370`.
   This is page-to-runtime evidence for an existing-object placement in CE development source. No publicly released CE
@@ -345,7 +351,8 @@ verified backups described above. Nothing is written while it finds
 `BEA.exe` or Onslaught CE running, checked before the backup and again just before the swap (on
 Linux, the `BEA.exe` rule was seen on 2026-09-26 to find the Steam game's own process under
 Proton and nothing else; the CE rule was seen on 2026-10-22 to find a running Onslaught CE 0.1
-on Linux, recorded in the ignored `local-data/companion/evidence/ce-running-check-2026-10-22.log`,
+on Linux, recorded in the ignored `local-data/companion/evidence/ce-running-check-2026-10-22.log` (a private run, not reproducible
+from this repository),
 and the native Windows backend checks on 2026-10-24 also refused writes while the selected CE game
 process was running; general Windows Godot UI acceptance remains pending); a
 file the game saved since it was opened is not replaced; the new file is swapped in (on Linux
@@ -356,7 +363,7 @@ after a confirmation naming both games and folders; new manifests record the gam
 that information are identified as unknown. Switching careers or closing with unsaved changes asks first. When the
 game closes, or the player comes back to the companion, it reads what the game saved and shows the latest, keeping any
 unsaved changes; while changes are unsaved, a bar under the page keeps Save in reach. Every label style outside the banner measures at least 4.5:1 against the
-surfaces it sits on.
+surfaces it sits on ([ThemeTests](companion/OnslaughtToolkit.Godot/Tests/ThemeTests.cs); the banner's Hero labels, which sit on the game's art under a shade, are not measured).
 
 The in-process [ProtectedSaveFiles](companion/OnslaughtToolkit.Godot/Files/ProtectedSaveFiles.cs)
 adapter uses the companion's own `SaveLabFileTransaction` and `FileMutationSafety` (moved from the retired
@@ -372,7 +379,7 @@ after a file is in place is reported as a possible change and the file is left a
 injection in the tests, not on a real drive lacking the exchange. Backups cover the careers and settings file the
 companion can read; other files are skipped and counted.
 
-**Evidence:** the lane's commit messages from 2026-09-26 record each check: `npm test`
+**Checks:** the commit messages of 2026-09-26 and the [September 26 validation section](VALIDATION.md#companion-approved-workflows--september-26) record each check: `npm test`
 (one C# contract suite inside headless Godot, including the portable write path run on
 Linux, and the development runner's own cases), renders of every screen at 1280×800 and 1920×1080
 reviewed first-hand, the problems that review found fixed, covered by tests, re-rendered and
@@ -385,7 +392,7 @@ synthetic models, textures, a sound bank and Goodie archives; no dated receipt f
 recorded here. **Ordinary Windows release UI acceptance, a human click-through and listening to the audio remain pending.**
 The selected Windows development UI workflow and native backend and CE career-load checks described above are narrower executed evidence.
 The companion does not patch
-`BEA.exe` and that is not planned; mission, rank and link edits are not offered; no legacy
+`BEA.exe` and that is not planned; career mission, rank and route-link edits are not offered (the Level editor edits mission scripts, described above); no legacy
 feature parity or retail gameplay acceptance is implied.
 
 The [content and model/transform catalogue tools](tools/README.md) cover the families their current readers support.
@@ -420,7 +427,8 @@ observation. A second install, Windows and an HD conversion are not covered; the
 
 The Windows-only WinUI 3 shell, its UI tests, the maintainer CLI and the portable ZIP
 packaging were removed on 2026-10-15; the Godot companion replaced them. Their source,
-demonstrated features and receipts remain in Git history.
+demonstrated features and receipts remain only in the private pre-flatten history (before the public root commit of
+2026-10-15).
 
 The WinUI app's core library, AppCore (executable patch plans, guarded application, copied-install
 "safe launch" profiles and their save and options services), and the `patches/` catalog it read
@@ -443,10 +451,12 @@ test) and have not run on Windows; nobody has looked at the panel on screen.
 its numerical model and portability are not claimed exact beyond those checks. Test success does not establish
 audible audio, visual equality, physical input, whole-game parity or a completed tutorial.
 
-**History: the earlier fixed-point rebuild.** On 2026-10-15 David first parked this fixed-point rebuild in favour of a
-native source port, then restarted the lane around the parity core above. What follows is the fixed-point rebuild's
-demonstrated state at the old tag archive/godot-rebuild-20260926 (now in the private RE archive); it is reference,
-not active work.
+### History: the earlier fixed-point rebuild (reference only)
+
+On 2026-10-15 David first parked this fixed-point rebuild in favour of a native source port, then restarted the lane
+around the parity core above. What follows is the fixed-point rebuild's demonstrated state at the old tag
+archive/godot-rebuild-20260926 (now in the private historical maintainer archive); it is reference, not active work,
+and the `local-data/` receipts it cites are private runs, not reproducible from this repository.
 
 [`rebuild/`](rebuild/README.md) is a GPL-3.0-only (as a whole), source- and RE-informed
 reconstruction lane. `OnslaughtRebuild.Core` owns fixed-step simulation,
@@ -483,10 +493,10 @@ and Windows.
 **September 25 return to all-code C#.** The rebuild is C# only and built in
 code again (David's direction), on the exact `4.8.dev6.mono.official.8898c2b3d`
 engine and `Godot.NET.Sdk/4.8.0-dev.6` with `net8.0`. Its code is the last
-all-code C# rebuild (`b0b9c5e7`, September 19) with the pause menu's tree built
+all-code C# rebuild (a pre-flatten commit of September 19) with the pause menu's tree built
 in code and the later evidenced fixes: strict AYA texture admission, refusals
 of two impossible inputs and the smoke-validator pin. The September 19–25
-GDScript and editor-scene work is retired; Git keeps it. The restored build
+GDScript and editor-scene work is retired; it remains only in the private pre-flatten history. The restored build
 records the identical smoke tape (`89ca7b4b…`), the C# headless replayer
 reproduces its trace and final state (`a4e6673b…`, `53c1cc64…`) and the first
 flight fingerprint, and an offscreen Movie Maker capture of startup, menus and
@@ -524,7 +534,7 @@ retail comparison or performance benchmark. Logs and raw recordings are in
 audio-exit correction below. The labelled 50-second preview is
 `onslaught-progress-2026-09-08-final.mp4` in that
 directory; `first-flight-full-20hz.mp4` retains the full smoke recording. Both
-show the production source at `5fc65256`; the preview uses edited excerpts.
+show the production source at a pre-flatten commit; the preview uses edited excerpts.
 
 **Audio shutdown.** The Godot host now stops producers and streams before quitting,
 then lets the mixer release outstanding playback objects. One shared weak-reference
@@ -584,7 +594,7 @@ missing-boundary note. The internal-function inventory is available, but the
 wider semantic audit is incomplete; the controller's decompiler stack artifact and
 named-but-untyped script callbacks remain explicit next work. See the
 [execution receipts](VALIDATION.md#linux-execution-of-the-remote-checkpoint--september-12)
-and Ghidra owner (private RE archive: `reverse-engineering/ghidra/README.md`).
+and Ghidra owner (private historical maintainer archive).
 
 The bounded nonballistic Unit weapon selector now has original-code execution
 evidence and passing Core cases, including a distance example that detects
@@ -652,7 +662,7 @@ comments now record its caller correctly and the shipped AABB-distance quirk,
 with separate full readback and verified PRE/POST recovery. Four further
 labels/comments/tag sets now assign segment-controller helpers and their motion
 bridges to the correct owner, removing the disproved UnitAI classification;
-the checkpoint/working owner (private RE archive: `reverse-engineering/ghidra/README.md`) records the
+the checkpoint/working owner (private historical maintainer archive) records the
 exact scope. The rebuild's New Career field now carries the measured fresh-text,
 cursor, character, width and unique-name rules. Its software keyboard and caret
 geometry remain incomplete. Held Vulcan input now reaches Fire; Pulse release
@@ -708,7 +718,7 @@ re-launched this pass.
 training Won).**
 `Capture-Frontend.ps1 -Plan gameplay -Purpose production
 -RetailOffsetManifest …/level100-gameplay/manifest.json` drove the whole
-scripted traversal on `75ecbd2e` with a clean Godot source tree: click-to-start
+scripted traversal on a pre-flatten commit with a clean Godot source tree: click-to-start
 → FEP_MAIN New Game → CHOOSE GAME NAME → level select → mission briefing →
 select configuration → Loading → Gameplay, then held Level 100 for 42 s.
 **92** shots at retail's realised level offsets, **0** screen mismatches, **0**
@@ -921,11 +931,12 @@ presentation-grounded. The observed route did not exercise a steep-slope flag,
 body tilt, or nonzero vertical velocity, so those behaviors remain outside the
 demonstrated slice.
 
-**Visual parity remains unproven.** The current configured frontend measurements
-belong to `rebuild/tools/frontend-parity-plan.json`, whose provenance names July 31
-and commit `fc07fef6`; reading that configuration is not a fresh runtime comparison.
-The earlier July 27 gameplay/frontend scores and correction history remain in Git
-and their dated capture records. They must not be presented as today's measured gap.
+**Visual parity remains unproven.** The frontend measurements configured in
+`rebuild/tools/frontend-parity-plan.json` were last measured on 2026-07-31 (its provenance names a pre-flatten commit)
+and have not been re-measured; reading that configuration is not a fresh runtime comparison, and
+[onslaught-godot's parity record](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md) owns the
+current rebuild measurements. The earlier July 27 gameplay/frontend scores and correction history remain in the
+private pre-flatten history and their dated capture records. They must not be presented as today's measured gap.
 
 `tools/score_frontend_capture.py` derives each regression ceiling as
 `min(measured + marginPp, 100)` and evaluates the worst sample. The selected plan's
@@ -968,7 +979,7 @@ actor scripts keep the spawn-registration and clock hooks; the pending Hangar
 spawn regression first failed without those hooks, then passed with them.
 Aircraft event arithmetic and its mode are retained in schema 47.
 
-Cold combat wins. The cold-start route clears the firing range, flies and
+Cold combat wins. In the synthetic in-process harness (not player acceptance), the cold-start route clears the firing range, flies and
 lands all three flight legs, destroys the Target Trucks, Moving Targets and the
 first airborne wave with the weapons in the order the script hands them over,
 and ends the final wave on one of its two released branches, six kills or the
@@ -993,12 +1004,10 @@ following these controller changes. Exact bot endpoint values are sensitive to
 input and mechanics. Current claims come from their owning focused tests, not
 from old trajectories copied into this page.
 
-The current source tree and release packages do not include retail game assets
-or their conversions, other than two registered screenshots used for the app's
-own Home and About surfaces — pictures of the game running rather than files
-copied out of it. They are listed in
-[`reverse-engineering/project-meta/attribution.md`](reverse-engineering/project-meta/attribution.md)
-and the allowance is stated in [`AGENTS.md`](AGENTS.md).
+The current source tree and release packages include no retail game assets or their conversions, and no picture of
+the game is tracked (the register in
+[`reverse-engineering/project-meta/attribution.md`](reverse-engineering/project-meta/attribution.md) is empty;
+[`AGENTS.md`](AGENTS.md) states the allowance for a future registered set).
 The rebuild materializes the exact currently consumed slice
 from a user-provided supported retail installation into ignored local paths.
 The remaining asset gap is technical integration and format fidelity.
