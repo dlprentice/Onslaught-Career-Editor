@@ -1,10 +1,11 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-11-04 (individual imposter identities and view metadata; content inventory, metadata and media coverage; independent checks distinguished from run-consistency checks; historical results retain their dates)
+Last updated: 2026-11-05 (the museum stage tool and the toolchain manifest are named; command lines and cross-references corrected; earlier: individual imposter identities and view metadata; content inventory, metadata and media coverage; independent checks distinguished from run-consistency checks; historical results retain their dates)
 Summary: what each tool in `tools/` is for, and which of them are gates.
 
-`tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
+`tools/` supports the companion, the game documentation and the Godot rebuild developed in onslaught-godot (this repository
+keeps a frozen copy in `rebuild/`) through guarded extraction,
 format inspection, capture analysis and focused checks. The Ghidra scripts, cohort specs, campaign/authority tools
 and the Windows TTD/cdb/PowerShell runtime-probe lab moved on 2026-10-15 to the private historical maintainer archive; the WinUI packaging tools were removed.
 
@@ -16,9 +17,11 @@ npm run test:docs
 npm run test:safety
 ```
 
-`npm test` runs the Companion's contract and tooling checks without opening a window after public toolchain setup.
+`npm test` runs the Companion's contract and tooling checks without opening a window after `npm run setup:companion`
+(`python tools/companion_toolchain.py setup`).
 See the [Companion build guide](../companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export).
-`companion_toolchain.py` installs and verifies the pinned official development tools locally;
+`companion_toolchain.py setup` installs and `companion_toolchain.py verify` verifies the pinned official development tools locally
+(the pins are in `companion_toolchain.json`);
 `companion_godot.py` stages, builds and tests the application using that installation.
 Current root commands and reusable examples use `python` and forward-slash paths. The Companion development
 runner targets Linux, including WSL2; other tools state their own platform limits. Dated receipts and historical evidence may
@@ -26,8 +29,8 @@ retain the literal Windows commands and drive letters that produced them; a
 tool can also have an explicitly documented Windows evidence dependency.
 
 `npm run test:tools` runs every registered suite; prefer an affected suite for a focused change. A suite that
-cannot run here (one that needs a Windows host, none registered now, or the extractor source audit when a submodule it
-compares with its pin is not initialised) is a named SKIP in the summary, never a pass and never a failure. The runner's
+cannot run here (one that needs a Windows host, as listed in `WINDOWS_ONLY` in `tools/run_tool_tests.py`, or the extractor
+source audit when a submodule it compares with its pin is not initialised) is a named SKIP in the summary, never a pass and never a failure. The runner's
 self-test fails for any `*_tests.py` file that is neither registered nor listed with a reason as run elsewhere or out of scope.
 
 ## Python prerequisites
@@ -53,13 +56,14 @@ change that needs no retail data. For example, `python tools/content_catalog_tes
 - `godot_host.py` supplies installed-engine discovery, locked bundled-SDK restore/build and owned-process cleanup;
   `companion_godot.py` builds and runs the companion through the verified public setup; an explicitly selected
   shared installation remains an optional maintainer route.
-- `rebuild/` is a frozen reference. Some current format tools import its `cmsh_static_preview.py` parser;
-  `test:tools` retains that parser's tests and `materialize_retail_assets_tests.py`. `test:godot-host` also checks
+- `rebuild/` is a frozen reference. Some current format tools import its `rebuild/tools/cmsh_static_preview.py` parser;
+  `test:tools` retains that parser's tests and `rebuild/tools/materialize_retail_assets_tests.py`. `test:godot-host` also checks
   the retained `first_flight.py` launcher with fake tools. These are support-code checks, not builds or parity
   acceptance of the frozen rebuild application. Current rebuild setup, runtime commands and gates belong to
   [onslaught-godot](https://github.com/dlprentice/onslaught-godot).
-Use [`VALIDATION.md`](../VALIDATION.md) to select checks. These tools do not
-publish, sign, or install anything by themselves.
+Use [`VALIDATION.md`](../VALIDATION.md) to select checks. Only the setup step (`npm run setup:companion`, which runs
+`companion_toolchain.py setup`) installs anything, into the ignored `local-data/toolchains/companion`; nothing here
+publishes or signs.
 
 ## Documentation integrity
 
@@ -96,7 +100,8 @@ publish, sign, or install anything by themselves.
 
 ## Content catalogue
 
-[`content_catalog.py`](content_catalog.py) builds a local content inventory from a selected game installation.
+[`content_catalog.py`](content_catalog.py) builds a local content catalogue (records and joins, not byte accounting; see
+[Content inventory](#content-inventory) below) from a selected game installation.
 Its [authored tests](content_catalog_tests.py) require no retail files; `jsonschema` enables the schema assertions.
 The generator and separate read-only retail gate need your own lawfully obtained game:
 
@@ -181,7 +186,7 @@ No loader reads the sources, so each is held to its own grammar to its end. A mi
 assisted: an `#include` the install lacks is read as empty and the names it would define come from the shipped
 constants) or, when no level ships it, when it compiles with every include present; a stale source (it compiles to a
 known older revision), one that compiles only with a missing include read as empty and one that does not compile stay
-referenced, and a shipped copy it does not reproduce is a problem even beside one it does. When the judge cannot read a
+referenced, and a shipped copy it does not reproduce is a problem even beside one it does. When the mission-script judge (`msl_gate.py`) cannot read a
 level archive's worlds, which scripts that archive ships, and for which level folders, is unknown: no source in a level
 folder is then judged, each is referenced with a problem, and the gate fails. Mission
 text counts when every line is an `[ID]` line with its quoted string on the next, a `;` comment or blank; a symbol
@@ -269,14 +274,18 @@ The Companion's [level and mission editor owners](../PROJECT-INDEX.md#level-and-
 
 - `world_resources_decode.py` and `world_resources_encode.py` for world formats, `world_edit_move.py` for coordinates
   and moves, `world_mod_stage.py` for separate mod folders, and `heightfield_lookup.py` for terrain lookup.
+- `ce_museum_stage.py` turns an authored exhibition description into two loose-world overrides in a CE mod folder, with
+  authored cases in `ce_museum_stage_tests.py`; the project description and its evidence limits are in
+  [docs/ce-museum-project.md](../docs/ce-museum-project.md).
 - `msl_compile.py` for mission-source compilation, with authored cases in `msl_compile_tests.py`.
 - `level_editor_vectors.py`, `msl_vectors.py` and `script_tables.py` generate the committed C# vectors and tables.
   Their `--check` mode compares generated content with the tracked file without rewriting it.
 
 These authored checks are separate from retail comparisons: `level_editor_vectors.py gate-table` feeds
-`Development/LevelsGate.cs`, and `msl_gate.py --table` feeds `Development/ScriptsGate.cs`. Those comparisons need
+`companion/OnslaughtToolkit.Godot/Development/LevelsGate.cs`, and `msl_gate.py --table` feeds
+`companion/OnslaughtToolkit.Godot/Development/ScriptsGate.cs`. Those comparisons need
 selected retail inputs and the Companion's shared-toolchain runtime; their detailed commands and limitations are
-documented below and in the development entry headers. Keep retail-derived tables in ignored local output.
+documented below and in the header comments of those two files. Keep retail-derived tables in ignored local output.
 
 ## Assets and formats
 
@@ -444,7 +453,7 @@ documented below and in the development entry headers. Keep retail-derived table
   member is limited to 1 MiB, matching the PC writer and default read buffer. These total limits are tool resource
   ceilings, not established maxima for the game format. Encoding checks binary layout but is not a mission, placement
   or gameplay safety validator.
-  `stage --as-mod --out PARENT --id ID --name TEXT [--world MODEL.json] [--base-world MODEL.json]` is the one command that
+  `stage --game DIR --level N --as-mod --out PARENT --id ID --name TEXT [--world MODEL.json] [--base-world MODEL.json]` is the one command that
   writes files. It packages the edited world(s) as a CE mod folder `PARENT/ID` (`mod.json` plus `data/worlds/worldNNN.wrd`,
   the one kind of file a CE mod may add) through `world_mod_stage.py`, held to the loader's own limits (the id, the text
   lengths, the version format, at most 4 MiB per world file), so CE loads it with no hand editing. It is the step after
@@ -456,10 +465,13 @@ documented below and in the development entry headers. Keep retail-derived table
   without replacing anything, the world files first and `mod.json` last, and the helper detects replacement rather than
   locking, so a folder moved by another process during the run is not guaranteed to stay outside the game folder (the
   limit every writer through that helper has). It does not validate placement, slots, scripts or saves, and it needs a CE
-  build whose Mods section lists world files. CE loads mods on Linux only for now: Windows refuses them, and mods
+  build whose Mods section lists world files. Normal Windows builds refuse world mods (current platform status is in the Mods
+  row of the [PROGRAM.md chart](../PROGRAM.md#cross-project-progress-and-priorities)), and mods
   are off in replays, recordings, probes, virtual clocks, pilots and network sessions, so a staged mod cannot change
   any of those runs. `world_mod_stage_tests.py` checks the staged folder against an independent
   restatement of the loader's start-up rules on authored data only.
+  Choose `world_edit_move.py` for one moved thing (its `--emit-model` output pins the identities that `stage --as-mod` takes)
+  and `world_edit_preview.py` for any other edited model (read-only review).
   `world_edit_preview.py BASELINE.wrd EDITED.json` is a read-only step before encoding or preparing a stage bundle. It reports input
   hashes, byte and field changes, changes to opaque groups and slot-sensitive structures, and bounded compiled-script
   inspection findings. It also identifies model fields the encoder would silently omit. An omitted field, truncated
@@ -528,8 +540,8 @@ documented below and in the development entry headers. Keep retail-derived table
   preserves stored scalar fields and reports separately the effective values after initialization and the loader's
   version-specific defaults or overwrites. A catalogue configuration's `values` and `stores` are effective; when
   defaults occur, `storedValues` and `storedStores` preserve the stored values (null means absent or non-finite for
-  stored scalars, absent for stores). Existing catalogue v1 outputs for versions before 8 can contain incorrect
-  effective values and should be regenerated. It also reads
+  stored scalars, absent for stores). Catalogue v1 outputs built from configuration records of a version before 8 can contain
+  incorrect effective values and should be regenerated. It also reads
   `data/sounds/sounds.sfx` as `CEffect::LoadSFXFile` reads its lines (`CDXMemBuffer::ReadString` and `CEffect::ReadLine`:
   `#` lines skipped, a CR in the penultimate byte replaced even without a LF, each line's last character stripped; a later effect of an earlier one's
   name, by `stricmp`, joins that effect's chain, of which `PlayEffect` plays one at random). It refuses what the loaders
@@ -547,8 +559,8 @@ documented below and in the development entry headers. Keep retail-derived table
   bodies decode with the loader's slots, that every registry
   entry is a slotted record of a class that names itself, under its own name, with the base world's first and every
   base-world slot inside the career's bits, that no unit takes a slot with nothing made for it, and that `find` and
-  `find_by_walk` agree on every literal thing name of every script, and every cutscene's link-to name, with every, no
-  and every other base-world thing kept. Over every resource archive it decodes every payload a PC loader decodes
+  `find_by_walk` agree on every literal thing name of every script, and every cutscene's link-to name, under three career keep
+  patterns: every base-world thing kept, none kept, and only every other base slot kept. Over every resource archive it decodes every payload a PC loader decodes
   (`ERES`, `SURF`, `SSHD`, `VSDS`, `PMIB`, `DMKR`) and checks that each consumes exactly its chunk and that every patch
   strip stays inside its patch. It decodes the configurations and `sounds.sfx` and counts what they name that the
   install lacks, and the levels whose world header lists other configurations than `worldheaders.dat`. It reads the
@@ -582,17 +594,20 @@ documented below and in the development entry headers. Keep retail-derived table
   `python tools/level_editor_vectors.py --check` fails when the committed file is not what `--write` writes; it compares
   what each compressed blob inflates to, so it does not depend on the zlib that compressed it.
   `level_editor_vectors_tests.py` adds the reference's own round trips and the refusal of every proper prefix of a body.
-  `gate-table --game GAME --stdout` lists the size, SHA-256 and dump hash of each world body of an installed game, for
-  each level archive a SCRIPTS row (how many scripts its own world and its base world hold, a hash of the lines the Level editor's script
-  catalog reads from them, how many of their sources the finder reads and a hash of those sources' text), a NAMES row (every quoted text of
-  the level's own sources, found outside comments and resolved against the level's objects and its base world's, its paths, scripts and event handlers, hashed;
-  the nonempty first argument of a `FollowWaypoint` or `FollowWaypointWait` call uses the first matching base or level path under the modeled C-locale byte comparison: ASCII case-insensitive, other bytes exact, NUL-terminated; other locales and native Windows remain unverified), a PATHS row (each waypoint
-  path of the level's own world with the rows of the points the game keeps, the slots that name a waypoint, hashed, and how many points are kept of how many slots)
-  and for
-  each level archive with a terrain the digest of its samples, the bits of its scale and water level, and a digest of the
-  heights `heightfield_lookup.py` gives on a fixed grid and at every thing's position (hashes only) for the Companion's local
-  retail gate, `Development/LevelsGate.cs`, whose header gives its command; the table is derived from a game, so keep it
-  private.
+  `python tools/level_editor_vectors.py gate-table --game GAME --stdout` lists the size, SHA-256 and dump hash of each world body of an
+  installed game, then these rows for each level archive:
+  - a SCRIPTS row (how many scripts its own world and its base world hold, a hash of the lines the Level editor's script
+    catalog reads from them, how many of their sources the finder reads and a hash of those sources' text);
+  - a NAMES row (every quoted text of the level's own sources, found outside comments and resolved against the level's objects and its base world's, its paths,
+    scripts and event handlers, hashed; the nonempty first argument of a `FollowWaypoint` or `FollowWaypointWait` call uses the first matching base or level
+    path under the modeled C-locale byte comparison: ASCII case-insensitive, other bytes exact, NUL-terminated; other locales and native Windows remain unverified);
+  - a PATHS row (each waypoint path of the level's own world with the rows of the points the game keeps, the slots that name a waypoint, hashed, and how many
+    points are kept of how many slots);
+  - for each level archive with a terrain, the digest of its samples, the bits of its scale and water level, and a digest of the heights
+    `heightfield_lookup.py` gives on a fixed grid and at every thing's position (hashes only).
+
+  The table feeds the Companion's local retail gate, `companion/OnslaughtToolkit.Godot/Development/LevelsGate.cs`, whose header gives its command; the table
+  is derived from a game, so keep it private.
 - `msl_compile.py` compiles a mission script source (`.msl`) to the record a level's world file ships for it. The game never reads
   `.msl` files: it runs the compiled scripts inside each world body (`CWorld::LoadScripts`, `0x0050ac70`, and
   `CMissionScriptObjectCode`'s file constructor, `0x00538ec0`), so the sources are the original compiler's input and the
@@ -648,9 +663,9 @@ documented below and in the development entry headers. Keep retail-derived table
   asset catalogue's exact-content mesh variants contain payload-relative
   metadata; selected source paths and occurrence identities stay on occurrence
   rows rather than changing the shared variant. All four publish with its moved-destination limit (see `safe_generated_output.py` above).
-- `level_asset_xref.py --archive LEVEL_res_PC.aya [--mesh m_NAME.msh.aya ...] --stdout`
+- `level_asset_xref.py --archive LEVEL_res_PC.aya [--mesh m_NAME.msh.aya]... --stdout`
   reports metadata from one selected PC archive and up to 16 selected loose
-  meshes. It retains each top-level `MESH` and `TEXT` occurrence and lists
+  meshes (repeat `--mesh` for each). It retains each top-level `MESH` and `TEXT` occurrence and lists
   same-archive `TEXT` candidates for each selected root mesh's stored `TEXB`
   names, qualified by the stored requested format and mip-level fields. The
   archive-to-selected-mesh association is by ASCII case-insensitive filename
