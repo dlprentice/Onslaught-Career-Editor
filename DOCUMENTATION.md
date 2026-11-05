@@ -1,7 +1,7 @@
 # Documentation standard — five fields, derived from what this repository already does, and mechanically enforced
 
 Status: active — the header contract for tracked documentation
-Last updated: 2026-10-31 (the header date means the last substantive change; mechanical edits do not bump it)
+Last updated: 2026-11-05 (the specimen rule names the pristine specimen and the patched lab copy; the header date means the last substantive change; mechanical edits do not bump it)
 Summary: every tracked document declares whether it is live, how old its claim
 is, and what it settles; a finding additionally declares whether its evidence is
 MEASURED, SOURCE, INFERRED or UNKNOWN, and names its specimen when it quotes
@@ -80,17 +80,18 @@ two different jobs:
 - **`Verdict:`** when the document makes a claim about the game. Put it first,
   in a blockquote, and make the **title a claim rather than a topic**. This is
   the strongest pattern in the repository and the one that lets a reader stop
-  after ten lines. `binary-analysis/terrain-third-light-2026-07-26.md`:
+  after ten lines. `reverse-engineering/binary-analysis/terrain-third-light-2026-07-26.md`:
 
   > Verdict: **two independent falsifications, both precise negatives.**
 
-  A negative verdict is a first-class verdict. `cockpit-lighting-law-2026-07-26.md`
+  A negative verdict is a first-class verdict.
+  `reverse-engineering/binary-analysis/cockpit-lighting-law-2026-07-26.md`
   states its own uselessness up front — "No renderer change is warranted by this
   note" — and names the premises it falsified in the same block. That is a good
   document.
 
 - **`Summary:`** when the document makes no claim — an index, a guide, a
-  reference table. `quick-reference/cli-parameters.md` already does this.
+  reference table. `reverse-engineering/quick-reference/cli-parameters.md` already does this.
 
 Say what your verdict rests on, and say explicitly when a prior note is
 corroboration rather than evidence.
@@ -117,8 +118,8 @@ here:
 
 - **A bare grade is rejected.** `Evidence: MEASURED` with nothing after it is a
   label, not evidence. Name the capture, the byte comparison, the test, or the
-  source file and line. Per [`AGENTS.md`](AGENTS.md): "a measured number and its
-  method are" the deliverable.
+  source file and line. Per [`AGENTS.md`](AGENTS.md#ground-rules), every behaviour
+  claim cites a capture, byte comparison, focused test, or pinned source file and line.
 - **`UNKNOWN` is a passing value.** An honest unknown with a route to settling it
   is a good outcome; a plausible guess dressed as a fact is the failure mode that
   got a previous generation of documentation deleted wholesale. This mirrors the
@@ -138,9 +139,11 @@ partition the body — the structural form
 eight hex characters.
 
 **This is the highest-priority rule in this document and it is not a formatting
-rule.** There are two retail binaries on this machine and they are not
-interchangeable: the installed Steam `BEA.exe` is deliberately patched, and the
-pristine original sits beside it as `BEA.exe.original.backup`. A byte finding
+rule.** There are two retail binaries in the maintainer's workspace and they are not
+interchangeable: the pristine original, kept at
+`local-lab/safe-copy-bea-pristine/BEA.exe.original.backup` (SHA-256 `74154bfa…`), and the lab's patched `BEA.exe`
+(`e1436ef7…`). An unmodified Steam install matches the pristine identity (the companion's `ExecutableIdentity.RetailSha256`),
+but hash the exact file before relying on it. A byte finding
 that does not name which one it read may simply be **false** — category 1, not
 category 4. At least one parity target has already been set from the wrong
 binary; see
@@ -175,8 +178,8 @@ Class is resolved from the path, so nothing has to declare its own type.
 - **`GOVERNANCE` carries no `Evidence:` and no `Verdict:`.** These documents say
   what is wanted or required. [`GOAL.md`](GOAL.md) is explicitly not superseded
   by measurement; grading it as evidence would be a category error.
-- **`FUNCTION-NOTE` is exempt from the `Specimen:` rule.** 321 of 322 quote a
-  retail address, so the rule would fire on all but one while adding no truth:
+- **`FUNCTION-NOTE` is exempt from the `Specimen:` rule.** Nearly all quote a
+  retail address, so the rule would fire on almost every note while adding no truth:
   they index functions rather than establish a byte finding, and their own
   trailer already names the binary. Since 2026-10-15 the byte-matching decompilation,
   not a Ghidra name table, is the naming authority. A gate that punishes correct

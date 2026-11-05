@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-11-03 (content inventory owners, with the per-asset metadata file)
+Last updated: 2026-11-05 (the companion is the current standalone app; public setup route; omitted projects and docs/ added; maintainer-side pointers named as such)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository: the companion, tools, lore and frozen references, with routes to the live game projects.
 
@@ -43,7 +43,9 @@ There, `OnslaughtRebuild.Parity` owns the simulation and `OnslaughtRebuild.Host`
 Parity is deterministic given its configured inputs, including the tape, retail data, options and virtual clock;
 that contract permits reading those inputs. Its [live parity record](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md)
 owns measured fidelity. The earlier Core, Client, Headless and Godot projects are reference material.
-The companion is the public player product for the original game and Onslaught CE. It is a C# application built
+The companion is the current standalone Godot .NET app for the original game and Onslaught CE (built from this
+repository; no published release yet). [`GOAL.md`](GOAL.md) moves every Companion capability into CE and retires the
+separate app after verified migration; this index maps where the current code lives. It is a C# application built
 in code, owns its file-safety source and has no rebuild project dependency. Some Toolkit Python tools use retained
 parsers under `rebuild/tools/`; their checks are distinguished from rebuild application gates in [VALIDATION.md](VALIDATION.md).
 
@@ -56,16 +58,17 @@ parsers under `rebuild/tools/`; their checks are distinguished from rebuild appl
 | [`OnslaughtRebuild.Core`](rebuild/OnslaughtRebuild.Core/OnslaughtRebuild.Core.csproj) | Earlier fixed-point simulation reference, with no presentation, filesystem, clock, process, network or GPU dependency. |
 | [`OnslaughtRebuild.Client`](rebuild/OnslaughtRebuild.Client/OnslaughtRebuild.Client.csproj) | Earlier input-to-fixed-step and presentation-lifecycle adapter reference; references Core. |
 | [`OnslaughtRebuild.Godot`](rebuild/OnslaughtRebuild.Godot/OnslaughtRebuild.Godot.csproj) | Earlier rendering, audio, native-integration and player-input reference; references Client and Core. |
+| [`OnslaughtRebuild.Headless`](rebuild/OnslaughtRebuild.Headless/OnslaughtRebuild.Headless.csproj) | Earlier headless replay reference; references Client, Core and Parity. |
+| [`OnslaughtToolkit.NativeChecks`](companion/OnslaughtToolkit.NativeChecks/README.md) | Console executable that compile-links the companion's production implementations to exercise native Windows file, process and launcher boundaries; it carries no second codec or publisher. |
+| [`BeaAssetExportHarness`](tools/BeaAssetExportHarness/BeaAssetExportHarness.csproj) | The bounded C# AYA/FBX export bridge used by the asset tools ([tools guide](tools/README.md)). |
 
-The Companion development runner requires Linux and the maintainer's shared toolchain installation; the
-[build guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export) states the current public setup gap.
-Documentation and selected authored Python checks use the [public prerequisites](README.MD#build-and-run).
-The WinUI shell, its UI tests and the CLI
-were removed on 2026-10-15, and the patching core it left behind (AppCore, with its tests and the `patches/` catalog)
-on 2026-10-22; Git keeps them. The never-built Windows VM was retired;
-this repository provisions no Windows validation host.
-[`VALIDATION.md`](VALIDATION.md) distinguishes focused service tests, native
-runtime checks and unfinished acceptance.
+The Companion development runner needs Linux x86-64, Git and Python 3.12 or newer; `python tools/companion_toolchain.py setup`
+installs the pinned Godot .NET and SDK under ignored `local-data/` (an existing shared installation is an optional
+legacy route). The [build guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export) has the
+details, and documentation and selected authored Python checks use the [public prerequisites](README.MD#build-and-run).
+Removal history and Windows validation status are in [`VALIDATION.md`](VALIDATION.md), which distinguishes focused
+service tests, native runtime checks and unfinished acceptance; the retired WinUI releases are in
+[`CHANGELOG.md`](CHANGELOG.md). This repository provisions no Windows validation host.
 
 [`rebuild/OnslaughtRebuild.slnx`](rebuild/OnslaughtRebuild.slnx) and [`rebuild/README.md`](rebuild/README.md)
 describe the retained snapshot. Current assembly contracts, builds and tests belong to
@@ -111,6 +114,8 @@ actions to [`CeMissionProjectEditor`](companion/OnslaughtToolkit.Godot/Missions/
 [`CeMissionProjectJson`](companion/OnslaughtToolkit.Godot/Missions/CeMissionProjectJson.cs) its serialization and
 [`CeMissionProjectFiles`](companion/OnslaughtToolkit.Godot/Files/CeMissionProjectFiles.cs) protected new-file publication.
 The [Mission project workflow](companion/OnslaughtToolkit.Godot/README.md#mission-project) owns its scope and limits.
+These editors are the Companion's current implementation and the source for the CE-native editors:
+[`GOAL.md`](GOAL.md) requires the 3D map and mission editors inside native CE, and the plans below own the staged route.
 [`LevelTerrainViewport`](companion/OnslaughtToolkit.Godot/Ui/Pages/LevelTerrainViewport.cs) is the shared 3D control.
 
 [`LevelEditorPage`](companion/OnslaughtToolkit.Godot/Ui/Pages/LevelEditorPage.cs) passes player actions to
@@ -153,13 +158,14 @@ installation it read ([inventory entry point](tools/README.md#content-inventory)
 | [`companion/`](companion/OnslaughtToolkit.Godot/README.md) | GPL-3.0-only Godot .NET toolkit, a C# application built in code with its in-process file adapter. `tools/companion_godot.py` owns pinned .NET-engine routes (build, test, capture, run, export); `tools/godot_host.py` supplies shared engine discovery and process support. |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | A frozen copy of the documentation of the game as prose and specs: formats, mechanics, saves, assets, source notes, function notes and contracts, each bound to its specimen or source. The maintained documentation is [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation). No Ghidra database or decompiler output. |
 | `local-lab/` | Ignored machine-local evidence: retail safe copies, historical campaign generations, captures, reviewer reports, frozen proof graphs, the retired working Ghidra project and `rebuild-godot/` staging. It is a real directory inside the maintainer's checkout; fresh clones and child worktrees lack it. [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) owns canonical absolute-path / `BEA_LOCAL_LAB` routing; consult relevant `local-lab/INDEX.md` sections for the retained corpus. |
-| `local-data/` | The real ignored repository child for `host-attestations/`, current retail/media inputs, operational outputs and grouped `recovered/` packages; its `AGENTS.md` owns the internal map. Unused `windows-vm/` and `vm-media/` staging was retired. `_recovered-worktrees/` and `windows-profile-2026-08-28/` retain protected historical Ghidra material in place. `local-proofs/` remains a reserved ignored/publication-denied name, not a current data owner. |
-| `.artifacts/` | Ignored legacy validation, screenshot and publish output. It may contain unique evidence; preserve coupled tool paths, put new general-purpose output in `local-data/`, and use the migration deletion queue for authorized retirement. |
+| `local-data/` | The real ignored repository child for `host-attestations/`, current retail/media inputs, operational outputs and grouped `recovered/` packages; the maintainer's checkout keeps its internal map in a local `AGENTS.md` there (fresh clones lack `local-data/`). Unused `windows-vm/` and `vm-media/` staging was retired. `_recovered-worktrees/` and `windows-profile-2026-08-28/` retain protected historical Ghidra material in place. `local-proofs/` remains a reserved ignored/publication-denied name, not a current data owner. |
+| `.artifacts/` | Ignored legacy validation, screenshot and publish output. It may contain unique evidence; preserve coupled tool paths, put new general-purpose output in `local-data/`, and retire it only under the maintainer's retention record (not in this repository). |
 | [`rebuild/`](rebuild/README.md) | Frozen GPL Godot rebuild reference and earlier fixed-point projects. Some retained Python helpers support current Toolkit format tools and remain tested here; live rebuild contracts and gates belong to [onslaught-godot](https://github.com/dlprentice/onslaught-godot). |
 | [`tools/`](tools/README.md) | Format decoders, the local content catalogue, editor references/generators, asset export, capture analysis, the Companion launcher and documentation/safety gates. Root [`package.json`](package.json) owns commands. |
 | [`tests_shared/`](tests_shared/fixtures/README.md) | Narrow reviewed cross-project fixtures; never a dumping ground for retail saves or assets. |
 | [`lore/`](lore/) and `lore-book/` | Canonical public lore/history library and its entry guide. |
 | [`references/`](references/) | The pinned GPL `Onslaught` source and `AYAResourceExtractor` references, pinned at `c3d8ac4` and `53b10b0` by `ONSLAUGHT_PIN` and `EXTRACTOR_PIN` in [`aya_extractor_source_audit.py`](tools/aya_extractor_source_audit.py). Preserve pins, licences and provenance. These are source references, not proof of retail behavior. |
+| [`docs/`](docs/ce-museum-project.md) | The authored CE museum room project description (`docs/ce-museum-project.md`) and its evidence limits. |
 | [`roadmap/`](roadmap/original-binary-online-multiplayer-feasibility.md) | Bounded original-binary multiplayer feasibility, the [Companion level editor plan](roadmap/companion-level-editor.md), and the [mission editor design](roadmap/companion-mission-editor.md). [GOAL.md](GOAL.md) owns the outcomes and [PROGRAM.md](PROGRAM.md) owns remaining work. |
 
 ## Documentation truth owners
@@ -169,19 +175,19 @@ wrong — fix the rows, not the document.
 
 | Question | Owner |
 | --- | --- |
-| What is the contributor contract? | [`AGENTS.md`](AGENTS.md) — restated nowhere |
+| How do I contribute? | [`CONTRIBUTING.md`](CONTRIBUTING.md), with [Build and run](README.MD#build-and-run) |
+| Which evidence, data and licensing rules bind project work? | [`AGENTS.md`](AGENTS.md) |
 | What do we want? | [`GOAL.md`](GOAL.md) |
 | What is the execution work-queue state (done/next/queued, with receipts)? | [`PROGRAM.md`](PROGRAM.md) |
 | What does the Toolkit currently demonstrate? | [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) |
-| What do CE and the active rebuild demonstrate? | [CE releases](https://github.com/dlprentice/onslaught-ce/releases) and [Godot parity](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md) |
+| What did CE ship, and what do its release notes demonstrate? | [Onslaught CE releases](https://github.com/dlprentice/onslaught-ce/releases) |
 | Where does our code and responsibility live? | This index |
 | What is known about the retail game? | [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation); [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) is the frozen copy |
 | How are retail function/behavior contracts graded and located? | [`CONTRACTS.md`](CONTRACTS.md) |
 | What evidence may enter the rebuild? | [onslaught-godot provenance](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PROVENANCE.md) |
 | What is the rebuild's determinism contract and measured parity? | [onslaught-godot determinism](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/DETERMINISM.md) and [parity](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md) |
-| Where does ignored machine-local evidence live? | [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md); on this host the canonical checkout's real `local-lab/` directory |
+| Where does ignored machine-local evidence live? | [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md): the maintainer's canonical checkout; fresh clones lack `local-lab/` and `local-data/` |
 | Which validation command applies? | [`VALIDATION.md`](VALIDATION.md) and [`package.json`](package.json) |
-| What shipped in CE? | [Onslaught CE releases](https://github.com/dlprentice/onslaught-ce/releases) |
 | What shipped in the retired WinUI app? | [`CHANGELOG.md`](CHANGELOG.md) |
 
 ### Lane front doors
@@ -191,7 +197,7 @@ wrong — fix the rows, not the document.
 - **Rebuild:** [onslaught-godot](https://github.com/dlprentice/onslaught-godot); [`rebuild/`](rebuild/README.md)
   here is a frozen reference
 - **Machine-local evidence lane:** [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md)
-  + canonical-checkout `local-lab/INDEX.md`
+  + the maintainer's canonical-checkout `local-lab/INDEX.md` (not in a fresh clone)
 - **Companion:** [`Godot companion`](companion/OnslaughtToolkit.Godot/README.md) /
   [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md)
 - **Level and mission editor:** [source owners](#level-and-mission-editor) /

@@ -366,7 +366,8 @@ Its visitor Back route and saved-data checks passed independent Linux review; th
 native Windows behavior and the full museum remain open.
 
 The 0.1.99 r2 checkpoint adds a separate **museum construction test**: three identical static props on
-existing terrain, reached through its own prepared launch route and museum-only profile. The reviewed staging tool
+existing terrain, reached through its own prepared launch route and museum-only profile
+(its authored room description is in [docs/ce-museum-project.md](docs/ce-museum-project.md)). The reviewed staging tool
 and a repeated run of the exact Linux package demonstrated movement and clean exit; fresh frames were inspected,
 inputs and package files read back unchanged, and no career files were created. The independent review has SHA-256
 `ccb53107417183050541a5da3aa111f5dac1bf5500d35d8125529e9bb6d75b77`.
