@@ -453,7 +453,7 @@ audible audio, visual equality, physical input, whole-game parity or a completed
 
 ### History: the earlier fixed-point rebuild (reference only)
 
-On 2026-10-15 David first parked this fixed-point rebuild in favour of a native source port, then restarted the lane
+On 2026-10-15 David first parked this fixed-point rebuild in favour of a native source port, then restarted the rebuild
 around the parity core above. What follows is the fixed-point rebuild's demonstrated state at the old tag
 archive/godot-rebuild-20260926 (now in the private historical maintainer archive); it is reference, not active work,
 and the `local-data/` receipts it cites are private runs, not reproducible from this repository.

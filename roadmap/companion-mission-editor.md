@@ -11,7 +11,7 @@ milestones with their gates, the first editable thing, the safety rules and the 
 Evidence: MEASURED for section 2 (each item names its method and limits), SOURCE for the cited decompilation functions
 (cited by function, never quoted), INFERRED where the text says so; the rest is plan.
 Specimen: `BEA.exe.original.backup`, SHA-256 `74154bfa…`, 2,506,752 bytes (the addresses are the decompilation's, which matches
-this binary; the retail view, the installed game folder read read-only, has a `BEA.exe` with the same hash)
+this binary; the retail view, a read-only view of the installed game folder, has a `BEA.exe` with the same hash)
 
 > **Required end state (2026-11-04):** a 3D mission editor usable inside native CE through its menus ([GOAL.md](../GOAL.md);
 > [PROGRAM.md](../PROGRAM.md#order-after-0113), items 9 and 10). Everything below is the interim Companion path: the Scripts view,

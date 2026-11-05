@@ -127,8 +127,8 @@ invent a project-wide percentage or promise universal parity from bounded checks
 
 [PROGRAM.md](PROGRAM.md) owns the dated cross-project chart and work queue. Product repositories own their detailed
 release, design and evidence records; [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) owns this repository's
-demonstrated capabilities. A handoff is a dated continuity snapshot, not a competing roadmap: verify current refs,
-claims and evidence before acting, and update the existing owner when a material milestone changes.
+demonstrated capabilities. A dated continuity note from earlier work is a snapshot, not a competing roadmap: verify
+current refs, claims and evidence before acting, and update the existing owner when a material milestone changes.
 
 Work from the reported problems and current evidence while keeping the earlier and refreshed 0.1.99 checkpoints
 (r1 and r2, defined in [PROGRAM.md](PROGRAM.md#order-after-0113)) reproducible.
