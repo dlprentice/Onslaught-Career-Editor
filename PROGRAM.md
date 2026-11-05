@@ -1,14 +1,15 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-11-04 (unified CE migration supersedes a separate Companion end state; existing tools remain until verified replacement)
+Last updated: 2026-11-05 (the 0.2 hold and the standing 0.1.x authorization point to GOAL.md; every Companion capability named in the migration; the repository rename and a second history flatten held; status wording corrections)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
 [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) and its checks in [VALIDATION.md](VALIDATION.md); CE and the Godot
 rebuild own their own release and parity evidence. The queue that
-ran the Ghidra campaign, the decompilation plan and the rebuild's work items until 2026-10-15 is in Git history;
-the campaign's records are in the private historical maintainer archive.
+ran the Ghidra campaign, the decompilation plan and the rebuild's work items until 2026-10-15 is in the private
+pre-flatten history (before the public root commit of 2026-10-15); the campaign's records are in the private historical
+maintainer archive.
 
 ## Cross-project progress and priorities
 
@@ -21,22 +22,22 @@ defines progress and what a completion claim requires.
 
 | Area | Current state and remaining outcome | Detailed owner |
 | --- | --- | --- |
-| CE release and player experience | Latest public release: 0.1.13 (published 2026-10-31). Its release notes describe shipped changes, checks and limits; physical Windows retesting remains open. The initial and refreshed unreleased 0.1.99 snapshots are preserved. The refresh passed both platform builds and package-content checks, a Linux main-menu render and local edited-project smoke, bounded Companion workflow checks and reviewed manual-launch routes. David has now tried CE and the museum construction test; his observations are recorded below. Development is resumed. This is not the 0.2 release; native Windows runtime and the online game path remain unaccepted. | [0.1.13 release notes](https://github.com/dlprentice/onslaught-ce/releases/tag/v0.1.13), [Manual feedback](#onslaught-ce-player-experience-and-online-play), [checkpoint order](#order-after-0113) |
-| Reported Windows issues | One reproduced cause of double music is fixed in 0.1.12, with software-VM evidence, and Jeppi reports the audio fixed in 0.1.13 on their own Windows PC (a player's report; no log has been read). 0.1.13 adds changes aimed at the pause-menu mouse, the game clock after Alt-Tab and the system cursor in fullscreen; none has been seen on a real Windows PC. The reporter's physical AMD/input retest, separate stutter and reported graphics artifacts remain open. | [CE releases](https://github.com/dlprentice/onslaught-ce/releases/latest) |
-| Online multiplayer | On November 4, a bounded test used two actual Linux CE processes through the authorized TURN relay: both entered a session, exchanged traffic and confirmed 1,000 simulation ticks; the guest closed and the host handled departure, returned to the frontend and quit normally. Independent raw-record review confirmed this result. This was one machine and automated input, not two physical players or proof of moving and shooting together. The test services were disabled afterwards. Player-ready host/join, native Windows, independent-machine networks and campaign progression remain acceptance gaps. The public CE README still lists Internet multiplayer as planned; public 0.1.13 is unchanged. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play), [CE README](https://github.com/dlprentice/onslaught-ce) |
-| Campaign co-op and scale | Ordinary-campaign objectives, transitions, deaths, rejoin and safe progression are not established online. Opposing-team versus/skirmish maps, larger matches, team colours and compatible Battle Engine/unit customization remain goals. Players should be able to pilot Battle Engines or play eligible infantry, vehicles, guns and controllable structures. Temporary control needs identity/team/squad preservation, AI hand-back with current valid orders and controls/HUD appropriate to the type. The solo tank prototype does not prove these full outcomes or network control. Local split-screen is not online co-op. | [Multiplayer work below](#onslaught-ce-player-experience-and-online-play) |
+| CE release and player experience | Latest public release: 0.1.13 (published 2026-10-31). Its release notes describe shipped changes, checks and limits; physical Windows retesting remains open. The unreleased 0.1.99 r1 and r2 checkpoints are preserved. r2 passed a Linux build, a Windows cross-target build (no Windows run) and package-content checks, a Linux main-menu render and local edited-project smoke, bounded Companion workflow checks and reviewed manual-launch routes. David has now tried CE and the museum construction test; his observations are recorded below. Development is resumed. This is not the 0.2 release; native Windows runtime and the online game path remain unaccepted. | [0.1.13 release notes](https://github.com/dlprentice/onslaught-ce/releases/tag/v0.1.13), [Manual feedback](#onslaught-ce-player-experience-and-online-play), [checkpoint order](#order-after-0113) |
+| Reported Windows issues | One reproduced cause of double music is fixed in 0.1.12, with software-VM evidence, and Jeppi reports the audio fixed in 0.1.13 on their own Windows PC (a player's report; no log has been read). 0.1.13 adds changes aimed at the pause-menu mouse, the game clock after Alt-Tab and the system cursor in fullscreen; none of these three changes has yet been seen on a real Windows PC. The reporter's physical AMD/input retest, separate stutter and reported graphics artifacts remain open. | [CE releases](https://github.com/dlprentice/onslaught-ce/releases/latest) |
+| Online multiplayer | On November 4, a bounded test with automated input and no movement or firing used two actual Linux CE processes on one machine through the authorized TURN relay: both entered a session, exchanged traffic and confirmed 1,000 simulation ticks; the guest closed and the host handled departure, returned to the frontend and quit normally. Independent raw-record review confirmed this result. It was not two physical players, moving and firing together, Windows, voice, a campaign win or a public service ([details](#multiplayer-engineering)). The test services were disabled afterwards. Player-ready host/join, native Windows, independent-machine networks and campaign progression remain acceptance gaps. The public CE README still lists Internet multiplayer as planned; public 0.1.13 is unchanged. | [Multiplayer engineering below](#multiplayer-engineering), [CE README](https://github.com/dlprentice/onslaught-ce) |
+| Campaign co-op and scale | Ordinary-campaign objectives, transitions, deaths, rejoin and safe progression are not established online. Opposing-team versus/skirmish maps, larger matches, team colours and compatible Battle Engine/unit customization remain goals. Players should be able to pilot Battle Engines or play eligible infantry, vehicles, guns and controllable structures. Temporary control needs identity/team/squad preservation, AI hand-back with current valid orders and controls/HUD appropriate to the type. The bounded opt-in solo tank prototype (movement, native firing, camera/control return and squad hand-back on one level; see [Multiplayer engineering](#multiplayer-engineering)) does not prove these full outcomes or network control. Local split-screen is not online co-op. | [Multiplayer engineering below](#multiplayer-engineering) |
 | Controls, display and guidance | Improve understandable dodge/zoom and free-camera help, controllers, accessible menus, window/display choices and performance while preserving the game's look and feel. David's manual r2 report found photo mode fine, dodge difficult despite some successes, Commander janky and tank control jerky. Graphics reported Extra unavailable on an RTX 4060 with Geometry Medium and anti-aliasing None. These observations need focused reproduction; no cause or fix is established. Prefer supported high ordinary graphics separately from the requested optional maximum-distance/LOD/full-model mode. Floaty mouse and 4K HUD/UI remain in scope. Real devices and representative Windows graphics remain acceptance gaps. | [Player experience work below](#onslaught-ce-player-experience-and-online-play), [CE README](https://github.com/dlprentice/onslaught-ce) |
-| Level and mission tools | Required: usable 3D map and mission authoring inside native CE through its menus. Current integrated authoring runs in Companion, with JSON Save/Open, 3D placement and linked-map preview; it does not complete the in-game requirement. Unambiguous object definitions resolve to same-archive meshes, with inspected static, untextured level-221 models and unsupported references reported. The page's Save as path produced projects that moved one existing object's X/Y in CE; initialization still controls height. Both unreleased 0.1.99 Linux packages passed local edited-project smokes without a network session. No publicly released CE reads these projects. Reuse this working data/tooling while building native CE controls and workflow. Textures, animation, terrain editing, new playable levels, full mission authoring, human use, multiplayer loading and native Windows validation remain open; older installed-level candidates retain their separate scope. | [Mission project evidence](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore), [Mission project workflow and limits](companion/OnslaughtToolkit.Godot/README.md#mission-project), [Installed-level workflow](roadmap/companion-level-editor.md#2-what-exists-today), [Remaining candidates](roadmap/companion-level-editor.md#unreleased-editor-candidates) |
+| Level and mission tools | Required: usable 3D map and mission authoring inside native CE through its menus. Current integrated authoring runs in Companion, with JSON Save/Open, 3D placement and linked-map preview; it does not complete the in-game requirement. Unambiguous object definitions resolve to same-archive meshes, with inspected static, untextured level-221 models and unsupported references reported. In a controlled 2026-11-03 run (the page driven programmatically; no person at the Save as dialog), the page's Save as path produced projects that placed one existing level-221 boat at its authored X/Y in CE; the boat's own initialization replaced the stored height, and in one moved case later mission and AI reactions followed, so moving an object does not keep a mission unchanged. Both unreleased 0.1.99 Linux packages (r1 and r2) passed local edited-project smokes without a network session. No publicly released CE reads these projects. Reuse this working data/tooling while building native CE controls and workflow. Textures, animation, terrain editing, new playable levels, full mission authoring, human use, multiplayer loading and native Windows validation remain open; older installed-level candidates retain their separate scope. | [Mission project evidence](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore), [Mission project workflow and limits](companion/OnslaughtToolkit.Godot/README.md#mission-project), [Installed-level workflow](roadmap/companion-level-editor.md#2-what-exists-today), [Remaining candidates](roadmap/companion-level-editor.md#unreleased-editor-candidates) |
 | Mods and content catalogue | Released mods override existing files and supply worlds on Linux; Windows remains disabled. CE development source includes the reviewed Windows loading contract, integrated November 3, with the normal-build switch OFF. Native filesystem acceptance remains open; integration does not enable Windows mods for players. The complete mod platform and verified catalogue remain open; catalogue path counts do not establish complete asset coverage. | [CE mods](https://github.com/dlprentice/onslaught-ce#mods-experimental), [Creation scope](#level-and-mission-tools), [Catalogue work](#content-catalogue), [Coverage limits](tools/README.md#catalogue-source-file-coverage) |
 | Museum and custom levels | Required: an actual explorable 3D museum reached through CE's menus. The separate Goodies gallery retains bounded Linux visitor-access, return-navigation and saved-data acceptance for pictures/models; it does not unlock movies, cheats or bonus levels. The refreshed checkpoint's construction test places three copies of one static prop on existing terrain; independent review and a repeated Linux run support movement and clean exit with inspected images and preserved careers, inputs and package files. Its museum-only profile stays separate from campaign play. Neither the gallery nor this test completes the museum or newly authored terrain/mission; native Windows, physical mouse input, audible audio and collision/damage remain unverified. | [Museum and authoring scope](#level-and-mission-tools), [Order after 0.1.13](#order-after-0113), [Level evidence](roadmap/companion-level-editor.md#3-what-the-measurements-say-2026-10-29-level-100-the-read-only-retail-view) |
-| Commander | Required: continuous real-time 3D RTS Commander inside native CE, with usable camera, selection, orders and status UI. CE 0.1.13's opt-in map pauses the battle; development adds a live 3D strategic view. These partial controls do not complete the required mode. On one level, scripted Move, Advance and Fall back took one tank squad to the ordered place and Hold stopped it; a longer Move stalled for an unknown reason. David's manual r2 report is janky, so usability remains open. Buildings/production and eventual multiplayer remain goals; direct unit play is distinct. Preserve ordinary play while proving the full workflow, other units/scenarios and native Windows behavior. | [Goal](GOAL.md), [Mission-editor direction](roadmap/companion-mission-editor.md#optional-modes-and-ordinary-play), [CE commander map](https://github.com/dlprentice/onslaught-ce#commander-map-experimental) |
+| Commander | Required: continuous real-time 3D RTS Commander inside native CE, with usable camera, selection, orders and status UI. CE 0.1.13's opt-in map pauses the battle; development adds a live 3D strategic view. These partial controls do not complete the required mode. In a bounded Linux run, scripted Move, Advance and Fall back took one tank squad on one level to the ordered place and Hold stopped it; a longer Move stalled for an unknown reason. Aircraft, turrets, buildings and script-following squads take no orders, and artillery can only Hold ([CE README](https://github.com/dlprentice/onslaught-ce#commander-map-experimental)). David's manual r2 report is janky, so usability remains open. Buildings/production and eventual multiplayer remain goals; direct unit play is distinct. Preserve ordinary play while proving the full workflow, other units/scenarios and native Windows behavior. | [Goal](GOAL.md), [Mission-editor direction](roadmap/companion-mission-editor.md#optional-modes-and-ordinary-play), [CE commander map](https://github.com/dlprentice/onslaught-ce#commander-map-experimental) |
 | Godot rebuild | Selected recorded level-100 comparisons exist; complete gameplay, audio and presentation parity and a finished playable replacement are not established. HD assets and expanded gameplay follow a faithful baseline. | [Godot parity record](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md) |
 | Decompilation and baseline | The private mapped-function check uses a disclosed one-byte compiled-object concession; without it one mapped function remains unmatched. Stand-ins and full linked/runtime equivalence remain separate work. The corrected public [overview](https://github.com/dlprentice/onslaught-decomp/blob/9169f28862ebda0b768cbcc7ec354734af013f5e/README.md#L14-L18) and [score-write documentation](https://github.com/dlprentice/onslaught-decomp/blob/9169f28862ebda0b768cbcc7ec354734af013f5e/tools/README.md#L7-L10) are exported. | [Public decompilation](https://github.com/dlprentice/onslaught-decomp) |
-| Companion | Required end state: its player capabilities move into CE and the separate app is phased out after verified replacement. Current standalone tools and evidence remain preserved. Automated Linux acceptance against released CE 0.1.13 covers the real launcher/career load, copied-career edits/backups/settings, running-game refusal and restoration. The initial unreleased 0.1.99 snapshot passed bounded copied-career/settings and inspected workflow/project checks. The refreshed stage also passed actual version discovery, copied-career backup/edit/restore, settings writes and stale-write refusal; fresh workflow and installed-model images were inspected. David has not tried Companion in his November 4 playtest. These remain programmatic checks, not human use or an update hand-off. Broader Windows UI/device acceptance, listening and safe release remain. | [Companion README](companion/OnslaughtToolkit.Godot/README.md), [current evidence](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore), [dated 0.1.13 acceptance](VALIDATION.md#companion-with-real-onslaught-ce-0113--november-3) |
+| Companion | Required end state: every Companion capability moves into native CE, and the separate app stays supported until each replacement is verified, then is phased out. Current standalone tools and evidence remain preserved. Automated Linux acceptance against released CE 0.1.13 covers the real launcher/career load, copied-career edits/backups/settings, running-game refusal and restoration. The 0.1.99 r1 Companion stage passed bounded copied-career/settings and inspected workflow/project checks. The r2 stage also passed actual version discovery, copied-career backup/edit/restore, settings writes and stale-write refusal; fresh workflow and installed-model images were inspected. David has not tried Companion in his November 4 playtest. These remain programmatic checks, not human use or an update hand-off. Broader Windows UI/device acceptance, listening and safe release remain. | [Companion README](companion/OnslaughtToolkit.Godot/README.md), [current evidence](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore), [dated 0.1.13 acceptance](VALIDATION.md#companion-with-real-onslaught-ce-0113--november-3) |
 | Diagnostics and recording | Useful bounded logs and manual, informed reporting are available. Preserve faithful reference tapes and develop separate coverage for CE features and controller input; avoid telemetry or automatic uploads. | [CE reporting guidance](https://github.com/dlprentice/onslaught-ce#report-a-problem) |
 | Special Thanks | Stuart Gillam, Jeppi and BermudaMaster are acknowledged in 0.1.12. Keep acknowledgements accurate as further contributors are identified. | [CE credits](https://github.com/dlprentice/onslaught-ce#credits-and-special-thanks) |
 | Documentation, repositories and recovery | Public setup and contribution workflows are published. Owner reconciliation and indexing of retained evidence and handoffs remain open. The verified restore covers one selected snapshot; restoration of the full corpus and recovery on a replacement machine remain unproven. | [Contributor workflow](CONTRIBUTING.md), [Recovery scope](#recovery-and-repository), [Project index](PROJECT-INDEX.md) |
-| Showcase and website | The requested port footage has not met its brief and may resume with the next lead. The domain is owned; no website deployment is currently required. | Maintainer direction |
+| Showcase and website | Port footage is paused at David's direction (2026-10-29) and restarts only if David asks. The domain is owned; no website deployment is currently required. | Maintainer direction |
 
 ### Order after 0.1.13
 
@@ -47,20 +48,23 @@ Goodies gallery does not complete those respective requirements. Preserve ordina
 quality-of-life improvements. Scenario eligibility, implementation and packaging can develop around these concrete
 player workflows; the order below tracks dependencies, not dates.
 
-Complete and test the agreed 0.2 scope internally before considering release. Working multiplayer and the complete
-in-game workflows above are required alongside the other agreed outcomes. An experimental or alpha label is not
-permission to ship unfinished pieces. Do not publish 0.2 while its requirements remain incomplete; internal playtest
-checkpoints and continued development do not lift this release hold. Publishing 0.2 also requires David's further
-explicit go-ahead.
+The 0.2 release hold and the standing authorization for 0.1.x releases are worded once, in
+[GOAL.md](GOAL.md#how-progress-is-measured): 0.2 is not released until David gives an explicit go-ahead after its whole
+program is complete and tested internally, and internal playtest checkpoints do not lift that hold. Gated 0.1.x
+maintenance releases remain under David's standing authorization of 2026-10-27; 0.1.99 is an internal checkpoint label
+that is never published. Working multiplayer and the complete in-game workflows above are required alongside the other
+agreed outcomes.
 
-David has requested that **0.1.99 include the recent integrated work**. The separate refreshed checkpoint (r2)
-contains the reviewed work described below. The earlier snapshot (r1), its accepted builds/packages, Companion stage,
+David has requested that **0.1.99 include the recent integrated work**. Two local checkpoints carry that label, and
+this page names them only as **0.1.99 r1** (the earlier snapshot) and **0.1.99 r2** (the separate refreshed checkpoint,
+which contains the reviewed work described below). "Package" and "stage" name components of a checkpoint (its CE
+package, its Companion stage), never the checkpoint itself. r1, its accepted builds/packages, Companion stage,
 launch setup/profile and copied user data remain preserved. The earlier Linux package smokes and bounded Companion
-workflow/image checks remain evidence for that earlier snapshot; the refresh has its own acceptance.
+workflow/image checks remain evidence for r1; r2 has its own acceptance.
 
-The refresh has passed Linux and Windows cross-target builds and package-content checks with networking, ICE
+r2 has passed Linux and Windows cross-target builds (no Windows run) and package-content checks with networking, ICE
 and text chat included. Native signaling is included on Linux; Windows relay startup still refuses its unvalidated path. The exact Linux package rendered its main menu/version and a local edited
-project, and both runs exited cleanly. This does not establish navigation through the CE hub. The refreshed Companion
+project, and both runs exited cleanly. This does not establish navigation through the CE hub. The r2 Companion
 passed actual version discovery, copied-career backup/edit/restore, settings writes and stale-write refusals; fresh
 workflow and installed-model images were inspected. Its installed models remain static and untextured. Separate
 manual launch routes passed independent review, focused helper checks and checks of the actual prepared files.
@@ -82,9 +86,9 @@ manual feedback below as observations within the tested scope, and retain each s
 7. Done 2026-10-30, ahead of this order at David's request: CE ran editor changes in the bounded cases documented in the [level editor plan](roadmap/companion-level-editor.md). A comparison with the original is recorded privately and does not establish complete equivalence. Next, a writer that builds a level from scratch (terrain, world and mission), whose first targets are a two-unit test level that CE runs and the museum world, walked or flown around in the Battle Engine. Retail-compatible test levels are optional where useful.
 8. The content catalogue to a complete inventory (every model, texture and image, used or not), alongside the museum's art boards, turntables, lighting, signs and a main-menu entry. The first CE exhibition can progress in parallel with catalogue work.
 9. Level and mission authoring from scratch: usable 3D map and mission editors inside CE, including save/reopen and a connected playtest workflow, custom levels for players and small test levels CE can run. Reuse the existing tools and project contracts; retail-compatible export remains optional where useful.
-10. Migrate Companion's player capabilities into CE, with Windows acceptance for the resulting invocation, input, dialogs, rendering and workflows. Retain the current standalone implementation and its evidence until its verified replacement is usable; do not silently discard its remaining acceptance work.
+10. Migrate every Companion capability into CE, with Windows acceptance for the resulting invocation, input, dialogs, rendering and workflows. The separate Companion stays supported, with its evidence, until each replacement is verified and usable; do not silently discard its remaining acceptance work.
 11. Windows validation of every lane before release, the release path's own script, and the reported Windows issues retested on real hardware.
-12. The decompilation's last unmatched function and the Godot rebuild continue alongside as separate products, not part of the CE package.
+12. Source-only matching of the one function that needs the disclosed one-byte concession (see the chart's Decompilation and baseline row), and the Godot rebuild, continue alongside as separate products, not part of the CE package.
 
 ## Open work
 
@@ -105,12 +109,13 @@ what is proven. Players can choose the original game or CE, manage careers and b
 launcher settings and the steps for updating CE (the companion contacts nothing). The CE launcher checks its own signed
 feed and installs an update only when the player chooses Update.
 
-The required end state is one CE player product, with the separate Companion eventually phased out. Move its lore,
-game-content exploration, career/save editing, backups, settings and installation-management capabilities into CE
-alongside gameplay, content authoring, mod selection and the in-game catalogue. This supersedes the separate
-offline-management end state. Preserve and reuse the working Companion, tools, data/contracts and evidence during
-the migration; retire the separate app only after its useful capabilities have verified replacements. No embedding
-of Godot, C# or another runtime is prescribed by this product decision.
+The required end state is one native CE product, with the separate Companion phased out only after verified
+replacement. Move every current Companion workflow and its subflows into CE (careers, saves and backups, settings,
+lore, content exploration and the catalogue, the editors, installation management) alongside gameplay, content
+authoring, mod selection and the in-game catalogue; the checklist below is the inventory. This replaces the earlier
+plan to keep a separate offline-management product. Preserve and reuse the working Companion, tools, data/contracts
+and evidence during the migration; the separate Companion stays supported until each replacement is verified. No
+embedding of Godot, C# or another runtime is prescribed by this product decision.
 
 Save editing inside CE needs an explicit coordination contract with loaded careers. Retain verified backups,
 changed-source refusal, preservation of unknown data and read-back checks. Protect an in-use career, and arrange
@@ -164,9 +169,9 @@ Remaining acceptance and release work:
   exercised production-page actions and its screenshots were inspected; ordinary release invocation, physical input,
   file dialogs, hardware rendering and broader UI coverage remain open. The [November 3 Linux acceptance](VALIDATION.md#companion-with-real-onslaught-ce-0113--november-3)
   uses released CE 0.1.13's real launcher, protected edits, the game's own Load menu, running-game refusals and backup
-  restoration. The initial November 4 unreleased 0.1.99 snapshot adds the bounded copied-career/settings and inspected
+  restoration. The November 4 0.1.99 r1 Companion stage adds the bounded copied-career/settings and inspected
   workflow/project images recorded in [current capabilities](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore).
-  The refreshed stage also passed the bounded copied-career/settings workflow and inspected installed-model views.
+  The r2 stage also passed the bounded copied-career/settings workflow and inspected installed-model views.
   These checks do not exercise the update hand-off or human input. Separate
   [native Windows checks](companion/OnslaughtToolkit.NativeChecks/README.md) cover production file/settings writes,
   real-process refusal, and CE loading the edited Unicode career. None is full campaign acceptance.
@@ -218,11 +223,12 @@ The retained log has SHA-256 `81f2de49e62165489abf8356821f52d76148d55e547e805e42
 | Museum construction test | David reported that it loaded. This is a human launch observation for the small separate test, not acceptance of the complete museum, collisions or all controls. |
 | Companion | David has not tried it. Its workflow/editor evidence remains automated; no human Companion or editor acceptance is added by this CE playtest. |
 
-**Deferred graphics ideas (November 4):** evaluate DLSS and ray-traced effects as optional future enhancements,
-with supported-hardware checks, useful fallbacks and a way to retain the original look. David explicitly placed
-both on the back burner: record the ideas, but do not start implementation while the current work is being finished.
-No integration, hardware acceptance or performance benefit is claimed. Neural texture compression is another
-possible future option, not an automatic benefit of updating DirectX. The [Microsoft DirectX ML update](https://devblogs.microsoft.com/directx/evolving-directx-for-the-ml-era-on-windows/)
+**Deferred (David, November 4):** DLSS and ray-traced effects are ideas to evaluate later as optional future
+enhancements, with supported-hardware checks, useful fallbacks and a way to retain the original look. David explicitly
+placed both on the back burner, and neural texture compression is deferred with them: record the ideas, but do not
+start implementation while the current work is being finished. No integration, hardware acceptance or performance
+benefit is claimed. Neural texture compression is a possible future option, not an automatic benefit of updating
+DirectX. The [Microsoft DirectX ML update](https://devblogs.microsoft.com/directx/evolving-directx-for-the-ml-era-on-windows/)
 and [NVIDIA neural-rendering introduction](https://developer.nvidia.com/blog/get-started-with-neural-rendering-using-nvidia-rtx-kit/)
 describe integration-dependent capabilities; their demonstrations do not establish memory or frame-rate gains for CE.
 
@@ -231,17 +237,19 @@ session but does not establish the screenshot's level or cause. Training and Bla
 his reported fly mode was aircraft flight or the detached/free camera, then compare that view with retail and the port;
 distinguish software rendering from physical hardware and do not claim the reporter's AMD symptoms fixed without evidence.
 
+#### Multiplayer engineering
+
 For multiplayer, progress in dependency order: two independent players with their own input, viewpoint, HUD and audio;
 complete host/join and session failure handling; Linux and native Windows in both host roles across actual networks;
 then tutorial/early-campaign co-op, save-safe progression and broader campaign coverage. Validate compatibility,
 latency, loss, disconnects and rejoin. Versus and skirmish should support maps with opposing teams. Players may pilot
 Battle Engines or directly control eligible other units under the match's rules, with team colours and compatible
 customization. Spawning as a unit and temporarily taking control of one are both open design options; directly
-playing it is distinct from a commander giving it orders. Infantry, vehicles, mounted/fixed guns and eligible
-controllable structures are in scope. This combined-arms direction needs coherent team/squad identity across direct
+playing it is distinct from a commander giving it orders. Infantry, vehicles (aircraft and boats included),
+mounted/fixed guns and eligible controllable structures are in scope. This combined-arms direction needs coherent team/squad identity across direct
 control, commander orders and the planned voice channels; it is not a currently implemented combination.
 An opt-in solo tank prototype is integrated into CE development source and
-the initial unreleased 0.1.99 snapshot. Its bounded independent Linux review demonstrated movement, native firing and
+0.1.99 r1. Its bounded independent Linux review demonstrated movement, native firing and
 camera/control return on Aquila Prototype; the retained review receipt has SHA-256
 `ba94fe981d4e95860e1b7112753596b9f070b4cebfda846c328c7c2d64dfa730`.
 The parked Battle Engine remains vulnerable, not a required rule for future online roles. The initial prototype lacked
@@ -268,6 +276,9 @@ The future controls and HUD must fit what is being played:
 | --- | --- |
 | Infantry | A viewpoint appropriate to the soldier, usable weapon selection, ammunition and reload feedback, with the unit's own movement and firing behavior. |
 | Tanks and artillery | Native aiming/traverse limits, firing arcs and applicable trajectory feedback, ammunition and reload state. |
+| Aircraft | A flight viewpoint and flight controls, weapon arcs, ammunition and reload state, a clear way to leave control, and only the actions the type supports. |
+| Boats, ferries and other vehicles (wheeled, hover, walkers, drones) | The viewpoint, controls and feedback their type supports, with native movement and firing behavior. |
+| Every other unit type | The catalogue's unit definitions list every type; each gets a defined viewpoint, controls and HUD, or an explicit written exclusion. |
 | Mounted/fixed guns, turrets and controllable structures | Appropriate viewpoint, traverse/aim controls and a clear way to leave control; only actions the controlled type supports. |
 
 Crosshairs, aim/trajectory indicators and firing feedback must agree with the native weapon's actual firing state and
@@ -277,10 +288,10 @@ all-unit controls, full HUDs or online possession.
 
 The intended menu is **Multiplayer → Local or Online**. Local should clearly distinguish split-screen from
 local-network play. Online should offer a browser of available public lobbies and options to create or join public
-and private lobbies, including a private invite/join path. Voice and text chat are planned multiplayer workflows.
-Voice should offer proximity/local, squad and team channels, speaking indicators above participating units, and mute
-controls. The voice backend, channel rules and indicator visibility still need design and validation; no voice
-implementation is claimed. Optional LAN discovery plus an online directory and relay is one preliminary connection
+and private lobbies, including a private invite/join path. Text chat is integrated in 0.1.99 r2 (source, unit tests
+and package-content checks only; no in-game acceptance). Voice is planned and not implemented: it should offer
+proximity/local, squad and team channels, speaking indicators above participating units, and mute controls, and its
+backend, channel rules and indicator visibility still need design and validation. Optional LAN discovery plus an online directory and relay is one preliminary connection
 design; the current two-player admission is an experiment, not a permanent cap. Cloudflare TURN and an experimental
 Cloudflare Worker provide the authorized bounded relay and private-room signaling tests. Public lobby discovery and
 production admission remain unfinished; their data handling and player workflows still need design and validation. These experiments do not establish
@@ -293,7 +304,7 @@ separate historical route, not a statement that CE already has online play.
 The November 4 TURN test's retained summary has SHA-256
 `48bca4f415db38b90ebef4cdb7820368c3e37d0cac6d4c333e6c8c09ea3f8c3f`; its independent raw-record review has SHA-256
 `d78d6246061361a6ec38d66ba25ac3babeec300d5dd15e5f027f8f30e649991f`.
-It proves the bounded Linux session lifecycle above, not active movement/fire, Windows, two physical machines,
+It proves the bounded Linux session lifecycle in the chart's Online multiplayer row (TURN relay), not active movement/fire, Windows, two physical machines,
 voice, a campaign win or a publicly available service. The next active-input check must observe both player
 movement and actual shot creation in both game processes, first with a direct test and then through TURN.
 
@@ -301,8 +312,8 @@ Multiplayer engineering results remain separate from public source and release a
 [published CE README](https://github.com/dlprentice/onslaught-ce/blob/bb4fa1f899db0d1826216b89a59c50781bb9cc9b/README.md#L721-L722)
 lists Internet multiplayer as planned. Player-ready in-game host/join, native Windows hosting, two physical machines
 across actual networks, a played campaign win and real-device controls still need acceptance; bandwidth requirements
-still need measurement. The public release remains 0.1.13. The full program remains in scope; availability, placement
-and packaging for 0.2 remain flexible.
+still need measurement. The public release remains 0.1.13. The full 0.2 program remains in scope; the release hold is
+worded in [GOAL.md](GOAL.md#how-progress-is-measured).
 
 ### Level and mission tools
 
@@ -315,24 +326,25 @@ tools; opening it from CE does not satisfy the in-game requirement. The integrat
 document with placements, preserved source text and source links, saved and reopened as `.ceproject` JSON. Its 3D
 view starts as a flat placement plane with markers, with orbit, zoom, drag and undo. A placement can be bound to one
 named object of an installed level, and that level loaded as a read-only preview of sampled terrain and static,
-untextured models. Integrated source resolves unambiguous object definitions to meshes in the same resource archive;
+untextured models. The Companion's Mission project page resolves unambiguous object definitions to meshes in the same resource archive;
 fresh Linux level-221 captures were inspected. Missing, ambiguous and unsupported references are omitted and reported.
 Base-world objects stay where the map puts them, and a name only the base world has, or that two objects of the level
 share, is refused, following CE's project loader. The page edits no terrain and has no source
-compilation or new playable-level export. CE development source now reads linked projects. On 2026-11-03, projects
-saved through the production page's Save as path moved one existing object's X/Y on level 221 in default Linux CE;
-an independent review reproduced the path. The object initializes its own height, so stored Z is not a promise of
-runtime height. On November 4, the initial network-enabled 0.1.99 Linux package also passed a local smoke check of one of
+compilation or new playable-level export. CE development source now reads linked projects. In a controlled run on
+2026-11-03 (the page driven programmatically; no person at the Save as dialog), projects saved through the production
+page's Save as path placed one existing level-221 boat at its authored X/Y in default Linux CE; an independent review
+reproduced the path. The boat initializes its own height, so stored Z is not a promise of runtime height, and in one
+moved case later mission and AI reactions followed, so moving an object does not keep a mission unchanged. On
+November 4, the network-enabled 0.1.99 r1 Linux package also passed a local smoke check of one of
 those page-saved projects, with an inspected placement log entry and gameplay image and no active network session.
-The refreshed Linux package also loaded that project, rendered gameplay and exited cleanly with no active peer. These
+The 0.1.99 r2 Linux package also loaded that project, rendered gameplay and exited cleanly with no active peer. These
 checks use programmatic page signals, not human dialog or drag input, and establish neither Windows nor multiplayer
 project loading/replication, mission completion or general object support. No publicly released CE reads these
 projects. The [capability record](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore)
 owns the measured scope; the full format, authoring and runtime goals remain open.
 
-David's mod-platform direction (2026-10-30) is to replace any model, texture, sound, music or text; add units, levels
-and missions; and provide a scripting interface for new rules and modes, up to whole new games built inside CE.
-Safe authoring and compatibility, complete content coverage and HD successors remain open.
+David's mod-platform direction (2026-10-30) is recorded in [GOAL.md](GOAL.md): safe authoring and compatibility,
+complete content coverage and HD successors remain open, and this page tracks the work.
 
 The Companion's Level editor can inspect and move placed objects (typed, dragged on the map or nudged with the arrow keys), list only the moved ones, copy a unit (appended after every row so existing row, path and target indices do not shift; the copy retains its script and target), show a map and mission scripts, and edit a script's
 source (compile it, make the level use it, undo it); it saves changed world files as new CE mods and starts CE at the open level with the changes in a temporary folder of its own (its Play button). The page is covered by
@@ -343,17 +355,17 @@ script-draft restoration and the waypoint-check workflow remain outside that int
 and [mission editor design](roadmap/companion-mission-editor.md) own their remaining gates, including source-preserving
 staging, hand use and gameplay acceptance. CE's released world-mod route remains Linux-only. The reviewed Windows
 loading contract was integrated into CE development source on November 3. It constrains mod reads and keeps fallback
-to installed data, but normal Windows builds retain the switch OFF. A special test build can exercise the loader;
+to installed data, but normal Windows builds retain the Windows mod-loading switch OFF (see the chart's Mods and content catalogue row). A special test build can exercise the loader;
 that is not player availability. Native filesystem behavior, including links, spelling and files changed during a
 run, still needs its Windows gate before enabling the route.
 
 The integrated, unreleased Museum Preview currently reuses the Goodies pictures/models gallery. Its visitor access
-does not unlock movies, cheats or bonus-level items; a wording correction is under review and is not yet delivered.
+does not unlock movies, cheats or bonus-level items. A wording correction naming the gallery read-only was integrated into CE development source on 2026-11-04, after the r2 build, so neither the r1 nor the r2 package carries it.
 Its visitor Back route and saved-data checks passed independent Linux review; the retained review receipt has SHA-256
 `9eb42f9130db4ea5d43728febc78bd8129e7f32644c09a6f1561930a47b5ceaf`. This is a gallery, not an explorable level;
 native Windows behavior and the full museum remain open.
 
-The refreshed local checkpoint adds a separate **museum construction test**: three identical static props on
+The 0.1.99 r2 checkpoint adds a separate **museum construction test**: three identical static props on
 existing terrain, reached through its own prepared launch route and museum-only profile. The reviewed staging tool
 and a repeated run of the exact Linux package demonstrated movement and clean exit; fresh frames were inspected,
 inputs and package files read back unchanged, and no career files were created. The independent review has SHA-256
@@ -370,8 +382,8 @@ complete it. The museum should be a self-guided world built from scratch, displa
 for exploration on foot or in flight in the Battle Engine. It should show the game's art on boards, with turntables,
 lighting and signs. The art comes from the player's own installation and is never shipped. A small CE-first exhibition can progress before
 catalogue completion, suitable Windows support or original-game-compatible output. Full museum coverage still needs
-a complete catalogue, level authoring and suitable CE support on Windows and for boards, turntables, lighting and
-signs. Protect the original campaign's expected behavior with regression tests while allowing documented bug fixes
+a complete catalogue, level authoring, Windows support that passes its Windows gate (see the chart's Mods and content
+catalogue row) and CE support for boards, turntables, lighting and signs. Protect the original campaign's expected behavior with regression tests while allowing documented bug fixes
 and improvements. Small test levels runnable in both the original and CE remain optional where a direct comparison
 is useful. Existing CE edit runs and the bounded comparison with the original do not establish complete equivalence;
 the [level editor plan](roadmap/companion-level-editor.md) owns the CE runs' measured scope.
@@ -437,9 +449,10 @@ This establishes only the selected snapshot; it does not cover work created afte
   verified bundle and `refs/old/*` in the private RE archive. The third-party fork and GitHub's pull-request refs
   still hold the old history; whether to ask GitHub Support to purge the PR refs is David's decision.
 - The split: the Godot rebuild is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot) (the `rebuild/` copy here is frozen), and
-  the game documentation is published as [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation). Still to come: this repository's
-  full history is bundled into the private RE archive and flattened again, and the repository is renamed
-  onslaught-companion. Each step is a separate, coordinated task.
+  the game documentation is published as [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation). Held: bundling and re-flattening this repository's
+  history, and renaming the repository. Public main histories stay unrewritten and the Companion is being moved into
+  CE, so no rename is scheduled; any rename waits until the Companion's retirement is settled and is a separate,
+  coordinated task.
 
 ## Paused
 
@@ -453,7 +466,7 @@ This establishes only the selected snapshot; it does not cover work created afte
 | Item | Outcome |
 | --- | --- |
 | Retail RE by Ghidra campaign (generations, contracts, promotion cohorts, record audit) | Superseded by the byte-matching decompilation; records in the private RE archive. |
-| Private decompilation matching measurement | 5,482/5,482 mapped functions match with the guarded one-byte correction; one remains unmatched without it. The published [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) reproduces 5,449, with that concession. |
+| Private decompilation matching measurement (measurement closed; concession-free matching is open) | Every mapped function matches with the guarded one-byte correction; one remains unmatched without it. The published [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) records its own coverage, with that concession, and what it leaves out in its [score document](https://github.com/dlprentice/onslaught-decomp/blob/main/docs/SCORE.md). |
 | WinUI toolkit, its UI tests and CLI (former P11) | Removed 2026-10-15; the companion replaced them. |
 | Campaign bookkeeping relief (former P6) | Retired with the campaign. |
 | Repository preparation (former P12) | The maintainer's checkout lives on a separate archive drive; `local-lab/` and `local-data/` are real ignored children. The 2026-10-15 cleanup moved the Ghidra checkpoint and RE machinery to the private archive and removed the WinUI surfaces. |
