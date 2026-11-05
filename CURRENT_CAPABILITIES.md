@@ -379,14 +379,12 @@ after a file is in place is reported as a possible change and the file is left a
 injection in the tests, not on a real drive lacking the exchange. Backups cover the careers and settings file the
 companion can read; other files are skipped and counted.
 
-**Checks:** the commit messages of 2026-09-26 and the [September 26 validation section](VALIDATION.md#companion-approved-workflows--september-26) record each check: `npm test`
+**Checks:** the [September 26 validation section](VALIDATION.md#companion-approved-workflows--september-26) records them: `npm test`
 (one C# contract suite inside headless Godot, including the portable write path run on
 Linux, and the development runner's own cases), renders of every screen at 1280×800 and 1920×1080
-reviewed first-hand, the problems that review found fixed, covered by tests, re-rendered and
-reviewed again, and Linux and Windows packages exported, with the Linux package started and
-quit cleanly under an isolated home. The earlier approved-workflow receipts are
-in [their validation section](VALIDATION.md#companion-approved-workflows--september-26) and
-the migration's in [its section](VALIDATION.md#companion-c-migration--september-25).
+reviewed first-hand, the fixes that review led to, and Linux and Windows packages exported, with the Linux
+package started and quit cleanly under an isolated home. The migration's receipts are
+in [its section](VALIDATION.md#companion-c-migration--september-25).
 Art & sound and the Goodies page's "What it shows" are covered by the contract suite on
 synthetic models, textures, a sound bank and Goodie archives; no dated receipt for them is
 recorded here. **Ordinary Windows release UI acceptance, a human click-through and listening to the audio remain pending.**

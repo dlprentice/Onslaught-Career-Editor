@@ -236,8 +236,11 @@ window**; use it when the desktop is available. Each command stages the project 
 Worktrees follow the overlay rules in [LOCAL_LAB_OVERLAY.md](../../LOCAL_LAB_OVERLAY.md); no research corpus
 is copied.
 
-To route engine checks through your own headless wrapper, set `ONSLAUGHT_GODOT_HEADLESS` to its command (it receives
-`--path PROJECT` and the engine's arguments). Tests and captures use a private HOME and clear inherited CE user-folder overrides.
+To route engine checks through your own headless wrapper, set `ONSLAUGHT_GODOT_HEADLESS` to its command. The runner
+replaces the engine command with it: the wrapper receives `--path PROJECT` and the engine's other arguments without
+`--headless` (the wrapper supplies it), and finds the engine in the `GODOT` environment variable (the runner's own check in
+`tools/companion_godot_tests.py` uses a wrapper that runs `"$GODOT" --headless "$@"`). Tests and captures use a private HOME and
+clear inherited CE user-folder overrides.
 
 `npm test` runs `Tests/CompanionTestRunner.cs` against an owned copy of the one tracked
 [real-save fixture](../../tests_shared/fixtures/README.md) and a game-shaped folder built
@@ -693,7 +696,7 @@ process during the run is not guaranteed to stay outside the game folder (the li
 
 [toolchain.json](toolchain.json) records the measured engine, SDK and template hashes and
 the shared lock revision; `tools/companion_godot.py` verifies the installation and refuses
-mismatches. `global.json` pins .NET SDK 10.0.402 (the latest patch of that band when it was pinned on 2026-10-30; the runner accepts only
+mismatches. `global.json` pins .NET SDK 10.0.402 (the latest patch of that band when it was pinned on 2026-10-22; the runner accepts only
 10.0.402); the Godot SDK is `4.8.0-beta.1`, the target `net10.0` and the runtime 10.0.13, the
 one that SDK ships. The runtime packs Godot's export bundles
 (`microsoft.netcore.app.runtime.linux-x64` and `win-x64` 10.0.13) are pinned by nuget.org's
