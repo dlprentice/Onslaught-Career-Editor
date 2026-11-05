@@ -1,9 +1,9 @@
 # Onslaught Toolkit changelog
 
 Status: historical — the retired WinUI app's release record; no further entries
-Last updated: 2026-10-21 (marked historical; the unreleased section and the never-published 1.0.12 candidate removed)
-Evidence: MEASURED — published entries name the released ZIP/tag they
-describe.
+Last updated: 2026-11-05 (evidence label corrected; earlier: marked historical, the unreleased section and the never-published 1.0.12 candidate removed)
+Evidence: INFERRED — the 1.0.11 entry names its download
+(`OnslaughtToolkit-winui-v1.0.11-win-x64.zip`); earlier entries do not name theirs.
 Summary: per-version record of the retired WinUI app's releases, for downloaders
 who arrive from the Releases page. The WinUI app is no longer maintained.
 

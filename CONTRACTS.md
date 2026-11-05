@@ -1,10 +1,11 @@
 # Retail function and behavior contracts
 
 Status: active — what the contract documents are and how to read their grades
-Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-05 (new contracts are written in onslaught-preservation; the evidence grade and the list of grades corrected)
 Summary: what a retail behaviour contract states, what its recorded grade meant, and where the authority now sits.
-Evidence: SOURCE — the contract documents under `reverse-engineering/contracts/` and the per-function notes under
-`reverse-engineering/binary-analysis/functions/`; grades are those the Ghidra-era campaign recorded.
+Evidence: INFERRED — the grade names are the Ghidra-era campaign's vocabulary as recorded in
+`reverse-engineering/contracts/` and the per-function notes under `reverse-engineering/binary-analysis/functions/`;
+none is re-measured here.
 Specimen: pristine `BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
@@ -13,7 +14,9 @@ per-function notes under [`reverse-engineering/binary-analysis/functions/`](reve
 describe what individual retail functions do. They were written during the Ghidra-era campaign, which graded every
 function in machine-verified campaign generations. That campaign ended on 2026-10-15. The reconstructed source in
 [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) owns current function matching; its published
-record states the coverage, compiled-object concession and exclusions. Matching is distinct from runtime validation. The
+record ([README overview](https://github.com/dlprentice/onslaught-decomp/blob/main/README.md) and
+[score](https://github.com/dlprentice/onslaught-decomp/blob/main/docs/SCORE.md)) states the coverage,
+compiled-object concession and exclusions. Matching is distinct from runtime validation. The
 campaign's ledgers, verifiers and `developer_state.json` are in the private historical maintainer archive.
 
 ## What a contract is
@@ -45,12 +48,17 @@ A contract's recorded grade is the campaign's last word on it, not a current mea
 4. Refuter-survived: predictions, controls, identity, receipts and competing explanations passed a can-fail gate.
 5. Terminal or `REBUILD_READY`: enough evidence for the stated use, with remaining uncertainty explicit.
 
-Grades are not percentages, and a name or boundary does not raise a semantic grade.
+Grades are not percentages, and a name or boundary does not raise a semantic grade. Item 4 has no code name in the
+tree. Function notes and `rebuild/PROVENANCE.md` also use `OPEN_EXECUTED` and `PARTIAL_CONTRACT`; they are not grades on
+this list.
 
-## Writing or correcting a contract now
+## Writing or correcting a contract (current route)
 
-- Check the claim against the decompiled function in [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) and cite it by name and address; never paste
-  decompiler output into this repository.
+- New or corrected contracts are written in [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation)
+  (read its CONTRIBUTING.md; contracts sit beside their subsystem, for example under `engine/world/contracts/`); this
+  repository's copy is frozen.
+- Check the claim against the function in [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) and cite it
+  by function name (an address only in a document with a `Specimen:` line); never paste decompiler output.
 - Keep static structure, measured runtime behaviour, source architecture and open questions visibly separate, and
   state what the document does not prove.
 - Name the specimen for any byte or address finding.

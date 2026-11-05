@@ -1,13 +1,14 @@
 # Security And Private Data Reporting
 
 Status: active disclosure guidance
-Last updated: 2026-10-22 (private reports go through GitHub's private vulnerability reporting; the installed-game write contract cites the companion's GameWrites; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
-Summary: how to report a defect that touches saves, local paths or copied
-executables, and the safety contracts a report is judged against.
+Last updated: 2026-11-05 (the scope no longer lists copied executables or copied-profile patching, which only the retired WinUI v1.0.11 build had; earlier: private reports go through GitHub's private vulnerability reporting; the installed-game write contract cites the companion's GameWrites; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Summary: how to report a defect that touches saves, local paths or writes into an
+installed game, and the safety contracts a report is judged against.
 
-Onslaught Toolkit handles save files, local game paths, copied executables, and
-generated asset output. Reports should expose only what is needed to reproduce
-the defect.
+Onslaught Toolkit handles save files, local game paths and generated asset output.
+(Copied executables and copied-profile patching existed only in the retired,
+unmaintained WinUI v1.0.11 build.) Reports should expose only what is needed to
+reproduce the defect.
 
 ## Consequential safety contracts
 
@@ -45,7 +46,7 @@ vulnerability": https://github.com/dlprentice/Onslaught-Career-Editor/security/a
 - leaked secrets, credentials, private paths, or machine identifiers;
 - unsafe mutation of an installed game, original executable, save, or options
   file;
-- copied-profile patching that can escape its selected/app-owned root;
+- a copy, export or generated output that can escape its selected or app-owned root;
 - launcher behavior that can stop a process it did not start;
 - raw debugger/runtime captures, full Ghidra projects, or unreviewed bulk game
   payloads that should not be posted in a public issue.
