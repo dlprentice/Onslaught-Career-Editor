@@ -148,8 +148,11 @@ npm test
 Without Node.js, after the same clone and virtual environment, the equivalent Python commands are:
 
 ```bash
+python3 tools/md_link_check.py --self-test
 python3 tools/md_link_check.py --check-only
+python3 tools/doc_header_check.py --self-test
 python3 tools/doc_header_check.py
+python3 tools/public_allowlist_safety_check.py --self-test
 python3 tools/public_allowlist_safety_check.py --include-submodules
 python3 tools/companion_toolchain.py setup
 python3 tools/companion_godot.py build
@@ -181,7 +184,8 @@ implement a feature and submit a PR from your fork.
 Activating the virtual environment supplies the `python` command used by npm, including on distributions that
 otherwise provide only `python3`. Without Node/npm, documentation checks are
 `python3 tools/md_link_check.py --check-only` and `python3 tools/doc_header_check.py`; the payload check is
-`python3 tools/public_allowlist_safety_check.py --include-submodules`.
+`python3 tools/public_allowlist_safety_check.py --include-submodules`. `npm run test:docs` and `npm run test:safety` run
+each checker's `--self-test` first, and the list above does the same.
 The equivalent application commands are `python3 tools/companion_godot.py build`,
 `python3 tools/companion_godot.py test` and `python3 tools/companion_godot.py run`. Run both
 `python3 tools/companion_toolchain_tests.py` and `python3 tools/companion_godot_tests.py` for the tooling stage of

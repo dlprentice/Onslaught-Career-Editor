@@ -25,7 +25,7 @@ then `ce.ini`'s `gamedir`, and finally searches CE's Steam locations. Choosing a
 folder for pictures and music does not change that CE career source.
 
 **CE launcher safety.** Released Onslaught CE launchers 0.1.0–0.1.6 can delete neighbouring
-`<program folder>.old-*` files and folders when they start; CE's
+`<program folder>.old-*` files and folders when they start, even with update checks off; CE's
 [manual migration](https://github.com/dlprentice/onslaught-ce#manual-migration-from-affected-launchers)
 says not to start them at all. Before executing a launcher, the companion reads the version on the first
 line of the package's `README.txt` and refuses Play and the version query for 0.1.0–0.1.6, for a missing or
@@ -368,7 +368,7 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   folder or the backups (even one that does not exist yet) and never over an existing folder. A move you have not saved as a mod
   is asked about before it is dropped when you close the Companion, open another level or choose another game folder, and
   switching games is refused, with a message, until the move is saved or undone. Only a level's own world is changed: the base
-  world a level also loads is mentioned, not edited. Onslaught CE loads a world file from a mod on Linux only for now, from 0.1.11 on, and only from a version
+  world a level also loads is mentioned, not edited. Onslaught CE loads a world file from a mod only on Linux, from 0.1.11 on, and only from a version
   whose README's Mods section lists world files. The page's reader and writer are checked against the Toolkit's Python reference
   (`tools/level_editor_vectors.py`) and, on a game install, against every world body in it; the file it saves for a move of one
   Target Tank is byte for byte the one the Toolkit's pipeline stages for the same move, whether the move was typed or made by
