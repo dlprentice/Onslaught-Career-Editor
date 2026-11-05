@@ -49,11 +49,9 @@ quality-of-life improvements. Scenario eligibility, implementation and packaging
 player workflows; the order below tracks dependencies, not dates.
 
 The 0.2 release hold and the standing authorization for 0.1.x releases are worded once, in
-[GOAL.md](GOAL.md#how-progress-is-measured): 0.2 is not released until David gives an explicit go-ahead after its whole
-program is complete and tested internally, and internal playtest checkpoints do not lift that hold. Gated 0.1.x
-maintenance releases remain under David's standing authorization of 2026-10-27; 0.1.99 is an internal checkpoint label
-that is never published. Working multiplayer and the complete in-game workflows above are required alongside the other
-agreed outcomes.
+[GOAL.md](GOAL.md#how-progress-is-measured), and this page does not restate them. 0.1.99 is an internal checkpoint
+label that is never published. Working multiplayer and the complete in-game workflows above are required alongside the
+other agreed outcomes.
 
 David has requested that **0.1.99 include the recent integrated work**. Two local checkpoints carry that label, and
 this page names them only as **0.1.99 r1** (the earlier snapshot) and **0.1.99 r2** (the separate refreshed checkpoint,
@@ -129,7 +127,7 @@ This checklist inventories the production Companion pages and their subflows fro
 migration requirement, not a new runtime acceptance result. Each unchecked row needs an end-to-end native CE
 workflow; existing CE features may already provide parts of it. CE can combine or rearrange the screens, but a
 button that opens the standalone Companion does not complete a row. Preserve the working app and its evidence
-until the replacements are verified; then it can be phased out or retained as redundant access to those capabilities.
+until the replacements are verified; then it is phased out.
 
 | Workflow and current source owner | What exists in the Companion | Native CE completion check |
 | --- | --- | --- |
@@ -253,7 +251,7 @@ An opt-in solo tank prototype is integrated into CE development source and
 camera/control return on Aquila Prototype; the retained review receipt has SHA-256
 `ba94fe981d4e95860e1b7112753596b9f070b4cebfda846c328c7c2d64dfa730`.
 The parked Battle Engine remains vulnerable, not a required rule for future online roles. The initial prototype lacked
-squad restoration. The refresh includes the reviewed hand-back correction: reciprocal membership is restored only
+squad restoration. The r2 checkpoint includes the reviewed hand-back correction: reciprocal membership is restored only
 when the original squad is still live and compatible, the unit adopts that squad's current AI, and external ownership
 changes are preserved. The retained independent review has SHA-256
 `69886ea02b775c19a8c965d8005c9856e359e1645b6f1e4cd5b74079bb484d2b`.
@@ -278,12 +276,12 @@ The future controls and HUD must fit what is being played:
 | Tanks and artillery | Native aiming/traverse limits, firing arcs and applicable trajectory feedback, ammunition and reload state. |
 | Aircraft | A flight viewpoint and flight controls, weapon arcs, ammunition and reload state, a clear way to leave control, and only the actions the type supports. |
 | Boats, ferries and other vehicles (wheeled, hover, walkers, drones) | The viewpoint, controls and feedback their type supports, with native movement and firing behavior. |
-| Every other unit type | The catalogue's unit definitions list every type; each gets a defined viewpoint, controls and HUD, or an explicit written exclusion. |
+| Every other unit type | The catalogue's unit definitions list every type; each gets a defined viewpoint, controls and HUD. |
 | Mounted/fixed guns, turrets and controllable structures | Appropriate viewpoint, traverse/aim controls and a clear way to leave control; only actions the controlled type supports. |
 
 Crosshairs, aim/trajectory indicators and firing feedback must agree with the native weapon's actual firing state and
 obstructions. A displayed target or a fire input alone is not proof that a round was fired or that its path is clear.
-These requirements stay in the broader unit-role work; they do not hold the isolated 0.1.99 checkpoint for infantry,
+These requirements stay in the broader unit-role work; they do not hold the 0.1.99 r1 and r2 checkpoints for infantry,
 all-unit controls, full HUDs or online possession.
 
 The intended menu is **Multiplayer → Local or Online**. Local should clearly distinguish split-screen from

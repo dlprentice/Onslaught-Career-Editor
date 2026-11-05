@@ -58,7 +58,7 @@ narrow or mark this objective complete. The earlier Ghidra campaign remains only
   trajectory, ammunition and reload; aircraft flight controls, weapon arcs, ammunition and reload; boats, ferries and
   other vehicles (wheeled, hover, walkers, drones) with the controls their type supports; fixed-gun traverse and
   leaving the position. Every other unit type in the catalogue's unit definitions gets a defined viewpoint, controls
-  and HUD, or an explicit written exclusion. Indicators must reflect actual native firing conditions and
+  and HUD. Indicators must reflect actual native firing conditions and
   obstructions. The solo tank prototype is an early step on this path; its status is in
   [PROGRAM.md](PROGRAM.md#onslaught-ce-player-experience-and-online-play). It does not prescribe how
   future online roles work. Like other new modes, these roles must not interfere with ordinary campaign play;
