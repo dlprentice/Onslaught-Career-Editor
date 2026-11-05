@@ -1,11 +1,14 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-05 (Onslaught CE is the one native player product and every Companion capability is moving into it; routing to GOAL.md and PROGRAM.md; a Node-free setup block; pre-flatten wording)
 Summary: what this project is, where each part lives, which checks a public clone can run, and what Companion builds require.
 
-Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
-repository holds it and the project's overview.
+Onslaught CE is the one native player product for *Battle Engine Aquila* (2003, Lost Toys). This repository holds the
+current standalone Onslaught Companion (careers, saves and backups, settings, lore, content exploration and the
+catalogue, the editors, installation management), whose capabilities are all moving into native CE and which stays
+supported until each replacement is verified ([PROGRAM.md](PROGRAM.md#companion--ce-integration)), together with the
+project overview, tools and frozen documentation.
 
 - **The byte-matching decompilation is the reverse-engineering authority.** Its public export,
   [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), documents matching coverage, excluded code and
@@ -20,19 +23,23 @@ repository holds it and the project's overview.
   **[Onslaught CE](https://github.com/dlprentice/onslaught-ce)** (GPL-3.0-only, no game files), not from this repository.
   Its [release notes](https://github.com/dlprentice/onslaught-ce/releases/latest) identify the tested routes,
   corrections and remaining limits.
-- **The companion, Onslaught Companion, manages careers for the original game and Onslaught CE.** It is a Godot
+- **The companion, Onslaught Companion, currently manages careers for the original game and Onslaught CE, and is being
+  moved into CE.** It is a Godot
   .NET app that shows progress and Goodies, edits careers and settings after a verified backup and a clear choice,
   and keeps automatic backups that can be put back. It offers CE launch, two CE launcher settings and the steps for
   updating CE (the companion itself contacts nothing; CE checks its own signed feed). It also plays and explains the game's own music, voices and lore.
-  The [companion's limits](companion/OnslaughtToolkit.Godot/README.md#known-limits) distinguish tested file operations
-  from game launch and Windows behavior that still need to be tried.
+  The [companion's known limits](companion/OnslaughtToolkit.Godot/README.md#known-limits) say what was tested:
+  automated Linux checks against CE 0.1.13 that started its real launcher and loaded an edited copy of a career
+  (2026-11-03). Still open: ordinary Windows invocation and file dialogs, human use (nobody has yet clicked through
+  the app or listened to its music and voices), the update hand-off and complete campaign play.
 - **The Godot rebuild** aims to be 1:1 with retail from startup to exit, with level 100 playable to completion. It
   is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot), which keeps its measured parity.
   `rebuild/` here is retained as a frozen reference. Its application is not built or gated here; some retained
   Python helpers still support this repository's format tools and have focused checks.
 
 This repository holds the companion, the lore, our own tools, a frozen copy of the game documentation and a frozen
-copy of the Godot rebuild. It holds no game files, Ghidra database, decompiler output or decomp source.
+copy of the Godot rebuild. It holds no game binaries or assets, Ghidra database, decompiler output or decomp source,
+and no save except one reviewed regression fixture.
 
 This is an unofficial community project. It is not affiliated with or endorsed by the game's publishers or rights
 holders. Repository licenses cover their respective project code and documentation; they grant no rights in the
@@ -41,7 +48,8 @@ retail game, its assets, names, or trademarks.
 ## Play: Onslaught CE
 
 To play the game, use Onslaught CE, the native source port. It needs your own installation of the game for its data.
-Its source and downloads are at [Onslaught CE](https://github.com/dlprentice/onslaught-ce).
+Its source and downloads are at [Onslaught CE](https://github.com/dlprentice/onslaught-ce). Online multiplayer is not
+player-ready ([PROGRAM.md](PROGRAM.md#onslaught-ce-player-experience-and-online-play)).
 
 ## Report a problem
 
@@ -77,7 +85,7 @@ on the companion's Home page, where each can be saved as a copy elsewhere.
 
 | Path | Owner |
 | --- | --- |
-| [`companion/OnslaughtToolkit.Godot/`](companion/OnslaughtToolkit.Godot/README.md) | The companion for original-game and CE careers, settings, launch and the level/mission editor, C# built in code on Godot 4.8 beta1 .NET and .NET 10 |
+| [`companion/OnslaughtToolkit.Godot/`](companion/OnslaughtToolkit.Godot/README.md) | The current standalone companion for original-game and CE careers, settings, launch and the level/mission editor (authoring moves into CE: [PROGRAM.md](PROGRAM.md#level-and-mission-tools)), C# built in code on Godot 4.8 beta1 .NET and .NET 10 |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | A frozen copy of the game documentation (formats, mechanics, saves, assets, function notes and contracts) as at commit `fae54b7`. Its home is [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation), where new findings go |
 | [`lore/`](lore/_index.md) | The canonical lore and history library, embedded in the companion |
 | [`tools/`](tools/README.md) | Format decoders, the [local content catalogue](tools/README.md#content-catalogue), asset exporters, capture analysis and the repository's checks |
@@ -85,7 +93,10 @@ on the companion's Home page, where each can be saved as a copy elsewhere.
 
 [`PROJECT-INDEX.md`](PROJECT-INDEX.md) maps source ownership and dependencies;
 [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) says what is demonstrated today and what is not.
-Retired surfaces (WinUI, the CLI, Electron, the Python GUI, WPF) remain in Git history.
+[`GOAL.md`](GOAL.md) states the outcomes; [`PROGRAM.md`](PROGRAM.md) holds the dated chart and work queue, including
+the Companion's migration into CE ([Companion - CE integration](PROGRAM.md#companion--ce-integration)).
+The retired surfaces (WinUI, the CLI, Electron, the Python GUI, WPF) are in the private pre-flatten history (before the
+public root commit of 2026-10-15); the tag `winui-v1.0.11` marks the one WinUI release kept.
 
 ## Build and run
 
@@ -106,7 +117,7 @@ such as `~/src/Onslaught-Career-Editor`, rather than under `/mnt/c`. Install Git
 inside that distribution. The [WSLg prerequisites](https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps)
 apply to opening the Companion with `npm run dev`; headless tests do not need a graphical desktop. A WSL run tests
 the Linux application, not native Windows file or input behavior. This setup was reproduced on native Linux;
-the WSL recipe follows Microsoft's documented route and has not been exercised in the Windows test VM.
+the WSL recipe follows Microsoft's documented route and has not yet been run on a Windows machine.
 
 ### Public setup
 
@@ -120,6 +131,8 @@ Start with:
 Some tool checks also require NumPy or Pillow, and catalogue schema checks need `jsonschema` to avoid skips.
 See the [Python prerequisite scopes](tools/README.md#python-prerequisites) before choosing a tooling suite.
 
+With Node.js 26.7 and npm 11.19:
+
 ```bash
 git clone --recurse-submodules https://github.com/dlprentice/Onslaught-Career-Editor.git
 cd Onslaught-Career-Editor
@@ -130,6 +143,19 @@ npm run test:safety
 python tools/companion_toolchain.py setup
 npm run build
 npm test
+```
+
+Without Node.js, after the same clone and virtual environment, the equivalent Python commands are:
+
+```bash
+python3 tools/md_link_check.py --check-only
+python3 tools/doc_header_check.py
+python3 tools/public_allowlist_safety_check.py --include-submodules
+python3 tools/companion_toolchain.py setup
+python3 tools/companion_godot.py build
+python3 tools/companion_godot.py test
+python3 tools/companion_toolchain_tests.py
+python3 tools/companion_godot_tests.py
 ```
 
 The setup downloads pinned official Godot .NET and .NET SDK archives into ignored `local-data/`, verifies them
@@ -183,7 +209,6 @@ checkout's `local-data/companion/`, including from a Git worktree.
   swap, an exchange swap that is undone if the displaced file is not the one backed up, and verification of the saved file.
 - Keep game binaries and assets (or converted copies), real saves, Ghidra databases, decompiler output, debugger
   transcripts, private captures, secrets and build output out of Git; `npm run test:safety` enforces the boundary.
-- Online multiplayer is not player-ready.
 
 The tracked regression fixture [`tests_shared/fixtures/gold_career_save.bin`](tests_shared/fixtures/README.md) is
 the reviewed exception to the no-save rule. See [`SECURITY.md`](SECURITY.md) and
@@ -193,9 +218,9 @@ the reviewed exception to the no-save rule. See [`SECURITY.md`](SECURITY.md) and
 
 The game documentation moved to [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation), where it is
 maintained and where new findings go; [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) here is a frozen copy.
-Findings name the specimen, capture, test or source line they rest on. Stuart Gillam's GPL Onslaught project (GitHub `stuart73/Onslaught`) in the
-pinned [`references/Onslaught`](references/Onslaught) submodule is a source reference, not proof of retail behaviour.
-Earlier Ghidra-era records, the tracked Ghidra checkpoint and the campaign machinery are kept privately.
+Findings name the specimen, capture, test or source line they rest on. Stuart Gillam's GPL Onslaught project (GitHub `stuart73/Onslaught`),
+pinned through the `dlprentice/Onslaught` fork as the [`references/Onslaught`](references/Onslaught) submodule, is a source reference, not proof of retail behaviour.
+The Ghidra checkpoint and the campaign machinery are kept in a private archive; this repository holds none of them.
 
 The lore library begins at [`lore/_index.md`](lore/_index.md); [`lore-book/BOOK.md`](lore-book/BOOK.md) is a short
 reading guide.
