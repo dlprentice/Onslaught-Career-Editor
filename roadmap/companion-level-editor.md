@@ -310,8 +310,8 @@ A custom `Control` like `CampaignMap`:
 - No telemetry, no network. The page reads the installed game's data; the Save as mod dialog says "Nothing in your game
   changes", and there is no first-use notice.
 - Mods do not load on Windows in the current public CE (0.1.13; see the Mods row of the
-  [PROGRAM.md chart](../PROGRAM.md#cross-project-progress-and-priorities)). The page does not yet say so or block saving
-  there; adding that notice is open work.
+  [PROGRAM.md chart](../PROGRAM.md#cross-project-progress-and-priorities)). The Play button refuses on Windows with that reason
+  (`CePlay`); **Save as mod** does not yet say so or block saving there, and adding that notice is open work.
 
 ## 9. Tests and acceptance
 
