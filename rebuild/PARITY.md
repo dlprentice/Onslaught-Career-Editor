@@ -1,7 +1,7 @@
 # Rebuild parity contract
 
-Status: active — proof-of-concept milestones (2026-10-15); the tables after them grade the earlier fixed-point rebuild
-Last updated: 2026-10-22 (private evidence named by its store, not a machine path; earlier, 2026-10-21: whole-game host slices 1-4: the front end drawn page by page against the port, the level inside the flow through a parked-run inspect, the level's 2D and HUD target passes; earlier rows keep their dates)
+Status: frozen — a retained copy; the maintained document is in onslaught-godot (at the freeze: active — proof-of-concept milestones (2026-10-15); the tables after them grade the earlier fixed-point rebuild)
+Last updated: 2026-11-06 (marked as a frozen copy; the content below is unchanged since 2026-10-22, with the entries it already dates)
 Evidence: SOURCE — authority order and the known divergences are
 recorded in `PROVENANCE.md` plus the Lost-countdown row of this table; gate capabilities are MEASURED claims of the
 tracked harnesses named in the table. Every row of *Carried retail contracts*
@@ -14,6 +14,8 @@ pristine specimen; do not infer another executable's identity from its folder na
 Summary: the gradeable dimensions of parity, the gate each currently has (or
 lacks), and the standing exceptions. This document names the gap; it does not
 claim the gap is closed.
+
+> **Frozen copy.** This file is retained from the Godot rebuild as it stood when `rebuild/` was split into [onslaught-godot](https://github.com/dlprentice/onslaught-godot). It is not built, tested or developed in this repository, and the commands, branch names and `npm run` scripts it names are not part of this repository's `package.json`. Current what is measured: [onslaught-godot's `rebuild/PARITY.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md).
 
 CGameInterface on PC (2026-10-21): the in-game menu rises only at a lost or drawn level's end, after
 `CGame::Update` has made continue, message log, level briefing and options unavailable (bea-decomp

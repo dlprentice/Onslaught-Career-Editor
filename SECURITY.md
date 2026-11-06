@@ -1,7 +1,7 @@
 # Security And Private Data Reporting
 
 Status: active disclosure guidance
-Last updated: 2026-10-22 (private reports go through GitHub's private vulnerability reporting; the installed-game write contract cites the companion's GameWrites; relicensing: code GPL-3.0-only, docs and lore CC BY-SA 4.0)
+Last updated: 2026-11-06 (the licence sentence names both licence files and the other repositories' reporting is pointed to; 2026-10-22: private reports go through GitHub's private vulnerability reporting; the installed-game write contract cites the companion's GameWrites)
 Summary: how to report a defect that touches saves, local paths or copied
 executables, and the safety contracts a report is judged against.
 
@@ -54,6 +54,15 @@ In the first report, include the affected path and commit, the command or user
 action, high-level reproduction steps, and the smallest redacted evidence. Do
 not paste secrets, executable/save bytes, machine-local paths, or raw captures.
 
+## Other repositories
+
+Each public repository of the project has its own `SECURITY.md` and its own private vulnerability reporting form:
+[Onslaught CE](https://github.com/dlprentice/onslaught-ce/security/policy),
+[onslaught-decomp](https://github.com/dlprentice/onslaught-decomp/security/policy),
+[onslaught-godot](https://github.com/dlprentice/onslaught-godot/security/policy) and
+[onslaught-preservation](https://github.com/dlprentice/onslaught-preservation/security/policy).
+Report a problem in the repository that owns the affected files ([Where to contribute](CONTRIBUTING.md#where-to-contribute)).
+
 ## Public reports
 
 Source-code bugs, documentation defects, redacted validation failures, feature
@@ -62,7 +71,7 @@ publicly. Do not attach full local retail payloads.
 
 ## License and asset boundary
 
-Project code, including `rebuild/`, is GPL-3.0-only under the root `LICENSE`;
+Project code is GPL-3.0-only under the root `LICENSE`, and `rebuild/` under `rebuild/LICENSE`;
 documentation and lore are CC BY-SA 4.0, as `REUSE.toml` maps them.
 `references/Onslaught` keeps its own GPL licence; file-level and third-party
 notices remain applicable.

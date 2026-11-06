@@ -55,6 +55,7 @@ path = [
     "lore-book/**",
     "roadmap/**",
     "companion/**/*.md",
+    "docs/**/*.md",
     "tools/**/*.md",
     "tests_shared/fixtures/README.md",
 ]

@@ -1,7 +1,7 @@
 # Local lab overlay
 
 Status: active — the ignored-directory boundary
-Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-06 (maintainer-workspace history shortened; the public ignored-directory rules are unchanged)
 Summary: which local paths own retail inputs and bulky generated work, and what
 may be promoted out of them into tracked evidence.
 
@@ -24,7 +24,7 @@ Current owners:
   durable workstation-local inputs;
 - `.artifacts/` — legacy validation, screenshots, publish output, reports,
   and extracted release candidates; inspect before retirement because some is unique evidence;
-- `local-data/` (Git-ignored, inside this checkout; `~/ProjectData` no longer exists) —
+- `local-data/` (Git-ignored, inside this checkout) —
   grouped `recovered/` packages, retained `_recovered-worktrees/` and Windows-profile inputs, retail
   profiles, media, VM media, and the gen32 host attestations that are not part of
   `local-lab/`; its own `AGENTS.md` describes the recovered packages;
@@ -32,12 +32,8 @@ Current owners:
   former tracked checkpoint (now in the private RE archive) and the sealed off-volume package are preservation
   copies, never writable inputs.
 
-The canonical lab was moved inside the checkout by atomic rename on 2026-08-30.
-On 2026-09-05 the complete checkout moved to external encrypted storage; the maintainer's
-usual path reaches those same files, and the lab itself remains a normal writable child
-directory. The earlier original copy was retired. The old ProjectData path is absent, not a
-compatibility link. Where the storage is mounted on a given machine is in the ignored
-`local-data/` notes.
+The canonical lab is a normal writable child directory of the maintainer's checkout. Where that checkout is stored on a
+given machine is in the ignored `local-data/` notes.
 Fresh clones and Git child worktrees do not receive ignored content. A worktree
 must set `BEA_LOCAL_LAB` to the canonical absolute path or pass that path through
 the owning tool's explicit lab option; do not create a per-worktree copy.
@@ -69,13 +65,7 @@ implementation or contract. Retail binaries/assets, real saves, raw debugger
 logs, screenshots, captures, and generated catalogs remain local.
 
 The machine-local RE campaign generations and READY bundles are history: the campaign ended on 2026-10-15 and
-its selector, `developer_state.json`, is in the private RE archive. On this workstation open `local-lab/INDEX.md`
-for the retained corpus. The retained
-`local-lab/hermes-kanban-campaign-2026-08-18/` material is dated operational
-history, not a liveness oracle. The DeepSeek drop remains at
-`local-lab/ds-deep-review/` and `local-lab/ds-deep-review-extended/`; the
-3,211-line historical catalog is `local-lab/INDEX-CATALOG-2026-08-17.md`.
-
-OpenJDK 21.0.12.1 and the verified Ghidra 12.1.3 distribution remain installed (activation receipt under
-`local-lab/ghidra-linux-12.1.3-activation-20260830-v1/receipts/`). No Ghidra work is planned; the working project
-and the independent cold recovery on the maintainer's archive storage stay as preservation copies.
+its selector, `developer_state.json`, is in the private RE archive. On the maintainer's workstation,
+`local-lab/INDEX.md` lists the retained corpus and the dated campaign material in it, which is history, not a
+liveness oracle. No Ghidra work is planned; the working Ghidra project and the independent cold recovery on the
+maintainer's archive storage stay as preservation copies.

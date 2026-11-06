@@ -1,11 +1,15 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-06 (names, contribution routing and the second pinned fork; 2026-11-02: public contributor setup and routing; historical results retain their dates)
 Summary: what this project is, where each part lives, which checks a public clone can run, and what Companion builds require.
 
 Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
-repository holds it and the project's overview.
+repository holds it and the project's overview. The repository is named Onslaught-Career-Editor; its documents also
+call it the Toolkit.
+
+To contribute to any part of the project, start with [Where to contribute](CONTRIBUTING.md#where-to-contribute): it says
+which public repository takes which kind of work, and everyone contributes by fork and pull request.
 
 - **The byte-matching decompilation is the reverse-engineering authority.** Its public export,
   [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), documents matching coverage, excluded code and
@@ -60,6 +64,9 @@ Its source and downloads are at [Onslaught CE](https://github.com/dlprentice/ons
 | [onslaught-godot](https://github.com/dlprentice/onslaught-godot) | The Godot 4 C# rebuild, compared Present by Present with recorded runs of the native port and of the original game; a proof of concept, not yet playable; GPL-3.0-only |
 | [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation) | The one home of the game documentation: file formats, saves, mechanics, levels and engine; CC BY-SA 4.0 |
 | [`stuart73/Onslaught`](https://github.com/stuart73/Onslaught) | Stuart Gillam's GPL Onslaught project; this repository pins David's fork, [`dlprentice/Onslaught`](https://github.com/dlprentice/Onslaught), as [`references/Onslaught`](references/Onslaught) |
+| [`stuart73/AYAResourceExtractor`](https://github.com/stuart73/AYAResourceExtractor) | Stuart Gillam's resource extractor; this repository pins David's fork, [`dlprentice/AYAResourceExtractor`](https://github.com/dlprentice/AYAResourceExtractor), as [`references/AYAResourceExtractor`](references/AYAResourceExtractor) |
+
+The two forks are pinned references, not contribution targets.
 
 ## Using the companion
 
@@ -119,6 +126,9 @@ Start with:
 
 Some tool checks also require NumPy or Pillow, and catalogue schema checks need `jsonschema` to avoid skips.
 See the [Python prerequisite scopes](tools/README.md#python-prerequisites) before choosing a tooling suite.
+
+The commands below use the npm shortcuts, which need Node.js. Without Node, use the Python commands listed after the
+block.
 
 ```bash
 git clone --recurse-submodules https://github.com/dlprentice/Onslaught-Career-Editor.git

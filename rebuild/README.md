@@ -1,16 +1,17 @@
 # Onslaught Rebuild
 
-Status: active — scoped proof of concept (reactivated 2026-10-15): startup to exit 1:1 with retail, level 100 playable to completion
-Last updated: 2026-10-22 (the decompilation named as onslaught-decomp; the reference environment as a table of variables, values kept outside the repository; earlier entries keep their dates)
+Status: frozen — a retained copy; the maintained document is in onslaught-godot (at the freeze: active — scoped proof of concept (reactivated 2026-10-15): startup to exit 1:1 with retail, level 100 playable to completion)
+Last updated: 2026-11-06 (marked as a frozen copy; the content below is unchanged since 2026-10-22, with the entries it already dates)
 Summary: the Godot/C# reconstruction: the new float-exact parity core and its harness, and the earlier fixed-point rebuild kept as reference.
 [`PROVENANCE.md`](PROVENANCE.md) is the authority for its evidence boundary.
 [`DETERMINISM.md`](DETERMINISM.md) is the determinism contract (the first
 thing a contributor to Core breaks). [`PARITY.md`](PARITY.md) defines what
 "1:1 parity" means operationally and what is currently graded.
 
+> **Frozen copy.** This file is retained from the Godot rebuild as it stood when `rebuild/` was split into [onslaught-godot](https://github.com/dlprentice/onslaught-godot). It is not built, tested or developed in this repository, and the commands, branch names and `npm run` scripts it names are not part of this repository's `package.json`. Current what is built, run and verified: [onslaught-godot's `rebuild/README.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/README.md).
+
 ## Working lane
 
-- Integration branch: `codex/rebuild-takeover-20261017` (merged into `main` when its gate passes).
 - Builds, test runs and captures happen in a clone on an internal disk (or a worktree of it), never in a checkout on
   slow or removable storage. Which clone and folders this machine uses is kept in an ignored local file
   (`local-data/rebuild-env.sh`) and the maintainers' private notes, not in the repository.

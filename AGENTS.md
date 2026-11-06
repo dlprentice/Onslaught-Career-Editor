@@ -1,13 +1,16 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-06 (contributors pointed to CONTRIBUTING.md; 2026-11-02: public contributor setup and routing; historical results retain their dates)
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
 Follow any applicable ancestor guides on your own machine. This repository's [README](README.MD#build-and-run)
 and [contribution guide](CONTRIBUTING.md) supply the public setup and baseline-to-PR workflow; no maintainer guide
-or private checkout is required. This guide adds project-specific rules.
+or private checkout is required. This guide adds project-specific rules. People contributing by pull request start with
+[CONTRIBUTING.md](CONTRIBUTING.md#where-to-contribute); the ground rules, reference routing and definition of done
+below apply to everyone, while "Tool outcomes and user holds" and the maintainer-workspace notes concern the
+maintainer's own agent tooling.
 
 ## What this is
 

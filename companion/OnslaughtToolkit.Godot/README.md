@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-11-04 (installed definition models in the linked 3D preview; separate frozen 0.1.99 checkpoint and platform limits retained)
+Last updated: 2026-11-06 (capture command moved out of the public command list, wrapper lock wording; 2026-11-04: installed definition models in the linked 3D preview; separate frozen 0.1.99 checkpoint and platform limits retained)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -217,11 +217,12 @@ also work without Godot. With public setup complete, use the commands in [packag
 ```bash
 npm run build:companion-godot
 npm test
-npm run capture:companion-godot
 npm run run:companion-godot
 npm run export:companion-godot -- --platform both
 python tools/companion_godot.py audit
 ```
+
+`npm run capture:companion-godot` is not in this list: it needs the optional wrapper described under the captures below.
 
 `audit` restores outside locked mode with
 NuGet's vulnerability audit over direct and transitive packages (it needs nuget.org); the
@@ -263,10 +264,9 @@ With that wrapper available, `npm run capture:companion-godot` renders every pag
 built from the fixture. Add `--capture-arg=--steam-root=DIR` to render against a real Steam
 library instead; that library is only read, and nothing is saved into it in that mode. Add
 `--beside-gpu-jobs` to render next to a job on the NVIDIA card instead of queuing behind the
-machine-wide GPU lock: the run gets its own hidden output and queues on the lanes' shared Intel
-GPU lock, `/var/tmp/godot-igpu.lock`. The companion's Compatibility renderer runs on the laptop's
-Intel GPU through Mesa, so it does not compete with a film rendering on the NVIDIA card, and it
-never overlaps another job on the Intel GPU (David allowed this on 2026-09-26).
+machine-wide GPU lock: the run gets its own hidden output and queues on the wrapper's shared
+Intel-GPU lock. The companion's Compatibility renderer runs on the integrated Intel GPU through Mesa, so it does not
+compete with a film rendering on the NVIDIA card, and it never overlaps another job on the Intel GPU.
 
 ## What it does
 

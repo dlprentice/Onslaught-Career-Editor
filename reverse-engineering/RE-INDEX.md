@@ -1,12 +1,12 @@
 # Reverse-Engineering Index
 
 Status: frozen — a copy of the game documentation as at Toolkit commit `fae54b7`; its home is onslaught-preservation
-Last updated: 2026-10-29 (frozen at fae54b7: onslaught-preservation is the one home of the game documentation and takes new findings; the files tools still read are listed; earlier: the decompilation's published score stated as it is; earlier: moved: maintained at onslaught-preservation, this copy frozen; the decompilation cited as onslaught-decomp; retired WinUI/AppCore surfaces named in the past tense; patch recipes: the executable-patch catalog and its contract were retired; removed the tracked retail string table row)
+Last updated: 2026-11-06 (the two post-freeze locator removals recorded; 2026-10-29: frozen at fae54b7: onslaught-preservation is the one home of the game documentation and takes new findings; the files tools still read are listed; earlier: the decompilation's published score stated as it is; earlier: moved: maintained at onslaught-preservation, this copy frozen; the decompilation cited as onslaught-decomp; retired WinUI/AppCore surfaces named in the past tense; patch recipes: the executable-patch catalog and its contract were retired; removed the tracked retail string table row)
 Summary: where the frozen copy of the documentation of Battle Engine Aquila lives in this tree, what each store covers, and the rules a claim about the shipped game has to meet before it is written down; new findings go to onslaught-preservation.
 
 > **Moved and frozen:** the game documentation's one home is
 > [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation), and new findings go there. This copy
-> is frozen at Toolkit commit `fae54b7`, the last commit that changed it, and gets no further edits, apart from the
+> is frozen at Toolkit commit `fae54b7`, the last commit that changed its findings, and gets no further edits, apart from the
 > files listed under [What the freeze leaves open](#what-the-freeze-leaves-open). For a document both hold, the one in
 > onslaught-preservation is the maintained one.
 
@@ -39,7 +39,11 @@ findings:
 - [`asset-formats/battle-engine-config-layout.tsv`](asset-formats/battle-engine-config-layout.tsv): the layout whose bytes
   `tools/battle_engine_config_decode_tests.py` pins.
 
-Everything else here, including the documents those tools cite, stays as it was at the freeze.
+Everything else here, including the documents those tools cite, stays as it was at the freeze, with one recorded
+exception: Toolkit commit `87dbf0da9` (2026-11-02) removed personal evidence locators from two function notes,
+[`binary-analysis/functions/Controller.cpp/ControlBindings.md`](binary-analysis/functions/Controller.cpp/ControlBindings.md)
+and [`game-mechanics/battle-engine-weapon-stores.md`](game-mechanics/battle-engine-weapon-stores.md). Their findings did
+not change.
 
 ## Evidence rules
 

@@ -1,7 +1,7 @@
 # Rebuild Provenance
 
-Status: active implementation boundary
-Last updated: 2026-10-22 (SPDX prose excluded from REUSE parsing; stale root MIT mention removed; private evidence named by its store; 2026-10-21: all rebuild code GPL-3.0-only; static identities from the specimen and the decompilation, not Ghidra; earlier entries keep their dates).
+Status: frozen — a retained copy; the maintained document is in onslaught-godot (at the freeze: active implementation boundary)
+Last updated: 2026-11-06 (marked as a frozen copy; the content below is unchanged since 2026-10-22, with the entries it already dates)
 The 2026-08-31 world-110 admissions and the separate construction stage built
 on them were retired on 2026-09-26, when World 110 moved onto the one
 construction owner; the standalone ordered `CPlayer::AssignBattleEngine`
@@ -13,6 +13,8 @@ startup/frontend, partial-source inventory, frontend-asset, mouse-sensitivity,
 and retained-particle claims retain their narrower dated evidence boundaries.
 Summary: the licence boundary, permitted evidence, and authority order for the
 `rebuild/` reconstruction lane, plus what the current slice actually covers.
+
+> **Frozen copy.** This file is retained from the Godot rebuild as it stood when `rebuild/` was split into [onslaught-godot](https://github.com/dlprentice/onslaught-godot). It is not built, tested or developed in this repository, and the commands, branch names and `npm run` scripts it names are not part of this repository's `package.json`. Current where code comes from: [onslaught-godot's `rebuild/PROVENANCE.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PROVENANCE.md).
 
 `rebuild/` is a GPL-3.0, source- and reverse-engineering-informed reconstruction, distributed as a whole under
 GPL-3.0-only because many of its files adapt Stuart's version-3-only release (see *Licence identifiers* below). It is

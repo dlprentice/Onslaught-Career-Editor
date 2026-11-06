@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-11-03 (content inventory owners, with the per-asset metadata file)
+Last updated: 2026-11-06 (the Companion runner's public toolchain and the contributor-contract owner corrected; 2026-11-03: content inventory owners, with the per-asset metadata file)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository: the companion, tools, lore and frozen references, with routes to the live game projects.
 
@@ -57,8 +57,10 @@ parsers under `rebuild/tools/`; their checks are distinguished from rebuild appl
 | [`OnslaughtRebuild.Client`](rebuild/OnslaughtRebuild.Client/OnslaughtRebuild.Client.csproj) | Earlier input-to-fixed-step and presentation-lifecycle adapter reference; references Core. |
 | [`OnslaughtRebuild.Godot`](rebuild/OnslaughtRebuild.Godot/OnslaughtRebuild.Godot.csproj) | Earlier rendering, audio, native-integration and player-input reference; references Client and Core. |
 
-The Companion development runner requires Linux and the maintainer's shared toolchain installation; the
-[build guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export) states the current public setup gap.
+The Companion development runner requires Linux x86-64 and the public pinned toolchain that
+`python tools/companion_toolchain.py setup` installs under `local-data/`; the
+[build guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export) lists the prerequisites. An explicitly
+selected shared installation remains an optional maintainer route.
 Documentation and selected authored Python checks use the [public prerequisites](README.MD#build-and-run).
 The WinUI shell, its UI tests and the CLI
 were removed on 2026-10-15, and the patching core it left behind (AppCore, with its tests and the `patches/` catalog)
@@ -169,7 +171,7 @@ wrong — fix the rows, not the document.
 
 | Question | Owner |
 | --- | --- |
-| What is the contributor contract? | [`AGENTS.md`](AGENTS.md) — restated nowhere |
+| What is the contributor contract? | [`CONTRIBUTING.md`](CONTRIBUTING.md) for contributors; [`AGENTS.md`](AGENTS.md) for the project rules automated agents follow |
 | What do we want? | [`GOAL.md`](GOAL.md) |
 | What is the execution work-queue state (done/next/queued, with receipts)? | [`PROGRAM.md`](PROGRAM.md) |
 | What does the Toolkit currently demonstrate? | [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) |

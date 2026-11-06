@@ -1,21 +1,79 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-11-02 (public setup and baseline-to-PR workflow)
-Summary: what a focused change looks like here, what must never be added to the
-repository, and which checks a change owes.
+Last updated: 2026-11-06 (where to contribute across the public repositories, first-hour checks and commit messages)
+Summary: which public repository takes which kind of work, what a first contribution needs and runs, what a focused
+change looks like here, what must never be added to the repository, and which checks a change owes.
 
 This public repository holds Onslaught Companion for the original game and Onslaught CE, the lore, our tools, a
-frozen copy of the game documentation (`reverse-engineering/`), whose home is
-[onslaught-preservation](https://github.com/dlprentice/onslaught-preservation), and a frozen copy of the Godot
-rebuild, which is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot). The byte-matching decompilation's public export is
-[onslaught-decomp](https://github.com/dlprentice/onslaught-decomp); its native port is published separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce);
-report port problems in [its issues](https://github.com/dlprentice/onslaught-ce/issues). Report companion, lore and
-tool problems in [this repository's issues](https://github.com/dlprentice/Onslaught-Career-Editor/issues), problems in the game documentation in
-[onslaught-preservation's issues](https://github.com/dlprentice/onslaught-preservation/issues), and
-rebuild problems in [onslaught-godot](https://github.com/dlprentice/onslaught-godot/issues). [GOAL.md](GOAL.md) states the
-direction and [PROGRAM.md](PROGRAM.md) the work queue. Keep changes focused and use existing records and
-validation.
+frozen copy of the game documentation (`reverse-engineering/`) and a frozen copy of the Godot rebuild.
+[GOAL.md](GOAL.md) states the direction and [PROGRAM.md](PROGRAM.md) the work queue. Keep changes focused and use
+existing records and validation.
+
+## Where to contribute
+
+This is the one place that says which repository takes which kind of work; the other public repositories'
+`CONTRIBUTING.md` files link here.
+
+Everyone contributes the same way: fork the repository that owns the work, make a branch and open a pull request.
+No invitation, collaborator access or private repository is needed. The maintainer reviews and merges pull requests,
+and no response time is promised. Branches on the upstream repositories are the maintainer's working branches, not
+contribution targets.
+
+| Your work is about | It belongs in | How it is taken |
+| --- | --- | --- |
+| Playing Onslaught CE, its bugs, Linux and Windows issues, network play, the launcher and updates | [onslaught-ce](https://github.com/dlprentice/onslaught-ce) | Generated repository: open issues and pull requests there as usual. The maintainer imports accepted work into the working source and it returns in the next export, with credit. |
+| The byte-matching decompilation: functions, tools, matching notes | [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) | Generated repository, same import route. Matching work needs your own copy of the game plus the compiler and SDK inputs its guide names. |
+| The Godot rebuild | [onslaught-godot](https://github.com/dlprentice/onslaught-godot) | Edited directly: pull requests are reviewed and merged there. |
+| How the game works: file formats, saves, mechanics, levels, engine | [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation) | Edited directly. It uses onslaught-decomp's function names. |
+| The Companion (saves, backups, settings, lore, music) and the program's goals and plan ([GOAL.md](GOAL.md), [PROGRAM.md](PROGRAM.md)) | This repository, [Onslaught-Career-Editor](https://github.com/dlprentice/Onslaught-Career-Editor) | Edited directly. The Companion's features are moving into Onslaught CE, so new feature work belongs in CE. |
+
+Two trees in this repository are frozen copies: `rebuild/` (rebuild work goes to onslaught-godot) and
+`reverse-engineering/` (documentation goes to onslaught-preservation). The forks
+[dlprentice/Onslaught](https://github.com/dlprentice/Onslaught) and
+[dlprentice/AYAResourceExtractor](https://github.com/dlprentice/AYAResourceExtractor) are pinned references, not
+contribution targets.
+
+Report security problems as each repository's `SECURITY.md` says. Each repository's `REUSE.toml` says which licence
+covers which files, and a contribution comes in under the same terms as the files it changes.
+
+A generated repository (onslaught-ce, onslaught-decomp) takes pull requests like any other, but its upstream `main`
+is regenerated from the maintainer's working source, so an accepted change reaches it through the next export rather
+than by merging the pull request itself.
+
+## Your first hour
+
+What you need depends on what you change. None of it needs an invitation, a private repository or the maintainer's
+computer, and there is no hosted CI: the checks below are yours to run, and the pull request form asks you to report
+them.
+
+| You are changing | You need | Run before the pull request |
+| --- | --- | --- |
+| Text, links or lore (Markdown) | Git and Python 3.12 or newer; no game, Godot or .NET | `git diff --check`, `python3 tools/md_link_check.py --check-only`, `python3 tools/doc_header_check.py` |
+| Python tools under `tools/` | The above; NumPy or Pillow for some suites | The affected `python3 tools/<name>_tests.py` ([the tools guide](tools/README.md#python-prerequisites) says which suites need NumPy, Pillow or your own copy of the game) |
+| The Companion (`companion/`) | Linux x86-64 or WSL2, then `python tools/companion_toolchain.py setup`; no game for the authored tests | `npm run build` and `npm test`, or the Python equivalents in the [README](README.MD#public-setup) |
+| Anything that reads or writes the game | Your own licensed copy of *Battle Engine Aquila* | The affected check ([`VALIDATION.md`](VALIDATION.md) selects it), run on a copy, never on your only install |
+| Any new or edited file | Nothing more | `python3 tools/public_allowlist_safety_check.py --include-submodules` |
+
+Steps:
+
+1. Fork this repository and clone your fork with its public reference submodules, which the link and safety checks
+   follow: `git clone --recurse-submodules https://github.com/<your-account>/Onslaught-Career-Editor.git`. In an
+   existing clone, run `git submodule update --init --recursive` once.
+2. Create a branch from upstream `main`: `git switch -c my-change`.
+3. Make one focused change. A new or edited Markdown file needs the `Status:`, `Last updated:` and `Summary:` header
+   that [`DOCUMENTATION.md`](DOCUMENTATION.md) describes; `tools/doc_header_check.py` enforces it.
+4. Run the checks for your kind of change from the table, and keep their output.
+5. Push the branch to your fork and open a pull request against `dlprentice/Onslaught-Career-Editor`. Fill in the
+   [pull request form](.github/PULL_REQUEST_TEMPLATE.md): what changed, the exact commands you ran, the checks you
+   could not run and why.
+
+Commit messages describe the change itself. Leave out session or chat links, private paths and anything copied from the
+game. A `Co-Authored-By` trailer is welcome when someone else wrote part of the change.
+
+Corrections to the frozen game documentation in `reverse-engineering/` go to
+[onslaught-preservation](https://github.com/dlprentice/onslaught-preservation); a pull request here may change only the
+tool-owned files that [`RE-INDEX.md`](reverse-engineering/RE-INDEX.md) lists.
 
 ## Start here
 
@@ -24,8 +82,9 @@ use the same route: commit scoped changes, push to your fork and open a pull req
 `dlprentice/Onslaught-Career-Editor`. No collaborator invitation, private repository or maintainer computer is needed
 to prepare a proposal. The available validation depends on the inputs described below; list unavailable checks in the PR.
 
-1. Read [`AGENTS.md`](AGENTS.md), [`README.MD`](README.MD), and only the owning
-   README or evidence files for your change.
+1. Read [`README.MD`](README.MD) and only the owning README or evidence files for your change. [`AGENTS.md`](AGENTS.md)
+   is the guide automated agents read; its project rules (ground rules, reference routing, definition of done) apply to
+   everyone, and its sections on tool outcomes, user holds and the maintainer's workspace concern the maintainer's own tooling.
 2. Follow [Build and run](README.MD#build-and-run) on your own machine. Record the upstream commit, branch,
    existing edits and reference pins, then build and run the affected baseline checks before editing.
 3. Preserve unrelated work. Keep recorded reference pins unchanged unless this PR intentionally updates one;
@@ -77,7 +136,9 @@ New code files start with an `SPDX-License-Identifier: GPL-3.0-only` comment.
   retail data and options files it reads as the game does, and the virtual clock) and has no presentation,
   process, network or GPU dependency; `OnslaughtRebuild.Host` owns presentation. The earlier
   `OnslaughtRebuild.Core` is reference material.
-- `lore/` is the canonical public lore/history source.
+- `lore/` is the canonical public lore/history source. Corrections to it are made here; the record of what it used to say
+  wrongly is [`history/lore-errata.md`](https://github.com/dlprentice/onslaught-preservation/blob/main/history/lore-errata.md)
+  in onslaught-preservation.
 - `reverse-engineering/` is a frozen copy of the game documentation, which is now maintained in
   [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation) (see "Game documentation and the
   rebuild" below). What is written here keeps static, runtime and source-reference claims distinct.

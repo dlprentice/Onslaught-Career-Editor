@@ -1,7 +1,7 @@
 # Rebuild determinism contract
 
-Status: reference — the earlier fixed-point Core's contract; the parity core's is the short section at the top
-Last updated: 2026-10-21 (the parity core's contract added; the Core's sections below are unchanged since 2026-09-26)
+Status: frozen — a retained copy; the maintained document is in onslaught-godot (at the freeze: reference — the earlier fixed-point Core's contract; the parity core's is the short section at the top)
+Last updated: 2026-11-06 (marked as a frozen copy; the content below is unchanged since 2026-10-21, with the entries it already dates)
 Evidence: SOURCE and bounded copied-runtime observation — constants and behaviors cited against
 `references/Onslaught` (thing.h, eventmanager.cpp) and the tracked Core and
 Headless sources named at the bottom; the retail 20 Hz step was MEASURED in
@@ -11,6 +11,8 @@ Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Summary: what "deterministic" means in this rebuild, what is enforced, and
 what a contributor must do when a change legitimately moves the trace hash.
+
+> **Frozen copy.** This file is retained from the Godot rebuild as it stood when `rebuild/` was split into [onslaught-godot](https://github.com/dlprentice/onslaught-godot). It is not built, tested or developed in this repository, and the commands, branch names and `npm run` scripts it names are not part of this repository's `package.json`. Current the determinism contract: [onslaught-godot's `rebuild/DETERMINISM.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/DETERMINISM.md).
 
 ## The parity core (`OnslaughtRebuild.Parity`)
 
