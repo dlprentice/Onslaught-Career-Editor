@@ -14,7 +14,7 @@ and retained-particle claims retain their narrower dated evidence boundaries.
 Summary: the licence boundary, permitted evidence, and authority order for the
 `rebuild/` reconstruction lane, plus what the current slice actually covers.
 
-> **Frozen copy.** This file is retained from the Godot rebuild as it stood when `rebuild/` was split into [onslaught-godot](https://github.com/dlprentice/onslaught-godot). It is not built, tested or developed in this repository, and the commands, branch names and `npm run` scripts it names are not part of this repository's `package.json`. Current where code comes from: [onslaught-godot's `rebuild/PROVENANCE.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PROVENANCE.md).
+> **Frozen copy.** This file is retained from the Godot rebuild as it stood when `rebuild/` was split into [onslaught-godot](https://github.com/dlprentice/onslaught-godot). It is not built, tested or developed in this repository, and the commands, branch names and `npm run` scripts it names are not part of this repository's `package.json`. The maintained version of where code comes from is [onslaught-godot's `rebuild/PROVENANCE.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PROVENANCE.md).
 
 `rebuild/` is a GPL-3.0, source- and reverse-engineering-informed reconstruction, distributed as a whole under
 GPL-3.0-only because many of its files adapt Stuart's version-3-only release (see *Licence identifiers* below). It is

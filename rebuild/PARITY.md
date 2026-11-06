@@ -15,7 +15,7 @@ Summary: the gradeable dimensions of parity, the gate each currently has (or
 lacks), and the standing exceptions. This document names the gap; it does not
 claim the gap is closed.
 
-> **Frozen copy.** This file is retained from the Godot rebuild as it stood when `rebuild/` was split into [onslaught-godot](https://github.com/dlprentice/onslaught-godot). It is not built, tested or developed in this repository, and the commands, branch names and `npm run` scripts it names are not part of this repository's `package.json`. Current what is measured: [onslaught-godot's `rebuild/PARITY.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md).
+> **Frozen copy.** This file is retained from the Godot rebuild as it stood when `rebuild/` was split into [onslaught-godot](https://github.com/dlprentice/onslaught-godot). It is not built, tested or developed in this repository, and the commands, branch names and `npm run` scripts it names are not part of this repository's `package.json`. The maintained version of what is measured is [onslaught-godot's `rebuild/PARITY.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md).
 
 CGameInterface on PC (2026-10-21): the in-game menu rises only at a lost or drawn level's end, after
 `CGame::Update` has made continue, message log, level briefing and options unavailable (bea-decomp

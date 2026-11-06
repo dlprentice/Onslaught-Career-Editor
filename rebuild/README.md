@@ -8,7 +8,7 @@ Summary: the Godot/C# reconstruction: the new float-exact parity core and its ha
 thing a contributor to Core breaks). [`PARITY.md`](PARITY.md) defines what
 "1:1 parity" means operationally and what is currently graded.
 
-> **Frozen copy.** This file is retained from the Godot rebuild as it stood when `rebuild/` was split into [onslaught-godot](https://github.com/dlprentice/onslaught-godot). It is not built, tested or developed in this repository, and the commands, branch names and `npm run` scripts it names are not part of this repository's `package.json`. Current what is built, run and verified: [onslaught-godot's `rebuild/README.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/README.md).
+> **Frozen copy.** This file is retained from the Godot rebuild as it stood when `rebuild/` was split into [onslaught-godot](https://github.com/dlprentice/onslaught-godot). It is not built, tested or developed in this repository, and the commands, branch names and `npm run` scripts it names are not part of this repository's `package.json`. The maintained version of what is built, run and verified is [onslaught-godot's `rebuild/README.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/README.md).
 
 ## Working lane
 
@@ -130,7 +130,7 @@ surface with a deterministic replay tape, World 110 built in Core from retail da
 host). Its retail-data decoders, determinism notes and RE contract citations remain useful reference; the sections
 below describe that state, not current work.
 
-## Ownership
+## Ownership (earlier rebuild)
 
 - `OnslaughtRebuild.Core` owns deterministic simulation state and fixed 20 Hz
   stepping - retail's own rate, `GAME_FR 20.0` / `CLOCK_TICK 0.05`. It has no presentation, filesystem, clock, process, network, or GPU

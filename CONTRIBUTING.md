@@ -20,9 +20,12 @@ No invitation, collaborator access or private repository is needed. The maintain
 and no response time is promised. Branches on the upstream repositories are the maintainer's working branches, not
 contribution targets.
 
+Questions and ideas: https://github.com/dlprentice/onslaught-ce/discussions
+(Discussions are on in onslaught-ce only; problems go to the Issues of the repository that owns the work).
+
 | Your work is about | It belongs in | How it is taken |
 | --- | --- | --- |
-| Playing Onslaught CE, its bugs, Linux and Windows issues, network play, the launcher and updates | [onslaught-ce](https://github.com/dlprentice/onslaught-ce) | Generated repository: open issues and pull requests there as usual. The maintainer imports accepted work into the working source and it returns in the next export, with credit. |
+| Playing Onslaught CE, its bugs, Linux and Windows issues, the launcher and updates (Internet multiplayer is planned, not in this version yet) | [onslaught-ce](https://github.com/dlprentice/onslaught-ce) | Generated repository: open issues and pull requests there as usual. The maintainer imports accepted work into the working source and it returns in the next export, with credit. |
 | The byte-matching decompilation: functions, tools, matching notes | [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) | Generated repository, same import route. Matching work needs your own copy of the game plus the compiler and SDK inputs its guide names. |
 | The Godot rebuild | [onslaught-godot](https://github.com/dlprentice/onslaught-godot) | Edited directly: pull requests are reviewed and merged there. |
 | How the game works: file formats, saves, mechanics, levels, engine | [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation) | Edited directly. It uses onslaught-decomp's function names. |

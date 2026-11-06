@@ -12,7 +12,7 @@ Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 Summary: what "deterministic" means in this rebuild, what is enforced, and
 what a contributor must do when a change legitimately moves the trace hash.
 
-> **Frozen copy.** This file is retained from the Godot rebuild as it stood when `rebuild/` was split into [onslaught-godot](https://github.com/dlprentice/onslaught-godot). It is not built, tested or developed in this repository, and the commands, branch names and `npm run` scripts it names are not part of this repository's `package.json`. Current the determinism contract: [onslaught-godot's `rebuild/DETERMINISM.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/DETERMINISM.md).
+> **Frozen copy.** This file is retained from the Godot rebuild as it stood when `rebuild/` was split into [onslaught-godot](https://github.com/dlprentice/onslaught-godot). It is not built, tested or developed in this repository, and the commands, branch names and `npm run` scripts it names are not part of this repository's `package.json`. The maintained version of the determinism contract is [onslaught-godot's `rebuild/DETERMINISM.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/DETERMINISM.md).
 
 ## The parity core (`OnslaughtRebuild.Parity`)
 
