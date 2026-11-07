@@ -15,7 +15,7 @@ states and the evidence tier shown for each Goodie rule follow the documents in 
 also holds, that copy is the maintained one),
 which name their specimens. Some rules are facts read from the developers' released source
 (`references/Onslaught`, a submodule that is empty in a plain clone; [the public setup in README.MD](../../README.MD#public-setup) describes how to initialise it with `git submodule update --init --recursive`): the Goodie unlock rules, the gallery's row order and the god-flag
-field's identity. They are checked against retail where the game's own Goodies page (its gallery screen; see the Goodies entry in [README.md](README.md)) says so, and no code
+field's identity. They are checked against retail where the companion's Goodies page says so (its detail view states how each rule is known; see the Goodies entry in [README.md](README.md)), and no code
 or comments were copied from that source. The interface, theme and styles are constructed in code from
 Godot's built-in controls and default engine font.
 

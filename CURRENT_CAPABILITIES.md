@@ -442,8 +442,8 @@ Terms used in this section:
 - **AYA**: the game's asset-envelope format; its files end in `.aya` ([companion provenance](companion/OnslaughtToolkit.Godot/PROVENANCE.md)).
 - **HFLD**: a level's framed height-field (terrain) chunk, stored inside the level archive's ERES chunk ([rebuild README](rebuild/README.md)).
 - **BBOX**: the bounding-box chunk tag (`BBOX`) in serialized asset data ([AssetTests](companion/OnslaughtToolkit.Godot/Tests/AssetTests.cs)).
-- **CST**: a CComplexThing object, the script-bearing Thing ([CComplexThing function map](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md)).
-- **CEMT**: an authored waypoint selector and its constant model pose ([Level100ActorRegistry.cs](rebuild/OnslaughtRebuild.Core/Level100ActorRegistry.cs)).
+- **CST**: a CCollisionSeekingThing object, the collision-seeking Thing ([CCollisionSeekingThing function map](reverse-engineering/binary-analysis/functions/collisionseekingthing.cpp.md)).
+- **CEMT**: the emitter-table chunk of the CMSH mesh format ([CMSH fields](reverse-engineering/asset-formats/cmsh-fields.md)).
 
 **Current: the parity-core proof of concept.** The rebuild is developed in
 [onslaught-godot](https://github.com/dlprentice/onslaught-godot), not in this repository's frozen `rebuild/` copy.

@@ -81,7 +81,6 @@ companion's tests); dated entries below that name them are history.
 - **SEH**: Windows structured exception handling.
 - **TRX**: the Visual Studio test-results XML file that `dotnet test` writes with the trx logger.
 - **Placeholders** in commands: `ABS_FRESH_EMPTY_DIR` is an absolute path to a new empty directory, `ABS_FRESH_OWNED_DIR` an absolute path to a directory the run owns, `GODOT_PROJECT` the Godot project directory, and `NAME` the test or check name.
-- **`<pinned Godot 4.8 beta1 .NET editor>`**: the editor that `npm run setup:toolchain` in onslaught-godot installs.
 
 ## Companion with real Onslaught CE 0.1.13 — November 3
 
@@ -3697,7 +3696,7 @@ unresolved. Software rendering, headless input events and synthetic handoff
 fixtures do not establish physical input, audible playback, normal GPU performance
 or Windows behavior. Existing retail header/art and editor shutdown gaps remain.
 
-Run standard `<pinned Godot 4.8 beta1 .NET editor> --headless --audio-driver Dummy --path
+Run the standard-edition Godot 4.8 editor `--headless --audio-driver Dummy --path
 rebuild/OnslaughtRebuild.Godot --script res://Tests/frontend_localization_checks.gd`
 for the pure admission checks. The production scene harness remains
 `res://Scenes/Frontend/Tests/frontend_scene_checks.gd`; add `--editor` for its
@@ -4168,7 +4167,7 @@ startup cache/audio tests passed **16/16**. Focused recorder/headless tests pass
 completed, and the separately recorded **9,367-tick** session replayed twice with
 both live expected hashes verified. That session was mostly idle and did not
 complete the tutorial. The companion's native shell/file dialog opened, but its
-UI write/reopen flow remained pending at this entry; no later entry in this file records it closed. Startup logo/montage audio decoded with
+UI write/reopen flow remained pending at this entry; the "Native companion migration — September 19" entry in this file records an actual-input run that opened, published and reopened a career copy. Startup logo/montage audio decoded with
 format/length readback; native playback of those new tracks remained pending at this entry; no later entry in this file records it closed.
 These are bounded results, not a new broad Core, Windows or full parity receipt.
 
