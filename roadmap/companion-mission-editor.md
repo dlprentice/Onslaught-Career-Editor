@@ -11,7 +11,7 @@ milestones with their gates, the first editable thing, the safety rules and the 
 Evidence: MEASURED for section 2 (each item names its method and limits; item 1 is INFERRED), SOURCE for the cited decompilation functions
 (cited by function, never quoted), INFERRED where the text says so; the rest is plan.
 Specimen: `BEA.exe.original.backup`, SHA-256 `74154bfa…`, 2,506,752 bytes (the addresses are the decompilation's, which matches
-this binary; the installed Steam `BEA.exe` was not read for these byte claims, and it is deliberately patched, see [DOCUMENTATION.md](../DOCUMENTATION.md))
+this binary; the installed game's `BEA.exe` was not read for these byte claims; an installed copy may be modified, see [DOCUMENTATION.md](../DOCUMENTATION.md))
 
 > **Future direction — 2026-10-31:** David requested a 3D mission editor alongside the 3D map editor. The existing script and data workflows remain as described below; a 3D mission-authoring workflow, its interactions, safe staging and platform acceptance are still to be designed and demonstrated. See the project [goal](../GOAL.md) and [program](../PROGRAM.md).
 

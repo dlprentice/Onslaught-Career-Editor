@@ -20,7 +20,7 @@ or comments were copied from that source. The interface, theme and styles are co
 Godot's built-in controls and default engine font.
 
 These sources were written for the retired WinUI application's AppCore library and
-moved into the companion on 2026-10-16, a date recorded in the pre-release history, which this public repository does not contain (its history starts at the initial public release, commit `840311c`, 2026-10-15, and that commit already includes these files), when the
+moved into the companion before the initial public release (commit `840311c`, 2026-10-15, whose first tree already holds these files; the earlier history is not in this public repository), when the
 companion became their only user; when AppCore itself was removed on 2026-10-22,
 `FileMutationSafety.cs` was cut down to the members the companion calls: `Files/SaveLabFileTransaction.cs` and
 `Files/FileMutationSafety.cs` (the OS file boundary), `Game/GameTextCatalog.cs` (the game's

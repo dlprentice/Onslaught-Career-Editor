@@ -35,7 +35,7 @@ Commit ids cited in entries dated before 2026-10-15 predate the history flatten;
 
 Scripts, tools and paths named in dated entries that this repository no longer contains: npm scripts `test:rebuild-client`, `test:rebuild-core`, `test:save-lab` and `prepare:rebuild-assets` (onslaught-godot defines the rebuild gates, including its own `prepare:rebuild-assets` and `ref:*` scripts); tools `tools/export_packets_tests.py`, `tools/re_lib_match_tests.py`, `tools/ghidra_cohort_framework_tests.py`, `tools/re_function_doc_names_check.py` and `rebuild/tools/gdscript_parity.py`; `reverse-engineering/ghidra/README.md`; and the worktrees `.worktrees/main-integration-20260919/`, `.worktrees/remote-review-20260912/`. Receipts cited in dated entries are kept in ignored local folders and the private archive; they are not in this repository and cannot be re-run from it.
 
-Dated entries that report rebuild suite counts (Core, Client, Parity, the Godot build) describe the rebuild as it stood on their dates. The rebuild is frozen here, and its current gates run in onslaught-godot. Entries from 2026-09-19 to 2026-09-23 describe GDScript harnesses and editor scenes removed on 2026-09-25; any `.gd` or `.tscn` run target in dated entries is historical and not runnable from either public tree. Relative `.gd` and `.tscn` paths in dated entries are relative to `rebuild/OnslaughtRebuild.Godot`.
+Dated entries that report rebuild suite counts (Core, Client, Parity, the Godot build) describe the rebuild as it stood on their dates. The rebuild is frozen here, and its current gates run in onslaught-godot. Entries from 2026-09-19 to 2026-09-23 describe GDScript harnesses and editor scenes removed on 2026-09-25; the `.gd` run targets in dated entries are historical and not runnable from either public tree, and so are the `.tscn` targets other than the Pause and AYA harnesses, which are present in the frozen rebuild and in onslaught-godot. Relative `.gd` and `.tscn` paths in dated entries are relative to `rebuild/OnslaughtRebuild.Godot`.
 
 The WinUI shell, its UI tests, the Windows-targeted CLI and the ZIP procedure were
 removed on 2026-10-15; dated entries below that name them are history. The unused
@@ -2136,7 +2136,7 @@ simulation unchanged and no other evidenced behavior to carry.
 Executed at the restored state:
 - The solution and Godot project build with 0 warnings and 0 errors.
 - `npm run test:rebuild-client` (script removed from this repository; closest current name `ref:client-tests` in onslaught-godot): **912 passed**, 2 existing skips.
-- `npm run test:rebuild-core` (script removed from this repository; closest current name `ref:core-tests` in onslaught-godot, which filters differently): **1,469 of 1,470**. The one failure is
+- `npm run test:rebuild-core` (script removed from this repository; closest current name `ref:core-tests` in onslaught-godot, which excludes `Level100FerryLandingTests`): **1,469 of 1,470**. The one failure is
   `Level100ColdStartTests.ColdStart_PlaysLevel100ThroughThePlayerInputSurface`,
   failing since the September 12 aircraft work (see below); the reverse-engineering notes'
   contract identifies two missing retail helps in its final wave.
@@ -4592,7 +4592,7 @@ no retail/Godot runtime, Ghidra database or desktop was opened.
 
 ### Aircraft integration follow-up — September 12
 
-`npm run test:rebuild-core` (script since removed from this repository; closest current name `ref:core-tests` in onslaught-godot, which filters differently) built successfully and finished with **1,354 passed,
+`npm run test:rebuild-core` (script since removed from this repository; closest current name `ref:core-tests` in onslaught-godot, which excludes `Level100FerryLandingTests`) built successfully and finished with **1,354 passed,
 8 failed, zero skipped**. Six failures exposed outdated component fixtures or
 fingerprints after raw aircraft construction; the other two are the still-failing
 cold and returning full-combat routes. This is not a passing broad-suite receipt.
@@ -9209,4 +9209,4 @@ The 27-function allocator plan has fresh PRE restore/census, all seven full
 exports equal to the latest live readback, and corrected draft wording from
 independent review reproduced by root. It is **unsealed and unpromoted**;
 its fresh specimen-bound body packet covers 7,761 bytes / 2,533 instructions.
-No public resume record exists for this plan (it is unsealed and unpromoted, per this paragraph) and remaining review/gates.
+No public resume record exists for this plan; its remaining review and gates are not recorded here.

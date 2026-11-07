@@ -396,8 +396,8 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   world's scripts, dimmed; the selected script's installed source, the `.msl` file it was compiled from, is shown beside it with line numbers
   and the keywords coloured, and a card in the right-hand column says what the script handles, which game functions it calls, and
   which objects name it (each a button that shows the object on the table and the map). Selecting an object that names a script
-  offers a button for it in the same way. The game never reads these source files (it runs the compiled scripts in the level's world),
-  so the page says so, says which file is missing when one is, and says when an object names a script the level does not have; a source
+  offers a button for it in the same way. Static reading finds no reader of these source files in the game (runtime tracing has not checked); the game runs the compiled scripts in the level's world,
+  and the page says so, says which file is missing when one is, and says when an object names a script the level does not have; a source
   may differ from what was compiled, which the Toolkit's `tools/msl_gate.py` checks per script. A click in a quoted text of the
   source says what in the level has that name, with a button for each that goes to it: an object by its own name, a waypoint
   path, a script, or the scripts that handle an event of that name. An object of the level's base world is named too, without a
