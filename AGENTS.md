@@ -1,11 +1,13 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-11-06 (contributors pointed to CONTRIBUTING.md; 2026-11-02: public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-06 (contributors pointed to CONTRIBUTING.md; maintainer-only workspace grouped; rebuild gate, screenshot allowance and lane terms corrected; 2026-11-02: public contributor setup and routing; historical results retain their dates)
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
-Follow any applicable ancestor guides on your own machine. This repository's [README](README.MD#build-and-run)
+This repository, called the Toolkit in its guides, holds the Onslaught Companion app (its project folder is still named OnslaughtToolkit.Godot), its lore and tools. The retired WinUI app also carried the Toolkit name (see [CHANGELOG.md](CHANGELOG.md)).
+
+If guide files exist above this checkout on your machine, follow them too. This repository's [README](README.MD#build-and-run)
 and [contribution guide](CONTRIBUTING.md) supply the public setup and baseline-to-PR workflow; no maintainer guide
 or private checkout is required. This guide adds project-specific rules. People contributing by pull request start with
 [CONTRIBUTING.md](CONTRIBUTING.md#where-to-contribute); the ground rules, reference routing and definition of done
@@ -22,7 +24,7 @@ A preservation project for *Battle Engine Aquila* (2003). This public repository
   `OnslaughtRebuild.Host` the presentation owner; the earlier `OnslaughtRebuild.Core`, `Client` and `Godot` projects
   are reference material, not a second production simulation;
 - the **companion** (`companion/`), Onslaught Companion: the Godot .NET app for careers, saves, backups, settings,
-  music and lore for the original game and Onslaught CE, including CE launcher settings and the steps for updating CE (the companion contacts nothing). The old AppCore patching
+  music and lore for the original game and Onslaught CE, including CE launcher settings and the steps for updating CE (the running companion contacts nothing; its build setup downloads pinned tools, see [README](README.MD#build-and-run)). The old AppCore patching
   core is gone; the file-safety and save-layout code the companion uses lives in the companion, and Git keeps the rest;
 - a frozen copy of the game documentation (`reverse-engineering/`), whose home is
   https://github.com/dlprentice/onslaught-preservation, where new findings go, and our own tools.
@@ -41,20 +43,24 @@ current milestones and measured parity. The local [`rebuild/PARITY.md`](rebuild/
 
 ## Checkouts and branches
 
-The storage procedures below describe the maintainer's workspace. Public fork setup uses
-[CONTRIBUTING.md](CONTRIBUTING.md) and requires none of that workspace's private inputs.
+Public fork setup uses [CONTRIBUTING.md](CONTRIBUTING.md). Contributor checks need no local-lab inputs and none of the
+maintainer's workspace described under "Maintainer-only workspace" below ([README](README.MD#build-and-run)).
 
-- `main` is the integration branch; a lane merges into it when its own gate passes. Lane branches start from the
-  flattened `main`; never merge a pre-flatten branch or resurrect its plans.
+- `main` is the integration branch; a lane (a topic branch) merges into it when its own gate passes. Lane branches
+  start from the flattened `main` (the history was flattened into a single root; see the commit titled Describe the
+  repository after the history flatten); never merge a pre-flatten branch or resurrect its plans.
+- Current rebuild development is documented in [onslaught-godot](https://github.com/dlprentice/onslaught-godot); the
+  local `rebuild/README.md` records the frozen copy. The companion's own
+  [README](companion/OnslaughtToolkit.Godot/README.md) describes its workflows and validation limits.
+
+### Maintainer-only workspace
+
 - The maintainer's working checkout may sit on slow external storage, and it holds the canonical `local-lab/`. Give
   such a checkout light I/O only: do builds, test runs, captures and worktrees in a clone on a fast internal disk and
   point it at the canonical lab ([LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md)). Worktrees never receive a copied
   corpus. Where the checkout and the clone are on a given machine is in the ignored `local-data/` notes.
-- Current rebuild development is documented in [onslaught-godot](https://github.com/dlprentice/onslaught-godot); the
-  local `rebuild/README.md` records the frozen copy. The companion's own
-  [README](companion/OnslaughtToolkit.Godot/README.md) describes its workflows and validation limits. Which clone and
-  reference folders this machine uses is in the ignored `local-data/rebuild-env.sh` and the private notes, never in a
-  tracked file.
+- Which clone and reference folders this machine uses is in the ignored `local-data/rebuild-env.sh` and the private
+  notes, never in a tracked file.
 
 ## Project progress and documentation
 
@@ -110,8 +116,8 @@ Official OpenAI documentation: [Auto-review](https://learn.chatgpt.com/docs/sand
   `tests_shared/fixtures/gold_career_save.bin` is the one tracked save.
 - Never track retail binaries or assets, converted retail material, arbitrary saves, raw debugger logs, bulky
   captures, Ghidra databases or backups, decompiler output, decomp source, credentials or `.env*`.
-  `npm run test:safety` enforces the boundary; a small registered set of the app's own screenshots is the one
-  allowance (`reverse-engineering/project-meta/attribution.md`, `tools/check_registered_screenshots.py`). It also
+  `npm run test:safety` enforces the boundary; the screenshot allowance exists, but the register in `reverse-engineering/project-meta/attribution.md` is currently empty
+  (`tools/check_registered_screenshots.py` checks it). It also
   fails live text (docs, code and comments alike) that quotes original-game bytes (a run of hex byte tokens, or a long
   hex string that is not a SHA-1 or SHA-256) or a private machine path. The frozen copies (`reverse-engineering/`
   and `rebuild/`) are not read by those rules; every reviewed exception is listed with its reason in
@@ -167,8 +173,7 @@ Official OpenAI documentation: [Auto-review](https://learn.chatgpt.com/docs/sand
 ## Definition of done
 
 1. The smallest gate that could falsify the change passed: docs → `git diff --check` and `npm run test:docs`; added
-   files → `npm run test:safety`; tool changes → the affected `_tests.py` cases; rebuild code → the affected Parity
-   tests, then the Parity suite and Host build as the [live rebuild guide](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/README.md) describes; companion → its `npm test`.
+   files → `npm run test:safety`; tool changes → the affected `_tests.py` cases; rebuild changes are not made here (`rebuild/` is frozen): send them to onslaught-godot, as [CONTRIBUTING.md](CONTRIBUTING.md) describes; companion → its `npm test`.
 2. A new or edited tracked `.md` has `Status:`, `Last updated:` (or `Date:`) and `Summary:` (or `Verdict:`) in its
    header and no volatile counts. `tools/doc_header_backlog.txt` may only shrink.
 3. Stage only the scoped paths, commit plainly and push the working branch to your fork, then open a PR as

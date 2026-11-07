@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-11-04 (unified CE product required; phase out standalone Companion after verified migration)
+Last updated: 2026-11-06 (build-from-source and setup-download wording; the CE migration pointer, the upstream reference pin and the refreshed checkpoint label stated precisely; 2026-11-04: unified CE product required; phase out standalone Companion after verified migration)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
@@ -84,10 +84,10 @@ archive.
   Migrate in verified stages; keep the working Companion, its tools and evidence
   until the replacement preserves their useful capabilities and safety. This supersedes the earlier plan to retain
   a separate offline-management product, without prescribing an engine/runtime embedding architecture.
-  The current standalone Godot .NET app for Linux and Windows still provides careers, Goodies, settings, backups,
+  The current standalone Godot .NET app for Linux and Windows ([built from source](README.MD#build-and-run); no packaged release yet) still provides careers, Goodies, settings, backups,
   music, voices and lore, with protected writes and verified backups, and can launch Onslaught CE.
-  It supports original-game and CE careers and backups, CE launcher settings and the steps for updating CE (the companion
-  contacts nothing). For older CE installations, follow the [current release's migration guidance](https://github.com/dlprentice/onslaught-ce/releases/latest).
+  It supports original-game and CE careers and backups, CE launcher settings and the steps for updating CE (the running companion
+  contacts nothing; its build setup downloads pinned tools, see [README](README.MD#build-and-run)). For older CE installations, follow the [manual migration steps](https://github.com/dlprentice/onslaught-ce#manual-migration-from-affected-launchers) for 0.1.0-0.1.7, or the [updater](https://github.com/dlprentice/onslaught-ce#updates-and-privacy) for 0.1.8 and later.
   Its [known limits](companion/OnslaughtToolkit.Godot/README.md#known-limits) distinguish
   the exercised Linux CE workflow and native Windows backend/load checks from Windows Godot UI
   acceptance still awaiting validation. Original-game save
@@ -119,7 +119,7 @@ release, design and evidence records; [CURRENT_CAPABILITIES.md](CURRENT_CAPABILI
 demonstrated capabilities. A handoff is a dated continuity snapshot, not a competing roadmap: verify current refs,
 claims and evidence before acting, and update the existing owner when a material milestone changes.
 
-David has resumed development across the requested areas after trying the refreshed local 0.1.99 checkpoint. Work
+David has resumed development across the requested areas after trying the refreshed (r2) local 0.1.99 checkpoint. Work
 from the reported problems and current evidence while keeping the earlier and refreshed checkpoints reproducible.
 Preserve their packages, accepted builds, Companion stages, launch profiles and copied user data until their
 preservation has been verified; subsequent implementation and tests use separate outputs and profiles. Each
@@ -139,7 +139,7 @@ explicit go-ahead. The wider foundation, rebuild, quality, documentation and rec
 Every behaviour claim needs a capture, byte comparison, focused test, or pinned source reference. The decompilation
 is cited by function, never quoted. A name, one observed call or a model report alone is insufficient. Static
 evidence establishes identities and structures; only controlled runtime evidence establishes causality and values.
-The upstream GPL Onslaught source (`stuart73/Onslaught`, in `references/Onslaught`) is a source reference, not proof of retail behaviour.
+The upstream GPL Onslaught source (`stuart73/Onslaught`; the pinned reference in `references/Onslaught` is the fork `dlprentice/Onslaught`) is a source reference, not proof of retail behaviour.
 Unknowns are written as open questions with the cheapest falsifier.
 
 ## Safeguards

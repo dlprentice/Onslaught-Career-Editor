@@ -1,14 +1,14 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-04 (standalone Companion is current implementation; unified CE migration is required, not delivered)
+Last updated: 2026-11-06 (standalone Companion is current implementation; unified CE migration is required, not delivered; screenshot, rebuild, archive and local-evidence wording corrected)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
-in Git and the private RE archive; they are not current operating instructions.
+in Git and the private historical maintainer archive; they are not current operating instructions.
 
-The current standalone Onslaught Companion lets players choose the original game or Onslaught CE. It supports finding
-CE's launcher, protected career writes, two launcher settings and the steps for updating CE (the companion
-contacts nothing; CE checks its own signed feed and installs an update only when the player chooses Update).
+The current standalone Onslaught Companion ([built from source](README.MD#build-and-run); no packaged release yet) lets players choose the original game or Onslaught CE. It supports finding
+CE's launcher, protected career writes, two launcher settings and the steps for updating CE (the running companion
+contacts nothing; its build setup downloads pinned tools, see [README](README.MD#build-and-run); CE checks its own signed feed and installs an update only when the player chooses Update).
 See its [README](companion/OnslaughtToolkit.Godot/README.md) for the contract and platform limits.
 The map/mission authoring capabilities described here currently run in Companion. They are reusable work toward the
 required native CE experience, not completed in-game editors. Continuous 3D RTS Commander and an explorable museum
@@ -84,8 +84,8 @@ and [executed checks](VALIDATION.md#original-sample-decode-and-quality-conversio
 A further 25 original caller controls resolve sample reuse, list insertion,
 name truncation and suffix selection. They distinguish a filename-route stub
 from the working buffer loader, correcting the meaning implied by inherited
-names. The four-function metadata correction (private RE archive: `reverse-engineering/ghidra/README.md`)
-is now saved, independently read back and protected by a restored recovery copy on the maintainer's archive storage;
+names. The four-function metadata correction (in the private historical maintainer archive: `reverse-engineering/ghidra/README.md`, not in this repository)
+is now saved, independently read back and protected by a restored recovery copy;
 all types, storage and unrelated functions are unchanged. A sample
 can be inserted after a supplied device-creation failure, so list presence alone
 does not establish playable audio. See the
@@ -345,7 +345,7 @@ verified backups described above. Nothing is written while it finds
 `BEA.exe` or Onslaught CE running, checked before the backup and again just before the swap (on
 Linux, the `BEA.exe` rule was seen on 2026-09-26 to find the Steam game's own process under
 Proton and nothing else; the CE rule was seen on 2026-10-22 to find a running Onslaught CE 0.1
-on Linux, recorded in the ignored `local-data/companion/evidence/ce-running-check-2026-10-22.log`,
+on Linux, recorded in the maintainer's ignored local evidence,
 and the native Windows backend checks on 2026-10-24 also refused writes while the selected CE game
 process was running; general Windows Godot UI acceptance remains pending); a
 file the game saved since it was opened is not replaced; the new file is swapped in (on Linux
@@ -436,6 +436,15 @@ test) and have not run on Windows; nobody has looked at the panel on screen.
 
 ## Reconstruction
 
+Terms used in this section:
+
+- **PC24/RN**: x87 arithmetic at 24-bit precision control with round-to-nearest rounding ([PARITY](rebuild/PARITY.md), M1; [DETERMINISM](rebuild/DETERMINISM.md)).
+- **AYA**: the game's asset-envelope format; its files end in `.aya` ([companion provenance](companion/OnslaughtToolkit.Godot/PROVENANCE.md)).
+- **HFLD**: a level's framed height-field (terrain) chunk, stored inside the level archive's ERES chunk ([rebuild README](rebuild/README.md)).
+- **BBOX**: the bounding-box chunk tag (`BBOX`) in serialized asset data ([AssetTests](companion/OnslaughtToolkit.Godot/Tests/AssetTests.cs)).
+- **CST**: a CComplexThing object, the script-bearing Thing ([CComplexThing function map](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md)).
+- **CEMT**: an authored waypoint selector and its constant model pose ([Level100ActorRegistry.cs](rebuild/OnslaughtRebuild.Core/Level100ActorRegistry.cs)).
+
 **Current: the parity-core proof of concept.** The rebuild is developed in
 [onslaught-godot](https://github.com/dlprentice/onslaught-godot), not in this repository's frozen `rebuild/` copy.
 `OnslaughtRebuild.Parity` owns the simulation and `OnslaughtRebuild.Host` the presentation. The live
@@ -445,11 +454,11 @@ audible audio, visual equality, physical input, whole-game parity or a completed
 
 **History: the earlier fixed-point rebuild.** On 2026-10-15 David first parked this fixed-point rebuild in favour of a
 native source port, then restarted the lane around the parity core above. What follows is the fixed-point rebuild's
-demonstrated state at the old tag archive/godot-rebuild-20260926 (now in the private RE archive); it is reference,
+demonstrated state at the old tag archive/godot-rebuild-20260926 (now in the private historical maintainer archive); it is reference,
 not active work.
 
-[`rebuild/`](rebuild/README.md) is a GPL-3.0-only (as a whole), source- and RE-informed
-reconstruction lane. `OnslaughtRebuild.Core` owns fixed-step simulation,
+The frozen [`rebuild/`](rebuild/README.md) copy is a GPL-3.0-only (as a whole), source- and RE-informed
+reference snapshot of the reconstruction lane. In that copy, `OnslaughtRebuild.Core` owns fixed-step simulation,
 snapshots, state hashing, and command-tape replay without presentation,
 filesystem, clock, process, network, or GPU dependencies.
 
@@ -501,8 +510,7 @@ and gameplay through operating-system input. The intro produced nonzero captured
 audio. Its mostly idle gameplay tape recorded **9,367 ticks** and replayed twice
 with both the live trace and final-state hashes verified. Expected hashes were
 accumulated from live snapshots, not generated by replay. The tape and captures
-are in `local-data/first-flight/player-20260906-b/`; replay and build output are
-in `local-data/test-runs/linux-route-20260906-af1sa_l9/`.
+are in the maintainer's ignored local evidence; replay and build output are in the same place.
 
 This establishes a native execution and recording route. It does **not** establish
 training completion, pause/retry/failure through live input, full audio mixing,
@@ -519,11 +527,10 @@ Godot menu frames and a 107.9-second movie at 20 frames/s, matching the smoke's
 one 20 Hz simulation tick per frame. No desktop input or desktop capture was used.
 The smoke exercised movement, four fire inputs, retry and return; its mission
 was still Running. It is development footage, not a completed player tutorial,
-retail comparison or performance benchmark. Logs and raw recordings are in
-`local-data/first-flight/progress-video-20260908-a/`. The recording predates the
+retail comparison or performance benchmark. Logs and raw recordings are in the maintainer's ignored local evidence. The recording predates the
 audio-exit correction below. The labelled 50-second preview is
 `onslaught-progress-2026-09-08-final.mp4` in that
-directory; `first-flight-full-20hz.mp4` retains the full smoke recording. Both
+evidence set; `first-flight-full-20hz.mp4` retains the full smoke recording. Both
 show the production source at `5fc65256`; the preview uses edited excerpts.
 
 **Audio shutdown.** The Godot host now stops producers and streams before quitting,
@@ -554,7 +561,7 @@ Managed trig remains provisional outside the finite comparisons. Native
 controller approach/retreat and weapon-support callbacks, the complete avoidance
 candidate stream, contacts, effects and dying flight remain unfinished; the
 current target bridge still pursues during Move. Private
-inputs, scripts and receipts are in `local-data/retail-runtime/aircraft-20260908-a/`;
+inputs, scripts and receipts are in the maintainer's ignored local evidence;
 the [Unit evidence](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md)
 records the exact route and limits. This does not reproduce a player tutorial,
 the normal Steam/DXVK launch path or Windows behavior.
@@ -584,7 +591,7 @@ missing-boundary note. The internal-function inventory is available, but the
 wider semantic audit is incomplete; the controller's decompiler stack artifact and
 named-but-untyped script callbacks remain explicit next work. See the
 [execution receipts](VALIDATION.md#linux-execution-of-the-remote-checkpoint--september-12)
-and Ghidra owner (private RE archive: `reverse-engineering/ghidra/README.md`).
+and Ghidra owner (in the private historical maintainer archive: `reverse-engineering/ghidra/README.md`, not in this repository).
 
 The bounded nonballistic Unit weapon selector now has original-code execution
 evidence and passing Core cases, including a distance example that detects
@@ -652,7 +659,7 @@ comments now record its caller correctly and the shipped AABB-distance quirk,
 with separate full readback and verified PRE/POST recovery. Four further
 labels/comments/tag sets now assign segment-controller helpers and their motion
 bridges to the correct owner, removing the disproved UnitAI classification;
-the checkpoint/working owner (private RE archive: `reverse-engineering/ghidra/README.md`) records the
+the checkpoint/working owner (in the private historical maintainer archive: `reverse-engineering/ghidra/README.md`, not in this repository) records the
 exact scope. The rebuild's New Career field now carries the measured fresh-text,
 cursor, character, width and unique-name rules. Its software keyboard and caret
 geometry remain incomplete. Held Vulcan input now reaches Fire; Pulse release
@@ -994,15 +1001,15 @@ input and mechanics. Current claims come from their owning focused tests, not
 from old trajectories copied into this page.
 
 The current source tree and release packages do not include retail game assets
-or their conversions, other than two registered screenshots used for the app's
-own Home and About surfaces — pictures of the game running rather than files
-copied out of it. They are listed in
+or their conversions. The source tree tracks no screenshots: the screenshot register in
 [`reverse-engineering/project-meta/attribution.md`](reverse-engineering/project-meta/attribution.md)
-and the allowance is stated in [`AGENTS.md`](AGENTS.md).
-The rebuild materializes the exact currently consumed slice
+is empty (its two former entries left with the retired WinUI shell on 2026-10-15), and the screenshot allowance is
+stated in [`AGENTS.md`](AGENTS.md). Pictures of the game running are not files
+copied out of it.
+In onslaught-godot (the live rebuild), the materializer takes the exact currently consumed slice
 from a user-provided supported retail installation into ignored local paths.
 The remaining asset gap is technical integration and format fidelity.
-Read [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) before changing this lane.
+Read that repository's [`rebuild/PROVENANCE.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PROVENANCE.md) before changing this lane.
 
 ## Reverse engineering
 

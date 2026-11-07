@@ -185,7 +185,7 @@ Save edits must start from a real baseline and preserve unknown bytes. An
 installed executable may be changed only when its owner explicitly chooses it
 and the write path has already made and verified a pre-write backup; otherwise
 use a verified copy. The pristine specimen is never a mutation target. The
-full three-principle contract is [`AGENTS.md`](AGENTS.md); this is the
+full rules are the Ground rules section of [`AGENTS.md`](AGENTS.md); this is the
 contributor-facing summary, not a second owner.
 Exporters must require explicit local inputs and a separate local output root.
 

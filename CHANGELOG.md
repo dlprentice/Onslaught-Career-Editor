@@ -1,9 +1,8 @@
 # Onslaught Toolkit changelog
 
 Status: historical — the retired WinUI app's release record; no further entries
-Last updated: 2026-10-21 (marked historical; the unreleased section and the never-published 1.0.12 candidate removed)
-Evidence: MEASURED — published entries name the released ZIP/tag they
-describe.
+Last updated: 2026-11-06 (evidence grade corrected and a pointer to current releases added; 2026-10-21: marked historical, the unreleased section and the never-published 1.0.12 candidate removed)
+Evidence: INFERRED — each entry summarises the release notes and tag for its version.
 Summary: per-version record of the retired WinUI app's releases, for downloaders
 who arrive from the Releases page. The WinUI app is no longer maintained.
 
@@ -38,3 +37,5 @@ Download: `OnslaughtToolkit-winui-v1.0.11-win-x64.zip` (+ `.sha256` sidecar).
 ## 1.0.9 and earlier
 
 See the GitHub Releases page for prior releases.
+
+Current releases: Onslaught CE at https://github.com/dlprentice/onslaught-ce/releases. The Companion has no packaged release yet; build it from source ([README](README.MD#build-and-run)).

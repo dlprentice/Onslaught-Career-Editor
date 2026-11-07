@@ -115,7 +115,7 @@ cardid.txt
 .worktrees/
 .claude/settings.local.json
 
-# machine-local project data (retail profiles, media, VM media, host attestations); was ~/ProjectData/Onslaught
+# machine-local project data (retail profiles, media, VM media, host attestations)
 /local-data/
 # godot-offscreen evidence and its .gdignore beside the rebuild's project.godot
 /rebuild/OnslaughtRebuild.Godot/local-data/

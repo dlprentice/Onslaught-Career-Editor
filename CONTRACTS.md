@@ -1,7 +1,7 @@
 # Retail function and behavior contracts
 
 Status: active — what the contract documents are and how to read their grades
-Last updated: 2026-11-02 (public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-06 (live contract home named; 2026-11-02: public contributor setup and routing; historical results retain their dates)
 Summary: what a retail behaviour contract states, what its recorded grade meant, and where the authority now sits.
 Evidence: SOURCE — the contract documents under `reverse-engineering/contracts/` and the per-function notes under
 `reverse-engineering/binary-analysis/functions/`; grades are those the Ghidra-era campaign recorded.
@@ -47,7 +47,9 @@ A contract's recorded grade is the campaign's last word on it, not a current mea
 
 Grades are not percentages, and a name or boundary does not raise a semantic grade.
 
-## Writing or correcting a contract now
+## Writing or correcting a contract (live home: onslaught-preservation)
+
+Write or correct contract findings in [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation), whose [INDEX.md](https://github.com/dlprentice/onslaught-preservation/blob/main/INDEX.md) lists its live contract documents under "Static contracts by subsystem". Do not edit `reverse-engineering/contracts/` in this repository; it is frozen.
 
 - Check the claim against the decompiled function in [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) and cite it by name and address; never paste
   decompiler output into this repository.

@@ -1,7 +1,7 @@
 # Documentation standard — five fields, derived from what this repository already does, and mechanically enforced
 
 Status: active — the header contract for tracked documentation
-Last updated: 2026-10-31 (the header date means the last substantive change; mechanical edits do not bump it)
+Last updated: 2026-11-06 (the AGENTS.md citation and the specimen rule's machine-specific wording corrected; the header date means the last substantive change; mechanical edits do not bump it)
 Summary: every tracked document declares whether it is live, how old its claim
 is, and what it settles; a finding additionally declares whether its evidence is
 MEASURED, SOURCE, INFERRED or UNKNOWN, and names its specimen when it quotes
@@ -80,17 +80,17 @@ two different jobs:
 - **`Verdict:`** when the document makes a claim about the game. Put it first,
   in a blockquote, and make the **title a claim rather than a topic**. This is
   the strongest pattern in the repository and the one that lets a reader stop
-  after ten lines. `binary-analysis/terrain-third-light-2026-07-26.md`:
+  after ten lines. `reverse-engineering/binary-analysis/terrain-third-light-2026-07-26.md`:
 
   > Verdict: **two independent falsifications, both precise negatives.**
 
-  A negative verdict is a first-class verdict. `cockpit-lighting-law-2026-07-26.md`
+  A negative verdict is a first-class verdict. `reverse-engineering/binary-analysis/cockpit-lighting-law-2026-07-26.md`
   states its own uselessness up front — "No renderer change is warranted by this
   note" — and names the premises it falsified in the same block. That is a good
   document.
 
 - **`Summary:`** when the document makes no claim — an index, a guide, a
-  reference table. `quick-reference/cli-parameters.md` already does this.
+  reference table. `reverse-engineering/quick-reference/cli-parameters.md` already does this.
 
 Say what your verdict rests on, and say explicitly when a prior note is
 corroboration rather than evidence.
@@ -117,8 +117,8 @@ here:
 
 - **A bare grade is rejected.** `Evidence: MEASURED` with nothing after it is a
   label, not evidence. Name the capture, the byte comparison, the test, or the
-  source file and line. Per [`AGENTS.md`](AGENTS.md): "a measured number and its
-  method are" the deliverable.
+  source file and line. Per [`AGENTS.md`](AGENTS.md) (Ground rules): every behaviour claim cites a capture,
+  byte comparison, focused test, or pinned source file and line.
 - **`UNKNOWN` is a passing value.** An honest unknown with a route to settling it
   is a good outcome; a plausible guess dressed as a fact is the failure mode that
   got a previous generation of documentation deleted wholesale. This mirrors the
@@ -129,7 +129,7 @@ here:
 When a document mixes grades, grade it by its **weakest load-bearing claim** and
 partition the body — the structural form
 `## Measured retail input` / `## Source-backed ownership`, already used by
-`game-mechanics/shield-retail-to-core-translation-policy.md`, is the model.
+`reverse-engineering/game-mechanics/shield-retail-to-core-translation-policy.md`, is the model.
 
 ### `Specimen:` — which binary?
 
@@ -138,13 +138,12 @@ partition the body — the structural form
 eight hex characters.
 
 **This is the highest-priority rule in this document and it is not a formatting
-rule.** There are two retail binaries on this machine and they are not
-interchangeable: the installed Steam `BEA.exe` is deliberately patched, and the
-pristine original sits beside it as `BEA.exe.original.backup`. A byte finding
+rule.** A machine may hold two retail binaries that are not interchangeable: an installed
+game, which may be modified, and a pristine backup kept as the baseline. A byte finding
 that does not name which one it read may simply be **false** — category 1, not
 category 4. At least one parity target has already been set from the wrong
 binary; see
-[`binary-analysis/retail-capture-provenance-2026-07-25.md`](reverse-engineering/binary-analysis/retail-capture-provenance-2026-07-25.md).
+[`reverse-engineering/binary-analysis/retail-capture-provenance-2026-07-25.md`](reverse-engineering/binary-analysis/retail-capture-provenance-2026-07-25.md).
 
 The checker additionally **rejects a `Specimen:` that cites a path under
 `steamapps`** unless that same path is the `.original.backup` or a `safe-copy`.
@@ -169,7 +168,7 @@ Class is resolved from the path, so nothing has to declare its own type.
 | `FINDING` | A dated write-up that claims something about the game | default for in-scope prose | Status, Date, Verdict, Evidence, + Specimen when it quotes a retail address |
 | `INDEX` | A front door or reference that makes no claim of its own | `_index.md`, `README.md`, `*INDEX*.md` | Status, Date, Summary |
 | `GOVERNANCE` | States what is wanted or required, not what is true | explicit list in the checker | Status, Date, Summary |
-| `FUNCTION-NOTE` | Per-function RE note | `binary-analysis/functions/*.md` | `Source File:` trailer naming its `Binary:`, `Last updated:` |
+| `FUNCTION-NOTE` | Per-function RE note | `binary-analysis/functions/**/*.md` (except `_index.md`, an INDEX) | `Source File:` trailer naming its `Binary:`, `Last updated:` |
 | `WAVE-SHARD` | Fullpass wave review shard (all now in the private RE archive; the class stays in the checker) | `ghidra-fullpass-findings/W*/{primary,adversarial}/*.md` | `Phase:`, `Function count:`, `Reviewed at:` (ISO 8601) |
 
 - **`GOVERNANCE` carries no `Evidence:` and no `Verdict:`.** These documents say
@@ -183,8 +182,8 @@ Class is resolved from the path, so nothing has to declare its own type.
   documents gets switched off.
 - **`WAVE-SHARD` gates `Export root:` and `Primary:` only on shards reviewed on
   or after 2026-07-28.** Measured: 107 of 514 shards carry no `Export root:`, and
-  181 of 257 adversarial shards carry no `Primary:` — the exemplar `W001/B01.md`
-  is the exception, not the rule. Those come from the 2026-07-23 expedition,
+  181 of 257 adversarial shards carry no `Primary:` — the exemplar `W001/B01.md`,
+  in the private historical maintainer archive, is the exception, not the rule. Those come from the 2026-07-23 expedition,
   which closed on 2026-07-25 and will not be re-reviewed. Gating them would
   freeze a 288-entry backlog that can never shrink, and a backlog that cannot
   move stops being read. The shard's own `Reviewed at:` stamp is the ratchet

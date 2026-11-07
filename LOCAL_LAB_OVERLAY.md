@@ -1,7 +1,7 @@
 # Local lab overlay
 
 Status: active — the ignored-directory boundary
-Last updated: 2026-11-06 (maintainer-workspace history shortened; the public ignored-directory rules are unchanged)
+Last updated: 2026-11-06 (maintainer-workspace history shortened; the materializer command now names onslaught-godot's live copy; the public ignored-directory rules are unchanged)
 Summary: which local paths own retail inputs and bulky generated work, and what
 may be promoted out of them into tracked evidence.
 
@@ -40,8 +40,9 @@ the owning tool's explicit lab option; do not create a per-worktree copy.
 
 The rebuild materializer detects a linked worktree and verifies the canonical
 materialized files against its current source pins, then creates individual
-file links in the worktree's ignored `Assets/` paths. The explicit equivalent is
-`python rebuild/tools/materialize_retail_assets.py --reuse-canonical-assets`.
+file links in the worktree's ignored `Assets/` paths. The explicit equivalent, run in onslaught-godot's checkout,
+is `python rebuild/tools/materialize_retail_assets.py --reuse-canonical-assets` (see that repository's
+[rebuild/README.md](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/README.md)).
 It refuses stale inputs, conflicting destinations and directory links; it never
 regenerates the canonical files. This leaves adjacent `.import` files and the
 project's `.godot/` cache local to the worktree. Rebuild launchers place each
@@ -67,5 +68,5 @@ logs, screenshots, captures, and generated catalogs remain local.
 The machine-local RE campaign generations and READY bundles are history: the campaign ended on 2026-10-15 and
 its selector, `developer_state.json`, is in the private RE archive. On the maintainer's workstation,
 `local-lab/INDEX.md` lists the retained corpus and the dated campaign material in it, which is history, not a
-liveness oracle. No Ghidra work is planned; the working Ghidra project and the independent cold recovery on the
-maintainer's archive storage stay as preservation copies.
+liveness oracle. No Ghidra work is planned; the working Ghidra project and the independent cold recovery stay as
+preservation copies.
