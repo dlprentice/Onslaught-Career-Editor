@@ -1,14 +1,14 @@
 # Native Windows companion checks
 
 Status: active development check
-Last updated: 2026-10-25
+Last updated: 2026-11-06 (build setup step, fixture and game-data wording, headless wrapper marked optional; previously 2026-10-25)
 Summary: exercises native file/process/launcher boundaries and records the separate bounded development Godot UI workflow gate.
 
 This console executable compile-links the app's production implementations. It does not carry a second save codec,
 file publisher, process detector or platform override. Its Windows checks complement the Godot UI checks; they do not
 establish UI, rendering, game-load or gameplay acceptance. A successful cross-compilation is not a Windows test result.
 
-Build with the repository's pinned SDK and runtime from the repository root:
+Build with the repository's pinned SDK and runtime from the repository root. Run `python tools/companion_toolchain.py setup` on Linux x86-64 first: it installs the pinned .NET SDK and prints the path of its `dotnet` executable. Put that executable's folder first on `PATH`, so the command below uses that SDK (see the [Companion build guide](../OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export)).
 
 ```sh
 dotnet publish companion/OnslaughtToolkit.NativeChecks/OnslaughtToolkit.NativeChecks.csproj \
@@ -16,10 +16,10 @@ dotnet publish companion/OnslaughtToolkit.NativeChecks/OnslaughtToolkit.NativeCh
   -p:UseSharedCompilation=false -m:8 --output local-data/native-check/win-x64
 ```
 
-On a shared development machine, apply its resource and heavy-job lock rules around that command. The result includes
+If the machine is shared, run the build within the memory and CPU limits you use for heavy jobs, and keep other heavy jobs idle. The result includes
 its runtime; no .NET installation or Godot is needed on Windows. Copy the entire output directory to the test machine.
 
-Use an admitted **copy of a real game-created career**, with an independently recorded SHA-256. Never synthesize one.
+Use a **copy of a real game-created career** whose SHA-256 you recorded independently and pass with `--fixture-sha256`. The harness refuses a file with any other hash, or one that is not a valid career save. Never synthesize one.
 Keep the fixture outside the disposable root. Keep the root outside the actual user profile and CE package; the `files`
 phase refuses any existing root. The launcher must be a real `onslaught-ce.exe` from the selected CE package. The harness
 does not launch a game or terminate processes. It launches only `onslaught-ce.exe --version` in the `version` phase.
@@ -37,8 +37,8 @@ stale-input refusal in both writers, Windows sharing refusal, restoration from t
 backup/edit/reopen with unknown-line preservation and stale refusal. It restores `baseline.bes` and leaves a separate
 edited Unicode career. The copied profile ends with update checks disabled. It does not touch the fixture or package.
 
-For running-process acceptance, separately start the actual CE launcher with `BEA_USER_DIR=ROOT\user` and admitted game
-data. Record its actual **bea.exe** PID and leave it running. Then run:
+For running-process acceptance, separately start the actual CE launcher with `BEA_USER_DIR=ROOT\user` and game data that the
+launcher accepts. Record its actual **bea.exe** PID and leave it running. Then run:
 
 ```bat
 OnslaughtToolkit.NativeChecks.exe running --root C:\ce-check\run01 --fixture C:\ce-check\fixtures\baseline.bes --fixture-sha256 HASH --launcher C:\ce-package\onslaught-ce.exe --pid PID
@@ -82,7 +82,7 @@ native process evidence, byte assertions and inspected screenshots are recorded 
 
 `Development/CeLiveCheck.cs` also accepts an explicit `workflow` phase in a **development** Godot build.
 Normal release exports exclude this entry. Use a copied CE package and profile below a new disposable owner,
-outside the real Windows profile; keep the admitted real baseline byte-identical. Prepare an existing empty
+outside the real Windows profile; keep the real baseline byte-identical. Prepare an existing empty
 backup folder, `user/savegames/Companion Pilot.bes` copied from that baseline, and `user/ce.ini` containing
 `update_check=0`, `record_sessions=0` and `future_kept=acceptance`. The original game folder is read-only input.
 Place the `.companion-owned` marker below the owner and supply this private JSON through
@@ -99,7 +99,7 @@ Place the `.companion-owned` marker below the owner and supply this private JSON
   "game": "C:/read-only-game-data",
   "expectedVersion": "SELECTED_VERSION",
   "launcherSha256": "SELECTED_LAUNCHER_SHA256",
-  "baselineSha256": "ADMITTED_REAL_BASELINE_SHA256",
+  "baselineSha256": "REAL_BASELINE_SHA256",
   "capture": true
 }
 ```
@@ -126,10 +126,10 @@ tests physical input or establishes hardware audio. The selected native Windows 
 under `DEBUG_PROCESS` and a private job, with first-hand inspection of all three screenshots. Ordinary release
 invocation, physical input, file dialogs, Windows ACL failures and hardware GPU rendering remain unvalidated.
 
-The offline/headless fixture control is:
+The offline/headless fixture control is below. If you have a headless Godot wrapper, set `ONSLAUGHT_GODOT_HEADLESS` to it; otherwise leave it unset.
 
 ```sh
-ONSLAUGHT_GODOT_HEADLESS=godot-headless python tools/companion_godot.py test \
+python tools/companion_godot.py test \
   --script Development/CeLiveCheckTests.cs --timeout 120
 ```
 

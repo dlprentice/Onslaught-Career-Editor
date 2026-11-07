@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-11-06 (capture command moved out of the public command list, wrapper lock wording; 2026-11-04: installed definition models in the linked 3D preview; separate frozen 0.1.99 checkpoint and platform limits retained)
+Last updated: 2026-11-06 (capture command moved out of the public command list, wrapper lock wording; 2026-11-04: installed definition models in the linked 3D preview; unpublished CE development builds and platform limits retained)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -9,6 +9,8 @@ changes in the game is backed up first and can be put back. Retail reverse engin
 faithful game (the native source port, published separately as
 [Onslaught CE](https://github.com/dlprentice/onslaught-ce)) and the GPL Godot rebuild ([onslaught-godot](https://github.com/dlprentice/onslaught-godot)) have separate owners; this project neither launches nor
 depends on the rebuild. Tools for looking at raw bytes are kept, folded away under Advanced.
+
+Its player features are moving into Onslaught CE. This app stays the current implementation until each feature has a verified CE replacement (see the [native CE migration checklist](../../PROGRAM.md#native-ce-migration-checklist)).
 
 ## Which game it works with
 
@@ -128,7 +130,7 @@ a general resolution of those earlier startup waits. See
 [NativeChecks](../OnslaughtToolkit.NativeChecks/README.md) for the executed paths and limits.
 
 A native Windows development package at companion source `b4b32d0f` passed the `CeLiveCheck` workflow with
-the selected CE `0.1.6-dev` package, source `9ed8c56e81d3`. Production discovery read the actual launcher
+the selected unpublished CE development package (`0.1.6-dev`, source `9ed8c56e81d3`). Production discovery read the actual launcher
 version, then programmatic production-page actions edited, backed up and reopened a copied real career,
 published a Unicode-named copy, refused stale inputs, saved both supported settings and restored the exact
 baseline. Home, Settings and restored Backups screenshots were inspected first-hand and their selected
@@ -173,7 +175,7 @@ is a separate Python analysis tool; this application does not load its generated
 
 ## Build, test, capture, run and export
 
-Use Linux x86-64 with Git and Python 3.12 or newer. The repo-local setup installs the exact Godot .NET and .NET SDK
+Use Linux x86-64 with Git and Python 3.12 or newer. The npm commands below need Node.js 26.7 and npm 11.19 (the versions named in `.nvmrc` and `package.json`); the `python tools/` commands need no Node.js. The repo-local setup installs the exact Godot .NET and .NET SDK
 versions pinned in [toolchain.json](toolchain.json). The public [download manifest](../../tools/companion_toolchain.json)
 names official URLs, sizes, checksums and licences. No private repository or installer is required.
 
@@ -189,7 +191,7 @@ python tools/companion_toolchain.py setup
 python tools/companion_toolchain.py verify
 ```
 
-The default installs below ignored `local-data/toolchains/companion/` in the canonical checkout. Engine and SDK
+The default installs below ignored `local-data/toolchains/companion/` in the canonical checkout (the main clone that holds the repository's `.git`; a Git worktree uses it too). Engine and SDK
 downloads total about 318 MiB; allow about 1.2 GiB for the retained archives and installation, plus build outputs.
 The setup reuses matching downloads and refuses changed installations instead of overwriting them. It does not
 modify system tools, PATH or shell startup files. Build commands select the verified local SDK themselves. For a
@@ -207,7 +209,7 @@ ignored build data; only the setup code and pins belong in Git. Setup contacts t
 and Microsoft SDK download service; restore contacts nuget.org for pinned packages. No game data or usage data is sent.
 
 A maintainer can still explicitly select an existing shared installation with `--shared-lock FILE` or
-`ONSLAUGHT_SHARED_LOCK`. That optional legacy route retains its provenance checks. `--toolchain-root DIR` explicitly
+`ONSLAUGHT_SHARED_LOCK`. A shared installation is an engine and SDK that another toolchain setup has already installed and recorded in its lock file (`toolchain.linux.lock.json`); the tool checks that record against this repository's pins before use. That optional legacy route retains its provenance checks. `--toolchain-root DIR` explicitly
 selects the public installation even if a shared-lock environment variable is set. Neither route silently falls
 back to a different engine. `--engine PATH`, if provided, must match the selected verified executable.
 
@@ -231,7 +233,7 @@ Each check, build, test, run and audit leaves an output folder; the runner keeps
 of each per worktree and removes older ones. Export and capture folders are never removed.
 
 Build, test, capture and export never open a window on the desktop. **Run opens a
-window**; use it when the desktop is available. Each command stages the project and the lore into a unique canonical `local-data/companion/`
+window**; use it when the desktop is available. Each command stages the project and the lore into a unique `local-data/companion/`
 directory with isolated imports, profiles, scratch and logs, and prints that directory.
 Worktrees use the [canonical lab rules](../../LOCAL_LAB_OVERLAY.md); no research corpus
 is copied.
@@ -256,11 +258,11 @@ catching up after the game closes, and asking before unsaved changes are dropped
 
 The automatic capture route is an optional maintainer workflow, separate from public build/test setup. It requires
 a compatible hidden-output wrapper selected with `--offscreen PATH`; the bootstrap does not install a desktop
-compositor or this machine-specific wrapper. Contributors can inspect the application through `npm run dev` on their
-own desktop. Automated agents must follow their user's rules before opening a window.
+compositor or a site-specific wrapper. Contributors can inspect the application through `npm run dev` on their
+own desktop.
 
 With that wrapper available, `npm run capture:companion-godot` renders every page and state at 1280×800 and
-1920×1080 through `godot-offscreen`: first a machine without the game, then a fake install
+1920×1080 through the offscreen wrapper passed with `--offscreen PATH`: first a machine without the game, then a fake install
 built from the fixture. Add `--capture-arg=--steam-root=DIR` to render against a real Steam
 library instead; that library is only read, and nothing is saved into it in that mode. Add
 `--beside-gpu-jobs` to render next to a job on the NVIDIA card instead of queuing behind the
@@ -272,7 +274,7 @@ compete with a film rendering on the NVIDIA card, and it never overlaps another 
 
 The sidebar groups the pages the way a player thinks about them: **Home**; **Your
 career** (Summary, Goodies, Edit career, Cheats); **Your game** (Game settings, Backups);
-**Extras** (Music & voices, Lore, Art & sound, Level editor); and **Advanced**, folded away
+**Extras** (Music & voices, Lore, Art & sound, Level editor, Mission project); and **Advanced**, folded away
 (Career bytes). The header names the page, shows **Game running** while the original game
 or Onslaught CE is open, and switches careers (or opens a career file, Ctrl+O). While Edit career or Game
 settings has unsaved changes, a bar under the page counts them and offers Save (Ctrl+S)
@@ -302,7 +304,7 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   game's text, its unlock rule and how that rule is known. Slots 071–073 are stored and can
   be earned but never shown; they are listed apart and always kept as they are. **What it
   shows** reads the Goodie from your install, as
-  reverse-engineering/asset-formats/goodie-resources.md describes:
+  [the goodie resource format](https://github.com/dlprentice/onslaught-preservation/blob/main/formats/goodie-resources.md) describes:
   - a picture is shown;
   - a model is named;
   - both open in Art & sound, which saves copies;
@@ -321,7 +323,7 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
 - **Game settings**, with the original game selected: the game's default settings
   (`defaultoptions.bea`, which the game reads when it starts), or the copy of the settings each career stores. The game does not apply a
   career's copy when that career loads, and may overwrite it the next time it saves the
-  career ([save-format.md](../../reverse-engineering/save-file/save-format.md#options-entries)).
+  career ([save-format.md](https://github.com/dlprentice/onslaught-preservation/blob/main/saves/save-format.md#options-entries)).
   It edits sound and music volume; invert flight and walking, vibration and controller layout
   for each player; mouse sensitivity (the game's own slider steps) and screen shape; and
   keyboard keys captured from a key press, in the two binding slots each action has (Slot 1
@@ -331,7 +333,7 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   CE career backups include original-install careers in its combined list; `ce.ini` backups
   are separate, as described above. Automatic backups run when the companion opens and after the
   game closes while it is open, only when something changed. The page shows the folder
-  (`Battle Engine Aquila Backups` in Documents unless you choose another; on Windows in `%LOCALAPPDATA%\Onslaught Companion`, which
+  (`Battle Engine Aquila Backups` in Documents unless you choose another; on Windows in `%LOCALAPPDATA%\Onslaught Companion\Battle Engine Aquila Backups`, which
   Windows does not sync, because Documents is often a OneDrive folder), Back up now, and every backup set, newest first,
   with why it was made and **Put back** for each file.
 - **Music & voices** plays the soundtrack and voice lines from your install, grouped by
@@ -346,10 +348,10 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   previews each (a model as it stands at its first frame, a texture over a checkerboard) and
   saves a copy into a folder you choose: a model as binary glTF (`.glb`, with its textures
   embedded; Blender and most 3D tools open it), a texture as PNG, a sound effect as WAV (16-bit
-  mono at 44,100 Hz, decoded as reverse-engineering/asset-formats/xap-sample-bank.md describes);
+  mono at 44,100 Hz, decoded as [xap-sample-bank.md](https://github.com/dlprentice/onslaught-preservation/blob/main/formats/xap-sample-bank.md) describes);
   a sound can also be played. The readers follow the
-  public format documents (`reverse-engineering/asset-formats/cmsh-fields.md` and
-  `cmsh-animation-keys.md`); the game's left-handed, Z-down model space is converted to
+  public format documents ([cmsh-fields.md](https://github.com/dlprentice/onslaught-preservation/blob/main/formats/cmsh-fields.md) and
+  [cmsh-animation-keys.md](https://github.com/dlprentice/onslaught-preservation/blob/main/formats/cmsh-animation-keys.md)); the game's left-handed, Z-down model space is converted to
   glTF's right-handed, Y-up one. Copies are new files only, never written into the game
   folder or the backups. A copy carries the model's animations, one per animation mode, with
   the mode's frames in each animation's `extras`, and its skeleton as a glTF skin. The game
@@ -381,7 +383,7 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   on a mark selects it in the table and the fields, and dragging a mark moves it: the mark follows the pointer, Esc puts it
   back, and letting go moves X and Y to the place under the pointer (to a hundredth) and keeps Z as it was, a stored -0
   included, as one move that can be undone. With a mark selected and the map focused, the arrow keys nudge it, 0.5 a press (Shift 5, Ctrl 0.05; up is +Y), each press one
-  move that can be undone (a held key's repeats count as presses; nobody has tried a real held key). Only the pressed axis changes, and it lands on the hundredth as a drop does; the other axis and Z stay as they were, bit for bit. **Copy this unit** (for a selected unit; a start, trigger, path point, spawner or building cannot be copied yet) adds a copy at the end of the level's list, 10 units to its right under the name `<name> copy`, selects it so it can be moved at once, and counts as one change that Undo takes back; it keeps the original's script and target (a unit whose script ends the level does so for the copy), and it is appended after every row so no path, target or career index changes, the saved world holds one more thing, and a base world is never given one. **List only the moved objects** in the changes box makes the table show just the objects that have been moved or copied, to look a long session over. A moved object is amber on the map with a line from where the level has it, and a
+  move that can be undone (a held key's repeats count as presses; nobody has tried a real held key). Only the pressed axis changes, and it lands on the hundredth as a drop does; the other axis and Z stay as they were, bit for bit. **Copy this unit** (for a selected unit; a start, trigger, path point, spawner or building cannot be copied yet) adds a copy at the end of the level's list, 10 units to its right (to its left when the right side would leave the 0 to 512 square) under the name `<name> copy`, selects it so it can be moved at once, and counts as one change that Undo takes back; it keeps the original's script and target (a unit whose script ends the level does so for the copy), and it is appended after every row so no path, target or career index changes, the saved world holds one more thing, and a base world is never given one. **List only the moved objects** in the changes box makes the table show just the objects that have been moved or copied, to look a long session over. A moved object is amber on the map with a line from where the level has it, and a
   readout gives the world position and the ground's height under the pointer. The map's mouse paths are tested with events
   pushed into the window; how a drag feels has been tried only by scripted events. The map's orientation was checked in Onslaught CE
   on level 100: two Target Tanks were dragged on the map, one straight ahead of the player's start and one 25 degrees to the
@@ -434,7 +436,7 @@ Linux; neither has run on Windows, and nobody has looked at the panel on screen.
   file with the replaced script, and only when every replaced script passes the structural check (`ScriptChecker`: the opcodes,
   operands, jump targets, game functions and their argument counts, entry points, handlers, symbol tables and stack balance the game's
   loader and script machine assume); the mod holds the world file only, so the edited source is not kept beside it. **Play this level with the changes** starts Onslaught CE at the
-  open level with the changes as they are (nothing is saved), in a temporary CE folder of its own: a copy of your ce.ini with only this mod switched on and recording and the update check off,
+  open level with the changes as they are (nothing is saved), in a temporary CE folder of its own: a copy of your ce.ini with only this mod enabled, session recording off and the update check off,
   your options file (never a career) and the mod. It is designed to leave your own CE folder, ce.ini and careers untouched. In one offscreen run the scratch player's settings, stand-in career and tape were unchanged and the temporary folder was removed. The Play feature needs Linux and CE 0.1.11 or later,
   and a recorded session switches mods off, which the copy of ce.ini avoids. The page was driven
   by events in tests and looked at in offscreen captures, and its `scriptmod` capture staged one edit (a tutorial message of level 100) as a mod that Onslaught CE ran on
@@ -501,12 +503,12 @@ special file where a map file should be is refused at once.
 
 Project definition references remain names. Geometry comes from the linked installed object, not an arbitrary new
 object of that definition. This page edits no terrain, compiles or runs no source and
-exports no new playable level. CE development source now reads linked projects: a 2026-11-03 controlled run and
+exports no new playable level. The unreleased CE development build now reads linked projects: a 2026-11-03 controlled run and
 independent review saved projects through this page's production Save as path and ran those files in default Linux
 CE on level 221. One existing boat reached the authored X/Y; its own initialization set its height. A moved placement
 can change later mission and AI behavior. The page was driven programmatically, not by a person operating its dialog
 or dragging a marker. A November 4 local smoke check loaded one of those saved projects in the final network-enabled
-0.1.99 Linux checkpoint package; its placement log entry and gameplay image were inspected with no active network session.
+unpublished CE development Linux build; its placement log entry and gameplay image were inspected with no active network session.
 No publicly released CE reads these projects. Complete mission authoring, physical-input use, multiplayer project
 loading/replication and native Windows acceptance remain open; the
 [capability record](../../CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore) gives the
@@ -533,7 +535,7 @@ The [capability record](../../CURRENT_CAPABILITIES.md#godot-companion--careers-s
   CE runs passed. Separate CE replays loaded both the restored baseline and the edited Unicode
   career, with the loaded options container matching each selected career exactly. Earlier standalone
   launcher queries intermittently hit their five-second deadline, even with the launcher output correction.
-  The selected `9ed8c56e81d3` launcher passed its production version query in the rendered development gate;
+  The selected launcher from the unpublished development package (`9ed8c56e81d3`) passed its production version query in the rendered development gate;
   that observation does not resolve the earlier intermittent loader wait for other builds or invocations.
 - Nobody has clicked through the app by hand or listened to its music and voices.
 - The model preview shows each model at its first frame; the app never plays an animation. On
@@ -591,20 +593,19 @@ Home describes three safeguards for your original game (its Steam or retail inst
   the original game when its name is `BEA.exe`, when the program it runs (its first argument)
   is `BEA.exe`, or when it is a Wine loader given `BEA.exe`; a tool that only names the file
   further along its command line does not count. It counts as Onslaught CE when the program
-  it runs is CE's launcher (`onslaught-ce-launch`, or `onslaught-ce.exe` on Windows), or is
+  it runs is CE's launcher (`onslaught-ce-launch`, or `onslaught-ce.exe` on Windows; on Linux the `onslaught-ce` script starts `onslaught-ce-launch`), or is
   named `bea` (`bea.exe`) and sits in a folder that also holds that launcher, as an Onslaught
   CE package lays it out; a program called `bea` anywhere else does not count. On Windows the
   check looks for processes named `BEA` (which includes CE's `bea.exe`) or `onslaught-ce`. A
   CE program replaced while it runs (`/proc/PID/exe` ending in ` (deleted)`) still counts. On
   2026-10-22 the check found a running Onslaught CE 0.1 on Linux (comm `bea`, its program in the
   extracted package beside `onslaught-ce-launch`), before and after its `bea` file was replaced,
-  and stopped finding it once CE exited (`Development/RunningCheck.cs` output saved in the ignored
-  `local-data/companion/evidence/ce-running-check-2026-10-22.log` beside the harness that ran it);
+  and stopped finding it once CE exited (the output of `Development/RunningCheck.cs` was kept as private evidence in the ignored
+  `local-data/` folder of the machine that ran it, not in this repository; the command at the end of this item reruns that check);
   native Windows checks on 2026-10-24 also detected the selected package's actual `bea.exe` and
   refused both career and CE-settings writes with the running-game reason, without changing files
   or creating backups ([NativeChecks](../OnslaughtToolkit.NativeChecks/README.md)). On 2026-09-26, with the Steam
-  game running under Proton, the check found exactly the game's own process (`BEA.exe`, argv[0]
-  `S:\steamapps\common\Battle Engine Aquila\BEA.exe`) and not Steam's launcher shim, the Proton script or the runtime wrapper;
+  game running under Proton, the check found exactly the game's own process (`BEA.exe`, whose argv[0] is the game's `BEA.exe` in the Steam library) and not Steam's launcher shim, the Proton script or the runtime wrapper;
   `python tools/companion_godot.py test --script Development/RunningCheck.cs` prints what it sees.
 - **Career backup sets can be put back from Backups.** Putting a file back is itself a
   write into the game, so it backs up the current files first. The file is put back only if
@@ -681,8 +682,8 @@ process during the run is not guaranteed to stay outside the game folder (the li
 
 [toolchain.json](toolchain.json) records the measured engine, SDK and template hashes and
 the shared lock revision; `tools/companion_godot.py` verifies the installation and refuses
-mismatches. `global.json` pins .NET SDK 10.0.402 (latest patch of that band; the runner accepts only
-10.0.402); the Godot SDK is `4.8.0-beta.1`, the target `net10.0` and the runtime 10.0.13, the
+mismatches. `companion/OnslaughtToolkit.Godot/global.json` pins .NET SDK 10.0.402 (latest patch of that band; the runner accepts only
+10.0.402; the repository root's `global.json` pins the same version); the Godot SDK is `4.8.0-beta.1`, the target `net10.0` and the runtime 10.0.13, the
 one that SDK ships. The runtime packs Godot's export bundles
 (`microsoft.netcore.app.runtime.linux-x64` and `win-x64` 10.0.13) are pinned by nuget.org's
 SHA-512 and their SHA-256, and an export whose restored pack differs is refused. Export presets target Linux x86_64 and Windows x86_64, and Godot's normal
