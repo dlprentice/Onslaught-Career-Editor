@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-11-06 (the Companion gate rows name the public pinned toolchain; 2026-11-03: the Companion's live check against released CE 0.1.13; historical results retain their dates)
+Last updated: 2026-11-06 (the Companion gate rows name the public pinned toolchain; dated entries now carry superseded and retired-tool notes; 2026-11-03: the Companion's live check against released CE 0.1.13; historical results retain their dates)
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -30,8 +30,12 @@ Dated entries below are history. Those that name the Ghidra campaign, `developer
 private historical maintainer archive describe checks that no longer run here. Paths beginning
 `.worktrees/godot-editor-48-20260919/local-data/` now live under
 `local-data/test-runs/retired-worktrees-20261015/godot-editor-48-20260919-local-data/` in the canonical checkout.
-Commit ids cited below predate the 2026-10 history flatten; they resolve in the private RE archive's bundle and
+Commit ids cited in entries dated before 2026-10-15 predate the history flatten; they resolve in the private archive's bundle and
 `refs/old/*`, not in this repository.
+
+Scripts, tools and paths named in dated entries that this repository no longer contains: npm scripts `test:rebuild-client`, `test:rebuild-core`, `test:save-lab` and `prepare:rebuild-assets` (onslaught-godot defines the rebuild gates, including its own `prepare:rebuild-assets` and `ref:*` scripts); tools `tools/export_packets_tests.py`, `tools/re_lib_match_tests.py`, `tools/ghidra_cohort_framework_tests.py`, `tools/re_function_doc_names_check.py` and `rebuild/tools/gdscript_parity.py`; `reverse-engineering/ghidra/README.md`; and the worktrees `.worktrees/main-integration-20260919/`, `.worktrees/remote-review-20260912/`. Receipts cited in dated entries are kept in ignored local folders and the private archive; they are not in this repository and cannot be re-run from it.
+
+Dated entries that report rebuild suite counts (Core, Client, Parity, the Godot build) describe the rebuild as it stood on their dates. The rebuild is frozen here, and its current gates run in onslaught-godot. Entries from 2026-09-19 to 2026-09-23 describe GDScript harnesses and editor scenes removed on 2026-09-25; any `.gd` or `.tscn` run target in dated entries is historical and not runnable from either public tree. Relative `.gd` and `.tscn` paths in dated entries are relative to `rebuild/OnslaughtRebuild.Godot`.
 
 The WinUI shell, its UI tests, the Windows-targeted CLI and the ZIP procedure were
 removed on 2026-10-15; dated entries below that name them are history. The unused
@@ -45,16 +49,39 @@ companion's tests); dated entries below that name them are history.
 
 | Change | Focused evidence |
 | --- | --- |
-| Documentation or deletion only | `git diff --check`, `npm run test:docs` (link check with its self-test, then headers), and the affected generator/reference check. The full link scan needs initialized pinned public source references; no retail data is needed |
+| Documentation or deletion only | `git diff --check`, `npm run test:docs` (link check with its self-test, then headers), and, when a generator's output changed, that generator's `--check` (the catalogue row below gives the pattern). The full link scan needs initialized pinned public source references; no retail data is needed |
 | A new or edited tracked `.md` header | `npm run test:doc-headers`, which is also inside `test:docs`. The contract is [`DOCUMENTATION.md`](DOCUMENTATION.md); the backlog of pre-standard documents is `tools/doc_header_backlog.txt` and may only shrink |
-| Companion (C# built in code) and its file safety | With the public pinned toolchain (`python tools/companion_toolchain.py setup`), `npm run test:companion-godot` runs `Tests/CompanionTestRunner.cs` on owned copies of the tracked real-save fixture: codec contracts, independent byte diffs, protected round trips, changed/conflicting sources and links, publication races and the code-built interface's real controls. `test:companion-tools` separately checks pins, the code-only policy, staging and export boundaries with fake tools |
+| Companion (C# built in code) and its file safety | With the public pinned toolchain (`python tools/companion_toolchain.py setup`), `npm run test:companion-godot` runs `companion/OnslaughtToolkit.Godot/Tests/CompanionTestRunner.cs` on owned copies of the tracked real-save fixture: codec contracts, independent byte diffs, protected round trips, changed/conflicting sources and links, publication races and the code-built interface's real controls. `test:companion-tools` separately checks pins, the code-only policy, staging and export boundaries with fake tools |
 | Public payload/provenance boundary | `npm run test:safety` |
 | The Godot rebuild application | Developed, built and gated in [onslaught-godot](https://github.com/dlprentice/onslaught-godot). Local `rebuild/` is retained as a frozen reference; its application is not built or gated here |
 | Retained Python support under `rebuild/tools/` | `test:tools` runs the retained `materialize_retail_assets_tests.py` and `cmsh_static_preview_tests.py`; some current Toolkit format tools import the latter's parser. `test:godot-host` runs the retained `first_flight_tests.py` with fake tools. These checks do not run the rebuild application or establish its parity |
-| Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. With the public pinned toolchain, `build:companion-godot` refuses GDScript, saved resources and multi-node scenes, then builds the C# companion; `export:companion-godot` produces normal Godot .NET Linux/Windows exports. Builds are headless |
+| Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. With the public pinned toolchain, `build:companion-godot` refuses GDScript, saved resources and multi-node scenes, then builds the C# companion; `export:companion-godot` produces normal Godot .NET Linux/Windows exports after `python tools/companion_toolchain.py setup --with-templates`. Builds are headless |
 | Catalogue or editor Python reference | The affected authored suite, such as `python tools/content_catalog_tests.py`, `python tools/world_resources_encode_tests.py`, `python tools/level_editor_vectors_tests.py` or `python tools/msl_compile_tests.py`; check changed generated C# vectors/tables with the owning generator's `--check`. These need no retail install; [Python package requirements](tools/README.md#python-prerequisites) and schema skips still apply. Retail catalogue, world and compiler comparisons are separate [tools](tools/README.md#editor-references-and-generators); C# changes also owe the Companion runtime gate |
-| Tools | The affected `tools/<name>_tests.py`; `npm run test:tools` runs every registered suite (`worldheaders_decode --self-test` needs the retail `worldheaders.dat`). Its self-test fails for any `*_tests.py` that is neither registered nor excluded with a reason in `tools/run_tool_tests.py`, so a new test file cannot fall outside it. It covers, besides the earlier ones, `dds_census`, `mission_script_inspect`, `worldheaders_decode`, the skinning and matrix contracts, `battle_engine_config_decode`, `gltf_pose_check`, `goodie_resource_walk`, `xap_bank_walk`, `safe_generated_output` and the extractor source audit. A suite that cannot run (a Windows-only one on another host, or the audit when the `AYAResourceExtractor` or `Onslaught` submodule is not initialised: `git submodule update --init`) is a named SKIP in the summary, never a pass. A suite that runs is reported as passed even when some of its tests skipped themselves (tests that need the retail data or a specimen skip one by one): on 2026-10-29 the skipped tests numbered 27 without the retail environment variables and 17 with the retail view and the pinned asset index, so read each suite's own skip lines before citing the summary as evidence for a retail claim. The companion, Godot host and rebuild launcher suites run under their own npm scripts. |
+| Tools | The affected `tools/<name>_tests.py`; `npm run test:tools` runs every registered suite (`worldheaders_decode --self-test` needs the retail `worldheaders.dat`). Its self-test fails for any `*_tests.py` that is neither registered nor excluded with a reason in `tools/run_tool_tests.py`, so a new test file cannot fall outside it. It covers, besides the earlier ones, `dds_census`, `mission_script_inspect`, `worldheaders_decode`, the skinning and matrix contracts, `battle_engine_config_decode`, `gltf_pose_check`, `goodie_resource_walk`, `xap_bank_walk`, `safe_generated_output` and the extractor source audit. A suite that cannot run (a Windows-only one on another host, or the audit when the `AYAResourceExtractor` or `Onslaught` submodule is not initialised: `git submodule update --init --recursive`) is a named SKIP in the summary, never a pass. A suite that runs is reported as passed even when some of its tests skipped themselves (tests that need the retail data or a specimen skip one by one): on 2026-10-29 the skipped tests numbered 27 without the retail environment variables and 17 with the retail view and the pinned asset index, so read each suite's own skip lines before citing the summary as evidence for a retail claim. The companion, Godot host and rebuild launcher suites run under their own npm scripts. |
 | Game documentation claim | New findings belong in [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation). Cite the decompilation's function, capture, byte comparison or source line; never paste decompiler output. The local `reverse-engineering/` notes are frozen references |
+
+## Terms used in this file
+
+- **private archive**: the maintainer's private historical archive of recovery copies, Ghidra records and the full pre-flatten history. It is not in this repository.
+- **PRE, POST**: recovery copies taken before and after a live change, kept in the private archive, as the dated entries use the terms.
+- **rehearsal**: an isolated trial run of a change on copies, before the live apply, as the dated entries use it.
+- **readback**: reading written output back from disk to check it.
+- **cohort**: a group of related changes or names handled together.
+- **lane**: a separate workstream named in the dated entries, for example the reverse-engineering notes or the rebuild.
+- **remote**: the separate environment that produced the 2026-09-09 source changes (see that entry).
+- **handoff**: a dated record that passes unfinished work to another session.
+- **FirstFlight**: the rebuild's first-flight launch and check tool (`rebuild/tools/first_flight.py`).
+- **Movie Maker**: Godot's movie-writing mode.
+- **Dummy audio**: Godot's audio driver with no output, selected with `--audio-driver Dummy`.
+- **llvmpipe**: Mesa's software OpenGL renderer on the CPU.
+- **iGPU**: an integrated graphics processor.
+- **x87**: the x87 floating-point instruction set of 32-bit x86.
+- **ELF**: the Executable and Linkable Format used by Linux executables.
+- **CRT**: the C runtime library.
+- **SEH**: Windows structured exception handling.
+- **TRX**: the Visual Studio test-results XML file that `dotnet test` writes with the trx logger.
+- **Placeholders** in commands: `ABS_FRESH_EMPTY_DIR` is an absolute path to a new empty directory, `ABS_FRESH_OWNED_DIR` an absolute path to a directory the run owns, `GODOT_PROJECT` the Godot project directory, and `NAME` the test or check name.
+- **`<pinned Godot 4.8 beta1 .NET editor>`**: the editor that `npm run setup:toolchain` in onslaught-godot installs.
 
 ## Companion with real Onslaught CE 0.1.13 — November 3
 
@@ -144,7 +171,7 @@ machine-specific offscreen capture wrapper were not exercised in this fresh-clon
 
 The public setup code and pinned inputs are committed; detailed run outputs are retained as private maintainer
 evidence. New contributors reproduce the commands in the [Companion guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export),
-then report their own platform and results in a PR. Existing shared-lock installs remain an optional separate route.
+then report their own platform and results in a pull request against dlprentice/Onslaught-Career-Editor (see CONTRIBUTING.md). Existing shared-lock installs remain an optional separate route.
 
 ## Companion native Windows development UI — October 25
 
@@ -230,9 +257,10 @@ Run the optional entry only with a prepared isolated owner containing `.companio
 copied baseline/career and backup folder. `ONSLAUGHT_CE_LIVE_CHECK` names its private JSON configuration
 (`owner`, `launcher`, `user`, `baseline`, `backups`, `game`, and `phase`). Phases are `prepare`, `settings`,
 `launch`, and `restore`. Launch additionally requires `expectedLoadedCareer`, a bounded keyboard
-tape/configuration and explicit offscreen/dummy-audio guards; the caller holds the GPU and resource locks.
+tape/configuration and explicit offscreen/dummy-audio guards; the maintainer's wrapper holds the GPU and resource locks.
 The command is `python tools/companion_godot.py test --script Development/CeLiveCheck.cs`.
 Do not point this acceptance hook at a player's normal profile.
+This opt-in hook is not part of public setup or the ordinary suite; a pull request does not need it.
 
 Gates: the unchanged `CompanionTestRunner` passed 1,073 C# checks; `tools/companion_godot_tests.py` passed
 26 Python tests. These are the two `npm test` constituent suites; a private wrapper redirected only the
@@ -243,7 +271,7 @@ those links without changing the pins. The ordinary suite does not run the opt-i
 
 Follow-up failure-path review fixed three development-hook defects: a rejected owner could receive a receipt,
 an invalid phase could escape into its filename, and a launcher that exited before its game skipped child
-cleanup. `Development/CeLiveCheckTests.cs` passed 16 focused checks through `godot-headless`: actual rejected
+cleanup. `companion/OnslaughtToolkit.Godot/Development/CeLiveCheckTests.cs` passed 16 focused checks through `godot-headless`: actual rejected
 configurations write nowhere outside an admitted owner; a recorded dummy child is cleaned after its parent
 exits; wrong executable and start-time identities refuse signals. No game is launched by these checks.
 Running refusals now require the exact running-game reason, no backup and no possible file change; both
@@ -281,7 +309,7 @@ passed. The target bodies remain 1,065 bytes / 363 instructions; all signatures,
 variables, frames and non-target records are preserved. No runtime behavior is
 established by those metadata checks.
 
-`python -m unittest tools.ghidra_cohort_framework_tests`: **94 passed** after
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): **94 passed** after
 each scoped allowlist registration. Production projection checks match **all
 8,332 live names**; running unique counts are 2,139 names corrected, 377 kept,
 0 newly neutralized and 5,816 outside that accounted set. Existing consumer
@@ -370,7 +398,7 @@ live exports equal rehearsal; every name, prototype, variable, frame and body is
 preserved, along with 8,324 other function records. The complete 8,332-row name
 projection matches live; the tracked checkpoint remains unchanged.
 
-`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 94 passed.
 Execution logs are `local-data/test-runs/re-audit-20260926/music/verified-*`.
 Filesystem enumeration, device/FPU setup, audio output and runtime lifetime
 acceptance remain outside this static promotion.
@@ -482,7 +510,7 @@ Private gate owner:
 Its `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
 `compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
 `finish.py` and `verify_projection.py` record exact commands/outcomes.
-`python -m unittest tools.ghidra_cohort_framework_tests`: **94 passed**.
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): **94 passed**.
 The 8,331-name projection equals live; deduplicated counts are 1,985 corrected
 names, 300 additional kept names, 6,046 outside that name set, 22 corrected
 interfaces and 2,295 updated comments. Earlier 49 original-code reader cases
@@ -537,7 +565,7 @@ All fourteen Read cases copy zero destination bytes. Underlying buffer calls
 are intercepted and high return counts are authored controls; this is not
 file I/O, ownership, decoder, full dispatcher or retail acceptance.
 
-`python -m unittest tools.ghidra_cohort_framework_tests`: **94 passed**.
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): **94 passed**.
 `npm run test:docs` passed with 2,041 assertions, zero drift and zero unresolved
 entries; its first run caught a missing provenance header in the updated
 Goodies note, corrected before the successful rerun. `npm run test:safety`
@@ -602,7 +630,7 @@ Private commands/receipts:
 Executed with `python`: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
 `compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
 `finish.py`, `verify_projection.py`.
-`python -m unittest tools.ghidra_cohort_framework_tests`: **94 passed**.
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): **94 passed**.
 Deduplicated counts: 1,980 corrected names, 294 additional kept names, 6,057
 outside that name set; **16 corrected prototypes and 2,284 updated comments**.
 No new name disposition is claimed for this ABI-only cohort.
@@ -648,7 +676,7 @@ live exports equal rehearsal; 708 instructions / 2,037 code bytes, all saved
 prototypes/locals and 8,315 non-target function rows are unchanged. The program
 comment count grows by seven. The full 8,331-name projection equals live.
 
-`python -m unittest tools.ghidra_cohort_framework_tests` passed 94 cases.
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive) passed 94 cases.
 Current-name documentation checks first found eight old assertions, then three
 historical acceptance markers using the wrong side of the mapping. Those were
 corrected without rewriting the historical rows; final strict projection passes.
@@ -695,8 +723,8 @@ source-line/offset-notation draft and rehearsal are preserved as superseded.
 
 Private command/results owner:
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/membuffer-identities/`.
-`python -m unittest tools.ghidra_cohort_framework_tests` passed 94 cases;
-`python tools/re_function_doc_names_check.py --self-test` passed, and its
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive) passed 94 cases;
+`python tools/re_function_doc_names_check.py --self-test` (retired tool, now in the private archive) passed, and its
 `--strict` current-document check found no drift. The first combined unittest
 command incorrectly named a nonexistent projection-test module; its loader
 error is retained, then the actual built-in self-test was run. No empty selection
@@ -783,7 +811,7 @@ Executed with `python`: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
 `finish.py`, `verify_projection.py`. The last check reproduces all 8,331 names
 and deduplicated counts: 1,897 corrected, 294 kept, 6,140 outside the name set;
 8 corrected prototypes and 2,196 updated comments are separate dimensions.
-`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 94 passed.
 No game, Godot, drawing, player input or full runtime acceptance ran.
 
 ### RE compiler deleting-entry identities — September 27
@@ -836,7 +864,7 @@ Fresh PRE, separate/sealed readback, five no-write refusal controls, exact nine
 live/rehearsal exports and independently restored Archive A POST passed.
 Only program `commentsSha256` changed; all 8,317 non-target rows and the tracked
 checkpoint stayed unchanged. All 8,331 current projected names match live.
-`python -m unittest tools.ghidra_cohort_framework_tests`: **93 passed**.
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): **93 passed**.
 Documentation and public-payload checks are recorded with the scoped commit.
 
 The Controller contract distinguishes signed upper-only pad guards, RightY's
@@ -864,7 +892,7 @@ and the five stale comment claims. Old notes remain marked as fallible leads.
 - All nine live exports equal the independently reopened rehearsal. The new
   Archive A POST was restored elsewhere and opened read-only; working, cold and
   restored inventories agree. The tracked checkpoint is unchanged.
-- `python -m unittest tools.ghidra_cohort_framework_tests`: 93 passed after the
+- `python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 93 passed after the
   exact registration. `npm run test:safety` passed. The evidence-tool code is
   unchanged from the preceding 55-test run; those tests were not rerun here.
 
@@ -888,7 +916,7 @@ owners are accounted for; unsupported dispatch/stack cases are withheld.
   55 passed. Adverse cases cover incomplete decoding, branch escapes, unsafe
   stack writes, backward tail branches, conflicting aliases and 64-bit argument
   widths. They validate the bounded admission method, not full ABI correctness.
-- `python -m unittest tools.ghidra_cohort_framework_tests`: 93 passed after
+- `python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 93 passed after
   registering the exact cohort.
 - Fresh PRE restore/open, rehearsal dry/apply/separate readback, sealed readback
   and five no-write refusal controls passed. An earlier seal with ambiguous
@@ -968,7 +996,7 @@ stay with their tests. The Start refusal test now removes Player 1 from the
 materialized World 110 set, and the world-200 test pins the shared BSWD
 (54,669 bytes, `04c5a383…10f4`) literally.
 
-The retail evidence stays in the RE lane's
+The retail evidence stays in the reverse-engineering notes'
 `world-110-initial-constructor-seeds.md` and `world-110-player-start-admission.md`.
 The code and its mutation receipts stay in Git history (last present at
 `df392cb4`) and in the ignored `local-lab/rebuild-world110-*` receipts. Nine
@@ -1037,7 +1065,7 @@ first-flight, smoke and won-tape pins pass unchanged. Suites: Core 1,578,
 Client 917 with the two known skips, and the Godot build.
 
 Open:
-- which Level 100 rows a player can actually destroy (the RE lane's falsifier
+- which Level 100 rows a player can actually destroy (the reverse-engineering notes' falsifier
   is a copied-retail run that destroys one base building);
 - the stamps' rendering;
 - the Godot host still plays only Level 100. SELECT LEVEL offers World 110
@@ -1046,7 +1074,7 @@ Open:
 
 ### Walker dash window — September 26
 
-The RE lane's walker-dash contract
+The reverse-engineering notes' walker-dash contract
 (`reverse-engineering/game-mechanics/walker-dash.md`) found a second bound in
 retail's dash window that the source lacks. Re-read here from the pristine
 specimen (`74154bfa…`):
@@ -1070,7 +1098,7 @@ never did. Now:
 
 `SimulationTests.WalkerDash_AdmitsTheOppositePressOnlyInsideRetailsFloatWindow`
 pins k = 2 at frames 320, 321 and 322 and k = 4 at frames 324, 325 and 326,
-from the RE lane's table recomputed past the pan. `WalkerOppositeFlick_…` now
+from the reverse-engineering notes' table recomputed past the pan. `WalkerOppositeFlick_…` now
 flicks with k = 3. The table itself reproduces here: the first admitted frames
 are 3, 6, 9, 21 and 42 for k = 2 and 5, 7, 25, 28 and 30 for k = 4, at the
 table's rates (10.5% and 12.1%; 22.3% and 6.1%).
@@ -1100,7 +1128,7 @@ the abort branch. That is a fixture reading.
 Suites: Core 1,573, Client 916 with the two known skips, pause checks 56 and
 AYA checks 447.
 
-Open, with the RE lane's falsifiers: the runtime precision mode, and whether
+Open, with the reverse-engineering notes' falsifiers: the runtime precision mode, and whether
 one input sample reaches the walker per event frame. Core's input is digital,
 so the 0.9 and 0.8 analog thresholds also remain open.
 
@@ -1108,21 +1136,21 @@ so the 0.9 and 0.8 analog thresholds also remain open.
 
 Core now builds World 110 as a session. `new Simulation(seed, world110,
 worldNumber: 110)` loads the materialized static world in the retail order and
-runs the level's pre-run, as the RE lane's construction contract describes
+runs the level's pre-run, as the reverse-engineering notes' construction contract describes
 (`reverse-engineering/game-mechanics/world-110-construction-order.md`, RE
 commit `0bce197c`). A definition set without its Start row is refused before
 anything is built. The Godot host still starts only Level 100. Each
 address below was re-read from the pristine specimen (`74154bfa…`).
 - **Load.** The shared base world loads as Level 100's: 1,481 pines, the
   influence map and 37 base-row draws. The 40 level rows take 102 draws under
-  the RE lane's static squad-target estimate, and the tail takes one: 1,622 in
+  the reverse-engineering notes' static squad-target estimate, and the tail takes one: 1,622 in
   all, counted on the shared stream. World 110 has no warm-up units.
 - **Squads.** A type-28 squad is now a thing of its own ("Level Actor Type 28",
   ahead of its members in the manifest). Each member takes the Actor draw
   (multiplier 4), fire control and its 4001, 4003, the hover draw and its AI.
   Then the squad binds its own script (Scout after its four members,
   `0x004e61b4`) and takes its 4000 and 4001 draws. It also takes 4002's draw
-  unless `Process` returns 1 at construction. The RE lane's static estimate
+  unless `Process` returns 1 at construction. The reverse-engineering notes' static estimate
   gives 1 for rows 16 and 18; that is open until a load log reads squad
   `+0xc4`.
 - **Landing craft.** Each craft builds its "Dropship Gun Turret" child after
@@ -1137,7 +1165,7 @@ address below was re-read from the pristine specimen (`74154bfa…`).
   ((r mod 65536)·2⁻¹⁸ + 0.25) + now. Their air velocity and turn rate come from
   their unit records: the factory at `0x00431bb0` indexes id − 1 into
   `0x00432908`, and ids 2 and 6 apply through `0x00432af0` (`+0xb4`) and
-  `0x00432b00` (`+0xb8`). The landing craft's values match the RE lane's
+  `0x00432b00` (`+0xb8`). The landing craft's values match the reverse-engineering notes'
   `dropship-flight.md` table (8.0 and 7.0; 0.0174532924).
 - **Spawner and trigger.** Row 5's inactive spawner and row 9's volume file
   nothing that draws.
@@ -1168,7 +1196,7 @@ address below was re-read from the pristine specimen (`74154bfa…`).
   instructions 36, 47 and 58; opcode `0x14`'s executor `0x0052e9b0` sets the
   instruction pointer unconditionally. So below 60% health it plays one
   HEALTH_LOW message, then `_110_RESEARCH_HIT`. This corrects the RE
-  contract, which reads the source as falling through; the RE lane has the
+  contract, which reads the source as falling through; the reverse-engineering notes has the
   evidence.
 - **Start state.** The pan ends on frame 100, where "game playing" is posted
   after that frame's mission tick. Scout answers with "Enemy Engaged".
@@ -1228,7 +1256,7 @@ Tests: `World110ConstructionTests` (10), `World110ScriptNativeTests` (3) and
 two known skips, `materialize_retail_assets_tests` 95, pause checks 56, AYA
 checks 447, and the safety gate (4,100 files).
 
-Open, each with its cheapest falsifier where the RE lane names one:
+Open, each with its cheapest falsifier where the reverse-engineering notes names one:
 - each squad's formation and first target (log squad `+0xc4` after load);
 - the turret child's life (its component record's field map);
 - the landing craft's flight and landing, whose contracts
@@ -1247,7 +1275,7 @@ The materializer now writes World 110's level for the Simulation:
 `rebuild/OnslaughtRebuild.Core/Assets/Level110/level110-static-world.json`
 (schema `onslaught.world110-static-world.v1`, SHA-256 `7b201943…`, ignored like
 the other Level110 outputs). It is built from the pristine specimen's
-`110_res_PC.aya` and `default physics.dat` and follows the RE lane's
+`110_res_PC.aya` and `default physics.dat` and follows the reverse-engineering notes'
 construction contract
 (`reverse-engineering/game-mechanics/world-110-construction-order.md`):
 - the shared base world's 33 objects and 1,481 pines, identical to Level 100's
@@ -1276,12 +1304,12 @@ pristine inputs and the missing-canonical rule), `World110StaticWorldManifestTes
 
 Open: the turret child's life (its component record's field map is not
 established); member formation slots, which the squad sets at runtime
-(`0x004e9600`, `0x004e8730`); dropship motion (the RE lane's contract is in
+(`0x004e9600`, `0x004e8730`); dropship motion (the reverse-engineering notes' contract is in
 progress).
 
 ### Audit corrections: Mech Bullet damage and comments — September 26
 
-The RE lane's record audit found these in rebuild code; each was re-read here
+The reverse-engineering notes' record audit found these in rebuild code; each was re-read here
 from the pristine specimen (`74154bfa…`).
 - **Mech Bullet damage is 0.08, not 0.081.** `CExplosion::Init` compares an
   explosion's damage with the double 0.0015 (`0x0044b9e8-0x0044ba02`, `0x5db298`).
@@ -1305,7 +1333,7 @@ from the pristine specimen (`74154bfa…`).
 ### Terrain detail rotation — September 26
 
 The terrain shader's second detail layer used an axis-aligned quarter scale. The
-RE lane's audit found that stage 3's angle is the double at `0x005d87e0`,
+reverse-engineering notes' audit found that stage 3's angle is the double at `0x005d87e0`,
 re-read here from the pristine specimen (`74154bfa…`, `0x005459a4-0x005459fd`).
 `fld qword` loads 1.0, one radian; read as a float32, its low dword is the 0.0
 the old comment cited. `fcos` and `fsin` of it are scaled by `0x005d858c`
@@ -1318,7 +1346,7 @@ lines. Only a GPU render compiles the shader; the final capture is its check.
 ### Waypoint walks from the nearest node — September 26
 
 Core started every waypoint walk at the head of its path's target chain and
-steered at waypoints' authored heights. The RE lane's contract
+steered at waypoints' authored heights. The reverse-engineering notes' contract
 (`reverse-engineering/game-mechanics/waypoint-paths.md`, commits `1e7bc137` and
 `d0709d36`) was re-read here from the pristine specimen (`74154bfa…`):
 - The loader keeps a path's `CWaypoint` rows (flag bit `0x1000`,
@@ -1380,14 +1408,14 @@ module accepts the report. The cold-start won tape is 8,540 ticks (trace
 with hull 3,350, and it replays twice.
 
 Open: Core has no dropship motion, so the U-17 and World 110's landing craft do
-not fly their paths yet. The RE lane's runtime check of the start nodes is still
+not fly their paths yet. The reverse-engineering notes' runtime check of the start nodes is still
 open.
 
 ### Scripts start on their INIT_SCRIPT events — September 26
 
 Core used to run every script's `init()` during the load: Setup first, the
 authored scripts in actor-id order, then LevelScript. Retail starts each script
-on an event (the RE lane's construction contract, "Level-world rows" and
+on an event (the reverse-engineering notes' construction contract, "Level-world rows" and
 "Scripts in the first frames", with its answers on the carriers and on World
 110's Setup):
 - `SetScript` binds the VM and files INIT_SCRIPT 2001 at −1 for the thing itself
@@ -1460,7 +1488,7 @@ run 60 frames less than retail's when the player first saw it.
   loads (`game.cpp:371-373`).
 - `CGame::PreRun` then runs whole updates, unrendered, until it arrives
   (`game.cpp:2063-2071`).
-- The RE lane confirmed the frames (`reverse-engineering/game-mechanics/level100-construction-order.md`,
+- The reverse-engineering notes confirmed the frames (`reverse-engineering/game-mechanics/level100-construction-order.md`,
   "Pre-run, pan and the first rendered frame", commit `2035942b`):
   - frames 1-60 run in the pre-run, and frame 60's flush starts the pan;
   - FINISHED_PANNING lands on frame 180 for Level 100 and frame 100 for World 110;
@@ -1537,7 +1565,7 @@ Open:
 
 Core used to move player rounds at the end of every update, starting on the
 launch frame, newest first. Drone rounds moved after the flush, also newest
-first. Every round lived a fixed tick count. The RE lane's round contract
+first. Every round lived a fixed tick count. The reverse-engineering notes' round contract
 (`reverse-engineering/game-mechanics/level100-final-drone-wave.md`, "Frames"
 and "No hit while dying", commits `0827d186` and `6c966df3`, with its message
 on insertion order) says:
@@ -1606,7 +1634,7 @@ twice.
 
 ### Influence map and warm-up draws in Level 100's load — September 26
 
-The RE lane corrected its construction-order contract
+The reverse-engineering notes corrected its construction-order contract
 (`reverse-engineering/game-mechanics/level100-construction-order.md`, commit
 `ec29ffa4`). Retail's load takes six draws that Core did not:
 - After the base world's pines, `CInfluenceMapManager::Load` (`0x0048b010`)
@@ -1662,7 +1690,7 @@ delay; the contract names a draw-count log in a copied runtime as the check.
 
 Core launched every player round from one point: a live capture of the Pulse's
 emitter relative to the Battle Engine (right −6 mm, forward 80 mm, up 259 mm),
-turned by yaw and pitch only. The RE lane's aiming contract
+turned by yaw and pitch only. The reverse-engineering notes' aiming contract
 (`reverse-engineering/game-mechanics/battle-engine-aiming.md`, "Gun emitters",
 commits `0827d186` and `0aa1ceac`) gives each weapon its own emitters on the
 cockpit mesh `cockpit2.msh`. Their model positions are x right, y forward and z
@@ -1776,7 +1804,7 @@ assertions was too strong and is weakened: it claimed the two hand-off arms
 separate only when the adverse ferry hands off above the 20 m tier. On this route
 both arms hand off at 19.3 m, and they still separate twelve ticks later through
 the driver's re-launch, which the same clearance term governs. Re-pinned:
-- `first-flight.v1.json` replays to trace `2564e760…` and state `66cab706…`.
+- `rebuild/scenarios/first-flight.v1.json` replays to trace `2564e760…` and state `66cab706…`.
 - The in-process smoke and its validator: state `afc552db…`.
 - The canonical-hash fingerprints.
 
@@ -1797,12 +1825,12 @@ Open, each also listed in PARITY.md:
 - The squads' target branch is not modelled.
 - The Air Trainer's `+0x284` draw is taken but the value is unused.
 
-Logs: `.worktrees/godot-editor-48-20260919/local-data/test-runs/construction-order-20260926/`.
+Logs: `local-data/test-runs/retired-worktrees-20261015/godot-editor-48-20260919-local-data/test-runs/construction-order-20260926/`.
 
 ### Launch basis for every round — September 26
 
 The burst spawner builds each round's basis as orientation × launch angle ×
-scatter, every factor an `FMatrix(yaw, pitch, 0)` (the RE lane's burst-spawner
+scatter, every factor an `FMatrix(yaw, pitch, 0)` (the reverse-engineering notes' burst-spawner
 contract, steps 5-7, and its 36-case Euler-constructor control, commit
 `84193799`). Before this change Core added the scatter to the aim as angles, which
 matches the product only when the aim is level, and gave modes without launch-angle
@@ -1830,7 +1858,7 @@ pitch, the Small bolt's scatter restored, and the drones' pitch sign flipped at
 either end of the composition.
 
 Core passes 1,522 and the Client suite 912 with the two known skips.
-`first-flight.v1.json` and the canonical fingerprints do not move, because they
+`rebuild/scenarios/first-flight.v1.json` and the canonical fingerprints do not move, because they
 fire nothing. The smoke fires the Pulse four times, so its pins move: the
 in-process fingerprints and the smoke validator now read state `aaf7bba9…`. The
 headless Godot smoke records a tape whose inputs equal the previous tape's;
@@ -1841,16 +1869,16 @@ The chain autopilot still wins on the final wave's abort branch, now after one
 kill at tick 5,543 with hull 7,950. The cold-start route records a won tape of
 7,347 ticks (trace `25332a14…`, state `6dd3c819…`), also on the abort branch
 with two kills, and it replays twice. Logs:
-`.worktrees/godot-editor-48-20260919/local-data/test-runs/launch-basis-20260926/`.
+`local-data/test-runs/retired-worktrees-20261015/godot-editor-48-20260919-local-data/test-runs/launch-basis-20260926/`.
 
 ### Jet Missile Pod, locks and seeking rounds — September 26
 
 The jet's second weapon did nothing in the rebuild: Core refused to invent a
-shot. It now fires as retail's records and the RE lane's contracts describe.
+shot. It now fires as retail's records and the reverse-engineering notes' contracts describe.
 The records are `data/default physics.dat` (SHA-256 `e1fb3ded…`): `Weapon
 "Missile Pod"` @`0x17746`, its modes `Mech Micro Missile Launcher` @`0x13e49`
 and `… Salvo` @`0x14093`, `Round "Micro Missile"` @`0x8e74` and `Explosion
-"Micro Missile Hit"` @`0x3a59`. The contracts, on the RE branch, are the weapon
+"Micro Missile Hit"` @`0x3a59`. The contracts are the weapon
 stores and charge law (`05d5ed86`), the burst spawner's launch sequence, launch
 angle and Euler matrices (`d5ad5c9a`, `056c56d7`, `84193799`) and the final-wave
 contract's lock, seeking-round and round-lifetime sections (`35056883`,
@@ -1922,13 +1950,13 @@ records the same tape as the previous change (`7c7ca639…`), and the C# replaye
 reproduces it twice (trace `248b326a…`, state `89b9ada6…`). The cold-start won
 tape is byte-identical too (`c5050fa0…`, 7,813 ticks, trace `613489cc…`, state
 `278af3f3…`). No pin moved. Logs:
-`.worktrees/godot-editor-48-20260919/local-data/test-runs/missile-pod-20260926/`.
+`local-data/test-runs/retired-worktrees-20261015/godot-editor-48-20260919-local-data/test-runs/missile-pod-20260926/`.
 
 ### Weapon stores, recoil shake and the round's Init draw — September 26
 
 The rebuild charged every walker Pulse shot 30 milli-units of walker energy
 (and the Twin Vulcan 15), a placeholder the code itself called unaccepted. Retail
-spends no energy on weapons. The RE lane's contract
+spends no energy on weapons. The reverse-engineering notes' contract
 (`reverse-engineering/game-mechanics/battle-engine-weapon-stores.md` on the RE
 branch, commit `05d5ed86`, with the GPL part bodies) gives the Aquila's six stores from
 `data/battle engine configurations.dat` offset `0x35f`: ammo 2000 (both Vulcans),
@@ -1943,7 +1971,7 @@ ammo weapon that cannot pay. A walker heat shot or charge clears
 `mShieldsRecharging`, which halves that update's ground recharge — the arm the
 rebuild had left out only because stores were unmodelled.
 
-The burst spawner's order (the RE lane's Q12 answer and correction, commits
+The burst spawner's order (the reverse-engineering notes' Q12 answer and correction, commits
 `d5ad5c9a` and `35056883`) adds four things per round of a Battle Engine weapon:
 `GetCurrentTarget` (its cursor zeroed by each successful `Fire`), `FireLock` for
 the current weapon, the round's `CRound::Init` → `CActor::Init` draw, and
@@ -1977,14 +2005,14 @@ re-pin to state `89b9ada6…`; the headless Godot smoke records a tape whose inp
 equal the September 25 tape's (tape `7c7ca639…`, trace `248b326a…`), and the C#
 replayer reproduces it twice. The cold-start won tape is 7,813 ticks, trace
 `613489cc…`, state `278af3f3…`, replayed twice. Logs:
-`.worktrees/godot-editor-48-20260919/local-data/test-runs/stores-shake-20260926/`.
+`local-data/test-runs/retired-worktrees-20261015/godot-editor-48-20260919-local-data/test-runs/stores-shake-20260926/`.
 
 ### Battle Engine crosshair and auto-aim refresh — September 26
 
 Retail's player Battle Engine files two refresh events for itself that the
 rebuild never had, and both draw from the one gameplay stream: event 6002
-(`CALC_UNIT_OVER_CROSSHAIR`) and event 6003 (`HANDLE_AUTO_AIM`). The RE lane's
-static contract ([level100-final-drone-wave.md](reverse-engineering/game-mechanics/level100-final-drone-wave.md),
+(`CALC_UNIT_OVER_CROSSHAIR`) and event 6003 (`HANDLE_AUTO_AIM`). The reverse-engineering notes'
+static contract ([level100-final-drone-wave.md](https://github.com/dlprentice/onslaught-preservation/blob/main/levels/level100-final-drone-wave.md),
 "Crosshair and auto-aim refresh", commit `f23dcc28`, and its due-time answer
 from the pristine `74154bfa…` bytes) gives: `CBattleEngine::Init` takes one draw
 and files 6002, then `HandleAutoAim(NULL)` takes one draw and files 6003; each
@@ -2000,12 +2028,12 @@ crosshair readers, casts the 1,000-unit view line through the shared contact
 query (terrain first, a thing only when not farther, dying non-buildings
 skipped), retains the line report and returns the struck unit when the current
 weapon's `GetActualMaxRange` exceeds the hit distance (Pulse 210 or 140,
-Vulcans 60, Missile Pod 100, from the RE lane's Q14 answer). The launch
+Vulcans 60, Missile Pod 100, from the reverse-engineering notes' Q14 answer). The launch
 correction (`GetLaunchPosition`) now reads that retained distance along the
 current view line, as retail does, instead of the rebuild's former per-shot
 fresh trace. The auto-aim candidate search is not implemented yet, so its
 offsets stay zero; its draw and requeue are exact. The Battle Engine's Init
-draws follow the Air Trainer's Actor Init draw until the RE lane's first-flush
+draws follow the Air Trainer's Actor Init draw until the reverse-engineering notes' first-flush
 order places them. Core has no camera, so the view line starts at the Battle
 Engine's position along its facing, as the launch correction always assumed.
 
@@ -2018,7 +2046,7 @@ facing). Core passes except the known cold-start six-kill expectation; the
 Client suite passes 912 with the two known skips.
 
 The new draws move every Level 100 hash. Re-pinned with this change:
-`first-flight.v1.json` now replays to trace `a59321dc…` / state `63b241d6…`;
+`rebuild/scenarios/first-flight.v1.json` now replays to trace `a59321dc…` / state `63b241d6…`;
 the in-process 2,148-step smoke and the smoke validator to state `a8c2209d…`;
 the canonical-hash and older-definition fingerprints in `SimulationTests`,
 `HeadlessApplicationTests` and `InteractiveSessionTests`; schema 49 where
@@ -2035,7 +2063,7 @@ hand-off rules differ. The route-level adverse control therefore compares
 identical runs, so the rule itself is now pinned directly
 (`Level100ZoneHandoffTests`, in the default Core gate). The divergence
 check asserts that the arms separate exactly when an adverse hand-off exceeds
-the tier. Logs: `.worktrees/godot-editor-48-20260919/local-data/test-runs/be-refresh-20260926/`.
+the tier. Logs: `local-data/test-runs/retired-worktrees-20261015/godot-editor-48-20260919-local-data/test-runs/be-refresh-20260926/`.
 
 ### Terrain contact sweep pruning — September 25
 
@@ -2060,11 +2088,11 @@ contact record is identical, in 17 ms against 36,339 ms.
 At the four firing ticks the crosshair sweep now takes **0.06 ms**. The 2,148-tick
 smoke replay (Release, warm) has **no tick over 1 ms**: median 0.0745 ms, p99
 0.36 ms, maximum 0.48 ms, and about 28 µs per live projectile per tick. The
-smoke tape and `first-flight.v1.json` still replay to trace `a4e6673b…` / state
+smoke tape and `rebuild/scenarios/first-flight.v1.json` still replay to trace `a4e6673b…` / state
 `53c1cc64…` and `0872e009…` / `69bd64ac…`; the Core suite (1,471 of 1,472, the
 known cold-start route) now runs in 1 m 32 s instead of 7 m 55 s and the Client
 suite (912 passed) in 16 s. Logs:
-`.worktrees/godot-editor-48-20260919/local-data/test-runs/reticle-sweep-profile-20260925/`,
+`local-data/test-runs/retired-worktrees-20261015/godot-editor-48-20260919-local-data/test-runs/reticle-sweep-profile-20260925/`,
 `sim-benchmark-20260925/after-terrain-prune.log` and
 `terrain-prune-suites-20260925-231708/`.
 
@@ -2072,18 +2100,17 @@ suite (912 passed) in 16 s. Logs:
 
 The cold-start Level 100 run (frontend by clicks, then the chain autopilot on
 the client's own `InteractiveSession`) now records its command tape from tick 0,
-as the Godot host's `--record-tape` does. `Level100ColdStartTests.
-ColdStart_RecordsATapeThatReplaysDeterministicallyToAWin` builds that tape and
+as the Godot host's `--record-tape` does. `Level100ColdStartTests.ColdStart_RecordsATapeThatReplaysDeterministicallyToAWin` builds that tape and
 replays it twice through `ReplayRunner`; both replays reproduce the live trace
 and final-state hashes and end with the mission **Won**. The tape covers
 **8,141 ticks**, trace `885ae25b…`, final state `0a656b1c…`; the C# headless CLI
 (`--repeat 2`) reproduces both with no divergence
-(`.worktrees/godot-editor-48-20260919/local-data/test-runs/level100-won-tape-20260925-225339/`).
+(`local-data/test-runs/retired-worktrees-20261015/godot-editor-48-20260919-local-data/test-runs/level100-won-tape-20260925-225339/`).
 
 The win goes through retail's designed abort branch: the final drone wave aborts
 after one kill once the player's life falls below 40 %, and `LevelWon()` still
-follows. The RE lane's contract
-([level100-final-drone-wave.md](reverse-engineering/game-mechanics/level100-final-drone-wave.md))
+follows. The reverse-engineering notes' contract
+([level100-final-drone-wave.md](https://github.com/dlprentice/onslaught-preservation/blob/main/levels/level100-final-drone-wave.md))
 shows the rebuild lacks two retail helps in that wave, the four friendly turrets
 that Help Player activates and the jet Missile Pod, and that every base-world
 Building and Cannon draws shared RNG from level start. Until those land, this
@@ -2108,13 +2135,13 @@ simulation unchanged and no other evidenced behavior to carry.
 
 Executed at the restored state:
 - The solution and Godot project build with 0 warnings and 0 errors.
-- `npm run test:rebuild-client`: **912 passed**, 2 existing skips.
-- `npm run test:rebuild-core`: **1,469 of 1,470**. The one failure is
+- `npm run test:rebuild-client` (script removed from this repository; closest current name `ref:client-tests` in onslaught-godot): **912 passed**, 2 existing skips.
+- `npm run test:rebuild-core` (script removed from this repository; closest current name `ref:core-tests` in onslaught-godot, which filters differently): **1,469 of 1,470**. The one failure is
   `Level100ColdStartTests.ColdStart_PlaysLevel100ThroughThePlayerInputSurface`,
-  failing since the September 12 aircraft work (see below); the RE lane's
+  failing since the September 12 aircraft work (see below); the reverse-engineering notes'
   contract identifies two missing retail helps in its final wave.
 - The C# headless replayer reproduces the baseline smoke tape (`89ca7b4b…`,
-  2,148 ticks, trace `a4e6673b…`, state `53c1cc64…`) and `first-flight.v1.json`
+  2,148 ticks, trace `a4e6673b…`, state `53c1cc64…`) and `rebuild/scenarios/first-flight.v1.json`
   (838 ticks, trace `0872e009…`, state `69bd64ac…`), twice each.
 - The headless smoke records the identical tape (`89ca7b4b…`).
 - `PauseSceneChecks` **56 passed** headless; offscreen, the code-built root
@@ -2174,7 +2201,7 @@ true peak +0.2 dBFS). Frames 0–13,179 and the three main-menu frames match the
 already had against the baseline:
 - **The terrain's stage-3 detail matrix** ([Terrain detail rotation](#terrain-detail-rotation--september-26))
   changes every frame that draws terrain. Two no-intro smoke captures of the same checkout on the Intel
-  iGPU (Mesa, `gl_compatibility`), one with the matrix as committed and one with only the old
+  iGPU (on one maintainer machine: Mesa, `gl_compatibility`), one with the matrix as committed and one with only the old
   quarter-scale matrix restored, reach the same state and tape and differ on exactly the frames that draw
   terrain; their loading screens and menus are identical. Their gameplay frames are bit-identical to the
   NVIDIA captures: the committed run to this capture on all 2,151, and the old-matrix run to the capture
@@ -2190,18 +2217,18 @@ Logs and comparisons: `local-data/test-runs/final-capture-455ed6f4/` (the Intel 
 
 ### Lane baseline — September 25
 
-Each lane was built and checked in its own checkout on Linux: Godot 4.8 dev6 .NET
-(`godot48-mono`), with the standard edition for the GDScript-only gates. Every Godot
+Each lane was built and checked in its own checkout on Linux: Godot 4.8 dev6 .NET at the time (the pinned engine is now Godot 4.8 beta1 .NET; see README.MD and companion/OnslaughtToolkit.Godot/toolchain.json)
+(the maintainer's Godot 4.8 mono binary), with the standard edition for the GDScript-only gates. Every Godot
 run was headless with Dummy audio; no window opened. Logs are in canonical
 `local-data/test-runs/lane-baseline-20260925-H8dhmW/`; rebuild-owned runs are under
-`.worktrees/godot-editor-48-20260919/local-data/test-runs/lane-baseline-*`.
+`local-data/test-runs/retired-worktrees-20261015/godot-editor-48-20260919-local-data/test-runs/lane-baseline-*`.
 
 - **Companion (`main` `996d6109`).** `npm run build` had zero warnings/errors.
   `npm test` ran the native Save Lab with **0 failures**, **6/6** publication races and
-  **12/12** launcher tests. `test:save-lab` passed **24/24**, `test:godot-host` **12 + 20**,
+  **12/12** launcher tests. `test:save-lab` (script removed from this repository) passed **24/24**, `test:godot-host` **12 + 20**,
   plus `test:docs` and `test:safety`. Main's rebuild also built with its Level 100 import verified.
 - **Reverse engineering.** Before its merge, the lane passed `test:docs`, `test:safety`,
-  the cohort framework (**93/93**, `python -m unittest tools.ghidra_cohort_framework_tests`),
+  the cohort framework (**93/93**, `python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive)),
   `test:save-lab` and its 4.7.2 .NET companion build. Its own commits never touched Godot
   code; the 4.7.2 selection came from its merge base. After merging `main` (`eeb4d1f6`),
   the same checks plus `npm run build` and `npm test` passed on 4.8 dev6 .NET, and the
@@ -2257,7 +2284,7 @@ complete payload. Short-read diagnostics are admitted only in the reference phas
 The rebuild then built with zero warnings/errors and a verified Level 100 import,
 passed 77/77 headless scene checks, **24,190** world checks, **910** Client tests
 (2 known skips), and kept the smoke tape (`89ca7b4b…`) and replayed state
-(`53c1cc64…`). Logs: `.worktrees/godot-editor-48-20260919/local-data/test-runs/aya-contract-afwwC2/`.
+(`53c1cc64…`). Logs: `local-data/test-runs/retired-worktrees-20261015/godot-editor-48-20260919-local-data/test-runs/aya-contract-afwwC2/`.
 
 ### Simulation language measurement — September 25
 
@@ -2289,12 +2316,12 @@ scaling the measured per-actor work puts even the idle GDScript tick at 10–56 
 repository (`AGENTS.md`), so no subsystem needs a measured exception. The launch and
 flight costs above were the terrain contact sweep; the pruning recorded in "Terrain
 contact sweep pruning — September 25" removed them without changing any result. Sources and logs:
-`.worktrees/godot-editor-48-20260919/local-data/test-runs/sim-benchmark-20260925/`.
+`local-data/test-runs/retired-worktrees-20261015/godot-editor-48-20260919-local-data/test-runs/sim-benchmark-20260925/`.
 
 ### September 19 production scene migration
 
 The supported Linux build passed with zero warnings/errors and explicitly
-imported the private Level 100 scene. No Core simulation, snapshot format,
+imported the private Level 100 scene (this step needs the maintainer's private Level 100 import, which is not reproducible from the public repositories). No Core simulation, snapshot format,
 gameplay constant or input tape changed in this presentation migration.
 Executed focused selections passed **112 Core replay/camera/headless/recorder/
 scheduler tests**, **101 world Client tests** (one existing captured-water skip),
@@ -2313,9 +2340,11 @@ retry materials/terrain, pointer preservation and unchanged simulation hashes.
 The import receipt was verified after those checks. Logs live in this branch's
 `local-data/editor-48/checks/`, `local-data/hud-editor/`, `local-data/pause-*`
 and `local-data/frontend-render-20260919/`; source checks live beside their
-production scenes under `rebuild/OnslaughtRebuild.Godot/Scenes/`.
+production scenes. The Pause and AYA harnesses are under `rebuild/OnslaughtRebuild.Godot/Scenes/`; the Frontend, World and HUD harnesses named in this section are not in the public repositories.
 
 For the world check, after the supported build:
+
+Not runnable: `res://Scenes/World/WorldSceneChecks.tscn` is in neither public tree. Current rebuild launch commands are in onslaught-godot's `rebuild/README.md`.
 
 ```bash
 python rebuild/tools/first_flight.py run --no-build --no-prepare --timeout 90 \
@@ -2419,8 +2448,8 @@ NUL, lone surrogates, numeric-format termination and exact alignment.
 Source-checkout loading from the separately licensed root-tools utility passed
 **9 dependency checks**; package/export loading is not established. These
 reports are in `local-data/test-runs/gdscript-parity-qpd6ptf8/`.
-Use `python rebuild/tools/gdscript_parity.py --check NAME` to rerun an affected
-group; omit `--check` for the complete bounded migration gate.
+The GDScript parity gate, removed on 2026-09-25 (its tool is in neither public tree), reran an affected
+group; without `--check` it ran the complete bounded migration gate.
 
 Command-tape comparison passed all six sections: JSON admission, validation,
 input records, canonical strings/identities, reader/cursor behavior and explicit
@@ -2799,7 +2828,7 @@ user arguments, then standard `Scenes/Shared/fixed_function_material_checks.gd`
 with that fixture and a fresh report; `--editor` selects its inactive-resource gate.
 
 After Click/material integration, the supported pinned build and private Level
-100 import passed with zero build warnings/errors. `WorldSceneChecks.tscn`
+100 import (not reproducible from the public repositories) passed with zero build warnings/errors. `WorldSceneChecks.tscn`
 passed **24,144 checks**, including the added external-dependency route/content
 and missing-input checks (`click-material-full-build-e.log` and
 `click-material-world-e.log`). The **2,148-step** smoke retained thirteen ordered
@@ -2929,7 +2958,7 @@ through the existing asset routes.
   renderer: 640×480, 1280×720, 801×601 and 320×240 transitions, language flags,
   raw UTF-16, reflection suppression and authored row text/geometry. The
   isolated Xvfb display used separate credentials/profiles, Dummy audio and
-  llvmpipe (Mesa 26.2.2, LLVM 22.1.8), then stopped its owned processes.
+  llvmpipe (on one maintainer machine: Mesa 26.2.2, LLVM 22.1.8), then stopped its owned processes.
   Two representative captures were inspected. The log contains only the
   expected virtual-display input-method/V-Sync warnings, with no runtime
   errors or teardown leaks. This is software-rendered regression evidence,
@@ -3083,7 +3112,7 @@ Executed receipts under the conversion worktree's `local-data/test-runs/`:
   Coverage includes 640×480, 1280×720, 801×601 and 320×240, New/Load, overflow
   selection, raw UTF-16, edited names and authored header/list/name transforms.
   The 1280×720 New and 801×601 Load host images were inspected. Rendering used
-  task-owned Xvfb credentials/profiles, llvmpipe and Dummy audio with process
+  run-owned Xvfb credentials/profiles, llvmpipe and Dummy audio with process
   cleanup. Only the expected input-method/V-Sync warnings appeared; no runtime
   errors or teardown leaks occurred.
 - `career-frontend-runtime-zcyj78m7/` and `career-frontend-editor-wz7yhlm5/`:
@@ -3282,7 +3311,7 @@ Executed receipts under this worktree's `local-data/test-runs/`:
   both worlds at 640×480, 1280×720, 801×601 and 320×240, empty-body fallback,
   explicit blank paragraphs, spacing/long-word/raw-unit cases, authored body/
   header/name edits and explicit text overrides. The World 100, World 110 and
-  edited-body host images were inspected. Isolated Xvfb used task-owned
+  edited-body host images were inspected. Isolated Xvfb used run-owned
   credentials/profiles, software rendering and Dummy audio; credentials and
   processes were cleaned up. Only the expected XIM/V-Sync warnings appeared.
   The tracked save fixture and seven private inputs retained their hashes.
@@ -3668,7 +3697,7 @@ unresolved. Software rendering, headless input events and synthetic handoff
 fixtures do not establish physical input, audible playback, normal GPU performance
 or Windows behavior. Existing retail header/art and editor shutdown gaps remain.
 
-Run standard `godot48 --headless --audio-driver Dummy --path
+Run standard `<pinned Godot 4.8 beta1 .NET editor> --headless --audio-driver Dummy --path
 rebuild/OnslaughtRebuild.Godot --script res://Tests/frontend_localization_checks.gd`
 for the pure admission checks. The production scene harness remains
 `res://Scenes/Frontend/Tests/frontend_scene_checks.gd`; add `--editor` for its
@@ -4073,7 +4102,7 @@ the standard `sun_scene_checks.gd` accepts that reference and a new owned report
 path. These entry points reuse production scenes and existing comparison owners.
 
 The scheduler group additionally passed **454 checks** derived from the committed
-September 19 queue/precision contracts described in [PARITY.md](rebuild/PARITY.md),
+September 19 queue/precision contracts described in [PARITY.md](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md),
 alongside its existing differential transcripts. The HUD model comparison also
 passed after adopting native default constants. Both reports are in
 `local-data/test-runs/gdscript-native-front-camera-5clstjzh/`. The scheduler checks
@@ -4105,8 +4134,8 @@ September 19 main integration independently rebuilt the combined companion and
 rebuild changes with zero warnings/errors. Launcher checks passed 12 shared-host
 and 20 rebuild cases; canonical asset reuse/routing passed 17 cases. The routing fixtures
 initially failed two expected-message assertions because their supposedly external
-scratch paths were inside the checkout; all 17 passed with private `/var/tmp`
-scratch, without changing the routing implementation or assertions.
+scratch paths were inside the checkout; all 17 passed with a
+scratch directory outside the checkout, without changing the routing implementation or assertions.
 Headless production checks passed for world (23,877 assertions, including 13 new
 import ownership checks), HUD (44), pause (70), frontend and startup. The combined
 native companion gate also passed its scene/domain workflow, 17 file-bridge
@@ -4125,7 +4154,7 @@ leaving all 320 existing files byte-identical in each case. A successful
 regeneration preserved an unrelated noncolliding file. Commands, logs, before/after
 hashes and the bounded reproducer are retained under
 `.worktrees/main-integration-20260919/local-data/merge-checks/rebuild-11whx7zg/`;
-the reusable ownership checks live in `WorldSceneChecks.cs`. This protects the
+the scene-import ownership checks are not in the public repositories. This protects the
 observed collisions; it is not a claim of an atomic multi-file import transaction.
 
 The Windows `test:winui` gate (removed 2026-10-15) built the WinUI solution, then ran
@@ -4139,8 +4168,8 @@ startup cache/audio tests passed **16/16**. Focused recorder/headless tests pass
 completed, and the separately recorded **9,367-tick** session replayed twice with
 both live expected hashes verified. That session was mostly idle and did not
 complete the tutorial. The companion's native shell/file dialog opened, but its
-UI write/reopen flow remains pending. Startup logo/montage audio decoded with
-format/length readback; native playback of those new tracks remains pending.
+UI write/reopen flow remained pending at this entry; no later entry in this file records it closed. Startup logo/montage audio decoded with
+format/length readback; native playback of those new tracks remained pending at this entry; no later entry in this file records it closed.
 These are bounded results, not a new broad Core, Windows or full parity receipt.
 
 September 7 first-training corrections passed **43/43** Client tests selected by
@@ -4151,12 +4180,12 @@ aggregation and `FirstFlightSmokeScenario_ReachesFiringRangeAndCompletesWaypoint
 The Jet check composes actual Client button samples with the existing isolated
 flight fixture; it is not a complete flight playthrough. Two materialized smoke
 input runs reproduced the new weapon-state hash before its focused and retained
-Windows-launcher pins changed. Test output is retained in this task's transcript,
-not a newly claimed log file. Native Godot built without warnings/errors; no
+Windows-launcher pins changed. Test output is not in this repository,
+and no new log file is claimed. Native Godot built without warnings/errors; no
 visible launch or Windows execution followed these changes. The shared Ghidra
 cohort framework passed **88** focused tests; its actual isolated rehearsal,
 stale-comment refusal, live apply, separate readback and PRE/POST restore probes
-are recorded by the Ghidra owner (private RE archive: `reverse-engineering/ghidra/README.md`).
+are recorded by the Ghidra owner (private archive, not in this repository).
 
 September 8 focused checks passed **46/46 Core and 8/8 Client** for the shared
 retail clock, reset/pause behavior, readiness boundaries and canonical state;
@@ -4330,8 +4359,8 @@ nineteen angle updates and thirty-one matrix outputs
 (`unit-euler-live-matrix-20260908.log`). Twelve additional inputs came from
 actual Plane calls in the private copied-game WineD3D run; the unchanged native
 oracle also matched eleven consecutive live Euler/basis transitions. Its
-constructor/cache/Euler samples all read PC24/RN. The exact private route and
-receipts are in the [Unit evidence](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md).
+constructor/cache/Euler samples all read PC24/RN. The private route and
+receipts are in the private archive (not in this repository). See the [frozen CComplexThing note](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md).
 Managed trig remains provisional outside those finite cases. The subsequent
 `observe-plane-motion-a` run supplied 32 complete Move transactions (128 boundary
 samples); `managed-plane-comparison.log` records 352 matching grouped compiled-Core
@@ -4437,7 +4466,7 @@ warnings/errors. This remains partial construction, not second-world runtime.
 September 7 targeted RE reproduced a Core scheduler overflow-count mismatch:
 the new callback regression failed before the fix, then the complete affected
 `RetailEventSchedulerTests` fixture passed **32/32, zero skipped**. The
-[event-system owner](reverse-engineering/source-code/io/event-system.md) records
+[frozen note: event-system owner](reverse-engineering/source-code/io/event-system.md) records
 the pristine instruction sites, body hashes and test's artificial callback
 boundary. Its `scheduler-overflow-{red,green}.log` files share the Linux run
 directory above. Actor/base and Unit initialization extensions are static
@@ -4451,13 +4480,13 @@ fingerprint was not repinned. The materializer's affected fixtures passed
 **12/12**; the existing synthetic mesh parser/re-emitter fixtures plus new
 emitter framing cases passed **65/65**, without running a corpus census.
 The two real factory meshes produced the same four spawner transforms before
-and after the parser change. The existing materializer published only the
+and after the parser change. The existing materializer wrote only the
 changed 38,751-byte World110 actor/input asset.
 
 An original native x87 probe under explicit `0x027f` checked all four attachment
 positions, nine-component bases and child Euler outputs; it executed no retail
 code. Exact source/log hashes and static body evidence are in the
-[Unit transform owner](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__UpdateTransform.md).
+[frozen note: Unit transform owner](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__UpdateTransform.md).
 The `world110-attachment-{core,materializer,docs,safety}.log` and
 `mesh-emitter-tests.log` files use the existing Linux run directory above.
 Read-only reviews found no remaining parser or arithmetic defects after the
@@ -4557,13 +4586,13 @@ Source was restored byte-for-byte before the full focused selection passed again
 Logs are `initial-icebergs-core.log`, `initial-icebergs-restored.log`,
 `initial-icebergs-materializer.log`, `initial-icebergs-water-mutation.log` and
 `initial-icebergs-centre-mutation.log` in the same Linux run directory.
-Only the ignored 234,999-byte v7 actor input was published. This remains
+Only the ignored 234,999-byte v7 actor input was written to local-data. This remains
 headless construction evidence under explicit numerical/resource assumptions;
 no retail/Godot runtime, Ghidra database or desktop was opened.
 
 ### Aircraft integration follow-up — September 12
 
-`npm run test:rebuild-core` built successfully and finished with **1,354 passed,
+`npm run test:rebuild-core` (script since removed from this repository; closest current name `ref:core-tests` in onslaught-godot, which filters differently) built successfully and finished with **1,354 passed,
 8 failed, zero skipped**. Six failures exposed outdated component fixtures or
 fingerprints after raw aircraft construction; the other two are the still-failing
 cold and returning full-combat routes. This is not a passing broad-suite receipt.
@@ -4607,7 +4636,7 @@ combat completion, native input, audio or rendering is weakened by these updates
 The cold and returning full-combat runs still reach Won through the low-health
 abort, with objective 4 failed and no final-wave kills; they remain failures.
 
-New general check output belongs under ignored `local-data/test-runs/` or a
+Historical instruction, not current policy: new general check output belongs under ignored `local-data/test-runs/` or a
 descriptive child of `local-data/`. Preserve existing coupled `.artifacts/` and
 specimen-bound `local-lab/` evidence paths. Validation output is not release content
 or proof of unrelated runtime behavior.
@@ -4643,7 +4672,7 @@ Before/after TRX files are in `local-data/test-runs/preparation-20260906/`.
 This focused result closes those three failures; it does not replace the dated broad
 receipt or establish Windows/Godot runtime acceptance.
 
-Do not add a new test during cleanup unless implementation behavior changed,
+Historical instruction, not current policy: do not add a new test during cleanup unless implementation behavior changed,
 the regression is consequential, and no focused existing check covers it. Do
 not fix unrelated failures discovered outside the changed contract.
 
@@ -4665,13 +4694,13 @@ Executed locally:
   project bytes unchanged. The first sealed draft remains under `rejected-v1/`
   after ambiguous Init branch wording was found; the corrected seal repeated
   the PRE, rehearsal and controls.
-- Independent read-only review plus root reproduction; `apply_live.py`:
+- Independent read-only review plus an independent re-run; `apply_live.py`:
   live dry/apply/readback passed and all nine exports equalled the reopened
-  rehearsal. `finish.py`: new Archive A POST copied, independently restored and
-  reopened read-only, byte-equal to live; tracked checkpoint unchanged.
-- `python -B -m unittest tools.ghidra_cohort_framework_tests`: **93 passed**.
+  rehearsal. `finish.py`: new private POST copied, independently restored and
+  reopened read-only, byte-equal to live; private Ghidra checkpoint unchanged.
+- `python -B -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): **93 passed**.
   The name-checker and public-payload self-tests passed; strict name checking
-  resolved 2,062 assertions with zero drift or unresolved entries.
+  resolved 2,062 assertions with zero drift or unresolved entries (the retired Ghidra name checker, now in the private archive; the current `npm run test:docs` runs the link and header checks only).
 - `npm run test:safety`: passed with submodules. The first documentation gate
   found two missing Evidence headers and one now-conforming backlog entry;
   the headers were supplied and that single backlog entry retired. Final
@@ -4733,13 +4762,13 @@ Executed locally:
   project-byte changes. The first seal was rejected for FindOtherFace's
   incomplete null-return wording and remains under `rejected-v1/`; its replacement
   repeated preservation, rehearsal and independent review.
-- Root reproduction and independent read-only review; `apply_live.py`: live
+- Independent re-run and independent read-only review; `apply_live.py`: live
   dry/apply/separate readback passed, with nine exports exactly equal to rehearsal.
-  `finish.py`: Archive A POST copied, independently restored, opened read-only
-  and byte-matched to live. The tracked checkpoint remains unchanged.
-- `python -B -m unittest tools.ghidra_cohort_framework_tests`: **93 passed**.
+  `finish.py`: private POST copied, independently restored, opened read-only
+  and byte-matched to live. The private Ghidra checkpoint remains unchanged.
+- `python -B -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): **93 passed**.
   The name-checker and public-payload self-tests passed.
-- `npm run test:docs`: passed, 2,062 name assertions and zero drift or unresolved
+- `npm run test:docs`: passed, 2,062 name assertions from the retired Ghidra name checker (the current `npm run test:docs` runs only the link and header checks) and zero drift or unresolved
   assertions. Its initial failures identified a missing provenance trailer in
   the rewritten constructor note; the final note names its reference and binary.
   `npm run test:safety`: passed, 4,099 public candidate files with submodules.
@@ -4752,12 +4781,12 @@ not additional behavioral findings. Structural identity and bounded static
 contracts do not certify the saved prototypes, full library behavior or retail
 rendering. No Godot, desktop input or runtime acceptance was performed.
 
-## Remote source review — 2026-09-09 (execution pending)
+## Remote source review — 2026-09-09 (executed 2026-09-12, see below)
 
 The following is the September 9 remote handoff record; its host execution is
-recorded below. At remote closeout it was pending verification. Source changes
-are on `codex/onslaught-remote-integration-20260908`, following `82af1a41`.
-Native-command and Python probes returned `TransportTimeoutError` without program
+recorded below. At remote closeout it was pending verification. In this record, "remote" names the separate environment that produced the source changes; the record names no host. Source changes
+were on a 2026-09-08 remote-integration branch that is not in this repository, following `82af1a41`.
+Native-command and Python probes timed out without program
 output; no compiler, test suite, Godot, Ghidra or retail program ran in this pass.
 GitHub commit diffs were inspected and branch updates were read back separately.
 Those checks establish source/publication state, not executable correctness.
@@ -4776,6 +4805,8 @@ grade or Ghidra correction. Microsoft's documented last-definition behavior for
 [JsonElement.TryGetProperty](https://learn.microsoft.com/en-us/dotnet/api/system.text.json.jsonelement.trygetproperty?view=net-8.0)
 supports the JSON ambiguity analysis; the fix uses .NET 8 enumeration APIs rather
 than adding a newer-framework duplicate-property option.
+
+Superseded: run 2026-09-12, see below. Not a current procedure.
 
 On a functioning host, first prepare the existing admitted retail inputs and
 perform the pinned project restore without changing locks, targets or engine.
@@ -4804,7 +4835,7 @@ three commits. Earlier `3654eb73` fixed actor-script restoration but still needs
 baseline diagnosis, not permission to replace its expected hash. Earlier remote
 launcher/exporter commits contain dated test reports; this pass did not rerun them.
 The proposed Python smoke report/log gate remains unpublished and unverified.
-Record actual commands, outcomes and output locations here before integration;
+Historical instruction, not current policy: record actual commands, outcomes and output locations here before integration;
 do not transform these pending entries or historical receipts into claimed passes.
 
 ### Linux execution of the remote checkpoint — September 12
@@ -4832,7 +4863,7 @@ Commands and results are in `remote-core-*.log` and `remote-client-*.log` under
 `CommandTapeJsonAdmissionTests`, `RetailEventSchedulerUpdateGuardTests`,
 `RetailEventSchedulerTests`, `ReplayTests`, `CommandTapeRecorderTests`,
 `HeadlessApplicationTests`, the named Hangar/canonical-hash regressions, and
-`Level100RawPlaneCreationTests`; no empty selection is counted as a pass.
+`Level100RawPlaneCreationTests`; no empty selection is counted as a pass. The names `CommandTapeRecorderTests`, `RetailWorld110InitialObjectSeedAdmissionTests` and `RetailWorld110LevelActorsTests` are not in this repository or in onslaught-godot, so the filters that name them cannot be rerun from either.
 
 `python tools/godot_host_tests.py` passed **10/10**;
 `python tools/export_packets_tests.py` passed **32/32**. First Flight initially
@@ -4853,12 +4884,14 @@ working payload remained unchanged. Private outputs are in
 This verifies exporter execution and preserved structural state, not a complete
 semantic audit, retail run, or native Godot acceptance.
 
+## Linux RE experiments — September 12 to 25
+
 ### Plane-controller prototype and structural audit — September 12
 
 The selected pristine executable was freshly hashed to the identity in the
-Ghidra owner (private RE archive: `reverse-engineering/ghidra/README.md`).
+Ghidra owner (private archive, not in this repository).
 The reviewed checkpoint was inspected by file hashes only. The existing
-Archive A working PRE was freshly copied, compared and reopened read-only.
+the private archive working PRE was freshly copied, compared and reopened read-only.
 The one-function manifest then passed isolated census/dry/apply and a separate
 readback, independent raw-byte review, a sealed dry/apply/readback, and the
 same live dry/apply/separate-readback sequence. Every headless invocation used
@@ -4869,14 +4902,14 @@ omitted `-readOnly`. Exact live command arrays and receipts are retained in
 Full live function/program/variable/type/bookmark exports equal the sealed
 rehearsal. Exactly one of 8,330 function rows changed. All other function and
 variable rows, all program metrics and the complete saved stack-purge export
-stayed identical. The POST recovery copy on Archive A passed a separate
+stayed identical. The POST recovery copy in the private archive passed a separate
 restore/reopen with no missing, extra, size-different or hash-different file.
 The function/variable exports cover internal functions; external/import
 semantics are not certified by these comparisons. This does not certify every
 decompiled expression: the spurious return-address
 and vector-local artifacts persist and are documented in the controller owner.
 
-`python -m unittest tools.ghidra_cohort_framework_tests` discovered **91 tests:
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive) discovered **91 tests:
 85 passed, six existing skips**. The new test executes the production Java
 column-policy method. Five actual Ghidra refusal cases exercise stale, empty
 and absent current-convention bindings, an undeclared prototype verb and
@@ -4900,7 +4933,7 @@ remained identical. Exactly eight parameter rows were added; the unknown
 return rows stayed byte-identical. Native `RET 0ch`, declared parameter size
 12 and saved UNKNOWN purge are recorded as separate facts.
 
-`python -m unittest tools.ghidra_cohort_framework_tests` again discovered 91:
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive) again discovered 91:
 **85 passed, six existing skips**, including the production Java column probe.
 Its tiny temporary source file now uses the platform temporary directory,
 removing a Linux-only test-path assumption. The applier's only further change
@@ -4964,11 +4997,11 @@ program metric is `commentsSha256`; all eight live exports equal sealed POST.
 A deliberately stale tag set in the fifth row was rejected in actual apply
 mode before any row was written. Its separate function/program export matches
 PRE byte-for-byte. PRE and POST recovery were restored to new local paths and
-opened read-only; the tracked checkpoint was freshly hash-compared and preserved.
+opened read-only; the private Ghidra checkpoint was freshly hash-compared and preserved.
 Exact command arrays, manifests, exports, control and recovery receipts are in
 `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260912/weapon-provider-semantics/`.
 
-`python -m unittest tools.ghidra_cohort_framework_tests` passed **91/91**,
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive) passed **91/91**,
 with no skips on this invocation. Its production-Java and exact live-twin
 derivation checks passed; no framework gate changed. The live twin adds only
 this reviewed cohort to its allowlist. Output is
@@ -4986,7 +5019,7 @@ docs and name self-test logs use the matching `weapon-provider-` prefix.
 
 ### Aircraft weapon model inputs and model-time fraction — September 12
 
-`npm run prepare:rebuild-assets` materialized **389 exact files**. The new
+`npm run prepare:rebuild-assets` (script since removed from this repository; defined in onslaught-godot) materialized **389 exact files**. The new
 166,705-byte static-world manifest has SHA-256
 `17d6112a96d548fb546999b79d3980d173ce5bb0a6f0da4573eae28fc5b62c09`.
 It equals the independently projected update byte-for-byte. Removing only
@@ -4994,7 +5027,7 @@ the two aircraft profiles' `weaponMounts` and the corresponding provenance
 entry recovers every previous JSON field. The prior 165,541-byte manifest and
 expected update are retained as `aircraft-mount-input-pre-20260912.json` and
 `aircraft-mount-input-expected-20260912.json` in
-`local-data/test-runs/linux-route-20260906-af1sa_l9/` (the owner below).
+`local-data/test-runs/linux-route-20260906-af1sa_l9/` (not in this repository).
 The aircraft mesh remains separately hash-pinned; the static-mesh aggregate
 and animation manifest were not widened to imply different source coverage.
 
@@ -5004,12 +5037,16 @@ retain the legitimate earlier GunA/2, exact selector1, ordered uses/raw flags,
 CPOS/CORI words, padding exclusion, cache ownership and constant ancestors.
 Malformed tuples and ambiguous/missing bindings are rejected.
 
+The command below set `TMPDIR=/var/tmp`, which only chooses the temporary-file directory.
+
 `TMPDIR=/var/tmp dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj --no-restore --nologo`
 passed **135/135** with the exact filter
-`FullyQualifiedName~Level100ActorRegistryTests|FullyQualifiedName~Level100WaypointFixtureTests|FullyQualifiedName~SimulationTests|FullyQualifiedName~HeadlessApplicationTests|FullyQualifiedName~RetailWorld110InitialObjectSeedAdmissionTests|FullyQualifiedName~RetailWorld110LevelActorsTests`.
+`FullyQualifiedName~Level100ActorRegistryTests|FullyQualifiedName~Level100WaypointFixtureTests|FullyQualifiedName~SimulationTests|FullyQualifiedName~HeadlessApplicationTests|FullyQualifiedName~RetailWorld110InitialObjectSeedAdmissionTests|FullyQualifiedName~RetailWorld110LevelActorsTests`. The two `RetailWorld110` names in this filter are not in this repository or in onslaught-godot, so the 135/135 count is historical.
 The final log/TRX stem is `aircraft-mount-core-final-20260912`; all logs and
-TRX files use the owner above. New cases cover both immutable lookup views,
+TRX files are in `local-data/test-runs/linux-route-20260906-af1sa_l9/`, which is not in this repository. New cases cover both immutable lookup views,
 raw-word/use/order identity, nonfinite rejection and cross-definition restore.
+
+The command below set `TMPDIR=/var/tmp`, which only chooses the temporary-file directory.
 
 `TMPDIR=/var/tmp dotnet test rebuild/OnslaughtRebuild.Client.Tests/OnslaughtRebuild.Client.Tests.csproj --no-restore --nologo`
 passed **907 tests**, with the same two existing capture skips (header-font
@@ -5108,7 +5145,7 @@ frame zero and supplied render stamp; other paths leave that cache zero.
 The frozen probe's generic `frame` labels mean CGame's render-frame number,
 as clarified by the later MainLoop readback; it is not the event-manager tick.
 
-The [Unit evidence owner](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__UpdateTransform.md#isolated-aircraft-attachment-composition)
+The [frozen note: Unit evidence owner](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__UpdateTransform.md#isolated-aircraft-attachment-composition)
 records the causal comparisons: supplied fraction below one changes fallback
 pose; a synthetic basis distinguishes accumulation order; same-frame direct
 reuse survives current-pose changes but not a frame advance or selected-part
@@ -5166,9 +5203,9 @@ An independent read-only review checked the 32 mappings, graph relocation,
 retained I/O and arithmetic; it did not rerun the experiment. Its comment-only
 correction records that unused zero-filled scalar fields need not fault.
 
-The [Unit owner](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__UpdateTransform.md#renderer-cache-population-and-render-stamp)
+The [frozen note: Unit owner](reverse-engineering/binary-analysis/functions/Unit.cpp/CUnit__UpdateTransform.md#renderer-cache-population-and-render-stamp)
 records the result and limits. Fresh static
-[MainLoop readback](reverse-engineering/binary-analysis/functions/game.cpp/CGame__MainLoop.md#render-stamp-and-gameplay-ordering)
+[frozen note: MainLoop readback](reverse-engineering/binary-analysis/functions/game.cpp/CGame__MainLoop.md#render-stamp-and-gameplay-ordering)
 identifies the stamp as **render count**, distinct from Update and event frames.
 The probes supply this context; they do not execute its real cadence. Allocation,
 loading, active motion/animation, camera-latch delivery, integrated firing and
@@ -5214,7 +5251,7 @@ synthetic branch cases. Phase completion is invoked directly. No real projectile
 Plane/Move scheduling, burst delivery, automatic acquisition or geometry is tested.
 `plane-normal-static-boundaries-20260912.log` in the same owner binds the
 attachment and line-query findings to exact bytes and the freshly hashed physics
-records. [The Unit owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#remaining-selected-provider-integration)
+records. [frozen note: The Unit owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#remaining-selected-provider-integration)
 records the consequences and remaining production work.
 
 ### Weapon line-query arbitration — September 19
@@ -5269,7 +5306,7 @@ over those inputs. It does not validate the geometry, actual world enumeration,
 Weapon B's complete caller, nonfinite behavior, gameplay, Ghidra metadata or the
 rebuild implementation. The supplied integer-distance cases do not establish
 general PC24/PC53 equivalence. No desktop or production source was used.
-The [existing Unit/weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-line-query-arbitration-and-retained-result-fields)
+The [frozen note: existing Unit/weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-line-query-arbitration-and-retained-result-fields)
 records the resulting contract and remaining questions.
 
 ### Weapon aim point and native motion provider — September 19
@@ -5314,7 +5351,7 @@ Attachment position/orientation and target point remain explicit stubs.
 The Actor receiver is synthetic. No real lifecycle, complete target/attachment
 provider, collision, Weapon B caller or gameplay runs. Other precision modes,
 rounding modes, denormals and unmasked faults remain untested. The
-[weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#target-point-providers-and-weapon-prediction)
+[frozen note: weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#target-point-providers-and-weapon-prediction)
 separates these observations from the static dispatch and source-unit evidence.
 
 ### Weapon B nonballistic caller composition — September 19
@@ -5375,7 +5412,7 @@ show that ordinary authored gameplay supplies these inputs. Attachment/point
 providers, query results and all object state are controlled substitutes;
 finite-angle trig, ballistics, real collision, lifecycle and live combat remain
 outside this result. No Ghidra or rebuild implementation changed.
-The [weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-b-nonballistic-caller-composition)
+The [frozen note: weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-b-nonballistic-caller-composition)
 records the reconstruction implications.
 
 ### Weapon B finite-angle composition — September 19
@@ -5427,7 +5464,7 @@ direction residuals, displacement stores and a precision-dependent tiny-angle
 boundary. The harness includes the separate arithmetic comparator for the
 selected final words. Original `FPATAN` still executes; the comparator is not a
 replacement or an assertion of general modern-library equivalence. The
-[weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-b-finite-elevation-and-arithmetic-boundaries)
+[frozen note: weapon owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#weapon-b-finite-elevation-and-arithmetic-boundaries)
 records the derived implementation contract and measured discriminating cases.
 
 Subsequent read-only review independently reconciled all 152 saved binary
@@ -5470,7 +5507,7 @@ cleanup, nonvolatile registers and x87 stack depth. Independent read-only
 review reconciled all eight binary records and checked the ELF/stub mappings;
 it did not rerun native code. Numerical scope is positive inputs near this
 single boundary with supplied masked control words. The
-[function owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#shared-unary-math-error-bridge)
+[frozen note: function owner](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#shared-unary-math-error-bridge)
 records the contract and its remaining limits.
 
 Three disposable Ghidra model projects and their scopes, commands, logs,
@@ -5493,9 +5530,9 @@ types and unrelated rows are unchanged. Its explicit-width `char *32` is an
 extra model type, not a required live addition. An explicit local rewrite is
 also unnecessary for the demonstrated improvement.
 
-No live Ghidra project, tracked checkpoint or production implementation changed
-for these experiments. The subsequent ABI-only promotion below adopts the
-physical carrier model; the record-type experiment remains unpromoted.
+No live Ghidra project, private Ghidra checkpoint or production implementation changed
+for these experiments. The shared math-error Ghidra correction below adopts the
+physical ABI model; the record-type experiment remains unpromoted.
 Initial exploratory export/comparison failures
 were missing function ownership and comparison-format assumptions, not native
 execution failures; the retained successful readbacks and explicit comparisons
@@ -5520,7 +5557,7 @@ negative/zero global count, last-entry bounds, duplicate first-match, unused
 Init arguments and the malformed per-record counts 0/-1. Every case checks
 complete registry/receiver bytes, stack/nonvolatile preservation and owner
 forwarding; initialized objects link to the null prior head. The
-[Actor owner](reverse-engineering/binary-analysis/functions/Actor.cpp.md#selected-round-renderer-admission)
+[frozen note: Actor owner](reverse-engineering/binary-analysis/functions/Actor.cpp.md#selected-round-renderer-admission)
 records the interpretation and `DEC`/`JS` edge limitation.
 
 Saved stem:
@@ -5541,16 +5578,16 @@ return-4 pointer slots through RTTI. Its `static-receipt.json` SHA-256 is
 This establishes one renderer-admission boundary, not retail startup execution,
 an exhaustive projectile RNG count, full-combat acceptance or a campaign grade.
 
-The subsequent two Ghidra cohorts (private RE archive: `reverse-engineering/ghidra/README.md`)
+The subsequent two Ghidra cohorts (private archive, not in this repository)
 corrected the wrapper/registry arguments and the shared return-4 leaf's name.
 Each passed restored PRE, isolated dry/apply/separate readback, independent
 full comparison, live dry/apply/separate readback and independent POST restore.
 All nine live exports match the corresponding rehearsals byte-for-byte;
-the tracked checkpoint is unchanged. Exact commands, final sealed specs and
+the private Ghidra checkpoint is unchanged. Exact commands, final sealed specs and
 recovery receipts are under the same private `round-render-registry/` owner.
 `python tools/ghidra_cohort_framework_tests.py` passed **92 tests** after the
 two live allowlist entries were generated; the base framework did not change.
-`python tools/re_function_doc_names_check.py --self-test` passed with the new
+`python tools/re_function_doc_names_check.py --self-test` (retired tool, now in the private archive) passed with the new
 one-row current-name overlay. Its intentional missing-table control emits
 `UNAVAILABLE`; that expected refusal is not an untested name projection.
 Documentation checks passed. The first public-payload check rejected the new
@@ -5596,7 +5633,7 @@ Its `selected-static-receipt.json` SHA-256 is
 Blaster's nested type ID 3 reaches a getter returning 2; the Round prefix uses
 that result to add its extra exclusion bit. Both selected ordinary zero-radius
 Round definitions retain the default collision-readiness delay. The
-[collision owner](reverse-engineering/binary-analysis/functions/collisionseekingthing.cpp.md#selected-round-initialization--2026-09-19)
+[frozen note: collision owner](reverse-engineering/binary-analysis/functions/collisionseekingthing.cpp.md#selected-round-initialization--2026-09-19)
 records the full contract and distinction between the native persistent
 predicate and concrete Round trajectory filter. The same static receipt and
 full bodies bind all five collision-component vtables and three distinct
@@ -5627,7 +5664,7 @@ relative-clock crossings, ring wrap, computed buckets and strict overflow time.
 They also expose a one-update admission difference between controlled x87
 PC24/PC64 at one exact float boundary, with neighboring-float controls, and a
 growth-disabled overflow failure that increments the count without publishing
-the event. The [scheduler owner](reverse-engineering/binary-analysis/functions/CEventManager.cpp.md#projectile-readiness-queue--september-19)
+the event. The [frozen note: scheduler owner](reverse-engineering/binary-analysis/functions/CEventManager.cpp.md#projectile-readiness-queue--september-19)
 records inputs, ordering, ownership and limits. Live scheduler precision was
 not measured and no reconstruction implementation changed.
 
@@ -5649,7 +5686,7 @@ separately binds 62 compatible primary speed-provider tables, 14 targets, 43
 complete exported bodies and the constructor candidate absent from the
 function export. Its `selected-dependencies.json` SHA-256 is
 `a3accd11b68cba11959a68406149403a1152ed8eb95f34781afaa05258afc658`.
-The [collision owner](reverse-engineering/binary-analysis/functions/collisionseekingthing.cpp.md#static-maximum-speed-providers-and-linked-parents)
+The [frozen note: collision owner](reverse-engineering/binary-analysis/functions/collisionseekingthing.cpp.md#static-maximum-speed-providers-and-linked-parents)
 records the normal parent-assignment/type closure and unresolved global
 acyclicity. The same receipt binds scheduler allocation arguments, the explicit
 20,000-event count, allocator bodies and mutex imports. No Ghidra database was
@@ -5658,21 +5695,21 @@ campaign-grade or parity completion is claimed.
 
 ### Debug-log ownership and initialization — September 19
 
-The [logger contract](reverse-engineering/binary-analysis/functions/string-helpers.md#debug-log-ownership-and-history--september-19)
+The [frozen note: logger contract](reverse-engineering/binary-analysis/functions/string-helpers.md#debug-log-ownership-and-history--september-19)
 separates static control flow, isolated initialization/reset, and unresolved
 live file/heap state. All byte findings select pristine SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Private owner: `local-data/test-runs/round-logging-boundary-20260919/`.
 
-- `python -B <owner>/inspect.py`: pins nine complete contiguous bodies and
+- `python -B local-data/test-runs/round-logging-boundary-20260919/inspect.py`: pins nine complete contiguous bodies and
   the explicitly identified three-range heap-body envelope. The envelope is
   not a recovered complete contiguous function.
-- `python -B <owner>/literal_paths.py`: all **111** bytes of the two fixed
+- `python -B local-data/test-runs/round-logging-boundary-20260919/literal_paths.py`: all **111** bytes of the two fixed
   pool messages remain on the pristine formatter's literal path. Receipt
   `literal-paths.json`, SHA-256
   `392a9a557cca37800ce288e813d1cef9b1726f7e9b9b3752b6acf932ba854e92`.
   This is static table/instruction analysis, not a retail execution.
-- `python -B <owner>/initializer_reset.py`: **24/24** original-code controls
+- `python -B local-data/test-runs/round-logging-boundary-20260919/initializer_reset.py`: **24/24** original-code controls
   passed. Accepted stem `initializer-run-ar33gbxm/initializer_reset`; receipt
   `.json` SHA-256
   `e2541be24011d1e9d03226d0e0246a0f4f8a535398b64d9b19083f518319f830`;
@@ -5693,7 +5730,7 @@ sentinels also pass. Independent read-only review reconstructed those exact
 writes from the saved bytes and outputs; it did not rerun the experiment.
 
 The function names and corrected comments belong to the separate
-five-row Ghidra cohort (private RE archive: `reverse-engineering/ghidra/README.md`).
+five-row Ghidra cohort (private archive, not in this repository).
 The warning-specific disabled route does not establish arbitrary-format
 safety. Enabled file logging may reach a CRT allocation-failure handler before
 a successful retry. Actual enable, locale, heap mode, retry/handler state,
@@ -5724,10 +5761,10 @@ An independent reviewer reconstructed all outputs from the saved instructions;
 that review did not rerun them. Static disassembly commands are retained in the
 private body receipts.
 
-The one-row Ghidra correction (private RE archive: `reverse-engineering/ghidra/README.md`)
+The one-row Ghidra correction (private archive, not in this repository)
 passed fresh PRE equality/restore-open, isolated dry/apply/separate readback,
 independent exact-cohort review, live dry/apply/separate readback and independent
-Archive A POST restore-open. Exactly one name, nonrepeatable comment and tag
+private POST restore-open. Exactly one name, nonrepeatable comment and tag
 set changes; all 8,330 other functions, every ABI/variable/type/stack record
 and program structure stay unchanged. Only the comment digest moves among
 program metrics; all nine live exports equal rehearsal. The initial unsupported
@@ -5736,12 +5773,12 @@ program metrics; all nine live exports equal rehearsal. The initial unsupported
 writes. The final spec seals the measured rehearsal; no second sealed rehearsal
 is claimed.
 
-`python -m tools.ghidra_cohort_framework_tests` passed **92 tests**;
-`python tools/re_function_doc_names_check.py --self-test` passed.
+`python -m tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive) passed **92 tests**;
+`python tools/re_function_doc_names_check.py --self-test` (retired tool, now in the private archive) passed.
 Commands, logs, comparisons, refusals and recovery receipts are in
 `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/cli-initializer-ownership/`.
 `compare_exports.py rehearsal-post` and `compare_exports.py live-post` compare
-the complete exports. The [parser owner](reverse-engineering/binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md)
+the complete exports. The [frozen note: parser owner](reverse-engineering/binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md)
 records the source/retail distinctions and unresolved consumers. No full parser,
 retail startup, later selector values, file I/O, desktop or gameplay acceptance
 was exercised.
@@ -5759,7 +5796,7 @@ both guarded receivers and both complete logger extents. Forty-six verify
 normal-return ABI preservation; the version case takes an intercepted
 nonreturning exit. A forbidden syscall control terminates with SIGSYS.
 
-The [CLI contract](reverse-engineering/binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md#isolated-parser-execution--september-19)
+The [frozen note: CLI contract](reverse-engineering/binary-analysis/functions/CLIParams.cpp/CLIParams__ParseCommandLine.md#isolated-parser-execution--september-19)
 records argument ordering, conversion failure, windowed guard, timeout,
 resolution, directory-prefix and version-exit controls. Independent read-only
 review checked all saved bytes, inputs, outputs and the compiled syscall filter;
@@ -5773,7 +5810,7 @@ and all failed attempts are retained separately; they are not added to the
 the startup call chain and the bounded absence of identified trace-field
 consumers. `trace-consumers.json` and `selector-neighbors.json` retain body
 pins and disassembly commands. These corrections change documentation only;
-the Ghidra working project and tracked checkpoint were not opened or modified.
+the Ghidra working project and private Ghidra checkpoint were not opened or modified.
 Native review records are retained under the existing audit owner in
 `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/cli-parser-review.json`.
 
@@ -5837,7 +5874,7 @@ Independent read-only reviews checked saved code/input/output identities,
 compiled sandbox instructions and the serializer extension; they did not rerun
 the experiment. Records use the existing ignored aircraft-audit owner.
 
-The [subsystem contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md)
+The [frozen note: subsystem contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md)
 separates executed findings, fresh static checks, inherited receipts and pending
 cross-runtime acceptance. This tranche changes RE documentation; it does not
 modify Ghidra or either implementation lane.
@@ -5930,7 +5967,7 @@ identities remain unchanged.
 
 This establishes the selected helper behavior, not device enumeration, key
 delivery, selector/remap UI execution, full loader/preset composition or
-arbitrary malformed-save safety. The [binding contract](reverse-engineering/binary-analysis/functions/Controller.cpp/ControlBindings.md)
+arbitrary malformed-save safety. The [frozen note: binding contract](reverse-engineering/binary-analysis/functions/Controller.cpp/ControlBindings.md)
 separates these executions from fresh UI instruction checks and inherited
 historical mappings. No Ghidra or implementation code changed.
 
@@ -6393,7 +6430,7 @@ quality conversion execute. Two complete real English-bank size/payload records
 run at qualities 0, 1 and 2. Authored size residues, quality 3/negative quality,
 fresh/reused objects, supplied Create/Lock/Unlock failures, zero/short reads,
 short returned lock span and descriptor flag/GUID selection cover adverse paths.
-The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-decoding-and-saved-quality)
+The [frozen note: contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-decoding-and-saved-quality)
 identifies the bank and separates its 164 framed records from the two decoded.
 
 Complete selected state, the entire guarded allocation arena and unchanged input
@@ -6424,7 +6461,7 @@ materializer's two literal tables and pure decoder. The private
 `710c3843f533af18e9b634ed40051da2ab1f1a6cb71fab0db716e13081566081`, selected lines
 and output hashes. Both complete real quality-0 outputs match; an authored odd
 size differs only at its final byte. The full materializer was not invoked or
-edited. Review prompts, full reports and root dispositions remain in the existing
+edited. Review prompts, full reports and review dispositions remain in the existing
 private save-loader/language review record. No Ghidra database was opened.
 
 ### Original sample admission and registration — September 22
@@ -6453,7 +6490,7 @@ and original null-stream stub. The original ASCII-locale comparison/copy does
 execute; other locales do not. Heap/COM/destruction hooks retain memory, so
 sample reuse and insertion are not proof of actual device or object lifetime.
 No bank traversal, real file access, audible behavior, Load/Save composition or
-startup acceptance is claimed. The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#outer-sample-admission-and-registration)
+startup acceptance is claimed. The [frozen note: contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#outer-sample-admission-and-registration)
 distinguishes caller evidence from the separate Ghidra correction below.
 
 The preserved v1 outer run passed but inherited two-record receipt wording
@@ -6465,8 +6502,8 @@ modify a Ghidra project.
 
 ### Sample-loading Ghidra metadata — September 22
 
-The two-stage correction (private RE archive: `reverse-engineering/ghidra/README.md`)
-passed fresh PRE equality against independent Archive A recovery, restored
+The two-stage correction (private archive, not in this repository)
+passed fresh PRE equality against independent private recovery, restored
 read-only opening, isolated dry/apply/separate readbacks, sealed-spec readbacks,
 independent exact comparison, live dry/apply/separate readbacks and independent
 POST copy/restore/opening. Scope: two function names, four explicit parameter
@@ -6496,7 +6533,7 @@ without skips**, including after the reviewed live allowance. The name oracle,
 documentation and public-payload checks passed. Review corrected the draft
 stub coverage count to two cases and clarified name-copy padding before their
 respective rehearsal applies. Final specs add only the derived live-applier
-hash to the measured rehearsal pins. The tracked checkpoint is unchanged.
+hash to the measured rehearsal pins. The private Ghidra checkpoint is unchanged.
 
 These metadata changes preserve the preceding 44 direct and 25 outer controls;
 they do not execute successful whole-bank traversal, actual sample destruction,
@@ -6539,8 +6576,8 @@ The selected pristine specimen remains SHA-256
 Both instruments check original bodies/data/BSS, nonoverlapping ELF segments,
 full selected guarded state, unchanged input, ordered snapshots, unused output
 storage, integer ABI, PC53-nearest CW/TOP and normal FS-chain restoration.
-The forbidden-syscall control terminates with SIGSYS and empty output. Root
-separately decoded failure outputs to check exact release counts, canonical
+The forbidden-syscall control terminates with SIGSYS and empty output. A separate check
+decoded failure outputs to check exact release counts, canonical
 unlinking, fresh-case preservation and zero-size versus EOF error state.
 
 The composed instrument's preserved v1 syntax failure executed no experiment.
@@ -6552,7 +6589,7 @@ no path bytes because this route does not consume them. Heap and COM storage
 is retained, and owner callbacks only record. These checks do not establish
 actual reclamation, device lifetime, callback side effects, exception dispatch,
 successful bank traversal, file publication, playback or complete startup.
-The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-destruction-and-failed-loads)
+The [frozen note: contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-destruction-and-failed-loads)
 records observed ordering and adverse-fixture limits. Exact review prompts,
 reports and primary dispositions remain in the existing private review owner.
 No Ghidra project was opened for these experiments.
@@ -6581,7 +6618,7 @@ this-host observation, not a portable whole-status-register guarantee. The
 forbidden-syscall control terminates with SIGSYS and empty output.
 
 Independent read-only review parsed saved bytes without running/importing the
-driver. Root separately checked admitted bodies, source and output identities,
+driver. A separate check checked admitted bodies, source and output identities,
 every progress name/size/buffer/link/head, refill indices and consumed versus
 prefetched lengths. A separate read-only AST extraction of the materializer's
 two tables and pure decoder matches **all 164 PCM outputs / 21,537,072 bytes**;
@@ -6602,7 +6639,7 @@ Heap, filesystem imports, COM/device behavior, formatting and frontend progress
 remain explicit supplied boundaries. The trailer is prefetched but not parsed;
 CloseHandle false tests ignored return behavior, not actual closure. No Ghidra
 project, original save or production implementation was changed. The
-[contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#complete-original-bank-loading-and-reloads)
+[frozen note: contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#complete-original-bank-loading-and-reloads)
 records reconstruction implications and remaining composition/playback limits.
 Exact review prompts and reports remain in the existing private review owner.
 
@@ -6626,11 +6663,11 @@ expected serialization. Six complete selected-state snapshots, source/serializer
 guards, all recorded paths, bank arguments/return sites, integer ABI, owned stack
 and x87 control/TOP pass. The forbidden-syscall control terminates with SIGSYS.
 
-Root independently compares original bodies/data/zero BSS, nonoverlapping ELF
+A separate check independently compares original bodies/data/zero BSS, nonoverlapping ELF
 regions and the read-only jump table against the pristine file. Saved-output
 readback checks all source/control bytes, complete serializers and guards,
 immutable music vtable and all 44 CLI-tail bytes at every observation phase.
-Full review and root readback remain private. The retained v1 failure caught
+Full review and a separate readback remain private. The retained v1 failure caught
 Python/assembler escaping removing the authored path separators; v2 uses numeric
 string bytes and verifies their exact loaded representation. Retail bytes are
 unchanged.
@@ -6643,7 +6680,7 @@ That case does not establish real device failure recovery.
 The formatter produces only the admitted bank-path template; heap, music-platform
 shutdown, diagnostics and latest-world remain supplied boundaries. No actual file
 Open, device normalization, playback or cold-start reachability is established.
-The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#coupled-language-and-audio-settings-routing)
+The [frozen note: contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#coupled-language-and-audio-settings-routing)
 records the stale-path result, second-load correction and serialization limits.
 
 ### Original audio-device initialization — September 23
@@ -6675,7 +6712,7 @@ the second QueryInterface failure deliberately leaves its prior output unchanged
 The existing-wrapper case retains an authored table-count sentinel; the receipt's
 `admittedDevices` field there is **not an enumeration count**.
 
-Root independently reads the saved bytes without importing/running the driver;
+A separate check independently reads the saved bytes without importing/running the driver;
 `root-output-review.json` records original-byte identity, index/GUID selection,
 unchanged settings and manager regions, exact format requests and selected failure
 results. Independent read-only reviews also reconstructed every selected-state
@@ -6684,7 +6721,7 @@ private review owner. Acquisition counters describe this invocation's resources,
 excluding pre-existing authored pointers. These are isolated original-code controls with supplied heap, API, COM,
 logger and narrow hex formatter behavior. No real device, playback, save Load/Save
 composition, empty-description localization or complete startup acceptance is
-established. The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-audio-device-initialization)
+established. The [frozen note: contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-audio-device-initialization)
 records the reconstruction implications and remaining boundaries.
 
 ### Original outer sound-manager initialization — September 23
@@ -6713,7 +6750,7 @@ with supplied counter output, and unsigned millisecond fallback. Pool/menu/
 console allocations succeed by construction. The SFX parser is excluded at its
 exact call boundary; effect-list state is unchanged, not populated successfully.
 
-Root readback independently checks body/data identity, all outer object bytes
+A separate readback independently checks body/data identity, all outer object bytes
 and guards, registration links/fields, initialized high bytes, sampled values,
 event ordering and snapshot pins without running/importing the driver.
 `init.root-readback.json` records it. All 30 input/output/stderr artifacts equal
@@ -6722,7 +6759,7 @@ traps with their verified targets and adds pointer/logger assertions. Neither
 version alters original instructions. Full read-only review reports remain in
 the existing private review owner. No real clock/device, SFX parser, Load/Save
 composition, full WinMain/shell execution or player acceptance is established.
-See the [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-outer-sound-manager-initialization).
+See the [frozen note: contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-outer-sound-manager-initialization).
 
 ### Original device effects during Load and Save — September 23
 
@@ -6748,8 +6785,7 @@ The first preserved prototype returned normally and matched its predicted full
 state, then failed an overly broad cached-path assertion. Its 64-byte capture
 contains the 52-byte path plus method/device/first-slot fields changed by Init.
 The accepted assertion predicts those adjacent fields separately and still
-checks all 64 bytes. ELF, first input and first output are unchanged. Root's
-separate `load.root-readback.json` checks source identities, all serializers,
+checks all 64 bytes. ELF, first input and first output are unchanged. A separate readback (`load.root-readback.json`) checks source identities, all serializers,
 unknown-byte preservation, device pointers, flags and stage-specific requests
 without importing or executing the candidate. Independent read-only reviews
 remain in the existing review owner.
@@ -6757,7 +6793,7 @@ remain in the existing review owner.
 Original outer startup and final bank parsing are excluded. Initialized state
 is authored; platform, heap, diagnostics and the final bank request are supplied
 boundaries. A failed device's later bank request does not establish usable audio
-or safe recovery. The [contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-device-effects-during-load-and-save)
+or safe recovery. The [frozen note: contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-device-effects-during-load-and-save)
 separates saved preferences, live device state and pending downstream behavior.
 
 ### Original bank null-device controls — September 23
@@ -6782,7 +6818,7 @@ With a null device, initialized bytes one and zero both stop at original
 with a null device completes without samples. Debugger exit terminates its own
 stopped inferior; the recorded stopped PIDs were subsequently absent.
 
-Root compares **6,675,024 bytes** of the two successful outputs with retained
+A separate check compares **6,675,024 bytes** of the two successful outputs with retained
 parent outputs: only the nine/twelve declared final-snapshot bytes differ. All
 PCM, event and guard bytes match. The initial snapshot predates debugger writes
 and remains identical. `result.root-readback.json` records that comparison;
@@ -6792,7 +6828,7 @@ the four debugger captures. The ELF and original inputs remain unchanged.
 These are isolated original-instruction observations with supplied file/heap/COM
 dependencies. They are separate from the composed Load experiment, and establish
 neither real Windows/Proton failure nor full startup reachability. The
-[contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#bank-loading-with-a-missing-device)
+[frozen note: contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#bank-loading-with-a-missing-device)
 distinguishes null-interface dereference from a returned method failure.
 
 ### Level 100 turret targeting control — September 25
@@ -6825,7 +6861,7 @@ capability stub. Both were corrected before the passing run.
 
 This measures the list, allegiance and selection transaction with supplied
 helper results. It establishes no turret aim, weapon, geometry, spawner or retail
-gameplay behavior; the [contract](reverse-engineering/game-mechanics/level100-final-drone-wave.md)
+gameplay behavior; the [contract](https://github.com/dlprentice/onslaught-preservation/blob/main/levels/level100-final-drone-wave.md)
 keeps those open.
 
 ### Level 100 turret fire-control control — September 25
@@ -6841,7 +6877,7 @@ and its nine-entry jump table, the emitter lookup `0x004aa820`, CRT `stricmp`,
 `_strnicmp` and `_strncmp`, the fire-control refresh `0x004fb280`,
 `Random__NextLCGAbs`, the shipped name strings and seven constants at their retail
 addresses. Part and emitter structures come from the three shipped turret meshes
-(hashes in the [contract](reverse-engineering/game-mechanics/level100-final-drone-wave.md#fire-control-control))
+(hashes in the [frozen note: contract](reverse-engineering/game-mechanics/level100-final-drone-wave.md#fire-control-control))
 through the repository CMSH parser. The C-locale fast path is supplied and the
 locale-lock path is trapped; the Euler constructor and `AddEvent_AtTime` are
 recording stubs and the ballistic solver is a trap. Every case checks stack,
@@ -6877,15 +6913,15 @@ callee-saved registers. Under control words `0x027f` and `0x007f`, every tested
 except for signed zero words, and the integer version leaves each row's fourth
 word unwritten. So the burst spawner's default launch matrix `0x004f8140(0, 1, 0)`
 is a 2π/4096 pitch; see the
-[burst contract](reverse-engineering/contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md).
+[frozen note: burst contract](reverse-engineering/contracts/render-platform/ProjectileBurst__SpawnFromCurrentPreset__005069f0.md).
 This measures the two constructors only, not the spawner or a retail run.
 
 ### Scheduled-event constructor boundary — September 19
 
-The one-function boundary correction (private RE archive: `reverse-engineering/ghidra/README.md`)
+The one-function boundary correction (private archive, not in this repository)
 passed fresh PRE equality/restore-open, isolated dry/apply, separate readback,
 independent comparison, live dry/apply/separate readback, and independent
-Archive A POST restore-open. Both actual-database negative controls rejected
+private POST restore-open. Both actual-database negative controls rejected
 their inputs before writes: wrong body hash and a clipped final return.
 The replica remained byte-identical after both refusals. All nine live
 exports equal rehearsal; all 8,330 prior functions, 32,697 prior variables,
@@ -6893,11 +6929,11 @@ types, bookmarks and prior stack records are unchanged. The sole addition is
 the default 64-byte, 15-instruction function at `0044b190`, with its default
 return and unknown-purge stack records. Only the function-count metric moves.
 
-`python -m tools.ghidra_cohort_framework_tests` passed **92 tests**.
+`python -m tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive) passed **92 tests**.
 The initial direct-file invocation could not import the repository package;
 the module invocation is the executed passing command. The base applier is
 unchanged; the derived live applier admits only the additional declared cohort.
-`python tools/re_function_doc_names_check.py --self-test` passed after the
+`python tools/re_function_doc_names_check.py --self-test` (retired tool, now in the private archive) passed after the
 current-name projection gained the new default function. Frozen tables stay
 unchanged. These checks establish the bounded correction, not a recovered
 semantic prototype or retail runtime behavior.
@@ -6914,7 +6950,7 @@ record while preserving all existing variables. `live-readback.json` and
 
 ### Shared math-error Ghidra correction — September 19
 
-The one-function correction (private RE archive: `reverse-engineering/ghidra/README.md`)
+The one-function correction (private archive, not in this repository)
 replaces `00561547`'s fabricated hidden-pointer/fastcall description with six
 explicit register/x87/stack inputs and a `float10` ST0 return. It changes only
 the prototype, nonrepeatable comment and tags. The binary64 spill/reload and
@@ -6955,7 +6991,7 @@ no tracked-checkpoint refresh is included.
 
 ### Asin-helper Ghidra correction — September 19
 
-The two-function correction record (private RE archive: `reverse-engineering/ghidra/README.md`)
+The two-function correction record (private archive, not in this repository)
 owns the exact manifest/spec and working/recovery identities. Fresh exports
 matched 194 pristine bytes across 54 instructions. The final rehearsal and
 independent full comparison changed only names, nonrepeatable comments and tag
@@ -6965,21 +7001,21 @@ digest moves. All nine live exports match the separately reopened rehearsal.
 
 The existing framework passed isolated dry/apply, stale-second-comment refusal
 before writes, sealed readback, live dry/apply/separate readback, and independent
-Archive A POST restore/read-only reopen. The refusal control used the initial
+private POST restore/read-only reopen. The refusal control used the initial
 draft with the same PRE guards; final wording was rehearsed on a fresh PRE copy.
-`python -m tools.ghidra_cohort_framework_tests` passed **91 tests**. Direct script
+`python -m tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive) passed **91 tests**. Direct script
 invocation first failed to resolve the existing `tools` package; module invocation
 passed without a framework behavior change. The only live-applier change is the
 exact new cohort grant. Private commands, logs and comparison records are under
 `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/asin-helper-semantics/`.
 
-The tracked checkpoint is unchanged. Implicit x87 inputs, the shared error helper's
+The private Ghidra checkpoint is unchanged. Implicit x87 inputs, the shared error helper's
 signature and alternate-entry ownership remain separate open work; the corrected
 names do not certify those prototypes or live gameplay.
 
 ### Aim-provider Ghidra correction — September 19
 
-The four-function correction record (private RE archive: `reverse-engineering/ghidra/README.md`)
+The four-function correction record (private archive, not in this repository)
 owns the immutable manifest/spec and measured working/recovery identities.
 Fresh body exports matched all 731 pristine bytes, covering 239 instructions.
 Independent read-only review checked the semantic corrections and compared all
@@ -6993,22 +7029,22 @@ stale-PRE refusal, sealed readback, live dry/apply/separate readback and indepen
 POST restore/reopen. All nine live exports equal the reviewed rehearsal. The
 stale-PRE control reports failure with `writesAttempted=false`; headless exit zero
 alone was not treated as success. Framework checks passed **91 tests** with
-`python -m tools.ghidra_cohort_framework_tests`; the live twin differs only by the
+`python -m tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive); the live twin differs only by the
 new exact cohort grant. Current-name projection and public-safety self-tests
 also passed. Raw commands, logs, manifests, comparisons and restore receipts are
 under `local-lab/ghidra-first-training-20260907-v1/aircraft-audit-20260919/aim-provider-semantics/`.
 
-The tracked checkpoint payload remains byte-identical. Neither the metadata
+The private Ghidra checkpoint payload remains byte-identical. Neither the metadata
 correction nor the isolated endpoint experiment above establishes actual segment
 poses, live combat or reconstruction acceptance.
 
 ### UnitAI exit comment correction — September 12
 
 The exact one-comment manifest passed the preserved rehearsal/live/readback/
-independent-recovery route in Ghidra's owner (private RE archive: `reverse-engineering/ghidra/README.md`).
+independent-recovery route in Ghidra's owner (private archive, not in this repository).
 Only `004ffbb0`'s nonrepeatable comment changes; all eight live exports equal
-the isolated rehearsal. The tracked checkpoint remains unchanged.
-`python -m tools.ghidra_cohort_framework_tests` passed **91/91**.
+the isolated rehearsal. The private Ghidra checkpoint remains unchanged.
+`python -m tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive) passed **91/91**.
 The direct script invocation first failed to import `tools`; module invocation
 uses the existing package without changing the framework's behavior.
 The cohort receipts and exact commands are under
@@ -7075,9 +7111,9 @@ The first extraction attempt refused missing CORI on the waypoint parts;
 native cache-owner inspection then established their declared root inheritance.
 No default orientation or launch transform was substituted.
 
-`npm run prepare:rebuild-assets` accepted **389 exact files** after publication
+`npm run prepare:rebuild-assets` (script since removed; the rebuild is built and gated in onslaught-godot) accepted **389 exact files** after publication
 (`airfield-exit-assets-ready-20260912.log`).
-`python -m unittest materialize_retail_assets_tests`, from `rebuild/tools`,
+`python -m unittest materialize_retail_assets_tests`, from `rebuild/tools` (historical: frozen rebuild, not run here),
 passed **82/82**, with no skips (`airfield-exit-materializer-final-20260912.log`).
 The selected Core run uses `dotnet test` with `--no-restore --nologo`, the Core
 test project and filter
@@ -7101,7 +7137,7 @@ No gameplay constant, scheduled aircraft behavior or combat assertion changed.
 
 The complete Client suite then passed **907**, with its two existing capture
 skips and no failures (`airfield-exit-client-complete-20260912.{trx,log}`).
-It used `dotnet test rebuild/OnslaughtRebuild.Client.Tests/OnslaughtRebuild.Client.Tests.csproj`
+It used `dotnet test rebuild/OnslaughtRebuild.Client.Tests/OnslaughtRebuild.Client.Tests.csproj` (historical: frozen rebuild, not run here)
 with `--no-restore --nologo`, the same results directory and no filter.
 The first run had 906 passes and one old First Flight hash failure
 (`airfield-exit-client-20260912.{trx,log}`). The corrected test runs the complete
@@ -7142,14 +7178,14 @@ provisional returns, saved stack/frame fields, types and bookmarks are preserved
 Program metrics change only the comment digest in each cohort.
 
 The exact source project was byte-matched to the preceding independent POST
-before each apply. Both new Archive A POST copies were copied, hash-compared,
+before each apply. Both new private POST copies were copied, hash-compared,
 restored elsewhere and opened read-only successfully. Each owner retains
 `source-{pre,post}.json`, `tracked-pre.json` and `post-working-restore.json`.
 The initializer's fresh PRE restore is `pre-working-restore.json`; its restored
-POST then supplies the second cohort's PRE. The reviewed tracked checkpoint
+POST then supplies the second cohort's PRE. The reviewed private Ghidra checkpoint
 was freshly compared and remained unchanged.
 
-`python -m unittest tools.ghidra_cohort_framework_tests` passed **91/91**, no
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive) passed **91/91**, no
 skips (`local-data/test-runs/linux-route-20260906-af1sa_l9/unit-ai-framework-final-20260912.log`).
 An intermediate run found two derivation failures because direct-script module
 resolution had prevented emitting the live twin; module invocation corrected
@@ -7191,12 +7227,12 @@ them. This is original-code experiment evidence, not a live game observation.
 of the death path, vulnerability getter, collision-ignore write and MinAltitude
 default/field setter. It also records the freshly verified physics input and
 all 25 hash-pinned Level100 script objects: 1,925 instructions, no native-32
-SetVulnerable call. The [Unit evidence](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#aircraft-spawner-exit-and-script-readiness--september-12)
+SetVulnerable call. The [frozen note: Unit evidence](reverse-engineering/binary-analysis/functions/CComplexThing.cpp.md#aircraft-spawner-exit-and-script-readiness--september-12)
 owns the interpretation. No Ghidra database was opened or changed for this step.
 
 The final affected Core run passed **317/317**, no skips
 (`plane-exit-core-final-20260912.{log,trx}`). It uses
-`dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj`
+`dotnet test rebuild/OnslaughtRebuild.Core.Tests/OnslaughtRebuild.Core.Tests.csproj` (historical: frozen rebuild, not run here)
 with `--no-restore --nologo --filter` selecting `Level100ActorPlaneRuntimeTests`,
 `Level100ActorMechanicsTests`, `Level100ActorWeaponTests`,
 `Level100DestructionContactTests`, `Level100RawPlaneCreationTests`,
@@ -7233,7 +7269,7 @@ all 838 ticks, including the previous complete trace. The final test retains
 that proof. Its current trace is
 `2da46d641e2187ead860869dd25b5abdf54f59aa5bac8830f7e661babe000309`,
 final state `6ec3dfbbfd2351f824e4bab7685503e8e014a57f9e6990ad2c13a78dfc44ad4d`.
-The direct `dotnet rebuild/OnslaughtRebuild.Headless/bin/Debug/net8.0/OnslaughtRebuild.Headless.dll --repeat 2`
+The direct `dotnet rebuild/OnslaughtRebuild.Headless/bin/Debug/net8.0/OnslaughtRebuild.Headless.dll --repeat 2` (historical: frozen rebuild, not run here)
 result is `plane-exit-headless-observed-20260912.json` with no replay divergence.
 
 The two full-combat drivers ran with their existing completion requirements
@@ -7279,7 +7315,7 @@ This section records the standard-engine/standalone-helper predecessor at
 
 `npm test` runs the standard-engine native scene/domain and media tests, followed
 by the explicit file bridge's **17** protocol cases (including six Linux
-transaction race/failure cases) and **12** focused launcher/package tests.
+transaction race/failure cases) and **12** focused launcher/package tests (superseded: the FileBridge was retired on 2026-09-25).
 The completed run is canonical `local-data/companion/gdscript-test-xc1i0e2n/`.
 The fixture was copied before use. Tests independently compare all 10,004 bytes,
 selected low-24-bit counts and packed/unselected bytes; source content and physical
@@ -7294,7 +7330,7 @@ and programmatic controls; it does not claim human click-through, audio or Windo
 execution. No physical desktop was used. Engine and template identities are pinned
 in the companion's `toolchain.json`, verified against the shared installation.
 
-Use `npm run export:companion-godot -- --platform both` for standard Linux/Windows
+Use `npm run export:companion-godot -- --platform both` for standard Linux/Windows (superseded: the FileBridge was retired on 2026-09-25)
 x86_64 packages with separate self-contained file-bridge directories and licenses.
 The September 19 packages are in canonical
 `local-data/companion/gdscript-export-pdsz2xf4/packages/`. The final scene suite
@@ -7319,7 +7355,7 @@ stopped after the check. Only virtual input-method/V-Sync warnings occurred.
 
 Both package hash inventories verified all 194 listed files. The Linux inventory
 covers 152,222,368 bytes and Windows 185,773,971 bytes, excluding the inventory
-file itself. ELF/PE x86_64 identities, runtime 8.0.30 and licenses were inspected.
+file itself. ELF/PE x86_64 identities, runtime 8.0.30 and licenses were inspected (September 19; superseded: the current engine and runtime pins are in companion/OnslaughtToolkit.Godot/toolchain.json).
 Mounted package resource views contained no legacy C# project, tests, saves,
 retail or GPL rebuild payloads. This is Windows cross-export/package evidence;
 Windows execution, its retained guarded staging handoff, human usability and
@@ -7334,10 +7370,10 @@ so opening the source preserves stable editor identities. Import receipt:
 ## Companion .NET integration — September 19
 
 David clarified that any necessary C# belongs inside Godot's .NET edition, while
-GDScript should own as much application behavior as possible. The companion now
+GDScript should own as much application behavior as possible (superseded by the all-C# rule in AGENTS.md). The companion now
 uses the existing shared **4.8.dev6.mono.official.8898c2b3d** editor and matching
-templates. The standard `godot48` install was not changed. The active C# assembly
-contains a thin RefCounted adapter, compatibility stubs and the two unchanged MIT
+templates. The maintainer's Godot 4.8 install was not changed (September 19; superseded: the current pins are in companion/OnslaughtToolkit.Godot/toolchain.json). The active C# assembly
+contains a thin RefCounted adapter, compatibility stubs and the two unchanged MIT (as of September 19; the current licence mapping is in REUSE.toml)
 file-safety sources. Scenes, save interpretation, edit plans, comparison, media
 inventory and workflow remain GDScript. The subprocess protocol, base64 transport,
 helper-path environment hook and sibling production helper are gone.
@@ -7367,7 +7403,7 @@ Normal closing while busy is deferred until the transaction returns; shutdown
 joins an outstanding worker. A read-only integration review found no actionable
 ownership, thread-lifetime, uncertainty or unchecked-write issue. The unchanged
 filesystem code's Windows staging-handoff and power-loss limitations remain as
-documented in the API/safety record, `companion/OnslaughtToolkit.FileBridge/README.md` at pre-flatten commit
+documented in the API/safety record, `companion/OnslaughtToolkit.FileBridge/README.md` at pre-flatten commit (not in this repository; see the header note)
 `d5e002d0` (in the private RE archive's `onslaught-career-editor-full-history-20261015-freeze.bundle`), retired
 with the prototype on September 25.
 
@@ -7381,7 +7417,7 @@ Normal Godot .NET Linux and Windows x86_64 exports completed in canonical
 `local-data/companion/godot-dotnet-export-ph2r7cmk/packages/`. Both hash inventories
 verified all 194 entries, covering 158,347,590 Linux bytes and 191,890,481 Windows
 bytes, excluding the inventories themselves. Package inspection confirmed ELF/PE
-x86_64 executables, the integrated assembly, runtime 8.0.30 and notices. No helper,
+x86_64 executables, the integrated assembly, runtime 8.0.30 and notices (September 19; superseded: the current pins are in companion/OnslaughtToolkit.Godot/toolchain.json). No helper,
 AppCore assembly, WinUI assembly or test harness is shipped. The mounted resource
 views omit retained SaveLab/test resources; the two active C# script resources are
 Godot's one-newline managed-script placeholders, not source text.
@@ -7416,12 +7452,12 @@ No physical desktop, VM, release or hosted CI was used.
 
 ## Companion C# migration — September 25
 
-Branch `claude/companion-csharp-20260925` replaced the companion's GDScript domain,
+The companion C# branch (pre-release history; not in this repository) replaced the companion's GDScript domain,
 interface and tests with one C# application built in code. `Main.tscn` is a one-node
 wrapper attaching `Ui/CompanionApp.cs`; the build now refuses `.gd`, saved resources and
 any scene with more than that node. Each former GDScript contract moved to a C# suite
 run inside headless Godot by `Tests/CompanionTestRunner.cs`: the codec checks to
-`CareerSaveTests`, the media checks to `MediaCatalogTests`, the direct adapter checks to
+`CareerSaveTests`, the music, voice and Vorbis checks to `GameAudioTests.cs` and `CompanionUiTests.cs`, the direct adapter checks to
 `ProtectedFilesTests`, the scene workflow to `CompanionUiTests`, and the retired
 FileBridge harness's six Linux publication races to `TransactionRaceTests`, which calls
 the linked transaction's internal hook in-process. GDScript's string-key, float and
@@ -7439,14 +7475,14 @@ reported zero warnings and errors with warnings treated as errors. Two deliberat
 defects — authoring the packed fourth kill byte and accepting a receipt without
 original verification — turned the same suite red with exit code 1 and ten named
 failures: `local-data/companion/godot-dotnet-test-6862alcj/`. The standalone FileBridge
-prototype and its Python protocol test were removed; their Windows staging-handoff and
-power-loss limits now live in the [companion README](companion/OnslaughtToolkit.Godot/README.md#file-safety-boundary).
+prototype and its Python protocol test were removed; their
+power-loss limits now live in the [companion README](companion/OnslaughtToolkit.Godot/README.md#how-files-stay-safe), and the Windows staging-handoff limits in its [file-safety boundary](companion/OnslaughtToolkit.Godot/README.md#file-safety-boundary).
 
 ## Companion approved workflows — September 26
 
 David approved four feature groups and the Flight-deck look on 2026-09-25 (careers and
 Goodies; copies and options; install and backups; music, voices and lore), with patching
-the installed `BEA.exe` left for a later phase. Branch `claude/companion-csharp-20260925`
+the installed `BEA.exe` left for a later phase. The companion C# branch (pre-release history; not in this repository)
 built all four in C# and in code; the [companion README](companion/OnslaughtToolkit.Godot/README.md)
 describes them and [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md#godot-companion--careers-settings-backups-music-and-lore)
 states their limits.
@@ -7468,7 +7504,7 @@ anchor, `lore/units-and-mechs.md:173` → `worlds.md#world-500-career-node-23`, 
 never resolved either (the em dash leaves `world-500--career-node-23`); the link was
 corrected in `a0246a39`.
 
-**Screens.** `npm run capture:companion-godot` rendered 76 screens through `godot-offscreen`
+**Screens.** `npm run capture:companion-godot` rendered 76 screens through `godot-offscreen` (optional maintainer workflow: it needs the machine-specific offscreen wrapper, which is not part of public setup)
 at 1280×800 and 1920×1080 against a fake install —
 `local-data/companion/godot-dotnet-capture-y9reye8p/captures/` — and 74 against the real
 Steam library with `--capture-arg=--steam-root=$HOME/.local/share/Steam` —
@@ -7490,10 +7526,10 @@ lore and neither the `Tests` nor the `Development` namespace. The Linux package 
 `--headless --quit-after 240` with isolated XDG directories and exited 0 with no error
 output; no core dump from the companion appeared.
 
-**Save-audit corrections (same day).** The RE lane's save audit (pristine `74154bfa…`,
+**Save-audit corrections (same day).** The reverse-engineering notes' save audit (pristine `74154bfa…`,
 gold save `0c17e47d…`) corrected four facts the companion displayed; all four are
 read-only, so no write path changed. Checked here against the pinned source and the
-fixture's bytes: the gallery wall mapper (`FEPGoodies.cpp:393-437`, which the RE lane
+fixture's bytes: the gallery wall mapper (`FEPGoodies.cpp:393-437`, which the reverse-engineering notes
 matched to retail `0x0045cb80`) never places 071–073, so the gallery shows 230 slots;
 the fixture stores 071–073 as new while the 230 shown slots hold 229 viewed and 1
 locked, so its "3 new" had been three Goodies the game never shows. `mIsGod[2]`
@@ -7518,7 +7554,7 @@ check has not been observed against a live game under Wine or Proton.
 **Not verified.** Windows execution, including the Windows file path for copies and
 backups; a human click-through with a mouse and keyboard; listening to the music and voice
 playback (the audio was decoded, never heard); and anything the game does with a copy
-beyond the options, Goodie and cheat behaviour the RE lane has already watched.
+beyond the options, Goodie and cheat behaviour the reverse-engineering notes has already watched.
 
 ## Library alias evidence — September 26
 
@@ -7526,7 +7562,7 @@ beyond the options, Goodie and cheat behaviour the RE lane has already watched.
 reproduce and reject reference-only aliases, unequal complete extents, stale
 representative choices and false saved-name admission, while retaining true
 folds and typed COFF names at one entry. The first counterexamples failed before
-the fix. An independent read-only review reproduced the later-owner case; root
+the fix. An independent read-only review reproduced the later-owner case; a separate check
 retained it as a regression case.
 
 Fresh matching of the current live export against the pinned libraries proposes
@@ -7553,7 +7589,7 @@ game semantics, Godot behavior or Windows/device acceptance.
 Private receipts and exact headless commands:
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/library-verified/`.
 The replacement seal preserves the rejected first seal under `rejected-v1/`.
-Root reproduced the `_strdup`/`_wcsdup` mismatch before resealing; independent
+An independent re-run reproduced the `_strdup`/`_wcsdup` mismatch before resealing; independent
 LLVM/GNU checking covers all 191 comments, 1,542 masked-byte code comparisons,
 118 data sections, 14 layout assertions, 15 folded aliases and three import
 thunks. Data-reference traversal reached a fixed point; no conflicting reference
@@ -7568,18 +7604,18 @@ Executed after the corrected seal:
   commits, and unchanged project inventories.
 - Independent read-only review of decoded comment payloads, exact rows,
   selected object evidence, rehearsal exports and refusal receipts: bounded GO;
-  root reproduced the consequential byte and matcher claims.
+  an independent re-run reproduced the consequential byte and matcher claims.
 - `python -B .../apply_live.py`: dry/apply/readback PASS; nine live/rehearsal
   exports equal. Manifest SHA-256
   `b9b307b6fc50cf53a65676f82c41da1919a0f7e65e8504047c4e91b9fcda6495`;
   final live-pinned spec
   `55cdfd664813ee39b1a5623c1bff6950f391cde9e5480160d112331aa6ef7c80`.
-- `python -B .../finish.py`: independent Archive A POST copied, restored elsewhere
+- `python -B .../finish.py`: independent private POST copied, restored elsewhere
   and opened read-only; live/cold/restored byte equality PASS. Measured working
   `db.18664`, inventory
   `55b2bffa9d76a3eeea15acd0f50ae94a774539bb156bc21141cb0ede02761025`.
-  Tracked checkpoint inventory remains `745c00ad…`; no checkpoint refresh.
-- `python -B -m unittest tools.ghidra_cohort_framework_tests`: 93 tests PASS.
+  private Ghidra checkpoint inventory remains `745c00ad…`; no checkpoint refresh.
+- `python -B -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 93 tests PASS.
 - `python -B tools/public_allowlist_safety_check.py --self-test`,
   `npm run test:docs`, `npm run test:safety`, `git diff --check`: PASS.
 
@@ -7594,7 +7630,7 @@ and integer EAX returns; the raw release helper keeps AL storage as `uchar`.
 Explicit keys remain at stack +4. Exactly 8,327 other function rows and every
 local, type, bookmark and stack row are unchanged. The only program-metric
 change is the comment digest. All nine live exports equal separately reopened
-rehearsal; the independently restored Archive A POST matches the working project.
+rehearsal; the independently restored private POST matches the working project.
 
 Executed private driver:
 `python -B local-data/test-runs/re-audit-20260926/controller-key-query/original_key_query.py`.
@@ -7610,20 +7646,19 @@ Cohort commands, inputs, pins and receipts are under
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/input-key-abi/`:
 `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
 `compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`
-and `finish.py`. Fresh PRE restore, independent read-only review with root
-reproduction, live readback and independent POST restoration passed. Seven
+and `finish.py`. Fresh PRE restore, independent read-only review with an independent re-run, live readback and independent POST restoration passed. Seven
 controls reject stale/wrong signatures, comments, tags and specimen identity
 without attempting writes or changing project bytes. The first isolated seal
 is preserved in `rejected-v1/`; it never reached live and was replaced so two
 disproved historical claims are explicitly marked as such.
 
-`python -B -m unittest tools.ghidra_cohort_framework_tests`: 93 passed.
+`python -B -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 93 passed.
 `python -B tools/public_allowlist_safety_check.py --self-test`: passed.
-`npm run test:docs`: passed, with zero drifted or unresolved name assertions.
+`npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script): passed, with zero drifted or unresolved name assertions.
 `npm run test:safety` and `git diff --check`: passed. The first docs run correctly
 refused missing/malformed evidence headers; those were corrected and the full
 docs gate rerun. Both outcomes remain in this cohort's private gate logs. The full contract is in
-[the keyboard recheck](reverse-engineering/binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-26-keyboard-recheck).
+[frozen note: the keyboard recheck](reverse-engineering/binary-analysis/cpccontroller-vtable-semantics-2026-08-11.md#september-26-keyboard-recheck).
 
 ## RE startup identities — September 26
 
@@ -7633,7 +7668,7 @@ and `CPCSoundManager__DeviceInit`. It preserves every prototype shape,
 parameter/local storage, type, bookmark, body and all 8,327 non-target function
 rows. All 979 selected instructions are unchanged; the nine live exports equal
 the separately reopened rehearsal. Only the comment digest changes among
-program metrics. Independent Archive A POST restoration passed; the tracked
+program metrics. Independent private POST restoration passed; the tracked
 checkpoint remains unchanged.
 
 Private commands and receipts are under
@@ -7642,7 +7677,7 @@ Private commands and receipts are under
 `compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`
 and `finish.py`. Five controls reject stale comments, name collisions and wrong
 readback names/comments/tags without attempting writes or changing project
-bytes. Independent read-only review and root reproduction checked body hashes,
+bytes. Independent read-only review and an independent re-run checked body hashes,
 callers, RTTI, strings, source differences and the exact rehearsal delta.
 
 The consumer notes correct the retail main-font spelling, debug-font identity,
@@ -7653,9 +7688,9 @@ Earlier isolated parser results remain dated evidence, not rerun results.
 No new Windows startup, physical input, rendering, device or audible acceptance
 is claimed. Damage investigation is a subsequent, separate milestone.
 
-`python -m unittest tools.ghidra_cohort_framework_tests`: 93 passed.
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 93 passed.
 `python tools/public_allowlist_safety_check.py --self-test`: passed.
-`npm run test:docs`: passed with zero drifted or unresolved name assertions.
+`npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script): passed with zero drifted or unresolved name assertions.
 `npm run test:safety` and `git diff --check`: passed. The first docs gate required
 removing a newly conforming CLI reference from the header backlog; that entry
 was removed and the full gate rerun. Both outcomes are retained in private logs.
@@ -7674,9 +7709,9 @@ Two separately preserved cohorts correct the existing analysis:
   and 8,330 non-target function rows remain. Seven refusal controls passed.
 
 Each cohort passed fresh PRE restore/open, isolated dry/apply and separate/sealed
-readback, exact export comparison, independent review with root reproduction,
-live dry/apply/readback and independent Archive A POST restore/open. All nine
-live exports equal each cohort's rehearsal. Tracked checkpoint inventory remains
+readback, exact export comparison, independent review with an independent re-run,
+live dry/apply/readback and independent private POST restore/open. All nine
+live exports equal each cohort's rehearsal. private Ghidra checkpoint inventory remains
 `745c00ad15a0fc1c3098533143caded4b1b825583322669df22699b5e99585a5`.
 Commands and outputs remain under the two corresponding directories in
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/`:
@@ -7706,7 +7741,7 @@ use the correct Damage offsets. The historical applier/plate copied three
 incorrect offsets; frozen receipts and that hash-pinned applier were preserved.
 Deleted TTD sessions were not replayed or queried.
 
-`python -m unittest tools.ghidra_cohort_framework_tests`: 93 passed after each
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 93 passed after each
 cohort registration. `python tools/public_allowlist_safety_check.py --self-test`
 passed. Final documentation/public-payload gates are recorded below after the
 shared audit-tool changes.
@@ -7718,7 +7753,7 @@ shared audit-tool changes.
 new slots and derived overrides, overload ambiguity, graph/source identity
 agreement, scalar and enum return handling, exact-name candidates and input
 pins. Independent read-only review found three additional false-classification
-cases; the root agent reproduced and corrected each, then reran the tests.
+cases; an independent re-run reproduced and corrected each, then reran the tests.
 The follow-up review found no blocker within the stated partial-parser limits.
 
 The specimen-bound run uses the cockpit ABI cohort's `live-post/functions.tsv`
@@ -7754,7 +7789,7 @@ branches are fail-closed substitutes and were not entered. Full game, Windows,
 UI and save-publication acceptance are not established. The grade ABI correction
 is documented but has not been promoted to Ghidra.
 
-`npm run test:docs`: passed with zero drifted or unresolved name assertions.
+`npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script): passed with zero drifted or unresolved name assertions.
 The first attempt found the grade note's missing binary trailer; it was fixed
 and the complete docs gate rerun. `npm run test:safety`: passed for 4,109 public
 candidate files, including submodules. `git diff --check`: passed. Logs remain
@@ -7766,7 +7801,7 @@ in the same private owner (`docs.log`, `docs-final.log`, `safety-final.log` and
 The exact 16-row `header-interface-identities-20260926` cohort passed fresh
 PRE restoration, dry/apply/separate and sealed rehearsal readback, five
 byte-stable refusal controls, independent review, live readback and independently
-restored Archive A POST. All nine live exports equal rehearsal; 8,315 other
+restored private POST. All nine live exports equal rehearsal; 8,315 other
 function rows, prototypes, variables, types, instructions and bodies remain
 unchanged. The first seal is retained under `rejected-v1/` after four authored
 comment errors were caught before live application. The current name projection
@@ -7786,13 +7821,13 @@ run. `python local-data/test-runs/re-audit-20260926/initializer-load/original_lo
 1,288 cases passed across seven unchanged original loader bodies, with 1,072
 distinct input payloads, in `run-5iwdk7m0/`. PE/ELF identity, version boundaries,
 request order, complete object snapshots and ABI guards passed. Independent
-review checked the loader harness and 126 retained pairs; root executed all
-cases. The [contract](reverse-engineering/game-mechanics/world-initializer-copy-load.md)
+review checked the loader harness and 126 retained pairs; an independent run executed all
+cases. The [contract](https://github.com/dlprentice/onslaught-preservation/blob/main/engine/world/world-initializer-copy-load.md)
 pins both frozen drivers/results and states the limits. The reader is intercepted;
 Spawner loading, short/zero reads, full-game construction and runtime acceptance
 are not established. No Godot or desktop run occurred.
 
-`npm run test:docs` passed with zero drifted or unresolved name assertions;
+`npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero drifted or unresolved name assertions;
 the initial attempt exposed three missing provenance/header fields, which were
 corrected. `npm run test:safety` passed for 4,116 public candidate files,
 including submodules. `git diff --check` passed. Gate logs are in the cohort
@@ -7803,13 +7838,13 @@ owner above (`focused-tests.log`, `docs.log`, `docs-final.log`, `safety.log`,
 
 The exact 80-row `compiler-destructor-verified-20260927` cohort passed fresh
 PRE restoration, rehearsal with separate/sealed readbacks, five byte-stable
-refusal controls, independent payload/proof review with root reproduction,
-live readback and an independently restored Archive A POST. All nine live
+refusal controls, independent payload/proof review with an independent re-run,
+live readback and an independently restored private POST. All nine live
 exports equal rehearsal. Every name, prototype, body and instruction remains
 unchanged; 8,251 other function rows remain exact. Only comments and tags change.
 The preceding 33 normalized entries and seven withheld entries are excluded.
 
-Root and the independent reviewer checked all 880 wrapper instructions against
+A separate check and the independent reviewer checked all 880 wrapper instructions against
 2,560 pristine bytes and compared v3/v4 body/RTTI/admission proof structures.
 They are identical; the prior fresh family proof remains applicable. The private
 comparison helper's copied 14-row assertion was corrected to 80 before use.
@@ -7817,7 +7852,7 @@ A retained CRound RET 8 note is explicitly an unverified historical lead; the
 new authored entry evidence states the measured RET 4. No name-driven reseal,
 prototype change or runtime acceptance is claimed.
 
-`python -m unittest tools.ghidra_cohort_framework_tests`: 93 passed.
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 93 passed.
 `verify_projection.py` matches all 8,331 live function names and independently
 deduplicates the running counts: 1,874 unique corrected names (1,875 rename
 rows), 220 additional kept names, 2,098 updated comments and 6,237 names outside
@@ -7825,7 +7860,7 @@ the accounted set. These are identity dispositions with stated limits.
 Commands and private receipts:
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/compiler-destructor-verified/`.
 
-`npm run test:docs` passed with zero drifted or unresolved name assertions.
+`npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero drifted or unresolved name assertions.
 `npm run test:safety` passed for 4,122 public candidate files, including
 submodules. `git diff --check` passed. The same private owner contains
 `framework-tests.log`, `projection.log`, `docs.log` and `safety.log`.
@@ -7840,14 +7875,13 @@ or body extents change. The Options instruction count changes from 69 to 68;
 8,330 other function rows remain exact.
 
 PRE restoration, reviewed rehearsal, separate/sealed readbacks, six real-database
-byte-stable refusal controls, independent method/payload review with root
-reproduction, live readback and independently restored Archive A POST passed.
+byte-stable refusal controls, independent method/payload review with an independent re-run, live readback and independently restored private POST passed.
 All nine live exports equal the reviewed rehearsal. Earlier rehearsal and
 refused PRE attempts remain preserved; the comparison helper was corrected to
 expect the single target instruction-count change instead of requiring every
 function field to remain equal.
 
-`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed. Its Java
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 94 passed. Its Java
 execution cases cover the production instruction-repair guards, 19 refusals
 and equal-count outside instruction/reference changes. Private receipts and
 exact commands: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/frontend-options-instruction/`.
@@ -7863,7 +7897,7 @@ constants were compared with the pristine specimen; the syscall refusal was
 verified. Results and exact input/output files are in sibling
 `run-5aleo33r/`. This is bounded original-code execution, not a rendered game,
 player test or validation of the earlier Options helpers. The re-derived
-[render contract](reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)
+[frozen note: render contract](reverse-engineering/binary-analysis/functions/FrontEnd.cpp/CFrontEnd__Render.md)
 records the opposite-endpoint argument and retail Credits/Screen Position IDs.
 
 `npm run test:docs` passed after restoring the render note's machine-readable
@@ -7890,12 +7924,12 @@ All 23 current bodies (2,573 instructions, 8,721 bytes) match pristine. The wide
 fresh proof covers 98 bodies, 10,814 instructions and 38,403 bytes.
 
 Rehearsal, separate/sealed readbacks, five byte-stable refusal controls,
-independent method/payload review with root reproduction, live readback and
-independently restored Archive A POST passed. All nine live exports equal
+independent method/payload review with an independent re-run, live readback and
+independently restored private POST passed. All nine live exports equal
 rehearsal; 8,308 non-target function rows and all target body/ABI fields stay exact.
 Program-scope changes are comment content and four added plate comments only.
 
-`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 94 passed.
 `verify_projection.py`: all 8,331 live names match the composed projection;
 1,897 unique corrected names (1,898 rename rows), 220 additional kept names,
 2,121 comment updates and 6,214 names outside the accounted set. These are
@@ -7908,7 +7942,7 @@ they were corrected, preserving the distinction between fresh interface/body
 proof and inherited behavior. The render note records the now-promoted Options
 name while keeping its saved ABI defect explicit. No Godot or desktop use.
 
-`npm run test:docs` passed with zero drifted/unresolved name assertions after
+`npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero drifted/unresolved name assertions after
 completing the edited Debriefing note's provenance/address header; earlier
 refusals remain in `docs.log`, `docs-final.log` and `docs-complete.log`, with the
 passing run in `docs-verified.log`. `npm run test:safety` passed for 4,126 public
@@ -7921,8 +7955,8 @@ The `frontend-page-verified-20260927` cohort retains 74 names and adds bounded
 interface evidence/comments/tags. The preceding 23 renames and 35 withheld
 candidates are excluded. Fresh PRE, dry/apply rehearsal, independent reopened
 and sealed readbacks, exact export comparison, five byte-stable refusal controls,
-independent read-only review/root reproduction, live dry/apply/readback and
-independently restored Archive A POST passed. All nine live exports equal the
+independent read-only review/independent re-run, live dry/apply/readback and
+independently restored private POST passed. All nine live exports equal the
 rehearsal; all names/prototypes, 8,184 instruction rows and 8,257 non-target
 functions are preserved. Current projection equals all 8,331 live names.
 
@@ -7941,7 +7975,7 @@ repeated. Rejected receipts remain in the owner. No checkpoint refresh occurred.
 `python local-data/test-runs/re-audit-20260926/frontend-options/original_clock.py`
 passed 166 unchanged original-span cases. Final report:
 `local-data/test-runs/re-audit-20260926/frontend-options/clock-run-723chelg/clock.json`.
-Independent review and root reproduction checked all 332 retained input/output
+Independent review and an independent re-run checked all 332 retained input/output
 files. The earlier `clock-run-q2b1ts4_` is preserved: rounded case labels caused
 20 earlier file pairs to be overwritten, so it was superseded by unique IDs and
 exclusive artifact creation, followed by a complete rerun. The finding survives:
@@ -7949,10 +7983,10 @@ retail uses a filtered float clock and compares the extended counter before its
 stored binary32 rounding. No Godot, game window, physical input or full retail
 acceptance occurred. Bounds are in the existing Process/Render notes.
 
-Publication checks: `npm run test:docs` passed with zero drifted name assertions;
+Publication checks: `npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero drifted name assertions;
 `npm run test:safety` passed over 4,128 candidates; `git diff --check` passed.
 The cohort registration/framework check
-`python -m unittest tools.ghidra_cohort_framework_tests` passed 94 cases; final payload-only resealing did not change those framework sources.
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive) passed 94 cases; final payload-only resealing did not change those framework sources.
 Logs: `docs.log`, `safety.log`, `framework-tests.log`, `projection.log` in the
 private cohort owner. These checks do not certify full page behavior or ABI.
 
@@ -7961,8 +7995,8 @@ private cohort owner. These checks do not certify full page behavior or ABI.
 The `camera-position-20260927` cohort corrects nine current/previous position
 method names, comments and tags. Fresh independent PRE restoration, revised
 rehearsal, separate/sealed readbacks, exact export comparison, five byte-stable
-refusal controls, independent read-only review with root reproduction, live
-readback and independently restored Archive A POST passed. All nine live
+refusal controls, independent read-only review with an independent re-run, live
+readback and independently restored private POST passed. All nine live
 exports equal rehearsal; 1,660 code bytes / 519 instructions, every prototype
 and 8,322 non-target functions are unchanged. Four comments were added where
 none existed; only the program comment count/digest change. The tracked
@@ -7981,7 +8015,7 @@ The final projection matches all 8,331 live names. Deduplicated counts:
 outside the accounted set; 22 prototypes and 2,327 comments are separate counts.
 
 `python -m unittest tools.re_name_evidence_tests` passed 113 cases;
-`python -m unittest tools.ghidra_cohort_framework_tests` passed 94. Independent
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive) passed 94. Independent
 review findings about extra reads, wrapped offsets, partial-register clobbers,
 entry argument overwrite, scalar-return contradictions and interior re-entry
 were reproduced and added as refusal controls. Source/receiver/result witness
@@ -8017,14 +8051,13 @@ updated comments are 2,330. This is not full ABI or semantic coverage.
 
 The declared `camera-copy-abi-20260927` gate passed fresh PRE restoration,
 rehearsal, separate/sealed readbacks, exact export/parameter comparisons, seven
-byte-stable refusal controls, independent payload/PRE review with root
-reproduction, live readback and independently restored Archive A recovery.
+byte-stable refusal controls, independent payload/PRE review with an independent re-run, live readback and independently restored private recovery.
 All nine live exports equal rehearsal. The first dry seal correctly refused
-empty base64 for an absent comment; no writes were attempted. Root proved the
+empty base64 for an absent comment; no writes were attempted. A separate check proved the
 replica and live owner still equal cold PRE, preserved that seal/log under
 `rejected-v1/`, changed only the field to the null sentinel and reran the gate.
 No checkpoint refresh occurred. The earlier 30 original-code cases and two
-mutants were reused, not rerun; root freshly decoded all 193 pristine bytes.
+mutants were reused, not rerun; a separate check freshly decoded all 193 pristine bytes.
 
 Commands/results are under
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/camera-copy-abi/`:
@@ -8044,17 +8077,17 @@ its candidate names are not counted as promoted.
 The `device-lifecycle-20260927` cohort corrects 31 method names, comments and
 tags across 40 known RTTI holder uses. Exact fresh PRE restoration, revised
 rehearsal, separate/sealed readbacks, five byte-stable refusal controls,
-independent review with root reproduction, live readback and independently
-restored Archive A POST passed. All nine live exports equal rehearsal; 3,716
+independent review with an independent re-run, live readback and independently
+restored private POST passed. All nine live exports equal rehearsal; 3,716
 body bytes / 1,282 instructions, every prototype and 8,300 non-target rows are
-unchanged. The tracked checkpoint is unchanged. The projection matches all
+unchanged. The private Ghidra checkpoint is unchanged. The projection matches all
 8,331 live names: 2,031 unique corrected, 317 additional kept, zero newly
 neutralized, 5,983 outside the accounted set. Prototype corrections remain 28;
 2,361 unique comments have been updated. These are audit dispositions, not
 semantic or runtime parity percentages.
 
 The first seal was rejected before live: eight Restore comments cited a result
-test one source line after the actual call. Root reproduced the difference,
+test one source line after the actual call. An independent re-run reproduced the difference,
 retained the rejected seal and successful first rehearsal, changed exactly the
 eight citation digits, then reran fresh preservation/rehearsal/review/refusals.
 Final receipts and exact commands are under
@@ -8065,8 +8098,8 @@ Final receipts and exact commands are under
 identities are recorded in the Ghidra README and current authority object.
 
 `python -m unittest tools.re_name_evidence_tests tools.re_source_graph_tests`
-passed 144 cases; `python -m unittest tools.ghidra_cohort_framework_tests`
-passed 94. Review/root counterexamples exposed source type/identifier lookalikes,
+passed 144 cases; `python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive)
+passed 94. Review and re-run counterexamples exposed source type/identifier lookalikes,
 receiver shadowing and branch/guard bypasses, which the checker now refuses.
 The proof preserves normal callee ABI/readable post-callback node premises and
 retail/source ordering differences. Two shared stubs and a texture initializer
@@ -8077,7 +8110,7 @@ Evidence and logs: `local-data/test-runs/re-audit-20260926/device-lifecycle/`.
 Tool/framework logs are `tool-tests-v3.log` and `framework-v2-tests.log`;
 recovery and projection logs are `finish-v2-run.log` and `projection-v2-run.log`.
 
-Publication checks: `npm run test:docs` passed with zero name drift and
+Publication checks: `npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero name drift and
 `npm run test:safety` passed over 4,152 candidate files. Initial header-check
 failures exposed a missing Binary trailer and an unsupported evidence-grade
 word; those were corrected without adding a backlog exemption. Logs:
@@ -8088,10 +8121,10 @@ word; those were corrected without adding a backlog exemption. Logs:
 
 The `startup-shell-20260927` cohort corrects eight names, comments and tag sets.
 Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
-refusal controls, independent review/root reproduction, live readback and
-independently restored Archive A POST passed. All nine live exports equal
+refusal controls, independent review/independent re-run, live readback and
+independently restored private POST passed. All nine live exports equal
 rehearsal; every prototype, 1,538 body bytes / 492 instructions and 8,323
-non-target function rows are unchanged. The tracked checkpoint is unchanged.
+non-target function rows are unchanged. The private Ghidra checkpoint is unchanged.
 The current projection exactly matches all 8,331 live entries: 2,039 unique
 corrected names, 317 additional kept, zero newly neutralized and 5,975 outside
 the accounted set. Prototype corrections remain 28; 2,369 unique comments
@@ -8123,7 +8156,7 @@ Logs are under `local-data/test-runs/re-audit-20260926/startup-shell/`:
 `framework-tests.log`, `messages-run.log`, `live.log`, `finish.log` and
 `projection.log`.
 
-Publication checks: `npm run test:docs` passed with zero name drift, and
+Publication checks: `npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero name drift, and
 `npm run test:safety` passed over 4,154 candidate files. `git diff --check`
 passed. Logs: `docs-final.log` and `safety-final.log` in that same evidence owner.
 
@@ -8134,14 +8167,14 @@ set. The former no-argument cdecl declaration becomes a source/caller-correlated
 shell member with automatic ECX `this` and one undefined4 stack format argument.
 The body reads neither; existing int/EAX return, stack purge 4, local size,
 eight code bytes / two instructions and all 8,330 other functions are unchanged.
-Nine full live exports equal rehearsal; independently restored Archive A POST
-matches live and the tracked checkpoint remains unchanged. The full projection
+Nine full live exports equal rehearsal; independently restored private POST
+matches live and the private Ghidra checkpoint remains unchanged. The full projection
 matches 8,331 entries: 2,040 corrected names, 317 additional kept, zero newly
 neutralized and 5,974 outside the accounted set. Prototype corrections total
 29 and unique updated comments total 2,370; these are not parity percentages.
 
 Fresh PRE restoration, rehearsal, separate/sealed readbacks, nine byte-stable
-refusal controls, independent exact-payload/POST review and root reproduction,
+refusal controls, independent exact-payload/POST review and an independent re-run,
 live readback and POST restoration passed. Commands and receipts are under
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/getbpp-abi/`:
 `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
@@ -8160,7 +8193,7 @@ Evidence/logs: `local-data/test-runs/re-audit-20260926/getbpp-abi/`, including
 `comparison.log`, `comparison-final.log`, `framework-tests.log`, `live.log`,
 `finish.log` and `projection.log`.
 
-Publication checks: `npm run test:docs` passed with zero name drift, and
+Publication checks: `npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero name drift, and
 `npm run test:safety` passed over 4,156 candidate files. `git diff --check`
 passed. Logs: `docs-final.log` and `safety-final.log` in the same evidence owner.
 
@@ -8175,8 +8208,8 @@ comments or tags. Its source-correlated identity/interface requires another coho
 Pristine specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`,
 SHA-256 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 Fresh PRE restore, rehearsal, separate/sealed readback, five byte-stable refusal
-controls, independent review/root reproduction, live readback and independently
-restored Archive A POST passed. All nine live exports equal rehearsal. The
+controls, independent review/independent re-run, live readback and independently
+restored private POST passed. All nine live exports equal rehearsal. The
 complete name projection matches 8,332 entries: 2,040 corrected, 317 additionally
 kept and 5,975 outside those sets; zero newly neutralized. Existing prototype
 and comment counts are unchanged. No Windows/device acceptance was performed.
@@ -8187,8 +8220,8 @@ Commands and receipts under
 `compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
 `finish.py` and `verify_projection.py`. Logs are in the corresponding
 `local-data/test-runs/re-audit-20260926/window-callback-boundary/` directory.
-`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
-`npm run test:docs` passed with zero drifted name assertions;
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 94 passed.
+`npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero drifted name assertions;
 `npm run test:safety` passed across 4,158 candidate files. `git diff --check` passed.
 
 ## RE ordered frontend argument checker — September 27
@@ -8213,7 +8246,7 @@ in this optional route; the existing identity-only route is unchanged.
 The private `frontend-options/ordered_argument_proof.py` rerun admitted all
 22 selected targets through 32 known holder words. The timed transition
 counterexample carries page on the stack while EDX holds a vptr. Independent
-review checked the packet and its 23 code-span pins; root reproduced the
+review checked the packet and its 23 code-span pins; an independent re-run reproduced the
 instructions and inputs. This establishes a proposed argument-storage
 correction, not a live promotion or full menu/runtime acceptance.
 
@@ -8233,7 +8266,7 @@ undefined/unassigned returns), locals, stack cleanup, 2,234 instructions and
 
 Fresh PRE restore, dry/apply rehearsal, separate/sealed readbacks, seven
 byte-stable refusal controls, independent exact-payload/POST review, live
-readback and independently restored Archive A POST passed. All nine live
+readback and independently restored private POST passed. All nine live
 exports equal rehearsal. The 8,332-entry name projection matches live; counts
 remain 2,040 corrected names, 317 additional kept, zero newly neutralized and
 5,975 outside those sets. Interface corrections rise to 51; unique corrected
@@ -8246,9 +8279,9 @@ Commands and receipts under
 `compare_exports.py rehearsal-post`, `negative_controls.py`, `apply_live.py`,
 `finish.py` and `verify_projection.py`. Logs use prefix `argument-abi-` under
 `local-data/test-runs/re-audit-20260926/frontend-options/`.
-`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 94 passed.
 `npm run test:safety`: passed across 4,160 candidate files.
-`npm run test:docs`: passed with zero drifted name assertions after fixing the
+`npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script): passed with zero drifted name assertions after fixing the
 SetPage note's missing source header and the contract's evidence prefix. Both
 the initial failure and final result are retained in `argument-abi-docs.log`
 and `argument-abi-docs-final.log`. `git diff --check` passed.
@@ -8286,7 +8319,7 @@ callee compliance and arbitrary indirect callers remain unproved.
 Evidence/logs: `local-data/test-runs/re-audit-20260926/frontend-options/`:
 `cleanup-review-negatives-before.log`, `cleanup-suite-v2.log`,
 `cleanup-admission-v2.log` and `cleanup-admission-v2.json`. Independent read-only
-review approved the bounded mechanism; root reproduced the counterexamples and
+review approved the bounded mechanism; an independent re-run reproduced the counterexamples and
 checked the real packet. Exact cohort payload review remains a separate gate.
 
 ## RE window callback identity and interface — September 27
@@ -8299,14 +8332,14 @@ Retained original-code outputs were inspected, not rerun; Windows/device
 acceptance was not performed.
 
 Fresh PRE restore, rehearsal, separate/sealed readback, nine byte-stable refusal
-controls, independent exact-payload review with root reproduction, live
-readback and independently restored Archive A POST passed. All nine live
+controls, independent exact-payload review with an independent re-run, live
+readback and independently restored private POST passed. All nine live
 exports match rehearsal. All 8,331 other function records, locals, types and
 code are preserved. Saved stack purge remains unknown, while RET16 proves
 physical cleanup. Exactly one comment and one DEFAULT-to-USER_DEFINED symbol
 change accompany the declared metadata correction.
 
-`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed. The current
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 94 passed. The current
 projection matches all 8,332 live names: 2,041 corrected, 317 additional kept,
 zero newly neutralized and 5,974 outside those sets. Prototype corrections are
 52; unique corrected comments are 2,371. These are audit dispositions, not
@@ -8318,7 +8351,7 @@ Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/window-callback-abi/`.
 Logs use prefix `abi-` under
 `local-data/test-runs/re-audit-20260926/window-callback-boundary/`.
-`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero drifted name assertions;
 `npm run test:safety` passed across 4,162 candidate files. `git diff --check` passed.
 
 
@@ -8332,11 +8365,11 @@ All 16,761 previous comment bytes remain verbatim as explicitly fallible leads.
 This adds no complete cleanup, exception-path or retail runtime acceptance.
 
 The already-tested admission tool's 152 cases and revised fresh-input packet
-support this scope. Exact independent payload/POST review, root reproduction,
+support this scope. Exact independent payload/POST review, independent re-run,
 restored PRE, rehearsal, separate/sealed readbacks, five byte-stable refusal
-controls, live readback and independently restored Archive A POST passed.
+controls, live readback and independently restored private POST passed.
 All nine live exports equal rehearsal; only the program comment digest changes.
-`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 94 passed.
 
 `verify_projection.py` matches all 8,332 live names: 2,041 corrected, 360
 additional verified/kept, zero newly neutralized and 5,931 outside those sets.
@@ -8350,7 +8383,7 @@ Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/cleanup-body-verified/`.
 Evidence and execution logs use `cleanup-` under
 `local-data/test-runs/re-audit-20260926/frontend-options/`.
-`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero drifted name assertions;
 `npm run test:safety` passed. `git diff --check` passed.
 
 
@@ -8367,10 +8400,10 @@ subsystem/wave tags are qualified in the living function map. Historical July
 records retain their narrower withdrawal scope and original table spellings.
 
 Fresh PRE restoration, rehearsal/separate/sealed readback, five byte-stable
-refusal controls, independent exact review, root reproduction, live readback and
-independent Archive A POST restoration passed. All nine live exports equal the
+refusal controls, independent exact review, independent re-run, live readback and
+independent private POST restoration passed. All nine live exports equal the
 rehearsal; only the program comment digest changes. The saved signature text
-changes only its function name. `python -m unittest tools.ghidra_cohort_framework_tests`:
+changes only its function name. `python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive):
 94 passed. Current projection matches 8,332 entries: 2,042 corrected, 360
 additional kept, zero newly neutralized and 5,930 outside the accounted sets;
 52 prototype corrections and 2,415 unique updated comments are separate dimensions.
@@ -8381,7 +8414,7 @@ Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
 `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/postevent-cleanup/`.
 Execution logs use `postevent-` under
 `local-data/test-runs/re-audit-20260926/frontend-options/`.
-`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero drifted name assertions;
 `npm run test:safety` passed across 4,166 candidate files. `git diff --check` passed.
 
 ## RE console-menu interface evidence — September 27
@@ -8397,7 +8430,7 @@ complete prototypes, implementation ownership or runtime effects.
 
 Independent read-only review exposed inline conditional definitions, source-name
 macros, duplicate construction addresses with different spellings, partial-register
-clobbers and class-aggregated RTTI losing table-specific ancestry. Root reproduced
+clobbers and class-aggregated RTTI losing table-specific ancestry. An independent re-run reproduced
 the failures before fixing them, including a raw descendant omitted by aggregated
 family discovery. Stack/segment writes and malformed ancestry have adverse cases.
 `python -m unittest tools.re_name_evidence_tests`: **164 passed** after the fixes.
@@ -8427,8 +8460,8 @@ used that seal. The revised packet is `override-admission-v5.json` with
 `override-anchors-v5.json`; the reviewed tool and 164-test result are unchanged.
 
 Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
-refusal controls, independent exact review with root reproduction, live readback
-and independent Archive A POST restoration passed. All nine live exports equal
+refusal controls, independent exact review with an independent re-run, live readback
+and independent private POST restoration passed. All nine live exports equal
 rehearsal. The first registration helper stopped on an ambiguous text match,
 leaving a partial allowlist update; its framework run correctly failed. After
 completing the exact four registrations, **all 94 framework tests passed before
@@ -8471,10 +8504,10 @@ names, interfaces, locals, types and 8,323 other functions remain unchanged. All
 signature/wave tags do not certify complete ABI or behavior.
 
 Fresh PRE restoration, rehearsal/separate/sealed readbacks, five byte-stable
-refusal controls, independent exact review with root reproduction, live readback
-and independent Archive A POST restoration passed. All nine live exports equal
+refusal controls, independent exact review with an independent re-run, live readback
+and independent private POST restoration passed. All nine live exports equal
 rehearsal; the program comment digest is the only changed program metric.
-`python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 94 passed.
 The projection matches all 8,332 live entries: 2,054 unique corrected names,
 369 additional kept, zero newly neutralized and 5,909 outside those sets.
 Prototype corrections remain 52; corrected comments total 2,436 unique functions.
@@ -8487,7 +8520,7 @@ Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
 Execution logs use `kept-` under
 `local-data/test-runs/re-audit-20260926/console-menu/`.
 
-`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero drifted name assertions;
 `npm run test:safety` and `git diff --check` passed.
 
 
@@ -8502,9 +8535,9 @@ The initial exact comparator rejected that expected provenance transition;
 its target-specific expectation was corrected without altering the sealed payload.
 
 Fresh PRE restoration, rehearsal/separate/sealed readbacks, seven byte-stable
-refusal controls, exact independent review with root reproduction, live readback
-and independent Archive A POST restoration passed. All nine live exports equal
-rehearsal. `python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed.
+refusal controls, exact independent review with an independent re-run, live readback
+and independent private POST restoration passed. All nine live exports equal
+rehearsal. `python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 94 passed.
 The name projection matches all 8,332 entries; names remain 2,054 corrected,
 369 additionally kept and 5,909 outside those sets. Prototype corrections become
 53; updated comments remain 2,436 unique functions.
@@ -8522,7 +8555,7 @@ Commands/receipts: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
 Execution logs use `vertex-abi-` under
 `local-data/test-runs/re-audit-20260926/console-menu/`.
 
-`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero drifted name assertions;
 `npm run test:safety` passed across 4,172 candidate files. `git diff --check` passed.
 
 
@@ -8562,7 +8595,7 @@ interfaces, variables, locals, types, two thunk links and 8,322 other function
 records are unchanged. No old tags were removed.
 
 Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
-refusal controls, independent exact review with root reproduction, live
+refusal controls, independent exact review with an independent re-run, live
 readback and independent POST restoration passed. All nine live exports equal
 rehearsal. The complete source packet retains its actual earlier export pin;
 `report-pre-binding.json` proves only the intervening vertex argument row differs
@@ -8583,7 +8616,7 @@ configured-volume behavior. Older demo and original-code runs were not rerun.
 Complete device ABI, worker timing, filesystem and audible acceptance remain open;
 eight kept shared names await separate live comment disposition. No Godot ran.
 
-`npm run test:docs` passed with zero drifted name assertions;
+`npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero drifted name assertions;
 `npm run test:safety` passed across 4,174 candidate files. `git diff --check` passed.
 
 
@@ -8600,8 +8633,8 @@ The infantry slot-38 tag is corrected to slot 39 with its true table base;
 or incomplete cases and eight kept names remain outside this cohort.
 
 Fresh PRE restoration, rehearsal, separate/sealed readbacks, five byte-stable
-refusal controls, independent exact review with root reproduction, live readback
-and independent Archive A POST restoration passed. All nine live exports match
+refusal controls, independent exact review with an independent re-run, live readback
+and independent private POST restoration passed. All nine live exports match
 rehearsal. Two superseded seals remain under `rejected-v1`/`rejected-v2`;
 review caught overclaimed parser independence, slot/prose defects and precise
 pointer/value wording before live writes. Same-parser cache agreement is not
@@ -8625,7 +8658,7 @@ finite body facts do not establish full derived behavior or runtime parity.
 No Godot or retail game was launched. The next physical-interface cohort is
 separate from these counts.
 
-`npm run test:docs` passed with zero drifted assertions; `npm run test:safety`
+`npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero drifted assertions; `npm run test:safety`
 passed across 4,176 candidate files. `git diff --check` passed. Detailed output
 is in `thing-gameplay/docs.log` and `thing-gameplay/safety.log` under the log owner above.
 
@@ -8640,8 +8673,8 @@ Tree Damage changes only its misleading parameter name to `amount`.
 Specimen SHA-256: `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
 
 Fresh PRE restore/census, rehearsal and separate/sealed readbacks, seven byte-stable
-refusal controls, independent exact review with root reproduction, live readback
-and independent Archive A POST restoration passed. All nine live exports equal
+refusal controls, independent exact review with an independent re-run, live readback
+and independent private POST restoration passed. All nine live exports equal
 rehearsal. The comparator initially expected USER_DEFINED for fourteen default
 parameter names; installed Ghidra source proved DEFAULT is required. That
 expectation was corrected and independently reproduced, with no mutation change.
@@ -8660,7 +8693,7 @@ neutralized, 5,839 outside those sets; 85 corrected interfaces and 2,506 comment
 Ten custom-storage floating rows remain deferred. No Godot, retail execution,
 player or audible acceptance was performed for this static metadata cohort.
 
-`npm run test:docs` passed with zero drifted assertions; `npm run test:safety`
+`npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero drifted assertions; `npm run test:safety`
 passed across 4,178 candidate files. `git diff --check` passed. Detailed output
 is in `thing-gameplay/abi-docs.log` and `thing-gameplay/abi-safety.log` under the log owner above.
 
@@ -8677,7 +8710,7 @@ and `git diff --check` also passed. Their logs use the `storage-retention-`
 prefix in the same private output owner below.
 
 The authorized cleanup separately compared 100 real project pairs against
-retained Archive A recovery with fresh per-file hashes immediately before
+retained private recovery with fresh per-file hashes immediately before
 removal. All 100 manifests and original restore receipts were checked unchanged
 afterward; 89 excluded projects remain. Working/checkpoint hashes also remained
 unchanged. No Ghidra was opened and no new restore-open result is claimed.
@@ -8699,12 +8732,12 @@ external consumer or a pointer return in C++ syntax.
 
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
-Root re-derived all eight bodies and eleven complete caller spans. The initial
+A separate check re-derived all eight bodies and eleven complete caller spans. The initial
 caller-window disassembly was not admitted because its arbitrary starts could
 misalign instructions; `abi-caller-objdump-v2.log` starts at each complete caller.
 Fresh PRE restoration, rehearsal, separate/sealed readbacks, eight byte-stable
-refusal controls, independent exact review with root reproduction, live readback
-and independent Archive A POST restoration passed. Removing the thunk dependency
+refusal controls, independent exact review with an independent re-run, live readback
+and independent private POST restoration passed. Removing the thunk dependency
 fails before writes. All nine live exports equal rehearsal; 339 bytes / 121
 instructions, all names, frames and 8,324 non-target function records are unchanged.
 All 15 target variable records match the correction; 32,711 other records remain
@@ -8715,15 +8748,15 @@ Commands: `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
 `apply_live.py`, `compare_exports.py live-post`, `finish.py` and `verify_projection.py`
 in `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/sptrset-abi/`.
 Logs: `local-data/test-runs/re-audit-20260926/sptrset/abi-*`.
-`PYTHONPATH=tools python -m unittest tools.ghidra_cohort_framework_tests` passed
+`PYTHONPATH=tools python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive) passed
 94 tests. The full 8,332-row name projection equals live: 2,139 unique corrected
 names, 377 additional kept, zero newly neutralized, 5,816 outside those sets;
 93 corrected interfaces and 2,529 corrected comments are separate dimensions.
 After all gates, the closeout retired only the freshly hash-matched control-PRE
 and POST-open project payloads. Their manifests, original receipts and all other
-evidence remain; Archive A recovery and the differing rehearsal remain intact.
+evidence remain; private recovery and the differing rehearsal remain intact.
 
-`npm run test:docs` passed with zero drifted assertions; `npm run test:safety`
+`npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero drifted assertions; `npm run test:safety`
 passed across 4,186 candidate files; `git diff --check` passed. Logs are
 `abi-docs.log` and `abi-safety.log` in the execution owner above.
 
@@ -8794,7 +8827,7 @@ preprocessor/macro repairs and is not the final admission result. Independent
 read-only review accepted the final tool and eight witnesses; those results do
 not promote the pending sound identities or establish audible acceptance.
 
-`npm run test:docs` passed with zero drifted assertions; `npm run test:safety`
+`npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero drifted assertions; `npm run test:safety`
 passed across 4,186 candidate files; `git diff --check` passed. Logs are
 `direct-call-docs.log` and `direct-call-safety.log` in the same private owner.
 
@@ -8804,10 +8837,9 @@ The `sound-verified-20260927` comment/tag cohort retains 29 shared and 12 PC
 sound names. Complete pristine bodies cover 11,752 bytes / 3,885 instructions.
 Specimen: `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
-Pinned source commit: `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`.
+Pinned source commit: `5352a81cdb838b145a57f7febc5d9fc4b0129ebb` (as of 2026-09-27; not in this repository).
 
-The first seal was rejected before live use. Independent review and root
-instruction checks corrected five inlined stop-sequence descriptions, the
+The first seal was rejected before live use. Independent review and a separate instruction check corrected five inlined stop-sequence descriptions, the
 KillAllSamples backend flag (zero), and whole-DWORD versus normalized-DL wording.
 Its rehearsal, controls and seal remain under `sound-verified/rejected-v1/`.
 The final manifest is 169,820 bytes, SHA-256
@@ -8822,17 +8854,16 @@ Executed from the canonical checkout with the existing gate scripts under
   `compare_exports.py rehearsal-post`, `negative_controls.py`: PASS for the
   corrected seal. Five wrong-comment/tag/specimen cases refused without project
   byte changes. The PRE restoration and all nine exports match the prior state.
-- Independent exact-row reviews: GO for 29 shared and twelve PC rows, with root
-  reproduction. Saved interfaces, runtime devices and audible parity were not
+- Independent exact-row reviews: GO for 29 shared and twelve PC rows, with an independent re-run. Saved interfaces, runtime devices and audible parity were not
   certified by those identity reviews.
 - `apply_live.py`, `finish.py`, `verify_projection.py`: PASS. Exactly 41 comments
   and tag sets changed; all names, prototypes, code, variables and 8,291 other
   function records stayed unchanged. Nine live exports equal rehearsal; the
-  independently restored Archive A POST equals the working project. The tracked
+  independently restored private POST equals the working project. The tracked
   checkpoint remains unchanged. All 8,332 production name entries match live.
 - The closeout retired only its two successful exact PRE/control and POST-open
   twins, totaling 251,352,808 bytes. Both manifests and original receipts remain;
-  the changed rehearsal, rejected seal and all Archive A history remain. Exact
+  the changed rehearsal, rejected seal and all the private archive history remain. Exact
   targets and preservation checks are appended to the migration deletion queue.
 
 Fresh execution logs are under
@@ -8843,8 +8874,8 @@ the shared/PC `*-interface-candidates-v1.json` packets are not promoted results.
 retail-device or audible run was made by this cohort; the earlier event-queue
 experiment retains its separately stated scope.
 
-`python -m unittest tools.ghidra_cohort_framework_tests` passed all 94 cases
-against the final registered spec. `npm run test:docs` passed with zero drifted
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive) passed all 94 cases
+against the final registered spec. `npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero drifted
 assertions; `npm run test:safety` passed across 4,188 candidate files.
 `git diff --check` passed. The refreshed UpdateStatus function note now meets the
 current provenance-header rule and has been removed from the legacy backlog.
@@ -8855,7 +8886,7 @@ The ten-row `sound-abi-20260927` cohort corrects nine member-receiver
 annotations and IsEffectPlaying's bool/AL return to int/EAX. Complete targets
 cover 4,014 pristine bytes / 1,264 instructions. Specimen SHA-256:
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
-Pinned source: `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`.
+Pinned source: `5352a81cdb838b145a57f7febc5d9fc4b0129ebb` (as of 2026-09-27; not in this repository).
 Manifest: 86,322 bytes, SHA-256
 `ecac955001c06643e3392b2e7fe94627c31326f3e9c6930894bb6e56dcbf8b2e`.
 
@@ -8869,24 +8900,24 @@ Executed through the existing gate scripts in
   `negative_controls.py`: PASS. The untested first seal was retained after
   two source-line citation corrections. The final seal passes seven byte-stable
   refusals for stale/wrong signatures, comments, tags and specimen identity.
-- Independent exact-payload review: GO, with root reproduction. All ten PRE
+- Independent exact-payload review: GO, with an independent re-run. All ten PRE
   records, complete targets, four source pins, eleven complete caller bodies
   and 77 selected caller instructions were checked. Earlier notes remain leads.
 - `apply_live.py`, `compare_exports.py live-post`, `finish.py` and
   `verify_projection.py`: PASS. All nine live exports equal rehearsal; all
   8,322 non-target function rows, names, code, locals, frames and other frozen
-  metadata are unchanged. Independently restored Archive A POST equals live;
-  the tracked checkpoint is unchanged. All 8,332 name entries match the current
+  metadata are unchanged. Independently restored private POST equals live;
+  the private Ghidra checkpoint is unchanged. All 8,332 name entries match the current
   projection. The two successful exact scratch twins were retired after all
   gates, preserving original receipts/manifests and cold recovery.
-- `python -m unittest tools.ghidra_cohort_framework_tests`: 94 PASS against the
+- `python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 94 PASS against the
   final registered spec. Logs: the existing private sound owner's `abi-*` files.
 
 Separate original-code experiments `original_sample_lookup.py` and
 `original_sample_lookup_v2.py` each passed 76 cases and two altered-copy controls.
 Their saved input/output pairs, exact original body and compiled filter were
 independently reviewed; no second execution by the reviewer is claimed.
-[The shared note](reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.md#september-27-sample-lookup-correction)
+[frozen note: The shared note](reverse-engineering/binary-analysis/csoundmanager-shared-semantics-2026-08-11.md#september-27-sample-lookup-correction)
 owns the branch/argument findings and exact private output paths. Creation and
 ASCII comparison were intercepted. Memory equality covers the authored 4 KiB
 arena and two gates, not all process memory. No full loading, CRT collation,
@@ -8907,7 +8938,7 @@ physical parameter/return types, storage and calling conventions are unchanged.
 Complete targets cover 276 bytes / 122 instructions from pristine
 `BEA.exe.original.backup`, SHA-256
 `74154bfae14ddc8ecb87a0766f5bc381c7b7f1ab334ed7a753040eda1e1e7750`.
-Pinned source: `5352a81cdb838b145a57f7febc5d9fc4b0129ebb`.
+Pinned source: `5352a81cdb838b145a57f7febc5d9fc4b0129ebb` (as of 2026-09-27; not in this repository).
 Manifest: 10,681 bytes, SHA-256
 `d8ea10c9e14801f33c0d56261b124154dee2f15096b97010895c92a709f76543`.
 
@@ -8917,14 +8948,14 @@ Executed through existing scripts under
 - `prepare_preservation.py`, `prepare.py`, `rehearse.py`,
   `compare_exports.py rehearsal-post` and `negative_controls.py`: PASS.
   Nine stale/wrong-input refusals leave project bytes unchanged.
-- Independent exact-payload review: GO, with root reproduction. Both complete
+- Independent exact-payload review: GO, with an independent re-run. Both complete
   target bodies, six complete caller/callee witnesses, source pins and the
   1,155 preserved historical comment bytes were checked. Prior experiment
   records were inspected, not rerun or expanded into device acceptance.
 - `apply_live.py`, `compare_exports.py live-post`, `finish.py` and
   `verify_projection.py`: PASS. All nine live exports equal the independently
   reopened rehearsal. All 8,330 other function rows, physical interfaces,
-  code, locals and frames are unchanged. Archive A POST restored and reopened
+  code, locals and frames are unchanged. private POST restored and reopened
   read-only; the checkpoint remains unchanged. The full 8,332-name projection
   equals live. Counts: 2,141 unique corrected names, 418 verified/kept,
   5,773 outside that set, 2,572 corrected comments and 105 prototype records;
@@ -8937,23 +8968,23 @@ Fresh static GetSampleLength/caller decoding is recorded in
 `local-data/test-runs/re-audit-20260926/sound/sample-length-evidence-v1.json`.
 Five direct call sites support a member receiver but do not prove float versus
 double return width; no type correction or original-code run is claimed for
-that recheck. The [backend note](reverse-engineering/binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.md#getsamplelength-caller-and-precision-boundary--september-27)
+that recheck. The [frozen note: backend note](reverse-engineering/binary-analysis/cpcsoundmanager-backend-semantics-2026-08-11.md#getsamplelength-caller-and-precision-boundary--september-27)
 records the cutscene consumer and a proposed rounding discriminator. Exact
 gate logs remain in the same sound test-run owner as `source-*`.
 
-`python -m unittest tools.ghidra_cohort_framework_tests` passed all 94 cases
-against the final registered spec. `npm run test:docs` passed with zero drifted
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive) passed all 94 cases
+against the final registered spec. `npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero drifted
 or unresolved assertions; `npm run test:safety` passed across 4,192 candidate
 files. `git diff --check` passed. These gates do not establish audio acceptance.
 
 ### RE walker records and default input mapping — September 27
 
-The RE lane promoted `walker-verified-20260927`: 25 retained names, corrected
+The reverse-engineering notes promoted `walker-verified-20260927`: 25 retained names, corrected
 plate comments/tag sets, 7,121 unchanged code bytes / 2,224 instructions and
 8,307 untouched function records. The first successful disposable rehearsal
 was rejected for imprecise prose; its full seal and changed replica remain
 private under `rejected-v1/`. The corrected payload received independent exact
-review and root reproduction. No retail executable or checkpoint bytes changed.
+review and an independent re-run. No retail executable or checkpoint bytes changed.
 
 Executed in the existing audit owner, in order:
 
@@ -8961,17 +8992,17 @@ Executed in the existing audit owner, in order:
   `compare_exports.py rehearsal-post`: fresh PRE and all declared deltas passed.
 - `walker-verified/negative_controls.py`: five expected refusals, all project
   bytes unchanged.
-- `python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed after the
+- `python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 94 passed after the
   exact cohort allowlist registration.
 - `walker-verified/apply_live.py`, `compare_exports.py live-post` and `finish.py`:
-  exact live readback, all nine exports equal rehearsal, independent Archive A
+  exact live readback, all nine exports equal rehearsal, independent the private archive
   POST copied, hash-compared, restored elsewhere and opened read-only.
 - `walker-verified/verify_projection.py`: all 8,332 projected names equal live.
   Cumulative dispositions: 2,141 unique corrected names, 443 additional kept,
   zero newly neutralized, 5,748 outside the accounted set; 2,597 comments and
   105 prototype records corrected across the audit. These are audit counts,
   not game-understanding or parity percentages.
-- `npm run test:docs`: no drifted or unresolved name assertions; two rewritten
+- `npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script): no drifted or unresolved name assertions; two rewritten
   function notes required their standard Source File/Binary provenance fields,
   corrected before the passing run. `npm run test:safety`: 4,194 candidate files
   passed. Whitespace/diff inspection is part of commit closeout.
@@ -9005,11 +9036,11 @@ function records remain unchanged.
 The cohort's `prepare_preservation.py`, `prepare.py`, `rehearse.py` and
 `compare_exports.py rehearsal-post` passed. `negative_controls.py` passed nine
 no-write refusals with unchanged project bytes. Independent review checked the
-exact 48,943-byte manifest (`b97d29f5…e0d6d5`) and root reproduced the evidence.
-`python -m unittest tools.ghidra_cohort_framework_tests` passed 94 cases.
+exact 48,943-byte manifest (`b97d29f5…e0d6d5`) and an independent re-run reproduced the evidence.
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive) passed 94 cases.
 `apply_live.py`, `compare_exports.py live-post` and `finish.py` passed: all nine
-live exports equal rehearsal; the independent Archive A POST was copied,
-hash-compared, restored elsewhere and opened read-only. The tracked checkpoint
+live exports equal rehearsal; the independent private POST was copied,
+hash-compared, restored elsewhere and opened read-only. The private Ghidra checkpoint
 is unchanged. Only successful exact control/POST-open twins were retired, with
 the existing deletion queue recording every target and preservation proof.
 
@@ -9054,11 +9085,10 @@ is inlined within ChangeWeapon; no new function boundary is asserted.
 
 The cohort's `prepare_preservation.py`, `prepare.py`, `rehearse.py` and
 `compare_exports.py rehearsal-post` passed. Nine negative controls refused
-without changing any project bytes. Independent exact-manifest review and root
-reproduction agreed on the source, complete bodies and string-consuming caller.
-`python -m unittest tools.ghidra_cohort_framework_tests` passed 94 cases.
+without changing any project bytes. Independent exact-manifest review and an independent re-run agreed on the source, complete bodies and string-consuming caller.
+`python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive) passed 94 cases.
 `apply_live.py`, `compare_exports.py live-post` and `finish.py` passed: all nine
-live exports equal rehearsal; the Archive A POST was independently restored and
+live exports equal rehearsal; the private POST was independently restored and
 opened read-only. The checkpoint is unchanged. Successful exact probe twins
 were retired only after fresh comparisons, with existing deletion-queue records.
 
@@ -9080,18 +9110,18 @@ command logs: `local-data/test-runs/re-audit-20260926/walker/icon-*`.
 
 ## Jet weapon recheck and retained identities — September 27
 
-The RE lane completed `jet-verified-20260927`: 14 supported names retained,
+The reverse-engineering notes completed `jet-verified-20260927`: 14 supported names retained,
 comments/tags corrected, all signatures and 2,676 code bytes / 1,014 instructions
-preserved. The tracked checkpoint and earlier recovery history remain unchanged.
+preserved. The private Ghidra checkpoint and earlier recovery history remain unchanged.
 
 Executed under the existing ignored `re-audit-20260926/jet-verified/` owner:
 
 - Fresh `prepare_preservation.py`; prior reviewed manifest/spec and fresh PRE
   compared exactly. `rehearse.py` and `compare_exports.py rehearsal-post` passed.
 - `negative_controls.py`: five expected refusals, each without project byte changes.
-- `python -m unittest tools.ghidra_cohort_framework_tests`: 94 passed after registration.
+- `python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive): 94 passed after registration.
 - `apply_live.py`, `compare_exports.py live-post`, `finish.py`: nine live exports
-  equal the separately reopened rehearsal; Archive A POST independently restored
+  equal the separately reopened rehearsal; private POST independently restored
   and opened read-only. Only hash-equal successful control/POST probe payloads
   were retired, with exact migration-queue records.
 - `verify_projection.py`: all 8,332 projected names equal live; 2,154 unique
@@ -9110,11 +9140,11 @@ bodies (357 pristine bytes), with full authored-memory/register/cursor checks.
 The first locator failure is retained; its correction changed no expected result.
 Independent review inspected all retained inputs, outputs, executable spans and
 controls. Exact driver/result paths and limits are in the
-[weapon-store contract](reverse-engineering/game-mechanics/battle-engine-weapon-stores.md#isolated-jet-selection-and-admission--september-27).
+[frozen note: weapon-store contract](reverse-engineering/game-mechanics/battle-engine-weapon-stores.md#isolated-jet-selection-and-admission--september-27).
 These checks do not execute every audited helper or establish player acceptance,
 retail FPU state, complete firing behavior or reconstruction parity.
 
-Closeout: `npm run test:docs` passed with zero drifted name assertions;
+Closeout: `npm run test:docs` (its name-drift check, since moved to the private archive, is not run by the current script) passed with zero drifted name assertions;
 `npm run test:safety` passed (4,200 public candidate files);
 `git diff --check` passed. Logs: `local-data/test-runs/re-audit-20260926/jet/jet-verified-{docs,safety,framework}.log`.
 
@@ -9129,15 +9159,14 @@ return widths, cleanup, locals, frames and 769 code bytes / 315 instructions sta
 unchanged. All 8,323 other function records remain exact.
 
 Fresh PRE restore/census, dry/apply/separate/sealed rehearsal readbacks, nine
-byte-stable refusal controls, independent exact-manifest review with root
-reproduction, live readback and independently restored Archive A POST passed.
-All nine live exports equal rehearsal; the tracked checkpoint is unchanged.
+byte-stable refusal controls, independent exact-manifest review with an independent re-run, live readback and independently restored private POST passed.
+All nine live exports equal rehearsal; the private Ghidra checkpoint is unchanged.
 The production name projection equals all 8,332 live rows. Counts are 2,163
 unique corrected names (2,164 rename rows), 457 additional names kept, zero
 neutralized, 5,712 outside the accounted set, 2,633 comments and 127 signature
 records corrected. These dimensions do not measure semantic completion.
 
-The focused framework command `python -m unittest tools.ghidra_cohort_framework_tests`
+The focused framework command `python -m unittest tools.ghidra_cohort_framework_tests` (retired tool, now in the private archive)
 passed all 94 cases. Six living notes/contracts were re-derived or reconciled;
 three other notes update caller names. An initial documentation run found six
 header/evidence-format defects in those edits; the headers were corrected.
@@ -9157,7 +9186,7 @@ comparison; recovery and all evidence remain, with exact deletion-queue records.
 The one-row `jet-charge-abi-20260927` passed fresh PRE restoration/census,
 rehearsal and separate/sealed readbacks, seven byte-stable refusal controls,
 independent exact-manifest review, live readback and independently restored
-Archive A POST. All nine exports equal rehearsal. Only receiver annotation,
+private POST. All nine exports equal rehearsal. Only receiver annotation,
 comment and tags changed; name, physical transport, 632 code bytes and 8,331
 non-target function records are preserved. The 94 framework tests pass.
 Private commands/results: `local-lab/ghidra-first-training-20260907-v1/re-audit-20260926/jet-charge-abi/`.
@@ -9180,4 +9209,4 @@ The 27-function allocator plan has fresh PRE restore/census, all seven full
 exports equal to the latest live readback, and corrected draft wording from
 independent review reproduced by root. It is **unsealed and unpromoted**;
 its fresh specimen-bound body packet covers 7,761 bytes / 2,533 instructions.
-`PROGRAM.md` records the exact resume point and remaining review/gates.
+No public resume record exists for this plan (it is unsealed and unpromoted, per this paragraph) and remaining review/gates.
