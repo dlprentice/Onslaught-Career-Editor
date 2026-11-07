@@ -1,15 +1,18 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-11-04 (individual imposter identities and view metadata; content inventory, metadata and media coverage; independent checks distinguished from run-consistency checks; historical results retain their dates)
-Summary: what each tool in `tools/` is for, and which of them are gates.
+Last updated: 2026-11-06 (frozen-rebuild wording, Python version, submodule step, tool and table coverage, format-tag definitions, and the Companion, heightfield and mission-script statements corrected; 2026-11-04: individual imposter identities and view metadata; content inventory, metadata and media coverage; independent checks distinguished from run-consistency checks; historical results retain their dates)
+Summary: what each tool in `tools/` is for.
 
-`tools/` supports the companion, the game documentation and the active rebuild through guarded extraction,
+`tools/` supports the companion, the game documentation and the frozen rebuild copy in `rebuild/` through guarded extraction,
 format inspection, capture analysis and focused checks. The Ghidra scripts, cohort specs, campaign/authority tools
 and the Windows TTD/cdb/PowerShell runtime-probe lab moved on 2026-10-15 to the private historical maintainer archive; the WinUI packaging tools were removed.
+The active rebuild lives in [onslaught-godot](https://github.com/dlprentice/onslaught-godot).
 
 Root [`package.json`](../package.json) is the command authority. Documentation and safety checks use Python and
-the pinned public source-reference submodules, with optional Node/npm shortcuts; they need no retail installation or Godot:
+the pinned public source-reference submodules, with optional Node/npm shortcuts; they need no retail installation or Godot.
+Run `git submodule update --init --recursive` from the repository root first ([README.MD, Public setup](../README.MD#public-setup));
+without it, the link check in `npm run test:docs` fails with broken links into `references/`. The commands are:
 
 ```bash
 npm run test:docs
@@ -32,7 +35,7 @@ self-test fails for any `*_tests.py` file that is neither registered nor listed 
 
 ## Python prerequisites
 
-The engineering host uses Python 3.14 as `python`. The modules needed depend on the selected check:
+Python 3.12 or newer, with `venv`, for the setup, build and runtime checks; the repository's wider Python tools are tested on Python 3.14 ([README.MD, Public setup](../README.MD#public-setup)). The modules needed depend on the selected check:
 
 | Scope | Additional Python packages or inputs |
 | --- | --- |
@@ -40,10 +43,13 @@ The engineering host uses Python 3.14 as `python`. The modules needed depend on 
 | Authored catalogue, world/editor and mission-compiler checks | Standard library; catalogue schema assertions additionally need `jsonschema` and report SKIP without it |
 | glTF pose checks and numerical frame/terrain probes | NumPy; probes that read images also need Pillow |
 | Capture comparison, frontend scoring and region-overlap tests | Pillow |
-| Full `npm run test:tools` | NumPy and Pillow, plus the inputs required by its selected retail checks. In particular, `worldheaders_decode.py --self-test` requires retail `worldheaders.dat`; this aggregate is not a game-free contribution gate |
+| Content inventory gate (`content_inventory_gate.py`) | Pillow (image checks); `jsonschema` (row schema; the gate reports a skip without it) |
+| DDS census (`dds_census.py`) | NumPy |
+| Full `npm run test:tools` | NumPy and Pillow, plus the inputs required by its selected retail checks. In particular, `worldheaders_decode.py --self-test` reads `$BEA_GAME/data/worldheaders.dat` (or the tool's default install location); without that file it exits 1 with `not found`, so the aggregate reports a failure there, not a SKIP. This aggregate is not a game-free contribution gate |
 
 Install NumPy (`numpy`), Pillow (`Pillow`) and, when checking catalogue schemas, `jsonschema` in the Python environment
-used by the command. This repository does not yet pin their versions or provide a Python dependency lock file;
+used by the command. In an activated venv, `python -m pip install numpy Pillow jsonschema` installs all three;
+`jsonschema` enables the schema checks, which report SKIP without it. This repository does not yet pin their versions or provide a Python dependency lock file;
 these dependency names do not establish a tested standalone environment. Prefer the affected authored suite for a
 change that needs no retail data. For example, `python tools/content_catalog_tests.py` uses an authored install;
 `python tools/msl_compile_tests.py` uses authored script sources. Read each suite's SKIP lines when reporting results.
@@ -58,6 +64,8 @@ change that needs no retail data. For example, `python tools/content_catalog_tes
   the retained `first_flight.py` launcher with fake tools. These are support-code checks, not builds or parity
   acceptance of the frozen rebuild application. Current rebuild setup, runtime commands and gates belong to
   [onslaught-godot](https://github.com/dlprentice/onslaught-godot).
+- `ce_museum_stage.py` turns an authored exhibition description into two loose-world overrides in a CE mod folder, using an existing level's terrain and resources from a game you own. It is experimental: [the museum project note](../docs/ce-museum-project.md) gives its scope and limits. Its authored tests are registered in `run_tool_tests.py`.
+
 Use [`VALIDATION.md`](../VALIDATION.md) to select checks. These tools do not
 publish, sign, or install anything by themselves.
 
@@ -85,7 +93,7 @@ publish, sign, or install anything by themselves.
   `cmsh_static_preview.py` uses it too). On POSIX it creates and opens every output directory relative to a directory
   descriptor it already holds, so a symlink or directory put at the output path during a run cannot redirect a write;
   it writes an exclusive temporary name, publishes with a rename that follows no link, and refuses a destination that
-  is a symlink, a hard link or not a regular file. It re-checks that every held directory is still named where it was
+  is a symlink, a hard link or not a regular file. It re-checks that every held directory (one it keeps open as a descriptor) is still named where it was
   found before each write, again just before the rename and once after publishing. That is detection, not a lock.
   **Moved-destination limit:** a directory renamed while a file is being published still receives that file, wherever
   the directory now is, and the writer refuses only afterwards; later writes are refused before anything is created.
@@ -96,7 +104,7 @@ publish, sign, or install anything by themselves.
 
 ## Content catalogue
 
-[`content_catalog.py`](content_catalog.py) builds a local content inventory from a selected game installation.
+[`content_catalog.py`](content_catalog.py) builds a local content catalogue from a selected game installation.
 Its [authored tests](content_catalog_tests.py) require no retail files; `jsonschema` enables the schema assertions.
 The generator and separate read-only retail gate need your own lawfully obtained game:
 
@@ -110,8 +118,7 @@ python tools/content_catalog_gate.py --game /path/to/game
 Optional `--decomp /path/to/onslaught-decomp` adds literal code lookups from a public
 [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) checkout; no private decompilation or lab is required.
 The generator writes `manifest.json`, `survey.json`, `coverage.json` and `assets.jsonl` below this checkout's
-ignored `local-data/`. They contain retail-derived metadata and stay private. The Companion does not consume this
-catalogue. [The asset schema](content_catalog.schema.json), the detailed format descriptions below and
+ignored `local-data/`. They contain retail-derived metadata and stay private. The Companion does not read these output files; its C# implements the `catalog_world` contract of `content_catalog.py` as a static preview ([its provenance note](../companion/OnslaughtToolkit.Godot/PROVENANCE.md)). [The asset schema](content_catalog.schema.json), the detailed format descriptions below and
 [source-file coverage](#catalogue-source-file-coverage) explain the records and their limits.
 
 ### Imposter models and atlas references
@@ -169,7 +176,7 @@ further. A particle set counts as
 decoded only when `particle_set_walk.py` reads every value to the last descriptor; the words the game's reader skips
 after a direct number stay referenced. With `--decomp`, a film, particle set or splash image whose name a source string
 literal holds counts as used. An archive's `LVLR`, `TARG` and `AYAD` words count as decoded only when they are the
-documented PC build's ([the archive contract](../reverse-engineering/asset-formats/lvlr-archive.md)), `WDAT` only when
+documented PC build's ([the archive contract](../reverse-engineering/asset-formats/lvlr-archive.md), which defines all three), `WDAT` only when
 its level numbers fit the archive's world layout, and a mesh, goodie texture or goodie mesh reference's name or an
 imposter's stored label only when it ends inside its buffer; a language table's strings only when each entry points
 inside its pool and each string ends there. Anything else stays referenced and is reported as a problem. A texture
@@ -238,7 +245,7 @@ chunk its bytes lie in (read from its own chunk walk), whether its coordinates a
 open with; a PE resource is an icon or a bitmap as the executable's resource tree says. A row relabelled to another form
 therefore fails, and so does a row and its item relabelled together, because the file does not hold what the new label
 needs. Every row but a mesh chain's links, their animations and the terrain mixer mips (whose readers give no
-coordinates, and whose item must lie in an `ERES` chunk) is placed, and its bytes, cut from the stored file or from the
+coordinates, and whose item must lie in an `ERES` (engine-resources) chunk) is placed, and its bytes, cut from the stored file or from the
 stream inflated here, must hash to its SHA-256. Whether a DDS, texture record, Ogg or Bink is readable is the gate's
 reading of its bytes, never the row's status: a row that calls readable bytes unparsed fails, as does one that calls
 unreadable bytes parsed or claims fields for them. Each metadata field must equal what the gate reads from the bytes
@@ -316,7 +323,7 @@ documented below and in the development entry headers. Keep retail-derived table
   compiled-script record or range. Its bounded output describes stored
   structure and unknowns; it does not execute scripts or edit missions.
 - `cmsh_animation_usage_census.py` performs a read-only, optionally
-  mirror-hash-verified join across loose CMSH pose/skeleton lanes, numeric-LVLR
+  mirror-hash-verified join across loose CMSH (the tagged mesh-stream format, see its [format contract](../reverse-engineering/asset-formats/cmsh-mesh.md)) pose/skeleton lanes, numeric-LVLR
   `MESH` membership, and authored MSL animation calls. Census v4 reads mesh and
   part names from their bounded fields: an empty stored name stays empty, and
   an invalid or unterminated mesh name is null with a status. The shared parser
@@ -445,7 +452,7 @@ documented below and in the development entry headers. Keep retail-derived table
   ceilings, not established maxima for the game format. Encoding checks binary layout but is not a mission, placement
   or gameplay safety validator.
   `stage --as-mod --out PARENT --id ID --name TEXT [--world MODEL.json] [--base-world MODEL.json]` is the one command that
-  writes files. It packages the edited world(s) as a CE mod folder `PARENT/ID` (`mod.json` plus `data/worlds/worldNNN.wrd`,
+  writes files. Its `--out` is the writing form for this command only; the legacy `--out` of the `--stdout` commands is refused (see above). It packages the edited world(s) as a CE mod folder `PARENT/ID` (`mod.json` plus `data/worlds/worldNNN.wrd`,
   the one kind of file a CE mod may add) through `world_mod_stage.py`, held to the loader's own limits (the id, the text
   lengths, the version format, at most 4 MiB per world file), so CE loads it with no hand editing. It is the step after
   `world_edit_move.py --emit-model`: pass that preview's `--baseline-sha256` and `--model-sha256` (and the `--base-*`
@@ -474,7 +481,7 @@ documented below and in the development entry headers. Keep retail-derived table
   symlinks. It writes no files; later encoding or bundle preparation is a separate command and is not automatically
   bound to this preview. Inspect the reported
   hashes before using its inputs. It does not check terrain placement, runtime slots, save compatibility or mission
-  behavior, and does not execute a game or script. The CLI requires descriptor-relative no-follow file support;
+  behavior, and does not execute a game or script. The CLI requires descriptor-relative no-follow file support (each path component is opened relative to a held directory, and links are not followed);
   `preview_bytes` accepts immutable snapshots for integrations on other platforms. Windows CLI and physical play have
   not been validated.
   `world_thing_index.py WORLD.wrd --stdout` lists a page of serialized thing ordinals, stored names, definitions,
@@ -557,7 +564,7 @@ documented below and in the development entry headers. Keep retail-derived table
 - `heightfield_lookup.py ARCHIVE.aya X Y` prints the height under a position of a level archive's terrain, as the game's
   terrain lookup computes it: the archive's `ERES` chunk holds 64 x 64 tiles of 9 x 9 signed 16-bit samples (one per world
   unit; a tile's ninth row and column repeat its neighbour's first) and a height scale, and heights are world units with Z
-  down, so the ground under the player's start in level 100 is about -10. The rule is `CHeightField::Collide` (`0x0047eb80`)
+  down, so ground above the origin plane has a negative height. The rule is `CHeightField::Collide` (`0x0047eb80`)
   and the bilinear read it calls (`0x0047eb00`), cited by function as the decompilation describes them and written here
   without copying its source: a bias and a large constant are added to each coordinate in 32-bit floats, the bits are read as
   8.8 fixed point, a position outside 0 to 512 on either axis answers 0, and the four samples around it are blended with 8-bit
@@ -593,10 +600,9 @@ documented below and in the development entry headers. Keep retail-derived table
   heights `heightfield_lookup.py` gives on a fixed grid and at every thing's position (hashes only) for the Companion's local
   retail gate, `Development/LevelsGate.cs`, whose header gives its command; the table is derived from a game, so keep it
   private.
-- `msl_compile.py` compiles a mission script source (`.msl`) to the record a level's world file ships for it. The game never reads
-  `.msl` files: it runs the compiled scripts inside each world body (`CWorld::LoadScripts`, `0x0050ac70`, and
-  `CMissionScriptObjectCode`'s file constructor, `0x00538ec0`), so the sources are the original compiler's input and the
-  compiler is written from the decompilation's description of the script VM and its loader (cited by function, no source
+- `msl_compile.py` compiles a mission script source (`.msl`) to the record a level's world file ships for it. The `.msl` sources are the original compiler's input. The game runs the compiled scripts inside each world body
+  (`CWorld::LoadScripts`, `0x0050ac70`, and `CMissionScriptObjectCode`'s file constructor, `0x00538ec0`); no runtime
+  trace has checked whether it opens an `.msl` file. The compiler is written from the decompilation's description of the script VM and its loader (cited by function, no source
   copied) and checked against what the game shipped. The output is the record `world_resources_encode.read_world_model` gives for a
   script (instructions, the 13 event entry points, the symbol table with each symbol's source line, the named handlers, two
   trailing words), ready for `write_world_body`. The module's docstring lists the dialect as the shipped scripts show it: a call's

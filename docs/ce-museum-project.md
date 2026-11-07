@@ -1,7 +1,7 @@
 # Authored CE museum room projects
 
 Status: experimental content adapter; bounded Linux room check, independent acceptance pending
-Last updated: 2026-11-04
+Last updated: 2026-11-06 (output folder, launcher arguments and project wording)
 Summary: a CE-first exhibition description, exact local resource bindings and private generated content
 Evidence: MEASURED — authored content checks in `tools/ce_museum_stage_tests.py` and one isolated Linux launcher run; UNKNOWN — complete museum experience
 
@@ -78,15 +78,23 @@ Run the authored checks without an installed game:
 python3 -B tools/ce_museum_stage_tests.py
 ```
 
-With a locally prepared and pinned project, stage into a new private folder outside the game:
+With a project file whose carrier and source `sha256` fields you have filled in from your own copy of the game, stage
+into a new private folder outside the game:
 
 ```sh
-python3 tools/ce_museum_stage.py --project museum.json --game path/to/owned-game --out private-generated
+python3 tools/ce_museum_stage.py --project museum.json --game path/to/owned-game --out local-data/museum-stage
 ```
 
-The stage summary gives `launchLevel`, the carrier level to open. Place the generated mod under a **new,
-museum-only** CE user folder's `mods/` directory and enable only its `id` with `mods=<id>` in that folder's
-`ce.ini`. Leave ordinary CE profiles untouched. Use the regular launcher's argument forwarding:
+The stage creates a folder named by the project `id` inside `--out` and refuses one that already holds files.
+`local-data/` is this repository's git-ignored output folder, so the generated worlds stay out of Git.
+
+The stage summary gives `launchLevel`, the carrier level to open. Place the generated mod under a **new, museum-only**
+CE user folder's `mods/` directory and enable only its `id` with `mods=<id>` in that folder's `ce.ini`. Leave ordinary
+CE profiles untouched. The launcher passes the arguments after `--` to the game. `-level N` starts level N directly,
+and `-skipfmv` skips the game's full-motion videos (FMV). The development notes in
+[port/dsound/README.md](https://github.com/dlprentice/onslaught-ce/blob/main/port/dsound/README.md) use both flags,
+and [port/bink/README.md](https://github.com/dlprentice/onslaught-ce/blob/main/port/bink/README.md) describes the
+videos that play without `-skipfmv`.
 
 ```sh
 BEA_USER_DIR=path/to/museum-only-user BEA_GAME_DIR=path/to/owned-game \
@@ -98,6 +106,6 @@ directly; it is not a campaign menu option. Do not start a career or another lev
 overridden base world may also be shared by other levels. A production museum entry needs its own runtime
 context and must not expose these profile restrictions to ordinary play.
 
-This lane has not validated Windows content generation or Windows runtime; the current CE mod path is Linux
+This work has not validated Windows content generation or Windows runtime; the current CE mod path is Linux
 only. Linux staging checks alone establish neither. A usable-room menu entry must wait for independent runtime
 and career-safety acceptance and removal of the developer profile restrictions above.

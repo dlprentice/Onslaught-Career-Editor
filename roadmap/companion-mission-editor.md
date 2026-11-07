@@ -1,19 +1,21 @@
 # Companion Mission Editor: Design Addendum
 
 Status: design; the reference compiler and read-only scripts view with name links and map paths are built. The C# and Python compiler backends and the script-aware editor model are integrated, and the Level editor's Scripts view edits a script's source, compiles it and makes the open level use it (section 15); the acceptance in section 6 was run once on Linux (section 16) and the Level editor's Play button starts CE at the open level with the changes (section 17); source-preserving staging and native Windows validation remain open. It extends the
-[Companion level editor](companion-level-editor.md), which is on main through its map (M3).
-Last updated: 2026-11-02 (optional modes and capability proof before product placement)
+[Companion level editor](companion-level-editor.md), which is on main through its map (M3), with its later increments (M4 to M6, in part) recorded in its status line.
+Last updated: 2026-11-06 (corrections: stale milestone and run counts, the specimen's negative assurance, a static-evidence grade, and references to private sources)
 Summary: how the Companion can let a player edit a level's mission: show a level's scripts beside the map, then edit their
 source in the game's own script language, compile it with a compiler of ours checked against the shipped scripts with the documented
 missing-header and stale-source cases, and save the result as a CE mod, which is the world file the loader already serves. It states what
-the data says (the game never reads the `.msl` files; it runs the compiled scripts inside each level's world file), the
+the data says (static reading finds no reader of the `.msl` files, which runtime tracing has not checked; the game runs the compiled scripts inside each level's world file), the
 milestones with their gates, the first editable thing, the safety rules and the limits.
-Evidence: MEASURED for section 2 (each item names its method and limits), SOURCE for the cited decompilation functions
+Evidence: MEASURED for section 2 (each item names its method and limits; item 1 is INFERRED), SOURCE for the cited decompilation functions
 (cited by function, never quoted), INFERRED where the text says so; the rest is plan.
 Specimen: `BEA.exe.original.backup`, SHA-256 `74154bfa…`, 2,506,752 bytes (the addresses are the decompilation's, which matches
-this binary; the retail view's `BEA.exe` has the same hash)
+this binary; the installed Steam `BEA.exe` was not read for these byte claims, and it is deliberately patched, see [DOCUMENTATION.md](../DOCUMENTATION.md))
 
 > **Future direction — 2026-10-31:** David requested a 3D mission editor alongside the 3D map editor. The existing script and data workflows remain as described below; a 3D mission-authoring workflow, its interactions, safe staging and platform acceptance are still to be designed and demonstrated. See the project [goal](../GOAL.md) and [program](../PROGRAM.md).
+
+The Companion is the current implementation of this feature. Its map and mission authoring are reusable work toward the native CE experience that the project requires, not completed in-game editors ([CURRENT_CAPABILITIES.md](../CURRENT_CAPABILITIES.md)). The project's direction is a unified CE product, with the standalone Companion retired after its replacement is verified ([GOAL.md](../GOAL.md)).
 
 The [level editor plan](companion-level-editor.md) states the CE-first direction: a modern CE-native project format and
 custom gameplay are first-class targets, original-game export is optional where practical, and campaign faithfulness
@@ -40,14 +42,13 @@ Scripts view extends that pipeline.
 
 ## 2. What the data says (2026-10-29, the read-only retail view; the Toolkit's world decoder)
 
-Method for all items: the Toolkit's decoders and reader (`tools/world_resources_decode.py`, `tools/world_resources_encode.py`)
-over the 66 installed level archives, and the installed `data/MissionScripts` folders; counts are of this installation.
+Method for all items: the Toolkit's decoders and reader (the Python tools in this repository's `tools/` folder, documented in [tools/README.md](../tools/README.md): `tools/world_resources_decode.py` and `tools/world_resources_encode.py`) over the 66 installed level archives, and the installed `data/MissionScripts` folders. The read-only retail view is that installed game folder, read without writing to it; counts are of this installation.
 
-1. **The game never reads the `.msl` files.** `BEA.exe` holds no string naming `.msl` or `MissionScripts` (checked with
+1. **No reader of the `.msl` files has been found (INFERRED).** `BEA.exe` holds no string naming `.msl` or `MissionScripts` (checked with
    `strings` over the specimen, 0 matches); the decompilation's mission-script module is a virtual machine and an object-code loader
    (`CMissionScriptObjectCode`'s file constructor `0x00538ec0`; `CWorld::LoadScripts` `0x0050ac70`, which reads each script from
    the world file), with no parser; the one other file reader that takes a name from the player is the console's `Exec` command
-   (`0x0042ad30`), which reads console commands. The `.msl` files are the original compiler's input, shipped with the data.
+   (`0x0042ad30`), which reads console commands. The `.msl` files are the original compiler's input, shipped with the data. Whether the game ever opens an `.msl` file has not been measured; the falsifier is a file-open trace of the original game or CE across a level load.
 2. **The compiled scripts are in the world file.** Each level's world body holds its compiled scripts (the part the level
    editor's model already reads and writes byte for byte). The 66 levels hold 670 scripts between them (about 53,000
    instructions and about 8,800 native calls, 108 of the 144 natives in `gScriptFunctions`); the world file a mod supplies
@@ -58,9 +59,9 @@ over the 66 installed level archives, and the installed `data/MissionScripts` fo
    by no level's own world. The install holds 46 more `.msl` files, in the folders of seven levels whose compiled scripts it does
    not hold (six have no archive; the seventh, level 21, is only a base world that carries none), so there is nothing to compare
    them with. That is a source and an object for every script, which is what makes a byte-exact compiler testable (section 5).
-4. **The mod loader can replace an `.msl` file and it changes nothing.** The loader replaces any file the game has under `data/`
+4. **The mod loader can replace an `.msl` file, and on the static evidence that changes nothing (INFERRED from item 1).** The loader replaces any file the game has under `data/`
    (a mod may add only world files), so an `.msl` copy qualifies; but a replacement is read only when the game opens the file,
-   and item 1 says it never does. The route for a mission change is the world file, which today's Linux loader serves (CE 0.1.11,
+   and item 1 finds no reader of the file (INFERRED; the file opens have not been measured). The route for a mission change is the world file, which today's Linux loader serves (CE 0.1.11,
    published 2026-10-29, is the first to take a world file from a mod).
 5. **The object format is small and regular.** The VM has 27 opcodes (23 occur in the compiled scripts of the installed levels; `OP_NOP`, `OP_CMPNEB`,
    `OP_CALLLOCAL` and `OP_PUSHPC` never do, though one source of a level the install lacks writes `!=`, which compiles to `OP_CMPNEB`); `CAsmInstruction::Spawn`
@@ -106,7 +107,7 @@ script uses, any level not installed here, and anything on Windows.
 
 Edit the script source (the game's own language), compile it with a compiler of ours, replace the script in the world body, save
 the world file as a mod through the level editor's existing stager. Unchanged scripts are written back as the shipped bytes, never
-recompiled, so a mod differs from the game only where the player edited.
+recompiled, so a mod differs from the game only where the player edited or compiled a script; compiling one of the stale sources in section 11 changes its script, and section 15 says what differs.
 
 - **The compiler** is C# in the Companion (`Missions/`), with a Python reference (`tools/msl_compile.py`) that the C# is tested
   against on generated vectors, as the other tools are. It is written from the decompilation's description of the VM and its loader,
@@ -117,14 +118,16 @@ recompiled, so a mod differs from the game only where the player edited.
 
 ## 4. Milestones
 
-| Milestone | Scope | Done when | Estimate |
-| --- | --- | --- | --- |
-| MS0 scripts beside the map (read-only; built, section 12) and MS0.1 names and paths (built, section 13) | the Level editor page lists the open level's compiled scripts (name, the events handled, the things that run it, the natives it calls) next to the map, shows the selected script's installed `.msl` source with line numbers, and links names in it (thing names, waypoint paths, scripts and event handlers; text ids are not linked yet) to the table and the map; selecting a thing shows its script and the other way round; waypoint paths are drawn on the map | on every installed level the list equals the world body's scripts, every one finds its source (670 of 670), the capture at three sizes looked at, nothing written | 4 to 5 days |
-| MS1 reference compiler and the byte-exact gate | `tools/msl_compile.py` (preprocess, lex, parse, generate, write the record as the world file stores it) and `tools/msl_gate.py --game GAME`, section 5 | every shipped script compiles to its shipped record, or each difference is explained (built; section 11) | built 2026-10-29 (the spike ran on every script) |
-| MS2 the C# compiler (backend, section 14) | `Missions/` with the same stages, authored vectors from the Python reference in Git, and a local retail gate (`Development/ScriptsGate.cs`) that must match the Python gate on all scripts | the vectors and the retail gate pass; the C# refuses what the Python refuses and the supported platforms are checked. The C# and Python backends are integrated; source-preserving staging remains future work. | Native Windows and source-stage validation remain open |
-| MS3 first editable thing | the page edits the selected script's source (a text area with line numbers), compiles it (errors by line and column, a summary of what changed), replaces the script in the session as one undoable command, and saves through Save as mod | the acceptance in section 6. The script-aware model is integrated and the page edits, compiles and uses a script (section 15); the acceptance was run once on Linux (section 16) and source staging is not built. | 1 week |
-| MS4 structured helpers | forms for common edits (a count, a delay, a message id), the event graph (who posts, who handles), checks against the level (names exist), path membership and order on the map, spawner and trigger parameters (these are world-body data and need no compiler) | each helper has a test and a message a player can act on | 2 weeks |
-| MS5 texts (optional) | the text of a message is in the game's language files, a different mod file; a writer for them | a changed line shows in game | not estimated |
+MS0 to MS5 are this addendum's milestones; M0 to M6 are the level editor plan's ([companion-level-editor.md](companion-level-editor.md)).
+
+| Milestone | Scope | Done when | Estimate | State |
+| --- | --- | --- | --- | --- |
+| MS0 scripts beside the map (read-only; built, section 12) and MS0.1 names and paths (built, section 13) | the Level editor page lists the open level's compiled scripts (name, the events handled, the things that run it, the natives it calls) next to the map, shows the selected script's installed `.msl` source with line numbers, and links names in it (thing names, waypoint paths, scripts and event handlers; text ids are not linked yet) to the table and the map; selecting a thing shows its script and the other way round; waypoint paths are drawn on the map | on every installed level the list equals the world body's scripts, every one finds its source (670 of 670), the capture at three sizes looked at, nothing written | 4 to 5 days | built (sections 12 and 13) |
+| MS1 reference compiler and the byte-exact gate | `tools/msl_compile.py` (preprocess, lex, parse, generate, write the record as the world file stores it) and `tools/msl_gate.py --game GAME`, section 5 | every shipped script compiles to its shipped record, or each difference is explained (built; section 11) | not estimated | built 2026-10-29 (the spike ran on every script) |
+| MS2 the C# compiler (backend, section 14) | `Missions/` with the same stages, authored vectors from the Python reference in Git, and a local retail gate (`Development/ScriptsGate.cs`) that must match the Python gate on all scripts | the vectors and the retail gate pass; the C# refuses what the Python refuses and the supported platforms are checked. The C# and Python backends are integrated; source-preserving staging remains future work. | not estimated | Native Windows and source-stage validation remain open |
+| MS3 first editable thing | the page edits the selected script's source (a text area with line numbers), compiles it (errors by line and column, a summary of what changed), replaces the script in the session as one undoable command, and saves through Save as mod | the acceptance in section 6. The script-aware model is integrated and the page edits, compiles and uses a script (section 15); the acceptance was run once on Linux (section 16) and source staging is not built. | 1 week | page built (section 15); acceptance run once on Linux (section 16); source staging not built |
+| MS4 structured helpers | forms for common edits (a count, a delay, a message id), the event graph (who posts, who handles), checks against the level (names exist), path membership and order on the map, spawner and trigger parameters (these are world-body data and need no compiler) | each helper has a test and a message a player can act on | 2 weeks | plan |
+| MS5 texts (optional) | the text of a message is in the game's language files, a different mod file; a writer for them | a changed line shows in game | not estimated | plan (optional) |
 
 ## 5. The byte-exact gate
 
@@ -152,11 +155,11 @@ MS4 plus literal edits in compiled scripts. They matched on the first draft, and
 A message a script shows is chosen by a text id in a call such as `PlayCharMessage` or `PrintText`. The first edit is the id: the
 player changes which line a script shows, in source, compiles and saves.
 
-Acceptance, on the retail view: edit one message id in a level 100 script, save as a mod, and
+Acceptance, on the retail view (defined in section 2): edit one message id in a level 100 script, save as a mod, and
 1. the saved world file differs from the shipped one only in that script, and the compiled script differs from the shipped one in
    one constant's value (the gate's exact mode makes this a byte comparison, not a reading);
 2. the Toolkit's strict reader (`read_world_model`) reads the file and the existing checks on it pass;
-3. in a CE build that loads world files from mods (offscreen, level 100, real clock, as the level editor's mirror check was run),
+3. in a CE build that loads world files from mods (offscreen, level 100, real clock, as the mirror check in [the level editor plan](companion-level-editor.md), section 3 item 4, was run),
    the subtitle at the same frames shows the other line (text ids index the game's text table, which the Companion already
    reads), looked at, with a control run beside it.
 
@@ -181,7 +184,7 @@ Run on 2026-10-30, with the first message playing the second's text; section 16 
    unknown native an error.
 5. Everything is an undoable command on the level's edit session, with a reset to the shipped script; the level editor's rules
    about unsaved edits, the backups folder and the game folder apply unchanged.
-6. The editor never starts the game; playing a mod is a later step of the level editor (its M6).
+6. The page never starts the game; the Level editor's Play this level with the changes button does (section 17).
 
 ## 8. Honest limits
 
@@ -195,18 +198,17 @@ Run on 2026-10-30, with the first message playing the second's text; section 16 
   those, section 11), what it did with a construct no shipped script uses, and the 46 sources of levels whose compiled scripts the install does not
   hold (nothing to compare them with). Settled by the gate: the trailing words, the line order, and which installed sources are not the revision the
   game shipped (a pinned list, each with how it differs).
-- A script can crash a level by damaging a unit that runs a script of its own from inside a handler that is running (diagnosed by the level 888 work with a
-  test-only level script, and followed in the decompilation by function): `IScript::Damage` calls the thing's damage routine, which can start the thing's death
+- A script can crash a level by damaging a unit that runs a script of its own from inside a handler that is running (diagnosed with a test-only level script whose evidence is not tracked in this repository, and followed in the decompilation by function): `IScript::Damage` calls the thing's damage routine, which can start the thing's death
   at once; that starts its death handler, `CVM::CallEvent` sets the machine's code and place before `CVM::Run` refuses to run a second time, and the running script's
   next instruction is then read from the wrong place. `IScript::Arrived` and `IScript::Hit` return while the machine is running; the entry points for a dying or dead unit
   do not. It is a shape that can fail, not a certainty: one shipped script damages a unit with a death handler of its own from inside a handler and runs through in the
-  retail game, and the port's planned guard leaves that path as it is. `Die` is not part of it (it posts an event for the next frame), and `SetHealth`,
+  retail game, and the planned guard in the private port source (exported to onslaught-ce) leaves that path as it is. `Die` is not part of it (it posts an event for the next frame), and `SetHealth`,
   `SetSegmentHealth` and `SetAllSegmentsHealth` only store values. `HalfDestroy` is not warned about and is not cleared either: by the names of the functions it calls it reaches the same
   damage path (it damages parts of a unit at random), and whether it can finish a unit and start its death handler at once is not established; the cheapest falsifier is a test-only level
-  script that calls it on a unit with a death handler from inside a handler, run under the port with a debugger, as the level 888 diagnosis did. Until a CE release guards the entry, the page
+  script that calls it on a unit with a death handler from inside a handler, run under the port with a debugger, as that diagnosis did. Until a CE release guards the entry, the page
   warns about a replaced script that calls `Damage` more often than the shipped one (`ScriptHazards`: by native, not by target, so it cannot tell a unit that has a script from one that has none), and
   the checker (section 7) is where a stricter rule belongs.
-- One edit has been run in CE on Linux (section 16); nothing else here has been. The retail data (sources, objects, frames) stays local and out of Git.
+- Three edits have been run in CE on Linux, on one machine: the message edit, through the capture (section 16) and the Play button (section 17); a comment line above the first line of the same script, as a control (section 16); and a Weather snow-density edit whose mod loaded but showed no change beyond run-to-run noise (section 16, What was tried first). Nothing else here has been. The retail data (sources, objects, frames) stays local and out of Git.
 
 ## 9. Risks and the cheapest check for each
 
@@ -218,9 +220,9 @@ Run on 2026-10-30, with the first message playing the second's text; section 16 
 | A compiled script is accepted by our checker and crashes the VM | run the edited level in CE offscreen for the length of the script's events and read the log; keep edits small until the checker has been through a few of these |
 | Symbols shared between scripts (a clone) corrupt on a duplicate name | unique names are an error in the checker and a vector in the tests |
 | The mod loader changes what it serves | the acceptance in section 6 is re-run per CE version |
-| A script damages a scripted unit from inside a running handler and crashes the level | the page warns when an edit adds a call to `Damage` (`ScriptHazards`); the port is to defer the nested event |
+| A script damages a scripted unit from inside a running handler and crashes the level | the page warns when an edit adds a call to `Damage` (`ScriptHazards`); the private port source is to defer the nested event |
 
-## 10. Decisions (2026-10-29, the lead)
+## 10. Decisions (2026-10-29)
 
 **Future design, not implemented on main:** 1. The mod carries the edited sources as inert `.msl` copies at the game's own paths (section 3), with the stager and its Python
    reference taking extra files under the same refusals.
@@ -273,8 +275,7 @@ the game folder and writes nothing.
   accepts exactly the shown cases and the generalisation, and refuses any other mix without parentheses, naming both operators. For a
   mixed chain it does accept it returns a note with the grouping used, which the editor shows.
 - **Limits the compiler keeps** (so that the C# port can keep the same): statements and expressions nested more than 100 deep, a script
-  of more than a million characters or one that grows past a million tokens when its `#define` names are replaced, a header of more than
-  a million bytes, a number that does not fit 32 bits or float32, and an `#include` that is not a file inside the game folder
+  of more than a million characters or one that grows past a million tokens when its `#define` names are replaced, an included text of more than 1,048,576 characters or bytes (the limits are in section 14), a number that does not fit 32 bits or float32, and an `#include` that is not a file inside the game folder
   (a link out of it) are refused with a line and a reason. The deepest shipped script nests 15.
 - **What is still unproven.** Constructs no shipped script uses (the compiler refuses them; `!=`, which one source of a level the
   install lacks writes, compiles to the VM's `OP_CMPNEB` and is grouped only with arithmetic), the sources of the levels this install
@@ -368,7 +369,7 @@ Nothing is written.
 
 ## 14. MS2: the C# compiler (2026-10-29)
 
-`Missions/` is the reference compiler (`tools/msl_compile.py`) in C#: a lexer, a preprocessor for `#include` and `#define`, and a parser that
+`Missions/` is the C# port of the reference compiler (`tools/msl_compile.py`): a lexer, a preprocessor for `#include` and `#define`, and a parser that
 writes the instructions as it reads, statement for statement and message for message. `ScriptCompiler.Compile(name, source, readInclude,
 constStart, doOnceStart, resolve, notes, limits)` returns the `MissionScript` a world body stores (the same type the Level editor reads).
 It writes no file and delegates header reads to its caller. `ScriptCompiler.IncludesFrom(gameFolder)` finds headers by their game-relative
@@ -455,18 +456,18 @@ folder as before.
 
 ## 16. The CE acceptance of an edited script, on Linux (2026-10-30)
 
-The acceptance of section 6 was run once, on the retail view, with the page's own parts. The edit: level 100's `LevelScript` (the script that plays the tutorial's
+The acceptance of section 6 was run once, on the retail view (section 2), with the page's own parts. The edit: level 100's `LevelScript` (the script that plays the tutorial's
 messages), Edit source on, the first `PlayCharMessageWait` call's message replaced by the second call's, Compile and use ("1 symbol differs"), Save as mod through the
 dialog. The Level editor's capture drives exactly those controls: `--mode=scriptmod --edit=message` (`--script` defaults to `LevelScript`); `--edit=comment` makes the
-control, a comment line above the first line, which the compiled script keeps as line numbers (every symbol that holds one differs) and which behaves the same.
+control, a comment line above the first line, which the compiled script keeps as line numbers (every symbol that holds one differs) and which behaves the same. The runner-driven runs cannot be repeated from the public repositories.
 
 - **Items 1 and 2: the bytes.** The saved world file is the shipped body's size and two adjacent bytes differ; read as a model, the one field that differs is that
   script's symbol 42 (a message name's value), none outside the scripts. The strict reader (`world_resources_encode.py`'s `read_world_model`) reads the file and
   `write_world_body` gives the same bytes back. The comment control differs only in that script's line-number symbol fields, and reads and round-trips the same way.
-- **Item 3: CE.** A Linux build of Onslaught CE, the default flavour of the port's main at 93cac507 (SHA-256 86f258f2..., the binary a fresh-tree identity proof of that main
-  records), run live with the standard offscreen runner (`port/tools/run.py`): `-level 100 -skipfmv -forcewindowed
+- **Item 3: CE.** A Linux build of Onslaught CE, the default flavour of the port's main at 93cac507 (a private port-source commit, not in the public history; SHA-256 86f258f2..., the binary a fresh-tree identity proof of that main
+  records), run live with the standard offscreen runner (in the private port source; it is not in the public onslaught-ce tree): `-level 100 -skipfmv -forcewindowed
   -res 640 480`, a read-only game folder, an isolated home and user folder holding `ce.ini` (`mods=level-100-edit`) and the mod's folder (`mod.json` and
-  `data/worlds/world100.wrd`, put there with `--start`), dummy audio, no browser, the Intel GPU lock, the real clock. The key presses are scheduled at fixed Presents (a space at 250 and 290 skips the intro cinematic; CE's own screenshot key, F12, at 450 to 870
+  `data/worlds/world100.wrd`, put there with `--start`), dummy audio, no browser, the runner's GPU lock (the shared Intel-GPU lock that the [companion README](../companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export) describes), the real clock. The key presses are scheduled at fixed Presents (a space at 250 and 290 skips the intro cinematic; CE's own screenshot key, F12, at 450 to 870
   every 70), and CE logged the frames as saved 1 to 27 Presents after those. CE's log names the mod and its world file with the SHA-256 the page's receipt gave ("adds data/worlds/world100.wrd",
   "serves data/worlds/world100.wrd to the game"); the runs without the mod have none of those lines.
 - **What the frames show.** Five runs, two without the mod, one with the comment control and two with the edit. In the runs without the edit the cockpit's subtitle types out the
@@ -476,12 +477,12 @@ control, a comment line above the first line, which the compiled script keeps as
   The first control drew about 2.9 ms per Present against 5.6 to 6.3 ms, so its frames show an earlier moment (0.4 to 1.6 s after the skip). The comparison therefore rests
   on the two time-matched controls, the second control and the comment control, against both edit runs; the first control agrees with them at its own moment. Runs on the
   real clock cannot be matched to the Present, so the comparison is of the text written, not of pixels: none of the three controls shows the edit.
-- **Fences.** CE switches mods off whenever a deterministic clock (`run.py --virtual`, `BEA_PORT_CLOCK`), a tape, probes, a recording, a pilot or autopilot, or a network host, join or
-  handoff is active (`port/platform/common/mods.cpp`; at 93cac507 CE's own README says only "replays, recordings and network play"; the launcher's own `--record`, or `record_sessions=1` in `ce.ini`, sets `BEA_PORT_RECORD` and `BEA_PORT_CLOCK`, which is how a player meets this), and its screenshot key is taken only when no menu or
+- **Fences.** CE switches mods off whenever a deterministic clock (the runner's `--virtual` option, `BEA_PORT_CLOCK`), a tape, probes, a recording, a pilot or autopilot, or a network host, join or
+  handoff is active (`port/platform/common/mods.cpp`; at the private commit 93cac507, CE's own README says only "replays, recordings and network play"; the launcher's own `--record`, or `record_sessions=1` in `ce.ini`, sets `BEA_PORT_RECORD` and `BEA_PORT_CLOCK`, which is how a player meets this), and its screenshot key is taken only when no menu or
   its console has the keyboard. A mod run is therefore live and on the real clock, with no
   pixel-exact comparison between runs.
 - **The released package, repeated.** The same pair (one control, one run with the message edit) was run again with the released Onslaught CE 0.1.12 Linux package's own
-  binary in place of the build of main: the same driver, runner, flags and key schedule, the mod re-staged by the committed capture (byte-identical). The package is the
+  binary (the public v0.1.12 tag's commit begins with the build id that the launcher's log names below) in place of the build of main: the same driver, runner, flags and key schedule, the mod re-staged by the committed capture (byte-identical). The package is the
   release asset `onslaught-ce-0.1.12-linux-i686.tar.gz`: its size (6,844,827 bytes) and SHA-256 (31f96ae0...) are the `linux-i686` entry of the release's update feed
   (`ce-update-v2.json`, read from the release's public assets), whose Ed25519 signature was verified against the launcher's pinned public key; its `bea` has SHA-256
   1f036553.... CE's log has the same four mods lines in the mod run (the world file served once, with the receipt's SHA-256) and none in the control. **The pair is not
@@ -493,7 +494,7 @@ control, a comment line above the first line, which the compiled script keeps as
 - **Through the released launcher, one run of each kind.** The package's own launcher, `onslaught-ce`, with the command line the player is told to use (`--no-update-check
   -level 100 -skipfmv -forcewindowed`), started the game itself, offscreen. What differs from the runner's runs: the user folder is a scratch folder the test script made with
   plain file writes (for the mod run, the mod folder and a `ce.ini` holding the one line `mods=level-100-edit`) in place of the runner's `--start`; `BEA_USER_DIR` and
-  `BEA_GAME_DIR` are set by the script; the guards the runner sets (offscreen video, dummy audio, the Intel GPU filter, no session bus, the iGPU lock held by the script), the key
+  `BEA_GAME_DIR` are set by the script; the guards the runner sets (offscreen video, dummy audio, the Intel GPU filter, no session bus, the runner's GPU lock held by the script), the key
   presses and the frame limit are given by environment, and the runner's own checks (its refusals when the offscreen or dummy-audio driver is missing, its core-dump and timeout
   handling) are not applied, though both logs show the offscreen driver and the x87 control word 007f. The launcher, not the runner, started the game as its child with its own
   environment, hashed the game executable before starting it (SHA-256 1f036553..., the package's `bea`) and wrote the game's log into the user folder; that log names the version
@@ -505,7 +506,7 @@ control, a comment line above the first line, which the compiled script keeps as
 - **What was tried first.** The `Weather` script's starting snow density (one symbol, 0.1 to 0.8). The mod loaded and the log named it, but no frame difference rose above
   the run-to-run noise (two runs with the edit differed from each other by as many pixels as one differed from a control), and the script's text print did not appear in the
   console. That edit is not evidence of a changed behaviour and is not claimed: a mod's log lines alone do not show one.
-- **What this shows.** In the two edit runs made, on one machine, an edit made in the page's source editor, compiled by the Toolkit's compiler and saved by the page's stager is
+- **What this shows.** In the two edit runs made, on one machine, an edit made in the page's source editor, compiled by the Companion's compiler (section 14) and saved by the page's stager is
   read by CE on Linux and changes what the game does as the edit says; and a whole-script recompile with every line number different behaves as the shipped script for the same
   messages (one run).
 - **What it does not show.** A person using the page by hand. Any behaviour beyond one message in one script of one level: timers, spawns, AI and the `Damage` warning are
@@ -525,7 +526,7 @@ player's careers, so the play path is designed to leave the player's CE folder u
   they are, through the settings writer's own line handling, with `mods=` naming only this mod, `record_sessions=0` and `update_check=0`), a copy of their options file
   (`defaultoptions.bea`; never a career, a tape or anything else) and the mod, staged by the same stager as Save as mod. It starts CE's own launcher from its package folder with
   `--no-update-check -level N -skipfmv -forcewindowed`, `BEA_USER_DIR` set to the temporary folder and `BEA_GAME_DIR` to the game folder the editor read, and the variables that make
-  CE switch mods off removed (section 16; and every other `BEA_PORT_*` and `BEA_NET_*`, because the list of those nine lives in another repository and no player sets one, while what the play
+  CE switch mods off removed (section 16; and every other `BEA_PORT_*` and `BEA_NET_*` variable, because the list of those switch-offs is in onslaught-ce (`port/platform/common/mods.cpp`) and no player sets one, while what the play
   hooks add after that still reaches CE). It waits for CE to close, keeps the first megabyte of CE's log as `last-session.log` in the play folder (made as a new file and renamed over the old
   one, so a link planted at its working name is never written through), reads the log's lines about mods
   (the page shows them when CE did not say it served the mod's world file) and removes the temporary folder.
@@ -552,7 +553,7 @@ player's careers, so the play path is designed to leave the player's CE folder u
   folder replaced by a link, swapped late with an empty twin waiting, the temporary folder replaced by a link) are in the route, with a check for each of the review's other requests
   (the success sentence, the log copy, versions with a label, the refusals, the prefix scrub, the sweep of an empty unmarked folder, the owner and mode of the play folder), and a second sweep
   of the code added for them (26 mutants, the reviewer's five among them) killed every one. The capture's `play` mode runs the
-  button end to end: the same edit as section 16, then the button pressed with the released Onslaught CE 0.1.12 package as the launcher, offscreen (the guards of `port/tools/run.py`, the key presses and a frame
+  button end to end: the same edit as section 16, then the button pressed with the released Onslaught CE 0.1.12 package as the launcher, offscreen (the guards of the offscreen runner in the private port source, the key presses and a frame
   limit given by environment through the play hooks). CE exited 0 after the run; its log, kept from the temporary folder, has the same four mods lines as section 16 (the world file with
   SHA-256 1504f7e3..., the same bytes the page's Save as mod writes, served once) and the temporary `ce.ini` it was given was the scratch player's with `mods=play-level-100`, `record_sessions=0` and
   `update_check=0` (the player's `record_sessions=1` and a stand-in `mods=` line did not reach it, and an unknown key was kept); the scratch player's CE folder (a `ce.ini`, a stand-in
