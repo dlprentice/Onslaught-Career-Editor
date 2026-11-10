@@ -19,7 +19,6 @@ version = 1
 path = [
     "companion/**",
     "tools/**",
-    "tests_shared/*.py",
     ".editorconfig",
     ".gitattributes",
     ".gitignore",

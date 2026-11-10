@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-11-06 (names, contribution routing and the second pinned fork; 2026-11-02: public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-10 (licence table no longer lists tests_shared scripts; 2026-11-06: names, contribution routing and the second pinned fork; 2026-11-02: public contributor setup and routing; historical results retain their dates)
 Summary: what this project is, where each part lives, which checks a public clone can run, and what Companion builds require.
 
 Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
@@ -214,7 +214,7 @@ reading guide.
 
 | Path | Licence |
 | --- | --- |
-| Code: `companion/`, `tools/` and `tests_shared/` scripts, build files | GPL-3.0-only ([`LICENSE`](LICENSE)) |
+| Code: `companion/`, `tools/` scripts, build files | GPL-3.0-only ([`LICENSE`](LICENSE)) |
 | `rebuild/` | GPL-3.0-only ([`rebuild/LICENSE`](rebuild/LICENSE), [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md)) |
 | Documentation (`*.md`, `reverse-engineering/`, `roadmap/`, data tables) and `lore/`, `lore-book/` | CC BY-SA 4.0 ([`LICENSES/CC-BY-SA-4.0.txt`](LICENSES/CC-BY-SA-4.0.txt)) |
 | `reverse-engineering/source-code/`: notes quoting the upstream GPL Onslaught source by Stuart Gillam | CC BY-SA 4.0 and GPL-3.0-only (the quoted source keeps its licence and credit) |
