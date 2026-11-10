@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-11-08 (experimental network and r3 checkpoint evidence reconciled; 0.1.14 preparation authorized with publication held; unified CE migration retained)
+Last updated: 2026-11-10 (active-input check wording corrected; 2026-11-08: experimental network and r3 checkpoint evidence reconciled; 0.1.14 preparation authorized with publication held; unified CE migration retained)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
@@ -313,8 +313,9 @@ The November 4 TURN test's retained summary has SHA-256
 `48bca4f415db38b90ebef4cdb7820368c3e37d0cac6d4c333e6c8c09ea3f8c3f`; its independent raw-record review has SHA-256
 `d78d6246061361a6ec38d66ba25ac3babeec300d5dd15e5f027f8f30e649991f`.
 It proves the bounded Linux session lifecycle above, not active movement/fire, Windows, two physical machines,
-voice, a campaign win or a publicly available service. The next active-input check must observe both player
-movement and actual shot creation in both game processes, first with a direct test and then through TURN.
+voice, a campaign win or a publicly available service. Movement and firing by both players were observed in the November 2/3
+engineering TURN run and in a November 7 direct pair, both on one Linux machine; they were not observed in the November 4
+run. What remains is the normal menu-to-match path through TURN, Windows, and two physical machines.
 
 Multiplayer engineering results remain separate from public source and release acceptance. The
 [published CE README](https://github.com/dlprentice/onslaught-ce/blob/bb4fa1f899db0d1826216b89a59c50781bb9cc9b/README.md#L721-L722)
