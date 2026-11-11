@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-11-06 (contributors pointed to CONTRIBUTING.md; maintainer-only workspace grouped; rebuild gate, screenshot allowance and lane terms corrected; 2026-11-02: public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-11 (tool-neutral outcomes and holds section; helper model wording; rebuild gate wording; 2026-11-06: contributors pointed to CONTRIBUTING.md; maintainer-only workspace grouped; rebuild gate, screenshot allowance and lane terms corrected; 2026-11-02: public contributor setup and routing; historical results retain their dates)
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
@@ -18,7 +18,7 @@ maintainer's own agent tooling.
 
 A preservation project for *Battle Engine Aquila* (2003). This public repository holds:
 
-- a **frozen copy of the Godot rebuild** (`rebuild/`), retained as reference and not built or tested here; the rebuild
+- a **frozen copy of the Godot rebuild** (`rebuild/`), retained as reference; its application is not built or tested here, though two of its Python helpers still run in `npm run test:tools`. The rebuild
   is developed in https://github.com/dlprentice/onslaught-godot. It aims to be 1:1 with retail from startup to exit,
   with level 100 playable to completion. `OnslaughtRebuild.Parity` is the simulation owner and
   `OnslaughtRebuild.Host` the presentation owner; the earlier `OnslaughtRebuild.Core`, `Client` and `Godot` projects
@@ -78,28 +78,19 @@ percentages, and follow the user's current priorities.
 
 ## Tool outcomes and user holds
 
-Record consequential tool outcomes in existing private notes with time, caller, action scope, returned status or
-reason, handle and known effects. Keep observations separate from interpretations; fresh evidence can correct an
-interpretation without erasing the original observation.
+Record consequential tool outcomes in existing private notes with time, action scope, returned status or reason and
+known effects, keeping observations separate from interpretations. Fresh evidence can correct an interpretation without
+erasing the original observation.
 
-- **Safety denial:** preserve its stated scope and reason. Do not obtain the denied outcome through another tool,
-  wrapper or helper. Continue only with a materially safer permitted alternative or the supported review process.
-  A task-level safety stop follows its actual notice and supported resume path.
-- **Generic abort:** a failed invocation without a policy reason proves neither approval nor a permanent task-wide
-  ban; its cause remains unknown. An already-authorized harmless check may receive one direct retry through the
-  same controls. If it repeats, record the unresolved failure and finish independent authorized work, without
-  repeated status loops or changing the request to bypass a restriction. Check effects before repeating any mutation.
-- **Observation failure:** a failed status read leaves the task's state unknown. A returned child handle establishes
-  accepted creation, not completion; check that existing task or await its result. A child's inability to observe
-  the parent's result does not invalidate it or justify duplicate work or interruption. Report unobserved required
-  checks as limits, never passes.
-- **User hold:** preserve it until the user explicitly releases that scope. General goal resumption does not release
-  narrower holds, and elapsed time, delegation or tool success grants no new authorization.
-
-Official OpenAI documentation: [Auto-review](https://learn.chatgpt.com/docs/sandboxing/auto-review),
-[task safety notices](https://learn.chatgpt.com/docs/agent-approvals-security),
-[recovery](https://developers.openai.com/api/docs/guides/agents-api/errors), and
-[delegation](https://developers.openai.com/api/docs/guides/agents-api/multi-agent).
+- **Safety denial:** keep its stated scope and reason. Do not obtain the denied outcome through another tool, wrapper
+  or helper. Continue only with a materially safer permitted alternative or the supported review process.
+- **Failed call without a reason:** it proves neither approval nor a permanent ban. An already-authorized harmless
+  check may be retried once. If it fails again, record the unresolved failure and finish independent authorized work
+  instead of changing the request to get around a restriction. Check effects before repeating any mutation.
+- **Failed status read:** the task's state is unknown. Check the existing task or await its result rather than starting
+  a duplicate, and report required checks that could not be observed as limits, never as passes.
+- **User hold:** keep it until the user explicitly releases that scope. Resuming the general goal, elapsed time,
+  delegation or a successful tool call does not release a narrower hold.
 
 ## Ground rules
 
@@ -148,10 +139,10 @@ Official OpenAI documentation: [Auto-review](https://learn.chatgpt.com/docs/sand
   contacts and why, and reads only public data.
 - C# only, built in code: no `.gd` files, no editor-authored scenes or resources (a `.tscn` only as a one-node entry
   wrapper), shader source in C# strings, one production owner per subsystem. Repository tooling stays Python.
-- Reviews by other agents or models are optional input to reproduce, not authority. Helpers inherit the lead's
-  default model and reasoning settings unless David explicitly requests an override. Historical model assignments
-  and the frozen [review protocol](reverse-engineering/REVIEW-PROTOCOL.md) do not impose a strongest-model requirement
-  on current work. Hosted reviewers never receive retail material or secrets. Hosted CI and release automation are
+- Reviews by other agents or models are optional input to reproduce, not authority. Choose a helper's model and effort
+  to suit its job. Historical model assignments and the frozen
+  [review protocol](reverse-engineering/REVIEW-PROTOCOL.md) do not impose a strongest-model requirement on current
+  work. Hosted reviewers never receive retail material or secrets. Hosted CI and release automation are
   outside this phase; release claims need the selected platform's validation; Linux evidence alone does not establish
   Windows behaviour.
 
@@ -178,7 +169,7 @@ Official OpenAI documentation: [Auto-review](https://learn.chatgpt.com/docs/sand
    header and no volatile counts. `tools/doc_header_backlog.txt` may only shrink.
 3. Stage only the scoped paths, commit plainly and push the working branch to your fork, then open a PR as
    [CONTRIBUTING.md](CONTRIBUTING.md) describes. Maintainers use the established integration route. Commits here are
-   public: keep the Co-Authored-By line, add no Claude-Session line, and describe the change itself, not which agent or role made it.
+   public: keep the Co-Authored-By line, add no session-link line, and describe the change itself, not which agent or role made it.
 
 ## Gotchas
 
