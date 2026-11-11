@@ -27,7 +27,7 @@ coverage and the third-party sample files it leaves out. Function matches do not
 behavioural equivalence or a byte-identical linked executable. Its native port is published separately as
 [Onslaught CE](https://github.com/dlprentice/onslaught-ce), and this document does not measure it. The Godot rebuild,
 a scoped proof of concept (level 100, startup to exit), is developed
-in [onslaught-godot](https://github.com/dlprentice/onslaught-godot), which records its measured parity; `rebuild/` here is a frozen copy. Executable patching and copied-install
+in [onslaught-godot](https://github.com/dlprentice/onslaught-godot), which records its measured parity; `rebuild/` here is a pointer page. Executable patching and copied-install
 safe launch are retired and not planned; their code (the AppCore library and the `patches/` catalog) was removed on
 2026-10-22, and Git keeps it.
 
@@ -329,13 +329,14 @@ test) and have not run on Windows; nobody has looked at the panel on screen.
 ## Reconstruction
 
 **Current: the parity-core proof of concept.** The rebuild is developed in
-[onslaught-godot](https://github.com/dlprentice/onslaught-godot), not in this repository's frozen `rebuild/` copy.
+[onslaught-godot](https://github.com/dlprentice/onslaught-godot), not in this repository (a frozen copy stood in `rebuild/` until 2026-11-11).
 `OnslaughtRebuild.Parity` owns the simulation and `OnslaughtRebuild.Host` the presentation. The live
 [parity record](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md) owns the measured bounds;
 its numerical model and portability are not claimed exact beyond those checks. Test success does not establish
 audible audio, visual equality, physical input, whole-game parity or a completed tutorial.
 
-**The earlier fixed-point rebuild.** The frozen [`rebuild/`](rebuild/README.md) copy still holds the earlier fixed-point
+**The earlier fixed-point rebuild.** The frozen copy removed from [`rebuild/`](rebuild/README.md) on 2026-11-11 (it remains at
+the tag `archive/20261111-rebuild-frozen-copy`) held the earlier fixed-point
 rebuild (`OnslaughtRebuild.Core`, `Client`, `Godot` and `Headless`, with their tests) as a reference. Its dated account of what
 it demonstrated, as it stood at the end of September 2026, was removed from this page on 2026-11-11; it describes no
 current capability. Git keeps it: `git show e64df96d9:CURRENT_CAPABILITIES.md`.

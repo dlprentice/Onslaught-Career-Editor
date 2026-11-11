@@ -13,8 +13,10 @@ It also guards the one thing file types cannot show: original-game bytes and pri
 tracked text. Three rules fail any live text file (comments, docs and code alike): a run of four or more
 space-separated hex byte tokens, a contiguous hex string of sixteen or more digits that is not a SHA-1 or SHA-256
 identity, and the private path markers ``local-lab/``, ``/srv/archive``, ``~/Projects/`` and ``/home/<user>``.
-The frozen copies (``reverse-engineering/`` and ``rebuild/``) keep the text they were frozen with: the three rules
-do not read them, and every other rule still does. Reviewed exceptions are RETAIL_TEXT_ALLOW (an exact token in an
+The frozen copy (``reverse-engineering/``) keeps the text it was frozen with: the three rules
+do not read it, and every other rule still does. ``rebuild/`` is no longer frozen text: the frozen rebuild copy was removed on
+2026-11-11, so its pointer page is read like any other file, and the denied roots for locally materialized retail assets
+under ``rebuild/`` stay as a guard. Reviewed exceptions are RETAIL_TEXT_ALLOW (an exact token in an
 exact file), RETAIL_TEXT_ALLOW_PREFIX (a ``local-lab/`` prefix in a document that names the lab folder) and
 RETAIL_TEXT_ALLOW_RULE (one rule in a generated file), each with a reason; an entry that no longer matches anything
 fails as stale, so the lists cannot outlive the text they excuse.
@@ -235,9 +237,10 @@ RETAIL_TEXT_ALLOW_ANY_FILE: dict[str, str] = {
     "0123456789ABCDEF": "the upper-case hex digit alphabet",
     "0123456789abcdefABCDEF": "the mixed-case hex digit alphabet",
 }
-# The frozen copies keep the text they were frozen with (the reverse-engineering notes quote bytes by design, the retired
-# rebuild quotes probe rows): the three rules do not read them. Every other rule (payload roots, secrets, size) still does.
-RETAIL_TEXT_FROZEN_PREFIXES = ("reverse-engineering/", "rebuild/")
+# The frozen copy keeps the text it was frozen with (the reverse-engineering notes quote bytes by design): the three rules
+# do not read it. Every other rule (payload roots, secrets, size) still does. rebuild/ was frozen text until 2026-11-11 and is
+# read like any other folder now.
+RETAIL_TEXT_FROZEN_PREFIXES = ("reverse-engineering/",)
 
 # A token is named by its text; a hex token that could be game bytes is named by "sha256:" and the SHA-256 of the token
 # (see token_digest), so that this list does not quote it.
@@ -1033,8 +1036,8 @@ def retail_text_self_test() -> list[str]:
         for rule in rules:
             if rule not in (run, long_hex, path_rule):
                 failures.append(f"a rule allowance for a rule that is not one of the three: {path}: {rule}")
-    if RETAIL_TEXT_FROZEN_PREFIXES != ("reverse-engineering/", "rebuild/"):
-        failures.append(f"the frozen copies are reverse-engineering/ and rebuild/ and nothing else: {RETAIL_TEXT_FROZEN_PREFIXES!r}")
+    if RETAIL_TEXT_FROZEN_PREFIXES != ("reverse-engineering/",):
+        failures.append(f"the frozen copy is reverse-engineering/ and nothing else: {RETAIL_TEXT_FROZEN_PREFIXES!r}")
     if token_digest("abc") != "sha256:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad":
         failures.append("token_digest is not the SHA-256 of the token")
 
@@ -1056,6 +1059,8 @@ def retail_text_self_test() -> list[str]:
             (root / frozen / "bad.exe").write_bytes(b"MZ")
         (root / "tools").mkdir()
         (root / "tools" / "notes.md").write_text(f"bytes {dump} local-lab/x {digits[:34]}\n", encoding="utf-8")
+        (root / "rebuild").mkdir()
+        (root / "rebuild" / "notes.md").write_text(f"bytes {dump} local-lab/x {digits[:34]}\n", encoding="utf-8")
         submodule = root / "references" / "upstream"
         submodule.mkdir(parents=True)
         subprocess.run(["git", "init", "-q"], cwd=submodule, check=True)
@@ -1089,6 +1094,8 @@ def retail_text_self_test() -> list[str]:
             failures.append(f"retail-text rules were applied to a frozen copy: {frozen_hits!r}")
         if {f.label for f in found if f.path == "tools/notes.md"} != set(retail_labels):
             failures.append("the same text outside the frozen copies did not fail all three rules")
+        if {f.label for f in found if f.path == "rebuild/notes.md"} != set(retail_labels):
+            failures.append("rebuild/ is no longer a frozen copy, but text in it did not fail all three rules")
         for frozen in RETAIL_TEXT_FROZEN_PREFIXES:
             if not any(f.path == f"{frozen}bad.exe" for f in found):
                 failures.append(f"the other rules no longer read the frozen copy {frozen}")

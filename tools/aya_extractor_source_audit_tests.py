@@ -160,6 +160,20 @@ class AyaExtractorSourceAuditTests(unittest.TestCase):
         with self.assertRaisesRegex(audit.AuditError, "out-of-range line reference"):
             audit.build_report(self.repo_root, contract)
 
+    def test_references_to_the_archived_rebuild_file_are_checked_against_its_line_count(self) -> None:
+        # rebuild/tools/aya_battleengine_identity_analyzer.py left the tree with the frozen rebuild copy; the contract table
+        # still cites it, and a range past its recorded last line must still fail while one inside it passes.
+        path = "rebuild/tools/aya_battleengine_identity_analyzer.py"
+        last = audit.ARCHIVED_REFERENCE_LINE_COUNTS[path]
+        audit._validate_line_reference(self.repo_root, f"{path}:L{last - 1}-L{last}")
+        with self.assertRaisesRegex(audit.AuditError, "out-of-range line reference"):
+            audit._validate_line_reference(self.repo_root, f"{path}:L{last}-L{last + 1}")
+        with self.assertRaisesRegex(audit.AuditError, "missing referenced file"):
+            audit._validate_line_reference(self.repo_root, "rebuild/tools/never_existed.py:L1")
+
+    def test_moved_cmsh_files_are_read_at_their_new_path(self) -> None:
+        audit._validate_line_reference(self.repo_root, "rebuild/tools/cmsh_static_preview.py:L993-L1004")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -1,10 +1,10 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-11-11 (the CMSH parser, region data and reader fixtures moved here from the frozen rebuild copy)
+Last updated: 2026-11-11 (the CMSH parser, region data and reader fixtures moved here from the frozen rebuild copy, which was then removed)
 Summary: what each tool in `tools/` is for.
 
-`tools/` supports the companion, the game documentation and the frozen rebuild copy in `rebuild/` through guarded extraction,
+`tools/` supports the companion and the game documentation (and the rebuild developed in onslaught-godot) through guarded extraction,
 format inspection, capture analysis and focused checks. The Ghidra scripts, cohort specs, campaign/authority tools
 and the Windows TTD/cdb/PowerShell runtime-probe lab moved on 2026-10-15 to the private historical maintainer archive; the WinUI packaging tools were removed.
 The active rebuild lives in [onslaught-godot](https://github.com/dlprentice/onslaught-godot).
@@ -60,14 +60,14 @@ change that needs no retail data. For example, `python tools/content_catalog_tes
   `companion_godot.py` builds and runs the companion through the verified public setup; an explicitly selected
   shared installation remains an optional maintainer route.
 - `cmsh_static_preview.py` is the CMSH mesh parser that the format tools import. It and `cmsh_static_preview_tests.py`
-  moved here on 2026-11-11 from the frozen `rebuild/` copy, with the region and plan JSON files
+  moved here on 2026-11-11 from the frozen rebuild copy, with the region and plan JSON files
   (`gameplay-regions-level100.json`, `frontend-regions-*.json`, `frontend-parity-plan.json`); the move changed the
   checkout-root path constants only. `test:tools` runs that parser's tests.
   `godot_reader_fixtures/` holds five C# reader sources from onslaught-godot that `particle_set_walk_tests.py` and
   `physics_values_decode_tests.py` read; its [README](godot_reader_fixtures/README.md) names the source commit.
-- `rebuild/` is a frozen reference. `test:tools` retains `materialize_retail_assets_tests.py`, and `test:godot-host`
-  also checks the retained `first_flight.py` launcher with fake tools. These are support-code checks, not builds or parity
-  acceptance of the frozen rebuild application. Current rebuild setup, runtime commands and gates belong to
+- `rebuild/` holds only a pointer page since 2026-11-11: the frozen rebuild copy, with its `materialize_retail_assets.py`
+  and `first_flight.py` tools and their tests, was removed and is at the tag `archive/20261111-rebuild-frozen-copy`.
+  `test:godot-host` runs `godot_host_tests.py` only. Rebuild setup, runtime commands and gates belong to
   [onslaught-godot](https://github.com/dlprentice/onslaught-godot).
 - `ce_museum_stage.py` turns an authored exhibition description into two loose-world overrides in a CE mod folder, using an existing level's terrain and resources from a game you own. It is experimental: [the museum project note](../docs/ce-museum-project.md) gives its scope and limits. Its authored tests are registered in `run_tool_tests.py`.
 
@@ -81,9 +81,9 @@ publish, sign, or install anything by themselves.
   the link check accepts their links into sections that moved from `VALIDATION.md` to `VALIDATION-HISTORY.md`; live
   documents must link to the new file. In the same way it accepts a frozen page's link to a file that left `rebuild/`
   for `tools/` (while the new home exists: the parser, its tests and the region and plan JSON files) and, for
-  eight exact paths that only the `archive/20261111-rebuild-frozen-copy` tag will hold once `rebuild/` is removed,
-  a link that no longer resolves in the working tree; both lists are in the script, and the check fails if an allowed
-  path is missing from the tree it still has or from that tag when the clone has it. In a clone whose reference submodules are not initialised, links into them cannot
+  eight exact paths that only the `archive/20261111-rebuild-frozen-copy` tag holds, a link that no longer resolves in the
+  working tree; both lists are in the script, and the check fails if an allowed path is missing from that tag when the
+  clone has it. In a clone whose reference submodules are not initialised, links into them cannot
   be resolved: the check names each skipped submodule and the number of links it did not check (the result line says
   SKIPPED), and `--require-submodules` makes that a failure.
 - `doc_header_check.py` enforces the header contract in
@@ -102,8 +102,8 @@ publish, sign, or install anything by themselves.
 - `safe_generated_output.py` is the publication helper behind the Python writers `aya_archive_inventory.py`,
   `aya_cross_platform_compare.py`, `aya_texture_fidelity_census.py`, `cmsh_animation_usage_census.py`,
   `cmsh_skinning_contract.py`, `cmsh_matrix_normal_contract.py`, `content_catalog.py`, `export_asset_catalog.py`,
-  `export_game_assets.py`, `export_language_corpus.py` and `export_video_manifest.py` (the frozen rebuild's
-  `cmsh_static_preview.py` uses it too). On POSIX it creates and opens every output directory relative to a directory
+  `export_game_assets.py`, `export_language_corpus.py` and `export_video_manifest.py` (`cmsh_static_preview.py`
+  uses it too). On POSIX it creates and opens every output directory relative to a directory
   descriptor it already holds, so a symlink or directory put at the output path during a run cannot redirect a write;
   it writes an exclusive temporary name, publishes with a rename that follows no link, and refuses a destination that
   is a symlink, a hard link or not a regular file. It re-checks that every held directory (one it keeps open as a descriptor) is still named where it was
@@ -690,9 +690,9 @@ documented below and in the development entry headers. Keep retail-derived table
   retail-derived metadata to stdout and opens no report file. If the caller
   redirects or saves the result, the destination and overwrite safety are the
   caller's responsibility; never redirect it into a game or user folder.
-- `rebuild/tools/materialize_retail_assets.py` is the frozen rebuild's materialization reference; its retained
-  focused tests still run under `test:tools`. Current rebuild input preparation and build/run commands belong to
-  [onslaught-godot](https://github.com/dlprentice/onslaught-godot).
+- The rebuild's materialization tool, `rebuild/tools/materialize_retail_assets.py`, and its tests are in
+  [onslaught-godot](https://github.com/dlprentice/onslaught-godot) (the frozen copy that was here is at the archive tag);
+  they no longer run under `test:tools`. Current rebuild input preparation and build/run commands belong there.
 - `BeaAssetExportHarness/` is the bounded C# AYA/FBX export bridge.
 - `language_dat_decode.py`, `options_entries_decode.py`,
   `cheat_table_decode.py`, and `cardid_preset_manager.py` are focused format
@@ -751,9 +751,9 @@ The catalogue and its detailed outputs contain game-derived data and stay in ign
 
 - `compare_capture.py` compares one reconstruction frame against one retail
   frame per region. It refuses mismatched sizes rather than resampling.
-- `score_frontend_capture.py` pairs whole capture runs against the retail reference by offset. In the retained
+- `score_frontend_capture.py` pairs whole capture runs against the retail reference by offset. In onslaught-godot's
   `rebuild/tools/first_flight.py` launcher, capture folds its verdict into the capture's `status`, so a frontend
-  regression fails that capture. This describes the frozen route; current capture commands and parity gates belong to
+  regression fails that capture; current capture commands and parity gates belong to
   [onslaught-godot](https://github.com/dlprentice/onslaught-godot). The retained thresholds live in
   `tools/frontend-parity-plan.json` and are regression ceilings, not
   parity claims. The plan stores each measured value plus the single

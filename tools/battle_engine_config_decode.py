@@ -83,6 +83,9 @@ UNKNOWN_FALSIFIER = (
     "A promoted retail-static destination/consumer join for this exact span; "
     "source order alone is insufficient."
 )
+# The rebuild/ citations below name files of the frozen rebuild copy, which was removed from this repository on 2026-11-11
+# (it is at the tag archive/20261111-rebuild-frozen-copy; the line ranges are of that copy). The string is kept as written
+# because the frozen layout table carries it byte for byte and a test compares the two.
 RECORD_EVIDENCE = (
     "reverse-engineering/asset-formats/config-dat.md:57-70;"
     "reverse-engineering/installed-corpus-census.md:619-638;"

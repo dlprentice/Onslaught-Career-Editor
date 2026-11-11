@@ -52,14 +52,14 @@ PUBLIC_CORE_MARKDOWN = (
     "lore/_index.md",
     "reverse-engineering/RE-INDEX.md",
     "rebuild/README.md",
-    "rebuild/PROVENANCE.md",
 )
 
 
-# The frozen copies (reverse-engineering/, rebuild/) may not be edited, and many of their links point at dated sections that
+# The frozen copy (reverse-engineering/) may not be edited, and many of its links point at dated sections that
 # moved out of VALIDATION.md. A link from a frozen file into a moved file is accepted when the anchor exists in the new home;
-# every other document must link to the new home directly.
-FROZEN_PREFIXES = ("reverse-engineering/", "rebuild/")
+# every other document must link to the new home directly. rebuild/ was a frozen copy too until 2026-11-11; it holds a pointer
+# page now, which is checked like any live document.
+FROZEN_PREFIXES = ("reverse-engineering/",)
 MOVED_ANCHOR_HOMES = {"VALIDATION.md": "VALIDATION-HISTORY.md"}
 
 # Files that left rebuild/ for tools/ on 2026-11-11, while the rest of rebuild/ stayed: {old path: new home}. A link from a
@@ -389,11 +389,11 @@ def self_test() -> int:
         (root / "notes.txt").write_text("text", encoding="utf-8")
         (root / "VALIDATION.md").write_text("# Gate table\n", encoding="utf-8")
         (root / "VALIDATION-HISTORY.md").write_text("# History\n\n## Moved entry\n", encoding="utf-8")
-        (root / "rebuild").mkdir()
-        (root / "rebuild" / "frozen.md").write_text(
+        (root / "reverse-engineering").mkdir()
+        (root / "reverse-engineering" / "frozen.md").write_text(
             "[moved](../VALIDATION.md#moved-entry) [absent](../VALIDATION.md#no-such-entry)\n", encoding="utf-8")
         (root / "live.md").write_text("[moved](VALIDATION.md#moved-entry)\n", encoding="utf-8")
-        broken, total, skipped = check_links([root / "a.md", root / "b.md", root / "rebuild" / "frozen.md", root / "live.md"], root)
+        broken, total, skipped = check_links([root / "a.md", root / "b.md", root / "reverse-engineering" / "frozen.md", root / "live.md"], root)
         got = sorted((item["target"], item["kind"]) for item in broken)
         want = sorted([("b.md#missing-heading", "anchor"), ("#nope", "anchor"), ("missing.md", "path"),
                        ("b.md#bad-after", "anchor"), ("b.md#odd-tick-missing", "anchor"),

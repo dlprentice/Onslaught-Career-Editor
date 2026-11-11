@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-11-11 (tool-neutral outcomes and holds section; helper model wording)
+Last updated: 2026-11-11 (the frozen rebuild copy was cut; rebuild/ is a pointer page)
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
@@ -18,11 +18,13 @@ maintainer's own agent tooling.
 
 A preservation project for *Battle Engine Aquila* (2003). This public repository holds:
 
-- a **frozen copy of the Godot rebuild** (`rebuild/`), retained as reference; its application is not built or tested here, though some of its Python helpers are still used by Toolkit tools and tested by `npm run test:tools` and `npm run test:godot-host`. The rebuild
-  is developed in https://github.com/dlprentice/onslaught-godot. It aims to be 1:1 with retail from startup to exit,
+- a pointer page, `rebuild/README.md`, where a frozen copy of the Godot rebuild stood until 2026-11-11 (it remains at the tag
+  `archive/20261111-rebuild-frozen-copy`). The rebuild is developed in https://github.com/dlprentice/onslaught-godot, which holds its
+  code, tests, licence and provenance record. It aims to be 1:1 with retail from startup to exit,
   with level 100 playable to completion. `OnslaughtRebuild.Parity` is the simulation owner and
   `OnslaughtRebuild.Host` the presentation owner; the earlier `OnslaughtRebuild.Core`, `Client` and `Godot` projects
-  are reference material, not a second production simulation;
+  are reference material there, not a second production simulation. The CMSH mesh parser and the region and plan data that
+  Toolkit tools use moved from the frozen copy to `tools/`;
 - the **companion** (`companion/`), Onslaught Companion: the Godot .NET app for careers, saves, backups, settings,
   music and lore for the original game and Onslaught CE, including CE launcher settings and the steps for updating CE (the running companion contacts nothing; its build setup downloads pinned tools, see [README](README.MD#build-and-run)). The old AppCore patching
   core is gone; the file-safety and save-layout code the companion uses lives in the companion, and Git keeps the rest;
@@ -39,7 +41,7 @@ The decompilation's public export is https://github.com/dlprentice/onslaught-dec
 published at https://github.com/dlprentice/onslaught-preservation. [`GOAL.md`](GOAL.md) states the outcomes, [`PROGRAM.md`](PROGRAM.md) the work
 queue, [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) what is demonstrated, and
 [onslaught-godot's parity record](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md) the rebuild's
-current milestones and measured parity. The local [`rebuild/PARITY.md`](rebuild/PARITY.md) is frozen.
+current milestones and measured parity.
 
 ## Checkouts and branches
 
@@ -50,7 +52,7 @@ maintainer's workspace described under "Maintainer-only workspace" below ([READM
   start from the flattened `main` (the history was flattened into a single root; see the commit titled Describe the
   repository after the history flatten); never merge a pre-flatten branch or resurrect its plans.
 - Current rebuild development is documented in [onslaught-godot](https://github.com/dlprentice/onslaught-godot); the
-  local `rebuild/README.md` records the frozen copy. The companion's own
+  local [`rebuild/README.md`](rebuild/README.md) points there. The companion's own
   [README](companion/OnslaughtToolkit.Godot/README.md) describes its workflows and validation limits.
 
 ### Maintainer-only workspace
@@ -114,8 +116,8 @@ erasing the original observation.
   `npm run test:safety` enforces the boundary; the screenshot allowance exists, but the register in `reverse-engineering/project-meta/attribution.md` is currently empty
   (`tools/check_registered_screenshots.py` checks it). It also
   fails live text (docs, code and comments alike) that quotes original-game bytes (a run of hex byte tokens, or a long
-  hex string that is not a SHA-1 or SHA-256) or a private machine path. The frozen copies (`reverse-engineering/`
-  and `rebuild/`) are not read by those rules; every reviewed exception is listed with its reason in
+  hex string that is not a SHA-1 or SHA-256) or a private machine path. The frozen copy (`reverse-engineering/`)
+  is not read by those rules; every reviewed exception is listed with its reason in
   `tools/public_allowlist_safety_check.py`, and an exception whose text is gone fails as stale.
 - Every behaviour claim cites a capture, byte comparison, focused test, or pinned source file and line. Decompiler
   output, a plausible name or a model's opinion proves nothing; the decompilation is the naming authority, cited by
@@ -129,7 +131,8 @@ erasing the original observation.
   grep the tooling and tests, not only the docs: a 2026-08-06 cleanup deleted inputs whose identities were pinned in
   tooling. Retention belongs to `local-lab/INDEX.md` and the machine's deletion queue.
 - Licensing: the rebuild is GPL and may adapt the pinned GPL source in `references/Onslaught` and the decompilation's
-  simulation (recorded per unit in `rebuild/PROVENANCE.md`); it consumes locally materialized retail data but never
+  simulation (recorded per unit in [`rebuild/PROVENANCE.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PROVENANCE.md)
+  in onslaught-godot, where it is developed); it consumes locally materialized retail data but never
   contains retail executables, decompiler output or separately licensed material. All project code (companion, rebuild,
   tools) is GPL-3.0-only and documentation and lore are CC BY-SA 4.0, as `REUSE.toml` maps them; ExuberantParrot's PR #1
   passages also keep their MIT notice. Contributions come in under the same terms (`CONTRIBUTING.md`). None of it
@@ -137,7 +140,7 @@ erasing the original observation.
 - The rebuild's simulation (`OnslaughtRebuild.Parity`) is deterministic given its inputs: the tape, the retail data
   and options files it reads as the game does, and the virtual clock. It never reads wall time, locale, environment or
   thread scheduling, and it has no presentation, process, network or GPU dependency (the earlier `Core`'s stricter
-  contract is [DETERMINISM.md](rebuild/DETERMINISM.md)). Tests compare it with recorded references Present by
+  contract is [DETERMINISM.md](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/DETERMINISM.md) in onslaught-godot). Tests compare it with recorded references Present by
   Present; missing references, empty selections and new skips are not passes.
 - No telemetry: nothing in this repository collects or sends usage data. A network feature names exactly what it
   contacts and why, and reads only public data.
@@ -155,9 +158,8 @@ erasing the original observation.
 - Source layout and dependencies: [PROJECT-INDEX.md](PROJECT-INDEX.md); setup and commands:
   [README.MD](README.MD#build-and-run) and [package.json](package.json); which gate applies:
   [VALIDATION.md](VALIDATION.md).
-- Current rebuild setup and contracts: [onslaught-godot](https://github.com/dlprentice/onslaught-godot). The retained
-  [rebuild/README.md](rebuild/README.md), [PARITY.md](rebuild/PARITY.md), [PROVENANCE.md](rebuild/PROVENANCE.md) and
-  [DETERMINISM.md](rebuild/DETERMINISM.md) document the frozen copy.
+- Current rebuild setup and contracts: [onslaught-godot](https://github.com/dlprentice/onslaught-godot); its `rebuild/` folder
+  holds `README.md`, `PARITY.md`, `PROVENANCE.md` and `DETERMINISM.md`. The local [rebuild/README.md](rebuild/README.md) is a pointer.
 - Current game documentation: [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation); the local
   [RE-INDEX.md](reverse-engineering/RE-INDEX.md) routes the frozen copy. Archived Ghidra and campaign records: the
   private historical maintainer archive.
@@ -168,7 +170,7 @@ erasing the original observation.
 ## Definition of done
 
 1. The smallest gate that could falsify the change passed: docs → `git diff --check` and `npm run test:docs`; added
-   files → `npm run test:safety`; tool changes → the affected `_tests.py` cases; rebuild changes are not made here (`rebuild/` is frozen): send them to onslaught-godot, as [CONTRIBUTING.md](CONTRIBUTING.md) describes; companion → its `npm test`.
+   files → `npm run test:safety`; tool changes → the affected `_tests.py` cases; rebuild changes are not made here (`rebuild/` is a pointer page): send them to onslaught-godot, as [CONTRIBUTING.md](CONTRIBUTING.md) describes; companion → its `npm test`.
 2. A new or edited tracked `.md` has `Status:`, `Last updated:` (or `Date:`) and `Summary:` (or `Verdict:`) in its
    header and no volatile counts. `tools/doc_header_backlog.txt` may only shrink.
 3. Stage only the scoped paths, commit plainly and push the working branch to your fork, then open a PR as

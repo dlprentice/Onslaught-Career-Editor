@@ -434,7 +434,7 @@ def read_world_chunk(raw: bytes, base: int, size: int, ctx: Context, reading: Re
                 account.add(at - 8, 8 + child_size, UNKNOWN, "WRES/" + child)
 
 
-VIEW_RECORD = 24  # six floats: left, right, top, bottom, width, height (rebuild/tools/materialize_retail_assets.py)
+VIEW_RECORD = 24  # six floats: left, right, top, bottom, width, height (onslaught-godot's rebuild/tools/materialize_retail_assets.py)
 
 
 def views_hold(body: bytes) -> bool:
@@ -782,7 +782,7 @@ def read_jpeg(data: bytes, ctx: Context, row: dict) -> Reading:
     return reading
 
 
-DIAL_FRAME = 256  # 16 x 16 one-byte indices (rebuild/OnslaughtRebuild.Host/HudView.cs, from CByteSprite's use in DrawThreats)
+DIAL_FRAME = 256  # 16 x 16 one-byte indices (onslaught-godot's rebuild/OnslaughtRebuild.Host/HudView.cs, from CByteSprite's use in DrawThreats)
 
 
 def read_byte_sprite(data: bytes, _ctx: Context, row: dict) -> Reading:
@@ -1665,7 +1665,7 @@ def animation_details(record: dict) -> dict:
 # A mode's phase runs from 0 to 1, growing by the mode's rate once per game tick, 20 ticks a second, and a rate up to
 # 0.0001 plays at 1 instead (CAnimation::Process and CAnimation::SetAnimMode, as
 # reverse-engineering/asset-formats/cmsh-animation-keys.md documents them and
-# rebuild/OnslaughtRebuild.Parity/Things/Animation.cs follows them).
+# onslaught-godot's rebuild/OnslaughtRebuild.Parity/Things/Animation.cs follows them).
 TICKS_PER_SECOND = 20
 SLOWEST_RATE = 0.0001
 

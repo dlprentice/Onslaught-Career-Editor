@@ -1,8 +1,11 @@
 # Licence map for this repository (REUSE specification 3.3).
 # Per-file SPDX lines take precedence where a file has one; the last matching
 # annotation below wins for files without one.
-# rebuild/ is GPL-3.0-only throughout (its own LICENSE and PROVENANCE.md); its
-# per-file SPDX lines take precedence and the annotation below covers the rest.
+# The frozen rebuild copy that stood in rebuild/ was removed on 2026-11-11 (it is at the
+# tag archive/20261111-rebuild-frozen-copy, GPL-3.0-only throughout, with its own LICENSE
+# and PROVENANCE.md); rebuild/ now holds only a pointer page, annotated with the documentation below.
+# The credit for code adapted from Stuart Gillam's Onslaught release is recorded per unit in
+# onslaught-godot's rebuild/PROVENANCE.md (https://github.com/dlprentice/onslaught-godot).
 # Not covered here: references/ submodules (their own licences).
 #
 # tests_shared/fixtures/gold_career_save.bin is annotated below with
@@ -33,13 +36,6 @@ path = [
 SPDX-FileCopyrightText = "David Prentice and Onslaught Toolkit contributors"
 SPDX-License-Identifier = "GPL-3.0-only"
 
-# The frozen rebuild copy: code, docs, data and project files, all GPL-3.0-only.
-# Files adapting Stuart Gillam's release also credit him (rebuild/PROVENANCE.md).
-[[annotations]]
-path = "rebuild/**"
-SPDX-FileCopyrightText = "David Prentice and Onslaught Toolkit contributors"
-SPDX-License-Identifier = "GPL-3.0-only"
-
 # Documentation, lore and documentation data tables. lore/** and lore-book/**
 # quote developers, interviews and articles; those quotations stay with their
 # authors (the quotation note under "Licences" in
@@ -56,6 +52,7 @@ path = [
     "companion/**/*.md",
     "docs/**/*.md",
     "tools/**/*.md",
+    "rebuild/README.md",
     "tests_shared/fixtures/README.md",
 ]
 SPDX-FileCopyrightText = "David Prentice and Onslaught Toolkit contributors"

@@ -6,7 +6,7 @@ DXT2 bracket texture, then sweeps uniform scale and centre position to find the
 placement whose alpha mask best covers the arc pixels actually drawn on the page.
 
 The AYA container framing and the DXT2 (premultiplied DXT3) alpha layout follow
-rebuild/OnslaughtRebuild.Godot/CuratedAyaTextureLoader.cs: a stream of
+onslaught-godot's rebuild/OnslaughtRebuild.Godot/CuratedAyaTextureLoader.cs: a stream of
 <uint32 little-endian compressed length><zlib record> producing a DDS whose
 128-byte header is followed by 16-byte blocks of 8 alpha bytes (4 bits/texel,
 row-major within the 4x4 block) then 8 colour bytes.
@@ -94,7 +94,7 @@ class PageSpec:
 
 # Exclusions are drawn from the proven page inventories in
 # local-lab/STARTUP-FLOW-FINDINGS-2026-07-25.md and the region JSON under
-# rebuild/tools/. They remove page furniture that is bright and neutral enough to
+# tools/. They remove page furniture that is bright and neutral enough to
 # be confused with arc metal, never the arc itself.
 COMMON_EXCLUDE = (
     (0, 0, 200, 205),  # Forseti emblem, its writing, and the left header end-cap

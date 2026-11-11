@@ -42,8 +42,8 @@ HEADER_CANDIDATES = (0, 4, 8, 20, 24)
 
 # Tags whose payload is bulk data, not a record stream. Treating them as
 # containers risks framing noise. Membership is asserted by the mesh-format
-# contract in rebuild/tools/aya_battleengine_identity_analyzer.py and by the
-# world parsers in rebuild/tools/materialize_retail_assets.py.
+# contract in onslaught-godot's rebuild/tools/aya_battleengine_identity_analyzer.py and by the
+# world parsers in its rebuild/tools/materialize_retail_assets.py.
 OPAQUE_TAGS = frozenset(
     {
         b"VBUF", b"IBUF", b"TEXR", b"CMVB", b"CMSP", b"CMST", b"TEXB",

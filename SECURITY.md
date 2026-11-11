@@ -71,7 +71,7 @@ publicly. Do not attach full local retail payloads.
 
 ## License and asset boundary
 
-Project code is GPL-3.0-only under the root `LICENSE`, and `rebuild/` under `rebuild/LICENSE`;
+Project code is GPL-3.0-only under the root `LICENSE`, and the rebuild (developed in onslaught-godot) under that repository's `rebuild/LICENSE`;
 documentation and lore are CC BY-SA 4.0, as `REUSE.toml` maps them.
 `references/Onslaught` keeps its own GPL licence; file-level and third-party
 notices remain applicable.

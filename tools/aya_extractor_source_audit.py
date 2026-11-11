@@ -137,6 +137,11 @@ RELOCATED_REFERENCES = {
     "rebuild/tools/cmsh_static_preview.py": "tools/cmsh_static_preview.py",
     "rebuild/tools/cmsh_static_preview_tests.py": "tools/cmsh_static_preview_tests.py",
 }
+# One file the contract table cites left the tree when the frozen rebuild copy was removed (2026-11-11); it is at the tag
+# archive/20261111-rebuild-frozen-copy. Its line count there lets a cited range still be checked for being inside the file.
+ARCHIVED_REFERENCE_LINE_COUNTS = {
+    "rebuild/tools/aya_battleengine_identity_analyzer.py": 636,
+}
 _LINE_REFERENCE = re.compile(r"^(?P<path>.+):L(?P<first>[1-9]\d*)(?:-L?(?P<last>[1-9]\d*))?$")
 FORMAT_TOKENS = (
     "CMSH", "CMST", "MSHT", "TEXB", "MESP", "CMSP", "CHLD", "PRNT", "NMIC",
@@ -285,12 +290,15 @@ def _validate_line_reference(repo_root: Path, value: str) -> None:
             return
         raise AuditError(f"reference lacks checked line range or hash: {value}")
     path = repo_root / RELOCATED_REFERENCES.get(match.group("path"), match.group("path"))
-    if not path.is_file():
+    if not path.is_file() and match.group("path") in ARCHIVED_REFERENCE_LINE_COUNTS:
+        total = ARCHIVED_REFERENCE_LINE_COUNTS[match.group("path")]
+    elif not path.is_file():
         raise AuditError(f"missing referenced file: {value}")
-    text = _decode_text(path.read_bytes())
-    if text is None:
-        raise AuditError(f"line reference points at binary: {value}")
-    total = len(text.splitlines())
+    else:
+        text = _decode_text(path.read_bytes())
+        if text is None:
+            raise AuditError(f"line reference points at binary: {value}")
+        total = len(text.splitlines())
     first = int(match.group("first"))
     last = int(match.group("last") or first)
     if first > last or last > total:

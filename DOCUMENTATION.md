@@ -108,7 +108,7 @@ by what the evidence actually is:
 | `UNKNOWN` | Not settled, **and here is what would settle it.** | `Evidence: UNKNOWN — a CDB stop at 0x0040C990 would settle it.` |
 
 The four grades are not invented: they are
-[`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md)'s own authority order, with its
+[`rebuild/PROVENANCE.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PROVENANCE.md) in onslaught-godot, whose own authority order they are, with its
 top two rungs (controlled runtime observation, retail binary/static evidence)
 collapsing into `MEASURED` because both read the shipped artefact.
 
@@ -327,7 +327,7 @@ cleanup batch. Prior wording and implementation history remain in Git.
 - [`AGENTS.md`](AGENTS.md) — the contributor guide, and the evidence rules this
   standard mechanises.
 - [`GOAL.md`](GOAL.md) — the evidence partition the `Evidence:` grades follow.
-- [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) — the authority order the four
-  grades were taken from.
+- [`rebuild/PROVENANCE.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PROVENANCE.md) in onslaught-godot — the
+  authority order the four grades were taken from.
 - [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) — the RE
   evidence front door, and the specimen rule in its original form.

@@ -295,7 +295,7 @@ puts all of them on the unit-statement surface. It does not silently narrow
 - Tracked source synthesis: `reverse-engineering/source-code/stuart-source-synthesis.md`
   and the focused gameplay/system notes under that directory.
 - Exact statement framing reused by the materializer:
-  `rebuild/tools/materialize_retail_assets.py` (`_physics_records`).
+  onslaught-godot's `rebuild/tools/materialize_retail_assets.py` (`_physics_records`).
 - Boss exclusivity windows: TTD deep-mine REPORT + batches 1-10
   (`local-lab/hermes-kanban-campaign-2026-08-22/ttd-deep-mine/`).
 - Mission-side boss behavior (Fenrir components, submarine dive/surface):

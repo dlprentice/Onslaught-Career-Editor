@@ -72,7 +72,7 @@ lines are played from the player's install; cutscenes are only listed. Home's ba
 map of Allium are the images in the player's own `Manuals/Images/`, read when shown, and the
 manual itself opens from the install in the player's browser. The icons and the emblem
 (also the Windows program icon, drawn at export) are original vector shapes in code. No source from
-`rebuild/` or `references/Onslaught`, decompiler output, proprietary asset, font, music,
+the rebuild (onslaught-godot, formerly `rebuild/` here) or `references/Onslaught`, decompiler output, proprietary asset, font, music,
 executable or user save enters this application or its exports. Using Godot in both lanes
 does not combine their licensing boundaries. No retail payload is required to build or
 launch the companion.

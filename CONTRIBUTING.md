@@ -1,12 +1,12 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-11-11 (one rule for where findings go; the named submodule skip)
+Last updated: 2026-11-11 (the frozen rebuild copy was cut; rebuild/ is a pointer page)
 Summary: which public repository takes which kind of work, what a first contribution needs and runs, what a focused
 change looks like here, what must never be added to the repository, and which checks a change owes.
 
 This public repository holds Onslaught Companion for the original game and Onslaught CE, the lore, our tools, a
-frozen copy of the game documentation (`reverse-engineering/`) and a frozen copy of the Godot rebuild.
+frozen copy of the game documentation (`reverse-engineering/`) and a pointer to the Godot rebuild (`rebuild/`).
 [GOAL.md](GOAL.md) states the direction and [PROGRAM.md](PROGRAM.md) the work queue. Keep changes focused and use
 existing records and validation.
 
@@ -34,8 +34,8 @@ Questions and ideas: https://github.com/dlprentice/onslaught-ce/discussions
 One rule for findings: function identity, naming and matching go to onslaught-decomp; behaviour, format and mechanics
 documentation goes to onslaught-preservation.
 
-Two trees in this repository are frozen copies: `rebuild/` (rebuild work goes to onslaught-godot) and
-`reverse-engineering/` (documentation goes to onslaught-preservation). The forks
+One tree in this repository is a frozen copy: `reverse-engineering/` (documentation goes to onslaught-preservation).
+`rebuild/` is a pointer page: the frozen rebuild copy was removed on 2026-11-11, and rebuild work goes to onslaught-godot. The forks
 [dlprentice/Onslaught](https://github.com/dlprentice/Onslaught) and
 [dlprentice/AYAResourceExtractor](https://github.com/dlprentice/AYAResourceExtractor) are pinned references, not
 contribution targets.
@@ -118,7 +118,7 @@ New code files start with an `SPDX-License-Identifier: GPL-3.0-only` comment.
 
 - The companion owns its career codec, file safety, game text, lore and every screen.
 - The Godot rebuild's simulation and presentation are owned by [onslaught-godot](https://github.com/dlprentice/onslaught-godot);
-  `rebuild/` here is a frozen copy.
+  `rebuild/` here is a pointer page to it.
 - `lore/` is the canonical public lore/history source. Corrections to it are made here; the record of what it used to say
   wrongly is [`history/lore-errata.md`](https://github.com/dlprentice/onslaught-preservation/blob/main/history/lore-errata.md)
   in onslaught-preservation.
@@ -181,8 +181,9 @@ is written, new findings come from the byte-matching decompilation or controlled
 specs, cite the function or capture, and never paste decompiler output. Retain raw or bulky proof locally; commit
 only the smallest public-safe evidence a document needs, and state what it does not prove.
 
-`rebuild/` is a frozen copy: rebuild changes belong in [onslaught-godot](https://github.com/dlprentice/onslaught-godot). For the record, read
-[`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md) and [`rebuild/README.md`](rebuild/README.md): GPL-compatible source adaptation and locally materialized
+`rebuild/` is a pointer page: rebuild changes belong in [onslaught-godot](https://github.com/dlprentice/onslaught-godot). For the record, read
+[`rebuild/PROVENANCE.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PROVENANCE.md) and
+[`rebuild/README.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/README.md) there: GPL-compatible source adaptation and locally materialized
 user-supplied retail data are permitted; retail executable or decompiler text and separately licensed
 third-party material are not.
 

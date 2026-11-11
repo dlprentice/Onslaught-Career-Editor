@@ -47,11 +47,12 @@ which public repository takes which kind of work, and everyone contributes by fo
   from game launch and Windows behavior that still need to be tried.
 - **The Godot rebuild** aims to be 1:1 with retail from startup to exit, with level 100 playable to completion. It
   is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot), which keeps its measured parity.
-  `rebuild/` here is retained as a frozen reference. Its application is not built or gated here; some retained
-  Python helpers still support this repository's format tools and have focused checks.
+  `rebuild/` here is a pointer page: the frozen copy that stood there was removed on 2026-11-11 and is at the tag
+  `archive/20261111-rebuild-frozen-copy`. The CMSH mesh parser and the region and plan data that this repository's
+  format tools use moved to `tools/` and have focused checks.
 
-This repository holds the companion, the lore, our own tools, a frozen copy of the game documentation and a frozen
-copy of the Godot rebuild. It holds no game files, Ghidra database, decompiler output or decomp source.
+This repository holds the companion, the lore, our own tools, a frozen copy of the game documentation and a
+pointer to the Godot rebuild. It holds no game files, Ghidra database, decompiler output or decomp source.
 
 This is an unofficial community project. It is not affiliated with or endorsed by the game's publishers or rights
 holders. Repository licenses cover their respective project code and documentation; they grant no rights in the
@@ -73,7 +74,7 @@ Its source and downloads are at [Onslaught CE](https://github.com/dlprentice/ons
 
 | Repository | What it holds |
 | --- | --- |
-| This repository | The companion, lore, our tools, and frozen copies of the game documentation and the Godot rebuild |
+| This repository | The companion, lore, our tools, a frozen copy of the game documentation and a pointer to the Godot rebuild |
 | [Onslaught CE](https://github.com/dlprentice/onslaught-ce) | The native source port's source and its Windows and Linux downloads; GPL-3.0-only |
 | [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) | The byte-matching decompilation of the retail executable, for MSVC 6; bring your own game and compiler; GPL-3.0-only |
 | [onslaught-godot](https://github.com/dlprentice/onslaught-godot) | The Godot 4 C# rebuild, compared Present by Present with recorded runs of the native port and of the original game; a proof of concept, not yet playable; GPL-3.0-only |
@@ -103,7 +104,7 @@ on the companion's Home page, where each can be saved as a copy elsewhere.
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | A frozen copy of the game documentation (formats, mechanics, saves, assets, function notes and contracts) as at commit `fae54b7`. Its home is [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation), where new findings go |
 | [`lore/`](lore/_index.md) | The canonical lore and history library, embedded in the companion |
 | [`tools/`](tools/README.md) | Format decoders, the [local content catalogue](tools/README.md#content-catalogue), asset exporters, capture analysis and the repository's checks |
-| [`rebuild/`](rebuild/README.md) | A frozen GPL Godot rebuild reference, with retained Python helpers used by Toolkit tools. Current rebuild development, builds and parity gates live in [onslaught-godot](https://github.com/dlprentice/onslaught-godot) |
+| [`rebuild/`](rebuild/README.md) | A pointer page: the frozen GPL Godot rebuild copy was removed on 2026-11-11 (tag `archive/20261111-rebuild-frozen-copy`). Current rebuild development, builds and parity gates live in [onslaught-godot](https://github.com/dlprentice/onslaught-godot) |
 
 [`PROJECT-INDEX.md`](PROJECT-INDEX.md) maps source ownership and dependencies;
 [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) says what is demonstrated today and what is not.
@@ -230,7 +231,7 @@ reading guide.
 | Path | Licence |
 | --- | --- |
 | Code: `companion/`, `tools/` scripts, build files | GPL-3.0-only ([`LICENSE`](LICENSE)) |
-| `rebuild/` | GPL-3.0-only ([`rebuild/LICENSE`](rebuild/LICENSE), [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md)) |
+| The Godot rebuild (developed in onslaught-godot; the frozen copy that stood in `rebuild/` is at the tag `archive/20261111-rebuild-frozen-copy`) | GPL-3.0-only ([`rebuild/LICENSE`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/LICENSE) and [`rebuild/PROVENANCE.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PROVENANCE.md) in onslaught-godot) |
 | Documentation (`*.md`, `reverse-engineering/`, `roadmap/`, data tables) and `lore/`, `lore-book/` | CC BY-SA 4.0 ([`LICENSES/CC-BY-SA-4.0.txt`](LICENSES/CC-BY-SA-4.0.txt)) |
 | `reverse-engineering/source-code/`: notes quoting the upstream GPL Onslaught source by Stuart Gillam | CC BY-SA 4.0 and GPL-3.0-only (the quoted source keeps its licence and credit) |
 | `reverse-engineering/source-code/aya-*`: notes quoting Stuart Gillam's AYAResourceExtractor | CC BY-SA 4.0 and MIT (the quoted extractor keeps its licence and credit) |
@@ -239,6 +240,7 @@ reading guide.
 
 [`REUSE.toml`](REUSE.toml) maps every path to its licence; quotations in the lore stay with their authors.
 Repository licensing, source attribution and the rebuild's GPL boundary are in [`LICENSE`](LICENSE),
-[`rebuild/LICENSE`](rebuild/LICENSE), [`rebuild/PROVENANCE.md`](rebuild/PROVENANCE.md),
+[`rebuild/LICENSE`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/LICENSE) and
+[`rebuild/PROVENANCE.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PROVENANCE.md) in onslaught-godot,
 [`companion/OnslaughtToolkit.Godot/PROVENANCE.md`](companion/OnslaughtToolkit.Godot/PROVENANCE.md) and
 [`reverse-engineering/project-meta/attribution.md`](reverse-engineering/project-meta/attribution.md).

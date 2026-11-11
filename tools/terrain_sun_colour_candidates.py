@@ -30,7 +30,7 @@ DEFAULT_HEIGHT_FIELD = (
 )
 
 # CHFD payload start inside the HFLD chunk: 8-byte HFLD frame, then the 8-byte
-# CHFD frame. Matches rebuild/tools/materialize_retail_assets.py.
+# CHFD frame. Matches onslaught-godot's rebuild/tools/materialize_retail_assets.py.
 CHFD_OFFSET = 0x10
 SUN_COLOUR_FIELD = 0x107C
 AMBIENT_COLOUR_FIELD = 0x108C

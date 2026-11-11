@@ -261,5 +261,5 @@ pipeline heals (noted in the round-ids document).
 - HUD plumbing: `references/Onslaught/BattleEngineJetPart.cpp:903`
   (`GetLanguageName` → `TEXT_DB.GetString`).
 - Exact statement framing reused by the materializer:
-  `rebuild/tools/materialize_retail_assets.py` (`_physics_records`).
+  onslaught-godot's `rebuild/tools/materialize_retail_assets.py` (`_physics_records`).
 - Faction weapon flavor: [world-lore.md](world-lore.md) — fiction.

@@ -69,7 +69,6 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/level_editor_vectors_tests.py",),
     ("tools/aya_texture_fidelity_census_tests.py",),
     ("tools/export_game_assets_tests.py",),
-    ("rebuild/tools/materialize_retail_assets_tests.py",),
     ("tools/cmsh_static_preview_tests.py",),
     ("tools/score_frontend_capture_tests.py",),
     ("tools/check_region_overlap_tests.py",),
@@ -94,20 +93,6 @@ NOT_IN_THIS_GATE: dict[str, str] = {
     "tools/run_tool_tests.py": "this runner itself: npm run test:tools runs its --self-test before any suite",
     "tools/companion_godot_tests.py": "fake-tool checks of the companion's Godot routes; run by npm run test:companion-tools (part of npm test)",
     "tools/godot_host_tests.py": "engine discovery and process cleanup with fake tools; run by npm run test:godot-host",
-    "rebuild/tools/first_flight_tests.py": "the rebuild launcher with fake tools; run by npm run test:godot-host",
-    "rebuild/tools/aya_battleengine_identity_analyzer_tests.py":
-        "frozen rebuild copy, not built or tested here (its gate is onslaught-godot's); no Toolkit tool imports its module",
-    "rebuild/tools/materialize_films_tests.py":
-        "frozen rebuild copy, not built or tested here; no Toolkit tool imports its module, and it needs numpy",
-    "rebuild/tools/rebuild_gate_tests.py":
-        "frozen rebuild copy, not built or tested here; it tests the rebuild gate's report readers, and that gate is not run here",
-}
-
-# Suites that need another folder on the module search path, by path. The frozen rebuild's materializer imports the CMSH parser
-# lazily from beside itself; the parser moved to tools/ on 2026-11-11, and the frozen copy is not edited. This entry goes when
-# rebuild/ does.
-EXTRA_PYTHONPATH: dict[str, tuple[str, ...]] = {
-    "rebuild/tools/materialize_retail_assets_tests.py": ("tools",),
 }
 
 # Directories that hold other checkouts, private data or build output, never this repository's own test files.
@@ -206,11 +191,7 @@ def run_suite(command: tuple[str, ...]) -> dict[str, object]:
 
     arguments = [sys.executable, str(ROOT / command[0]), *command[1:]]
     started = time.monotonic()
-    environment = os.environ.copy()
-    extra = [str(ROOT / folder) for folder in EXTRA_PYTHONPATH.get(command[0], ())]
-    if extra:
-        environment["PYTHONPATH"] = os.pathsep.join([*extra, *([environment["PYTHONPATH"]] if environment.get("PYTHONPATH") else [])])
-    completed = subprocess.run(arguments, cwd=ROOT, env=environment, check=False)
+    completed = subprocess.run(arguments, cwd=ROOT, check=False)
     return {
         "name": " ".join(command),
         "exitCode": completed.returncode,
@@ -269,10 +250,6 @@ class RunToolTestsSelfTest(unittest.TestCase):
             with self.subTest(suite=command[0]):
                 self.assertTrue((ROOT / command[0]).is_file(), command[0])
         self.assertTrue(set(WINDOWS_ONLY) <= {command[0] for command in SUITES})
-        self.assertTrue(set(EXTRA_PYTHONPATH) <= {command[0] for command in SUITES})
-        for folders in EXTRA_PYTHONPATH.values():
-            for folder in folders:
-                self.assertTrue((ROOT / folder).is_dir(), folder)
 
     def test_every_test_file_is_registered_or_excluded_with_a_reason(self) -> None:
         # The converse of the check above: a gate also fails when a suite that exists is silently outside it.

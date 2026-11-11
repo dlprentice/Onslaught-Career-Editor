@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """Shared installed-Godot engine discovery and owned-process support.
 
-The companion launches through companion_godot.py and the rebuild through
-rebuild/tools/first_flight.py. This module contains no rebuild, retail-data or
+The companion launches through companion_godot.py and the rebuild (in onslaught-godot) through
+its rebuild/tools/first_flight.py. This module contains no rebuild, retail-data or
 simulation dependencies.
 """
 from __future__ import annotations

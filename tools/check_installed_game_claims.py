@@ -29,7 +29,6 @@ import sys
 
 # Directories with their own evidence rules, or not shipped as product claims.
 SKIP_PREFIXES = (
-    "rebuild/",
     "reverse-engineering/",
     "lore/",
     "lore-book/",

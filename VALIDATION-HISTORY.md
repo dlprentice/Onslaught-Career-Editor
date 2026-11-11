@@ -14,7 +14,7 @@ Commit ids cited in entries dated before 2026-10-15 predate the history flatten;
 
 Scripts, tools and paths named in dated entries that this repository no longer contains: npm scripts `test:rebuild-client`, `test:rebuild-core`, `test:save-lab` and `prepare:rebuild-assets` (onslaught-godot defines the rebuild gates, including its own `prepare:rebuild-assets` and `ref:*` scripts); tools `tools/export_packets_tests.py`, `tools/re_lib_match_tests.py`, `tools/ghidra_cohort_framework_tests.py`, `tools/re_function_doc_names_check.py` and `rebuild/tools/gdscript_parity.py`; `reverse-engineering/ghidra/README.md`; and the worktrees `.worktrees/main-integration-20260919/`, `.worktrees/remote-review-20260912/`. Receipts cited in dated entries are kept in ignored local folders and the private archive; they are not in this repository and cannot be re-run from it.
 
-Dated entries that report rebuild suite counts (Core, Client, Parity, the Godot build) describe the rebuild as it stood on their dates. The rebuild is frozen here, and its current gates run in onslaught-godot. Entries from 2026-09-19 to 2026-09-23 describe GDScript harnesses and editor scenes removed on 2026-09-25; the `.gd` run targets in dated entries are historical and not runnable from either public tree, and so are the `.tscn` targets other than the Pause and AYA harnesses, which are present in the frozen rebuild and in onslaught-godot. Relative `.gd` and `.tscn` paths in dated entries are relative to `rebuild/OnslaughtRebuild.Godot`.
+Dated entries that report rebuild suite counts (Core, Client, Parity, the Godot build) describe the rebuild as it stood on their dates. The rebuild's current gates run in onslaught-godot. The frozen rebuild copy that these entries ran against was removed from `rebuild/` on 2026-11-11 and is at the tag `archive/20261111-rebuild-frozen-copy`: a `rebuild/` path in a dated entry names a file of that copy there (ten tool files, among them `rebuild/tools/cmsh_static_preview.py`, its tests and the region and plan JSON files, are in `tools/` at that tag and now). Entries from 2026-09-19 to 2026-09-23 describe GDScript harnesses and editor scenes removed on 2026-09-25; the `.gd` run targets in dated entries are historical and not runnable from either public tree, and so are the `.tscn` targets other than the Pause and AYA harnesses, which are present in the frozen rebuild copy (at that tag) and in onslaught-godot. Relative `.gd` and `.tscn` paths in dated entries are relative to `rebuild/OnslaughtRebuild.Godot`.
 
 The WinUI shell, its UI tests, the Windows-targeted CLI and the ZIP procedure were
 removed on 2026-10-15; dated entries below that name them are history. The unused
@@ -2903,7 +2903,7 @@ scope.
 The three weapon foundations had only parsed at the September 20 checkpoint;
 their subsequent comparison results are recorded below. They have no live
 consumers yet.
-Component guidance for the rebuild is in [`rebuild/README.md`](rebuild/README.md), a frozen copy; current development is in
+Component guidance for the rebuild was in `rebuild/README.md` of the frozen copy (now at the archive tag; [`rebuild/README.md`](rebuild/README.md) is a pointer page); current development is in
 [onslaught-godot](https://github.com/dlprentice/onslaught-godot).
 
 #### Native Main Menu — September 22

@@ -113,8 +113,8 @@ manual feedback below as observations within the tested scope, and retain each s
 ### Godot rebuild
 
 The rebuild's work queue, milestones and measured parity are kept in
-[onslaught-godot](https://github.com/dlprentice/onslaught-godot), where it is developed; `rebuild/` here is a frozen
-copy.
+[onslaught-godot](https://github.com/dlprentice/onslaught-godot), where it is developed; `rebuild/` here is a pointer
+page (the frozen copy was removed on 2026-11-11 and is at the tag `archive/20261111-rebuild-frozen-copy`).
 
 ### Companion — CE integration
 
@@ -456,7 +456,7 @@ This establishes only the selected snapshot; it does not cover work created afte
 - The public history was flattened to a single new root (approved by the maintainer); the full earlier history is a
   verified bundle and `refs/old/*` in the private RE archive. The third-party fork and GitHub's pull-request refs
   still hold the old history.
-- The split: the Godot rebuild is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot) (the `rebuild/` copy here is frozen), and
+- The split: the Godot rebuild is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot) (the frozen `rebuild/` copy here was removed on 2026-11-11), and
   the game documentation is published as [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation). Still to come: this repository's
   full history is bundled into the private RE archive and flattened again, and the repository is renamed
   onslaught-companion. Each step is a separate, coordinated task.
@@ -465,7 +465,7 @@ This establishes only the selected snapshot; it does not cover work created afte
 
 - **The earlier fixed-point rebuild's queue** (Core/Client/Godot, paused 2026-10-15 when the rebuild restarted around
   the parity core): World 110 generalization (former P7) and player-input replay tapes (former P8). Its final state is
-  described in [rebuild/README.md](rebuild/README.md#the-earlier-rebuild-history). That historical queue was scoped to
+  described in [rebuild/README.md at the archive tag](https://github.com/dlprentice/Onslaught-Career-Editor/blob/archive/20261111-rebuild-frozen-copy/rebuild/README.md#the-earlier-rebuild-history). That historical queue was scoped to
   level 100; the current and longer-term rebuild goals are in [GOAL.md](GOAL.md).
 
 ## Closed

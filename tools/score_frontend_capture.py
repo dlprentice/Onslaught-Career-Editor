@@ -3,7 +3,7 @@
 
 Why this exists
 ---------------
-The capture gate (`Capture-Frontend.ps1` then, `rebuild/tools/first_flight.py
+The capture gate (`Capture-Frontend.ps1` then, onslaught-godot's `rebuild/tools/first_flight.py
 capture` since 2026-09-26) reported PASS iff the capture run itself was
 healthy: every shot landed on the expected screen, every file saved, every frame
 was the requested size, and the plan ran to the end. Every one of those is a

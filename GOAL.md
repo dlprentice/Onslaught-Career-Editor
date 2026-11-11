@@ -75,7 +75,7 @@ archive.
   retry), with compatible career data. `OnslaughtRebuild.Parity` owns the simulation and `OnslaughtRebuild.Host`
   the presentation; parity is measured against retail and native-port recordings Present by Present, and
   onslaught-godot records it. The longer-term aim is a faithful full-game baseline, followed by optional enhancements
-  such as modern creation tools, HD assets and expanded multiplayer. `rebuild/` here is a frozen copy.
+  such as modern creation tools, HD assets and expanded multiplayer. `rebuild/` here is a pointer page.
 - **Unify Companion's player capabilities within CE and eventually phase out the separate app.** CE should include
   its lore, game-content exploration, career/save editing, backups, settings and installation-management workflows,
   alongside native authoring and play. Every current Companion workflow and its subflows belong in the native CE

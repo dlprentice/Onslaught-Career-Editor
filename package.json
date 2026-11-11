@@ -16,7 +16,7 @@
     "test:doc-headers": "python tools/doc_header_check.py --self-test && python tools/doc_header_check.py",
     "test:safety": "python tools/public_allowlist_safety_check.py --self-test && python tools/public_allowlist_safety_check.py --include-submodules",
     "test:tools": "python ./tools/run_tool_tests.py --self-test && python ./tools/run_tool_tests.py",
-    "test:godot-host": "python ./tools/godot_host_tests.py && python ./rebuild/tools/first_flight_tests.py",
+    "test:godot-host": "python ./tools/godot_host_tests.py",
     "build:companion-godot": "python ./tools/companion_godot.py build",
     "run:companion-godot": "python ./tools/companion_godot.py run",
     "test:companion-godot": "python ./tools/companion_godot.py test",
