@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-11-11 (tool-neutral outcomes and holds section; helper model wording; rebuild gate wording; 2026-11-06: contributors pointed to CONTRIBUTING.md; maintainer-only workspace grouped; rebuild gate, screenshot allowance and lane terms corrected; 2026-11-02: public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-11 (tool-neutral outcomes and holds section; helper model wording)
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
@@ -18,7 +18,7 @@ maintainer's own agent tooling.
 
 A preservation project for *Battle Engine Aquila* (2003). This public repository holds:
 
-- a **frozen copy of the Godot rebuild** (`rebuild/`), retained as reference; its application is not built or tested here, though two of its Python helpers still run in `npm run test:tools`. The rebuild
+- a **frozen copy of the Godot rebuild** (`rebuild/`), retained as reference; its application is not built or tested here, though some of its Python helpers are still used by Toolkit tools and tested by `npm run test:tools` and `npm run test:godot-host`. The rebuild
   is developed in https://github.com/dlprentice/onslaught-godot. It aims to be 1:1 with retail from startup to exit,
   with level 100 playable to completion. `OnslaughtRebuild.Parity` is the simulation owner and
   `OnslaughtRebuild.Host` the presentation owner; the earlier `OnslaughtRebuild.Core`, `Client` and `Godot` projects
@@ -83,12 +83,16 @@ known effects, keeping observations separate from interpretations. Fresh evidenc
 erasing the original observation.
 
 - **Safety denial:** keep its stated scope and reason. Do not obtain the denied outcome through another tool, wrapper
-  or helper. Continue only with a materially safer permitted alternative or the supported review process.
+  or helper. Continue only with a materially safer permitted alternative or the supported review process. A task-level
+  safety stop follows its actual notice and its supported way to resume.
 - **Failed call without a reason:** it proves neither approval nor a permanent ban. An already-authorized harmless
-  check may be retried once. If it fails again, record the unresolved failure and finish independent authorized work
-  instead of changing the request to get around a restriction. Check effects before repeating any mutation.
-- **Failed status read:** the task's state is unknown. Check the existing task or await its result rather than starting
-  a duplicate, and report required checks that could not be observed as limits, never as passes.
+  check may be retried once. If it fails again, record the unresolved failure and finish independent authorized work,
+  without repeated status loops and without changing the request to get around a restriction. Check effects before
+  repeating any mutation.
+- **Failed status read:** the task's state is unknown. A returned task handle shows the task was accepted, not that it
+  finished: check that task or await its result rather than starting a duplicate. A helper that cannot see the caller's
+  result does not make that result invalid, and is no reason for duplicate work or interruption. Report required checks
+  that could not be observed as limits, never as passes.
 - **User hold:** keep it until the user explicitly releases that scope. Resuming the general goal, elapsed time,
   delegation or a successful tool call does not release a narrower hold.
 
