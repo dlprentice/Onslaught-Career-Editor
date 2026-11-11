@@ -1,7 +1,7 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-11-06 (where to contribute across the public repositories, first-hour checks and commit messages)
+Last updated: 2026-11-11 (the two overlapping first-contribution sections merged into one; 2026-11-06: where to contribute across the public repositories, first-hour checks and commit messages)
 Summary: which public repository takes which kind of work, what a first contribution needs and runs, what a focused
 change looks like here, what must never be added to the repository, and which checks a change owes.
 
@@ -44,11 +44,11 @@ A generated repository (onslaught-ce, onslaught-decomp) takes pull requests like
 is regenerated from the maintainer's working source, so an accepted change reaches it through the next export rather
 than by merging the pull request itself.
 
-## Your first hour
+## Your first contribution
 
 What you need depends on what you change. None of it needs an invitation, a private repository or the maintainer's
 computer, and there is no hosted CI: the checks below are yours to run, and the pull request form asks you to report
-them.
+them. People and automated agents use the same route.
 
 | You are changing | You need | Run before the pull request |
 | --- | --- | --- |
@@ -60,16 +60,29 @@ them.
 
 Steps:
 
-1. Fork this repository and clone your fork with its public reference submodules, which the link and safety checks
+1. Read [`README.MD`](README.MD) and the README or evidence file that owns the files you will change.
+   [`AGENTS.md`](AGENTS.md) is the guide automated agents read; its ground rules, reference routing and definition of
+   done apply to everyone. Its sections on tool outcomes, user holds and the maintainer's workspace concern the
+   maintainer's own tooling.
+2. Fork this repository and clone your fork with its public reference submodules, which the link and safety checks
    follow: `git clone --recurse-submodules https://github.com/<your-account>/Onslaught-Career-Editor.git`. In an
-   existing clone, run `git submodule update --init --recursive` once.
-2. Create a branch from upstream `main`: `git switch -c my-change`.
-3. Make one focused change. A new or edited Markdown file needs the `Status:`, `Last updated:` and `Summary:` header
-   that [`DOCUMENTATION.md`](DOCUMENTATION.md) describes; `tools/doc_header_check.py` enforces it.
-4. Run the checks for your kind of change from the table, and keep their output.
-5. Push the branch to your fork and open a pull request against `dlprentice/Onslaught-Career-Editor`. Fill in the
+   existing clone, run `git submodule update --init --recursive` once. Keep both recorded pins; do not replace them
+   with an upstream's latest commit unless the pull request is meant to update one, and then explain why and keep its
+   licence and provenance.
+3. Create a branch from upstream `main`: `git switch -c my-change`. Follow [Build and run](README.MD#build-and-run) and
+   run the checks for your kind of change before editing, so you can tell new failures from baseline ones.
+4. Make one focused change in the files that own it. Ordinary feature work needs no maintainer pre-approval; discuss
+   large or overlapping changes in a public issue first so contributors can coordinate. A new or edited Markdown file
+   needs the `Status:`, `Last updated:` and `Summary:` header that [`DOCUMENTATION.md`](DOCUMENTATION.md) describes;
+   `tools/doc_header_check.py` enforces it.
+5. Repeat the checks and keep their output. Inspect fresh output when appearance or behaviour matters. The full
+   documentation and safety gates follow links into the pinned reference submodules and need no game installation:
+   with the [public prerequisites](README.MD#build-and-run) installed, `npm run test:docs` and `npm run test:safety`
+   run them. After the public toolchain setup, `npm test` runs the Companion's C# contract and tooling checks without
+   opening a window or needing a game.
+6. Push the branch to your fork and open a pull request against `dlprentice/Onslaught-Career-Editor`. Fill in the
    [pull request form](.github/PULL_REQUEST_TEMPLATE.md): what changed, the exact commands you ran, the checks you
-   could not run and why.
+   could not run and why. The maintainer completes acceptance that needs a platform or input you do not have.
 
 Commit messages describe the change itself. Leave out session or chat links, private paths and anything copied from the
 game. A `Co-Authored-By` trailer is welcome when someone else wrote part of the change.
@@ -78,48 +91,9 @@ Corrections to the frozen game documentation in `reverse-engineering/` go to
 [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation); a pull request here may change only the
 tool-owned files that [`RE-INDEX.md`](reverse-engineering/RE-INDEX.md) lists.
 
-## Start here
-
-Fork this public repository, clone your fork and create a branch from upstream `main`. People and automated agents
-use the same route: commit scoped changes, push to your fork and open a pull request against
-`dlprentice/Onslaught-Career-Editor`. No collaborator invitation, private repository or maintainer computer is needed
-to prepare a proposal. The available validation depends on the inputs described below; list unavailable checks in the PR.
-
-1. Read [`README.MD`](README.MD) and only the owning README or evidence files for your change. [`AGENTS.md`](AGENTS.md)
-   is the guide automated agents read; its project rules (ground rules, reference routing, definition of done) apply to
-   everyone, and its sections on tool outcomes, user holds and the maintainer's workspace concern the maintainer's own tooling.
-2. Follow [Build and run](README.MD#build-and-run) on your own machine. Record the upstream commit, branch,
-   existing edits and reference pins, then build and run the affected baseline checks before editing.
-3. Preserve unrelated work. Keep recorded reference pins unchanged unless this PR intentionally updates one;
-   explain that update and retain its licence, provenance and relevant checks.
-4. Implement a focused change in its owning source files. Ordinary feature development does not require
-   maintainer pre-approval; discuss large or overlapping changes in a public issue so contributors can coordinate.
-5. Repeat the affected checks, inspect fresh output when appearance or behavior matters, and distinguish new
-   failures from baseline failures. Commit scoped paths, push your branch to your fork, and open the PR with the
-   problem, change, checks and remaining limits.
-
-No game installation is required to test ordinary documentation changes. The full documentation and safety gates
-need the existing pinned public reference submodules, including links into their source. Initialize them once with
-`git submodule update --init --recursive`; keep both recorded pins rather than replacing them with an upstream's
-latest commit. With the [public prerequisites](README.MD#build-and-run) installed, run:
-
-```bash
-npm run test:docs
-npm run test:safety
-```
-
-After public toolchain setup, `npm test` runs the Companion's C# contract and tooling checks without opening a
-window or requiring a game installation. The [Companion build guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export)
-owns the setup and commands. Documentation and selected authored Python checks need no Godot installation.
-`npm run test:companion-tools` checks the setup and runner with authored inputs; it does not replace the C# gate.
-Checks against your installed game require your own licensed copy. If recorded references or a platform are
-unavailable, name the missing checks in the PR; maintainers complete required acceptance before integration.
-
-`npm run dev` launches the Companion when that toolchain is configured. This repository provisions no Windows host;
-Linux checks do not establish Windows behaviour. Native workflow checks are separate from build, static or headless evidence.
-
-Root [`package.json`](package.json) is the command authority. Do not duplicate
-its command list in new documents.
+`npm run dev` opens the Companion once the toolchain is set up. This repository provisions no Windows host, so Linux
+checks do not establish Windows behaviour. [`package.json`](package.json) is the command authority; do not copy its
+command list into new documents.
 
 ## Licensing of contributions
 
@@ -135,10 +109,8 @@ New code files start with an `SPDX-License-Identifier: GPL-3.0-only` comment.
 ## Ownership
 
 - The companion owns its career codec, file safety, game text, lore and every screen.
-- The rebuild's simulation, `OnslaughtRebuild.Parity`, is deterministic given its inputs (the tape, the
-  retail data and options files it reads as the game does, and the virtual clock) and has no presentation,
-  process, network or GPU dependency; `OnslaughtRebuild.Host` owns presentation. The earlier
-  `OnslaughtRebuild.Core` is reference material.
+- The Godot rebuild's simulation and presentation are owned by [onslaught-godot](https://github.com/dlprentice/onslaught-godot);
+  `rebuild/` here is a frozen copy.
 - `lore/` is the canonical public lore/history source. Corrections to it are made here; the record of what it used to say
   wrongly is [`history/lore-errata.md`](https://github.com/dlprentice/onslaught-preservation/blob/main/history/lore-errata.md)
   in onslaught-preservation.
@@ -208,13 +180,5 @@ third-party material are not.
 
 ## Validation
 
-Use [`VALIDATION.md`](VALIDATION.md) to choose checks. Typical focused commands
-are:
-
-```bash
-npm run test:docs
-npm run test:safety
-npm test
-```
-
-Do not run a root aggregate merely for ceremony.
+Use [`VALIDATION.md`](VALIDATION.md) to choose the checks for a change: the smallest one that could fail, not a root
+aggregate for ceremony. For documentation and payload changes that is `npm run test:docs` and `npm run test:safety`.
