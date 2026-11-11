@@ -1,12 +1,12 @@
 # Security And Private Data Reporting
 
 Status: active disclosure guidance
-Last updated: 2026-11-06 (the licence sentence names both licence files and the other repositories' reporting is pointed to; 2026-10-22: private reports go through GitHub's private vulnerability reporting; the installed-game write contract cites the companion's GameWrites)
+Last updated: 2026-11-11 (reportable classes and toolchain-cache wording match the retired patching and the Linux host)
 Summary: how to report a defect that touches saves, local paths or copied
 executables, and the safety contracts a report is judged against.
 
-Onslaught Toolkit handles save files, local game paths, copied executables, and
-generated asset output. Reports should expose only what is needed to reproduce
+The Toolkit handles save files, local game paths, retail files that tools read,
+and generated asset output. Reports should expose only what is needed to reproduce
 the defect.
 
 ## Consequential safety contracts
@@ -32,7 +32,7 @@ the defect.
   tracked source. They publish staged output rather than modifying input.
 - The optional Godot developer toolchain is pinned by manifest and hashes. Its
   per-user cache is integrity-checked, not a sandbox against another process
-  running as the same Windows user.
+  running as the same operating-system user.
 
 These contracts protect data and filesystem integrity. They do not establish
 format completeness, patch gameplay effects, asset fidelity, or rebuild parity.
@@ -45,7 +45,7 @@ vulnerability": https://github.com/dlprentice/Onslaught-Career-Editor/security/a
 - leaked secrets, credentials, private paths, or machine identifiers;
 - unsafe mutation of an installed game, original executable, save, or options
   file;
-- copied-profile patching that can escape its selected/app-owned root;
+- a tool or the Companion writing outside the output root or installed-game target the user selected;
 - launcher behavior that can stop a process it did not start;
 - raw debugger/runtime captures, full Ghidra projects, or unreviewed bulk game
   payloads that should not be posted in a public issue.
