@@ -8,7 +8,7 @@ assignees: ""
 
 <!--
 Status: active issue template
-Last updated: 2026-10-23
+Last updated: 2026-11-11 (environment fields)
 Summary: report companion bugs with valid template metadata and the protected-write contract.
 -->
 

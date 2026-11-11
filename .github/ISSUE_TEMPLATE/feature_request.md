@@ -10,7 +10,7 @@ assignees: ""
 
 Choose one:
 
-- [ ] Companion
+- [ ] Companion (fixes and its existing workflows; new player-facing features belong in Onslaught CE, see [Where to contribute](https://github.com/dlprentice/Onslaught-Career-Editor/blob/main/CONTRIBUTING.md#where-to-contribute))
 - [ ] Docs and lore
 - [ ] Tools
 
