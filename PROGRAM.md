@@ -62,9 +62,9 @@ fix since 0.1.13: the Dodge Button, switching between windowed and fullscreen wi
 highest settings on a new profile except Full models, the longer terrain view distance with the terrain reserve it
 needs, and CE's device-recovery path in the normal build. It is built from the integrated test build, with the
 unfinished modes (the in-game editor, the museum visit, Commander and playing other units) hidden behind one setting
-and off by default. Network play stays out of the normal build, and multiplayer remains 0.2. Its gates are the
-default-change comparison with 0.1.13, the Linux release candidate and the native Windows gate; it releases when
-they pass. A source-review
+and off by default. Network play stays out of the normal build, and multiplayer remains 0.2. Its gates include the
+default-change comparison with 0.1.13, the Linux release candidate and the native Windows gate, with the release
+guide's checks at the exact commit that ships; it releases when they pass. A source-review
 verdict or a partial suite table is not completed release acceptance. Exact-candidate builds, applicable complete checks
 and native Windows evidence must meet the release gates before a readiness recommendation.
 

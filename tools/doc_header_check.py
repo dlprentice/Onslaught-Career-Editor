@@ -97,6 +97,7 @@ CLASS_WAVE_SHARD = "WAVE-SHARD"
 GOVERNANCE_PATHS = frozenset(
     {
         "AGENTS.md",
+        "CODE_OF_CONDUCT.md",
         "CONTRIBUTING.md",
         "CURRENT_CAPABILITIES.md",
         "DOCUMENTATION.md",

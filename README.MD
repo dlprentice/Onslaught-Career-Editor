@@ -19,6 +19,7 @@ which public repository takes which kind of work, and everyone contributes by fo
 | Play the game | [Onslaught CE](https://github.com/dlprentice/onslaught-ce) (you need your own copy of the game) |
 | Build and run the Companion | [Build and run](#build-and-run) |
 | Contribute a change | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Read the community rules | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) |
 | Choose the checks for a change | [VALIDATION.md](VALIDATION.md) |
 | Find where code and documents live | [PROJECT-INDEX.md](PROJECT-INDEX.md) |
 | See the direction and the open work | [GOAL.md](GOAL.md) and [PROGRAM.md](PROGRAM.md) |

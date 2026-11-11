@@ -34,7 +34,7 @@
 
 | Name | Role | Notes |
 |------|------|-------|
-| **Stuart Gillam** | Lead Game Programmer | Active on Discord as desimbr; coded Gill-M boss |
+| **Stuart Gillam** | Lead Game Programmer | Coded Gill-M boss |
 | **Ben Carter** | Lead Programmer | Wrote post-mortem; PS2/Xbox engine code |
 | **John Treece-Birch** | Programmer | |
 | **Tony Monckton** | Programmer | |
@@ -79,7 +79,7 @@ After the console versions were complete, the core team moved onto other project
 
 | Name | Role | Notes |
 |------|------|-------|
-| Stuart Gillam | Lead Game Programmer | Active on Discord as desimbr |
+| Stuart Gillam | Lead Game Programmer | Coded Gill-M boss |
 | Glenn Corpes | Technical Director | Terrain, shadows, impostor system, battle map, graphics engine; joined BEA Discord April 2025; YouTube: G7ennx |
 | Alex Trowers | Lead Designer | Responsive on LinkedIn |
 | Jeremy Longley | Co-Director | Now at FunFair Technologies |
@@ -113,7 +113,6 @@ On VR: *"I've been fascinated by VR. In fact, I added support for three differen
 #### Stuart Gillam
 - Still codes C# part-time (non-gaming sector)
 - Experiments with Unity game engine
-- Active on Discord as "desimbr" / "desiado"
 - **GitHub**: [stuart73](https://github.com/stuart73) - Preserving game history:
   - **Onslaught** - Original BEA source code (GPL-3.0). The drop is **staged**. MEASURED from the pinned repository's
     own git history: `2025-04-10` published LICENSE and README plus 30 platform,

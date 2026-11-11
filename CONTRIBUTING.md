@@ -43,6 +43,8 @@ contribution targets.
 Report security problems as each repository's `SECURITY.md` says. Each repository's `REUSE.toml` says which licence
 covers which files, and a contribution comes in under the same terms as the files it changes.
 
+Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 A generated repository (onslaught-ce, onslaught-decomp) takes pull requests like any other, but its upstream `main`
 is regenerated from the maintainer's working source, so an accepted change reaches it through the next export rather
 than by merging the pull request itself.
