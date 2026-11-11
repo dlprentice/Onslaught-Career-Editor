@@ -22,7 +22,6 @@ import sys
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "rebuild" / "tools"))
 
 from cmsh_static_preview import CmshProfileError, inflate_aya, parse_cmsh_stream  # noqa: E402
 from aya_archive_inventory import (  # noqa: E402

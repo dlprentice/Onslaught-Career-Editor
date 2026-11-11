@@ -15,11 +15,8 @@ import json
 import math
 from pathlib import Path
 import struct
-import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "rebuild" / "tools"))
 from cmsh_static_preview import inflate_aya  # noqa: E402
-
 
 def chunks(data: memoryview, base: int = 0):
     pos = 0

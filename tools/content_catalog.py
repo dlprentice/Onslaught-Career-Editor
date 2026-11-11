@@ -47,7 +47,6 @@ from pathlib import Path, PurePosixPath
 TOOLS = Path(__file__).resolve().parent
 ROOT = TOOLS.parent
 sys.path.insert(0, str(TOOLS))
-sys.path.insert(0, str(ROOT / "rebuild" / "tools"))
 
 import aya_archive_inventory as aai  # noqa: E402
 import aya_cross_platform_compare as cross  # noqa: E402
@@ -128,7 +127,7 @@ FAMILIES = (
      "texture", L_TEX_LOADFRAME, "tools/dds_census.py", "catalogued"),
     ("cmsh-mesh", lambda p: p.startswith("data/resources/meshes/") and p.endswith(".aya"),
      "mesh + animation", L_MESH_DESERIALIZE + "; " + L_PART_DESERIALIZE + "; " + L_MESH_VB,
-     "rebuild/tools/cmsh_static_preview.py; tools/cmsh_grammar_walk.py", "catalogued"),
+     "tools/cmsh_static_preview.py; tools/cmsh_grammar_walk.py", "catalogued"),
     ("xap-sample-bank", lambda p: p.startswith("data/sounds/") and p.endswith(".xap"),
      "sound effects", L_XAP, "tools/xap_bank_walk.py", "catalogued"),
     ("ogg-music", lambda p: p.startswith("data/music/") and p.endswith(".ogg"),
@@ -693,7 +692,7 @@ def catalog_mesh(stream: bytes, *, asset_id: str, name: str, container: str, con
     rec = base_record(asset_id, "mesh", name or record.get("internalName") or "", container, container_sha,
                       envelope=envelope, offset=offset, length=len(stream), raw_sha=sha256(stream),
                       sha_scope="CMSH stream (inflated)", chunk_path=chunk_path,
-                      parser="rebuild/tools/cmsh_static_preview.py:parse_cmsh_stream + "
+                      parser="tools/cmsh_static_preview.py:parse_cmsh_stream + "
                              "tools/cmsh_animation_usage_census.py:mesh_record_from_stream")
     emitters = meta.get("emitters") or {}
     emitter_count = len(emitters.get("rows") or []) if emitters.get("status") in ("decoded", "absent") else None

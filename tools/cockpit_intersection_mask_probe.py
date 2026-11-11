@@ -38,11 +38,9 @@ from __future__ import annotations
 
 import argparse
 import math
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "rebuild" / "tools"))
 
 from cmsh_static_preview import inflate_aya, parse_cmsh_stream  # noqa: E402
 
@@ -67,7 +65,6 @@ SUNC = (189 / 256, 177 / 256, 121 / 256)
 ANTIC = (35 / 256, 35 / 256, 56 / 256)
 
 DRAW_ORDER = [1, 11, 12, 13, 14, 15, 18]   # the seven drawing CMSP parts
-
 
 def _norm(v):
     n = math.sqrt(sum(c * c for c in v))

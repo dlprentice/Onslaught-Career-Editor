@@ -61,7 +61,6 @@ from pathlib import Path
 TOOLS = Path(__file__).resolve().parent
 ROOT = TOOLS.parent
 sys.path.insert(0, str(TOOLS))
-sys.path.insert(0, str(ROOT / "rebuild" / "tools"))
 
 import aya_texture_fidelity_census as texture_layout  # noqa: E402  (the PC texture record's field offsets)
 import cmsh_animation_usage_census as meshcensus  # noqa: E402

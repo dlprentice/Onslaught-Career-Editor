@@ -63,7 +63,6 @@ from pathlib import Path, PurePosixPath
 TOOLS = Path(__file__).resolve().parent
 ROOT = TOOLS.parent
 sys.path.insert(0, str(TOOLS))
-sys.path.insert(0, str(ROOT / "rebuild" / "tools"))
 
 import aya_archive_inventory as aai  # noqa: E402
 import aya_cross_platform_compare as cross  # noqa: E402
@@ -307,7 +306,7 @@ def chunks_in(data: bytes, start: int, end: int) -> list[tuple[str, int, int]]:
 
 def prove_mesh(stream: bytes, proofs: collections.Counter, chain: list[bytes]) -> None:
     """Re-emit a mesh stream from its parsed model, chained meshes too: what the model regenerates is counted apart from
-    what it only copies (rebuild/tools/cmsh_static_preview.py keeps the two in separate columns). Every chained stream
+    what it only copies (tools/cmsh_static_preview.py keeps the two in separate columns). Every chained stream
     is appended to chain, nearest first."""
     identical, accounting = preview.round_trip_cmsh_stream(stream)
     proofs["meshStreamsRoundTripped"] += 1

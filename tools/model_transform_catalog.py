@@ -55,7 +55,6 @@ import stat
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "rebuild" / "tools"))
 from aya_archive_inventory import MAX_COMPRESSED_BYTES, inflate_aya_bytes  # noqa: E402
 from cmsh_static_preview import parse_cmsh_stream  # noqa: E402
 

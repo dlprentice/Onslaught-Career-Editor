@@ -50,7 +50,7 @@ Usage:
         --rebuild <reconstruction frame.png> \
         --macro-probe <ONSLAUGHT_TERRAIN_PROBE=macro frame.png> \
         --mask-probe  <ONSLAUGHT_TERRAIN_PROBE=mask frame.png> \
-        [--regions rebuild/tools/gameplay-regions-level100.json] \
+        [--regions tools/gameplay-regions-level100.json] \
         [--shift dx,dy] [--fog-color r,g,b] [--window 48]
 """
 

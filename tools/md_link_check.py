@@ -62,6 +62,65 @@ PUBLIC_CORE_MARKDOWN = (
 FROZEN_PREFIXES = ("reverse-engineering/", "rebuild/")
 MOVED_ANCHOR_HOMES = {"VALIDATION.md": "VALIDATION-HISTORY.md"}
 
+# Files that left rebuild/ for tools/ on 2026-11-11, while the rest of rebuild/ stayed: {old path: new home}. A link from a
+# frozen file to the old path is accepted while the new home exists; every other document must link to the new home.
+MOVED_FILE_HOMES = {
+    "rebuild/tools/cmsh_static_preview.py": "tools/cmsh_static_preview.py",
+    "rebuild/tools/cmsh_static_preview_tests.py": "tools/cmsh_static_preview_tests.py",
+    "rebuild/tools/gameplay-regions-level100.json": "tools/gameplay-regions-level100.json",
+    "rebuild/tools/frontend-parity-plan.json": "tools/frontend-parity-plan.json",
+    **{f"rebuild/tools/frontend-regions-{page}.json": f"tools/frontend-regions-{page}.json"
+       for page in ("dev-select", "level-select", "loading", "main-menu", "mission-briefing", "select-configuration")},
+}
+
+# The frozen rebuild copy is cut from main; its last tree is the tag below (URL form:
+# https://github.com/dlprentice/Onslaught-Career-Editor/blob/<tag>/<path>). A link from a frozen file to a path that is no
+# longer in the working tree is accepted only for these exact paths, which are the ones the frozen reverse-engineering pages
+# link to and which the tag still holds. A link to any other missing rebuild/ path, or from any other document, is broken.
+ARCHIVE_TAG = "archive/20261111-rebuild-frozen-copy"
+ARCHIVED_TREE_PRESENT = "rebuild/OnslaughtRebuild.slnx"  # exists only while the whole tree is still in the working tree
+ARCHIVED_TREE_TARGETS = frozenset({
+    "rebuild/PROVENANCE.md",
+    "rebuild/OnslaughtRebuild.Client/ParticleSetFile.cs",
+    "rebuild/OnslaughtRebuild.Client.Tests/ParticleSetTests.cs",
+    "rebuild/OnslaughtRebuild.Core/RetailActiveReaderGraph.cs",
+    "rebuild/OnslaughtRebuild.Core/RetailEventScheduler.cs",
+    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/README.md",
+    "rebuild/tools/materialize_retail_assets.py",
+    "rebuild/tools/materialize_retail_assets_tests.py",
+})
+
+
+def relocated_target_accepted(from_rel: str, resolved: Path, root: Path) -> bool:
+    """A frozen file's link to a path that moved to tools/ (the new home exists) or that only the archive tag holds."""
+    root = root.resolve()
+    if not from_rel.startswith(FROZEN_PREFIXES) or not resolved.is_relative_to(root):
+        return False
+    target = resolved.relative_to(root).as_posix()
+    home = MOVED_FILE_HOMES.get(target)
+    if home is not None:
+        return (root / home).exists()
+    return target in ARCHIVED_TREE_TARGETS
+
+
+def archived_target_problems(root: Path) -> List[str]:
+    """Why the archive-tag allowance cannot be trusted, or []. While the whole tree is still in the working tree every
+    allowed path must be in it (so the list holds no typo); when the tag exists in this clone every allowed path must be
+    in the tag's tree. A clone without the tag cannot check the second, and says so by returning nothing."""
+    problems: List[str] = []
+    if (root / ARCHIVED_TREE_PRESENT).exists():
+        problems += [f"{rel} is allowed as archived but is not in the tree" for rel in sorted(ARCHIVED_TREE_TARGETS) if not (root / rel).exists()]
+    try:
+        tag = subprocess.run(["git", "rev-parse", "--verify", "--quiet", f"refs/tags/{ARCHIVE_TAG}^{{commit}}"], cwd=root,
+                             capture_output=True, text=True).stdout.strip()
+        if tag:
+            for rel in sorted(ARCHIVED_TREE_TARGETS):
+                if subprocess.run(["git", "cat-file", "-e", f"{tag}:{rel}"], cwd=root, capture_output=True).returncode != 0:
+                    problems.append(f"{rel} is allowed as archived but is not in the tree of tag {ARCHIVE_TAG}")
+    except FileNotFoundError:
+        pass
+    return problems
+
 
 def uninitialised_submodules(root: Path) -> Dict[str, Path]:
     """Submodule paths declared in root/.gitmodules whose checkout is absent: {declared path: directory}."""
@@ -285,6 +344,8 @@ def check_links(md_files: List[Path], root: Path) -> Tuple[List[Dict[str, Any]],
                 if owner:
                     skipped[owner] = skipped.get(owner, 0) + 1
                     continue
+                if relocated_target_accepted(rel, resolved, root):
+                    continue
                 broken.append({"path": rel, "target": target, "resolved": os.fspath(resolved), "kind": "path"})
             elif fragment and not LINE_ANCHOR_RE.match(fragment) and resolved.is_file() and is_markdown_name(resolved.name):
                 if fragment.lower() not in anchors_of(resolved) and not moved_anchor_exists(rel, resolved, fragment):
@@ -344,6 +405,34 @@ def self_test() -> int:
         if skipped:
             failures.append(f"check_links skipped {skipped} with no submodule declared")
     with tempfile.TemporaryDirectory() as tmp:
+        # Links into rebuild/ from a frozen page: a moved file is accepted while its new home exists, an archived path only when
+        # it is on the list, and nothing is accepted from a live page.
+        root = Path(tmp)
+        (root / "reverse-engineering" / "asset-formats").mkdir(parents=True)
+        (root / "tools").mkdir()
+        (root / "tools" / "cmsh_static_preview.py").write_text("x", encoding="utf-8")
+        page = root / "reverse-engineering" / "asset-formats" / "page.md"
+        page.write_text(
+            "[moved](../../rebuild/tools/cmsh_static_preview.py) [home gone](../../rebuild/tools/frontend-parity-plan.json) "
+            "[archived](../../rebuild/PROVENANCE.md) [archived dir file](../../rebuild/OnslaughtRebuild.Core/RetailEventScheduler.cs) "
+            "[unlisted](../../rebuild/PARITY.md) [typo](../../rebuild/tools/materialize_retail_assets_test.py)\n", encoding="utf-8")
+        live = root / "live.md"
+        live.write_text("[moved](rebuild/tools/cmsh_static_preview.py) [archived](rebuild/PROVENANCE.md)\n", encoding="utf-8")
+        broken, total, skipped = check_links([page, live], root)
+        got = sorted((item["path"], item["target"]) for item in broken)
+        want = sorted([("reverse-engineering/asset-formats/page.md", "../../rebuild/tools/frontend-parity-plan.json"),
+                       ("reverse-engineering/asset-formats/page.md", "../../rebuild/PARITY.md"),
+                       ("reverse-engineering/asset-formats/page.md", "../../rebuild/tools/materialize_retail_assets_test.py"),
+                       ("live.md", "rebuild/tools/cmsh_static_preview.py"), ("live.md", "rebuild/PROVENANCE.md")])
+        if got != want or total != 8:
+            failures.append(f"relocated rebuild/ links: broken {got} of {total}, expected {want} of 8")
+        if archived_target_problems(root):
+            failures.append(f"archived_target_problems on a tree without rebuild/: {archived_target_problems(root)}")
+        (root / "rebuild").mkdir()
+        (root / ARCHIVED_TREE_PRESENT).write_text("x", encoding="utf-8")
+        if len(archived_target_problems(root)) != len(ARCHIVED_TREE_TARGETS):
+            failures.append("archived_target_problems must name every allowed path that a still-present tree lacks")
+    with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         (root / ".gitmodules").write_text('[submodule "refs/absent"]\n\tpath = refs/absent\n\turl = https://example.test/x.git\n'
                                          '[submodule "refs/present"]\n\tpath = refs/present\n\turl = https://example.test/y.git\n', encoding="utf-8")
@@ -396,6 +485,8 @@ def main() -> int:
 
     md_files = iter_markdown_files(args.scope)
     broken, total_links, skipped = check_links(md_files, REPO_ROOT)
+    broken += [{"path": "tools/md_link_check.py", "target": problem, "resolved": "", "kind": "archived-target"}
+               for problem in archived_target_problems(REPO_ROOT)]
 
     payload: Dict[str, Any] = {
         "generated_utc": utc_now_iso(),

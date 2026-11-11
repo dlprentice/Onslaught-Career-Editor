@@ -17,12 +17,10 @@ from collections import Counter
 from typing import Any, NamedTuple
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "rebuild" / "tools"))
 
 from cmsh_static_preview import inflate_aya, parse_cmsh_stream  # noqa: E402
 from aya_archive_inventory import read_held_archive  # noqa: E402
 from safe_generated_output import SecuredOutputRoot  # noqa: E402
-
 
 SCHEMA = "onslaught.cmsh-matrix-palette-skinning.v1"
 INDEX_SCHEMA = "onslaught.asset-mirror-index.v1"
@@ -55,7 +53,6 @@ RENDERER_PALETTE_LOOP_SHA256 = "362f12c6af54fcff8a238c5badfee7d5f7794b362af58a65
 RENDERER_PALETTE_SCALE_VA = 0x0054B0C3
 RENDERER_PALETTE_SCALE_BYTES = 340
 RENDERER_PALETTE_SCALE_SHA256 = "bac577a59b294c03e71d6b99ed33b018f8ffc1b6d6b7a20f4e7c15d407876772"
-
 
 class CodePin(NamedTuple):
     """Code of the pristine executable named by where it is and what it hashes to, so that this file quotes none of it: the

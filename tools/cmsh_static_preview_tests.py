@@ -1496,7 +1496,7 @@ class CmshStaticPreviewTests(unittest.TestCase):
                     preview.parse_cmsh_stream(bytes(stream))
 
     def test_guarded_local_publication_uses_only_anonymous_obj_names(self) -> None:
-        checkout = Path(__file__).resolve().parents[2]
+        checkout = Path(__file__).resolve().parents[1]
         input_parent = checkout / "local-lab" / "rebuild-godot" / "input"
         output_parent = checkout / "local-lab" / "rebuild-godot" / "generated"
         input_parent.mkdir(parents=True, exist_ok=True)
@@ -1527,7 +1527,7 @@ class CmshStaticPreviewTests(unittest.TestCase):
                 preview.publish_anonymous_previews(checkout, input_root, output_root)
 
     def test_local_publication_records_only_aggregate_path_free_rejections(self) -> None:
-        checkout = Path(__file__).resolve().parents[2]
+        checkout = Path(__file__).resolve().parents[1]
         input_parent = checkout / "local-lab" / "rebuild-godot" / "input"
         output_parent = checkout / "local-lab" / "rebuild-godot" / "generated"
         input_parent.mkdir(parents=True, exist_ok=True)
@@ -1543,7 +1543,7 @@ class CmshStaticPreviewTests(unittest.TestCase):
             self.assertEqual({"truncation": 1}, json.loads(summary)["categories"])
 
     def test_local_preflight_is_path_free_and_checkout_cannot_be_relabelled(self) -> None:
-        checkout = Path(__file__).resolve().parents[2]
+        checkout = Path(__file__).resolve().parents[1]
         private_missing = checkout / "local-lab" / "rebuild-godot" / "input" / "private-missing"
         output = checkout / "local-lab" / "rebuild-godot" / "generated" / "unused"
         with self.assertRaises(preview.CmshProfileError) as caught:
@@ -1677,7 +1677,7 @@ class CmshStaticPreviewTests(unittest.TestCase):
             preview.parse_cmsh_stream(bytes(header) + _chunk(b"CMST", b"") + oversized_part)
 
     def test_candidate_count_and_aggregate_source_caps_are_preflight_only(self) -> None:
-        checkout = Path(__file__).resolve().parents[2]
+        checkout = Path(__file__).resolve().parents[1]
         input_parent = checkout / "local-lab" / "rebuild-godot" / "input"
         output_parent = checkout / "local-lab" / "rebuild-godot" / "generated"
         input_parent.mkdir(parents=True, exist_ok=True)
@@ -1695,7 +1695,7 @@ class CmshStaticPreviewTests(unittest.TestCase):
                 preview.publish_anonymous_previews(checkout, Path(input_temp), Path(output_temp))
 
     def test_late_candidate_change_rolls_back_prior_atomic_obj(self) -> None:
-        checkout = Path(__file__).resolve().parents[2]
+        checkout = Path(__file__).resolve().parents[1]
         input_parent = checkout / "local-lab" / "rebuild-godot" / "input"
         output_parent = checkout / "local-lab" / "rebuild-godot" / "generated"
         input_parent.mkdir(parents=True, exist_ok=True)
@@ -1716,7 +1716,7 @@ class CmshStaticPreviewTests(unittest.TestCase):
             self.assertEqual([], list(output_root.iterdir()))
 
     def test_held_metadata_change_rejects_and_rolls_back_prior_obj(self) -> None:
-        checkout = Path(__file__).resolve().parents[2]
+        checkout = Path(__file__).resolve().parents[1]
         input_parent = checkout / "local-lab" / "rebuild-godot" / "input"
         output_parent = checkout / "local-lab" / "rebuild-godot" / "generated"
         input_parent.mkdir(parents=True, exist_ok=True)
@@ -1774,7 +1774,7 @@ class CmshStaticPreviewTests(unittest.TestCase):
                 preview.emit_obj(mesh)
 
     def test_broken_reparse_dirent_is_not_treated_as_a_missing_output_component(self) -> None:
-        checkout = Path(__file__).resolve().parents[2]
+        checkout = Path(__file__).resolve().parents[1]
         root = checkout / "local-lab" / "rebuild-godot" / "generated"
         path = root / "broken" / "session"
 
@@ -1984,7 +1984,7 @@ class CmshReEmitterTests(unittest.TestCase):
 def _shipped_mesh_directory() -> Path:
     """Where the released meshes are materialised on this machine.
 
-    `local-lab/` is gitignored and exists only in the checkout it was populated
+    The lab folder is gitignored and exists only in the checkout it was populated
     in, so a linked worktree has to be told where it is. The census skips
     entirely when neither location is present, which is the case in a clone.
     """
@@ -1992,7 +1992,7 @@ def _shipped_mesh_directory() -> Path:
     if override:
         return Path(override)
     return (
-        Path(__file__).resolve().parents[2]
+        Path(__file__).resolve().parents[1]
         / "local-lab"
         / "safe-copy-bea-pristine"
         / "data"

@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-11-11 (link check names links skipped for an uninitialised submodule)
+Last updated: 2026-11-11 (the CMSH parser, region data and reader fixtures moved here from the frozen rebuild copy)
 Summary: what each tool in `tools/` is for.
 
 `tools/` supports the companion, the game documentation and the frozen rebuild copy in `rebuild/` through guarded extraction,
@@ -59,9 +59,14 @@ change that needs no retail data. For example, `python tools/content_catalog_tes
 - `godot_host.py` supplies installed-engine discovery, locked bundled-SDK restore/build and owned-process cleanup;
   `companion_godot.py` builds and runs the companion through the verified public setup; an explicitly selected
   shared installation remains an optional maintainer route.
-- `rebuild/` is a frozen reference. Some current format tools import its `cmsh_static_preview.py` parser;
-  `test:tools` retains that parser's tests and `materialize_retail_assets_tests.py`. `test:godot-host` also checks
-  the retained `first_flight.py` launcher with fake tools. These are support-code checks, not builds or parity
+- `cmsh_static_preview.py` is the CMSH mesh parser that the format tools import. It and `cmsh_static_preview_tests.py`
+  moved here on 2026-11-11 from the frozen `rebuild/` copy, with the region and plan JSON files
+  (`gameplay-regions-level100.json`, `frontend-regions-*.json`, `frontend-parity-plan.json`); the move changed the
+  checkout-root path constants only. `test:tools` runs that parser's tests.
+  `godot_reader_fixtures/` holds five C# reader sources from onslaught-godot that `particle_set_walk_tests.py` and
+  `physics_values_decode_tests.py` read; its [README](godot_reader_fixtures/README.md) names the source commit.
+- `rebuild/` is a frozen reference. `test:tools` retains `materialize_retail_assets_tests.py`, and `test:godot-host`
+  also checks the retained `first_flight.py` launcher with fake tools. These are support-code checks, not builds or parity
   acceptance of the frozen rebuild application. Current rebuild setup, runtime commands and gates belong to
   [onslaught-godot](https://github.com/dlprentice/onslaught-godot).
 - `ce_museum_stage.py` turns an authored exhibition description into two loose-world overrides in a CE mod folder, using an existing level's terrain and resources from a game you own. It is experimental: [the museum project note](../docs/ce-museum-project.md) gives its scope and limits. Its authored tests are registered in `run_tool_tests.py`.
@@ -74,7 +79,11 @@ publish, sign, or install anything by themselves.
 - `md_link_check.py` validates local link **targets** and heading anchors; `md_reachability_check.py`
   answers the different question of whether a document is linked from anywhere. The frozen copies cannot be edited, so
   the link check accepts their links into sections that moved from `VALIDATION.md` to `VALIDATION-HISTORY.md`; live
-  documents must link to the new file. In a clone whose reference submodules are not initialised, links into them cannot
+  documents must link to the new file. In the same way it accepts a frozen page's link to a file that left `rebuild/`
+  for `tools/` (while the new home exists: the parser, its tests and the region and plan JSON files) and, for
+  eight exact paths that only the `archive/20261111-rebuild-frozen-copy` tag will hold once `rebuild/` is removed,
+  a link that no longer resolves in the working tree; both lists are in the script, and the check fails if an allowed
+  path is missing from the tree it still has or from that tag when the clone has it. In a clone whose reference submodules are not initialised, links into them cannot
   be resolved: the check names each skipped submodule and the number of links it did not check (the result line says
   SKIPPED), and `--require-submodules` makes that a failure.
 - `doc_header_check.py` enforces the header contract in
@@ -306,10 +315,10 @@ documented below and in the development entry headers. Keep retail-derived table
   (tokenized to their end as one html element) and XML documents (parsed by expat).
   `media_readers_tests.py` reaches every refusal reason the module has.
 - `particle_set_walk.py` reads a particle set (`*.par`) value by value in `CParticleSet::ReadData`'s order, with the
-  token grammar of the rebuild's reader (`rebuild/OnslaughtRebuild.Parity/Particles/`), and refuses what that reader
+  token grammar of onslaught-godot's reader (copies in `godot_reader_fixtures/`), and refuses what that reader
   would take otherwise than as written. `particle_set_walk_tests.py` checks its tables against that C#.
-- `physics_values_decode.py` reads the compiled physics script value by value with the value classes of the rebuild's
-  typed reader (`rebuild/OnslaughtRebuild.Parity/Physics/`) and says which values name a mesh, particle effect, sound
+- `physics_values_decode.py` reads the compiled physics script value by value with the value classes of onslaught-godot's
+  typed reader (copies in `godot_reader_fixtures/`) and says which values name a mesh, particle effect, sound
   effect or icon. `physics_values_decode_tests.py` checks its tables against that C#, so the two cannot drift apart.
 - `aya_archive_inventory.py`, `aya_cross_platform_compare.py`, and
   `aya_texture_fidelity_census.py` provide fail-closed AYA inventory,
@@ -746,7 +755,7 @@ The catalogue and its detailed outputs contain game-derived data and stay in ign
   `rebuild/tools/first_flight.py` launcher, capture folds its verdict into the capture's `status`, so a frontend
   regression fails that capture. This describes the frozen route; current capture commands and parity gates belong to
   [onslaught-godot](https://github.com/dlprentice/onslaught-godot). The retained thresholds live in
-  `rebuild/tools/frontend-parity-plan.json` and are regression ceilings, not
+  `tools/frontend-parity-plan.json` and are regression ceilings, not
   parity claims. The plan stores each measured value plus the single
   `marginPp: 2.0` regression allowance used to derive its ceiling.
 

@@ -20,9 +20,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from cmsh_track_probe import parse  # noqa: E402
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "rebuild" / "tools"))
 from cmsh_static_preview import inflate_aya  # noqa: E402
-
 
 def mat(payload: bytes, index: int):
     """HORI/CORI record -> 3x3 basis rows (each stored row is 4 floats)."""

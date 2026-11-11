@@ -19,7 +19,6 @@ import sys
 import cmsh_skinning_contract as p1
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "rebuild" / "tools"))
 
 from cmsh_static_preview import inflate_aya, parse_cmsh_stream  # noqa: E402
 from safe_generated_output import SecuredOutputRoot  # noqa: E402
@@ -882,7 +881,7 @@ def build_contract(
             {"disposition": "REUSED", "path": "reverse-engineering/source-code/aya-resource-extractor-source-audit.md", "sha256": "b08368a114069eae78b7dc61b00a085588188af575c74bb672ec1d5598b98af0"},
             {"disposition": "REUSED", "path": "reverse-engineering/source-code/aya-resource-extractor-contract.tsv", "sha256": "0a4a58c68f8c9d91cac27fba89d7c49a25948ac4ef5616c10fb6b0ae300a024e"},
             {"disposition": "REUSED", "path": "reverse-engineering/binary-analysis/cmsh-cpos-cori-identity-2026-07-25.md", "sha256": "8cc27f8d467628d158b3595813ad5e0c98ef123da273ceb22b38f686daf85259"},
-            {"disposition": "REUSED", "path": "rebuild/tools/cmsh_static_preview.py", "sha256": "efd14ff88315408d656e5b3605e1b3dab4a3e323118f5997934cb936f48f1cc7"},
+            {"disposition": "REUSED", "path": "tools/cmsh_static_preview.py", "sha256": "efd14ff88315408d656e5b3605e1b3dab4a3e323118f5997934cb936f48f1cc7"},
             {"disposition": "REUSED", "path": "tools/cmsh_animation_usage_census.py", "sha256": "510e03e5066f71ba1a89d604eefccb126589fcc16d27f339b90007526b02ec6c"},
             {"disposition": "EXTENDED", "path": "local-lab/PUZZLE-SKIN-WEIGHTS-2026-07-31.md", "sha256": "f894982b2d2bc71a1eadcf0990ecb588170313a9637706035a818b6d339150c5"},
             {"disposition": "EXTENDED", "path": "local-lab/ghidra-fullpass-2026-07-23/exports/W010/decompile/00549570_CMeshRenderer__RenderMeshCore.c", "sha256": "1fef07d87011225eaf5edfd307eaf10c83f32d4008f46ede6cf8378f0f631c71"},

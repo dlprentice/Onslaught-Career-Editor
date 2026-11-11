@@ -86,7 +86,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from compare_capture import gap_pct, load_rgb, region_stats  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_PLAN = REPO_ROOT / "rebuild" / "tools" / "frontend-parity-plan.json"
+DEFAULT_PLAN = REPO_ROOT / "tools" / "frontend-parity-plan.json"
 
 FULL_FRAME = "FULL FRAME"
 
@@ -318,7 +318,8 @@ def main(argv: list[str]) -> int:
             args.json_out.write_text(json.dumps(report, indent=2), encoding="utf-8")
         return 0
 
-    reference_root = REPO_ROOT / plan["referenceRoot"]
+    # The plan names the reference folder relative to the ignored lab folder; an absolute value is used as it is.
+    reference_root = REPO_ROOT / "local-lab" / plan["referenceRoot"]
     if not reference_root.is_dir():
         # The reference set is retail-derived and lives under the gitignored
         # local-lab, so a fresh clone legitimately has none of it. That is an

@@ -11,12 +11,10 @@ import unittest
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "rebuild" / "tools"))
 
 import cmsh_skinning_contract as contract
 import cmsh_static_preview as preview
 import cmsh_static_preview_tests as preview_fixtures
-
 
 class SlotPatternTests(unittest.TestCase):
     def test_classify_slot_pattern_covers_every_three_slot_equality_shape(self) -> None:

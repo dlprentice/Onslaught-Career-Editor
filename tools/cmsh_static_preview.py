@@ -2133,7 +2133,7 @@ def publish_anonymous_previews(
     include_material_layer_groups: bool = False,
     hierarchy_frame: int | None = None,
 ) -> tuple[int, int]:
-    trusted_checkout = Path(__file__).resolve().parents[2]
+    trusted_checkout = Path(__file__).resolve().parents[1]
     checkout = _absolute_lexical(checkout)
     input_directory = _absolute_lexical(input_directory)
     output_directory = _absolute_lexical(output_directory)
@@ -2142,8 +2142,6 @@ def publish_anonymous_previews(
     allowed_inputs = (
         checkout / "game",
         checkout / "local-lab" / "rebuild-godot" / "input",
-        checkout / "rebuild" / "OnslaughtRebuild.Godot" / "Assets" / "Aquila" / "Source",
-        checkout / "rebuild" / "OnslaughtRebuild.Godot" / "Assets" / "Level100" / "Source",
     )
     allowed_output = checkout / "local-lab" / "rebuild-godot" / "generated"
     try:

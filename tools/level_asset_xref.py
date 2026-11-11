@@ -40,7 +40,6 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "rebuild" / "tools"))
 
 import aya_archive_inventory as archive  # noqa: E402
 import aya_cross_platform_compare as names  # noqa: E402
@@ -56,7 +55,6 @@ MAX_MESH_INFLATED_TOTAL = 128 * 1024 * 1024
 MAX_ARCHIVE_ASSET_ROWS = 4096
 MAX_CANDIDATE_LINKS = 20000
 MAX_NESTED_CHUNKS = 4096
-
 
 def ascii_key(value: str) -> str | None:
     """Only claim ASCII case-insensitive equality; retain all other names as unknown."""

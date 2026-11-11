@@ -131,6 +131,12 @@ _DECLARATION = re.compile(
     r"(?:[A-Za-z_][\w<>,.\[\]?]*\s+)?(?P<name>[A-Za-z_]\w*)\s*\([^;]*\)\s*$"
 )
 _NON_FUNCTION_WORDS = frozenset({"if", "for", "foreach", "while", "switch", "catch", "lock", "using", "return"})
+# The contract table is a frozen page and cites files by the path they had when it was written. These two moved from rebuild/tools/
+# to tools/ on 2026-11-11; the line ranges are checked against the file at its new path.
+RELOCATED_REFERENCES = {
+    "rebuild/tools/cmsh_static_preview.py": "tools/cmsh_static_preview.py",
+    "rebuild/tools/cmsh_static_preview_tests.py": "tools/cmsh_static_preview_tests.py",
+}
 _LINE_REFERENCE = re.compile(r"^(?P<path>.+):L(?P<first>[1-9]\d*)(?:-L?(?P<last>[1-9]\d*))?$")
 FORMAT_TOKENS = (
     "CMSH", "CMST", "MSHT", "TEXB", "MESP", "CMSP", "CHLD", "PRNT", "NMIC",
@@ -278,7 +284,7 @@ def _validate_line_reference(repo_root: Path, value: str) -> None:
                 raise AuditError(f"invalid hash reference: {value}")
             return
         raise AuditError(f"reference lacks checked line range or hash: {value}")
-    path = repo_root / match.group("path")
+    path = repo_root / RELOCATED_REFERENCES.get(match.group("path"), match.group("path"))
     if not path.is_file():
         raise AuditError(f"missing referenced file: {value}")
     text = _decode_text(path.read_bytes())

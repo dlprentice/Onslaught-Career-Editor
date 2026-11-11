@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """Self-tests for check_region_overlap.py and for union regions in compare_capture.
 
-The defect this gate closes is that `rebuild/tools/gameplay-regions-level100.json`
+The defect this gate closes is that `tools/gameplay-regions-level100.json`
 declared overlapping scoring boxes, so a change to one subsystem moved another
 subsystem's score, and nothing could say so. Shipping a checker that cannot fail
 would be the same defect wearing the fix's clothes, so most of what is below is
@@ -29,7 +29,7 @@ from compare_capture import gap_pct, region_area, region_stats  # noqa: E402
 
 TOOL = Path(__file__).resolve().parent / "check_region_overlap.py"
 REAL = (Path(__file__).resolve().parent.parent
-        / "rebuild" / "tools" / "gameplay-regions-level100.json")
+        / "tools" / "gameplay-regions-level100.json")
 
 
 def run(*paths: Path) -> tuple[int, str]:

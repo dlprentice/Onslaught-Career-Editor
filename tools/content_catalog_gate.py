@@ -44,7 +44,6 @@ from pathlib import Path
 
 TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS))
-sys.path.insert(0, str(TOOLS.parent / "rebuild" / "tools"))
 
 import cmsh_animation_usage_census as meshcensus  # noqa: E402
 import content_catalog as cc  # noqa: E402
@@ -59,7 +58,6 @@ PAYLOAD_DECODERS = {"ERES": wrd.parse_eres, "SURF": wrd.parse_surf, "SSHD": wrd.
                     "PMIB": wrd.parse_pmib, "DMKR": wrd.parse_dmkr}
 KEEPS = {"all base things kept": lambda e: True, "no base thing kept": lambda e: not e["conditional"],
          "every other base slot kept": lambda e: not e["conditional"] or e["slot"] % 2 == 0}
-
 
 def physics_of(game: Path) -> tuple[dict, dict]:
     """The definition lookups parse_world_body needs, and unit name -> behaviour (the first definition of a name)."""

@@ -9,7 +9,7 @@ regions share pixels, a change to ONE subsystem moves the OTHER's score, and a
 critic reading the second number credits a builder for work it did not do.
 
 That is not hypothetical here and it is not small. In
-`rebuild/tools/gameplay-regions-level100.json`, commit `dba2948e` changed only
+`tools/gameplay-regions-level100.json`, commit `dba2948e` changed only
 the compass gauge blend, yet moved the "terrain" box 22.35 -> 20.75. With the
 overlapping "threat circle" box excised, real terrain moved 12.36 -> 12.27:
 **94 % of that terrain "win" was the compass overlay.** The two boxes share
@@ -69,8 +69,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 # opts into enforcement; the frontend ones are reported so a new overlap is at
 # least visible in the output of a routine run.
 DEFAULT_TARGETS = [
-    REPO_ROOT / "rebuild" / "tools" / "gameplay-regions-level100.json",
-    *sorted((REPO_ROOT / "rebuild" / "tools").glob("frontend-regions-*.json")),
+    REPO_ROOT / "tools" / "gameplay-regions-level100.json",
+    *sorted((REPO_ROOT / "tools").glob("frontend-regions-*.json")),
 ]
 
 

@@ -80,7 +80,7 @@ def rot_z(theta):
     return ((c, -s, 0.0), (s, c, 0.0), (0.0, 0.0, 1.0))
 
 
-# `emit_obj` (rebuild/tools/cmsh_static_preview.py:775 for positions, :738 for
+# `emit_obj` (tools/cmsh_static_preview.py:775 for positions, :738 for
 # normals) writes the BEA model-space triple with its third component negated.
 F = ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, -1.0))
 # RetailAquilaWalkerAsset.MapVector / Level100HeightFieldAsset's sun map.

@@ -41,7 +41,7 @@ def rects(box) -> list[tuple[int, int, int, int]]:
     one measurement box from another leaves an L or a U, and until this existed
     `"terrain mid-band (clean)"` could only be described in prose. A region that
     no tool can compute is not a measurement, and the caveat block of
-    `rebuild/tools/gameplay-regions-level100.json` carried exactly that for two
+    `tools/gameplay-regions-level100.json` carried exactly that for two
     days while the contaminated box it warns against went on being quoted.
 
     Rectangles in a union MUST be pairwise disjoint or their shared pixels are
