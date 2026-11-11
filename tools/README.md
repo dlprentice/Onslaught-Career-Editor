@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-11-06 (frozen-rebuild wording, Python version, submodule step, tool and table coverage, format-tag definitions, and the Companion, heightfield and mission-script statements corrected; 2026-11-04: individual imposter identities and view metadata; content inventory, metadata and media coverage; independent checks distinguished from run-consistency checks; historical results retain their dates)
+Last updated: 2026-11-11 (link-check note for the moved validation entries; 2026-11-06: frozen-rebuild wording, Python version, submodule step, tool and table coverage, format-tag definitions, and the Companion, heightfield and mission-script statements corrected; 2026-11-04: individual imposter identities and view metadata; content inventory, metadata and media coverage; independent checks distinguished from run-consistency checks; historical results retain their dates)
 Summary: what each tool in `tools/` is for.
 
 `tools/` supports the companion, the game documentation and the frozen rebuild copy in `rebuild/` through guarded extraction,
@@ -71,8 +71,10 @@ publish, sign, or install anything by themselves.
 
 ## Documentation integrity
 
-- `md_link_check.py` validates local link **targets**; `md_reachability_check.py`
-  answers the different question of whether a document is linked from anywhere.
+- `md_link_check.py` validates local link **targets** and heading anchors; `md_reachability_check.py`
+  answers the different question of whether a document is linked from anywhere. The frozen copies cannot be edited, so
+  the link check accepts their links into sections that moved from `VALIDATION.md` to `VALIDATION-HISTORY.md`; live
+  documents must link to the new file.
 - `doc_header_check.py` enforces the header contract in
   [`DOCUMENTATION.md`](../DOCUMENTATION.md) — Status, Date, Verdict/Summary
   everywhere, plus Evidence and Specimen on findings. It rejects a byte claim
