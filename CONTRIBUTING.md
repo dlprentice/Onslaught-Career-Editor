@@ -1,7 +1,7 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-11-11 (one first-contribution section; the Companion build guide and C# gate pointers)
+Last updated: 2026-11-11 (one rule for where findings go; the named submodule skip)
 Summary: which public repository takes which kind of work, what a first contribution needs and runs, what a focused
 change looks like here, what must never be added to the repository, and which checks a change owes.
 
@@ -30,6 +30,9 @@ Questions and ideas: https://github.com/dlprentice/onslaught-ce/discussions
 | The Godot rebuild | [onslaught-godot](https://github.com/dlprentice/onslaught-godot) | Edited directly: pull requests are reviewed and merged there. |
 | How the game works: file formats, saves, mechanics, levels, engine | [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation) | Edited directly. It uses onslaught-decomp's function names. |
 | The Companion (saves, backups, settings, lore, music) and the program's goals and plan ([GOAL.md](GOAL.md), [PROGRAM.md](PROGRAM.md)) | This repository, [Onslaught-Career-Editor](https://github.com/dlprentice/Onslaught-Career-Editor) | Edited directly. The Companion's features are moving into Onslaught CE, so new feature work belongs in CE. |
+
+One rule for findings: function identity, naming and matching go to onslaught-decomp; behaviour, format and mechanics
+documentation goes to onslaught-preservation.
 
 Two trees in this repository are frozen copies: `rebuild/` (rebuild work goes to onslaught-godot) and
 `reverse-engineering/` (documentation goes to onslaught-preservation). The forks
@@ -66,7 +69,8 @@ Steps:
    maintainer's own tooling.
 2. Fork this repository and clone your fork with its public reference submodules, which the link and safety checks
    follow: `git clone --recurse-submodules https://github.com/<your-account>/Onslaught-Career-Editor.git`. In an
-   existing clone, run `git submodule update --init --recursive` once. Keep both recorded pins; do not replace them
+   existing clone, run `git submodule update --init --recursive` once. Without them `tools/md_link_check.py` still runs,
+   but it names the links into the missing submodules as skipped and does not check them. Keep both recorded pins; do not replace them
    with an upstream's latest commit unless the pull request is meant to update one, and then explain why and keep its
    licence and provenance.
 3. Create a branch from upstream `main`: `git switch -c my-change`. Follow [Build and run](README.MD#build-and-run) and

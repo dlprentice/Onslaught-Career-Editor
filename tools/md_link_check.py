@@ -12,6 +12,9 @@ Notes:
   to hyphens, a repeated heading numbered -1, -2) and against `id=` / `name=` attributes
   of raw HTML. Line anchors (`#L12`) and anchors into files that are not Markdown are not
   checked. Setext headings (underlined with === or ---) are not read as anchors.
+- A link into a submodule declared in `.gitmodules` that this clone has not initialised cannot be resolved. Such a link is
+  neither counted as broken nor silently passed: the run names each skipped submodule and the number of links skipped, and
+  `--require-submodules` turns the skip into a failure.
 - This is best-effort and intentionally conservative.
 """
 
@@ -58,6 +61,15 @@ PUBLIC_CORE_MARKDOWN = (
 # every other document must link to the new home directly.
 FROZEN_PREFIXES = ("reverse-engineering/", "rebuild/")
 MOVED_ANCHOR_HOMES = {"VALIDATION.md": "VALIDATION-HISTORY.md"}
+
+
+def uninitialised_submodules(root: Path) -> Dict[str, Path]:
+    """Submodule paths declared in root/.gitmodules whose checkout is absent: {declared path: directory}."""
+    gitmodules = root / ".gitmodules"
+    if not gitmodules.is_file():
+        return {}
+    declared = re.findall(r"^\s*path\s*=\s*(\S+)\s*$", read_text(gitmodules), flags=re.M)
+    return {rel: (root / rel).resolve() for rel in declared if not (root / rel / ".git").exists()}
 
 
 def utc_now_iso() -> str:
@@ -224,9 +236,12 @@ def read_text(path: Path) -> str:
         return path.read_text(encoding="latin-1")
 
 
-def check_links(md_files: List[Path], root: Path) -> Tuple[List[Dict[str, Any]], int]:
-    """(broken links and anchors, links checked) over the given Markdown files; local targets resolve against root."""
+def check_links(md_files: List[Path], root: Path) -> Tuple[List[Dict[str, Any]], int, Dict[str, int]]:
+    """(broken links and anchors, links checked, links skipped per uninitialised submodule) over the given Markdown files;
+    local targets resolve against root."""
     broken: List[Dict[str, Any]] = []
+    skip_roots = uninitialised_submodules(root)
+    skipped: Dict[str, int] = {}
     total_links = 0
     anchor_cache: Dict[Path, Set[str]] = {}
 
@@ -266,11 +281,15 @@ def check_links(md_files: List[Path], root: Path) -> Tuple[List[Dict[str, Any]],
             total_links += 1
             resolved = resolve_local_target(p, target, root)
             if not resolved.exists():
+                owner = next((name for name, directory in skip_roots.items() if resolved.is_relative_to(directory)), None)
+                if owner:
+                    skipped[owner] = skipped.get(owner, 0) + 1
+                    continue
                 broken.append({"path": rel, "target": target, "resolved": os.fspath(resolved), "kind": "path"})
             elif fragment and not LINE_ANCHOR_RE.match(fragment) and resolved.is_file() and is_markdown_name(resolved.name):
                 if fragment.lower() not in anchors_of(resolved) and not moved_anchor_exists(rel, resolved, fragment):
                     broken.append({"path": rel, "target": f"{target}#{fragment}", "resolved": os.fspath(resolved), "kind": "anchor"})
-    return broken, total_links
+    return broken, total_links, skipped
 
 
 def self_test() -> int:
@@ -313,7 +332,7 @@ def self_test() -> int:
         (root / "rebuild" / "frozen.md").write_text(
             "[moved](../VALIDATION.md#moved-entry) [absent](../VALIDATION.md#no-such-entry)\n", encoding="utf-8")
         (root / "live.md").write_text("[moved](VALIDATION.md#moved-entry)\n", encoding="utf-8")
-        broken, total = check_links([root / "a.md", root / "b.md", root / "rebuild" / "frozen.md", root / "live.md"], root)
+        broken, total, skipped = check_links([root / "a.md", root / "b.md", root / "rebuild" / "frozen.md", root / "live.md"], root)
         got = sorted((item["target"], item["kind"]) for item in broken)
         want = sorted([("b.md#missing-heading", "anchor"), ("#nope", "anchor"), ("missing.md", "path"),
                        ("b.md#bad-after", "anchor"), ("b.md#odd-tick-missing", "anchor"),
@@ -322,6 +341,27 @@ def self_test() -> int:
             failures.append(f"check_links found {got}, expected {want}")
         if total != 28:
             failures.append(f"check_links counted {total} links, expected 28")
+        if skipped:
+            failures.append(f"check_links skipped {skipped} with no submodule declared")
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        (root / ".gitmodules").write_text('[submodule "refs/absent"]\n\tpath = refs/absent\n\turl = https://example.test/x.git\n'
+                                         '[submodule "refs/present"]\n\tpath = refs/present\n\turl = https://example.test/y.git\n', encoding="utf-8")
+        (root / "refs" / "absent").mkdir(parents=True)
+        (root / "refs" / "present").mkdir(parents=True)
+        (root / "refs" / "present" / ".git").write_text("gitdir: elsewhere\n", encoding="utf-8")
+        (root / "refs" / "present" / "here.cpp").write_text("x", encoding="utf-8")
+        (root / "doc.md").write_text(
+            "[a](refs/absent/one.cpp) [b](refs/absent/two.h) [ok](refs/present/here.cpp) [gone](refs/present/gone.cpp) "
+            "[miss](refs/other/x.cpp)\n", encoding="utf-8")
+        broken, total, skipped = check_links([root / "doc.md"], root)
+        if skipped != {"refs/absent": 2}:
+            failures.append(f"uninitialised submodule skips {skipped}, expected {{'refs/absent': 2}}")
+        got = sorted(item["target"] for item in broken)
+        if got != ["refs/other/x.cpp", "refs/present/gone.cpp"]:
+            failures.append(f"submodule case found broken {got}; links into an initialised or undeclared tree must still fail")
+        if uninitialised_submodules(root) != {"refs/absent": (root / "refs" / "absent").resolve()}:
+            failures.append("uninitialised_submodules did not report exactly the absent checkout")
     print("md_link_check self-test: " + ("PASS" if not failures else f"FAIL {failures}"))
     return 0 if not failures else 1
 
@@ -347,10 +387,15 @@ def main() -> int:
         action="store_true",
         help="Validate without writing markdown/json report artifacts.",
     )
+    ap.add_argument(
+        "--require-submodules",
+        action="store_true",
+        help="Fail instead of skipping links into submodules this clone has not initialised.",
+    )
     args = ap.parse_args()
 
     md_files = iter_markdown_files(args.scope)
-    broken, total_links = check_links(md_files, REPO_ROOT)
+    broken, total_links, skipped = check_links(md_files, REPO_ROOT)
 
     payload: Dict[str, Any] = {
         "generated_utc": utc_now_iso(),
@@ -359,6 +404,7 @@ def main() -> int:
         "total_local_links_checked": total_links,
         "broken_links": broken,
         "broken_count": len(broken),
+        "skipped_into_uninitialised_submodules": skipped,
     }
 
     out_json: Path | None = None
@@ -413,6 +459,12 @@ def main() -> int:
 
     print(f"Markdown files scanned: {len(md_files)}")
     print(f"Local links checked: {total_links}")
+    skipped_note = ""
+    if skipped:
+        names = ", ".join(f"{name} ({count} links)" for name, count in sorted(skipped.items()))
+        skipped_note = f" - SKIPPED, not checked: uninitialised submodule(s) {names}; run `git submodule update --init --recursive`"
+        print("SKIPPED: links into submodules this clone has not initialised were NOT checked: " + names)
+        print("Run `git submodule update --init --recursive` and check again for the full result.")
     if broken:
         for item in broken[:25]:
             print(f"- {item['path']} -> {item['target']}")
@@ -420,7 +472,10 @@ def main() -> int:
             print(f"- ... ({len(broken) - 25} more)")
         print(f"Markdown link check: FAIL ({len(broken)} broken local links)" + (f"; {sum(1 for b in broken if b['kind'] == 'anchor')} of them anchors" if any(b["kind"] == "anchor" for b in broken) else ""))
         return 1
-    print("Markdown link check: PASS")
+    if skipped and args.require_submodules:
+        print("Markdown link check: FAIL (--require-submodules and submodules are not initialised)" + skipped_note)
+        return 1
+    print("Markdown link check: PASS" + skipped_note)
     return 0
 
 

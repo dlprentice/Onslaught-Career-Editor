@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-11-06 (build-from-source and setup-download wording; the CE migration pointer, the upstream reference pin and the refreshed checkpoint label stated precisely; 2026-11-04: unified CE product required; phase out standalone Companion after verified migration)
+Last updated: 2026-11-11 (0.1.14 in preparation; what 0.2.0 is; Companion features move into CE; the look-and-feel standard)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
@@ -82,7 +82,8 @@ archive.
   migration, including media browsing/playback/exports, recovery, read-only inspection and authoring; the
   [migration checklist](PROGRAM.md#native-ce-migration-checklist) records their source owners and remaining requirements.
   Migrate in verified stages; keep the working Companion, its tools and evidence
-  until the replacement preserves their useful capabilities and safety. This supersedes the earlier plan to retain
+  until the replacement preserves their useful capabilities and safety. New player features are built in CE, not in
+  the standalone app, which stays until each of its features is replaced in CE and verified. This supersedes the earlier plan to retain
   a separate offline-management product, without prescribing an engine/runtime embedding architecture.
   The current standalone Godot .NET app for Linux and Windows ([built from source](README.MD#build-and-run); no packaged release yet) still provides careers, Goodies, settings, backups,
   music, voices and lore, with protected writes and verified backups, and can launch Onslaught CE.
@@ -119,20 +120,25 @@ release, design and evidence records; [CURRENT_CAPABILITIES.md](CURRENT_CAPABILI
 demonstrated capabilities. A handoff is a dated continuity snapshot, not a competing roadmap: verify current refs,
 claims and evidence before acting, and update the existing owner when a material milestone changes.
 
-David has resumed development across the requested areas after trying the refreshed (r2) local 0.1.99 checkpoint. Work
-from the reported problems and current evidence while keeping the earlier and refreshed checkpoints reproducible.
+David has resumed development across the requested areas after trying a refreshed unreleased development build. Work
+from the reported problems and current evidence while keeping the earlier and refreshed development builds reproducible.
 Preserve their packages, accepted builds, Companion stages, launch profiles and copied user data until their
 preservation has been verified; subsequent implementation and tests use separate outputs and profiles. Each
-checkpoint's capability claims must follow its own evidence. A player's report adds useful acceptance or a problem
+build's capability claims must follow its own evidence. A player's report adds useful acceptance or a problem
 to investigate within the scope actually tried; it does not certify untried features. [PROGRAM.md](PROGRAM.md#order-after-0113)
 owns the current order and remaining work.
 
-Complete and test the agreed 0.2 player workflows internally before considering that release. Working multiplayer,
-continuous native CE RTS Commander, usable in-game 3D map/mission editors, the explorable in-game museum and the other
-agreed requirements remain part of that larger outcome. An experimental or alpha label does not authorize shipping
-unfinished pieces in their place. Do not publish 0.2 while those requirements remain incomplete; internal playtest
-checkpoints and continued development do not lift this release hold. Publishing 0.2 also requires David's further
-explicit go-ahead. The wider foundation, rebuild, quality, documentation and recovery goals remain in scope.
+**Releases.** CE 0.1.13 is the latest release. 0.1.14, whose source is already on onslaught-ce `main`, is in
+preparation; it is not released, and David's direction of 2026-11-11 is that it releases when its gates pass.
+**0.2.0 is the large release: everything now in progress, complete.** That is online co-op, Commander as an RTS,
+playing any controllable unit, 3D map and mission editors with CE projects, mods and the complete content catalogue,
+the museum, and the Companion's player features absorbed into CE. Complete and test those workflows internally
+before considering that release. An experimental or alpha label does not authorize shipping unfinished pieces in
+their place. Do not publish 0.2 while those requirements remain incomplete; internal playtest builds and continued
+development do not lift this release hold. Publishing 0.2 also requires David's further explicit go-ahead.
+
+**Look and feel.** Everything CE adds must look and feel like part of the original game. A feature that works but
+reads as a separate tool bolted on does not meet this standard. The wider foundation, rebuild, quality, documentation and recovery goals remain in scope.
 
 ## Evidence
 

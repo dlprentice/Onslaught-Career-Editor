@@ -83,24 +83,24 @@ Linux workflow driven through programmatic production-page actions, not human UI
 complete campaign play or native Windows acceptance. The [October 24 CE 0.1.4 run](VALIDATION-HISTORY.md#companion-with-real-onslaught-ce--october-24)
 remains a separate dated record.
 
-The initial November 4 Linux checkpoint check used the same pinned production pages with the unreleased CE 0.1.99 package.
+The initial November 4 Linux check used the same pinned production pages with an unreleased CE development package.
 Discovery read its actual launcher version; copied-career backup/edit/restore and the two supported settings controls
 passed. Fresh Home/version, settings and restored-backup images, plus authored 3D project/map-link/source views,
 were inspected. Both capture processes exited normally and the pinned source/runtime inputs read back unchanged.
-The retained checkpoint acceptance receipt has SHA-256
+The retained acceptance receipt has SHA-256
 `2f267eb8df39c78028729fddeaf468307c1f74d56464229dfabb3f7fc25ff367`.
 This adds bounded automated workflow and image acceptance, not human input, audible output, an update hand-off or
-native Windows acceptance. This first local snapshot remains preserved; neither it nor the separate 0.1.99 refresh
+native Windows acceptance. This first local snapshot remains preserved; neither it nor the separate refresh
 is a public release. The earlier CE 0.1.13 career-load result remains the dated acceptance described above.
 
 The refreshed November 4 Companion stage uses the accepted installed-model editor source described below and the
-newer unreleased CE 0.1.99 package. Fresh scripted production-page checks passed actual launcher-version discovery,
+newer unreleased CE development package. Fresh scripted production-page checks passed actual launcher-version discovery,
 copied-career backup/edit/restore, settings writes and refusal to overwrite a changed settings snapshot. The process
 exited normally; package and preserved baseline read back unchanged. Home/version, settings, restored-career and
 static installed-model images were inspected. The retained combined receipt has SHA-256
 `60ce7544b472c5380e58a3c813abecf4bf179aba61e510b0595943642c052009`.
 This is bounded Linux workflow/image acceptance, with no new human-input, audio, game-load, update hand-off or
-native Windows claim. The checkpoint status and remaining work are tracked in [PROGRAM.md](PROGRAM.md#order-after-0113).
+native Windows claim. The status of these builds and the remaining work are tracked in [PROGRAM.md](PROGRAM.md#order-after-0113).
 David's subsequent November 4 manual CE playtest did not include Companion. Human use of its workflow and 3D editor
 therefore remains unverified; the CE and museum feedback is recorded in [PROGRAM.md](PROGRAM.md#onslaught-ce-player-experience-and-online-play).
 
@@ -185,7 +185,7 @@ Its sidebar:
   tables refuse that geometry instead
   of selecting an unrelated model. Move, Undo/Redo and Save/Open retain the project and source identities. Authored
   reader and scene checks and independent review cover those paths; textures, animation, complete-scene rendering,
-  human input and native Windows remain unverified. This source was added after the initial 0.1.99 Companion stage
+  human input and native Windows remain unverified. This source was added after the initial Companion stage
   and is included in the refreshed stage, whose fresh installed-model images were also inspected; the initial stage
   remains preserved.
   A separate 2026-11-03 controlled run and independent review exercised the production
@@ -198,7 +198,7 @@ Its sidebar:
   unchanged. Deliberately broken writer and coordinate-reader variants were refused by the check. The controlled
   career-write case left the protected save unchanged; it does not establish every save path. The retained independent
   review receipt has SHA-256 `9b9871ca08f689f63c2e8a1aa0c678a0ba36f13a0c7671f0027bbd68abcb6525`.
-  On November 4, the initial unreleased 0.1.99 Linux package, built with networking enabled, also loaded one of those
+  On November 4, the initial unreleased development Linux package, built with networking enabled, also loaded one of those
   page-saved level-221 projects locally. Its placement log entry and gameplay image were inspected; no network session
   was active. The retained exact-package smoke receipt has SHA-256
   `e4a7f4daf13dd8e442f52a894452870880aeeb45ea4a50d2ea2614b279070e81`.

@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-11-11 (link-check note for the moved validation entries)
+Last updated: 2026-11-11 (link check names links skipped for an uninitialised submodule)
 Summary: what each tool in `tools/` is for.
 
 `tools/` supports the companion, the game documentation and the frozen rebuild copy in `rebuild/` through guarded extraction,
@@ -74,7 +74,9 @@ publish, sign, or install anything by themselves.
 - `md_link_check.py` validates local link **targets** and heading anchors; `md_reachability_check.py`
   answers the different question of whether a document is linked from anywhere. The frozen copies cannot be edited, so
   the link check accepts their links into sections that moved from `VALIDATION.md` to `VALIDATION-HISTORY.md`; live
-  documents must link to the new file.
+  documents must link to the new file. In a clone whose reference submodules are not initialised, links into them cannot
+  be resolved: the check names each skipped submodule and the number of links it did not check (the result line says
+  SKIPPED), and `--require-submodules` makes that a failure.
 - `doc_header_check.py` enforces the header contract in
   [`DOCUMENTATION.md`](../DOCUMENTATION.md) — Status, Date, Verdict/Summary
   everywhere, plus Evidence and Specimen on findings. It rejects a byte claim

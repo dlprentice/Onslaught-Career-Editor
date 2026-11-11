@@ -1,12 +1,15 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-11-11 (a start-here table; the WSL note)
+Last updated: 2026-11-11 (the Companion-to-CE move stated in the intro)
 Summary: what this project is, where each part lives, which checks a public clone can run, and what Companion builds require.
 
 Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
 repository holds it and the project's overview. The repository is named Onslaught-Career-Editor; its documents also
 call it the Toolkit.
+
+The Companion's player features are moving into [Onslaught CE](https://github.com/dlprentice/onslaught-ce). The app
+stays until each feature is replaced there and verified, and new player features go to CE.
 
 To contribute to any part of the project, start with [Where to contribute](CONTRIBUTING.md#where-to-contribute): it says
 which public repository takes which kind of work, and everyone contributes by fork and pull request.
