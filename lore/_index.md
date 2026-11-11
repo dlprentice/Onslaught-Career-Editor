@@ -6,7 +6,7 @@
   [`reverse-engineering/`](../reverse-engineering/RE-INDEX.md), **the
   measurement wins** and the article is the side that gets corrected.
 - **Last updated:** 2026-10-22 (licence note: CC BY-SA 4.0, quotations stay with their authors)
-- **Summary:** navigation to the 16 lore articles in this directory, plus
+- **Summary:** navigation to the lore articles in this directory, plus
   pointers to the RE and roadmap indexes.
 
 A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the people who made it. This documentation preserves development history, in-game lore, community discoveries, and developer insights that would otherwise be lost.

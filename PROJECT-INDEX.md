@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-11-06 (Toolkit name mapped to its repository; Companion migration status stated; maintainer-workspace references marked as ignored; GameWrites.cs named as declaring GameInstaller; ripgrep need noted; the Companion runner's public toolchain and the contributor-contract owner corrected; 2026-11-03: content inventory owners, with the per-asset metadata file)
+Last updated: 2026-11-11 (validation history file routed; 2026-11-06: Toolkit name mapped to its repository; Companion migration status stated; maintainer-workspace references marked as ignored; GameWrites.cs named as declaring GameInstaller; ripgrep need noted; the Companion runner's public toolchain and the contributor-contract owner corrected; 2026-11-03: content inventory owners, with the per-asset metadata file)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository: the companion, tools, lore and frozen references, with routes to the live game projects.
 
@@ -66,8 +66,8 @@ The WinUI shell, its UI tests and the CLI
 were removed on 2026-10-15, and the patching core it left behind (AppCore, with its tests and the `patches/` catalog)
 on 2026-10-22; Git keeps them. An unused Windows evaluation VM was retired;
 this repository provisions no Windows validation host.
-[`VALIDATION.md`](VALIDATION.md) distinguishes focused service tests, native
-runtime checks and unfinished acceptance.
+[`VALIDATION.md`](VALIDATION.md) selects the check for a change; the dated receipts of earlier native runtime
+checks and unfinished acceptance are in [`VALIDATION-HISTORY.md`](VALIDATION-HISTORY.md).
 
 [`rebuild/OnslaughtRebuild.slnx`](rebuild/OnslaughtRebuild.slnx) and [`rebuild/README.md`](rebuild/README.md)
 describe the retained snapshot. Current assembly contracts, builds and tests belong to
@@ -183,6 +183,7 @@ wrong — fix the rows, not the document.
 | What is the rebuild's determinism contract and measured parity? | [onslaught-godot determinism](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/DETERMINISM.md) and [parity](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PARITY.md) |
 | Where does ignored machine-local evidence live? | [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md); in the maintainer's working checkout (ignored; not in public clones), the real `local-lab/` directory |
 | Which validation command applies? | [`VALIDATION.md`](VALIDATION.md) and [`package.json`](package.json) |
+| What did an earlier check run, and when? | [`VALIDATION-HISTORY.md`](VALIDATION-HISTORY.md) |
 | What shipped in CE? | [Onslaught CE releases](https://github.com/dlprentice/onslaught-ce/releases) |
 | What shipped in the retired WinUI app? | [`CHANGELOG.md`](CHANGELOG.md) |
 | What is the authored CE museum project format, and what are its limits? | [`docs/ce-museum-project.md`](docs/ce-museum-project.md) |

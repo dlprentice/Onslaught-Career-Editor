@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-11-10 (licence table no longer lists tests_shared scripts; 2026-11-06: names, contribution routing and the second pinned fork; 2026-11-02: public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-11 (a start-here table; 2026-11-10: licence table no longer lists tests_shared scripts; 2026-11-06: names, contribution routing and the second pinned fork; 2026-11-02: public contributor setup and routing; historical results retain their dates)
 Summary: what this project is, where each part lives, which checks a public clone can run, and what Companion builds require.
 
 Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
@@ -10,6 +10,17 @@ call it the Toolkit.
 
 To contribute to any part of the project, start with [Where to contribute](CONTRIBUTING.md#where-to-contribute): it says
 which public repository takes which kind of work, and everyone contributes by fork and pull request.
+
+| I want to | Start at |
+| --- | --- |
+| Play the game | [Onslaught CE](https://github.com/dlprentice/onslaught-ce) (you need your own copy of the game) |
+| Build and run the Companion | [Build and run](#build-and-run) |
+| Contribute a change | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Choose the checks for a change | [VALIDATION.md](VALIDATION.md) |
+| Find where code and documents live | [PROJECT-INDEX.md](PROJECT-INDEX.md) |
+| See the direction and the open work | [GOAL.md](GOAL.md) and [PROGRAM.md](PROGRAM.md) |
+| See what is demonstrated today | [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) |
+| Read the lore | [lore/_index.md](lore/_index.md) |
 
 - **The byte-matching decompilation is the reverse-engineering authority.** Its public export,
   [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), documents matching coverage, excluded code and
