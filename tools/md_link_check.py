@@ -45,11 +45,19 @@ PUBLIC_CORE_MARKDOWN = (
     "CONTRIBUTING.md",
     "SECURITY.md",
     "VALIDATION.md",
+    "VALIDATION-HISTORY.md",
     "lore/_index.md",
     "reverse-engineering/RE-INDEX.md",
     "rebuild/README.md",
     "rebuild/PROVENANCE.md",
 )
+
+
+# The frozen copies (reverse-engineering/, rebuild/) may not be edited, and many of their links point at dated sections that
+# moved out of VALIDATION.md. A link from a frozen file into a moved file is accepted when the anchor exists in the new home;
+# every other document must link to the new home directly.
+FROZEN_PREFIXES = ("reverse-engineering/", "rebuild/")
+MOVED_ANCHOR_HOMES = {"VALIDATION.md": "VALIDATION-HISTORY.md"}
 
 
 def utc_now_iso() -> str:
@@ -227,6 +235,12 @@ def check_links(md_files: List[Path], root: Path) -> Tuple[List[Dict[str, Any]],
             anchor_cache[path] = {a.lower() for a in anchors_in(read_text(path))}
         return anchor_cache[path]
 
+    def moved_anchor_exists(from_rel: str, target: Path, fragment: str) -> bool:
+        if not from_rel.startswith(FROZEN_PREFIXES):
+            return False
+        home = MOVED_ANCHOR_HOMES.get(target.relative_to(root).as_posix()) if target.is_relative_to(root) else None
+        return bool(home) and (root / home).is_file() and fragment.lower() in anchors_of(root / home)
+
     for p in md_files:
         rel = p.relative_to(root).as_posix()
         scan = strip_fenced_code(read_text(p))
@@ -254,7 +268,7 @@ def check_links(md_files: List[Path], root: Path) -> Tuple[List[Dict[str, Any]],
             if not resolved.exists():
                 broken.append({"path": rel, "target": target, "resolved": os.fspath(resolved), "kind": "path"})
             elif fragment and not LINE_ANCHOR_RE.match(fragment) and resolved.is_file() and is_markdown_name(resolved.name):
-                if fragment.lower() not in anchors_of(resolved):
+                if fragment.lower() not in anchors_of(resolved) and not moved_anchor_exists(rel, resolved, fragment):
                     broken.append({"path": rel, "target": f"{target}#{fragment}", "resolved": os.fspath(resolved), "kind": "anchor"})
     return broken, total_links
 
@@ -293,14 +307,21 @@ def self_test() -> int:
         (root / "b.md").write_text("# B\n\n## Target heading\n\n<A NAME=\"Upper-Name\"></A>\n", encoding="utf-8")
         (root / "dir.md").mkdir()
         (root / "notes.txt").write_text("text", encoding="utf-8")
-        broken, total = check_links([root / "a.md", root / "b.md"], root)
+        (root / "VALIDATION.md").write_text("# Gate table\n", encoding="utf-8")
+        (root / "VALIDATION-HISTORY.md").write_text("# History\n\n## Moved entry\n", encoding="utf-8")
+        (root / "rebuild").mkdir()
+        (root / "rebuild" / "frozen.md").write_text(
+            "[moved](../VALIDATION.md#moved-entry) [absent](../VALIDATION.md#no-such-entry)\n", encoding="utf-8")
+        (root / "live.md").write_text("[moved](VALIDATION.md#moved-entry)\n", encoding="utf-8")
+        broken, total = check_links([root / "a.md", root / "b.md", root / "rebuild" / "frozen.md", root / "live.md"], root)
         got = sorted((item["target"], item["kind"]) for item in broken)
         want = sorted([("b.md#missing-heading", "anchor"), ("#nope", "anchor"), ("missing.md", "path"),
-                       ("b.md#bad-after", "anchor"), ("b.md#odd-tick-missing", "anchor")])
+                       ("b.md#bad-after", "anchor"), ("b.md#odd-tick-missing", "anchor"),
+                       ("../VALIDATION.md#no-such-entry", "anchor"), ("VALIDATION.md#moved-entry", "anchor")])
         if got != want:
             failures.append(f"check_links found {got}, expected {want}")
-        if total != 25:
-            failures.append(f"check_links counted {total} links, expected 25")
+        if total != 28:
+            failures.append(f"check_links counted {total} links, expected 28")
     print("md_link_check self-test: " + ("PASS" if not failures else f"FAIL {failures}"))
     return 0 if not failures else 1
 

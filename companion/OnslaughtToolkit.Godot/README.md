@@ -45,7 +45,7 @@ It edited a copy of a game-created career through the companion's controls, made
 and loaded the edited Unicode-named career through CE's own keyboard-driven Load menu. The game reached
 level selection and wrote the exact edited career bytes through its successful-load path. This is an
 automated offscreen check, not a human click-through or a full mission playthrough; see
-[the acceptance record](../../VALIDATION.md#companion-with-real-onslaught-ce--october-24).
+[the acceptance record](../../VALIDATION-HISTORY.md#companion-with-real-onslaught-ce--october-24).
 
 CE's writable user folder is chosen in this order: `BEA_USER_DIR`, then Linux
 `$XDG_DATA_HOME/onslaught-ce` or `~/.local/share/onslaught-ce`; Windows uses
@@ -109,7 +109,7 @@ verified backup, saved both CE settings with verified backups and refused stale 
 settings writes while the real CE launcher and game ran offscreen; CE's own keyboard-driven Load menu loaded the edited
 career byte for byte; and the Backups page put the exact original bytes back. It is an automated Linux check driven by
 programmatic page actions, not a human click-through; see
-[the dated acceptance record](../../VALIDATION.md#companion-with-real-onslaught-ce-0113--november-3). The earlier
+[the dated acceptance record](../../VALIDATION-HISTORY.md#companion-with-real-onslaught-ce-0113--november-3). The earlier
 real-package runs are CE 0.1.4 on Linux and a `0.1.6-dev` package on Windows (below), and no run of these flows on
 Windows is newer than that one. The 0.1.8 hand-off to a package's `versions` folder is covered by tests with fixture
 launchers only, and the 0.1.10 reading above is a reading of files and of one `--version` line, not a launch, a
@@ -138,7 +138,7 @@ controls and text were readable. Godot used its embedded ANGLE fallback with Mic
 over D3D11 software. This was a development invocation under `DEBUG_PROCESS` and a private Windows job;
 ordinary release invocation, physical mouse/keyboard input, file dialogs, Windows ACL failures, hardware
 GPU rendering and audio remain unvalidated. The gate never starts a game or requests updates. See
-[the dated acceptance record](../../VALIDATION.md#companion-native-windows-development-ui--october-25) and
+[the dated acceptance record](../../VALIDATION-HISTORY.md#companion-native-windows-development-ui--october-25) and
 [the opt-in workflow contract](../OnslaughtToolkit.NativeChecks/README.md#godot-ui-workflow-gate).
 
 ## Layout

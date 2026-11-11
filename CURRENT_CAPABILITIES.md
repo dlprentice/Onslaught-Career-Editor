@@ -61,7 +61,7 @@ live settings. Private generated-copy fsync/readback succeeds on Linux. A furthe
 exactly nine entries finish in instruction state, with no unlocked Goodies.
 These results do not establish retail writer durability, complete process startup,
 every unlock rule or player parity. Direct sample decoding is bounded separately below.
-See [executed checks](VALIDATION.md#original-load-save-and-reload-controls--september-20).
+See [executed checks](VALIDATION-HISTORY.md#original-load-save-and-reload-controls--september-20).
 
 The September 22 extension passes 26 original nonnull-cleanup and language-change
 controls. Existing menu destruction, list recycling, resource counts and monitored
@@ -79,7 +79,7 @@ reproduces a one-byte excess at quality 1 and a one-byte unwritten tail at quali
 both complete quality-0 outputs. These are controlled-memory results, not real
 device overflow, audible behavior, whole-bank loading or full startup acceptance.
 See the [sample contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-decoding-and-saved-quality)
-and [executed checks](VALIDATION.md#original-sample-decode-and-quality-conversion--september-22).
+and [executed checks](VALIDATION-HISTORY.md#original-sample-decode-and-quality-conversion--september-22).
 
 A further 25 original caller controls resolve sample reuse, list insertion,
 name truncation and suffix selection. They distinguish a filename-route stub
@@ -100,7 +100,7 @@ its secondary slot untouched.
 These are guarded ownership observations with heap/COM/callback boundaries;
 they do not establish real reclamation, playback or complete startup. See the
 [destruction contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#original-sample-destruction-and-failed-loads)
-and [executed checks](VALIDATION.md#original-sample-destruction-and-failed-loads--september-22).
+and [executed checks](VALIDATION-HISTORY.md#original-sample-destruction-and-failed-loads--september-22).
 
 Complete original bank/Open/refill/Close/sample decoding now passes **11 cases /
 184 sample attempts**. All 164 English-bank high-quality PCM outputs also match
@@ -111,7 +111,7 @@ later records continue. Changed tags and a parser-unconsumed trailer are admitte
 zero/negative counts skip samples. These are original-code observations with
 supplied filesystem/heap/COM boundaries, not real playback or complete startup.
 See the [bank contract](reverse-engineering/binary-analysis/save-options-static-review-2026-05-26.md#complete-original-bank-loading-and-reloads)
-and [executed checks](VALIDATION.md#original-complete-bank-loading-and-reloads--september-22).
+and [executed checks](VALIDATION-HISTORY.md#original-complete-bank-loading-and-reloads--september-22).
 
 Nine paired settings controls now connect original Load, reset/language refresh,
 Save and direct-buffer reload. With a cached French path, applying English plus
@@ -182,13 +182,13 @@ search order; the companion's separate pictures-and-music choice does not overri
 [original-career browsing tests](companion/OnslaughtToolkit.Godot/Tests/CeOverlayTests.cs) use owned copies
 of the tracked real-save fixture in isolated folders. [Launcher and settings tests](companion/OnslaughtToolkit.Godot/Tests/CeSettingsTests.cs)
 check the launch request and capture a tiny fixture script's version reply. In addition, the
-[November 3 Linux acceptance](VALIDATION.md#companion-with-real-onslaught-ce-0113--november-3) read CE 0.1.13's version,
+[November 3 Linux acceptance](VALIDATION-HISTORY.md#companion-with-real-onslaught-ce-0113--november-3) read CE 0.1.13's version,
 started its actual launcher, edited and backed up a copy of a game-created career, saved the two supported CE settings,
 and loaded the edited Unicode-named career through CE's own menu. The loaded options file equals the edited career
 byte for byte; the selected level-selection frame was inspected. The check also refused career/settings writes while
 the game ran, refused stale writes, and restored the original career from its verified backup. It is an automated
 Linux workflow driven through programmatic production-page actions, not human UI input, an update hand-off,
-complete campaign play or native Windows acceptance. The [October 24 CE 0.1.4 run](VALIDATION.md#companion-with-real-onslaught-ce--october-24)
+complete campaign play or native Windows acceptance. The [October 24 CE 0.1.4 run](VALIDATION-HISTORY.md#companion-with-real-onslaught-ce--october-24)
 remains a separate dated record.
 
 The initial November 4 Linux checkpoint check used the same pinned production pages with the unreleased CE 0.1.99 package.
@@ -217,7 +217,7 @@ folder selection using owned tiny inputs; these are not a game-content or launch
 [Update tests](companion/OnslaughtToolkit.Godot/Tests/CeUpdateFeedTests.cs) check signature verification and refused
 responses. [Native Windows checks](companion/OnslaughtToolkit.NativeChecks/README.md) now exercise production
 process detection, protected career/settings writes and actual-game running refusals. CE also loads the edited
-Unicode career and writes exactly its bytes as options. A separate [native Windows development UI workflow](VALIDATION.md#companion-native-windows-development-ui--october-25)
+Unicode career and writes exactly its bytes as options. A separate [native Windows development UI workflow](VALIDATION-HISTORY.md#companion-native-windows-development-ui--october-25)
 exercised selected production-page actions and its screenshots were inspected; ordinary release invocation,
 physical input, file dialogs, hardware rendering and broader UI acceptance remain open. Version
 queries still intermittently time out while Windows opens SDL3.dll during loader startup. Separate native
@@ -378,8 +378,8 @@ Linux, and the development runner's own cases), renders of every screen at 1280Ã
 reviewed first-hand, the problems that review found fixed, covered by tests, re-rendered and
 reviewed again, and Linux and Windows packages exported, with the Linux package started and
 quit cleanly under an isolated home. The earlier approved-workflow receipts are
-in [their validation section](VALIDATION.md#companion-approved-workflows--september-26) and
-the migration's in [its section](VALIDATION.md#companion-c-migration--september-25).
+in [their validation section](VALIDATION-HISTORY.md#companion-approved-workflows--september-26) and
+the migration's in [its section](VALIDATION-HISTORY.md#companion-c-migration--september-25).
 Art & sound and the Goodies page's "What it shows" are covered by the contract suite on
 synthetic models, textures, a sound bank and Goodie archives; no dated receipt for them is
 recorded here. **Ordinary Windows release UI acceptance, a human click-through and listening to the audio remain pending.**
@@ -481,7 +481,7 @@ career update; the Client session launches World 110 with that carry-over
 still plays only world 100, and World 110's landing craft do not fly yet. A
 final offscreen capture of `main` matched the September 25 baseline except
 differences traced to evidence
-([VALIDATION.md](VALIDATION.md#return-to-all-code-c--september-25)): the
+([VALIDATION.md](VALIDATION-HISTORY.md#return-to-all-code-c--september-25)): the
 baseline's missing pines, the terrain's stage-3 detail matrix and the September
 26 simulation contracts. The rebuild's Windows PowerShell launchers were retired
 the same day; the Linux launcher carries their smoke and capture checks. Not done
@@ -590,7 +590,7 @@ The audit also refuted a stale
 missing-boundary note. The internal-function inventory is available, but the
 wider semantic audit is incomplete; the controller's decompiler stack artifact and
 named-but-untyped script callbacks remain explicit next work. See the
-[execution receipts](VALIDATION.md#linux-execution-of-the-remote-checkpoint--september-12)
+[execution receipts](VALIDATION-HISTORY.md#linux-execution-of-the-remote-checkpoint--september-12)
 and Ghidra owner (in the private historical maintainer archive: `reverse-engineering/ghidra/README.md`, not in this repository).
 
 The bounded nonballistic Unit weapon selector now has original-code execution
@@ -598,7 +598,7 @@ evidence and passing Core cases, including a distance example that detects
 incorrect widened arithmetic. Selection preserves burst locks, first-wins
 ties and retail's unusual out-of-range scoring. It is not yet connected to
 actor firing: retained aim, preparation phases and burst-event ownership must
-be integrated together. [Validation](VALIDATION.md#bounded-unit-weapon-selector--september-12)
+be integrated together. [Validation](VALIDATION-HISTORY.md#bounded-unit-weapon-selector--september-12)
 records the exact stubs, exclusions and negative controls.
 An additional unchanged-code phase experiment covers preparation, readiness,
 fire and post-fire state across 26 synthetic cases. It establishes bounded
@@ -616,7 +616,7 @@ the spawner marks the Plane dying without declaring immediate shutdown.
 New bursts wait for normal control, while a pending burst can continue and its
 new round first moves on the following tick. An unchanged-code exit/GoTo/guide
 experiment passed 26 synthetic cases; these and the Core checks are recorded in
-[validation](VALIDATION.md#aircraft-exit-lifecycle-integration--september-12).
+[validation](VALIDATION-HISTORY.md#aircraft-exit-lifecycle-integration--september-12).
 Normal control still hands back to the existing approximate target/weapon loop.
 Selected-provider firing, dying flight, contacts, avoidance and complete world
 event/RNG order remain open; no full-combat or player-route acceptance is claimed.
@@ -650,7 +650,7 @@ readback identifies the cache stamp as the separate render-frame number;
 gameplay updates and render calls need not advance together. The firing loop's
 use of these paths, ordered render context and camera-latch lifetime remain
 open; this adds no player-route acceptance. See the
-[focused evidence](VALIDATION.md#aircraft-renderer-cache-population--september-12).
+[focused evidence](VALIDATION-HISTORY.md#aircraft-renderer-cache-population--september-12).
 
 The first-training review corrected five misleading Ghidra names/comments in
 the working database, followed by the missing physical-keyboard function boundary

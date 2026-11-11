@@ -76,7 +76,7 @@ The later selected CE `0.1.6-dev` launcher, source `9ed8c56e81d3`, returned its 
 production discovery in the October 25 rendered development workflow. This is a passing observation for
 that package and invocation, not a general resolution of the earlier loader wait. The source/package pins,
 native process evidence, byte assertions and inspected screenshots are recorded in
-[the dated acceptance entry](../../VALIDATION.md#companion-native-windows-development-ui--october-25).
+[the dated acceptance entry](../../VALIDATION-HISTORY.md#companion-native-windows-development-ui--october-25).
 
 ## Godot UI workflow gate
 

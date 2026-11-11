@@ -2,7 +2,7 @@
 
 Status: active independent GPL-3.0-only application boundary
 Last updated: 2026-11-06 (provenance dates and references: the relicense time, the pre-release history, the frozen reverse-engineering copy, the submodule step, the Goodies page and the update-check members; 2026-11-04: installed model-definition preview lookup and its existing public-tool contracts)
-Evidence: SOURCE — code-built C# application, project source moved in from the retired AppCore library, and embedded project lore; executed package boundaries are recorded in VALIDATION.md.
+Evidence: SOURCE — code-built C# application, project source moved in from the retired AppCore library, and embedded project lore; executed package boundaries are recorded in VALIDATION-HISTORY.md.
 Summary: the companion's C# derives only from the project's own application code and the published contracts of the frozen `reverse-engineering/` copy (onslaught-preservation is the maintained home of the game documentation); it bundles the project's own lore, reads the game's files and manual art from the player's install at run time, and keeps retail data and GPL reconstruction out.
 
 All C# in this project is original application code, GPL-3.0-only under the repository

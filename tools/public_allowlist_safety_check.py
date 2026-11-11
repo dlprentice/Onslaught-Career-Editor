@@ -390,7 +390,7 @@ RETAIL_TEXT_ALLOW_PREFIX: dict[str, dict[str, str]] = {
     "LOCAL_LAB_OVERLAY.md": {"local-lab/": "this document describes the ignored lab folder and how a clone is pointed at it"},
     "PROGRAM.md": {"local-lab/": "the work queue names lab inputs and evidence in the ignored folder"},
     "PROJECT-INDEX.md": {"local-lab/": "the project index says what the ignored lab folder holds"},
-    "VALIDATION.md": {
+    "VALIDATION-HISTORY.md": {
         "local-lab/": "the dated validation receipts name the ignored lab folders their evidence lives in; kept as written (lead, 2026-10-29)"
     },
     "lore/units-and-mechs.md": {"local-lab/": "cites the lab tables and mining folders its figures were read from (the ignored lab folder)"},
