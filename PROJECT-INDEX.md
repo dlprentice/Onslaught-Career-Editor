@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-11-11 (validation history file routed; 2026-11-06: Toolkit name mapped to its repository; Companion migration status stated; maintainer-workspace references marked as ignored; GameWrites.cs named as declaring GameInstaller; ripgrep need noted; the Companion runner's public toolchain and the contributor-contract owner corrected; 2026-11-03: content inventory owners, with the per-asset metadata file)
+Last updated: 2026-11-11 (validation history file routed)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository: the companion, tools, lore and frozen references, with routes to the live game projects.
 

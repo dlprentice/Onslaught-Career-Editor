@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-11-11 (link-check note for the moved validation entries; 2026-11-06: frozen-rebuild wording, Python version, submodule step, tool and table coverage, format-tag definitions, and the Companion, heightfield and mission-script statements corrected; 2026-11-04: individual imposter identities and view metadata; content inventory, metadata and media coverage; independent checks distinguished from run-consistency checks; historical results retain their dates)
+Last updated: 2026-11-11 (link-check note for the moved validation entries)
 Summary: what each tool in `tools/` is for.
 
 `tools/` supports the companion, the game documentation and the frozen rebuild copy in `rebuild/` through guarded extraction,

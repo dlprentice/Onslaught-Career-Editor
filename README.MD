@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-11-11 (a start-here table; 2026-11-10: licence table no longer lists tests_shared scripts; 2026-11-06: names, contribution routing and the second pinned fork; 2026-11-02: public contributor setup and routing; historical results retain their dates)
+Last updated: 2026-11-11 (a start-here table; the WSL note)
 Summary: what this project is, where each part lives, which checks a public clone can run, and what Companion builds require.
 
 Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
@@ -124,7 +124,7 @@ such as `~/src/Onslaught-Career-Editor`, rather than under `/mnt/c`. Install Git
 inside that distribution. The [WSLg prerequisites](https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps)
 apply to opening the Companion with `npm run dev`; headless tests do not need a graphical desktop. A WSL run tests
 the Linux application, not native Windows file or input behavior. This setup was reproduced on native Linux;
-the WSL recipe follows Microsoft's documented route and has not been exercised in the Windows test VM.
+the WSL recipe follows Microsoft's documented route and has not been exercised by this project.
 
 ### Public setup
 

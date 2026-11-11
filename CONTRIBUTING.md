@@ -1,7 +1,7 @@
 # Contributing
 
 Status: active — the contributor entry point
-Last updated: 2026-11-11 (the two overlapping first-contribution sections merged into one; 2026-11-06: where to contribute across the public repositories, first-hour checks and commit messages)
+Last updated: 2026-11-11 (one first-contribution section; the Companion build guide and C# gate pointers)
 Summary: which public repository takes which kind of work, what a first contribution needs and runs, what a focused
 change looks like here, what must never be added to the repository, and which checks a change owes.
 
@@ -78,8 +78,10 @@ Steps:
 5. Repeat the checks and keep their output. Inspect fresh output when appearance or behaviour matters. The full
    documentation and safety gates follow links into the pinned reference submodules and need no game installation:
    with the [public prerequisites](README.MD#build-and-run) installed, `npm run test:docs` and `npm run test:safety`
-   run them. After the public toolchain setup, `npm test` runs the Companion's C# contract and tooling checks without
-   opening a window or needing a game.
+   run them. After the public toolchain setup, `npm test` runs the Companion's C# contract and launcher tests without
+   opening a window or needing a game; the [Companion build guide](companion/OnslaughtToolkit.Godot/README.md#build-test-capture-run-and-export)
+   has the full commands. `npm run test:companion-tools` checks the setup and runner with authored inputs and does not
+   replace that C# gate.
 6. Push the branch to your fork and open a pull request against `dlprentice/Onslaught-Career-Editor`. Fill in the
    [pull request form](.github/PULL_REQUEST_TEMPLATE.md): what changed, the exact commands you ran, the checks you
    could not run and why. The maintainer completes acceptance that needs a platform or input you do not have.
