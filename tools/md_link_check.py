@@ -62,45 +62,46 @@ PUBLIC_CORE_MARKDOWN = (
 FROZEN_PREFIXES = ("reverse-engineering/",)
 MOVED_ANCHOR_HOMES = {"VALIDATION.md": "VALIDATION-HISTORY.md"}
 
-# Files that left rebuild/ for tools/ on 2026-11-11, while the rest of rebuild/ stayed: {old path: new home}. A link from a
-# frozen file to the old path is accepted while the new home exists; every other document must link to the new home.
-MOVED_FILE_HOMES = {
-    "rebuild/tools/cmsh_static_preview.py": "tools/cmsh_static_preview.py",
-    "rebuild/tools/cmsh_static_preview_tests.py": "tools/cmsh_static_preview_tests.py",
-    "rebuild/tools/gameplay-regions-level100.json": "tools/gameplay-regions-level100.json",
-    "rebuild/tools/frontend-parity-plan.json": "tools/frontend-parity-plan.json",
-    **{f"rebuild/tools/frontend-regions-{page}.json": f"tools/frontend-regions-{page}.json"
-       for page in ("dev-select", "level-select", "loading", "main-menu", "mission-briefing", "select-configuration")},
-}
-
-# The frozen rebuild copy is cut from main; its last tree is the tag below (URL form:
-# https://github.com/dlprentice/Onslaught-Career-Editor/blob/<tag>/<path>). A link from a frozen file to a path that is no
-# longer in the working tree is accepted only for these exact paths, which are the ones the frozen reverse-engineering pages
-# link to and which the tag still holds. A link to any other missing rebuild/ path, or from any other document, is broken.
+# Frozen reverse-engineering pages link into rebuild/ and may not be edited, so those links cannot be repointed.
+# Accepted only for these exact (page, target) pairs and only when the target is no longer in the
+# working tree: any other frozen page, any other rebuild/ path and every live document must link to the real home. The
+# value is the file's new home in tools/ (accepted while it exists), or None for a path that only the archive tag still holds.
+# The accepted links stay relative, so on GitHub at main they lead to a missing page; the tag URL form is
+# https://github.com/dlprentice/Onslaught-Career-Editor/blob/<tag>/<path>.
 ARCHIVE_TAG = "archive/20261111-rebuild-frozen-copy"
+_MOVED = "rebuild/tools/cmsh_static_preview.py"
+FROZEN_LINKS_TO_REBUILD = {
+    ("reverse-engineering/REVIEW-PROTOCOL.md", "rebuild/PROVENANCE.md"): None,
+    ("reverse-engineering/asset-formats/cmsh-matrix-normal-deformation.md", _MOVED): "tools/cmsh_static_preview.py",
+    ("reverse-engineering/asset-formats/cmsh-matrix-palette-skinning.md", _MOVED): "tools/cmsh_static_preview.py",
+    ("reverse-engineering/asset-formats/cmsh-mesh.md", _MOVED): "tools/cmsh_static_preview.py",
+    ("reverse-engineering/asset-formats/particle-par.md", "rebuild/OnslaughtRebuild.Client/ParticleSetFile.cs"): None,
+    ("reverse-engineering/asset-formats/particle-par.md", "rebuild/OnslaughtRebuild.Client.Tests/ParticleSetTests.cs"): None,
+    ("reverse-engineering/binary-analysis/functions/DXTrees.cpp.md", "rebuild/OnslaughtRebuild.Godot/Assets/Level100/README.md"): None,
+    ("reverse-engineering/binary-analysis/functions/game.cpp/CGame__InitRestartLoop.md", "rebuild/OnslaughtRebuild.Core/RetailEventScheduler.cs"): None,
+    ("reverse-engineering/binary-analysis/pc-native-source-coordinates-2026-08-12.md", "rebuild/PROVENANCE.md"): None,
+    ("reverse-engineering/game-mechanics/world-110-initial-constructor-seeds.md", "rebuild/tools/materialize_retail_assets.py"): None,
+    ("reverse-engineering/game-mechanics/world-110-player-start-admission.md", "rebuild/tools/materialize_retail_assets_tests.py"): None,
+    ("reverse-engineering/source-code/_index.md", "rebuild/PROVENANCE.md"): None,
+    ("reverse-engineering/source-code/io/event-system.md", "rebuild/OnslaughtRebuild.Core/RetailEventScheduler.cs"): None,
+    ("reverse-engineering/source-code/io/event-system.md", "rebuild/OnslaughtRebuild.Core/RetailActiveReaderGraph.cs"): None,
+    ("reverse-engineering/source-code/stuart-source-synthesis.md", "rebuild/PROVENANCE.md"): None,
+}
 ARCHIVED_TREE_PRESENT = "rebuild/OnslaughtRebuild.slnx"  # exists only while the whole tree is still in the working tree
-ARCHIVED_TREE_TARGETS = frozenset({
-    "rebuild/PROVENANCE.md",
-    "rebuild/OnslaughtRebuild.Client/ParticleSetFile.cs",
-    "rebuild/OnslaughtRebuild.Client.Tests/ParticleSetTests.cs",
-    "rebuild/OnslaughtRebuild.Core/RetailActiveReaderGraph.cs",
-    "rebuild/OnslaughtRebuild.Core/RetailEventScheduler.cs",
-    "rebuild/OnslaughtRebuild.Godot/Assets/Level100/README.md",
-    "rebuild/tools/materialize_retail_assets.py",
-    "rebuild/tools/materialize_retail_assets_tests.py",
-})
+ARCHIVED_TREE_TARGETS = frozenset(target for (_page, target), home in FROZEN_LINKS_TO_REBUILD.items() if home is None)
 
 
 def relocated_target_accepted(from_rel: str, resolved: Path, root: Path) -> bool:
-    """A frozen file's link to a path that moved to tools/ (the new home exists) or that only the archive tag holds."""
+    """A frozen page's link to a path that moved to tools/ (the new home exists) or that only the archive tag holds,
+    accepted for the exact (page, target) pairs in FROZEN_LINKS_TO_REBUILD."""
     root = root.resolve()
-    if not from_rel.startswith(FROZEN_PREFIXES) or not resolved.is_relative_to(root):
+    if not resolved.is_relative_to(root):
         return False
-    target = resolved.relative_to(root).as_posix()
-    home = MOVED_FILE_HOMES.get(target)
-    if home is not None:
-        return (root / home).exists()
-    return target in ARCHIVED_TREE_TARGETS
+    key = (from_rel, resolved.relative_to(root).as_posix())
+    if key not in FROZEN_LINKS_TO_REBUILD:
+        return False
+    home = FROZEN_LINKS_TO_REBUILD[key]
+    return home is None or (root / home).exists()
 
 
 def archived_target_problems(root: Path) -> List[str]:
@@ -110,6 +111,9 @@ def archived_target_problems(root: Path) -> List[str]:
     problems: List[str] = []
     if (root / ARCHIVED_TREE_PRESENT).exists():
         problems += [f"{rel} is allowed as archived but is not in the tree" for rel in sorted(ARCHIVED_TREE_TARGETS) if not (root / rel).exists()]
+    if (root / "reverse-engineering").is_dir():
+        problems += [f"{page} is named in FROZEN_LINKS_TO_REBUILD but is not in the tree"
+                     for page in sorted({page for page, _target in FROZEN_LINKS_TO_REBUILD}) if not (root / page).is_file()]
     try:
         tag = subprocess.run(["git", "rev-parse", "--verify", "--quiet", f"refs/tags/{ARCHIVE_TAG}^{{commit}}"], cwd=root,
                              capture_output=True, text=True).stdout.strip()
@@ -405,32 +409,50 @@ def self_test() -> int:
         if skipped:
             failures.append(f"check_links skipped {skipped} with no submodule declared")
     with tempfile.TemporaryDirectory() as tmp:
-        # Links into rebuild/ from a frozen page: a moved file is accepted while its new home exists, an archived path only when
-        # it is on the list, and nothing is accepted from a live page.
+        # Links into rebuild/ from a frozen page: accepted only for the exact (page, target) pairs on the list. A moved file also
+        # needs its new home; an archived path needs nothing more. The same target from another page, another path from a listed
+        # page, a typo and every link from a live page are broken.
         root = Path(tmp)
         (root / "reverse-engineering" / "asset-formats").mkdir(parents=True)
+        (root / "reverse-engineering" / "source-code").mkdir(parents=True)
         (root / "tools").mkdir()
-        (root / "tools" / "cmsh_static_preview.py").write_text("x", encoding="utf-8")
-        page = root / "reverse-engineering" / "asset-formats" / "page.md"
-        page.write_text(
-            "[moved](../../rebuild/tools/cmsh_static_preview.py) [home gone](../../rebuild/tools/frontend-parity-plan.json) "
-            "[archived](../../rebuild/PROVENANCE.md) [archived dir file](../../rebuild/OnslaughtRebuild.Core/RetailEventScheduler.cs) "
-            "[unlisted](../../rebuild/PARITY.md) [typo](../../rebuild/tools/materialize_retail_assets_test.py)\n", encoding="utf-8")
+        moved = root / "reverse-engineering" / "asset-formats" / "cmsh-mesh.md"
+        moved.write_text(
+            "[moved](../../rebuild/tools/cmsh_static_preview.py) [other moved](../../rebuild/tools/frontend-parity-plan.json) "
+            "[unlisted](../../rebuild/PARITY.md)\n", encoding="utf-8")
+        archived = root / "reverse-engineering" / "source-code" / "_index.md"
+        archived.write_text("[archived](../../rebuild/PROVENANCE.md) [other archived](../../rebuild/OnslaughtRebuild.Core/RetailEventScheduler.cs) "
+                            "[typo](../../rebuild/tools/materialize_retail_assets_test.py)\n", encoding="utf-8")
+        stranger = root / "reverse-engineering" / "asset-formats" / "other.md"
+        stranger.write_text("[moved](../../rebuild/tools/cmsh_static_preview.py) [archived](../../rebuild/PROVENANCE.md)\n", encoding="utf-8")
         live = root / "live.md"
         live.write_text("[moved](rebuild/tools/cmsh_static_preview.py) [archived](rebuild/PROVENANCE.md)\n", encoding="utf-8")
-        broken, total, skipped = check_links([page, live], root)
+        files = [moved, archived, stranger, live]
+        broken, total, skipped = check_links(files, root)
         got = sorted((item["path"], item["target"]) for item in broken)
-        want = sorted([("reverse-engineering/asset-formats/page.md", "../../rebuild/tools/frontend-parity-plan.json"),
-                       ("reverse-engineering/asset-formats/page.md", "../../rebuild/PARITY.md"),
-                       ("reverse-engineering/asset-formats/page.md", "../../rebuild/tools/materialize_retail_assets_test.py"),
+        want = sorted([("reverse-engineering/asset-formats/cmsh-mesh.md", "../../rebuild/tools/cmsh_static_preview.py"),  # new home absent
+                       ("reverse-engineering/asset-formats/cmsh-mesh.md", "../../rebuild/tools/frontend-parity-plan.json"),
+                       ("reverse-engineering/asset-formats/cmsh-mesh.md", "../../rebuild/PARITY.md"),
+                       ("reverse-engineering/source-code/_index.md", "../../rebuild/OnslaughtRebuild.Core/RetailEventScheduler.cs"),
+                       ("reverse-engineering/source-code/_index.md", "../../rebuild/tools/materialize_retail_assets_test.py"),
+                       ("reverse-engineering/asset-formats/other.md", "../../rebuild/tools/cmsh_static_preview.py"),
+                       ("reverse-engineering/asset-formats/other.md", "../../rebuild/PROVENANCE.md"),
                        ("live.md", "rebuild/tools/cmsh_static_preview.py"), ("live.md", "rebuild/PROVENANCE.md")])
-        if got != want or total != 8:
-            failures.append(f"relocated rebuild/ links: broken {got} of {total}, expected {want} of 8")
-        if archived_target_problems(root):
+        if got != want or total != 10:
+            failures.append(f"relocated rebuild/ links (no new home): broken {got} of {total}, expected {want} of 10")
+        (root / "tools" / "cmsh_static_preview.py").write_text("x", encoding="utf-8")
+        broken, total, skipped = check_links(files, root)
+        got = sorted((item["path"], item["target"]) for item in broken)
+        want = [w for w in want if w != ("reverse-engineering/asset-formats/cmsh-mesh.md", "../../rebuild/tools/cmsh_static_preview.py")]
+        if got != sorted(want):
+            failures.append(f"relocated rebuild/ links (new home present): broken {got}, expected {sorted(want)}")
+        if len(archived_target_problems(root)) != 0 and any("is allowed as archived" in x for x in archived_target_problems(root)):
             failures.append(f"archived_target_problems on a tree without rebuild/: {archived_target_problems(root)}")
+        if not any("is named in FROZEN_LINKS_TO_REBUILD" in x for x in archived_target_problems(root)):
+            failures.append("archived_target_problems must name a listed page that the tree lacks")
         (root / "rebuild").mkdir()
         (root / ARCHIVED_TREE_PRESENT).write_text("x", encoding="utf-8")
-        if len(archived_target_problems(root)) != len(ARCHIVED_TREE_TARGETS):
+        if len([x for x in archived_target_problems(root) if "is allowed as archived" in x]) != len(ARCHIVED_TREE_TARGETS):
             failures.append("archived_target_problems must name every allowed path that a still-present tree lacks")
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)

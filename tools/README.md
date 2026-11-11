@@ -77,12 +77,13 @@ publish, sign, or install anything by themselves.
 ## Documentation integrity
 
 - `md_link_check.py` validates local link **targets** and heading anchors; `md_reachability_check.py`
-  answers the different question of whether a document is linked from anywhere. The frozen copies cannot be edited, so
-  the link check accepts their links into sections that moved from `VALIDATION.md` to `VALIDATION-HISTORY.md`; live
-  documents must link to the new file. In the same way it accepts a frozen page's link to a file that left `rebuild/`
-  for `tools/` (while the new home exists: the parser, its tests and the region and plan JSON files) and, for
-  eight exact paths that only the `archive/20261111-rebuild-frozen-copy` tag holds, a link that no longer resolves in the
-  working tree; both lists are in the script, and the check fails if an allowed path is missing from that tag when the
+  answers the different question of whether a document is linked from anywhere. The frozen copy (`reverse-engineering/`)
+  cannot be edited, so the link check accepts its links into sections that moved from `VALIDATION.md` to
+  `VALIDATION-HISTORY.md`; live documents must link to the new file. In the same way it accepts, for exact (page,
+  target) pairs listed in the script, a frozen page's link into `rebuild/` that no longer resolves in the working tree: one target that
+  moved to `tools/` (the mesh parser, accepted while its new home exists) and paths that only the
+  `archive/20261111-rebuild-frozen-copy` tag holds. The same target from any other page,
+  and any other `rebuild/` path, still fails, and the check fails if a listed path is missing from that tag when the
   clone has it. In a clone whose reference submodules are not initialised, links into them cannot
   be resolved: the check names each skipped submodule and the number of links it did not check (the result line says
   SKIPPED), and `--require-submodules` makes that a failure.

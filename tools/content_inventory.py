@@ -787,7 +787,7 @@ DIAL_FRAME = 256  # 16 x 16 one-byte indices (onslaught-godot's rebuild/Onslaugh
 
 def read_byte_sprite(data: bytes, _ctx: Context, row: dict) -> Reading:
     """data\\\\Dial.raw: the rebuild reads its first 16 x 16 frame. Nothing has established the frames after it."""
-    reading = Reading(Account(len(data)), "stored", "rebuild/OnslaughtRebuild.Host/HudView.cs (frame 0)")
+    reading = Reading(Account(len(data)), "stored", "onslaught-godot rebuild/OnslaughtRebuild.Host/HudView.cs (frame 0)")
     reading.account.add(0, min(DIAL_FRAME, len(data)), DECODED, "byte-sprite/frame-0")
     reading.account.add(DIAL_FRAME, max(0, len(data) - DIAL_FRAME), REFERENCED, "byte-sprite/further-bytes")
     reading.facts = {"frameBytes": DIAL_FRAME, "wholeFrames": len(data) // DIAL_FRAME}

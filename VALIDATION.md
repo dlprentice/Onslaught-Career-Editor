@@ -25,7 +25,7 @@ support-code checks here do not establish rebuild parity. Source and headless te
 alone do not establish native input, audio, focus or full tutorial behavior.
 
 Dated receipts of earlier checks are in [`VALIDATION-HISTORY.md`](VALIDATION-HISTORY.md). They record what ran
-on their dates and are not instructions. A link ending in `VALIDATION.md#<section>` in the frozen copies refers to the
+on their dates and are not instructions. A link ending in `VALIDATION.md#<section>` in the frozen copy refers to the
 section of the same name in `VALIDATION-HISTORY.md`.
 
 | Change | Focused evidence |

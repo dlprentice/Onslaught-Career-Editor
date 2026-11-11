@@ -850,7 +850,7 @@ def check_repo(root: Path, *, include_submodules: bool = False, stale_allowances
         findings.extend(size_findings(root, path))
         findings.extend(magic_findings(root, path))
         findings.extend(text_binary_findings(root, path))
-        # A submodule's files are another project's published text and the frozen copies keep the text they were frozen with;
+        # A submodule's files are another project's published text and the frozen copy keeps the text they were frozen with;
         # the retail-text rules cover this repository's own live text.
         findings.extend(text_findings(root, path, retail_rules=not path.startswith(RETAIL_TEXT_FROZEN_PREFIXES + submodule_prefixes), used=used))
     if stale_allowances:
@@ -1087,13 +1087,13 @@ def retail_text_self_test() -> list[str]:
         leaked = [f for f in found if f.path.startswith("references/upstream/")]
         if leaked:
             failures.append(f"retail-text rules were applied to a submodule's files: {leaked!r}")
-        # the frozen copies are not read by the three rules (the same text in tools/ is), but every other rule still reads them
+        # the frozen copy is not read by the three rules (the same text in tools/ is), but every other rule still reads it
         retail_labels = (run, long_hex, path_rule)
         frozen_hits = [f for f in found if f.path.startswith(RETAIL_TEXT_FROZEN_PREFIXES) and f.label in retail_labels]
         if frozen_hits:
             failures.append(f"retail-text rules were applied to a frozen copy: {frozen_hits!r}")
         if {f.label for f in found if f.path == "tools/notes.md"} != set(retail_labels):
-            failures.append("the same text outside the frozen copies did not fail all three rules")
+            failures.append("the same text outside the frozen copy did not fail all three rules")
         if {f.label for f in found if f.path == "rebuild/notes.md"} != set(retail_labels):
             failures.append("rebuild/ is no longer a frozen copy, but text in it did not fail all three rules")
         for frozen in RETAIL_TEXT_FROZEN_PREFIXES:
