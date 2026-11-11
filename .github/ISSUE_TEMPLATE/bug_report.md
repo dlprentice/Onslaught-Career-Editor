@@ -22,6 +22,12 @@ Choose one:
 
 Issues with the native port belong in [Onslaught CE's issues](https://github.com/dlprentice/onslaught-ce/issues), not here; rebuild issues belong in [onslaught-godot](https://github.com/dlprentice/onslaught-godot).
 
+## Environment
+
+- Operating system and version:
+- How you run it (built from source at which commit, or another way):
+- The game: Steam, another install, or none (and which game version, if you know):
+
 ## Expected Behavior
 
 What should happen?

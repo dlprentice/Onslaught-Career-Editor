@@ -39,12 +39,10 @@ Validation intentionally skipped (relevant commands and reason):
       exceed the evidence in this PR.
 - [ ] No hosted CI/release automation or public release action was added.
 
-Private/public boundary check (write `none` or name affected paths/artifacts):
+Private/public boundary check (write `none` or name the affected paths):
 
-- Hard payloads:
-- Release-manifest entries:
-- Copied-game proof summaries:
-- Local evidence (redacted paths or compact non-secret summaries only; no raw
+- Files or summaries that came from your own copy of the game:
+- Local evidence included (redacted paths or compact non-secret summaries only; no raw
   proof bundles):
 
 ## State And Risks
