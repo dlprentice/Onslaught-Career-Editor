@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
 """Checks tools/particle_set_walk.py on authored particle sets (no game bytes): what the walk reads, every reason it
-refuses, and its tables against the rebuild's reader they were taken from, so the two cannot drift apart unnoticed."""
+refuses, and its tables against the reader they were taken from (the C# copies in tools/godot_reader_fixtures/), so the two cannot
+drift apart unnoticed."""
 from __future__ import annotations
 
 import random
@@ -12,7 +13,7 @@ from pathlib import Path
 import particle_set_walk as psw
 
 ROOT = Path(__file__).resolve().parents[1]
-PARTICLES = ROOT / "rebuild" / "OnslaughtRebuild.Parity" / "Particles"
+PARTICLES = ROOT / "tools" / "godot_reader_fixtures"
 SEMANTICS = ROOT / "reverse-engineering" / "binary-analysis" / "tokenarchive-semantics-2026-08-11.md"
 SEP = psw.SEPARATOR
 
@@ -180,7 +181,8 @@ def switch_cases(body: str, order: list[str]) -> dict[str, str]:
 
 
 class TablesTests(unittest.TestCase):
-    """The walk's tables are the rebuild's: TokenArchive.cs, ParticleSet.cs and ParticleDescriptors.cs."""
+    """The walk's tables are the reader's: TokenArchive.cs, ParticleSet.cs and ParticleDescriptors.cs, as onslaught-godot has them
+    (copies in tools/godot_reader_fixtures/). A missing copy is a failure, not a skip."""
 
     @classmethod
     def setUpClass(cls) -> None:

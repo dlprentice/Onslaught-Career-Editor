@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
 """Checks tools/physics_values_decode.py on authored physics scripts (no game bytes), and checks its value tables
-against the rebuild's typed reader they were taken from, so the two cannot drift apart unnoticed."""
+against the typed reader they were taken from (the C# copies in tools/godot_reader_fixtures/), so the two cannot drift apart
+unnoticed."""
 from __future__ import annotations
 
 import re
@@ -12,7 +13,7 @@ from pathlib import Path
 import physics_values_decode as physics
 
 ROOT = Path(__file__).resolve().parents[1]
-REGISTRY = ROOT / "rebuild" / "OnslaughtRebuild.Parity" / "Physics"
+REGISTRY = ROOT / "tools" / "godot_reader_fixtures"
 FUNCTIONS = {"ApplyUnitValue": "unit", "ApplyFeatureValue": "feature", "ApplyHazardValue": "hazard",
              "ApplyWeaponValue": "weapon", "ApplyWeaponModeValue": "weapon-mode", "ApplyRoundValue": "round",
              "ApplySpawnerValue": "spawner", "ApplyExplosionValue": "explosion", "ApplyComponentValue": "component"}
@@ -129,8 +130,16 @@ def rebuild_signatures() -> dict[str, dict[int, str]]:
     return out
 
 
-@unittest.skipUnless(REGISTRY.is_dir(), "the rebuild's physics reader is not in this checkout")
 class RebuildTableTests(unittest.TestCase):
+    """The tables against the physics reader's C# source. The copies in tools/godot_reader_fixtures/ are tracked, so a
+    missing copy fails here: it must not turn into a silent skip."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        missing = [name for name in ("PhysicsRegistry.cs", "PhysicsRegistry.Families.cs") if not (REGISTRY / name).is_file()]
+        if missing:
+            raise AssertionError(f"the physics reader copies are missing from {REGISTRY}: {missing}")
+
     def test_every_value_class_reads_what_the_rebuild_reads(self):
         signatures = rebuild_signatures()
         self.assertEqual(sorted(signatures), sorted(physics.VALUE_TABLES))

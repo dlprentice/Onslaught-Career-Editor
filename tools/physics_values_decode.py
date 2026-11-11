@@ -8,8 +8,9 @@ size and its body, followed by a word that is zero when another value follows an
 
 Each value id of each statement belongs to one value class, whose Load reads exactly the value's stored size. The
 tables below give every class's body as a signature (i int, f float, s zero-terminated string; an empty signature is a
-value with no body) and the catalogue role of what a string names. They come from the rebuild's typed reader
-(rebuild/OnslaughtRebuild.Parity/Physics/PhysicsRegistry.cs and PhysicsRegistry.Families.cs), which applies each value
+value with no body) and the catalogue role of what a string names. They come from onslaught-godot's typed reader
+(rebuild/OnslaughtRebuild.Parity/Physics/PhysicsRegistry.cs and PhysicsRegistry.Families.cs there; copies are in
+tools/godot_reader_fixtures/), which applies each value
 as the game's Create*Value classes do and throws when a body is not read exactly.
 
 An id no class knows is skipped by the game: it stays in the result as unread bytes, not as a guess.

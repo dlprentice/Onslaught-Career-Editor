@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """A particle set file (data\\ParticleSets\\*.par) walked as the game's reader takes it: line by line, value by value.
 
-The grammar is the rebuild's (rebuild/OnslaughtRebuild.Parity/Particles/): TokenArchive.cs gives each token's value
+The grammar is onslaught-godot's reader's (rebuild/OnslaughtRebuild.Parity/Particles/ there; copies are in
+tools/godot_reader_fixtures/): TokenArchive.cs gives each token's value
 shape and how a line is split, ParticleSet.cs (ReadData) the file's order, and ParticleDescriptors.cs the tokens each
 descriptor type's Load takes. particle_set_walk_tests.py checks the tables below against that C#, so the two cannot
 drift apart unnoticed.
