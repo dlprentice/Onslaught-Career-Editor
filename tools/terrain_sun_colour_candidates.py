@@ -12,6 +12,15 @@ supplies a magnitude. Run it to reproduce the numbers quoted in
 
 Usage:
     python ./tools/terrain_sun_colour_candidates.py [heightfield.hfld.bin]
+
+Inputs
+------
+The default input paths in this file name materialized retail assets under
+`rebuild/` in this checkout. That folder is no longer part of the repository:
+the assets are an ignored leftover on the owner's machine, made by
+onslaught-godot's `rebuild/tools/materialize_retail_assets.py`. To run this
+elsewhere, materialize the assets in an onslaught-godot checkout and point the
+path constants or options at them.
 """
 
 from __future__ import annotations

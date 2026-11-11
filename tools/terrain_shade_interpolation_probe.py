@@ -15,6 +15,15 @@ measurable questions:
      in the composited macro at each level?
 
 Read-only. Renders into memory and writes nothing.
+
+Inputs
+------
+The default input paths in this file name materialized retail assets under
+`rebuild/` in this checkout. That folder is no longer part of the repository:
+the assets are an ignored leftover on the owner's machine, made by
+onslaught-godot's `rebuild/tools/materialize_retail_assets.py`. To run this
+elsewhere, materialize the assets in an onslaught-godot checkout and point the
+path constants or options at them.
 """
 
 from __future__ import annotations
