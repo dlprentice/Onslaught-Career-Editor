@@ -57,7 +57,7 @@ continuity snapshot, not a second roadmap: check current refs, claims and eviden
 
 ## Tool outcomes and user holds
 
-How outcomes are recorded is in [MAINTAINER-AGENT-PRACTICE.md](MAINTAINER-AGENT-PRACTICE.md#recording-tool-outcomes).
+Record consequential tool outcomes in existing private notes ([how](MAINTAINER-AGENT-PRACTICE.md#recording-tool-outcomes)).
 
 - **Safety denial:** keep its stated scope and reason. Do not obtain the denied outcome through another tool, wrapper
   or helper. Continue only with a materially safer permitted alternative or the supported review process. A task-level
@@ -112,7 +112,9 @@ How outcomes are recorded is in [MAINTAINER-AGENT-PRACTICE.md](MAINTAINER-AGENT-
   tools) is GPL-3.0-only and documentation and lore are CC BY-SA 4.0, as `REUSE.toml` maps them; ExuberantParrot's PR #1
   passages also keep their MIT notice. Contributions come in under the same terms (`CONTRIBUTING.md`). None of it
   merges with private retail material into one licensing boundary.
-- The rebuild's determinism contract is in [MAINTAINER-AGENT-PRACTICE.md](MAINTAINER-AGENT-PRACTICE.md#the-rebuilds-determinism-contract) and onslaught-godot.
+- The rebuild's determinism contract is in
+  [MAINTAINER-AGENT-PRACTICE.md](MAINTAINER-AGENT-PRACTICE.md#the-rebuilds-determinism-contract) and onslaught-godot;
+  missing references, empty selections and new skips are not passes.
 - No telemetry: nothing in this repository collects or sends usage data. A network feature names exactly what it
   contacts and why, and reads only public data.
 - C# only, built in code: no `.gd` files, no editor-authored scenes or resources (a `.tscn` only as a one-node entry
