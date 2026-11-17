@@ -1,8 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-11-17 (trimmed: practice, progress reporting and repository context moved to
-MAINTAINER-AGENT-PRACTICE.md; helper models follow the machine guide; companion tests run from the root)
+Last updated: 2026-11-17
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
@@ -16,20 +15,12 @@ notes concern the maintainer's own agent tooling.
 
 ## What this is
 
-A preservation project for *Battle Engine Aquila* (2003). This public repository holds:
-
-- a pointer page, `rebuild/README.md`: the Godot rebuild is developed in
-  [onslaught-godot](https://github.com/dlprentice/onslaught-godot), which holds its code, tests, licence and
-  provenance record;
-- the **companion** (`companion/`), Onslaught Companion: the Godot .NET app for careers, saves, backups, settings,
-  music and lore for the original game and Onslaught CE, including CE launcher settings and the steps for updating CE (the running companion contacts nothing; its build setup downloads pinned tools, see [README](README.MD#build-and-run));
-- a frozen copy of the game documentation (`reverse-engineering/`), whose home is
-  https://github.com/dlprentice/onslaught-preservation, where new findings go, and our own tools.
-
-The decompilation is public as [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) and the native
-port as [Onslaught CE](https://github.com/dlprentice/onslaught-ce). [`GOAL.md`](GOAL.md) states the outcomes,
-[`PROGRAM.md`](PROGRAM.md) the work queue and [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md) what is
-demonstrated; the fuller repository context is in [MAINTAINER-AGENT-PRACTICE.md](MAINTAINER-AGENT-PRACTICE.md).
+A preservation project for *Battle Engine Aquila* (2003). This public repository holds the companion (`companion/`,
+Onslaught Companion), a frozen copy of the game documentation (`reverse-engineering/`, whose home is
+[onslaught-preservation](https://github.com/dlprentice/onslaught-preservation)), our tools, and a pointer page where the
+rebuild stood (it is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot)). [`GOAL.md`](GOAL.md)
+states the outcomes, [`PROGRAM.md`](PROGRAM.md) the work queue and [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md)
+what is demonstrated; the full context is in [MAINTAINER-AGENT-PRACTICE.md](MAINTAINER-AGENT-PRACTICE.md).
 
 ## Checkouts and branches
 
@@ -51,13 +42,18 @@ maintainer's workspace described under "Maintainer-only workspace" below ([READM
 
 ## Project progress and documentation
 
-How progress is reported, which document owns which state and how handoffs are used is in
-[MAINTAINER-AGENT-PRACTICE.md](MAINTAINER-AGENT-PRACTICE.md#project-progress-and-documentation). A handoff is a dated
-continuity snapshot, not a second roadmap: check current refs, claims and evidence before relying on it.
+Report experiments, integrated source, released packages and real-player/platform acceptance separately; a passing
+synthetic test, a branch or a byte match is evidence within its stated scope, not automatic feature completion.
+Preserve historical evidence rather than creating competing live status files, and report failures and open gaps
+without invented percentages. A handoff is a dated continuity snapshot, not a second roadmap: check current refs, claims
+and evidence before relying on it. Which document owns which state:
+[MAINTAINER-AGENT-PRACTICE.md](MAINTAINER-AGENT-PRACTICE.md#project-progress-and-documentation).
 
 ## Tool outcomes and user holds
 
-Record consequential tool outcomes in existing private notes ([how](MAINTAINER-AGENT-PRACTICE.md#recording-tool-outcomes)).
+Record consequential tool outcomes in existing private notes, keeping observations separate from interpretations;
+fresh evidence can correct an interpretation without erasing the original observation
+([how](MAINTAINER-AGENT-PRACTICE.md#recording-tool-outcomes)).
 
 - **Safety denial:** keep its stated scope and reason. Do not obtain the denied outcome through another tool, wrapper
   or helper. Continue only with a materially safer permitted alternative or the supported review process. A task-level
@@ -76,9 +72,8 @@ Record consequential tool outcomes in existing private notes ([how](MAINTAINER-A
 ## Ground rules
 
 - Game/save writes require an informed user choice and a verified recovery copy before overwriting original data, and
-  never happen while the game runs. The companion's `GameInstaller` (`companion/OnslaughtToolkit.Godot/Files/GameWrites.cs`:
-  a verified backup set outside the game folder, a running check before the backup and again before the swap, an
-  exchange swap undone if the displaced file is not the backed-up one, a read-back) is the model. Never manufacture an
+  never happen while the game runs. The companion's `GameInstaller` (`companion/OnslaughtToolkit.Godot/Files/GameWrites.cs`; the
+  [companion README](companion/OnslaughtToolkit.Godot/README.md) describes its mechanism) is the model. Never manufacture an
   "original" from an already modified file, and never destroy career data as a side effect.
 - The pristine specimen `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup` (SHA-256 `74154bfa…`) is the
   byte-measurement baseline: read it, never write it. The lab folder's `BEA.exe` (`e1436ef7…`) is patched. Every
@@ -88,12 +83,8 @@ Record consequential tool outcomes in existing private notes ([how](MAINTAINER-A
   `tests_shared/fixtures/gold_career_save.bin` is the one tracked save.
 - Never track retail binaries or assets, converted retail material, arbitrary saves, raw debugger logs, bulky
   captures, Ghidra databases or backups, decompiler output, decomp source, credentials or `.env*`.
-  `npm run test:safety` enforces the boundary; the screenshot allowance exists, but the register in `reverse-engineering/project-meta/attribution.md` is currently empty
-  (`tools/check_registered_screenshots.py` checks it). It also
-  fails live text (docs, code and comments alike) that quotes original-game bytes (a run of hex byte tokens, or a long
-  hex string that is not a SHA-1 or SHA-256) or a private machine path. The frozen copy (`reverse-engineering/`)
-  is not read by those rules; every reviewed exception is listed with its reason in
-  `tools/public_allowlist_safety_check.py`, and an exception whose text is gone fails as stale.
+  Never quote original-game bytes or a private machine path in live text. `npm run test:safety` enforces both; what
+  it checks and its reviewed exceptions are in [VALIDATION.md](VALIDATION.md).
 - Every behaviour claim cites a capture, byte comparison, focused test, or pinned source file and line. Decompiler
   output, a plausible name or a model's opinion proves nothing; the decompilation is the naming authority, cited by
   function, never quoted. Static evidence establishes identities and structures; only controlled runtime evidence
@@ -108,9 +99,9 @@ Record consequential tool outcomes in existing private notes ([how](MAINTAINER-A
 - Licensing: the rebuild is GPL and may adapt the pinned GPL source in `references/Onslaught` and the decompilation's
   simulation (recorded per unit in [`rebuild/PROVENANCE.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PROVENANCE.md)
   in onslaught-godot, where it is developed); it consumes locally materialized retail data but never
-  contains retail executables, decompiler output or separately licensed material. All project code (companion, rebuild,
-  tools) is GPL-3.0-only and documentation and lore are CC BY-SA 4.0, as `REUSE.toml` maps them; ExuberantParrot's PR #1
-  passages also keep their MIT notice. Contributions come in under the same terms (`CONTRIBUTING.md`). None of it
+  contains retail executables, decompiler output or separately licensed material. All project code is GPL-3.0-only and
+  documentation and lore are CC BY-SA 4.0, as `REUSE.toml` maps them; contributions come in under the same terms
+  ([CONTRIBUTING.md](CONTRIBUTING.md#licensing-of-contributions), which also lists kept third-party notices). None of it
   merges with private retail material into one licensing boundary.
 - The rebuild's determinism contract is in
   [MAINTAINER-AGENT-PRACTICE.md](MAINTAINER-AGENT-PRACTICE.md#the-rebuilds-determinism-contract) and onslaught-godot;
@@ -120,7 +111,8 @@ Record consequential tool outcomes in existing private notes ([how](MAINTAINER-A
 - C# only, built in code: no `.gd` files, no editor-authored scenes or resources (a `.tscn` only as a one-node entry
   wrapper), shader source in C# strings, one production owner per subsystem. Repository tooling stays Python.
 - Reviews by other agents or models are optional input to reproduce, not authority. Every agent call names its model and
-  effort by role, as rule 12 of the maintainer's machine guide says. Hosted reviewers never receive retail material or
+  effort by role, as rule 12 of the maintainer's machine guide says; that rule overrides historical model
+  assignments and the frozen review protocol's "strongest available setting". Hosted reviewers never receive retail material or
   secrets. Hosted CI and release automation are outside this phase; release claims need the selected platform's validation; Linux evidence alone does not establish
   Windows behaviour.
 

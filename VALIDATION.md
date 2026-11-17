@@ -1,7 +1,7 @@
 # Validation
 
 Status: active — the gate-selection table
-Last updated: 2026-11-11 (the frozen rebuild copy was cut; the rows for it and for the moved parser were rewritten)
+Last updated: 2026-11-17
 Summary: choosing the smallest evidence that proves the contract you changed.
 [`package.json`](package.json) owns the commands.
 
@@ -33,7 +33,7 @@ section of the same name in `VALIDATION-HISTORY.md`.
 | Documentation or deletion only | `git diff --check`, `npm run test:docs` (link check with its self-test, then headers), and, when a generator's output changed, that generator's `--check` (the catalogue row below gives the pattern). The full link scan needs initialized pinned public source references; no retail data is needed |
 | A new or edited tracked `.md` header | `npm run test:doc-headers`, which is also inside `test:docs`. The contract is [`DOCUMENTATION.md`](DOCUMENTATION.md); the backlog of pre-standard documents is `tools/doc_header_backlog.txt` and may only shrink |
 | Companion (C# built in code) and its file safety | With the public pinned toolchain (`python tools/companion_toolchain.py setup`), `npm run test:companion-godot` runs `companion/OnslaughtToolkit.Godot/Tests/CompanionTestRunner.cs` on owned copies of the tracked real-save fixture: codec contracts, independent byte diffs, protected round trips, changed/conflicting sources and links, publication races and the code-built interface's real controls. `test:companion-tools` separately checks pins, the code-only policy, staging and export boundaries with fake tools |
-| Public payload/provenance boundary | `npm run test:safety` |
+| Public payload/provenance boundary | `npm run test:safety`. Besides the tracked-file boundary, it fails live text (docs, code and comments alike) that quotes original-game bytes (a run of hex byte tokens, or a long hex string that is not a SHA-1 or SHA-256) or a private machine path. The frozen copy (`reverse-engineering/`) is not read by those rules; every reviewed exception is listed with its reason in `tools/public_allowlist_safety_check.py`, and an exception whose text is gone fails as stale. The screenshot allowance exists, but the register in `reverse-engineering/project-meta/attribution.md` is currently empty (`tools/check_registered_screenshots.py` checks it) |
 | The Godot rebuild application | Developed, built and gated in [onslaught-godot](https://github.com/dlprentice/onslaught-godot). Local `rebuild/` is a pointer page: the frozen copy that stood there was removed on 2026-11-11 (tag `archive/20261111-rebuild-frozen-copy`) and its application is not built or gated here |
 | The CMSH parser and its data under `tools/` | `test:tools` runs `cmsh_static_preview_tests.py`, `check_region_overlap_tests.py`, `score_frontend_capture_tests.py` and `check_region_overlap.py`; many Toolkit format tools import the parser. `particle_set_walk_tests.py` and `physics_values_decode_tests.py` compare their tables with the C# reader copies in `tools/godot_reader_fixtures/` and fail, not skip, when a copy is missing. These checks do not run the rebuild application or establish its parity |
 | Godot toolchain or native behavior | `test:godot-host` checks launcher routing/process cleanup with fake tools. With the public pinned toolchain, `build:companion-godot` refuses GDScript, saved resources and multi-node scenes, then builds the C# companion; `export:companion-godot` produces normal Godot .NET Linux/Windows exports after `python tools/companion_toolchain.py setup --with-templates`. Builds are headless |
