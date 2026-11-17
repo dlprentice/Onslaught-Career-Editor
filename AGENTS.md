@@ -103,9 +103,10 @@ fresh evidence can correct an interpretation without erasing the original observ
   documentation and lore are CC BY-SA 4.0, as `REUSE.toml` maps them; contributions come in under the same terms
   ([CONTRIBUTING.md](CONTRIBUTING.md#licensing-of-contributions), which also lists kept third-party notices). None of it
   merges with private retail material into one licensing boundary.
-- The rebuild's determinism contract is in
-  [MAINTAINER-AGENT-PRACTICE.md](MAINTAINER-AGENT-PRACTICE.md#the-rebuilds-determinism-contract) and onslaught-godot;
-  missing references, empty selections and new skips are not passes.
+- The rebuild's simulation (`OnslaughtRebuild.Parity`, now in onslaught-godot) is deterministic given its inputs: the
+  tape, the retail data and options files it reads as the game does, and the virtual clock. It never reads wall time,
+  locale, environment or thread scheduling, and has no presentation, process, network or GPU dependency. Tests compare
+  it with recorded references Present by Present; missing references, empty selections and new skips are not passes.
 - No telemetry: nothing in this repository collects or sends usage data. A network feature names exactly what it
   contacts and why, and reads only public data.
 - C# only, built in code: no `.gd` files, no editor-authored scenes or resources (a `.tscn` only as a one-node entry
