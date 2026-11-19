@@ -1,7 +1,7 @@
 # Validation history
 
 Status: historical — dated validation receipts; the live gate table is VALIDATION.md
-Last updated: 2026-11-11 (moved here unchanged from VALIDATION.md; each entry keeps its own date)
+Last updated: 2026-11-19 (one present-tense engine clause in the September 25 entry dated; 2026-11-11: moved here unchanged from VALIDATION.md; each entry keeps its own date)
 Summary: the dated receipts of earlier checks, kept so that the entries cited from other documents still resolve.
 Read them as what ran on their dates. For which check to run now, use [`VALIDATION.md`](VALIDATION.md).
 
@@ -2182,7 +2182,7 @@ Logs and comparisons: `local-data/test-runs/final-capture-455ed6f4/` (the Intel 
 
 ### Lane baseline — September 25
 
-Each lane was built and checked in its own checkout on Linux: Godot 4.8 dev6 .NET at the time (the pinned engine is now Godot 4.8 beta1 .NET; see README.MD and companion/OnslaughtToolkit.Godot/toolchain.json)
+Each lane was built and checked in its own checkout on Linux: Godot 4.8 dev6 .NET at the time (the pinned engine later became Godot 4.8 beta1 .NET; see the companion README for the current pin)
 (the maintainer's Godot 4.8 mono binary), with the standard edition for the GDScript-only gates. Every Godot
 run was headless with Dummy audio; no window opened. Logs are in canonical
 `local-data/test-runs/lane-baseline-20260925-H8dhmW/`; rebuild-owned runs are under
