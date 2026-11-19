@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-11 (the earlier rebuild's dated narrative removed; 2026-11-06: standalone Companion is current implementation; unified CE migration is required, not delivered)
+Last updated: 2026-11-19 (the engine is now Godot 4.8 beta4 .NET)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private historical maintainer archive; they are not current operating instructions.
@@ -50,7 +50,7 @@ acceptance. The figures that this page once quoted for them are in Git (`git sho
 ## Godot companion — careers, settings, backups, music and lore
 
 The GPL-3.0-only [companion](companion/OnslaughtToolkit.Godot/README.md) is a C# application
-built entirely in code on **Godot 4.8.beta1.mono.official.4d10419ca** and .NET 10 (`net10.0`,
+built entirely in code on **Godot 4.8.beta4.mono.official.b070e63b1** and .NET 10 (`net10.0`,
 runtime 10.0.13, SDK 10.0.402). Its one scene only
 attaches the root script; the build refuses GDScript, saved resources and multi-node
 scenes. David approved its feature set and Flight-deck look on 2026-09-25; on 2026-09-26

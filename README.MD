@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-11-11 (the Companion-to-CE move stated in the intro)
+Last updated: 2026-11-19 (the engine is now Godot 4.8 beta4 .NET)
 Summary: what this project is, where each part lives, which checks a public clone can run, and what Companion builds require.
 
 Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
@@ -100,7 +100,7 @@ on the companion's Home page, where each can be saved as a copy elsewhere.
 
 | Path | Owner |
 | --- | --- |
-| [`companion/OnslaughtToolkit.Godot/`](companion/OnslaughtToolkit.Godot/README.md) | The companion for original-game and CE careers, settings, launch and the level/mission editor, C# built in code on Godot 4.8 beta1 .NET and .NET 10 |
+| [`companion/OnslaughtToolkit.Godot/`](companion/OnslaughtToolkit.Godot/README.md) | The companion for original-game and CE careers, settings, launch and the level/mission editor, C# built in code on Godot 4.8 beta4 .NET and .NET 10 |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | A frozen copy of the game documentation (formats, mechanics, saves, assets, function notes and contracts) as at commit `fae54b7`. Its home is [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation), where new findings go |
 | [`lore/`](lore/_index.md) | The canonical lore and history library, embedded in the companion |
 | [`tools/`](tools/README.md) | Format decoders, the [local content catalogue](tools/README.md#content-catalogue), asset exporters, capture analysis and the repository's checks |
@@ -173,7 +173,7 @@ installation is needed for tools that read the actual game.
 
 Companion commands use the .NET 10 SDK pinned in
 [`global.json`](global.json), repeated by [the Companion's pin](companion/OnslaughtToolkit.Godot/global.json),
-and [its toolchain manifest](companion/OnslaughtToolkit.Godot/toolchain.json): Godot 4.8 beta1 .NET,
+and [its toolchain manifest](companion/OnslaughtToolkit.Godot/toolchain.json): Godot 4.8 beta4 .NET,
 matching templates when exporting, and .NET SDK 10.0.402. Existing explicitly selected shared installations
 remain supported; they are optional. Follow [CONTRIBUTING.md](CONTRIBUTING.md) to establish the baseline,
 implement a feature and submit a PR from your fork.

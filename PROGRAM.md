@@ -1,7 +1,7 @@
 # Execution Program
 
 Status: durable backlog under David's 2026-10-15 direction
-Last updated: 2026-11-11 (the 2026-11-11 release direction)
+Last updated: 2026-11-19 (the engine is now Godot 4.8 beta4 .NET)
 Summary: the open work, its acceptance gates, and what was closed or paused, without an execution diary.
 
 The [goal](GOAL.md) sets the direction. Toolkit capability claims belong in
@@ -118,7 +118,7 @@ page (the frozen copy was removed on 2026-11-11 and is at the tag `archive/20261
 
 ### Companion — CE integration
 
-The companion is a C# application built in code on Godot 4.8 beta1 .NET and .NET 10, and organised around players: careers
+The companion is a C# application built in code on Godot 4.8 beta4 .NET and .NET 10, and organised around players: careers
 with a campaign map, Goodies, career editing, cheats, game settings, automatic backups that can be put back, music
 and voices, and lore (see its [README](companion/OnslaughtToolkit.Godot/README.md)). In this current standalone app,
 every write into the game is a choice made after a verified backup, never while the game runs.

@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — companion for the original game and Onslaught CE
-Last updated: 2026-11-06 (capture command moved out of the public command list, wrapper lock wording; 2026-11-04: installed definition models in the linked 3D preview; unpublished CE development builds and platform limits retained)
+Last updated: 2026-11-19 (the engine is now Godot 4.8 beta4 .NET)
 Summary: Onslaught Companion manages original-game and Onslaught CE careers, verified backups and supported settings; it starts only CE packages it identifies as 0.1.7 or later and explains how CE updates.
 
 Onslaught Companion is for players. It opens on their game and careers, and everything it
@@ -143,7 +143,7 @@ GPU rendering and audio remain unvalidated. The gate never starts a game or requ
 
 ## Layout
 
-Everything is C# on Godot 4.8 beta1 .NET, targeting .NET 10 (`net10.0`). [Main.tscn](Main.tscn) is a one-node wrapper
+Everything is C# on Godot 4.8 beta4 .NET, targeting .NET 10 (`net10.0`). [Main.tscn](Main.tscn) is a one-node wrapper
 that attaches [CompanionApp](Ui/CompanionApp.cs); every control, container, dialog
 and style below it is constructed in code. There is no GDScript, saved resource or
 editor-authored scene, and `npm run build` refuses to stage one.
@@ -683,7 +683,7 @@ process during the run is not guaranteed to stay outside the game folder (the li
 [toolchain.json](toolchain.json) records the measured engine, SDK and template hashes and
 the shared lock revision; `tools/companion_godot.py` verifies the installation and refuses
 mismatches. `companion/OnslaughtToolkit.Godot/global.json` pins .NET SDK 10.0.402 (latest patch of that band; the runner accepts only
-10.0.402; the repository root's `global.json` pins the same version); the Godot SDK is `4.8.0-beta.1`, the target `net10.0` and the runtime 10.0.13, the
+10.0.402; the repository root's `global.json` pins the same version); the Godot SDK is `4.8.0-beta.4`, the target `net10.0` and the runtime 10.0.13, the
 one that SDK ships. The runtime packs Godot's export bundles
 (`microsoft.netcore.app.runtime.linux-x64` and `win-x64` 10.0.13) are pinned by nuget.org's
 SHA-512 and their SHA-256, and an export whose restored pack differs is refused. Export presets target Linux x86_64 and Windows x86_64, and Godot's normal
