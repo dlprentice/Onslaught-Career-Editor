@@ -1,7 +1,7 @@
 # Repository and Application Map
 
 Status: active source-routing index
-Last updated: 2026-11-11 (the frozen rebuild copy was cut; rebuild/ is a pointer page)
+Last updated: 2026-11-19 (godot_host.py now supplies owned-process cleanup only; 2026-11-11: the frozen rebuild copy was cut; rebuild/ is a pointer page)
 Summary: stable ownership, dependency direction, and code-entry routing for the
 Onslaught Toolkit repository: the companion, tools, lore and frozen references, with routes to the live game projects.
 
@@ -140,7 +140,7 @@ installation it read ([inventory entry point](tools/README.md#content-inventory)
 
 | Path | Authority |
 | --- | --- |
-| [`companion/`](companion/OnslaughtToolkit.Godot/README.md) | GPL-3.0-only Godot .NET toolkit, a C# application built in code with its in-process file adapter. `tools/companion_godot.py` owns pinned .NET-engine routes (build, test, capture, run, export); `tools/godot_host.py` supplies shared engine discovery and process support. |
+| [`companion/`](companion/OnslaughtToolkit.Godot/README.md) | GPL-3.0-only Godot .NET toolkit, a C# application built in code with its in-process file adapter. `tools/companion_godot.py` owns pinned .NET-engine routes (build, test, capture, run, export); `tools/godot_host.py` supplies owned-process cleanup (`run_process`, `print_process_output`) for the companion runner. |
 | [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) | A frozen copy of the documentation of the game as prose and specs: formats, mechanics, saves, assets, source notes, function notes and contracts, each bound to its specimen or source. The maintained documentation is [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation). No Ghidra database or decompiler output. |
 | `local-lab/` | Ignored machine-local evidence: retail safe copies, historical campaign generations, captures, reviewer reports, frozen proof graphs, the retired working Ghidra project and `rebuild-godot/` staging. It is a real directory inside the maintainer's checkout; fresh clones and child worktrees lack it. [`LOCAL_LAB_OVERLAY.md`](LOCAL_LAB_OVERLAY.md) owns canonical absolute-path / `BEA_LOCAL_LAB` routing; consult relevant `local-lab/INDEX.md` sections for the retained corpus. |
 | `local-data/` | The real ignored repository child for `host-attestations/`, current retail/media inputs, operational outputs and grouped `recovered/` packages; its `AGENTS.md` (ignored; not in public clones) owns the internal map. Unused `windows-vm/` and `vm-media/` staging was retired. `_recovered-worktrees/` and `windows-profile-2026-08-28/` retain protected historical Ghidra material in place. `local-proofs/` remains a reserved ignored/publication-denied name, not a current data owner. |
