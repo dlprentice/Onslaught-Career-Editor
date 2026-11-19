@@ -92,7 +92,7 @@ SUITES: tuple[tuple[str, ...], ...] = (
 NOT_IN_THIS_GATE: dict[str, str] = {
     "tools/run_tool_tests.py": "this runner itself: npm run test:tools runs its --self-test before any suite",
     "tools/companion_godot_tests.py": "fake-tool checks of the companion's Godot routes; run by npm run test:companion-tools (part of npm test)",
-    "tools/godot_host_tests.py": "engine discovery and process cleanup with fake tools; run by npm run test:godot-host",
+    "tools/godot_host_tests.py": "owned-process cleanup with fake tools; run by npm run test:godot-host",
 }
 
 # Directories that hold other checkouts, private data or build output, never this repository's own test files.

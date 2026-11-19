@@ -1,7 +1,7 @@
 # Tools
 
 Status: active — the reusable support surface, not a product lane
-Last updated: 2026-11-11 (the CMSH parser, region data and reader fixtures moved here from the frozen rebuild copy, which was then removed)
+Last updated: 2026-11-19 (godot_host.py keeps only owned-process cleanup; its unused engine discovery and build helpers were removed)
 Summary: what each tool in `tools/` is for.
 
 `tools/` supports the companion and the game documentation (and the rebuild developed in onslaught-godot) through guarded extraction,
@@ -56,7 +56,7 @@ change that needs no retail data. For example, `python tools/content_catalog_tes
 
 ## Product and release
 
-- `godot_host.py` supplies installed-engine discovery, locked bundled-SDK restore/build and owned-process cleanup;
+- `godot_host.py` supplies owned-process cleanup (`run_process`, `print_process_output`) for the companion runner;
   `companion_godot.py` builds and runs the companion through the verified public setup; an explicitly selected
   shared installation remains an optional maintainer route.
 - `cmsh_static_preview.py` is the CMSH mesh parser that the format tools import. It and `cmsh_static_preview_tests.py`

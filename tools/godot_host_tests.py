@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""Engine discovery and owned-process handling with fake tools; no window or retail data is used."""
+"""Owned-process handling with fake tools; no engine, window or retail data is used."""
 from __future__ import annotations
 
 import os
@@ -12,22 +12,6 @@ from pathlib import Path
 from unittest import mock
 
 import godot_host as host
-
-
-@unittest.skipUnless(sys.platform.startswith("linux"), "Linux engine discovery")
-class EnginePathTests(unittest.TestCase):
-    def test_sdk_resolution_rejects_an_engine_without_the_pinned_package(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="godot-host-tests-") as temporary:
-            engine = Path(temporary) / "engine/godot48-mono"
-            packages = engine.parent / "GodotSharp/Tools/nupkgs"
-            packages.mkdir(parents=True)
-            (packages / "Godot.NET.Sdk.4.7.2.nupkg").touch()
-            engine.write_text("#!/bin/sh\n", encoding="utf-8")
-            engine.chmod(0o700)
-            with self.assertRaisesRegex(RuntimeError, "4.8.0-dev.6 bundled SDK package is missing"):
-                host.engine_path(str(engine))
-            (packages / "Godot.NET.Sdk.4.8.0-dev.6.nupkg").touch()
-            self.assertEqual(engine, host.engine_path(str(engine)))
 
 
 @unittest.skipUnless(sys.platform.startswith("linux"), "Linux process-group launcher")
