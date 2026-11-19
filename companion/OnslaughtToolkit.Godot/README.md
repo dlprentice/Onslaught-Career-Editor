@@ -192,7 +192,7 @@ python tools/companion_toolchain.py verify
 ```
 
 The default installs below ignored `local-data/toolchains/companion/` in the canonical checkout (the main clone that holds the repository's `.git`; a Git worktree uses it too). Engine and SDK
-downloads total about 318 MiB; allow about 1.2 GiB for the retained archives and installation, plus build outputs.
+downloads total about 320 MiB; allow about 1.2 GiB for the retained archives and installation, plus build outputs.
 The setup reuses matching downloads and refuses changed installations instead of overwriting them. It does not
 modify system tools, PATH or shell startup files. Build commands select the verified local SDK themselves. For a
 separate installation beneath this checkout's `local-data/`, use `setup --root DIR` and pass the same
