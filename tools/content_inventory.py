@@ -284,7 +284,7 @@ def found_metadata(envelope: str, scope: str, *, chunk_path: list[int] | None = 
 # leaves the chunk referenced: what it would mean is not established.
 PREFIX_VALUES = {"LVLR": (103,), "TARG": (1,), "AYAD": (344, 372, 316, 5084, 92, 1)}
 MESH_NAME = 300  # the reference's name buffer; a runtime id, a flag word and a byte follow (tools/goodie_resource_walk.py)
-IMPOSTER_LABEL = (4, 68)  # the CIMP bytes the catalogue reads as an imposter's stored label (content_catalog.parse_imposters)
+IMPOSTER_LABEL = (4, 36)  # char mName[0x20] in CDXImposter (sizeof 0x4C; onslaught-decomp src/imposter.h)
 PAYLOAD_DECODERS = {"ERES": wrd.parse_eres, "SURF": wrd.parse_surf, "SSHD": wrd.parse_sshd, "VSDS": wrd.parse_vsds,
                     "PMIB": wrd.parse_pmib, "DMKR": wrd.parse_dmkr}
 DECODE_ERRORS = (wrd.DecodeError, struct.error, ValueError)
@@ -472,7 +472,11 @@ def read_imposters(raw: bytes, base: int, size: int, reading: Reading) -> None:
     for tag, at, chunk_size in chunks_in(raw, body, body + length):
         account.add(at - 8, 8, DECODED, "IMPS/framing")
         if tag == "DATA":
-            account.add(at, chunk_size, REFERENCED, "IMPS/DATA")
+            if chunk_size == 8:
+                width, height = struct.unpack_from("<2i", raw, at)
+                account.add(at, chunk_size, DECODED if width > 0 and height > 0 else REFERENCED, "IMPS/DATA")
+            else:
+                account.add(at, chunk_size, REFERENCED, "IMPS/DATA")
         elif tag == "BTXT":
             read_texture_record(raw, at, at + chunk_size, reading, "IMPS/atlas-texture")
         elif tag == "IMPO":
@@ -490,7 +494,17 @@ def read_imposters(raw: bytes, base: int, size: int, reading: Reading) -> None:
                         terminated = b"\0" in raw[inner + first:inner + last]
                         account.add(inner, first, REFERENCED, "IMPS/CIMP-fields")
                         account.add(inner + first, last - first, DECODED if terminated else REFERENCED, "IMPS/label")
-                        account.add(inner + last, inner_size - last, REFERENCED, "IMPS/CIMP-fields")
+                        if inner_size >= 0x4C:
+                            # +0x24 mMesh (ptr) + +0x28 mUnknown28[8]; +0x30..+0x3C mUnknown30/mAlt/mUnknown38;
+                            # +0x3C mFrames (ptr); +0x40..+0x4C mViews/mNumFrames/mAnimated (imposter.h).
+                            account.add(inner + last, 12, REFERENCED, "IMPS/CIMP-fields")
+                            account.add(inner + 0x30, 12, DECODED, "IMPS/CIMP-decoded-fields")
+                            account.add(inner + 0x3C, 4, REFERENCED, "IMPS/CIMP-fields")
+                            account.add(inner + 0x40, 12, DECODED, "IMPS/CIMP-decoded-fields")
+                            if inner_size > 0x4C:
+                                account.add(inner + 0x4C, inner_size - 0x4C, REFERENCED, "IMPS/CIMP-fields")
+                        else:
+                            account.add(inner + last, inner_size - last, REFERENCED, "IMPS/CIMP-fields")
                         if not terminated:
                             reading.problems.append("IMPS: an imposter's stored label has no terminator")
                     elif child == "IMSH" and inner_size == 4:
@@ -782,21 +796,43 @@ def read_jpeg(data: bytes, ctx: Context, row: dict) -> Reading:
     return reading
 
 
-DIAL_FRAME = 256  # 16 x 16 one-byte indices (onslaught-godot's rebuild/OnslaughtRebuild.Host/HudView.cs, from CByteSprite's use in DrawThreats)
+DIAL_FRAME = 256  # 16 x 16 one-byte indices (CCompass::PlatformInit -> CByteSprite::Load("dial", 16, 16, 20, 4))
+DIAL_MAX_FRAMES = 20
+DIAL_TRANSPARENCY_KEY = 4
 
 
 def read_byte_sprite(data: bytes, _ctx: Context, row: dict) -> Reading:
-    """data\\\\Dial.raw: the rebuild reads its first 16 x 16 frame. Nothing has established the frames after it."""
-    reading = Reading(Account(len(data)), "stored", "onslaught-godot rebuild/OnslaughtRebuild.Host/HudView.cs (frame 0)")
-    reading.account.add(0, min(DIAL_FRAME, len(data)), DECODED, "byte-sprite/frame-0")
-    reading.account.add(DIAL_FRAME, max(0, len(data) - DIAL_FRAME), REFERENCED, "byte-sprite/further-bytes")
-    reading.facts = {"frameBytes": DIAL_FRAME, "wholeFrames": len(data) // DIAL_FRAME}
-    # One frame of 16 x 16 one-byte indices is established; the length holds more, which nothing has read as frames.
+    """data\\\\Dial.raw: CCompass::PlatformInit calls CByteSprite::Load("dial", 16, 16, 20, 4) (bytesprite.cpp), which
+    reads up to 20 sequential 16x16 8-bit indexed frames, RLE-encoding pixels < 4 and stopping at the first empty frame."""
+    whole_frames = len(data) // DIAL_FRAME
+    loaded_frames = 0
+    stopping_frame = None
+    for frame in range(min(DIAL_MAX_FRAMES, whole_frames)):
+        chunk = data[frame * DIAL_FRAME:(frame + 1) * DIAL_FRAME]
+        if any(pixel < DIAL_TRANSPARENCY_KEY for pixel in chunk):
+            loaded_frames += 1
+        else:
+            stopping_frame = frame
+            break
+    frames_read = (stopping_frame + 1) if stopping_frame is not None else min(DIAL_MAX_FRAMES, whole_frames)
+    bytes_read = frames_read * DIAL_FRAME
+    reading = Reading(Account(len(data)), "stored",
+                      "onslaught-decomp src/bytesprite.cpp CByteSprite::Load @0x004184c0 (16x16, max 20 frames, key 4)")
+    if bytes_read:
+        reading.account.add(0, bytes_read, DECODED, "byte-sprite/loaded-frames")
+    if bytes_read < len(data):
+        reading.account.add(bytes_read, len(data) - bytes_read, REFERENCED, "byte-sprite/trailing-bytes")
+    reading.facts = {"frameBytes": DIAL_FRAME, "wholeFrames": whole_frames, "framesLoaded": loaded_frames,
+                     "stoppingFrame": stopping_frame, "bytesRead": bytes_read}
     metadata = found_metadata(WHOLE_FILE, WHOLE_FILE, format="one-byte indices", width=16, height=16, channels=1,
-                              details={"frameBytes": DIAL_FRAME, "framesEstablished": 1,
-                                       "wholeFramesByLength": len(data) // DIAL_FRAME})
+                              frames=loaded_frames,
+                              details={"frameBytes": DIAL_FRAME, "framesLoaded": loaded_frames,
+                                       "stoppingFrame": stopping_frame, "maxFrames": DIAL_MAX_FRAMES,
+                                       "transparencyKey": DIAL_TRANSPARENCY_KEY,
+                                       "wholeFramesByLength": whole_frames})
+    status = DECODED if bytes_read == len(data) and bytes_read > 0 else PARTIAL
     reading.items.append(asset_item("image", "byte-sprite", PurePosixPath(row["path"]).name, offset=0, length=len(data),
-                                    sha=cc.sha256(data), status=PARTIAL, width=16, height=16, metadata=metadata))
+                                    sha=cc.sha256(data), status=status, width=16, height=16, metadata=metadata))
     return reading
 
 
@@ -1411,8 +1447,24 @@ def file_use(catalog: dict, incoming: dict[str, set[str]], ctx: Context, words: 
                 used[lowered].add(evidence)
         if row["family"] in LITERAL_FAMILIES and PurePosixPath(lowered).stem in words:
             used[lowered].add("code:string-literal")
-    for name, _role in physics_names_of(ctx, physics.MESH):
-        used["data/resources/meshes/" + meshcensus._loose_mesh_key(name)].add("physics:mesh")
+    if ctx.physics is not None:
+        has_building = False
+        for statement in ctx.physics["statements"]:
+            beh = next((v["args"][0] for v in statement["values"]
+                        if v["status"] == "read" and v["field"] == "behaviour"), None)
+            is_bldg = statement["kind"] == "unit" and beh == physics.UNIT_BEHAVIOUR_BUILDING
+            if is_bldg:
+                has_building = True
+            for value in statement["values"]:
+                if value["status"] != "read":
+                    continue
+                for role, name in physics.named_references(statement["kind"], value["id"], value["args"]):
+                    if role == physics.MESH:
+                        mesh_name = name + ".msh" if is_bldg and not name.lower().endswith(".msh") else name
+                        used["data/resources/meshes/" + meshcensus._loose_mesh_key(mesh_name)].add("physics:mesh")
+        if has_building:
+            used["data/resources/meshes/" + meshcensus._loose_mesh_key(
+                physics.DEFAULT_BUILDING_RUBBLE_MESH + ".msh")].add("physics:mesh")
     folders = {row["path"].casefold() for row in catalog["files"]}
     for page, links in ctx.links.items():
         base = PurePosixPath(page).parent
@@ -1435,11 +1487,19 @@ def physics_names_of(ctx: Context, role: str) -> list[tuple[str, str]]:
 def join_physics(catalog: dict, ctx: Context, incoming: dict[str, set[str]]) -> dict:
     """The physics values' names joined to what they name: the particle effects, sound effects and HUD icons.
 
-    A join is the game's own lookup key (exact for a particle descriptor, stricmp for an effect, hud\\\\<icon>.tga for an
-    icon); a name that finds nothing is counted, not guessed at.
+    A join is the game's own lookup key (stricmp in MainSet.par for a particle descriptor per
+    CParticleSet::FindByName/LoadAllFromDisk, stricmp for an effect, hud\\\\<icon>.tga for an icon);
+    a name that finds nothing is counted, not guessed at.
     """
     assets = catalog["assets"]
-    particles = {asset["name"]: asset["id"] for asset in assets if asset["type"] == "effect"}
+    particles: dict[str, str] = {}
+    for asset in assets:
+        if asset["type"] == "effect":
+            key = psw.fold(asset["name"])
+            if asset["source"]["container"].casefold() == "data/particlesets/mainset.par":
+                particles[key] = asset["id"]
+            else:
+                particles.setdefault(key, asset["id"])
     sounds: dict[bytes, list[str]] = collections.defaultdict(list)
     for asset in assets:
         if asset["type"] == "sound-effect":
@@ -1459,7 +1519,8 @@ def join_physics(catalog: dict, ctx: Context, incoming: dict[str, set[str]]) -> 
             unresolved[role].append(name)
 
     for name, field in physics_names_of(ctx, physics.PARTICLE):
-        join(physics.PARTICLE, name, field, [particles[name]] if name in particles else [])
+        key = psw.fold(name)
+        join(physics.PARTICLE, name, field, [particles[key]] if key in particles else [])
     for name, field in physics_names_of(ctx, physics.SOUND):
         join(physics.SOUND, name, field, sounds.get(gtd.stricmp_key(name), []))
     for name, field in physics_names_of(ctx, physics.ICON):

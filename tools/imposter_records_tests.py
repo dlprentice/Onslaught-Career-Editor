@@ -12,8 +12,12 @@ def chunk(tag, body):
     return tag + struct.pack("<I", len(body)) + body
 
 
-def label(name=b"Authored tree"):
-    return bytes(4) + name.ljust(64, b"\0") + bytes(8)
+def label(name=b"Authored tree", *, unk30=1, alt=0, unk38=1, views_count=1, num_frames=1, animated=0):
+    buf = bytearray(76)
+    buf[4:4 + len(name)] = name
+    struct.pack_into("<3i", buf, 0x30, unk30, alt, unk38)
+    struct.pack_into("<3i", buf, 0x40, views_count, num_frames, animated)
+    return bytes(buf)
 
 
 def views(*rows):
@@ -25,8 +29,9 @@ def record(*, mesh=7, name=b"Authored tree", view_data=None, extra=b""):
                  + chunk(b"VIEW", views() if view_data is None else view_data) + extra)
 
 
-def collection(*records, count=None, before=b"", after=b""):
-    return chunk(b"IMPS", before + chunk(b"DATA", bytes(8)) + chunk(b"BTXT", b"Authored atlas")
+def collection(*records, count=None, before=b"", after=b"", atlas_size=(1024, 512)):
+    data_payload = struct.pack("<2i", *atlas_size) if atlas_size is not None else bytes(8)
+    return chunk(b"IMPS", before + chunk(b"DATA", data_payload) + chunk(b"BTXT", b"Authored atlas")
                  + chunk(b"IMPO", struct.pack("<I", len(records) if count is None else count) + b"".join(records)) + after)
 
 
@@ -39,12 +44,17 @@ class ImposterReaderTests(unittest.TestCase):
         self.assertEqual(data[item["offset"]:item["offset"] + item["length"]], authored)
         self.assertEqual((item["ordinal"], item["meshResourceId"], item["storedLabel"], item["labelStatus"]),
                          (0, 7, "Authored tree", "terminated-latin1"))
+        self.assertEqual(item["cimpFields"], {"unknown30": 1, "alt": False, "unknown38": 1,
+                                              "views": 1, "numFrames": 1, "animated": False})
+        self.assertIs(item["viewCountMatchesCimp"], True)
+        self.assertEqual(result["atlasSize"], {"width": 1024, "height": 512})
         self.assertEqual(item["viewMetadata"], {"status": "parsed", "countByLength": 1, "reason": None,
                          "views": [{"ordinal": 0, "left": 0., "right": .5, "top": 0., "bottom": 1.,
                                     "width": 2., "height": 4.}]})
         atlas = result["atlas"]
         self.assertEqual(data[atlas["offset"]:atlas["offset"] + atlas["length"]], b"Authored atlas")
-        self.assertEqual([s["field"] for s in item["uninterpreted"]], ["CIMP/prefix", "CIMP/tail"])
+        self.assertEqual([s["field"] for s in item["uninterpreted"]],
+                         ["CIMP/mNext", "CIMP/mMesh", "CIMP/mUnknown28", "CIMP/mFrames"])
 
     def test_empty_set_and_multiple_records_preserve_order(self):
         self.assertEqual(reader.parse_imposter_set(collection())["records"], [])
@@ -99,12 +109,30 @@ class ImposterReaderTests(unittest.TestCase):
             self.assertEqual(item["viewMetadata"]["views"], [])
 
     def test_label_terminator_must_be_inside_its_own_buffer(self):
-        [item] = reader.parse_imposter_set(collection(record(name=b"A" * 64)))["records"]
+        # CDXImposter::mName is 32 bytes (+0x04..+0x24); a NUL past byte 32 must not terminate the name.
+        [item] = reader.parse_imposter_set(collection(record(name=b"A" * 32)))["records"]
         self.assertIsNone(item["storedLabel"])
         self.assertEqual(item["labelStatus"], "unterminated")
         self.assertIn("CIMP/label", [s["field"] for s in item["uninterpreted"]])
+        [at_limit] = reader.parse_imposter_set(collection(record(name=b"B" * 31)))["records"]
+        self.assertEqual((at_limit["storedLabel"], at_limit["labelStatus"]), ("B" * 31, "terminated-latin1"))
         [empty] = reader.parse_imposter_set(collection(record(name=b"")))["records"]
         self.assertEqual((empty["storedLabel"], empty["labelStatus"]), ("", "empty"))
+
+    def test_cimp_animated_and_view_count_agreement(self):
+        cimp = label(b"Anim.msh", alt=1, views_count=2, num_frames=3, animated=1)
+        six_views = views(*([(0, .5, 0, 1, 2, 4)] * 6))
+        body = chunk(b"CIMP", cimp) + chunk(b"IMSH", struct.pack("<i", 11)) + chunk(b"VIEW", six_views)
+        [ok] = reader.parse_imposter_set(collection(chunk(b"IMPT", body)))["records"]
+        self.assertEqual(ok["cimpFields"], {"unknown30": 1, "alt": True, "unknown38": 1,
+                                            "views": 2, "numFrames": 3, "animated": True})
+        self.assertIs(ok["viewCountMatchesCimp"], True)
+        bad_body = chunk(b"CIMP", cimp) + chunk(b"IMSH", struct.pack("<i", 11)) + chunk(b"VIEW", views())
+        [mismatch] = reader.parse_imposter_set(collection(chunk(b"IMPT", bad_body)))["records"]
+        self.assertIs(mismatch["viewCountMatchesCimp"], False)
+        zero_data = reader.parse_imposter_set(collection(chunk(b"IMPT", body), atlas_size=(0, 0)))
+        self.assertIsNone(zero_data["atlasSize"])
+        self.assertIn("DATA", [s["field"] for s in zero_data["uninterpreted"]])
 
     def test_missing_optional_metadata_is_explicit(self):
         [item] = reader.parse_imposter_set(collection(chunk(b"IMPT", chunk(b"IMSH", bytes(4)))))["records"]

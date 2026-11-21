@@ -123,6 +123,17 @@ VALUE_TABLES = {"unit": UNIT, "weapon": WEAPON_VALUES, "weapon-mode": WEAPON_MOD
                 "spawner": SPAWNER_VALUES, "explosion": EXPLOSION_VALUES, "component": COMPONENT_VALUES,
                 "feature": FEATURE_VALUES, "hazard": HAZARD_VALUES}
 
+# CWeaponLanguageName::Apply (onslaught-decomp src/CPhysicsScriptStatements.cpp @0x0043e660): maps 1..13 to english.dat text ids.
+WEAPON_LANGUAGE_TEXT_IDS = {
+    1: 0x00FE0572, 2: 0x00FFE389, 3: 0x0101C1A0, 4: 0x01039FB7, 5: 0x01057DCE,
+    6: 0x01075BE5, 7: 0x010939FC, 8: 0x010B1813, 9: 0x010CF62A, 10: 0x01B1D4BB,
+    11: 0x01B590E8, 12: 0x01B94D15, 13: 0x01BD0942,
+}
+# CUnitData constructor (onslaught-decomp src/WorldPhysicsManager.h) & CBuilding::InitRenderThing (Building.cpp @0x004176c0):
+# serialized unit behaviour 8 (UB_BUILDING) appends ".msh" to both mUnknown2c and default rubble mesh mUnknown30.
+UNIT_BEHAVIOUR_BUILDING = 8
+DEFAULT_BUILDING_RUBBLE_MESH = "m-b-rubble"
+
 
 class PhysicsError(ValueError):
     """The file's framing cannot be walked; nothing past the failure is read."""

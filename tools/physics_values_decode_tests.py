@@ -155,5 +155,12 @@ class RebuildTableTests(unittest.TestCase):
                 self.assertLessEqual(len(roles), row[0].count("s"), f"{family} {value_id}")
 
 
+    def test_weapon_language_text_ids_cover_all_thirteen_cases(self):
+        self.assertEqual(sorted(physics.WEAPON_LANGUAGE_TEXT_IDS), list(range(1, 14)))
+        self.assertEqual(physics.WEAPON_LANGUAGE_TEXT_IDS[1], 0x00FE0572)
+        self.assertEqual(physics.WEAPON_LANGUAGE_TEXT_IDS[13], 0x01BD0942)
+        self.assertEqual((physics.UNIT_BEHAVIOUR_BUILDING, physics.DEFAULT_BUILDING_RUBBLE_MESH), (8, "m-b-rubble"))
+
+
 if __name__ == "__main__":
     unittest.main()

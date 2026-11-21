@@ -132,6 +132,12 @@ ARG_ROLES = {
     ("GetThingRef", 0): "thing-name", ("Teleport", 0): "thing-name", ("PlayCutscene", 0): "thing-name",
     ("PostEvent", 0): "event", ("PlaySample", 0): "sample", ("SpawnParticle", 0): "effect",
     ("EnableSpawner", 0): "spawner", ("DisableSpawner", 0): "spawner",
+    ("EnableWeapon", 0): "weapon", ("DisableWeapon", 0): "weapon",
+    ("NumContained", 0): "unit-contained",
+    ("SetGoodieState", 0): "goodie", ("GetGoodieState", 0): "goodie",
+    ("PlayAnimation", 0): "animation", ("PlayAnimationWait", 0): "animation",
+    ("SetSegmentHealth", 0): "segment", ("ResetSegmentHealth", 0): "segment", ("SetSegmentVulnerable", 0): "segment",
+    ("AddHelpMessage", 0): "help-text",
     ("PrimaryObjectiveComplete", 0): "objective-number", ("SecondaryObjectiveComplete", 0): "objective-number",
     ("PrimaryObjectiveFailed", 0): "objective-number", ("SecondaryObjectiveFailed", 0): "objective-number",
 }

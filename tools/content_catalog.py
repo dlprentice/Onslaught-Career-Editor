@@ -56,7 +56,10 @@ import dds_census  # noqa: E402
 import game_tables_decode as gtd  # noqa: E402
 import imposter_records  # noqa: E402
 import language_dat_decode  # noqa: E402
+import media_readers  # noqa: E402
 import named_things  # noqa: E402
+import particle_set_walk as psw  # noqa: E402
+import physics_values_decode as pvd  # noqa: E402
 import world_resources_decode as wrd  # noqa: E402
 import worldheaders_decode  # noqa: E402
 import xap_bank_walk  # noqa: E402
@@ -113,6 +116,20 @@ L_PHYSICS = cite("WorldPhysicsManager.cpp", "UPhysicsManager::Reload", "0x005108
 L_BECONFIG = gtd.L_BE_RELOAD + " -> " + gtd.L_BE_LOAD
 L_BYTESPRITE = cite("bytesprite.cpp", "CByteSprite::Load", "0x004184c0")
 L_GOODIES = cite("FEPGoodies.cpp", "CFEPGoodies::Deserialise", "0x0045c870")
+L_TEX_INITDEV = cite("DXTexture.cpp", "CDXTexture::InitDeviceObjects", "0x00557a90")
+L_SYSTEM_RUN = cite("System.cpp", "CSystem::Run", "0x004f0330")
+L_PARTICLE_FIND = cite("ParticleSet.cpp", "CParticleSet::FindByName", "0x004cd7a0")
+L_PD_MESH = cite("ParticleDescriptor.cpp", "CPDMesh::Load", "0x004c4b00")
+L_RTMESH_INIT = cite("rtmesh.cpp", "CRTMesh::Init", "0x004dc370")
+L_BUILDING_INIT = cite("Building.cpp", "CBuilding::InitRenderThing", "0x004176c0")
+L_RTBUILDING_INIT = cite("RTBuilding.cpp", "CRTBuilding::Init", "0x004db8f0")
+L_WEAPON_LANG = cite("CPhysicsScriptStatements.cpp", "CWeaponLanguageName::Apply", "0x0043e660")
+L_WEAPON_ICON = cite("CPhysicsScriptStatements.cpp", "CWeaponIconName::Apply", "0x00434f20")
+L_UNIT_WEAPON = cite("Unit.cpp", "CUnit::EnableWeapon / DisableWeapon", "0x004fe2b0")
+L_UNIT_SPAWNER = cite("Unit.cpp", "CUnit::EnableSpawner / DisableSpawner", "0x004fe390")
+L_SCRIPT_GOODIE = cite("MissionScript/IScript.cpp", "IScript::SetGoodieState / GetGoodieState", "0x00533a70")
+L_SCRIPT_HELP = cite("MissionScript/IScript.cpp", "IScript::AddHelpMessage", "0x00533b30")
+L_SCRIPT_CONTAINED = cite("MissionScript/IScript.cpp", "IScript::NumContained", "0x00535d70")
 
 # Survey families: (id, matcher on the lower-cased relative path, content kind, loader, existing parser, status).
 # Status: "catalogued" = this tool emits asset records; "parsed-elsewhere" = a repository tool parses it but this phase
@@ -153,18 +170,22 @@ FAMILIES = (
      "#included by FrontEndText.cpp, MenuItem.cpp, FEPGoodies.cpp (build-time)",
      "tools/language_dat_decode.py:parse_text_stf (symbol names)", "inventoried"),
     ("particle-set-par", lambda p: p.startswith("data/particlesets/") and p.endswith(".par"),
-     "particle effects", L_PARTICLES, "tools/content_catalog.py (descriptor names, types, textures)", "catalogued"),
+     "particle effects", L_PARTICLES, "tools/particle_set_walk.py; tools/content_catalog.py "
+     "(descriptor coordinates, types, textures, meshes, internal references)", "catalogued"),
     ("world-headers-dat", lambda p: p == "data/worldheaders.dat", "level headers", L_HEADERS,
      "tools/worldheaders_decode.py", "catalogued"),
     ("default-physics-dat", lambda p: p == "data/default physics.dat", "physics/unit definitions", L_PHYSICS,
-     "tools/cmsh_animation_usage_census.py (definition names, mesh and behaviour fields only)", "catalogued"),
+     "tools/physics_values_decode.py; tools/content_catalog.py (all 9 statement kinds, typed values, joins)", "catalogued"),
     ("battle-engine-config-dat", lambda p: p == "data/battle engine configurations.dat", "battle engine loadouts",
      L_BECONFIG, "tools/game_tables_decode.py:parse_battle_engine_configurations; tools/battle_engine_config_decode.py "
      "(byte spans)", "catalogued"),
-    ("dial-raw", lambda p: p == "data/dial.raw", "HUD sprite (raw bytes)", L_BYTESPRITE + " (data\\%s.raw)", "none",
-     "unparsed"),
+    ("dial-raw", lambda p: p == "data/dial.raw", "HUD sprite (raw 8-bit indexed frames)",
+     L_BYTESPRITE + " (data\\%s.raw, 16x16, max 20 frames, key 4; DXCompass.cpp)",
+     "tools/content_catalog.py:catalog_images", "catalogued"),
     ("splash-tga", lambda p: p.startswith("data/textures/") and p.endswith(".tga"), "image",
-     "startup consumer not established", "none", "unparsed"),
+     "onslaught-decomp src/System.cpp CSystem::Init @0x004efb10 / " + L_SYSTEM_RUN + " -> " + L_TEX_FIND + " -> "
+     + L_TEX_INITDEV + " (gFMVSplash in " + L_FMV + ")",
+     "tools/media_readers.py:walk_tga; tools/content_catalog.py:catalog_images", "catalogued"),
     ("manual", lambda p: p.startswith("manuals/"), "manual (HTML and images)", "not read by the game", "none",
      "not-content"),
     ("executable-code", lambda p: "/" not in p and (p.endswith(".exe") or p.endswith(".dll")), "code",
@@ -405,6 +426,88 @@ def catalog_textures(game: Path, files: list[dict]) -> tuple[list[dict], dict[st
         records.append(rec)
         index[rel.casefold()] = rec
     return records, index
+
+
+DIAL_FRAME_SIDE = 16
+DIAL_FRAME_BYTES = DIAL_FRAME_SIDE * DIAL_FRAME_SIDE
+DIAL_MAX_FRAMES = 20
+DIAL_TRANSPARENCY_KEY = 4
+DIAL_PALETTE_A4R4G4B4 = ["0x0000", "0x2222", "0x2444", "0x2666"]  # CDXCompass::DrawThreats (DXCompass.cpp)
+
+
+def catalog_images(game: Path, files: list[dict]) -> list[dict]:
+    """Standalone non-DDS image assets read directly from disk: data/textures/*.tga (splash.tga) and data/Dial.raw."""
+    records = []
+    for row in files:
+        fam, rel = row["family"], row["path"]
+        if fam not in ("splash-tga", "dial-raw"):
+            continue
+        data = read_install_file(game / rel)
+        digest = sha256(data)
+        name = PurePosixPath(rel).name
+        if fam == "splash-tga":
+            rec = base_record("image:" + rel.casefold(), "image", name, rel, digest, envelope="tga", offset=0,
+                              length=len(data), raw_sha=digest, sha_scope="whole file",
+                              parser="tools/media_readers.py:walk_tga + " + TOOL + ":catalog_images")
+            rec["provenance"]["loader"] = (L_SYSTEM_INIT + "; " + L_SYSTEM_RUN + " -> " + L_TEX_FIND + " -> "
+                                           + L_TEX_INITDEV + "; " + L_FMV)
+            try:
+                walk = media_readers.walk_tga(data)
+            except media_readers.FormatError as error:
+                rec["image"] = {"status": "unparsed", "format": "tga", "width": None, "height": None,
+                                "reason": str(error)}
+            else:
+                facts = walk.facts
+                alpha_bits = facts["descriptor"] & 0x0F
+                rec["image"] = {"status": "parsed", "format": "tga", "width": facts["width"],
+                                "height": facts["height"], "bitsPerPixel": facts["bitsPerPixel"],
+                                "descriptor": facts["descriptor"], "alphaBits": alpha_bits,
+                                "role": "fmv-splash" if name.casefold() == "splash.tga" else "standalone-tga"}
+                rec["upscale"] = {"sourceResolution": [facts["width"], facts["height"]],
+                                  "storedFormat": f"TGA-{facts['bitsPerPixel']}bpp", "sourceFormat": "TGA",
+                                  "mipLevels": 1, "alpha": "graded" if alpha_bits else "none", "compressed": False,
+                                  "palette": None, "premultipliedAlpha": None,
+                                  "tiling": {"status": "no-mesh-evidence", "uvRange": None, "meshes": 0},
+                                  "suggestedTreatment": ["uncompressed TGA source; preserve aspect ratio and dimensions for fullscreen FMV splash"],
+                                  "treatmentBasis": "rule-derived from TGA header; no visual review"}
+            records.append(rec)
+        else:
+            rec = base_record("image:" + rel.casefold(), "image", name, rel, digest, envelope="byte-sprite", offset=0,
+                              length=len(data), raw_sha=digest, sha_scope="whole file",
+                              parser=TOOL + ":catalog_images")
+            rec["provenance"]["loader"] = L_BYTESPRITE + " (CCompass::PlatformInit, CDXCompass::DrawThreats, DXCompass.cpp)"
+            whole_frames = len(data) // DIAL_FRAME_BYTES
+            frame_opaque = []
+            stopping_frame = None
+            for fi in range(min(DIAL_MAX_FRAMES, whole_frames)):
+                chunk = data[fi * DIAL_FRAME_BYTES:(fi + 1) * DIAL_FRAME_BYTES]
+                opaque = sum(1 for b in chunk if b < DIAL_TRANSPARENCY_KEY)
+                if opaque == 0:
+                    stopping_frame = fi
+                    break
+                frame_opaque.append(opaque)
+            frames_read = (stopping_frame + 1) if stopping_frame is not None else min(DIAL_MAX_FRAMES, whole_frames)
+            bytes_read = frames_read * DIAL_FRAME_BYTES
+            trailing = len(data) - bytes_read
+            rec["image"] = {
+                "status": "parsed" if whole_frames > 0 else "unparsed",
+                "format": "byte-sprite-8bit-indexed", "width": DIAL_FRAME_SIDE, "height": DIAL_FRAME_SIDE,
+                "maxFrames": DIAL_MAX_FRAMES, "transparencyKey": DIAL_TRANSPARENCY_KEY,
+                "framesLoaded": len(frame_opaque), "stoppingFrame": stopping_frame,
+                "bytesRead": bytes_read, "trailingBytes": trailing, "wholeFramesByLength": whole_frames,
+                "frameOpaquePixels": frame_opaque, "usedFramesInDrawThreats": [0, 1, 2],
+                "paletteA4R4G4B4": DIAL_PALETTE_A4R4G4B4,
+                "role": "hud-compass-dial",
+            }
+            rec["upscale"] = {"sourceResolution": [DIAL_FRAME_SIDE, DIAL_FRAME_SIDE],
+                              "storedFormat": "8-bit indexed byte-sprite", "sourceFormat": None,
+                              "mipLevels": 1, "alpha": "binary", "compressed": False,
+                              "palette": None, "premultipliedAlpha": None,
+                              "tiling": {"status": "no-mesh-evidence", "uvRange": None, "meshes": 0},
+                              "suggestedTreatment": ["very small 16x16 indexed HUD sprite (6 loaded frames, frames 0-2 drawn by DrawThreats): redraw cleanly rather than upscaling"],
+                              "treatmentBasis": "rule-derived from CByteSprite::Load (16x16, key 4); no visual review"}
+            records.append(rec)
+    return records
 
 
 def expected_texture_file(name: str, frame: int, tex_format: int, compressible: bool) -> str:
@@ -695,9 +798,12 @@ def catalog_mesh(stream: bytes, *, asset_id: str, name: str, container: str, con
                       parser="tools/cmsh_static_preview.py:parse_cmsh_stream + "
                              "tools/cmsh_animation_usage_census.py:mesh_record_from_stream")
     emitters = meta.get("emitters") or {}
-    emitter_count = len(emitters.get("rows") or []) if emitters.get("status") in ("decoded", "absent") else None
+    emitter_rows = emitters.get("rows") or []
+    emitter_count = len(emitter_rows) if emitters.get("status") in ("decoded", "absent") else None
+    effect_emitters = sorted({r["name"] for r in emitter_rows if isinstance(r.get("name"), str)
+                              and r["name"].startswith("_")})
     rec["mesh"] = {"internalName": record.get("internalName"), **mesh_summary(meta),
-                   "textures": [], "emitters": emitter_count}
+                   "textures": [], "emitters": emitter_count, "effectEmitters": effect_emitters}
     slot_uv = uv_ranges(mesh) if mesh is not None else {}
     for slot in meta.get("textures") or []:
         fmt = requested_texture_format(slot["name"], slot["nameStatus"])
@@ -1087,9 +1193,11 @@ def collect_chunk(collect: dict, rel: str, rec: dict, source_sha: str, chunk, pa
         stats[f"nestedTextures{tag}"] += len(ids)
         if tag == "IMPS":
             atlas_ids = []
+            atlas_size = None
             try:
                 parsed = imposter_records.parse_imposter_set(payload)
                 imposters = parsed["records"]
+                atlas_size = parsed["atlasSize"]
                 atlas = parsed["atlas"]
                 if atlas is not None:
                     atlas_sha = sha256(payload[atlas["offset"]:atlas["offset"] + atlas["length"]])
@@ -1102,8 +1210,8 @@ def collect_chunk(collect: dict, rel: str, rec: dict, source_sha: str, chunk, pa
                 imposters, stats["imposterUnparsed"] = [], stats["imposterUnparsed"] + 1
                 rec["archive"]["imposterError"] = str(error)
             collect["imposters"].append({"archive": rel, "archiveRec": rec, "descriptors": atlas_ids,
-                                         "imposters": imposters, "sha": source_sha, "base": base,
-                                         "chunk": chunk.index})
+                                         "atlasSize": atlas_size, "imposters": imposters, "sha": source_sha,
+                                         "base": base, "chunk": chunk.index})
         elif tag == "PLAT":
             collect["platform"].append({"archive": rel, "descriptors": ids})
         else:
@@ -1260,10 +1368,14 @@ def link_imposters(collect: dict, descriptors_by_id: dict) -> list[dict]:
             asset["imposter"] = {
                 "status": "partial", "ordinal": imp["ordinal"], "meshResourceId": imp["meshResourceId"],
                 "storedLabel": imp["storedLabel"], "labelStatus": imp["labelStatus"],
+                "cimpFields": imp["cimpFields"], "atlasSize": row.get("atlasSize"),
+                "viewCountMatchesCimp": imp["viewCountMatchesCimp"],
                 "viewMetadata": imp["viewMetadata"],
                 "uninterpreted": [{**part, "offset": row["base"] + part["offset"]} for part in imp["uninterpreted"]],
-                "limits": "CIMP fields outside the label and set-level DATA remain uninterpreted; "
-                          "view count is by length, not runtime angle selection or observed use"}
+                "limits": "CIMP runtime pointers (mNext, mMesh, mFrames) and mUnknown28 remain uninterpreted; "
+                          "mName[32], mUnknown30, mAlt, mUnknown38, mViews, mNumFrames, mAnimated and IMPS/DATA "
+                          "atlas dimensions are decoded from CDXImposter (imposter.h, DXImposter.cpp); view count "
+                          "is verified against mViews * mNumFrames, not runtime angle selection or observed use"}
             asset["relationships"].append(mesh_relation(imp))
             asset["relationships"].append(relation(
                 "loaded-by-archive", row["archiveRec"]["id"], "resolved",
@@ -1284,8 +1396,8 @@ def link_imposters(collect: dict, descriptors_by_id: dict) -> list[dict]:
     return records
 
 
-# EPhysicsStatement (CPhysicsScriptStatements.h): PST_UNIT, PST_WEAPON, PST_EXPLOSION, PST_FEATURE, PST_HAZARD
-PHYSICS_STATEMENTS = {1: "unit", 2: "weapon", 6: "explosion", 8: "feature", 9: "hazard"}
+# EPhysicsStatement (CPhysicsScriptStatements.h): all nine statement kinds in default physics.dat
+PHYSICS_STATEMENTS = dict(pvd.STATEMENT_KINDS)
 # Which behaviours have a squad (UPhysicsManager::SpawnSquad, 0050f4b0) is tools/named_things.py:squad_class; LoadWorld
 # asks it of the first unit definition of a name.
 L_SPAWNSQUAD = cite("WorldPhysicsManager.cpp", "UPhysicsManager::SpawnSquad", "0x0050f4b0")
@@ -1294,27 +1406,12 @@ TEXT_TABLE_ID = "text-table:data/language/english.dat"
 
 
 def physics_names(data: bytes) -> dict:
-    """The Unit, Weapon, Explosion, Feature and Hazard statement names in load order (UPhysicsManager::Reload; each
-    kind's list is appended to, and its lookups take the first strcmp match)."""
-    if len(data) < 6 or struct.unpack_from("<H", data, 0)[0] != 0x12:
-        raise ValueError("unsupported physics-definition framing")
+    """All physics statement names per kind in load order (UPhysicsManager::Reload; each kind's list is appended to,
+    and its lookups take the first strcmp match)."""
+    parsed = pvd.parse_physics(data)
     out: dict[str, list[str]] = {kind: [] for kind in PHYSICS_STATEMENTS.values()}
-    offset = 2
-    while struct.unpack_from("<i", data, offset)[0] != -1:
-        rtype, _size = struct.unpack_from("<II", data, offset)
-        offset += 8
-        end = data.index(b"\0", offset)
-        name = data[offset:end].decode("latin-1")
-        offset = end + 1
-        while True:
-            _fid, size = struct.unpack_from("<II", data, offset)
-            offset += 8 + size
-            marker = struct.unpack_from("<i", data, offset)[0]
-            offset += 4
-            if marker == -1:
-                break
-        if rtype in PHYSICS_STATEMENTS:
-            out[PHYSICS_STATEMENTS[rtype]].append(name)
+    for stmt in parsed["statements"]:
+        out[stmt["kind"]].append(stmt["name"])
     return out
 
 
@@ -1486,57 +1583,94 @@ def names_thing_relation(name: str, natives: list[str], entries: list[dict], thi
 
 def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], script_ids: set[str],
                   text: dict, stats: collections.Counter) -> dict:
-    """WRES world bodies decoded in CWorld::LoadWorld's order: definitions, placements (things naming a physics
-    definition), markers (every other thing), waypoint paths and the compiled mission scripts, with their joins."""
-    out = {"definitions": [], "placements": [], "markers": [], "paths": [], "scripts": [], "worlds": {},
-           "registries": {}}
+    """WRES world bodies decoded in CWorld::LoadWorld's order: definitions (all 9 physics statement kinds),
+    placements (things naming a physics definition), markers (every other thing), waypoint paths and the compiled
+    mission scripts, with their joins."""
+    out = {"definitions": [], "defByKindName": {}, "defByKindFold": {}, "physicsStatements": [],
+           "placements": [], "markers": [], "paths": [], "scripts": [], "worlds": {}, "registries": {}}
     physics_path = game / "data" / "default physics.dat"
     if not physics_path.is_file():
         return out
     physics_bytes = read_install_file(physics_path)
     physics = meshcensus._physics_mesh_definitions(physics_bytes)
-    names = physics_names(physics_bytes)
+    parsed_physics = pvd.parse_physics(physics_bytes)
+    names: dict[str, list[str]] = {kind: [] for kind in PHYSICS_STATEMENTS.values()}
+    for stmt in parsed_physics["statements"]:
+        names[stmt["kind"]].append(stmt["name"])
     physics_sha = sha256(physics_bytes)
-    unit_shell = {}
+    unit_shell_by_name: dict[str, list[dict]] = collections.defaultdict(list)
     for unit in physics["unitDefinitions"]:
-        unit_shell.setdefault(unit["definition"], unit)
+        unit_shell_by_name[unit["definition"]].append(unit)
     # GetUnitData returns the first unit definition of a name (UPhysicsManager::Reload appends them in file order)
     behaviours = named_things.first_behaviours(physics["unitDefinitions"])
     lookup = {"units": set(names["unit"]), "features": set(names["feature"]), "hazards": set(names["hazard"]),
               "squadless": {name for name, behaviour in behaviours.items()
                             if named_things.squad_class(behaviour) is None}}
-    kinds_of: dict[str, set] = collections.defaultdict(set)
-    for kind, rows in names.items():
-        for name in rows:
-            kinds_of[name].add(kind)
-    def_by_name = {}
-    for name in sorted(kinds_of, key=lambda n: (fold(n), n)):
-        cands = physics["definitions"].get(name, [])
-        rec = base_record(f"definition:{fold(name)}", "definition", name, "data/default physics.dat", physics_sha,
-                          envelope="physics-statement-table", offset=None, length=0, raw_sha=physics_sha,
-                          sha_scope="whole definitions file", parser=TOOL + ":physics_names + tools/"
-                          "cmsh_animation_usage_census.py:_physics_mesh_definitions")
+    def_by_kind_name: dict[tuple[str, str], dict] = {}
+    def_by_kind_fold: dict[tuple[str, str], dict] = {}
+    seen_ids: collections.Counter = collections.Counter()
+    seen_exact: set[tuple[str, str]] = set()
+    unit_shell_cursor: collections.Counter = collections.Counter()
+    for stmt_index, stmt in enumerate(parsed_physics["statements"]):
+        kind, name = stmt["kind"], stmt["name"]
+        base_id = f"definition:{kind}:{fold(name)}"
+        dup = seen_ids[base_id]
+        seen_ids[base_id] += 1
+        rid = base_id if dup == 0 else f"{base_id}#{dup}"
+        found_by_name = (kind, name) not in seen_exact
+        seen_exact.add((kind, name))
+        stmt_bytes = physics_bytes[stmt["offset"]:stmt["end"]]
+        rec = base_record(rid, "definition", name, "data/default physics.dat", physics_sha,
+                          envelope=f"physics-statement({kind})", offset=stmt["offset"], length=len(stmt_bytes),
+                          raw_sha=sha256(stmt_bytes), sha_scope="physics statement bytes",
+                          parser="tools/physics_values_decode.py:parse_physics + " + TOOL + ":catalog_world",
+                          chunk_path=[stmt_index])
         rec["provenance"]["loader"] = L_PHYSICS
-        shell = unit_shell.get(name)
-        rec["definition"] = {"kinds": sorted(kinds_of[name]), "memberShell": shell["memberShell"] if shell else None,
-                             "behaviour": shell["factorySelector"] if shell else None,
-                             "meshNames": [c["mesh"] for c in cands]}
-        for c in cands:
-            target = loose.get("data/resources/meshes/" + meshcensus._loose_mesh_key(c["mesh"]))
-            rec["relationships"].append(relation(
-                "uses-mesh", target["id"] if target else None, "resolved" if target else "unresolved",
-                [evidence("data", "data/default physics.dat", f"record type {c['physicsRecordType']} field "
-                          f"{c['meshFieldId']} names mesh {c['mesh']!r} (onslaught-preservation "
-                          "formats/wres-instance-join.md)")], targetName=c["mesh"]))
+        shell = None
+        if kind == "unit":
+            shells = unit_shell_by_name.get(name, [])
+            idx = unit_shell_cursor[name]
+            unit_shell_cursor[name] += 1
+            shell = shells[idx] if idx < len(shells) else (shells[0] if shells else None)
+        read_values = [v for v in stmt["values"] if v["status"] == "read"]
+        unread_values = len(stmt["values"]) - len(read_values)
+        raw_behaviour = next((v["args"][0] for v in read_values if v["field"] == "behaviour"), None)
+        is_building = kind == "unit" and raw_behaviour == pvd.UNIT_BEHAVIOUR_BUILDING
+        mesh_names: list[str] = []
+        for v in read_values:
+            for role, target_name in pvd.named_references(kind, v["id"], v["args"]):
+                if role == pvd.MESH:
+                    eff = target_name + ".msh" if is_building and not target_name.lower().endswith(".msh") else target_name
+                    mesh_names.append(eff)
+        if is_building:
+            mesh_names.append(pvd.DEFAULT_BUILDING_RUBBLE_MESH + ".msh")
+        rec["definition"] = {
+            "status": "parsed" if unread_values == 0 else "partial",
+            "kind": kind, "kinds": [kind], "statementIndex": stmt_index,
+            "foundByName": found_by_name,
+            "memberShell": shell["memberShell"] if shell else None,
+            "behaviour": shell["factorySelector"] if shell else None,
+            "meshNames": mesh_names,
+            "valueCount": len(stmt["values"]),
+            "unreadValues": unread_values,
+            "values": [{"id": v["id"], "field": v["field"],
+                        "args": [None if (isinstance(a, float) and not (a == a and abs(a) != float("inf"))) else a
+                                 for a in v["args"]]} for v in read_values],
+        }
         out["definitions"].append(rec)
-        def_by_name[name] = rec
+        out["physicsStatements"].append((rec, stmt, is_building))
+        if found_by_name:
+            def_by_kind_name[(kind, name)] = rec
+        def_by_kind_fold.setdefault((kind, psw.fold(name)), rec)
+    out["defByKindName"] = def_by_kind_name
+    out["defByKindFold"] = def_by_kind_fold
     archive_by_rel = {a["source"]["container"]: a for a in archives}
     english = text.get("english")
     text_ids = {e["id"] for e in english["entries"]} if english else set()
     symbol_of = {ident: name for name, ident in text.get("symbols", {}).items()}
 
-    def def_relation(rtype: str, name: str, rule: str, source: str = wrd.L_LOADWORLD) -> dict:
-        d = def_by_name.get(name)
+    def def_relation(rtype: str, kind: str, name: str, rule: str, source: str = wrd.L_LOADWORLD) -> dict:
+        d = def_by_kind_name.get((kind, name))
         return relation(rtype, d["id"] if d else None, "resolved" if d else "unresolved",
                         [evidence("loader-code", source, rule)], targetName=name)
 
@@ -1644,8 +1778,9 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
                     if oid == 28:
                         rec["placement"]["squad"] = init["squad"]
                     rec["relationships"].append(def_relation(
-                        "instance-of", t["definition"], "the record's name string is passed to "
-                        "UPhysicsManager::GetUnitData / GetFeatureData (strcmp)"))
+                        "instance-of", "feature" if oid == 35 else "unit", t["definition"],
+                        "the record's name string is passed to UPhysicsManager::GetFeatureData (strcmp)" if oid == 35
+                        else "the record's name string is passed to UPhysicsManager::GetUnitData (strcmp)"))
                     want = 35 if oid == 35 else 8
                     exact = []
                     for cand in physics["definitions"].get(t["definition"], []):
@@ -1660,8 +1795,13 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
                             evidence("loader-code", L_READ_RESOURCES + " -> " + L_MESH_DESERIALIZE,
                                      f"this archive's MESH chunk {exact[0]['chunk']} loads that mesh")]))
                     else:
+                        reason = f"{len(exact)} same-archive named MESH candidates"
+                        if tag == "BSWD" and t["diesOn"] != -1 and t["diesOn"] < level:
+                            reason += " (base-world record dies before this level, so LoadWorld skips its mesh)"
+                        elif oid == 28 and init["squad"]["amount"] == 0:
+                            reason += " (squad amount is 0, so CSquad::Init spawns no units)"
                         rec["relationships"].append(relation("uses-mesh", None, "unresolved", [evidence(
-                            "data", "data/default physics.dat", f"{len(exact)} same-archive named MESH candidates")]))
+                            "data", "data/default physics.dat", reason)]))
                     stats["placements"] += 1
                 else:
                     rec["marker"] = dict(common)
@@ -1674,13 +1814,13 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
                         rec["marker"]["definition"] = t["definition"]
                         rec["marker"]["diesOn"] = t["diesOn"]
                         rec["relationships"].append(def_relation(
-                            "instance-of", t["definition"], "a hazard's name string is passed to "
+                            "instance-of", "hazard", t["definition"], "a hazard's name string is passed to "
                             "UPhysicsManager::GetHazardData (strcmp)"))
                     if "spawner" in init:
                         sp = init["spawner"]
                         if sp["spawnUnit"]:
                             rec["relationships"].append(def_relation(
-                                "spawns-unit", sp["spawnUnit"], "a spawner's spawn-unit string names a unit "
+                                "spawns-unit", "unit", sp["spawnUnit"], "a spawner's spawn-unit string names a unit "
                                 "definition (CSpawnerInitThing::Load; strcmp lookup)", wrd.L_INITLOAD))
                         if sp["spawnerSpawnScript"]:
                             rec["relationships"].append(script_relation(
@@ -1745,9 +1885,14 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
                 # the VM holds a signed int; CText::GetString takes the DWORD id
                 "textIds": sorted({a["value"] & 0xFFFFFFFF for r in ("text", "text-speaker") for a in roles[r]
                                    if isinstance(a["value"], int)}),
-                "units": values("unit"), "waypointPaths": values("waypoint-path"), "thingNames": values("thing-name"),
-                "scripts": values("script"), "postedEvents": values("event"), "samples": values("sample"),
-                "effects": values("effect"), "spawners": values("spawner"), "emitters": values("emitter"),
+                "helpTextIds": sorted({a["value"] & 0xFFFFFFFF for a in roles["help-text"]
+                                       if isinstance(a["value"], int)}),
+                "units": values("unit"), "containedUnits": values("unit-contained"),
+                "waypointPaths": values("waypoint-path"), "thingNames": values("thing-name"),
+                "scripts": [v for v in values("script") if v], "postedEvents": values("event"),
+                "samples": values("sample"), "effects": values("effect"), "spawners": values("spawner"),
+                "weapons": values("weapon"), "goodies": [v for v in values("goodie") if isinstance(v, int)],
+                "animations": values("animation"), "segments": values("segment"), "emitters": values("emitter"),
                 "nonLiteralArguments": {r: sum(1 for a in roles[r] if a["value"] is None) for r in roles
                                         if any(a["value"] is None for a in roles[r])},
                 "argumentRule": "a CALL's arguments are its n preceding OP_PUSH instructions (" + wrd.L_SPAWNMESHES
@@ -1781,11 +1926,27 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
                             f"argument {a['argument']} is a text id (the int as a DWORD); english.dat " + (
                                 "has an entry with that id" if ok else "has no entry with that id"))],
                         textId=text_id, textSymbol=symbol_of.get(text_id), role=role))
+            for text_id in rec["scriptCode"]["helpTextIds"]:
+                ok = text_id in text_ids
+                stats["scriptHelpTextIdsResolved" if ok else "scriptHelpTextIdsUnresolved"] += 1
+                note = ("retail AddHelpMessage only displays when arg == 2302408 (via Localization_GetStringById(0xdd))"
+                        + ("; this id matches the retail guard" if text_id == 2302408 else
+                           "; english.dat holds this id, though retail PC ignores ids other than 2302408"))
+                rec["relationships"].append(relation(
+                    "uses-text", TEXT_TABLE_ID if ok else None, "resolved" if ok else "unresolved", [evidence(
+                        "loader-code", L_SCRIPT_HELP, note)],
+                    textId=text_id, textSymbol=symbol_of.get(text_id), role="help"))
             for name in values("unit"):
-                stats["scriptUnitsResolved" if name in def_by_name else "scriptUnitsUnresolved"] += 1
+                stats["scriptUnitsResolved" if ("unit", name) in def_by_kind_name else "scriptUnitsUnresolved"] += 1
                 rec["relationships"].append(def_relation(
-                    "spawns-unit", name, "SpawnThing's first argument goes to UPhysicsManager::GetUnitData and "
+                    "spawns-unit", "unit", name, "SpawnThing's first argument goes to UPhysicsManager::GetUnitData and "
                     "SpawnThingByName (strcmp)", wrd.L_NATIVES + " SpawnThing"))
+            for name in values("unit-contained"):
+                stats["scriptContainedUnitsResolved" if ("unit", name) in def_by_kind_name
+                      else "scriptContainedUnitsUnresolved"] += 1
+                rec["relationships"].append(def_relation(
+                    "references-unit", "unit", name, "NumContained compares its argument with each contained unit's "
+                    "mUnitData->mName (strcmp)", L_SCRIPT_CONTAINED))
             for name in values("waypoint-path"):
                 hit = next((pid for _t, pid, p in path_ids_here if fold(p["name"]) == fold(name)), None)
                 stats["scriptPathsResolved" if hit else "scriptPathsUnresolved"] += 1
@@ -1795,6 +1956,9 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
                         "the first path whose name matches (_stricmp) in CWaypointManager::mPaths (the base world's "
                         "paths load first)")], targetName=name))
             for name in values("script"):
+                if not name:
+                    # IScript::SpawnThing and CComplexThing::SetScript treat an empty string as no script.
+                    continue
                 rec["relationships"].append(script_relation("sets-script", name, "SpawnThing's fourth argument, "
                                                             "SetScript's and SetSpawnScript's names a script"))
             # string literals only: Teleport also takes a position, which names nothing
@@ -1939,58 +2103,332 @@ def world_summary(w: dict) -> dict:
 PAR_TEXTURE_PREFIX = 32  # CDXParticleTexture::Get looks up path + 32 ("C:\dev\Onslaught2\data\textures\")
 
 
-def catalog_particles(game: Path, files: list[dict], dindex: DescriptorIndex) -> list[dict]:
+def catalog_particles(game: Path, files: list[dict], dindex: DescriptorIndex, loose: dict,
+                      stats: collections.Counter) -> list[dict]:
+    """Particle descriptors from data/ParticleSets/*.par walked by tools/particle_set_walk.py.
+
+    Resolves texture slots (Blend_Mode defaults to 0 per ParticleDescriptor constructors, so mBlendMode + 1 == 1 ->
+    TEXFMT_R5G6B5 unless overridden), PD_MESH mesh lookups (CPDMesh::Load strips to the last backslash and calls
+    CMesh::GetMesh), and all internal REFERENCE / FLOAT_REFERENCE links within each set (stricmp).
+    """
     records = []
     for row in files:
         if row["family"] != "particle-set-par":
             continue
         rel = row["path"]
         data = read_install_file(game / rel)
-        lines = data.decode("latin-1").splitlines()
-        blocks, current = [], None
-        for line in lines:
-            key, _, value = line.partition(" ")
-            if key == "Particle_Descriptor_Type":
-                current = {"type": int(value), "fields": []}
-                blocks.append(current)
-            elif current is not None:
-                current["fields"].append((key, value))
-        for ordinal, block in enumerate(blocks):
-            name = next((v for k, v in block["fields"] if k == "Particle_Descriptor_Name"), "")
-            rec = base_record(f"effect:{rel.casefold()}#{ordinal}", "effect", name, rel, sha256(data),
-                              envelope="token-archive-text", offset=None, length=0, raw_sha=sha256(data),
-                              sha_scope="whole particle-set file", parser=TOOL + ":catalog_particles",
+        file_sha = sha256(data)
+        walked_error = None
+        try:
+            walked = psw.walk_descriptors(data)
+            blocks = walked["descriptors"]
+        except psw.ParticleSetError as error:
+            walked_error = str(error)
+            # Fallback for partial/malformed particle files: preserve descriptor identity without claiming a full walk.
+            lines = data.decode("latin-1").splitlines()
+            blocks, current = [], None
+            for line in lines:
+                key, _, value = line.partition(" ")
+                if key == "Particle_Descriptor_Type":
+                    kind = int(value)
+                    current = {"ordinal": len(blocks), "offset": None, "length": 0, "type": kind,
+                               "typeName": psw.TYPES.get(kind, (str(kind), ()))[0], "name": "", "blendMode": None,
+                               "textures": [], "meshes": [], "references": [], "floatReferences": []}
+                    blocks.append(current)
+                elif current is not None:
+                    if key == "Particle_Descriptor_Name":
+                        current["name"] = value
+                    elif key == "Blend_Mode":
+                        current["blendMode"] = int(value)
+                    elif key == "Texture":
+                        bm = current["blendMode"]
+                        current["textures"].append({"path": value, "blendMode": 0 if bm is None else bm,
+                                                    "blendModeExplicit": bm is not None})
+                    elif key == "Mesh":
+                        current["meshes"].append(value)
+                    elif key in psw.REFERENCE and value and value != "NONE":
+                        current["references"].append({"token": key, "target": value})
+                    elif key in psw.FLOAT_REFERENCE:
+                        parts = value.split(" ", 1)
+                        if len(parts) == 2 and parts[1] and parts[1] != "NONE":
+                            current["floatReferences"].append({"token": key, "value": None, "target": parts[1]})
+        file_records: list[tuple[dict, dict]] = []
+        by_name_in_file: dict[str, dict] = {}
+        for block in blocks:
+            ordinal = block["ordinal"]
+            offset, length = block["offset"], block["length"]
+            raw_sha = sha256(data[offset:offset + length]) if offset is not None and length > 0 else file_sha
+            sha_scope = ("descriptor lines (Particle_Descriptor_Type through separator)"
+                         if offset is not None and length > 0 else "whole particle-set file")
+            rec = base_record(f"effect:{rel.casefold()}#{ordinal}", "effect", block["name"], rel, file_sha,
+                              envelope="token-archive-text", offset=offset, length=length, raw_sha=raw_sha,
+                              sha_scope=sha_scope,
+                              parser="tools/particle_set_walk.py:walk_descriptors + " + TOOL + ":catalog_particles",
                               chunk_path=[ordinal])
             rec["provenance"]["loader"] = L_PARTICLES + "; " + L_PARTICLE_READ
-            refs = [v for k, v in block["fields"] if k in ("Initial", "Death", "Mover") and v != "NONE"]
-            textures, mode = [], None
-            for key, value in block["fields"]:
-                if key == "Blend_Mode":
-                    mode = int(value)
-                elif key == "Texture" and len(value) > PAR_TEXTURE_PREFIX:
-                    textures.append((value, mode))
-            rec["effect"] = {"descriptorType": block["type"], "textures": [t for t, _m in textures],
-                             "references": refs}
-            for path, mode in textures:
+            textures_used = [t for t in block["textures"] if len(t["path"]) > PAR_TEXTURE_PREFIX]
+            ref_names = [r["target"] for r in block["references"]]
+            fref_names = [r["target"] for r in block["floatReferences"]]
+            rec["effect"] = {
+                "status": "parsed" if walked_error is None else "partial",
+                "descriptorType": block["type"], "descriptorTypeName": block["typeName"],
+                "blendMode": block["blendMode"],
+                "textures": [t["path"] for t in textures_used],
+                "meshes": list(block["meshes"]),
+                "references": ref_names,
+                "floatReferences": fref_names,
+            }
+            if walked_error is not None:
+                rec["effect"]["walkError"] = walked_error
+            for tex in textures_used:
+                path, mode, explicit = tex["path"], tex["blendMode"], tex["blendModeExplicit"]
                 lookup = path[PAR_TEXTURE_PREFIX:]
-                # CParticleDescriptor reads Texture as Get(sval, mBlendMode + 1); Get's format is A4R4G4B4 for
-                # modes 2-3, else R5G6B5. Without an earlier Blend_Mode the member's value is not established.
-                fmt = None if mode is None else (2 if 2 <= mode + 1 <= 3 else 5)
+                # CPDSimpleSprite/CPDTrail/CPDPMesh constructors set mBlendMode = 0; Texture calls
+                # CDXParticleTexture::Get(sval, mBlendMode + 1) -> A4R4G4B4 (2) for 2..3, else R5G6B5 (5).
+                fmt = 2 if 2 <= mode + 1 <= 3 else 5
                 rec["relationships"].append(find_relation(
                     "uses-texture", dindex.find(lookup, fmt, 1),
-                    [evidence("data", rel, f"Texture token of descriptor {name!r} (Blend_Mode {mode})"),
+                    [evidence("data", rel, f"Texture token of descriptor {block['name']!r} "
+                              f"(Blend_Mode {mode}{'' if explicit else ', constructor default 0'})"),
                      evidence("loader-code", cite("ParticleDescriptor.cpp", "texture token: Get(sval, mBlendMode + 1)",
                                                   "n/a") + " -> " + L_PARTICLE_TEX + " -> " + L_TEX_FIND,
-                              "name = path + 32; format A4R4G4B4 when Blend_Mode + 1 is 2-3, else R5G6B5; mip "
-                              "levels 1" + ("" if mode is not None else "; no Blend_Mode before the texture, so "
-                                            "only name and levels are matched"))],
+                              "name = path + 32; format A4R4G4B4 when Blend_Mode + 1 is 2-3, else R5G6B5 (default "
+                              "mBlendMode 0 -> R5G6B5); mip levels 1")],
                     targetName=lookup, requestedFormat=fmt))
+            for mesh_path in block["meshes"]:
+                filename = mesh_path.rsplit("\\", 1)[-1]
+                target = loose.get("data/resources/meshes/" + meshcensus._loose_mesh_key(filename))
+                stats["particleMeshes" + ("Resolved" if target else "Unresolved")] += 1
+                rec["relationships"].append(relation(
+                    "uses-mesh", target["id"] if target else None, "resolved" if target else "unresolved",
+                    [evidence("data", rel, f"PD_MESH Mesh token {mesh_path!r}"),
+                     evidence("loader-code", L_PD_MESH, "CPDMesh::Load strips through the last backslash and calls "
+                              "CMesh::GetMesh(filename, TRUE)")],
+                    targetName=filename, role="particle-mesh"))
+            file_records.append((rec, block))
+            by_name_in_file.setdefault(psw.fold(block["name"]), rec)
+        for rec, block in file_records:
+            for ref in block["references"]:
+                target = by_name_in_file.get(psw.fold(ref["target"]))
+                stats["particleInternalRefs" + ("Resolved" if target else "Unresolved")] += 1
+                rec["relationships"].append(relation(
+                    "uses-effect", target["id"] if target else None, "resolved" if target else "unresolved",
+                    [evidence("data", rel, f"{ref['token']} token of {block['name']!r}"),
+                     evidence("loader-code", L_PARTICLE_READ + " -> " + L_PARTICLE_FIND,
+                              "CTokenArchive::HandleRelocation resolves descriptor references case-insensitively "
+                              "within the same particle set")],
+                    targetName=ref["target"], role=ref["token"]))
+            for fref in block["floatReferences"]:
+                target = by_name_in_file.get(psw.fold(fref["target"]))
+                stats["particleInternalRefs" + ("Resolved" if target else "Unresolved")] += 1
+                rec["relationships"].append(relation(
+                    "uses-effect", target["id"] if target else None, "resolved" if target else "unresolved",
+                    [evidence("data", rel, f"{fref['token']} function binding of {block['name']!r}"),
+                     evidence("loader-code", L_PARTICLE_READ + " -> " + L_PARTICLE_FIND,
+                              "CTokenArchive::HandleRelocation resolves float-function references case-insensitively "
+                              "within the same particle set")],
+                    targetName=fref["target"], role=fref["token"]))
             records.append(rec)
     return records
 
 
+def effect_index_by_set(effects: list[dict]) -> tuple[dict[str, dict], dict[str, dict]]:
+    """Case-insensitive effect lookup tables for MainSet.par (in-game) and Frontend.par (frontend)."""
+    mainset: dict[str, dict] = {}
+    frontend: dict[str, dict] = {}
+    for e in effects:
+        container = e["source"]["container"].casefold()
+        key = psw.fold(e["name"])
+        if container == "data/particlesets/mainset.par":
+            mainset.setdefault(key, e)
+        elif container == "data/particlesets/frontend.par":
+            frontend.setdefault(key, e)
+    return mainset, frontend
+
+
+def link_mesh_effects(meshes: list[dict], mainset: dict[str, dict], stats: collections.Counter) -> None:
+    """CRTMesh::Init loads PARTICLE_SET.FindByName(emitter + 1) for every '_'-prefixed mesh emitter."""
+    for mesh in meshes:
+        for emitter in mesh["mesh"].get("effectEmitters", []):
+            lookup = emitter[1:]
+            target = mainset.get(psw.fold(lookup)) if lookup else None
+            stats["meshEffectEmitters" + ("Resolved" if target else "Unresolved")] += 1
+            mesh["relationships"].append(relation(
+                "uses-effect", target["id"] if target else None, "resolved" if target else "unresolved",
+                [evidence("data", mesh["source"]["container"], f"CEMT emitter {emitter!r} begins with '_'"),
+                 evidence("loader-code", L_RTMESH_INIT + " -> " + L_PARTICLE_FIND,
+                          "CRTMesh::Init loads PARTICLE_SET.FindByName(name + 1) case-insensitively from MainSet.par")],
+                targetName=lookup, emitterName=emitter, role="mesh-emitter"))
+
+
+PHYSICS_REL_MAP = {
+    pvd.WEAPON: ("uses-weapon", "weapon"),
+    pvd.MODE: ("uses-weapon-mode", "weapon-mode"),
+    pvd.ROUND: ("uses-round", "round"),
+    pvd.SPAWNER: ("uses-spawner", "spawner"),
+    pvd.COMPONENT: ("uses-component", "component"),
+    pvd.EXPLOSION: ("uses-explosion", "explosion"),
+    pvd.THING: ("spawns-unit", "unit"),
+}
+
+
+def link_physics_definitions(world: dict, loose: dict, dindex: DescriptorIndex, mainset: dict[str, dict],
+                             sound_effects: list[dict], text: dict, stats: collections.Counter) -> None:
+    """Join all 9 physics statement kinds' decoded values to other definitions, meshes, effects, sounds, icons and text."""
+    def_by_kind_name = world["defByKindName"]
+    sfx_heads: dict[bytes, dict] = {}
+    for e in sound_effects:
+        if e["soundEffect"]["variant"] == 0:
+            sfx_heads.setdefault(gtd.stricmp_key(e["name"]), e)
+    english = text.get("english")
+    text_ids = {e["id"] for e in english["entries"]} if english else set()
+    symbol_of = {ident: name for name, ident in text.get("symbols", {}).items()}
+    for rec, stmt, is_building in world["physicsStatements"]:
+        kind = stmt["kind"]
+        for v in stmt["values"]:
+            if v["status"] != "read":
+                continue
+            field, args = v["field"], v["args"]
+            if kind == "weapon" and field == "languageName":
+                lang_case = args[0]
+                text_id = pvd.WEAPON_LANGUAGE_TEXT_IDS.get(lang_case)
+                if text_id is not None:
+                    ok = text_id in text_ids
+                    stats["physicsWeaponText" + ("Resolved" if ok else "Unresolved")] += 1
+                    rec["relationships"].append(relation(
+                        "uses-text", TEXT_TABLE_ID if ok else None, "resolved" if ok else "unresolved",
+                        [evidence("loader-code", L_WEAPON_LANG, f"case {lang_case} maps to text id {text_id:#010x}; "
+                                  "english.dat " + ("has" if ok else "has no") + " entry with that id")],
+                        textId=text_id, textSymbol=symbol_of.get(text_id), role="weapon-name"))
+            for role, target_name in pvd.named_references(kind, v["id"], args):
+                if role == pvd.MOUNT:
+                    continue
+                if role == pvd.BASED_ON:
+                    target = def_by_kind_name.get((kind, target_name))
+                    stats["physicsDefs" + ("Resolved" if target else "Unresolved")] += 1
+                    rec["relationships"].append(relation(
+                        "based-on", target["id"] if target else None, "resolved" if target else "unresolved",
+                        [evidence("loader-code", L_PHYSICS, f"{kind}.{field} copies defaults from {kind} "
+                                  f"{target_name!r} (strcmp)")],
+                        targetName=target_name, role=field))
+                elif kind == "weapon-mode" and field == "weaponBasedOn" and role == pvd.WEAPON:
+                    target = def_by_kind_name.get(("weapon", target_name))
+                    stats["physicsDefs" + ("Resolved" if target else "Unresolved")] += 1
+                    rec["relationships"].append(relation(
+                        "based-on", target["id"] if target else None, "resolved" if target else "unresolved",
+                        [evidence("loader-code", L_PHYSICS, f"CWeaponBasedOn (inside weapon-mode) calls "
+                                  f"UPhysicsManager::GetWeaponData({target_name!r}) (strcmp)")],
+                        targetName=target_name, role=field))
+                elif role in PHYSICS_REL_MAP:
+                    rtype, target_kind = PHYSICS_REL_MAP[role]
+                    target = def_by_kind_name.get((target_kind, target_name))
+                    stats["physicsDefs" + ("Resolved" if target else "Unresolved")] += 1
+                    extra: dict = {"targetName": target_name, "role": field}
+                    if field in ("weapon", "spawner") and len(args) >= 3:
+                        extra["mount"] = args[1]
+                        extra["slot"] = args[2]
+                    elif field == "component" and len(args) >= 2:
+                        extra["slot"] = args[1]
+                    elif field == "chargeMode" and len(args) >= 1:
+                        extra["chargeLevel"] = args[0]
+                    rec["relationships"].append(relation(
+                        rtype, target["id"] if target else None, "resolved" if target else "unresolved",
+                        [evidence("loader-code", L_PHYSICS, f"{kind}.{field} looks up {target_kind} {target_name!r} "
+                                  "by strcmp")], **extra))
+                elif role == pvd.MESH:
+                    eff_name = (target_name + ".msh" if is_building and not target_name.lower().endswith(".msh")
+                                else target_name)
+                    target = loose.get("data/resources/meshes/" + meshcensus._loose_mesh_key(eff_name))
+                    stats["physicsMeshes" + ("Resolved" if target else "Unresolved")] += 1
+                    ev = [evidence("data", "data/default physics.dat", f"{kind} value id {v['id']} ({field}) names "
+                                   f"{target_name!r}")]
+                    if is_building:
+                        ev.append(evidence("loader-code", L_BUILDING_INIT, "UB_BUILDING appends '.msh' to mUnknown2c"))
+                    rec["relationships"].append(relation(
+                        "uses-mesh", target["id"] if target else None, "resolved" if target else "unresolved",
+                        ev, targetName=eff_name, role="mesh"))
+                elif role == pvd.PARTICLE:
+                    target = mainset.get(psw.fold(target_name))
+                    stats["physicsEffects" + ("Resolved" if target else "Unresolved")] += 1
+                    rec["relationships"].append(relation(
+                        "uses-effect", target["id"] if target else None, "resolved" if target else "unresolved",
+                        [evidence("loader-code", L_PHYSICS + " -> " + L_PARTICLE_FIND,
+                                  f"{kind}.{field} looks up {target_name!r} case-insensitively in MainSet.par")],
+                        targetName=target_name, role=field))
+                elif role == pvd.SOUND:
+                    target = sfx_heads.get(gtd.stricmp_key(target_name))
+                    stats["physicsSounds" + ("Resolved" if target else "Unresolved")] += 1
+                    rec["relationships"].append(relation(
+                        "uses-sound-effect", target["id"] if target else None, "resolved" if target else "unresolved",
+                        [evidence("loader-code", L_PHYSICS + " -> " + gtd.L_SFX_FIND,
+                                  f"{kind}.{field} looks up {target_name!r} (stricmp) in data/sounds/sounds.sfx")],
+                        targetName=target_name, role=field))
+                elif role == pvd.ICON:
+                    tex_name = f"hud\\{target_name}.tga"
+                    found = dindex.find(tex_name, 0, None)
+                    stats["physicsIcons" + ("Resolved" if found else "Unresolved")] += 1
+                    rec["relationships"].append(find_relation(
+                        "uses-texture", found,
+                        [evidence("loader-code", L_WEAPON_ICON + " -> " + L_TEX_FIND,
+                                  f"weapon icon name formats hud\\{target_name}.tga")],
+                        targetName=tex_name, role="weapon-icon"))
+        if is_building:
+            rubble = pvd.DEFAULT_BUILDING_RUBBLE_MESH + ".msh"
+            target = loose.get("data/resources/meshes/" + meshcensus._loose_mesh_key(rubble))
+            stats["physicsBuildingRubble" + ("Resolved" if target else "Unresolved")] += 1
+            rec["relationships"].append(relation(
+                "uses-mesh", target["id"] if target else None, "resolved" if target else "unresolved",
+                [evidence("loader-code", L_BUILDING_INIT + "; " + L_RTBUILDING_INIT,
+                          "CUnitData initializes mUnknown30 to 'm-b-rubble'; CBuilding::InitRenderThing appends '.msh' "
+                          "and CRTBuilding::Init loads m-b-rubble.msh")],
+                targetName=rubble, role="rubble"))
+
+
+def link_script_references(scripts: list[dict], mainset: dict[str, dict], def_by_kind_fold: dict[tuple[str, str], dict],
+                           goodies: list[dict], stats: collections.Counter) -> None:
+    """Link script-code SpawnParticle, Enable/DisableSpawner, Enable/DisableWeapon, and Get/SetGoodieState literals."""
+    goodie_by_num = {g["goodie"]["number"]: g for g in goodies}
+    for sc in scripts:
+        code = sc["scriptCode"]
+        for name in code.get("effects", []):
+            target = mainset.get(psw.fold(name))
+            stats["scriptEffects" + ("Resolved" if target else "Unresolved")] += 1
+            sc["relationships"].append(relation(
+                "uses-effect", target["id"] if target else None, "resolved" if target else "unresolved",
+                [evidence("loader-code", wrd.L_NATIVES + " SpawnParticle -> " + L_PARTICLE_FIND,
+                          "SpawnParticle's first argument looks up a particle descriptor in MainSet.par (stricmp)")],
+                targetName=name))
+        for name in code.get("spawners", []):
+            target = def_by_kind_fold.get(("spawner", psw.fold(name)))
+            stats["scriptSpawners" + ("Resolved" if target else "Unresolved")] += 1
+            sc["relationships"].append(relation(
+                "uses-spawner", target["id"] if target else None, "resolved" if target else "unresolved",
+                [evidence("loader-code", wrd.L_NATIVES + " EnableSpawner/DisableSpawner -> " + L_UNIT_SPAWNER,
+                          "matches the unit's spawner data name with stricmp")],
+                targetName=name))
+        for name in code.get("weapons", []):
+            target = def_by_kind_fold.get(("weapon", psw.fold(name)))
+            stats["scriptWeapons" + ("Resolved" if target else "Unresolved")] += 1
+            sc["relationships"].append(relation(
+                "uses-weapon", target["id"] if target else None, "resolved" if target else "unresolved",
+                [evidence("loader-code", wrd.L_NATIVES + " EnableWeapon/DisableWeapon -> " + L_UNIT_WEAPON,
+                          "matches the unit's weapon name with stricmp")],
+                targetName=name))
+        for raw_num in code.get("goodies", []):
+            zero_based = raw_num - 1
+            target = goodie_by_num.get(zero_based)
+            stats["scriptGoodies" + ("Resolved" if target else "Unresolved")] += 1
+            sc["relationships"].append(relation(
+                "references-goodie", target["id"] if target else None, "resolved" if target else "unresolved",
+                [evidence("loader-code", L_SCRIPT_GOODIE,
+                          f"scripts number goodies from 1; argument {raw_num} addresses goodie index {zero_based}")],
+                scriptGoodieNumber=raw_num, goodieNumber=zero_based))
+
+
 CODE_TEXTURE_RE = re.compile(r'\b(FindTexture|GetTextureByName)\(\s*"((?:[^"\\]|\\.)+)"\s*(,[^;]*?)?\)\s*[;,)]')
 CODE_MESH_RE = re.compile(r'\bGetMesh\(\s*"((?:[^"\\]|\\.)+)"')
+CODE_PARTICLE_RE = re.compile(r'\bPARTICLE_SET\.(FindByName|GetPD)\(\s*"((?:[^"\\]|\\.)+)"')
+CODE_VIDEO_RE = re.compile(r'\bPlayFullscreen\(\s*"((?:[^"\\]|\\.)+)"')
 FUNCTION_RE = re.compile(r"^(?P<sig>.*?\b(?P<name>[A-Za-z_][\w:~]*)\s*\([^;]*)//\s*FUNCTION:\s*(?P<va>0x[0-9a-fA-F]+)")
 
 
@@ -2005,8 +2443,8 @@ def code_int(token: str) -> int | None:
 
 
 def code_references(decomp: Path | None) -> dict:
-    """Literal texture and mesh names passed to the lookups in the decompilation's sources (optional input)."""
-    refs = {"textures": [], "meshes": [], "effects": [], "source": None}
+    """Literal texture, mesh, sound-effect, particle-effect and FMV names in the decompilation's sources (optional)."""
+    refs = {"textures": [], "meshes": [], "effects": [], "particles": [], "videos": [], "source": None}
     if decomp is None:
         return refs
     src = decomp / "src"
@@ -2023,6 +2461,7 @@ def code_references(decomp: Path | None) -> dict:
             m = FUNCTION_RE.match(line)
             if m:
                 function = f"{m.group('name')} @{m.group('va').lower()}"
+            site = f"selected source src/{path.name}:{number} {function or '(file scope)'}"
             for m in CODE_TEXTURE_RE.finditer(line):
                 args = [a for a in (m.group(3) or "").lstrip(",").split(",") if a.strip()]
                 values = [code_int(a) for a in args]
@@ -2033,14 +2472,16 @@ def code_references(decomp: Path | None) -> dict:
                     fmt = values[0] if len(values) > 0 else None
                     levels = values[2] if len(values) > 2 else None
                 refs["textures"].append({"name": m.group(2).replace("\\\\", "\\"), "format": fmt, "levels": levels,
-                                         "site": f"selected source src/{path.name}:{number} {function or '(file scope)'}",
-                                         "call": m.group(1)})
+                                         "site": site, "call": m.group(1)})
             for m in CODE_MESH_RE.finditer(line):
-                refs["meshes"].append({"name": m.group(1).replace("\\\\", "\\"),
-                                       "site": f"selected source src/{path.name}:{number} {function or '(file scope)'}"})
+                refs["meshes"].append({"name": m.group(1).replace("\\\\", "\\"), "site": site})
             for m in CODE_EFFECT_RE.finditer(line):
-                refs["effects"].append({"name": m.group(2).replace("\\\\", "\\"), "call": m.group(1),
-                                        "site": f"selected source src/{path.name}:{number} {function or '(file scope)'}"})
+                refs["effects"].append({"name": m.group(2).replace("\\\\", "\\"), "call": m.group(1), "site": site})
+            for m in CODE_PARTICLE_RE.finditer(line):
+                refs["particles"].append({"name": m.group(2).replace("\\\\", "\\"), "call": m.group(1),
+                                          "file": path.name, "site": site})
+            for m in CODE_VIDEO_RE.finditer(line):
+                refs["videos"].append({"name": m.group(1).replace("\\\\", "\\"), "site": site})
     return refs
 
 
@@ -2057,12 +2498,19 @@ def git_head_of(path: Path) -> str | None:
 
 
 def link_code_references(refs: dict, dindex: DescriptorIndex, descriptors_by_id: dict, loose: dict,
-                         stats: collections.Counter) -> list[dict]:
+                         stats: collections.Counter, images: list[dict] | None = None) -> list[dict]:
+    images_by_name = {fold(img["name"]): img for img in (images or [])}
     unresolved = []
     for ref in refs["textures"]:
         found = dindex.find(ref["name"], ref["format"], ref["levels"])
         stats["codeTextureSites"] += 1
         if not found:
+            img = images_by_name.get(fold(ref["name"]))
+            if img is not None:
+                img["relationships"].append(relation("named-by-code", None, "code-site", [evidence(
+                    "loader-code", ref["site"], f"{ref['call']}(\"{ref['name']}\", ...) reads this disk image via "
+                    + L_TEX_INITDEV + " when mAllowManualTextures is enabled")]))
+                continue
             stats["codeTextureSitesUnresolved"] += 1
             unresolved.append(ref)
         for d in found:
@@ -2080,6 +2528,43 @@ def link_code_references(refs: dict, dindex: DescriptorIndex, descriptors_by_id:
         target["relationships"].append(relation("named-by-code", None, "code-site", [evidence(
             "loader-code", ref["site"], f"CMesh::GetMesh(\"{ref['name']}\") names this mesh")]))
     return unresolved
+
+
+def link_code_particles(refs: dict, mainset: dict[str, dict], frontend: dict[str, dict],
+                        stats: collections.Counter) -> list[str]:
+    """Literal particle names game code asks PARTICLE_SET.FindByName / GetPD for (with --decomp)."""
+    unresolved = []
+    for ref in refs.get("particles", []):
+        stats["codeParticleSites"] += 1
+        key = psw.fold(ref["name"])
+        is_fe = ref["file"].upper().startswith("FEP")
+        target = (frontend.get(key) or mainset.get(key)) if is_fe else mainset.get(key)
+        if target is None:
+            stats["codeParticleSitesUnresolved"] += 1
+            unresolved.append(ref["name"])
+            continue
+        target["relationships"].append(relation("named-by-code", None, "code-site", [evidence(
+            "loader-code", ref["site"], f"PARTICLE_SET.{ref['call']}(\"{ref['name']}\") finds this descriptor "
+            "(" + L_PARTICLE_FIND + "; " + ("Frontend.par" if is_fe and key in frontend else "MainSet.par") + ")")]))
+    return sorted(set(unresolved))
+
+
+def link_code_videos(refs: dict, videos: list[dict], stats: collections.Counter) -> list[str]:
+    """Literal FMV names passed to PlayFullscreen (with --decomp)."""
+    by_rel = {v["source"]["container"].casefold(): v for v in videos}
+    unresolved = []
+    for ref in refs.get("videos", []):
+        stats["codeVideoSites"] += 1
+        rel = f"data/video/{ref['name'].replace(chr(92), '/')}.vid".casefold()
+        target = by_rel.get(rel)
+        if target is None:
+            stats["codeVideoSitesUnresolved"] += 1
+            unresolved.append(ref["name"])
+            continue
+        target["relationships"].append(relation("named-by-code", None, "code-site", [evidence(
+            "loader-code", ref["site"], f"PlayFullscreen(\"{ref['name']}\") plays {target['source']['container']} "
+            "(" + L_FMV_PLAY + ")")]))
+    return sorted(set(unresolved))
 
 
 LANGUAGE_LANES = ("english", "french", "german", "spanish", "italian")
@@ -2207,6 +2692,8 @@ def link_compiled_scripts(inventory: list[dict], scripts: list[dict]) -> None:
             "copies": len(copies), "units": union("units"), "textIds": union("textIds"),
             "waypointPaths": union("waypointPaths"), "thingNames": union("thingNames"), "scripts": union("scripts"),
             "postedEvents": union("postedEvents"), "handledEvents": union("handledEvents"),
+            "effects": union("effects"), "spawners": union("spawners"), "weapons": union("weapons"),
+            "goodies": union("goodies"),
             "objectiveCallsPerCopy": max(len(sc["scriptCode"]["objectives"]) for sc in copies),
             "objectiveNatives": sorted({o["native"] for sc in copies for o in sc["scriptCode"]["objectives"]}),
             "basis": "the compiled copies' literal call arguments (" + wrd.L_OBJECTCODE + ")"}
@@ -2443,6 +2930,8 @@ def compute_usage(assets: list[dict]) -> None:
                     st["effects"].add(a["name"])
                 elif a["type"] == "goodie":
                     st["goodies"].add(a["goodie"]["number"])
+                elif a["type"] == "definition" and r["type"] == "uses-texture":
+                    st["roles"].add(r.get("role") or "definition")
 
     def texture_usage(states: list[dict]) -> dict:
         pairs, out = set(), {"meshes": set(), "effects": set(), "goodies": set(), "archives": set(), "roles": set()}
@@ -2485,7 +2974,7 @@ def usage_sentence(u: dict, kind: str) -> str:
         parts.append("goodie " + ", ".join(str(g) for g in u["goodies"][:6]))
     if u.get("codeSites"):
         parts.append(f"named by {u['codeSites']} code site(s)")
-    roles = [r for r in u.get("roles", []) if r in ("font", "imposter atlas")]
+    roles = [r for r in u.get("roles", []) if r in ("font", "imposter atlas", "weapon-icon")]
     if roles:
         parts.append(" and ".join(roles))
     if not parts and u.get("archives"):
@@ -2514,7 +3003,7 @@ def float_field(value: dict | None) -> float | None:
     return None if value is None else value["value"]
 
 
-def catalog_configurations(game: Path, files: list[dict], defs_by_name: dict, loose: dict, text: dict,
+def catalog_configurations(game: Path, files: list[dict], defs_by_kind_name: dict, loose: dict, text: dict,
                            stats: collections.Counter) -> tuple[list[dict], dict | None]:
     """The battle engine configurations as CBattleEngineData::Load reads them, with what each names."""
     rel = install_path(files, "battle-engine-config-dat")
@@ -2554,8 +3043,8 @@ def catalog_configurations(game: Path, files: list[dict], defs_by_name: dict, lo
                 [{"heat": st["heat"], "value": float_field(st["value"])} for st in c["stores"]])
 
         def definition(rtype: str, kind: str, name: str, rule: str, source: str, **extra) -> dict:
-            d = defs_by_name.get(name)
-            ok = d is not None and kind in d["definition"]["kinds"]
+            d = defs_by_kind_name.get((kind, name))
+            ok = d is not None
             stats[f"configuration{kind.title()}s{'Resolved' if ok else 'Unresolved'}"] += 1
             return relation(rtype, d["id"] if ok else None, "resolved" if ok else "unresolved",
                             [evidence("loader-code", source, rule + (" (strcmp; the first definition of the name)"
@@ -2765,6 +3254,7 @@ def build_catalog(game: Path, decomp: Path | None = None) -> dict:
     files = walk_install(game)
     survey = build_survey(files)
     textures, texture_index = catalog_textures(game, files)
+    images = catalog_images(game, files)
     meshes, animations = [], []
     loose: dict[str, dict] = {}
     for row in files:
@@ -2806,15 +3296,21 @@ def build_catalog(game: Path, decomp: Path | None = None) -> dict:
     script_ids = {"script:" + r["path"].casefold() for r in files if r["family"] == "mission-script-msl"}
     world = catalog_world(collect, game, loose, archives, script_ids, text, archive_stats)
     definitions, placements = world["definitions"], world["placements"]
-    effects = catalog_particles(game, files, dindex)
-    configurations, config_meta = catalog_configurations(game, files, {d["name"]: d for d in definitions}, loose, text,
+    effects = catalog_particles(game, files, dindex, loose, archive_stats)
+    mainset_effects, frontend_effects = effect_index_by_set(effects)
+    link_mesh_effects(meshes, mainset_effects, archive_stats)
+    configurations, config_meta = catalog_configurations(game, files, world["defByKindName"], loose, text,
                                                          archive_stats)
     samples = sample_index(audio)
     sound_effects, sfx_meta = catalog_sound_effects(game, files, samples, archive_stats)
+    link_physics_definitions(world, loose, dindex, mainset_effects, sound_effects, text, archive_stats)
+    link_script_references(world["scripts"], mainset_effects, world["defByKindFold"], goodies, archive_stats)
     link_script_samples(world["scripts"], samples, archive_stats)
     refs = code_references(decomp)
-    unresolved_code = link_code_references(refs, dindex, descriptors_by_id, loose, archive_stats)
+    unresolved_code = link_code_references(refs, dindex, descriptors_by_id, loose, archive_stats, images=images)
     unresolved_effects = link_code_effects(refs, sound_effects, archive_stats)
+    unresolved_particles = link_code_particles(refs, mainset_effects, frontend_effects, archive_stats)
+    unresolved_videos = link_code_videos(refs, video, archive_stats)
     link_unloaded_mesh_names(textures, meshes)
     inventory = catalog_text_inventory(game, files, text)
     link_compiled_scripts(inventory, world["scripts"])
@@ -2826,9 +3322,9 @@ def build_catalog(game: Path, decomp: Path | None = None) -> dict:
         (p["decoded"] for p in collect["payloads"] if p["tag"] == "ERES" and p["decoded"]["status"] == "decoded"
          and lvl["level"]["resourceArchive"] == "archive:" + p["archive"].casefold()), None)] if d}
     rule_names = link_rule_textures(levels, terrain, dindex, descriptors_by_id, archive_stats)
-    assets = (levels + archives + payloads + descriptors + textures + meshes + animations + definitions + placements
-              + world["markers"] + world["paths"] + world["scripts"] + goodies + effects + audio + video + inventory
-              + configurations + sound_effects + imposters)
+    assets = (levels + archives + payloads + descriptors + textures + images + meshes + animations + definitions
+              + placements + world["markers"] + world["paths"] + world["scripts"] + goodies + effects + audio + video
+              + inventory + configurations + sound_effects + imposters)
     compute_usage(assets)
     dangling = dangling_targets(assets)
     if dangling:
@@ -2843,7 +3339,10 @@ def build_catalog(game: Path, decomp: Path | None = None) -> dict:
                        "soundEffects": sfx_meta},
             "codeReferences": {"source": refs["source"], "textureSites": len(refs["textures"]),
                                "meshSites": len(refs["meshes"]), "effectSites": len(refs["effects"]),
+                               "particleSites": len(refs["particles"]), "videoSites": len(refs["videos"]),
                                "unresolvedEffectNames": unresolved_effects,
+                               "unresolvedParticleNames": unresolved_particles,
+                               "unresolvedVideoNames": unresolved_videos,
                                "unresolvedTextureNames": sorted({r["name"] for r in unresolved_code}),
                                "ruleBuiltTextureNames": len(rule_names),
                                "ruleBuiltTextureNamesUnresolved": sorted({(r["level"] or "all") + " " + r["name"]
@@ -2852,8 +3351,9 @@ def build_catalog(game: Path, decomp: Path | None = None) -> dict:
 
 def asset_report_status(asset: dict) -> str:
     """Report an explicit parser status; a record alone does not establish parsing."""
-    details = (asset.get("texture") or asset.get("textureDescriptor") or asset.get("mesh") or
-               asset.get("audio") or asset.get("video") or asset.get("animation") or asset.get("imposter") or {})
+    details = (asset.get("texture") or asset.get("textureDescriptor") or asset.get("image") or asset.get("mesh") or
+               asset.get("audio") or asset.get("video") or asset.get("animation") or asset.get("imposter") or
+               asset.get("definition") or asset.get("effect") or {})
     status = details.get("status") if isinstance(details, dict) else None
     return status if isinstance(status, str) and status else "not-recorded"
 
@@ -2995,7 +3495,7 @@ def build_coverage(catalog: dict) -> dict:
         "textureFilesUsedByAMesh": sum(1 for t in textures if t.get("referencedBy")),
         "textureFilesWithAnEstablishedUse": sum(1 for t in textures if t["usage"]["meshes"] or t["usage"]["effects"]
                                                 or t["usage"]["goodies"] or t["usage"]["codeSites"]
-                                                or {"font", "imposter atlas"} & set(t["usage"]["roles"])),
+                                                or {"font", "imposter atlas", "weapon-icon"} & set(t["usage"]["roles"])),
         "textureFilesNotLoaded": sorted(t["source"]["container"] for t in textures if not t.get("loadedByDescriptors")),
         "codeReferences": catalog["codeReferences"],
         "placementsByLevel": dict(sorted(collections.Counter(
@@ -3028,12 +3528,9 @@ def build_coverage(catalog: dict) -> dict:
             "per role; names-thing joins use WORLD.mNamedThings as it stands right after loading: which base-world "
             "things a career keeps is the career's, and names given at run time (SetName), things spawned in play and "
             "things that leave the list (Shutdown) are listed or noted, not followed",
-            "names built with sprintf from data not decoded here: weapon HUD icons (hud\\%s.tga from physics weapon "
-            "icon names), screenshot and texture-dump paths (written, not read)",
+            "screenshot and texture-dump paths (written, not read)",
             "the .msl source text itself is not parsed (its compiled form is the evidence); mission text .txt",
-            "physics definitions are catalogued by name and kind (unit, weapon, explosion, feature, hazard); their "
-            "other fields (the sound effects, particles and icons they name) are not decoded, so those joins are open",
-            "Dial.raw and the splash TGA",
+            "CIMP runtime pointers (mNext, mMesh, mFrames) and mUnknown28 remain uninterpreted spans on imposter records",
         ],
         "notes": {"loaderCitations": families["cmsh-mesh"]["loader"]},
     }

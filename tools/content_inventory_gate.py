@@ -632,9 +632,20 @@ def placed_fields(asset: dict, stream: bytes, start: int, length: int, report: "
         if body[:4] != b"CMSH":
             raise Unreadable("not a CMSH stream")
         return expect(format="cmsh")
-    constants = {"byte-sprite": expect({"frameBytes": 256, "framesEstablished": 1, "wholeFramesByLength": length // 256},
-                                       format="one-byte indices", width=16, height=16, channels=1),
-                 "terrain-heightfield": expect(format="heightfield"), "surface-strips": expect(format="surface strips"),
+    if form == "byte-sprite":
+        whole = length // 256
+        loaded = 0
+        stop = None
+        for fi in range(min(20, whole)):
+            if any(b < 4 for b in body[fi * 256:(fi + 1) * 256]):
+                loaded += 1
+            else:
+                stop = fi
+                break
+        return expect({"frameBytes": 256, "framesLoaded": loaded, "stoppingFrame": stop,
+                       "maxFrames": 20, "transparencyKey": 4, "wholeFramesByLength": whole},
+                      format="one-byte indices", width=16, height=16, channels=1, frames=loaded)
+    constants = {"terrain-heightfield": expect(format="heightfield"), "surface-strips": expect(format="surface strips"),
                  "static-shadow-maps": expect()}
     return constants.get(form)
 

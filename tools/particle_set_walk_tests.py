@@ -86,6 +86,27 @@ class WalkTests(unittest.TestCase):
                 psw.scan_f(word)
 
 
+    def test_walk_descriptors_returns_coordinates_defaults_meshes_and_all_references(self):
+        mesh_desc = (11, "Shard", [r"Mesh C:\dev\Onslaught2\data\meshes\shrap.MSH", "Impact_Spawnee Spark"])
+        no_bm_sprite = (1, "DefaultBlend", [r"Texture C:\dev\Onslaught2\data\textures\spark.tga", "Colour_Range Fire"])
+        data = particle_set(SPRITE, COLOURS, EMITTER, WOBBLE, mesh_desc, no_bm_sprite)
+        result = psw.walk_descriptors(data)
+        self.assertEqual(result["walk"], psw.walk(data))
+        by_name = {d["name"]: d for d in result["descriptors"]}
+        for d in result["descriptors"]:
+            span = data[d["offset"]:d["offset"] + d["length"]]
+            self.assertTrue(span.startswith(f"Particle_Descriptor_Type {d['type']}".encode("latin-1")))
+            self.assertTrue(span.rstrip(b"\r\n").endswith(psw.SEPARATOR.encode("latin-1")))
+        self.assertEqual(by_name["Shard"]["meshes"], [r"C:\dev\Onslaught2\data\meshes\shrap.MSH"])
+        self.assertEqual(by_name["Shard"]["references"], [{"token": "Impact_Spawnee", "target": "Spark"}])
+        self.assertEqual(by_name["Smoke"]["references"], [{"token": "Particle_Descriptor", "target": "spark"}])
+        self.assertEqual(by_name["Smoke"]["floatReferences"], [{"token": "Emit_Per_Turn", "value": 2.5, "target": "Wobble"}])
+        self.assertEqual(by_name["DefaultBlend"]["textures"],
+                         [{"path": r"C:\dev\Onslaught2\data\textures\spark.tga", "blendMode": 0, "blendModeExplicit": False}])
+        self.assertEqual(by_name["Spark"]["textures"],
+                         [{"path": r"C:\dev\Onslaught2\data\textures\spark.tga", "blendMode": 1, "blendModeExplicit": True}])
+
+
 class RefusalTests(unittest.TestCase):
     def refuses(self, reason: str, data: bytes) -> None:
         with self.assertRaisesRegex(psw.ParticleSetError, reason):

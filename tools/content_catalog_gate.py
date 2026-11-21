@@ -48,6 +48,9 @@ sys.path.insert(0, str(TOOLS))
 import cmsh_animation_usage_census as meshcensus  # noqa: E402
 import content_catalog as cc  # noqa: E402
 import game_tables_decode as gtd  # noqa: E402
+import imposter_records  # noqa: E402
+import particle_set_walk  # noqa: E402
+import physics_values_decode as pvd  # noqa: E402
 import worldheaders_decode  # noqa: E402
 import xap_bank_walk  # noqa: E402
 import named_things as nt  # noqa: E402
@@ -212,6 +215,26 @@ def check_payloads(path: Path, counts: collections.Counter, failures: list[str])
     raw = b"".join(wre.inflate(wre.read_members(wre.read_retail(path))))
     counts["archives read"] += 1
     for tag, at, size in wre.chunks(raw):
+        if tag == "IMPS":
+            try:
+                parsed = imposter_records.parse_imposter_set(raw[at:at + size])
+            except imposter_records.ImposterFormatError as error:
+                failures.append(f"{path.name} IMPS at {at}: does not decode: {error}")
+                continue
+            counts["IMPS sets decoded"] += 1
+            if parsed["atlasSize"] is None:
+                failures.append(f"{path.name} IMPS at {at}: DATA does not carry positive atlas dimensions")
+            for imp in parsed["records"]:
+                counts["IMPT records decoded"] += 1
+                if imp["labelStatus"] not in ("terminated-latin1", "empty"):
+                    failures.append(f"{path.name} IMPS record {imp['ordinal']}: CIMP label status {imp['labelStatus']}")
+                if imp["cimpFields"] is None:
+                    failures.append(f"{path.name} IMPS record {imp['ordinal']}: CIMP shorter than CDXImposter (76 bytes)")
+                if imp["viewMetadata"]["status"] != "parsed":
+                    failures.append(f"{path.name} IMPS record {imp['ordinal']}: VIEW unparsed: {imp['viewMetadata']['reason']}")
+                if imp["viewCountMatchesCimp"] is not True:
+                    failures.append(f"{path.name} IMPS record {imp['ordinal']}: VIEW count disagrees with CIMP views * numFrames")
+            continue
         decoder = PAYLOAD_DECODERS.get(tag)
         if decoder is None:
             continue
@@ -233,6 +256,42 @@ def check_payloads(path: Path, counts: collections.Counter, failures: list[str])
             counts["VSDS declaration keys held by more than one shader"] += decoded["declarationKeysShared"]
         elif tag == "DMKR":
             counts[f"DMKR with {decoded['levels'] + 1} mip levels"] += 1
+
+
+def check_physics_and_particles(game: Path, counts: collections.Counter, failures: list[str]) -> None:
+    """Every physics statement/value in default physics.dat and every particle set in data/ParticleSets/*.par."""
+    phys_path = find_file(game, "data/default physics.dat")
+    if phys_path is not None:
+        try:
+            parsed = pvd.parse_physics(cc.read_install_file(phys_path))
+        except pvd.PhysicsError as error:
+            failures.append(f"default physics.dat does not decode: {error}")
+        else:
+            counts["physics statements decoded"] += len(parsed["statements"])
+            vstatus = collections.Counter(v["status"] for s in parsed["statements"] for v in s["values"])
+            counts["physics values decoded"] += vstatus["read"]
+            if vstatus["unknown-id"]:
+                failures.append(f"default physics.dat has {vstatus['unknown-id']} unknown value id(s)")
+            if vstatus["mis-sized"]:
+                failures.append(f"default physics.dat has {vstatus['mis-sized']} mis-sized value(s)")
+            if parsed["trailingBytes"]:
+                failures.append(f"default physics.dat has {parsed['trailingBytes']} trailing byte(s)")
+    data_dir = game / "data"
+    par_dir = next((p for p in data_dir.iterdir() if p.is_dir() and p.name.casefold() == "particlesets"), None) \
+        if data_dir.is_dir() else None
+    if par_dir is not None:
+        for par in sorted(p for p in par_dir.iterdir() if p.is_file() and p.name.casefold().endswith(".par")):
+            try:
+                walked = particle_set_walk.walk_descriptors(cc.read_install_file(par))
+            except particle_set_walk.ParticleSetError as error:
+                failures.append(f"{par.name}: particle set walk failed: {error}")
+                continue
+            summary = walked["walk"]
+            counts["particle set files walked"] += 1
+            counts["particle descriptors walked"] += summary["descriptors"]
+            unmatched = summary["references"].get("unmatched", 0)
+            if unmatched:
+                failures.append(f"{par.name}: {unmatched} unmatched internal descriptor reference(s)")
 
 
 def find_file(game: Path, rel: str) -> Path | None:
@@ -343,6 +402,7 @@ def main(argv: list[str] | None = None) -> int:
         failures.append("no level archive was checked: choose a game folder whose data/resources holds level archives")
     if args.level is None:
         check_tables(game, worlds_by_level, counts, failures)
+        check_physics_and_particles(game, counts, failures)
     for path in resource_archives(game):
         if args.level is not None and not path.name.startswith(f"{args.level:03d}_"):
             continue

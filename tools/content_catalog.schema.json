@@ -30,8 +30,8 @@
     },
     "id": {
       "type": "string",
-      "pattern": "^(archive|imposter|texture|texture-descriptor|mesh|animation|audio|video|level|level-payload|definition|placement|marker|waypoint-path|script-code|goodie|effect|script|mission-text|text-symbols|text-table|sound-table|configuration|sound-effect):.+",
-      "description": "Stable id. Files: <type>:<lower-cased install-relative path>; archive members: the container plus #chunk or #ordinal; texture records: name plus a payload-hash prefix; animations: <mesh id>/<ordinal>. Levels: level:NNN; placements: placement:<level>:<world>@<record offset>; definitions: definition:<lower-cased name>; goodies: goodie:NNN; effects: effect:<file>#<ordinal>. Markers: marker:<level>:<world>@<record offset>; waypoint paths: waypoint-path:<level>:<world>#<ordinal>; compiled scripts: script-code:<level>:<world>#<ordinal>; battle engine configurations: configuration:<file>#<record>; sound effects: sound-effect:<file>#<effect>."
+      "pattern": "^(archive|imposter|texture|texture-descriptor|image|mesh|animation|audio|video|level|level-payload|definition|placement|marker|waypoint-path|script-code|goodie|effect|script|mission-text|text-symbols|text-table|sound-table|configuration|sound-effect):.+",
+      "description": "Stable id. Files: <type>:<lower-cased install-relative path>; archive members: the container plus #chunk or #ordinal; texture records: name plus a payload-hash prefix; animations: <mesh id>/<ordinal>. Levels: level:NNN; placements: placement:<level>:<world>@<record offset>; definitions: definition:<kind>:<lower-cased name> (plus #<dup> for shadowed duplicates); goodies: goodie:NNN; effects: effect:<file>#<ordinal>. Markers: marker:<level>:<world>@<record offset>; waypoint paths: waypoint-path:<level>:<world>#<ordinal>; compiled scripts: script-code:<level>:<world>#<ordinal>; battle engine configurations: configuration:<file>#<record>; sound effects: sound-effect:<file>#<effect>."
     },
     "type": {
       "enum": [
@@ -39,6 +39,7 @@
         "imposter",
         "texture",
         "texture-descriptor",
+        "image",
         "mesh",
         "animation",
         "audio",
@@ -326,6 +327,50 @@
             "unterminated"
           ]
         },
+        "cimpFields": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "description": "Decoded non-pointer CDXImposter fields (onslaught-decomp src/imposter.h): mUnknown30 (+0x30), mAlt (+0x34), mUnknown38 (+0x38), mViews (+0x40), mNumFrames (+0x44), mAnimated (+0x48).",
+          "required": [
+            "unknown30",
+            "alt",
+            "unknown38",
+            "views",
+            "numFrames",
+            "animated"
+          ],
+          "properties": {
+            "unknown30": {"type": "integer"},
+            "alt": {"type": "boolean"},
+            "unknown38": {"type": "integer"},
+            "views": {"type": "integer"},
+            "numFrames": {"type": "integer"},
+            "animated": {"type": "boolean"}
+          }
+        },
+        "atlasSize": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "description": "Enclosing IMPS/DATA atlas dimensions when present and positive.",
+          "required": ["width", "height"],
+          "properties": {
+            "width": {"type": "integer", "minimum": 1},
+            "height": {"type": "integer", "minimum": 1}
+          }
+        },
+        "viewCountMatchesCimp": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "Whether VIEW rectangle count equals cimpFields.views * cimpFields.numFrames."
+        },
         "viewMetadata": {
           "type": "object",
           "additionalProperties": false,
@@ -559,6 +604,34 @@
               "offset"
             ]
           }
+        }
+      }
+    },
+    "image": {
+      "type": "object",
+      "required": [
+        "status",
+        "format"
+      ],
+      "description": "Standalone non-DDS image assets read directly by the game (data/textures/splash.tga via CDXTexture::InitDeviceObjects and data/Dial.raw via CByteSprite::Load).",
+      "properties": {
+        "status": {
+          "enum": [
+            "parsed",
+            "partial",
+            "unparsed"
+          ]
+        },
+        "format": {
+          "type": "string"
+        },
+        "width": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "height": {
+          "type": ["integer", "null"],
+          "minimum": 1
         }
       }
     },
@@ -1098,7 +1171,16 @@
             "path-member",
             "texture-by-rule",
             "uses-weapon",
+            "uses-weapon-mode",
+            "uses-round",
+            "uses-spawner",
+            "uses-component",
             "uses-explosion",
+            "uses-effect",
+            "uses-sound-effect",
+            "based-on",
+            "references-unit",
+            "references-goodie",
             "plays-sample",
             "variant-of",
             "offers-configuration"

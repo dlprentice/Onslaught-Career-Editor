@@ -78,10 +78,12 @@ def imposter_chunk() -> bytes:
     texture = text_record("Imposters_100", tag=b"BTXT")
     label = bytearray(76)
     label[4:4 + 12] = b"authored.msh"
+    struct.pack_into("<3i", label, 0x30, 1, 0, 1)
+    struct.pack_into("<3i", label, 0x40, 6, 1, 0)
     rectangles = struct.pack("<6f", 0, .5, 0, 1, 2, 4) * 6
     impt = chunk(b"CIMP", bytes(label)) + chunk(b"IMSH", struct.pack("<i", 7)) + chunk(b"VIEW", rectangles)
     impo = struct.pack("<I", 1) + chunk(b"IMPT", impt)
-    return chunk(b"IMPS", chunk(b"IMPS", chunk(b"DATA", bytes(8)) + texture + chunk(b"IMPO", impo)))
+    return chunk(b"IMPS", chunk(b"IMPS", chunk(b"DATA", struct.pack("<2i", 1024, 512)) + texture + chunk(b"IMPO", impo)))
 
 
 def goodie_archive() -> bytes:
@@ -734,7 +736,7 @@ class AuthoredInstallTests(unittest.TestCase):
         self.assertIsNone(placements["Ghost"]["placement"]["slot"])  # GetUnitData fails: no things[] slot
         self.assertEqual(placements["Rock"]["placement"]["slot"], 3)
         [inst] = [r for r in placements["Tank 1"]["relationships"] if r["type"] == "instance-of"]
-        self.assertEqual((inst["status"], inst["target"]), ("resolved", "definition:tank"))
+        self.assertEqual((inst["status"], inst["target"]), ("resolved", "definition:unit:tank"))
         [ghost] = [r for r in placements["Ghost"]["relationships"] if r["type"] == "instance-of"]
         self.assertEqual((ghost["status"], ghost["target"], ghost["targetName"]), ("unresolved", None, "Ghost"))
         markers = [a for a in self.catalog["assets"] if a["type"] == "marker"]
@@ -759,7 +761,7 @@ class AuthoredInstallTests(unittest.TestCase):
         self.assertEqual([o["native"] for o in code["objectives"]], ["SetObjective"])
         self.assertEqual(code["handledEvents"], ["Go"])
         rel = {r["type"]: r for r in sc["relationships"]}
-        self.assertEqual((rel["spawns-unit"]["status"], rel["spawns-unit"]["target"]), ("resolved", "definition:tank"))
+        self.assertEqual((rel["spawns-unit"]["status"], rel["spawns-unit"]["target"]), ("resolved", "definition:unit:tank"))
         self.assertEqual((rel["sets-script"]["status"], rel["sets-script"]["target"]),
                          ("resolved", "script-code:200:rlwd#0"))
         self.assertEqual((rel["follows-path"]["status"], rel["follows-path"]["target"]),
@@ -1035,8 +1037,12 @@ class NamedThingsCatalogueTests(unittest.TestCase):
                 (1, "Tank", {8: struct.pack("<I", 1), 9: b"authored.msh\0"}),
                 (1, "Tank", {8: struct.pack("<I", 4), 9: b"second.msh\0"})))
             assets = catalog.build_catalog(game)["assets"]
-        [tank] = [a for a in assets if a["type"] == "definition" and a["name"] == "Tank"]
-        self.assertEqual((tank["definition"]["behaviour"], tank["definition"]["memberShell"]), (0, "CMech"))
+        tanks = [a for a in assets if a["type"] == "definition" and a["name"] == "Tank"]
+        self.assertEqual(len(tanks), 2)
+        [primary] = [a for a in tanks if a["definition"]["foundByName"]]
+        [shadowed] = [a for a in tanks if not a["definition"]["foundByName"]]
+        self.assertEqual((primary["definition"]["behaviour"], primary["definition"]["memberShell"]), (0, "CMech"))
+        self.assertEqual(shadowed["id"], "definition:unit:tank#1")
 
     def test_over_limit_cli_reports_the_level_and_writes_no_partial_catalogue(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -1428,15 +1434,15 @@ class TablesCatalogueTests(unittest.TestCase):
         standard = self.configs["Standard"]
         self.assertEqual((standard["configuration"]["listPosition"], standard["configuration"]["fallback"]), (0, True))
         weapons = {(r["role"], r["targetName"]): (r["status"], r["target"]) for r in self.rel(standard, "uses-weapon")}
-        self.assertEqual(weapons, {("walker", "Gun A"): ("resolved", "definition:gun a"),
+        self.assertEqual(weapons, {("walker", "Gun A"): ("resolved", "definition:weapon:gun a"),
                                    ("walker", "Missing Gun"): ("unresolved", None),
                                    ("walker", "Tank"): ("unresolved", None),  # a unit, not a weapon
-                                   ("jet", "Gun B"): ("resolved", "definition:gun b"),
-                                   ("primary", "Gun A"): ("resolved", "definition:gun a"),
-                                   ("aug", "Gun B"): ("resolved", "definition:gun b")})
+                                   ("jet", "Gun B"): ("resolved", "definition:weapon:gun b"),
+                                   ("primary", "Gun A"): ("resolved", "definition:weapon:gun a"),
+                                   ("aug", "Gun B"): ("resolved", "definition:weapon:gun b")})
         [boom] = self.rel(standard, "uses-explosion")
-        self.assertEqual((boom["status"], boom["target"]), ("resolved", "definition:boom"))
-        self.assertEqual(self.assets["definition:boom"]["definition"]["kinds"], ["explosion"])
+        self.assertEqual((boom["status"], boom["target"]), ("resolved", "definition:explosion:boom"))
+        self.assertEqual(self.assets["definition:explosion:boom"]["definition"]["kinds"], ["explosion"])
         [cockpit] = self.rel(standard, "uses-mesh")
         self.assertEqual((cockpit["status"], cockpit["targetName"]), ("unresolved", "nothing.msh"))
         [racer_cockpit] = self.rel(self.configs["Racer"], "uses-mesh")
@@ -2411,6 +2417,206 @@ class SourceFileCoverageTests(unittest.TestCase):
         self.assertEqual(report["families"][0]["files"], 200)
         self.assertNotIn("private-example", json.dumps(report))
         self.assertLess(len(json.dumps(report)), 1500)
+
+
+class FullAuditRegressionTests(unittest.TestCase):
+    """Targeted regression tests for every physics, particle, emitter, script, imposter, image and code-ref fix."""
+
+    def test_all_nine_physics_kinds_building_rubble_weapon_icon_and_text_links(self) -> None:
+        import media_readers_tests as media_fixtures
+        import particle_set_walk_tests as psw_fixtures
+        import physics_values_decode_tests as pvd_fixtures
+        t = pvd_fixtures.text
+        phys = pvd_fixtures.script(
+            # 1: unit (UB_BUILDING=8, omits ".msh", links weapon/spawner/component/explosion/effect/sound/basedOn)
+            (1, "Base Unit", [(8, struct.pack("<i", 3)), (9, t("authored.msh")), (10, t("Boom"))]),
+            (1, "Bunker", [(8, struct.pack("<i", 8)), (9, t("bunker")), (39, t("Base Unit")),
+                           (7, t("Shared") + t("GunA") + struct.pack("<i", 0)),
+                           (18, t("Squad Spawner") + t("SpawnerA") + struct.pack("<i", 0)),
+                           (27, t("Turret") + struct.pack("<i", 0)), (10, t("Boom")),
+                           (12, t("spark")), (54, t("engine"))]),
+            # 2: weapon (same name "Shared" as weapon-mode and round; icon + languageName=1 -> 0xfe0572)
+            (2, "Shared", [(1, struct.pack("<i", 0) + t("Shared")), (5, t("Weapon Gun")), (11, struct.pack("<i", 1))]),
+            # 3: weapon-mode ("Shared", links round "Shared" + muzzleEffect + launchSound)
+            (3, "Shared", [(2, t("Shared")), (6, t("Spark")), (24, t("Engine"))]),
+            # 4: round ("Shared", links mesh + effect + explosion)
+            (4, "Shared", [(8, t("Spark")), (9, t("Boom")), (36, t("authored.msh"))]),
+            # 5: spawner (links unit)
+            (5, "Squad Spawner", [(1, t("Base Unit"))]),
+            # 6: explosion (duplicated name: second must be shadowed with foundByName=False)
+            (6, "Boom", [(2, t("Spark")), (10, t("Engine"))]),
+            (6, "Boom", [(2, t("Spark"))]),
+            # 7: component (links mesh + weapon + explosion)
+            (7, "Turret", [(3, t("authored.msh")), (2, t("Shared") + t("GunA") + struct.pack("<i", 0)), (4, t("Boom"))]),
+            # 8: feature
+            (8, "Rock", [(2, t("authored.msh")), (3, t("Boom"))]),
+            # 9: hazard
+            (9, "Lava", [(2, t("Spark"))]),
+        )
+        # Valid strict particle set with PD_MESH, default Blend_Mode=0 texture, REFERENCE, FLOAT_REFERENCE
+        main_par = psw_fixtures.particle_set(
+            (1, "Spark", [r"Texture C:\dev\Onslaught2\data\textures\Particle\spark.tga", "Colour_Range Fire"]),
+            (5, "Fire", ["Start_Red 255.0 Wobble", "Use_End 1"]),
+            (10, "Wobble", ["Param_A 1.0 NONE", "Param_Function 2"]),
+            (11, "Shard", [r"Mesh C:\dev\Onslaught2\data\meshes\authored.msh", "Impact_Spawnee spark"]),
+        )
+        fe_par = psw_fixtures.particle_set((1, "FE Spark", ["Blend_Mode 1"]))
+        # English language table containing weapon languageName case 1 (0x00FE0572) and AddHelpMessage id 2302408
+        wtext = "Vulcan\0".encode("utf-16le")
+        htext = "Help\0".encode("utf-16le")
+        lang = (struct.pack("<III", 0xFFFFFFBB, 3, 2)
+                + struct.pack("<III", 0x00FE0572, 0, 0xFFFFFFFF)
+                + struct.pack("<III", 2302408, len(wtext), 0xFFFFFFFF)
+                + struct.pack("<I", len(wtext) + len(htext)) + wtext + htext + struct.pack("<I", 0))
+        # Mesh with a '_Spark' effect emitter (CRTMesh::Init)
+        em_payload = mesh_fixtures.mesh_fixtures.MeshEmitterBindingTests._payload(("_Spark", 1, 0))
+        em_mesh = mesh_fixtures._catalog_stream(name="emitted.msh", emitters=em_payload, emitter_count=1)
+        # Script exercising SpawnThing(..., ""), SpawnParticle, EnableWeapon, EnableSpawner, NumContained, SetGoodieState, AddHelpMessage
+        def typed_script(name: str, calls: list[tuple[str, list]]) -> dict:
+            symbols, code = [], []
+            for native, args in calls:
+                for value in args:
+                    if isinstance(value, list):
+                        dtype = 6
+                    elif isinstance(value, int):
+                        dtype = 1
+                    else:
+                        dtype = 3
+                    symbols.append({"name": f"v{len(symbols)}", "dataType": dtype, "value": value,
+                                    "symbolType": 0, "index": 0, "flag": 0})
+                    code.append([worlddec.OP_PUSH, len(symbols) - 1])
+                code.append([worlddec.OP_CALL, named.NATIVE_INDEX[native] | len(args) << 8])
+            return {"name": name, "trailer": "00" * 10,
+                    "code": {"instructions": code, "eventPCs": [-1] * worlddec.NUM_SCRIPT_EVENTS, "symbols": symbols,
+                             "nextSymbolIndex": len(symbols), "eventFunctions": [], "tail": [0, 0]}}
+
+        script_body = typed_script("AuditScript", [
+            ("SpawnThing", ["Base Unit", "Spawner", 1, ""]),
+            ("SpawnParticle", ["spark", [0.0, 0.0, 0.0]]),
+            ("EnableWeapon", ["shared"]),
+            ("EnableSpawner", ["squad spawner"]),
+            ("NumContained", ["Base Unit"]),
+            ("SetGoodieState", [4, 2]),
+            ("AddHelpMessage", [2302408]),
+        ])
+        level_wrld = (chunk(b"WDAT", struct.pack("<ii", -1, 205))
+                      + chunk(b"RLWD", named.body([named.marker(27, script="AuditScript")], scripts=(script_body,))))
+        level_arc = resource_archive(chunk(b"WRES", chunk(b"WRLD", level_wrld)))
+        with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as decomp_temp:
+            game = Path(temp)
+            authored_install(game)
+            (game / "data/default physics.dat").write_bytes(phys)
+            (game / "data/ParticleSets/MainSet.par").write_bytes(main_par)
+            (game / "data/ParticleSets/Frontend.par").write_bytes(fe_par)
+            (game / "data/language").mkdir(parents=True, exist_ok=True)
+            (game / "data/language/english.dat").write_bytes(lang)
+            (game / "data/sounds/sounds.sfx").write_bytes(tables.sfx([("Engine", "Units\\engine", 30, True, False)]))
+            (game / "data/sounds/sounds_english_pc.xap").write_bytes(xap_fixtures.bank([("Units\\engine", 4, bytes(1))]))
+            (game / "data/resources/meshes/m_bunker.msh.aya").write_bytes(aya(mesh_stream()))
+            (game / "data/resources/meshes/m_m-b-rubble.msh.aya").write_bytes(aya(mesh_stream()))
+            (game / "data/resources/meshes/m_emitted.msh.aya").write_bytes(aya(em_mesh))
+            (game / "data/resources/100_res_PC.aya").write_bytes(resource_archive(
+                text_record("meshtex\\skin.tga"), named_mesh_record("authored.msh"),
+                text_record("Particle\\spark.tga", requested=5, levels=1),
+                text_record("hud\\Weapon Gun.tga", requested=4, levels=1),
+                imposter_chunk()))
+            (game / "data/resources/205_res_PC.aya").write_bytes(level_arc)
+            (game / "data/textures").mkdir(parents=True, exist_ok=True)
+            (game / "data/textures/splash.tga").write_bytes(media_fixtures.tga_file(16, 12))
+            # Dial.raw: 2 non-empty frames (<4), frame 2 empty sentinel (>=4), frame 3 trailing
+            (game / "data/Dial.raw").write_bytes(
+                bytes([0] * 10 + [4] * 246) + bytes([2] * 5 + [5] * 251) + bytes([4] * 256) + bytes([6] * 256))
+            (game / "data/video/ltlogo.vid").write_bytes(bink_file())
+            decomp = Path(decomp_temp)
+            (decomp / "src").mkdir(parents=True)
+            (decomp / "src/System.cpp").write_text(
+                'void CSystem::Init()\t// FUNCTION: 0x004efb10\n{\n'
+                '\tCDXTexture::FindTexture("splash.tga", 0, 0, 1, 1, 1);\n'
+                '\tFMV.PlayFullscreen("ltlogo");\n'
+                '\tPARTICLE_SET.GetPD("spark");\n}\n', encoding="latin-1")
+            (decomp / "src/FEPMain.cpp").write_text(
+                'void CFEPMain::Init()\t// FUNCTION: 0x00450000\n{\n'
+                '\tPARTICLE_SET.FindByName("fe spark");\n}\n', encoding="latin-1")
+            cat = catalog.build_catalog(game, decomp)
+            cov = catalog.build_coverage(cat)
+        by_id = {a["id"]: a for a in cat["assets"]}
+        # 1. All 9 physics statement kinds are catalogued distinctly with exact byte offsets & relationships.
+        defs = [a for a in cat["assets"] if a["type"] == "definition"]
+        self.assertEqual(len(defs), 11)
+        self.assertEqual({d["definition"]["kind"] for d in defs}, set(catalog.pvd.STATEMENT_KINDS.values()))
+        self.assertTrue(by_id["definition:explosion:boom"]["definition"]["foundByName"])
+        self.assertFalse(by_id["definition:explosion:boom#1"]["definition"]["foundByName"])
+        bunker = by_id["definition:unit:bunker"]
+        bunker_rels = {(r["type"], r.get("role"), r["target"]) for r in bunker["relationships"]}
+        self.assertIn(("uses-mesh", "mesh", "mesh:data/resources/meshes/m_bunker.msh.aya"), bunker_rels)
+        self.assertIn(("uses-mesh", "rubble", "mesh:data/resources/meshes/m_m-b-rubble.msh.aya"), bunker_rels)
+        self.assertIn(("based-on", "basedOn", "definition:unit:base unit"), bunker_rels)
+        self.assertIn(("uses-weapon", "weapon", "definition:weapon:shared"), bunker_rels)
+        self.assertIn(("uses-spawner", "spawner", "definition:spawner:squad spawner"), bunker_rels)
+        self.assertIn(("uses-component", "component", "definition:component:turret"), bunker_rels)
+        self.assertIn(("uses-effect", "trails", "effect:data/particlesets/mainset.par#0"), bunker_rels)
+        self.assertIn(("uses-sound-effect", "noise", "sound-effect:data/sounds/sounds.sfx#0"), bunker_rels)
+        wep = by_id["definition:weapon:shared"]
+        wep_rels = {(r["type"], r.get("role"), r["status"], r["target"]) for r in wep["relationships"]}
+        self.assertIn(("uses-weapon-mode", "chargeMode", "resolved", "definition:weapon-mode:shared"), wep_rels)
+        self.assertIn(("uses-text", "weapon-name", "resolved", catalog.TEXT_TABLE_ID), wep_rels)
+        self.assertTrue(any(r["type"] == "uses-texture" and r["status"] == "resolved"
+                            and r.get("role") == "weapon-icon" for r in wep["relationships"]))
+        # 2. Strict particle walk: exact byte offsets, default Blend_Mode=0 -> fmt 5, PD_MESH, internal refs & float refs.
+        spark = by_id["effect:data/particlesets/mainset.par#0"]
+        self.assertEqual((spark["effect"]["status"], spark["effect"]["descriptorTypeName"]), ("parsed", "SimpleSprite"))
+        self.assertGreater(spark["source"]["length"], 0)
+        spark_tex = [r for r in spark["relationships"] if r["type"] == "uses-texture"][0]
+        self.assertEqual((spark_tex["status"], spark_tex["requestedFormat"]), ("resolved", 5))
+        fire = by_id["effect:data/particlesets/mainset.par#1"]
+        self.assertIn(("uses-effect", "Start_Red", "effect:data/particlesets/mainset.par#2"),
+                      {(r["type"], r.get("role"), r["target"]) for r in fire["relationships"]})
+        shard = by_id["effect:data/particlesets/mainset.par#3"]
+        shard_rels = {(r["type"], r["target"]) for r in shard["relationships"]}
+        self.assertIn(("uses-mesh", "mesh:data/resources/meshes/m_authored.msh.aya"), shard_rels)
+        self.assertIn(("uses-effect", "effect:data/particlesets/mainset.par#0"), shard_rels)
+        # 3. Mesh '_' emitter links to MainSet.par.
+        em_rec = by_id["mesh:data/resources/meshes/m_emitted.msh.aya"]
+        self.assertEqual(em_rec["mesh"]["effectEmitters"], ["_Spark"])
+        [em_rel] = [r for r in em_rec["relationships"] if r["type"] == "uses-effect"]
+        self.assertEqual((em_rel["status"], em_rel["target"]), ("resolved", "effect:data/particlesets/mainset.par#0"))
+        # 4. Script empty-string sets-script dropped; SpawnParticle, EnableWeapon, EnableSpawner, NumContained, Goodie, Help wired.
+        sc = by_id["script-code:205:rlwd#0"]
+        self.assertFalse([r for r in sc["relationships"] if r["type"] == "sets-script"])
+        sc_rels = {(r["type"], r["status"], r["target"]) for r in sc["relationships"]}
+        self.assertIn(("uses-effect", "resolved", "effect:data/particlesets/mainset.par#0"), sc_rels)
+        self.assertIn(("uses-weapon", "resolved", "definition:weapon:shared"), sc_rels)
+        self.assertIn(("uses-spawner", "resolved", "definition:spawner:squad spawner"), sc_rels)
+        self.assertIn(("references-unit", "resolved", "definition:unit:base unit"), sc_rels)
+        self.assertIn(("references-goodie", "resolved", "goodie:003"), sc_rels)
+        self.assertIn(("uses-text", "resolved", catalog.TEXT_TABLE_ID), sc_rels)
+        # 5. Dial.raw & splash.tga catalogued (0 unparsed families), splash.tga + PARTICLE_SET + PlayFullscreen code sites resolved.
+        self.assertEqual(cov["filesInUnparsedFamilies"], 0)
+        dial = by_id["image:data/dial.raw"]["image"]
+        self.assertEqual((dial["status"], dial["framesLoaded"], dial["stoppingFrame"], dial["bytesRead"], dial["trailingBytes"]),
+                         ("parsed", 2, 2, 768, 256))
+        splash = by_id["image:data/textures/splash.tga"]
+        self.assertEqual((splash["image"]["status"], splash["image"]["width"], splash["image"]["height"]), ("parsed", 16, 12))
+        self.assertTrue(any(r["type"] == "named-by-code" for r in splash["relationships"]))
+        self.assertEqual(cat["codeReferences"]["unresolvedTextureNames"], [])
+        self.assertEqual((cat["codeReferences"]["particleSites"], cat["codeReferences"]["unresolvedParticleNames"]), (2, []))
+        self.assertTrue(any(r["type"] == "named-by-code" for r in by_id["effect:data/particlesets/frontend.par#0"]["relationships"]))
+        self.assertTrue(any(r["type"] == "named-by-code" for r in by_id["video:data/video/ltlogo.vid"]["relationships"]))
+        # 6. Imposter CIMP fields and DATA atlasSize populated & validated.
+        [imp] = [a for a in cat["assets"] if a["type"] == "imposter"]
+        self.assertEqual(imp["imposter"]["atlasSize"], {"width": 1024, "height": 512})
+        self.assertIs(imp["imposter"]["viewCountMatchesCimp"], True)
+        self.assertEqual(imp["imposter"]["cimpFields"]["views"], 6)
+        # 7. Every single generated record passes the strict Draft 2020-12 schema!
+        try:
+            import jsonschema
+        except ImportError:
+            self.skipTest("jsonschema is not installed")
+        schema = json.loads((catalog.TOOLS / "content_catalog.schema.json").read_text(encoding="utf-8"))
+        validator = jsonschema.Draft202012Validator(schema)
+        for asset in cat["assets"]:
+            self.assertEqual(sorted(validator.iter_errors({**asset, catalog.GENERATED_MARKER: True}), key=str), [],
+                             asset["id"])
 
 
 if __name__ == "__main__":

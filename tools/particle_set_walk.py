@@ -220,42 +220,45 @@ class _Line:
         return word, self.after[len(word) + 1:]
 
 
-def walk(data: bytes) -> dict:
-    """Walk one particle set file; returns where the walk ends, the skipped spans and counts (no names or values)."""
+def _walk(data: bytes, *, collect_descriptors: bool = False) -> tuple[dict, list[dict]]:
+    """Shared grammar walk; when collect_descriptors is True, also records per-descriptor coordinates and references."""
     lines = lines_of(data)
     cursor = 0
 
-    def take(expected: str | None = None) -> _Line:
+    def take(expected: str | None = None) -> tuple[_Line, int]:
         nonlocal cursor
         if cursor >= len(lines):
             raise ParticleSetError("the file ends before its last descriptor's separator")
-        start, _end, text = lines[cursor]
+        start, end, text = lines[cursor]
         cursor += 1
         line = _Line(start, text)
         if expected is not None and line.token != expected:
             raise ParticleSetError(f"{expected} is not where ReadData reads it")
-        return line
+        return line, end
 
-    header = take()
+    header, _ = take()
     if header.text != SIGNATURE:
         raise ParticleSetError("the first line is not the shipped particle set signature")
-    if scan_f(take("File_Version").sole_number()) != FILE_VERSION:
+    if scan_f(take("File_Version")[0].sole_number()) != FILE_VERSION:
         raise ParticleSetError("the file version is not the shipped one")
-    count = scan_i(take("Num_Particle_Descriptors").sole_number())
+    count = scan_i(take("Num_Particle_Descriptors")[0].sole_number())
     if count < 0:
         raise ParticleSetError("a negative descriptor count")
 
     names: list[str] = []  # the archive's name slots, in reading order
     fixups: dict[int, str] = {}  # slot -> the field that takes it (a later bind replaces an earlier one)
     descriptors: dict[str, int] = {}
+    descriptor_rows: list[dict] = []
     skipped: list[tuple[int, int]] = []
     types: collections.Counter = collections.Counter()
     rebinds = 0
     for number in range(count):
-        kind = scan_i(take("Particle_Descriptor_Type").sole_number())
+        type_line, _ = take("Particle_Descriptor_Type")
+        kind = scan_i(type_line.sole_number())
         if kind not in TYPES:
             raise ParticleSetError("a descriptor type the factory does not make")
-        name = take("Particle_Descriptor_Name").name()
+        name_line, _ = take("Particle_Descriptor_Name")
+        name = name_line.name()
         if len(name) > NAME_LIMIT:
             raise ParticleSetError("a descriptor name longer than a descriptor keeps")
         if fold(name) in descriptors:
@@ -266,12 +269,19 @@ def walk(data: bytes) -> dict:
         ival = 0  # ReadUntilSeparator's integer output, kept across the Load's lines
         timeline = collections.Counter()
         texture_size = 2
+        blend_mode: int | None = None
+        textures: list[dict] = []
+        meshes: list[str] = []
+        refs: list[dict] = []
+        float_refs: list[dict] = []
+        desc_end = type_line.start
         while True:
-            line = take()
+            line, line_end = take()
             token = line.token
             if token == SEPARATOR:
                 if line.text != SEPARATOR:
                     raise ParticleSetError("words after a separator")
+                desc_end = line_end
                 break
             if token not in TOKENS:
                 raise ParticleSetError("a token the reader does not know")
@@ -285,6 +295,8 @@ def walk(data: bytes) -> dict:
                     skipped.append((skipped_at, len(line.text) - (skipped_at - line.start)))
                 if token not in takes:
                     raise ParticleSetError(f"{token}: a value a {type_name} does not read")
+                if token == "Blend_Mode":
+                    blend_mode = value
                 if token in STALE_SLOT_FLOATS:
                     if ival not in range(WORKSPACE):
                         raise ParticleSetError(f"{token}: binds a slot outside the reader's workspace")
@@ -297,16 +309,29 @@ def walk(data: bytes) -> dict:
                 if type_name == "SimpleSprite" and token == "Texture_Size":
                     texture_size = value
             elif token in STRING:
-                line.name()
+                sval = line.name()
                 if token not in takes:
                     raise ParticleSetError(f"{token}: a name a {type_name} does not read")
+                if collect_descriptors:
+                    if token == "Texture":
+                        # CPDSimpleSprite/CPDTrail/CPDPMesh constructors initialize mBlendMode = 0
+                        # (onslaught-decomp src/ParticleDescriptor.h, src/ParticleDescriptor.cpp).
+                        textures.append({"path": sval, "blendMode": 0 if blend_mode is None else blend_mode,
+                                         "blendModeExplicit": blend_mode is not None})
+                    elif token == "Mesh":
+                        meshes.append(sval)
             else:
                 if token in REFERENCE:
-                    names.append(line.name())
+                    target_name = line.name()
+                    names.append(target_name)
+                    if collect_descriptors and target_name and target_name != "NONE":
+                        refs.append({"token": token, "target": target_name})
                 else:
                     word, rest = line.float_and_name()
-                    scan_f(word)
+                    fval = scan_f(word)
                     names.append(rest)
+                    if collect_descriptors and rest and rest != "NONE":
+                        float_refs.append({"token": token, "value": fval, "target": rest})
                 ival = len(names) - 1
                 if len(names) > WORKSPACE:
                     raise ParticleSetError("more name slots than the reader's workspace")
@@ -318,6 +343,12 @@ def walk(data: bytes) -> dict:
                             raise ParticleSetError(f"{token}: more than a timeline's entries")
         if type_name == "SimpleSprite" and texture_size not in SPRITE_TEXTURE_SIZES:
             raise ParticleSetError("a sprite texture size SetUV does not take")
+        if collect_descriptors:
+            descriptor_rows.append({
+                "ordinal": number, "offset": type_line.start, "length": desc_end - type_line.start,
+                "type": kind, "typeName": type_name, "name": name, "blendMode": blend_mode,
+                "textures": textures, "meshes": meshes, "references": refs, "floatReferences": float_refs,
+            })
     for slot in range(len(names)):
         if slot not in fixups:
             raise ParticleSetError("a name slot no field takes (the reader would write through an unset pointer)")
@@ -326,6 +357,18 @@ def walk(data: bytes) -> dict:
         outcome["empty" if not name else "resolved" if fold(name) in descriptors else
                 "NONE" if name == "NONE" else "unmatched"] += 1
     end = lines[cursor - 1][1]
-    return {"end": end, "skipped": skipped, "lines": cursor, "descriptors": count, "types": dict(sorted(types.items())),
-            "nameSlots": len(names), "slotRebinds": rebinds, "references": dict(sorted(outcome.items())),
-            "linesAfterTheWalk": len(lines) - cursor}
+    summary = {"end": end, "skipped": skipped, "lines": cursor, "descriptors": count,
+               "types": dict(sorted(types.items())), "nameSlots": len(names), "slotRebinds": rebinds,
+               "references": dict(sorted(outcome.items())), "linesAfterTheWalk": len(lines) - cursor}
+    return summary, descriptor_rows
+
+
+def walk(data: bytes) -> dict:
+    """Walk one particle set file; returns where the walk ends, the skipped spans and counts (no names or values)."""
+    return _walk(data, collect_descriptors=False)[0]
+
+
+def walk_descriptors(data: bytes) -> dict:
+    """Walk one particle set file and return both the summary counts and per-descriptor coordinates and references."""
+    summary, rows = _walk(data, collect_descriptors=True)
+    return {"walk": summary, "descriptors": rows}

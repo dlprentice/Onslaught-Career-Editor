@@ -150,7 +150,7 @@ def authored(game: Path) -> None:
         "data/sounds/english/MessageBox/line.ogg": media_fixtures.ogg_file(),
         "data/video/intro.vid": media_fixtures.bink_file([([b"\x10" * 8], b"\x20" * 30), ([b"\x11" * 4], b"\x21" * 50)]),
         "data/textures/splash.tga": media_fixtures.tga_file(),
-        "data/Dial.raw": bytes(512),
+        "data/Dial.raw": bytes(256) + bytes([4]) * 256 + bytes([4]) * 256,
         "Manuals/English/English.htm": b'<html><img src="English_files/image001.png"></html>\r\n',
         "Manuals/English/English_files/image001.png": media_fixtures.png_file(),
         "Manuals/Images/orphan.png": media_fixtures.png_file(3, 1),
@@ -350,9 +350,10 @@ class InventoryTests(unittest.TestCase):
         self.assertEqual((page["kind"], page["status"], page["file"]), ("text", inv.DECODED, "Manuals/English/English.htm"))
         self.assertFalse(page["used"])  # nothing in the authored install links to the page itself
 
-    def test_the_byte_sprite_proves_only_its_first_frame(self):
+    def test_the_byte_sprite_reads_frames_until_the_first_empty_frame(self):
         row = self.rows["data/Dial.raw"]
-        self.assertEqual(row["bytes"], {inv.DECODED: 256, inv.REFERENCED: 256, inv.UNKNOWN: 0})
+        self.assertEqual(row["bytes"], {inv.DECODED: 512, inv.REFERENCED: 256, inv.UNKNOWN: 0})
+        self.assertEqual((row["facts"]["framesLoaded"], row["facts"]["stoppingFrame"]), (1, 1))
         self.assertIn("loader:CByteSprite::Load", row["usedBy"])
 
     def test_physics_values_are_read_and_joined(self):
@@ -455,8 +456,9 @@ class InventoryTests(unittest.TestCase):
         film = self.metadata("video", name="intro")
         self.assertEqual((film["width"], film["height"], film["frames"]), (64, 48, 2))
         sprite = self.metadata("byte-sprite")
-        self.assertEqual((sprite["width"], sprite["height"], sprite["frames"], sprite["details"]["framesEstablished"]),
-                         (16, 16, None, 1))
+        self.assertEqual((sprite["width"], sprite["height"], sprite["frames"], sprite["details"]["framesLoaded"],
+                          sprite["details"]["stoppingFrame"]),
+                         (16, 16, 1, 1, 1))
         [num, den] = film["details"]["fpsRational"]
         self.assertEqual(film["durationSeconds"], round(2 * den / num, 3))
         music = self.metadata("music", name="track")

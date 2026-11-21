@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""Read imposter identities and view rectangles without guessing the remaining fields.
+"""Read imposter identities, CDXImposter header fields, atlas size and view rectangles without guessing unknown bytes.
 
 The caller supplies the payload of a top-level IMPS archive chunk. The nested
-IMPS/IMPO/IMPT framing, IMSH resource id and CIMP label are the catalogue's
-established CDXImposter::DeserializeAll reading. VIEW consists of six-float
-rectangles as read by content_inventory.views_hold and the rebuild materializer.
-The number of complete rectangles is not a claim about runtime view selection.
+IMPS/DATA, IMPS/BTXT and IMPS/IMPO/IMPT framing, IMSH resource id and CIMP
+CDXImposter layout (sizeof == 0x4C: mName[32] at +0x04, mUnknown30 at +0x30,
+mAlt at +0x34, mUnknown38 at +0x38, mViews at +0x40, mNumFrames at +0x44,
+mAnimated at +0x48) follow onslaught-decomp src/imposter.h and
+src/DXImposter.cpp (CDXImposter::DeserializeAll @0x00543d90). VIEW consists of
+six-float rectangles as read by content_inventory.views_hold and the rebuild
+materializer, with expected count mViews * mNumFrames.
 
-All offsets address the supplied payload. Unknown fields remain named spans;
-neither their values nor original payload bytes are returned. This reader does
-not read files, write output, decode atlas pixels or claim runtime use.
+All offsets address the supplied payload. Serialized pointers (mNext, mMesh,
+mFrames) and mUnknown28 remain named uninterpreted spans; neither their values
+nor original payload bytes are returned. This reader does not read files, write
+output, decode atlas pixels or claim runtime use.
 """
 from __future__ import annotations
 
@@ -95,15 +99,33 @@ def view_metadata(data: bytes, row: Chunk | None) -> dict:
     return {"status": "parsed", "countByLength": count, "views": out, "reason": None}
 
 
+CIMP_SIZE = 0x4C  # sizeof(CDXImposter) (onslaught-decomp src/imposter.h)
+CIMP_NAME_OFFSET = 0x04
+CIMP_NAME_SIZE = 0x20  # char mName[0x20]
+
+
 def parse_imposter_set(data: bytes) -> dict:
     outer = chunks(data, 0, len(data))
     if len(outer) != 1 or outer[0].tag != "IMPS":
         raise ImposterFormatError("expected exactly one nested IMPS chunk")
     root = outer[0]
     children = chunks(data, root.payload, root.end)
+    data_chunk = only(children, "DATA", required=False)
     atlas = only(children, "BTXT", required=False)
     entries = only(children, "IMPO")
     assert entries is not None
+    atlas_size = None
+    set_unread = []
+    if data_chunk is not None:
+        if data_chunk.length == 8:
+            width, height = struct.unpack_from("<2i", data, data_chunk.payload)
+            if width > 0 and height > 0:
+                atlas_size = {"width": width, "height": height}
+            else:
+                set_unread.append(span(data_chunk, "DATA"))
+        else:
+            set_unread.append(span(data_chunk, "DATA"))
+    set_unread.extend(span(row, row.tag) for row in children if row.tag not in {"DATA", "BTXT", "IMPO"})
     if entries.length < 4:
         raise ImposterFormatError("IMPO has no complete record count")
     count = struct.unpack_from("<I", data, entries.payload)[0]
@@ -123,31 +145,51 @@ def parse_imposter_set(data: bytes) -> dict:
             raise ImposterFormatError("IMSH is not one resource id")
         label_text = None
         label_status = "missing"
+        cimp_fields = None
         unread = []
         if label is not None:
-            if label.length < 68:
+            if label.length < CIMP_NAME_OFFSET + CIMP_NAME_SIZE:
                 label_status = "truncated"
                 unread.append(span(label, "CIMP"))
             else:
-                buffer = data[label.payload + 4:label.payload + 68]
+                buffer = data[label.payload + CIMP_NAME_OFFSET:label.payload + CIMP_NAME_OFFSET + CIMP_NAME_SIZE]
                 terminator = buffer.find(b"\0")
                 if terminator < 0:
                     label_status = "unterminated"
-                    unread.append({"field": "CIMP/label", "offset": label.payload + 4, "length": 64})
+                    unread.append({"field": "CIMP/label", "offset": label.payload + CIMP_NAME_OFFSET,
+                                   "length": CIMP_NAME_SIZE})
                 else:
                     label_text = buffer[:terminator].decode("latin-1")
                     label_status = "empty" if not label_text else "terminated-latin1"
-                unread.append({"field": "CIMP/prefix", "offset": label.payload, "length": 4})
-                if label.length > 68:
-                    unread.append({"field": "CIMP/tail", "offset": label.payload + 68, "length": label.length - 68})
+                unread.append({"field": "CIMP/mNext", "offset": label.payload, "length": 4})
+                if label.length >= CIMP_SIZE:
+                    unread.append({"field": "CIMP/mMesh", "offset": label.payload + 0x24, "length": 4})
+                    unread.append({"field": "CIMP/mUnknown28", "offset": label.payload + 0x28, "length": 8})
+                    unk30, alt, unk38 = struct.unpack_from("<3i", data, label.payload + 0x30)
+                    unread.append({"field": "CIMP/mFrames", "offset": label.payload + 0x3C, "length": 4})
+                    view_count, num_frames, animated = struct.unpack_from("<3i", data, label.payload + 0x40)
+                    cimp_fields = {"unknown30": unk30, "alt": bool(alt), "unknown38": unk38,
+                                   "views": view_count, "numFrames": num_frames, "animated": bool(animated)}
+                    if label.length > CIMP_SIZE:
+                        unread.append({"field": "CIMP/tail", "offset": label.payload + CIMP_SIZE,
+                                       "length": label.length - CIMP_SIZE})
+                else:
+                    unread.append({"field": "CIMP/tail", "offset": label.payload + CIMP_NAME_OFFSET + CIMP_NAME_SIZE,
+                                   "length": label.length - (CIMP_NAME_OFFSET + CIMP_NAME_SIZE)})
         unread.extend(span(row, row.tag) for row in fields if row.tag not in {"CIMP", "IMSH", "VIEW"})
         metadata = view_metadata(data, views)
         if views is not None and metadata["status"] != "parsed":
             unread.append(span(views, "VIEW"))
+        view_count_matches = None
+        if cimp_fields is not None and cimp_fields["views"] > 0 and cimp_fields["numFrames"] > 0:
+            expected_views = cimp_fields["views"] * cimp_fields["numFrames"]
+            if metadata["countByLength"] is not None:
+                view_count_matches = metadata["countByLength"] == expected_views
         out.append({"ordinal": ordinal, "offset": record.offset, "length": record.end - record.offset,
                     "meshResourceId": struct.unpack_from("<i", data, mesh.payload)[0],
-                    "storedLabel": label_text, "labelStatus": label_status, "viewMetadata": metadata,
+                    "storedLabel": label_text, "labelStatus": label_status, "cimpFields": cimp_fields,
+                    "viewCountMatchesCimp": view_count_matches, "viewMetadata": metadata,
                     "uninterpreted": unread})
-    return {"records": out, "atlas": None if atlas is None else
+    return {"records": out, "atlasSize": atlas_size, "atlas": None if atlas is None else
             {"offset": atlas.payload, "length": atlas.length},
-            "uninterpreted": [span(row, row.tag) for row in children if row.tag not in {"BTXT", "IMPO"}]}
+            "uninterpreted": set_unread}
