@@ -161,6 +161,10 @@ class RebuildTableTests(unittest.TestCase):
         self.assertEqual(physics.WEAPON_LANGUAGE_TEXT_IDS[13], 0x01BD0942)
         self.assertEqual((physics.UNIT_BEHAVIOUR_BUILDING, physics.DEFAULT_BUILDING_RUBBLE_MESH), (8, "m-b-rubble"))
 
+    def test_weapon_mode_clip_names_a_shell_casing_mesh(self):
+        # weapon.cpp:526-536 + Shell.cpp:21-41 pass mode->mClipName to CShell -> CRTMesh::Init (CMesh::GetMesh).
+        self.assertEqual(physics.named_references("weapon-mode", 15, ["casing.msh"]), [("mesh", "casing.msh")])
+
 
 if __name__ == "__main__":
     unittest.main()

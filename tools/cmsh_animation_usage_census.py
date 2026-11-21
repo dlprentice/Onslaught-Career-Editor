@@ -651,6 +651,7 @@ def _physics_mesh_definitions(data: bytes) -> dict[str, object]:
     record_count = 0
     unit_count = 0
     unit_definitions: list[dict[str, object]] = []
+    unit_behavior_by_name: dict[str, int] = {}
     definitions: dict[str, list[dict[str, object]]] = collections.defaultdict(list)
     while True:
         if offset + 4 > len(data):
@@ -666,6 +667,7 @@ def _physics_mesh_definitions(data: bytes) -> dict[str, object]:
         relevant = PHYSICS_MESH_FIELDS.get(record_type)
         mesh_value: str | None = None
         behavior_serialized_type: int | None = None
+        seen_explicit_behavior = False
         unit_ordinal = unit_count if record_type == 1 else None
         field_count = 0
         while True:
@@ -687,8 +689,14 @@ def _physics_mesh_definitions(data: bytes) -> dict[str, object]:
                 mesh_value, consumed = _take_c_string(value, 0, f"physics mesh for {name!r}")
                 if consumed != len(value):
                     raise ValueError(f"physics mesh for {name!r} has trailing bytes")
+            if record_type == 1 and field_id == 39:
+                parent_name, consumed = _take_c_string(value, 0, f"physics basedOn for {name!r}")
+                if consumed != len(value):
+                    raise ValueError(f"physics basedOn for {name!r} has trailing bytes")
+                if parent_name in unit_behavior_by_name:
+                    behavior_serialized_type = unit_behavior_by_name[parent_name]
             if record_type == 1 and field_id == 8:
-                if behavior_serialized_type is not None:
+                if seen_explicit_behavior:
                     raise ValueError(
                         f"Unit definition {name!r} repeats behaviour field 8"
                     )
@@ -697,6 +705,7 @@ def _physics_mesh_definitions(data: bytes) -> dict[str, object]:
                         f"Unit definition {name!r} behaviour field is not one dword"
                     )
                 behavior_serialized_type = struct.unpack("<I", value)[0]
+                seen_explicit_behavior = True
             if marker == -1:
                 break
             if marker != 0:
@@ -705,6 +714,7 @@ def _physics_mesh_definitions(data: bytes) -> dict[str, object]:
         if record_type == 1:
             if behavior_serialized_type is None:
                 raise ValueError(f"Unit definition {name!r} has no behaviour field 8")
+            unit_behavior_by_name.setdefault(name, behavior_serialized_type)
             if not 1 <= behavior_serialized_type <= len(
                 UNIT_BEHAVIOR_SELECTOR_BY_SERIALIZED_TYPE
             ):

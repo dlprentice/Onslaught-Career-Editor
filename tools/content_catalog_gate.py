@@ -222,8 +222,18 @@ def check_payloads(path: Path, counts: collections.Counter, failures: list[str])
                 failures.append(f"{path.name} IMPS at {at}: does not decode: {error}")
                 continue
             counts["IMPS sets decoded"] += 1
+            btxt_dims = None
+            if parsed["atlas"] is not None:
+                try:
+                    a = parsed["atlas"]
+                    tex = cc.parse_text_record(raw[at + a["offset"]:at + a["offset"] + a["length"]])
+                    btxt_dims = (tex["width"], tex["height"])
+                except (ValueError, struct.error):
+                    btxt_dims = None
             if parsed["atlasSize"] is None:
-                failures.append(f"{path.name} IMPS at {at}: DATA does not carry positive atlas dimensions")
+                failures.append(f"{path.name} IMPS at {at}: DATA does not carry positive dimensions")
+            elif btxt_dims is not None and (parsed["atlasSize"]["width"], parsed["atlasSize"]["height"]) != btxt_dims:
+                failures.append(f"{path.name} IMPS at {at}: DATA words disagree with enclosing BTXT dimensions")
             for imp in parsed["records"]:
                 counts["IMPT records decoded"] += 1
                 if imp["labelStatus"] not in ("terminated-latin1", "empty"):

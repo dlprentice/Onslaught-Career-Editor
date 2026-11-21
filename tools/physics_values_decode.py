@@ -72,7 +72,7 @@ WEAPON_MODE = {
     1: ("f", "inaccuracy"), 2: ("s", "round", (ROUND,)), 3: ("f", "reloadTime"), 4: ("f", "burstSize"),
     5: ("f", "burstDelay"), 6: ("s", "muzzleEffect", (PARTICLE,)), 8: ("ff", "launchSequence"), 9: ("f", "minRange"),
     10: ("f", "maxRange"), 11: ("f", "minDeflection"), 12: ("f", "maxDeflection"), 13: ("f", "preFireDelay"),
-    14: ("f", "postFireDelay"), 15: ("s", "clip", (MODE,)), 16: ("f", "lockTime"), 17: ("f", "lockDeflection"),
+    14: ("f", "postFireDelay"), 15: ("s", "clip", (MESH,)), 16: ("f", "lockTime"), 17: ("f", "lockDeflection"),
     18: ("s", "preFireEffect", (PARTICLE,)), 19: ("i", "lockMode"), 20: ("i", "lockUnit"), 21: ("f", "lockRange"),
     22: ("f", "maxLocks"), 23: ("f", "lockRadius"), 24: ("s", "launchSound", (SOUND,)),
     25: ("s", "weaponBasedOn", (WEAPON,)), 26: ("f", "minTargetHeight"), 27: ("f", "maxTargetHeight"),

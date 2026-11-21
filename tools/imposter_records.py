@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""Read imposter identities, CDXImposter header fields, atlas size and view rectangles without guessing unknown bytes.
+"""Read imposter identities, CDXImposter header fields, IMPS/DATA words and view rectangles without guessing unknown bytes.
 
 The caller supplies the payload of a top-level IMPS archive chunk. The nested
 IMPS/DATA, IMPS/BTXT and IMPS/IMPO/IMPT framing, IMSH resource id and CIMP
 CDXImposter layout (sizeof == 0x4C: mName[32] at +0x04, mUnknown30 at +0x30,
 mAlt at +0x34, mUnknown38 at +0x38, mViews at +0x40, mNumFrames at +0x44,
 mAnimated at +0x48) follow onslaught-decomp src/imposter.h and
-src/DXImposter.cpp (CDXImposter::DeserializeAll @0x00543d90). VIEW consists of
-six-float rectangles as read by content_inventory.views_hold and the rebuild
-materializer, with expected count mViews * mNumFrames.
+src/DXImposter.cpp (CDXImposter::DeserializeAll @0x00543d90). IMPS/DATA holds
+two SINTs read into unused sUnknown8c0/sUnknown8c4 by DeserializeAll; callers
+cross-check them against the enclosing BTXT (width, height), which they match
+empirically across retail. VIEW consists of six-float rectangles as read by
+content_inventory.views_hold and the rebuild materializer, with expected count
+mViews * mNumFrames.
 
 All offsets address the supplied payload. Serialized pointers (mNext, mMesh,
 mFrames) and mUnknown28 remain named uninterpreted spans; neither their values
@@ -115,12 +118,14 @@ def parse_imposter_set(data: bytes) -> dict:
     entries = only(children, "IMPO")
     assert entries is not None
     atlas_size = None
+    data_words = None
     set_unread = []
     if data_chunk is not None:
         if data_chunk.length == 8:
-            width, height = struct.unpack_from("<2i", data, data_chunk.payload)
-            if width > 0 and height > 0:
-                atlas_size = {"width": width, "height": height}
+            w0, w1 = struct.unpack_from("<2i", data, data_chunk.payload)
+            data_words = [w0, w1]
+            if w0 > 0 and w1 > 0:
+                atlas_size = {"width": w0, "height": w1}
             else:
                 set_unread.append(span(data_chunk, "DATA"))
         else:
@@ -190,6 +195,6 @@ def parse_imposter_set(data: bytes) -> dict:
                     "storedLabel": label_text, "labelStatus": label_status, "cimpFields": cimp_fields,
                     "viewCountMatchesCimp": view_count_matches, "viewMetadata": metadata,
                     "uninterpreted": unread})
-    return {"records": out, "atlasSize": atlas_size, "atlas": None if atlas is None else
+    return {"records": out, "dataWords": data_words, "atlasSize": atlas_size, "atlas": None if atlas is None else
             {"offset": atlas.payload, "length": atlas.length},
             "uninterpreted": set_unread}

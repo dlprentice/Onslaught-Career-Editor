@@ -357,11 +357,12 @@
             "null"
           ],
           "additionalProperties": false,
-          "description": "Enclosing IMPS/DATA atlas dimensions when present and positive.",
+          "description": "Two SINTs from enclosing IMPS/DATA (read into unused sUnknown8c0/sUnknown8c4 by CDXImposter::DeserializeAll) when positive; empirically matches enclosing BTXT (width, height) across retail (matchesBtxt records the cross-check).",
           "required": ["width", "height"],
           "properties": {
             "width": {"type": "integer", "minimum": 1},
-            "height": {"type": "integer", "minimum": 1}
+            "height": {"type": "integer", "minimum": 1},
+            "matchesBtxt": {"type": ["boolean", "null"]}
           }
         },
         "viewCountMatchesCimp": {

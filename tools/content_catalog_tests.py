@@ -83,7 +83,7 @@ def imposter_chunk() -> bytes:
     rectangles = struct.pack("<6f", 0, .5, 0, 1, 2, 4) * 6
     impt = chunk(b"CIMP", bytes(label)) + chunk(b"IMSH", struct.pack("<i", 7)) + chunk(b"VIEW", rectangles)
     impo = struct.pack("<I", 1) + chunk(b"IMPT", impt)
-    return chunk(b"IMPS", chunk(b"IMPS", chunk(b"DATA", struct.pack("<2i", 1024, 512)) + texture + chunk(b"IMPO", impo)))
+    return chunk(b"IMPS", chunk(b"IMPS", chunk(b"DATA", struct.pack("<2i", 4, 4)) + texture + chunk(b"IMPO", impo)))
 
 
 def goodie_archive() -> bytes:
@@ -2428,17 +2428,18 @@ class FullAuditRegressionTests(unittest.TestCase):
         import physics_values_decode_tests as pvd_fixtures
         t = pvd_fixtures.text
         phys = pvd_fixtures.script(
-            # 1: unit (UB_BUILDING=8, omits ".msh", links weapon/spawner/component/explosion/effect/sound/basedOn)
+            # 1: unit (UB_BUILDING=8, omits ".msh", plus child unit inheriting UB_BUILDING via basedOn)
             (1, "Base Unit", [(8, struct.pack("<i", 3)), (9, t("authored.msh")), (10, t("Boom"))]),
-            (1, "Bunker", [(8, struct.pack("<i", 8)), (9, t("bunker")), (39, t("Base Unit")),
+            (1, "Bunker", [(39, t("Base Unit")), (8, struct.pack("<i", 8)), (9, t("bunker")),
                            (7, t("Shared") + t("GunA") + struct.pack("<i", 0)),
                            (18, t("Squad Spawner") + t("SpawnerA") + struct.pack("<i", 0)),
                            (27, t("Turret") + struct.pack("<i", 0)), (10, t("Boom")),
                            (12, t("spark")), (54, t("engine"))]),
+            (1, "Bunker Child", [(39, t("Bunker")), (9, t("bunker"))]),
             # 2: weapon (same name "Shared" as weapon-mode and round; icon + languageName=1 -> 0xfe0572)
             (2, "Shared", [(1, struct.pack("<i", 0) + t("Shared")), (5, t("Weapon Gun")), (11, struct.pack("<i", 1))]),
-            # 3: weapon-mode ("Shared", links round "Shared" + muzzleEffect + launchSound)
-            (3, "Shared", [(2, t("Shared")), (6, t("Spark")), (24, t("Engine"))]),
+            # 3: weapon-mode ("Shared", links round "Shared", clip shell-casing mesh + muzzleEffect + launchSound)
+            (3, "Shared", [(2, t("Shared")), (6, t("Spark")), (15, t("authored.msh")), (24, t("Engine"))]),
             # 4: round ("Shared", links mesh + effect + explosion)
             (4, "Shared", [(8, t("Spark")), (9, t("Boom")), (36, t("authored.msh"))]),
             # 5: spawner (links unit)
@@ -2498,6 +2499,7 @@ class FullAuditRegressionTests(unittest.TestCase):
             ("NumContained", ["Base Unit"]),
             ("SetGoodieState", [4, 2]),
             ("AddHelpMessage", [2302408]),
+            ("AddHelpMessage", [999999]),
         ])
         level_wrld = (chunk(b"WDAT", struct.pack("<ii", -1, 205))
                       + chunk(b"RLWD", named.body([named.marker(27, script="AuditScript")], scripts=(script_body,))))
@@ -2518,9 +2520,11 @@ class FullAuditRegressionTests(unittest.TestCase):
             (game / "data/resources/100_res_PC.aya").write_bytes(resource_archive(
                 text_record("meshtex\\skin.tga"), named_mesh_record("authored.msh"),
                 text_record("Particle\\spark.tga", requested=5, levels=1),
-                text_record("hud\\Weapon Gun.tga", requested=4, levels=1),
+                text_record("hud\\Weapon Gun.tga", requested=4, levels=-1),
                 imposter_chunk()))
             (game / "data/resources/205_res_PC.aya").write_bytes(level_arc)
+            (game / "data/MissionScripts/level205").mkdir(parents=True, exist_ok=True)
+            (game / "data/MissionScripts/level205/AuditScript.msl").write_bytes(b"// audit\n")
             (game / "data/textures").mkdir(parents=True, exist_ok=True)
             (game / "data/textures/splash.tga").write_bytes(media_fixtures.tga_file(16, 12))
             # Dial.raw: 2 non-empty frames (<4), frame 2 empty sentinel (>=4), frame 3 trailing
@@ -2532,7 +2536,9 @@ class FullAuditRegressionTests(unittest.TestCase):
             (decomp / "src/System.cpp").write_text(
                 'void CSystem::Init()\t// FUNCTION: 0x004efb10\n{\n'
                 '\tCDXTexture::FindTexture("splash.tga", 0, 0, 1, 1, 1);\n'
+                '\tCDXTexture::FindTexture("Dial.raw", 0, 0, 1, 1, 1);\n'
                 '\tFMV.PlayFullscreen("ltlogo");\n'
+                '\t// FMV.PlayFullscreen("test");\n'
                 '\tPARTICLE_SET.GetPD("spark");\n}\n', encoding="latin-1")
             (decomp / "src/FEPMain.cpp").write_text(
                 'void CFEPMain::Init()\t// FUNCTION: 0x00450000\n{\n'
@@ -2542,7 +2548,7 @@ class FullAuditRegressionTests(unittest.TestCase):
         by_id = {a["id"]: a for a in cat["assets"]}
         # 1. All 9 physics statement kinds are catalogued distinctly with exact byte offsets & relationships.
         defs = [a for a in cat["assets"] if a["type"] == "definition"]
-        self.assertEqual(len(defs), 11)
+        self.assertEqual(len(defs), 12)
         self.assertEqual({d["definition"]["kind"] for d in defs}, set(catalog.pvd.STATEMENT_KINDS.values()))
         self.assertTrue(by_id["definition:explosion:boom"]["definition"]["foundByName"])
         self.assertFalse(by_id["definition:explosion:boom#1"]["definition"]["foundByName"])
@@ -2550,6 +2556,13 @@ class FullAuditRegressionTests(unittest.TestCase):
         bunker_rels = {(r["type"], r.get("role"), r["target"]) for r in bunker["relationships"]}
         self.assertIn(("uses-mesh", "mesh", "mesh:data/resources/meshes/m_bunker.msh.aya"), bunker_rels)
         self.assertIn(("uses-mesh", "rubble", "mesh:data/resources/meshes/m_m-b-rubble.msh.aya"), bunker_rels)
+        # Child unit inheriting UB_BUILDING via basedOn also appends .msh and links rubble.
+        child_rels = {(r["type"], r.get("role"), r["target"]) for r in by_id["definition:unit:bunker child"]["relationships"]}
+        self.assertIn(("uses-mesh", "mesh", "mesh:data/resources/meshes/m_bunker.msh.aya"), child_rels)
+        self.assertIn(("uses-mesh", "rubble", "mesh:data/resources/meshes/m_m-b-rubble.msh.aya"), child_rels)
+        # weapon-mode.clip links a shell-casing mesh (not a weapon-mode).
+        wm_rels = {(r["type"], r.get("role"), r["target"]) for r in by_id["definition:weapon-mode:shared"]["relationships"]}
+        self.assertIn(("uses-mesh", "clip", "mesh:data/resources/meshes/m_authored.msh.aya"), wm_rels)
         self.assertIn(("based-on", "basedOn", "definition:unit:base unit"), bunker_rels)
         self.assertIn(("uses-weapon", "weapon", "definition:weapon:shared"), bunker_rels)
         self.assertIn(("uses-spawner", "spawner", "definition:spawner:squad spawner"), bunker_rels)
@@ -2589,24 +2602,44 @@ class FullAuditRegressionTests(unittest.TestCase):
         self.assertIn(("uses-spawner", "resolved", "definition:spawner:squad spawner"), sc_rels)
         self.assertIn(("references-unit", "resolved", "definition:unit:base unit"), sc_rels)
         self.assertIn(("references-goodie", "resolved", "goodie:003"), sc_rels)
-        self.assertIn(("uses-text", "resolved", catalog.TEXT_TABLE_ID), sc_rels)
-        # 5. Dial.raw & splash.tga catalogued (0 unparsed families), splash.tga + PARTICLE_SET + PlayFullscreen code sites resolved.
+        help_rels = {r["textId"]: r for r in sc["relationships"] if r["type"] == "uses-text" and r.get("role") == "help"}
+        self.assertEqual((help_rels[2302408]["status"], help_rels[2302408]["target"]),
+                         ("name-match", catalog.TEXT_TABLE_ID))
+        self.assertEqual([e["kind"] for e in help_rels[2302408]["evidence"]], ["data", "loader-code"])
+        self.assertEqual((help_rels[999999]["status"], help_rels[999999]["target"]), ("unresolved", None))
+        self.assertIn("has no entry", help_rels[999999]["evidence"][0]["rule"])
+        msl_compiled = by_id["script:data/missionscripts/level205/auditscript.msl"]["file"]["compiled"]
+        self.assertEqual(msl_compiled["containedUnits"], ["Base Unit"])
+        self.assertEqual(msl_compiled["helpTextIds"], [2302408, 999999])
+        # 5. Dial.raw & splash.tga catalogued (0 unparsed families), dynamic Dial.raw treatment, commented PlayFullscreen skipped.
         self.assertEqual(cov["filesInUnparsedFamilies"], 0)
-        dial = by_id["image:data/dial.raw"]["image"]
+        dial_rec = by_id["image:data/dial.raw"]
+        dial = dial_rec["image"]
         self.assertEqual((dial["status"], dial["framesLoaded"], dial["stoppingFrame"], dial["bytesRead"], dial["trailingBytes"]),
                          ("parsed", 2, 2, 768, 256))
+        self.assertIn("2 loaded frame(s)", dial_rec["upscale"]["suggestedTreatment"][0])
+        self.assertFalse(any(r["type"] == "named-by-code" for r in dial_rec["relationships"]))
         splash = by_id["image:data/textures/splash.tga"]
         self.assertEqual((splash["image"]["status"], splash["image"]["width"], splash["image"]["height"]), ("parsed", 16, 12))
         self.assertTrue(any(r["type"] == "named-by-code" for r in splash["relationships"]))
-        self.assertEqual(cat["codeReferences"]["unresolvedTextureNames"], [])
+        self.assertEqual(cat["codeReferences"]["unresolvedTextureNames"], ["Dial.raw"])
+        self.assertEqual((cat["codeReferences"]["videoSites"], cat["codeReferences"]["unresolvedVideoNames"]), (1, []))
         self.assertEqual((cat["codeReferences"]["particleSites"], cat["codeReferences"]["unresolvedParticleNames"]), (2, []))
         self.assertTrue(any(r["type"] == "named-by-code" for r in by_id["effect:data/particlesets/frontend.par#0"]["relationships"]))
         self.assertTrue(any(r["type"] == "named-by-code" for r in by_id["video:data/video/ltlogo.vid"]["relationships"]))
-        # 6. Imposter CIMP fields and DATA atlasSize populated & validated.
+        # 6. Imposter CIMP fields and DATA atlasSize cross-checked against BTXT (4x4).
         [imp] = [a for a in cat["assets"] if a["type"] == "imposter"]
-        self.assertEqual(imp["imposter"]["atlasSize"], {"width": 1024, "height": 512})
+        self.assertEqual(imp["imposter"]["atlasSize"], {"width": 4, "height": 4, "matchesBtxt": True})
         self.assertIs(imp["imposter"]["viewCountMatchesCimp"], True)
         self.assertEqual(imp["imposter"]["cimpFields"]["views"], 6)
+        # 7. Truncated Dial.raw (<256 bytes) stays unparsed with upscale=None.
+        with tempfile.TemporaryDirectory() as small_tmp:
+            small_game = Path(small_tmp)
+            (small_game / "data").mkdir(parents=True)
+            (small_game / "data/Dial.raw").write_bytes(b"\0" * 10)
+            [small_dial] = catalog.catalog_images(small_game, [{"path": "data/Dial.raw", "family": "dial-raw"}])
+            self.assertEqual(small_dial["image"]["status"], "unparsed")
+            self.assertIsNone(small_dial["upscale"])
         # 7. Every single generated record passes the strict Draft 2020-12 schema!
         try:
             import jsonschema

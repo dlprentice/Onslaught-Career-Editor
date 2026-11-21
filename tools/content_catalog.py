@@ -125,10 +125,13 @@ L_BUILDING_INIT = cite("Building.cpp", "CBuilding::InitRenderThing", "0x004176c0
 L_RTBUILDING_INIT = cite("RTBuilding.cpp", "CRTBuilding::Init", "0x004db8f0")
 L_WEAPON_LANG = cite("CPhysicsScriptStatements.cpp", "CWeaponLanguageName::Apply", "0x0043e660")
 L_WEAPON_ICON = cite("CPhysicsScriptStatements.cpp", "CWeaponIconName::Apply", "0x00434f20")
+L_WEAPON_ICON_FORMAT = (cite("BattleEngineDataManager.cpp", "CBattleEngineData::AccumulateResources (hud\\%s.tga)", "n/a")
+                        + "; " + cite("BattleEngineJetPart.cpp", "CBattleEngineJetPart::AccumulateResources", "n/a"))
 L_UNIT_WEAPON = cite("Unit.cpp", "CUnit::EnableWeapon / DisableWeapon", "0x004fe2b0")
 L_UNIT_SPAWNER = cite("Unit.cpp", "CUnit::EnableSpawner / DisableSpawner", "0x004fe390")
 L_SCRIPT_GOODIE = cite("MissionScript/IScript.cpp", "IScript::SetGoodieState / GetGoodieState", "0x00533a70")
 L_SCRIPT_HELP = cite("MissionScript/IScript.cpp", "IScript::AddHelpMessage", "0x00533b30")
+L_PCTEXT_GET = cite("PCText.cpp", "Localization_GetStringById", "0x00524830")
 L_SCRIPT_CONTAINED = cite("MissionScript/IScript.cpp", "IScript::NumContained", "0x00535d70")
 
 # Survey families: (id, matcher on the lower-cased relative path, content kind, loader, existing parser, status).
@@ -499,13 +502,17 @@ def catalog_images(game: Path, files: list[dict]) -> list[dict]:
                 "paletteA4R4G4B4": DIAL_PALETTE_A4R4G4B4,
                 "role": "hud-compass-dial",
             }
-            rec["upscale"] = {"sourceResolution": [DIAL_FRAME_SIDE, DIAL_FRAME_SIDE],
-                              "storedFormat": "8-bit indexed byte-sprite", "sourceFormat": None,
-                              "mipLevels": 1, "alpha": "binary", "compressed": False,
-                              "palette": None, "premultipliedAlpha": None,
-                              "tiling": {"status": "no-mesh-evidence", "uvRange": None, "meshes": 0},
-                              "suggestedTreatment": ["very small 16x16 indexed HUD sprite (6 loaded frames, frames 0-2 drawn by DrawThreats): redraw cleanly rather than upscaling"],
-                              "treatmentBasis": "rule-derived from CByteSprite::Load (16x16, key 4); no visual review"}
+            if whole_frames > 0:
+                rec["upscale"] = {
+                    "sourceResolution": [DIAL_FRAME_SIDE, DIAL_FRAME_SIDE],
+                    "storedFormat": "8-bit indexed byte-sprite", "sourceFormat": None,
+                    "mipLevels": 1, "alpha": "binary", "compressed": False,
+                    "palette": None, "premultipliedAlpha": None,
+                    "tiling": {"status": "no-mesh-evidence", "uvRange": None, "meshes": 0},
+                    "suggestedTreatment": [
+                        f"very small 16x16 indexed HUD sprite ({len(frame_opaque)} loaded frame(s); "
+                        "retail DrawThreats draws frames 0-2): redraw cleanly rather than upscaling"],
+                    "treatmentBasis": "rule-derived from CByteSprite::Load (16x16, key 4); no visual review"}
             records.append(rec)
     return records
 
@@ -1197,13 +1204,19 @@ def collect_chunk(collect: dict, rel: str, rec: dict, source_sha: str, chunk, pa
             try:
                 parsed = imposter_records.parse_imposter_set(payload)
                 imposters = parsed["records"]
-                atlas_size = parsed["atlasSize"]
+                atlas_size = dict(parsed["atlasSize"]) if parsed["atlasSize"] is not None else None
                 atlas = parsed["atlas"]
                 if atlas is not None:
                     atlas_sha = sha256(payload[atlas["offset"]:atlas["offset"] + atlas["length"]])
                     descriptor = descriptors.get(atlas_sha)
                     if descriptor is not None and descriptor["id"] in ids:
                         atlas_ids = [descriptor["id"]]
+                        if atlas_size is not None and descriptor["textureDescriptor"].get("status") == "parsed":
+                            td = descriptor["textureDescriptor"]
+                            atlas_size["matchesBtxt"] = (
+                                atlas_size["width"] == td.get("width") and atlas_size["height"] == td.get("height"))
+                if atlas_size is not None and "matchesBtxt" not in atlas_size:
+                    atlas_size["matchesBtxt"] = None
                 for imp in imposters:
                     imp["sha256"] = sha256(payload[imp["offset"]:imp["offset"] + imp["length"]])
             except (ValueError, struct.error) as error:
@@ -1373,9 +1386,11 @@ def link_imposters(collect: dict, descriptors_by_id: dict) -> list[dict]:
                 "viewMetadata": imp["viewMetadata"],
                 "uninterpreted": [{**part, "offset": row["base"] + part["offset"]} for part in imp["uninterpreted"]],
                 "limits": "CIMP runtime pointers (mNext, mMesh, mFrames) and mUnknown28 remain uninterpreted; "
-                          "mName[32], mUnknown30, mAlt, mUnknown38, mViews, mNumFrames, mAnimated and IMPS/DATA "
-                          "atlas dimensions are decoded from CDXImposter (imposter.h, DXImposter.cpp); view count "
-                          "is verified against mViews * mNumFrames, not runtime angle selection or observed use"}
+                          "mName[32], mUnknown30, mAlt, mUnknown38, mViews, mNumFrames and mAnimated are decoded from "
+                          "CDXImposter (imposter.h, DXImposter.cpp); IMPS/DATA stores two SINTs read into unused "
+                          "sUnknown8c0/sUnknown8c4 that empirically match enclosing BTXT (width, height) across retail "
+                          "(cross-checked in atlasSize.matchesBtxt); view count is verified against mViews * mNumFrames, "
+                          "not runtime angle selection or observed use"}
             asset["relationships"].append(mesh_relation(imp))
             asset["relationships"].append(relation(
                 "loaded-by-archive", row["archiveRec"]["id"], "resolved",
@@ -1611,6 +1626,8 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
     seen_ids: collections.Counter = collections.Counter()
     seen_exact: set[tuple[str, str]] = set()
     unit_shell_cursor: collections.Counter = collections.Counter()
+    # Track effective unit raw behaviour in file order, including CUnitBasedOn inheritance (WorldPhysicsManager.h).
+    unit_raw_beh_by_name: dict[str, int | None] = {}
     for stmt_index, stmt in enumerate(parsed_physics["statements"]):
         kind, name = stmt["kind"], stmt["name"]
         base_id = f"definition:{kind}:{fold(name)}"
@@ -1634,13 +1651,23 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
             shell = shells[idx] if idx < len(shells) else (shells[0] if shells else None)
         read_values = [v for v in stmt["values"] if v["status"] == "read"]
         unread_values = len(stmt["values"]) - len(read_values)
-        raw_behaviour = next((v["args"][0] for v in read_values if v["field"] == "behaviour"), None)
+        raw_behaviour = None
+        if kind == "unit":
+            for v in read_values:
+                if v["field"] == "basedOn":
+                    inherited = unit_raw_beh_by_name.get(v["args"][0])
+                    if inherited is not None:
+                        raw_behaviour = inherited
+                elif v["field"] == "behaviour":
+                    raw_behaviour = v["args"][0]
+            if found_by_name:
+                unit_raw_beh_by_name[name] = raw_behaviour
         is_building = kind == "unit" and raw_behaviour == pvd.UNIT_BEHAVIOUR_BUILDING
         mesh_names: list[str] = []
         for v in read_values:
             for role, target_name in pvd.named_references(kind, v["id"], v["args"]):
                 if role == pvd.MESH:
-                    eff = target_name + ".msh" if is_building and not target_name.lower().endswith(".msh") else target_name
+                    eff = target_name + ".msh" if is_building else target_name
                     mesh_names.append(eff)
         if is_building:
             mesh_names.append(pvd.DEFAULT_BUILDING_RUBBLE_MESH + ".msh")
@@ -1928,14 +1955,28 @@ def catalog_world(collect: dict, game: Path, loose: dict, archives: list[dict], 
                         textId=text_id, textSymbol=symbol_of.get(text_id), role=role))
             for text_id in rec["scriptCode"]["helpTextIds"]:
                 ok = text_id in text_ids
-                stats["scriptHelpTextIdsResolved" if ok else "scriptHelpTextIdsUnresolved"] += 1
-                note = ("retail AddHelpMessage only displays when arg == 2302408 (via Localization_GetStringById(0xdd))"
-                        + ("; this id matches the retail guard" if text_id == 2302408 else
-                           "; english.dat holds this id, though retail PC ignores ids other than 2302408"))
-                rec["relationships"].append(relation(
-                    "uses-text", TEXT_TABLE_ID if ok else None, "resolved" if ok else "unresolved", [evidence(
-                        "loader-code", L_SCRIPT_HELP, note)],
-                    textId=text_id, textSymbol=symbol_of.get(text_id), role="help"))
+                stats["scriptHelpTextIdsMatched" if ok else "scriptHelpTextIdsUnresolved"] += 1
+                guard = ("; this literal matches the 2302408 retail guard" if text_id == 2302408 else
+                         "; this literal is ignored by retail PC")
+                if ok:
+                    ev = [
+                        evidence("data", TEXT_TABLE_ID,
+                                 f"english.dat carries an entry with id {text_id} ({text_id:#010x})"),
+                        evidence("loader-code", L_SCRIPT_HELP + "; " + L_PCTEXT_GET,
+                                 "retail PC AddHelpMessage never queries english.dat: it only acts on 2302408 "
+                                 "(via Localization_GetStringById(0xdd)) and ignores all other ids" + guard),
+                    ]
+                    rec["relationships"].append(relation(
+                        "uses-text", TEXT_TABLE_ID, "name-match", ev,
+                        textId=text_id, textSymbol=symbol_of.get(text_id), role="help"))
+                else:
+                    ev = [evidence("loader-code", L_SCRIPT_HELP + "; " + L_PCTEXT_GET,
+                                   f"english.dat has no entry with id {text_id} ({text_id:#010x}); retail PC "
+                                   "AddHelpMessage never queries english.dat and only acts on 2302408 "
+                                   "(via Localization_GetStringById(0xdd))" + guard)]
+                    rec["relationships"].append(relation(
+                        "uses-text", None, "unresolved", ev,
+                        textId=text_id, textSymbol=symbol_of.get(text_id), role="help"))
             for name in values("unit"):
                 stats["scriptUnitsResolved" if ("unit", name) in def_by_kind_name else "scriptUnitsUnresolved"] += 1
                 rec["relationships"].append(def_relation(
@@ -2336,17 +2377,20 @@ def link_physics_definitions(world: dict, loose: dict, dindex: DescriptorIndex, 
                         [evidence("loader-code", L_PHYSICS, f"{kind}.{field} looks up {target_kind} {target_name!r} "
                                   "by strcmp")], **extra))
                 elif role == pvd.MESH:
-                    eff_name = (target_name + ".msh" if is_building and not target_name.lower().endswith(".msh")
-                                else target_name)
+                    eff_name = target_name + ".msh" if is_building else target_name
                     target = loose.get("data/resources/meshes/" + meshcensus._loose_mesh_key(eff_name))
                     stats["physicsMeshes" + ("Resolved" if target else "Unresolved")] += 1
                     ev = [evidence("data", "data/default physics.dat", f"{kind} value id {v['id']} ({field}) names "
                                    f"{target_name!r}")]
                     if is_building:
                         ev.append(evidence("loader-code", L_BUILDING_INIT, "UB_BUILDING appends '.msh' to mUnknown2c"))
+                    elif kind == "weapon-mode" and field == "clip":
+                        ev.append(evidence("loader-code", cite("weapon.cpp", "CWeapon::Fire (mode->mClipName)", "n/a")
+                                           + " -> " + cite("Shell.cpp", "CShell::Init (CRTMesh::Init)", "0x004df550"),
+                                           "weapon-mode.clip names a shell-casing mesh loaded by CShell"))
                     rec["relationships"].append(relation(
                         "uses-mesh", target["id"] if target else None, "resolved" if target else "unresolved",
-                        ev, targetName=eff_name, role="mesh"))
+                        ev, targetName=eff_name, role="clip" if kind == "weapon-mode" and field == "clip" else "mesh"))
                 elif role == pvd.PARTICLE:
                     target = mainset.get(psw.fold(target_name))
                     stats["physicsEffects" + ("Resolved" if target else "Unresolved")] += 1
@@ -2365,12 +2409,13 @@ def link_physics_definitions(world: dict, loose: dict, dindex: DescriptorIndex, 
                         targetName=target_name, role=field))
                 elif role == pvd.ICON:
                     tex_name = f"hud\\{target_name}.tga"
-                    found = dindex.find(tex_name, 0, None)
+                    found = dindex.find(tex_name, 0, -1)
                     stats["physicsIcons" + ("Resolved" if found else "Unresolved")] += 1
                     rec["relationships"].append(find_relation(
                         "uses-texture", found,
-                        [evidence("loader-code", L_WEAPON_ICON + " -> " + L_TEX_FIND,
-                                  f"weapon icon name formats hud\\{target_name}.tga")],
+                        [evidence("loader-code", L_WEAPON_ICON + "; " + L_WEAPON_ICON_FORMAT + " -> " + L_TEX_FIND,
+                                  f"CWeaponIconName stores mIconName; AccumulateResources formats hud\\{target_name}.tga "
+                                  "and calls CTEXTURE::GetTextureByName (default format 0, levels -1)")],
                         targetName=tex_name, role="weapon-icon"))
         if is_building:
             rubble = pvd.DEFAULT_BUILDING_RUBBLE_MESH + ".msh"
@@ -2442,6 +2487,23 @@ def code_int(token: str) -> int | None:
     return {"TEX_NORMAL": 0}.get(token)
 
 
+def strip_line_comment(line: str) -> str:
+    """Drop a C++ // line comment while preserving // inside string literals."""
+    in_string = False
+    escaped = False
+    for i, ch in enumerate(line):
+        if escaped:
+            escaped = False
+            continue
+        if ch == "\\" and in_string:
+            escaped = True
+        elif ch == '"':
+            in_string = not in_string
+        elif ch == "/" and not in_string and i + 1 < len(line) and line[i + 1] == "/":
+            return line[:i]
+    return line
+
+
 def code_references(decomp: Path | None) -> dict:
     """Literal texture, mesh, sound-effect, particle-effect and FMV names in the decompilation's sources (optional)."""
     refs = {"textures": [], "meshes": [], "effects": [], "particles": [], "videos": [], "source": None}
@@ -2461,8 +2523,9 @@ def code_references(decomp: Path | None) -> dict:
             m = FUNCTION_RE.match(line)
             if m:
                 function = f"{m.group('name')} @{m.group('va').lower()}"
+            code_line = strip_line_comment(line)
             site = f"selected source src/{path.name}:{number} {function or '(file scope)'}"
-            for m in CODE_TEXTURE_RE.finditer(line):
+            for m in CODE_TEXTURE_RE.finditer(code_line):
                 args = [a for a in (m.group(3) or "").lstrip(",").split(",") if a.strip()]
                 values = [code_int(a) for a in args]
                 if m.group(1) == "GetTextureByName":
@@ -2473,14 +2536,14 @@ def code_references(decomp: Path | None) -> dict:
                     levels = values[2] if len(values) > 2 else None
                 refs["textures"].append({"name": m.group(2).replace("\\\\", "\\"), "format": fmt, "levels": levels,
                                          "site": site, "call": m.group(1)})
-            for m in CODE_MESH_RE.finditer(line):
+            for m in CODE_MESH_RE.finditer(code_line):
                 refs["meshes"].append({"name": m.group(1).replace("\\\\", "\\"), "site": site})
-            for m in CODE_EFFECT_RE.finditer(line):
+            for m in CODE_EFFECT_RE.finditer(code_line):
                 refs["effects"].append({"name": m.group(2).replace("\\\\", "\\"), "call": m.group(1), "site": site})
-            for m in CODE_PARTICLE_RE.finditer(line):
+            for m in CODE_PARTICLE_RE.finditer(code_line):
                 refs["particles"].append({"name": m.group(2).replace("\\\\", "\\"), "call": m.group(1),
                                           "file": path.name, "site": site})
-            for m in CODE_VIDEO_RE.finditer(line):
+            for m in CODE_VIDEO_RE.finditer(code_line):
                 refs["videos"].append({"name": m.group(1).replace("\\\\", "\\"), "site": site})
     return refs
 
@@ -2499,7 +2562,10 @@ def git_head_of(path: Path) -> str | None:
 
 def link_code_references(refs: dict, dindex: DescriptorIndex, descriptors_by_id: dict, loose: dict,
                          stats: collections.Counter, images: list[dict] | None = None) -> list[dict]:
-    images_by_name = {fold(img["name"]): img for img in (images or [])}
+    # CDXTexture::InitDeviceObjects reads disk textures relative to data\textures\ (never Dial.raw or other dirs).
+    tex_prefix = "data/textures/"
+    images_by_name = {fold(img["source"]["container"][len(tex_prefix):]): img for img in (images or [])
+                      if img["source"]["container"].casefold().startswith(tex_prefix)}
     unresolved = []
     for ref in refs["textures"]:
         found = dindex.find(ref["name"], ref["format"], ref["levels"])
@@ -2689,11 +2755,12 @@ def link_compiled_scripts(inventory: list[dict], scripts: list[dict]) -> None:
             continue
         union = lambda key: sorted({v for sc in copies for v in sc["scriptCode"][key]}, key=str)
         rec["file"]["compiled"] = {
-            "copies": len(copies), "units": union("units"), "textIds": union("textIds"),
+            "copies": len(copies), "units": union("units"), "containedUnits": union("containedUnits"),
+            "textIds": union("textIds"), "helpTextIds": union("helpTextIds"),
             "waypointPaths": union("waypointPaths"), "thingNames": union("thingNames"), "scripts": union("scripts"),
             "postedEvents": union("postedEvents"), "handledEvents": union("handledEvents"),
             "effects": union("effects"), "spawners": union("spawners"), "weapons": union("weapons"),
-            "goodies": union("goodies"),
+            "goodies": union("goodies"), "animations": union("animations"), "segments": union("segments"),
             "objectiveCallsPerCopy": max(len(sc["scriptCode"]["objectives"]) for sc in copies),
             "objectiveNatives": sorted({o["native"] for sc in copies for o in sc["scriptCode"]["objectives"]}),
             "basis": "the compiled copies' literal call arguments (" + wrd.L_OBJECTCODE + ")"}

@@ -469,12 +469,25 @@ def read_imposters(raw: bytes, base: int, size: int, reading: Reading) -> None:
         raise ValueError("IMPS does not hold its own IMPS chunk")
     account.add(base, 8, DECODED, "IMPS/framing")
     _tag, body, length = rows[0]
-    for tag, at, chunk_size in chunks_in(raw, body, body + length):
+    children = chunks_in(raw, body, body + length)
+    btxt_dims = None
+    for tag, at, chunk_size in children:
+        if tag == "BTXT":
+            try:
+                parsed_tex = cc.parse_text_record(raw[at:at + chunk_size])
+                btxt_dims = (parsed_tex["width"], parsed_tex["height"])
+            except (ValueError, struct.error):
+                pass
+    for tag, at, chunk_size in children:
         account.add(at - 8, 8, DECODED, "IMPS/framing")
         if tag == "DATA":
-            if chunk_size == 8:
+            # DeserializeAll reads two SINTs into unused sUnknown8c0/sUnknown8c4 (DXImposter.cpp:435-436);
+            # mark DECODED only when empirically cross-checked against enclosing BTXT (width, height).
+            if chunk_size == 8 and btxt_dims is not None:
                 width, height = struct.unpack_from("<2i", raw, at)
-                account.add(at, chunk_size, DECODED if width > 0 and height > 0 else REFERENCED, "IMPS/DATA")
+                account.add(at, chunk_size,
+                            DECODED if (width, height) == btxt_dims and width > 0 and height > 0 else REFERENCED,
+                            "IMPS/DATA")
             else:
                 account.add(at, chunk_size, REFERENCED, "IMPS/DATA")
         elif tag == "BTXT":
@@ -1449,9 +1462,18 @@ def file_use(catalog: dict, incoming: dict[str, set[str]], ctx: Context, words: 
             used[lowered].add("code:string-literal")
     if ctx.physics is not None:
         has_building = False
+        unit_beh: dict[str, int | None] = {}
         for statement in ctx.physics["statements"]:
-            beh = next((v["args"][0] for v in statement["values"]
-                        if v["status"] == "read" and v["field"] == "behaviour"), None)
+            beh = None
+            if statement["kind"] == "unit":
+                for v in statement["values"]:
+                    if v["status"] != "read":
+                        continue
+                    if v["field"] == "basedOn" and unit_beh.get(v["args"][0]) is not None:
+                        beh = unit_beh[v["args"][0]]
+                    elif v["field"] == "behaviour":
+                        beh = v["args"][0]
+                unit_beh.setdefault(statement["name"], beh)
             is_bldg = statement["kind"] == "unit" and beh == physics.UNIT_BEHAVIOUR_BUILDING
             if is_bldg:
                 has_building = True
@@ -1460,7 +1482,7 @@ def file_use(catalog: dict, incoming: dict[str, set[str]], ctx: Context, words: 
                     continue
                 for role, name in physics.named_references(statement["kind"], value["id"], value["args"]):
                     if role == physics.MESH:
-                        mesh_name = name + ".msh" if is_bldg and not name.lower().endswith(".msh") else name
+                        mesh_name = name + ".msh" if is_bldg else name
                         used["data/resources/meshes/" + meshcensus._loose_mesh_key(mesh_name)].add("physics:mesh")
         if has_building:
             used["data/resources/meshes/" + meshcensus._loose_mesh_key(
