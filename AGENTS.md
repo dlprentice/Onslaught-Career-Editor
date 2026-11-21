@@ -1,7 +1,7 @@
 # Onslaught Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-11-17
+Last updated: 2026-11-21 (scrubbed private Ghidra project path)
 Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
 that apply here.
 
@@ -89,7 +89,7 @@ fresh evidence can correct an interpretation without erasing the original observ
   output, a plausible name or a model's opinion proves nothing; the decompilation is the naming authority, cited by
   function, never quoted. Static evidence establishes identities and structures; only controlled runtime evidence
   establishes causality and values. Write unknowns as open questions with the cheapest falsifier.
-- Ghidra is retired as an authority. The working project `local-lab/ghidra-projects/BEA/BEA.gpr` and the cold copies
+- Ghidra is retired as an authority. Any retired local Ghidra project and the cold preservation copies
   kept outside this checkout (the ignored local notes say where) stay untouched (restore a copy, never open one in place; opening without
   `-readOnly` can roll its `db.NNNNN` version). Nothing Ghidra-derived returns to this repository.
 - `local-lab/` and `local-data/` are real ignored directories inside this checkout. Never run `git clean` here

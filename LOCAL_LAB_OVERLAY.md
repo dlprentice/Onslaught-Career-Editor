@@ -1,7 +1,7 @@
 # Local lab overlay
 
 Status: active — the ignored-directory boundary
-Last updated: 2026-11-06 (maintainer-workspace history shortened; the materializer command now names onslaught-godot's live copy; the public ignored-directory rules are unchanged)
+Last updated: 2026-11-21 (scrubbed private Ghidra project path)
 Summary: which local paths own retail inputs and bulky generated work, and what
 may be promoted out of them into tracked evidence.
 
@@ -28,7 +28,7 @@ Current owners:
   grouped `recovered/` packages, retained `_recovered-worktrees/` and Windows-profile inputs, retail
   profiles, media, VM media, and the gen32 host attestations that are not part of
   `local-lab/`; its own `AGENTS.md` describes the recovered packages;
-- `local-lab/ghidra-projects/BEA/` — the retired working PC Ghidra project (12.1.3), kept untouched; the
+- retired local Ghidra project (kept untouched inside the maintainer's ignored lab); the
   former tracked checkpoint (now in the private RE archive) and the sealed off-volume package are preservation
   copies, never writable inputs.
 

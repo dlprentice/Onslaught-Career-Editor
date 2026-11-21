@@ -6,14 +6,14 @@
   (from a string inventory generated locally from your own copy of `BEA.exe`; retail text is never committed),
   the resolved PhysicsScript value-id tables
   ([physics-round-value-ids-2026-07-25.md](../reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md),
-  raw table `local-lab/physics-value-ids-2026-07-25/all_ids.tsv`), the exact
+  raw tables retained in the private RE archive), the exact
   777-record framing of the pristine `default physics.dat`, and the tracked
   source synthesis under `reverse-engineering/source-code/`.
   In-universe flavor (who pilots what, what a faction calls its own machines)
   is carried from [world-lore.md](world-lore.md) and [characters.md](characters.md)
   and is marked as fiction. Where this page and a measurement disagree, the
   measurement wins.
-- **Last updated:** 2026-10-22 (string-table link replaced: the table is generated locally, not tracked)
+- **Last updated:** 2026-11-21 (replaced private lab paths with archive pointers)
 - **Summary:** all 160 literal top-level unit-record names, all 25 resolved
   behaviour-type ids, and the major runtime class families that turn those
   records into the player's machine, armies, bosses, and infrastructure.
@@ -290,14 +290,14 @@ puts all of them on the unit-statement surface. It does not silently narrow
 - RTTI class inventory: a string inventory generated locally from your own copy of `BEA.exe` (not tracked; retail text is never committed)
   (658 unique `C*` type descriptors, pristine specimen).
 - Behaviour-type/unit/component value tables (static, byte-read):
-  `local-lab/physics-value-ids-2026-07-25/all_ids.tsv` +
-  [physics-round-value-ids-2026-07-25.md](../reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md).
+  [physics-round-value-ids-2026-07-25.md](../reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md)
+  (raw value-id tables retained in the private RE archive).
 - Tracked source synthesis: `reverse-engineering/source-code/stuart-source-synthesis.md`
   and the focused gameplay/system notes under that directory.
 - Exact statement framing reused by the materializer:
   onslaught-godot's `rebuild/tools/materialize_retail_assets.py` (`_physics_records`).
-- Boss exclusivity windows: TTD deep-mine REPORT + batches 1-10
-  (`local-lab/hermes-kanban-campaign-2026-08-22/ttd-deep-mine/`).
+- Boss exclusivity windows: TTD deep-mine report and batches 1-10
+  (private RE archive).
 - Mission-side boss behavior (Fenrir components, submarine dive/surface):
   [msl-scripting.md](../reverse-engineering/game-assets/msl-scripting.md).
 - In-universe naming and faction flavor: [world-lore.md](world-lore.md),

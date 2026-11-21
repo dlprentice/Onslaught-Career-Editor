@@ -396,9 +396,6 @@ RETAIL_TEXT_ALLOW_PREFIX: dict[str, dict[str, str]] = {
     "VALIDATION-HISTORY.md": {
         "local-lab/": "the dated validation receipts name the ignored lab folders their evidence lives in; kept as written (lead, 2026-10-29)"
     },
-    "lore/units-and-mechs.md": {"local-lab/": "cites the lab tables and mining folders its figures were read from (the ignored lab folder)"},
-    "lore/weapons.md": {"local-lab/": "cites the lab table its figures were read from (the ignored lab folder)"},
-    "lore/worlds.md": {"local-lab/": "cites the lab report its figures were read from (the ignored lab folder)"},
 }
 
 # A generated file that holds only authored synthetic data may carry every finding of one rule, in that file only.

@@ -4,13 +4,13 @@
   numeric examples below are measured from the shipped `default physics.dat`
   byte-reads and the resolved value-id tables
   ([physics-round-value-ids-2026-07-25.md](../reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md),
-  raw `local-lab/physics-value-ids-2026-07-25/all_ids.tsv`), the pristine-exe
+  raw tables retained in the private RE archive), the pristine-exe
   string table
   (a string inventory generated locally from your own copy of `BEA.exe`; retail text is never committed),
   and the pinned source corpus. Faction flavor is carried from
   [world-lore.md](world-lore.md) and marked as fiction. Where this page and a
   measurement disagree, the measurement wins.
-- **Last updated:** 2026-10-22 (string-table link replaced: the table is generated locally, not tracked)
+- **Last updated:** 2026-11-21 (replaced private lab path with archive pointer)
 - **Summary:** all 139 literal weapon-record names, the
   weapon → weapon-mode → round → explosion data model that drives them, and
   what the numbers actually say for the two tutorial weapons measured end to

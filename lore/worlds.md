@@ -5,7 +5,7 @@
   story names remain in [world-lore.md](world-lore.md). Where this page and a
   measurement under [`reverse-engineering/`](../reverse-engineering/RE-INDEX.md)
   disagree, the measurement wins.
-- **Last updated:** 2026-08-22
+- **Last updated:** 2026-11-21 (replaced private lab path with archive pointer)
 - **Summary:** all 43 career nodes and all 23 additional numeric worlds shipped
   in the pristine PC resource shelf, plus the two distinct PS2-only world
   containers, with an honest boundary between graph fact, observed mechanics,
@@ -487,8 +487,8 @@ last numeric world shipped in the PC resource shelf.
 - Numeric resource count and world-header corpus:
   installed-corpus-census.md (private RE archive).
 - Per-world opening byte counts and range fingerprints:
-  `local-lab/hermes-kanban-campaign-2026-08-22/ttd-deep-mine/REPORT.md` and
-  batches 1-7 (runtime observation, bounded to retained captures).
+  retained TTD deep-mine report and batches 1-7 (private RE archive;
+  runtime observation, bounded to retained captures).
 - Mission slots, level-500 branching, level-901 race, and Fenrir scripts:
   [msl-scripting.md](../reverse-engineering/game-assets/msl-scripting.md).
 - Level-710 configuration evidence:
