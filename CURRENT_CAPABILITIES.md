@@ -1,7 +1,7 @@
 # Current Capabilities
 
 Status: active — what is demonstrated today, and what is not
-Last updated: 2026-11-19 (the engine is now Godot 4.8 beta4 .NET)
+Last updated: 2026-11-21 (incremental 0.1.14–0.1.19 release cadence; concession-free decompilation status; scrubbed opaque private receipt hashes)
 Summary: the demonstrated capability of each part of the project with the measured gap stated beside it. Every
 figure here is the value at the commit that wrote it; re-measure before relying on one. Superseded narratives remain
 in Git and the private historical maintainer archive; they are not current operating instructions.
@@ -14,17 +14,19 @@ The map/mission authoring capabilities described here currently run in Companion
 required native CE experience, not completed in-game editors. Continuous 3D RTS Commander and an explorable museum
 through CE's menus also remain incomplete; the map/preview controls and separate gallery/construction test retain
 their narrower evidence. [GOAL.md](GOAL.md) and [PROGRAM.md](PROGRAM.md#order-after-0113) own the new requirements
-and the hold on 0.2 until its agreed player workflows are internally complete and tested.
+and the incremental `0.1.14`–`0.1.19` release cadence leading to `0.2.0` once its agreed player workflows are
+internally complete and tested.
 The latest product decision also moves Companion's lore, content exploration, career/save editing, backups,
 settings and installation-management workflows into CE, eventually retiring the separate app. The present tools
 and evidence remain until that replacement is verified. This is a migration requirement; no completed in-process
 career editor or unified frontend is claimed here. Integrated career editing still needs verified recovery and
 coordination with CE's loaded profile state, not just removal of the current running-game refusal.
-The byte-matching decompilation is the reverse-engineering authority. Its private function check matches every mapped
-game function with a guarded one-byte correction to a compiled object; without that correction, one function remains
-unmatched. Its public export, [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), records its own
-coverage and the third-party sample files it leaves out. Function matches do not by themselves establish complete
-behavioural equivalence or a byte-identical linked executable. Its native port is published separately as
+The byte-matching decompilation is the reverse-engineering authority. All 5,482 of 5,482 mapped game functions match
+purely from source, with 0 object-byte concessions and 0 link aliases. Its public export,
+[onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), reproduces 5,449 of 5,482 purely from source
+(0 concessions, 0 aliases) and records the 33 third-party DirectX SDK sample functions it leaves out. Function matches
+do not by themselves establish complete behavioural equivalence or a byte-identical linked executable. Its native port
+is published separately as
 [Onslaught CE](https://github.com/dlprentice/onslaught-ce), and this document does not measure it. The Godot rebuild,
 a scoped proof of concept (level 100, startup to exit), is developed
 in [onslaught-godot](https://github.com/dlprentice/onslaught-godot), which records its measured parity; `rebuild/` here is a pointer page. Executable patching and copied-install
@@ -86,9 +88,8 @@ remains a separate dated record.
 The initial November 4 Linux check used the same pinned production pages with an unreleased CE development package.
 Discovery read its actual launcher version; copied-career backup/edit/restore and the two supported settings controls
 passed. Fresh Home/version, settings and restored-backup images, plus authored 3D project/map-link/source views,
-were inspected. Both capture processes exited normally and the pinned source/runtime inputs read back unchanged.
-The retained acceptance receipt has SHA-256
-`2f267eb8df39c78028729fddeaf468307c1f74d56464229dfabb3f7fc25ff367`.
+were inspected. Both capture processes exited normally and the pinned source/runtime inputs read back unchanged
+(the acceptance receipt is retained in the maintainer's private review archive).
 This adds bounded automated workflow and image acceptance, not human input, audible output, an update hand-off or
 native Windows acceptance. This first local snapshot remains preserved; neither it nor the separate refresh
 is a public release. The earlier CE 0.1.13 career-load result remains the dated acceptance described above.
@@ -97,8 +98,7 @@ The refreshed November 4 Companion stage uses the accepted installed-model edito
 newer unreleased CE development package. Fresh scripted production-page checks passed actual launcher-version discovery,
 copied-career backup/edit/restore, settings writes and refusal to overwrite a changed settings snapshot. The process
 exited normally; package and preserved baseline read back unchanged. Home/version, settings, restored-career and
-static installed-model images were inspected. The retained combined receipt has SHA-256
-`60ce7544b472c5380e58a3c813abecf4bf179aba61e510b0595943642c052009`.
+static installed-model images were inspected (the combined receipt is retained in the maintainer's private review archive).
 This is bounded Linux workflow/image acceptance, with no new human-input, audio, game-load, update hand-off or
 native Windows claim. The status of these builds and the remaining work are tracked in [PROGRAM.md](PROGRAM.md#order-after-0113).
 David's subsequent November 4 manual CE playtest did not include Companion. Human use of its workflow and 3D editor
@@ -196,15 +196,14 @@ Its sidebar:
   play. One moved case kept changes confined to that object through the observed window; another later caused
   mission and AI reactions, so the result does not promise that moving an object leaves the rest of a mission
   unchanged. Deliberately broken writer and coordinate-reader variants were refused by the check. The controlled
-  career-write case left the protected save unchanged; it does not establish every save path. The retained independent
-  review receipt has SHA-256 `9b9871ca08f689f63c2e8a1aa0c678a0ba36f13a0c7671f0027bbd68abcb6525`.
+  career-write case left the protected save unchanged; it does not establish every save path. The independent review
+  receipt is retained in the maintainer's private review archive.
   On November 4, the initial unreleased development Linux package, built with networking enabled, also loaded one of those
   page-saved level-221 projects locally. Its placement log entry and gameplay image were inspected; no network session
-  was active. The retained exact-package smoke receipt has SHA-256
-  `e4a7f4daf13dd8e442f52a894452870880aeeb45ea4a50d2ea2614b279070e81`.
+  was active (smoke receipt retained in the maintainer's private review archive).
   The refreshed November 4 package also loaded the saved project locally, rendered gameplay and exited cleanly;
-  the project and package read back unchanged. Its gameplay frame was inspected. The retained smoke receipt has
-  SHA-256 `f03720cef8d15f9e09f7d75661beaabccd4fb08d2d87e07cfb4ea76ebe2c1370`.
+  the project and package read back unchanged. Its gameplay frame was inspected (smoke receipt retained in the
+  maintainer's private review archive).
   This is page-to-runtime evidence for an existing-object placement in CE development source. No publicly released CE
   reads these projects. No person operated the Save as dialog or 3D drag for these checks, and they do not establish
   multiplayer project loading/replication, native Windows, mission completion or additional object kinds. The Windows
@@ -357,7 +356,8 @@ Read that repository's [`rebuild/PROVENANCE.md`](https://github.com/dlprentice/o
 The [content catalogue coverage report](tools/README.md#catalogue-source-file-coverage) distinguishes represented logical paths, relationship targets and unrecorded parse status. Its checks use authored fixtures; those counts do not establish a complete asset inventory, unique file contents or mappings to placeable objects.
 
 The byte-matching decompilation is the reverse-engineering authority. The [overview above](#current-capabilities)
-states the compiled-object concession and the limits of function matching. Its public export,
+states the concession-free matching scope (5,482/5,482 purely from source, 0 object-byte concessions, 0 link aliases)
+and the limits of function matching. Its public export,
 [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), owns the current score, matched list, sample-file
 exclusions and remaining divergences.
 Findings are written as prose and specs in [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation),

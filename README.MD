@@ -1,7 +1,7 @@
 # Onslaught Companion
 
 Status: active — the project overview
-Last updated: 2026-11-19 (the engine is now Godot 4.8 beta4 .NET)
+Last updated: 2026-11-21 (front-page Discussions link; decompilation status updated; onslaught-decomp added to Report a problem)
 Summary: what this project is, where each part lives, which checks a public clone can run, and what Companion builds require.
 
 Onslaught Companion is the player app of a preservation project for *Battle Engine Aquila* (2003, Lost Toys); this
@@ -17,6 +17,7 @@ which public repository takes which kind of work, and everyone contributes by fo
 | I want to | Start at |
 | --- | --- |
 | Play the game | [Onslaught CE](https://github.com/dlprentice/onslaught-ce) (you need your own copy of the game) |
+| Ask a question or share an idea | [Onslaught CE Discussions](https://github.com/dlprentice/onslaught-ce/discussions) |
 | Build and run the Companion | [Build and run](#build-and-run) |
 | Contribute a change | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Read the community rules | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) |
@@ -26,10 +27,11 @@ which public repository takes which kind of work, and everyone contributes by fo
 | See what is demonstrated today | [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) |
 | Read the lore | [lore/_index.md](lore/_index.md) |
 
-- **The byte-matching decompilation is the reverse-engineering authority.** Its public export,
-  [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), documents matching coverage, excluded code and
-  source and build concessions. Matching function sections and relocations is separate from reproducing the
-  complete linked executable or proving gameplay parity.
+- **The byte-matching decompilation is the reverse-engineering authority.** All 5,482 of 5,482 mapped game functions
+  match purely from source, with 0 object-byte concessions and 0 link aliases. Its public export,
+  [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), documents matching coverage (5,449 of 5,482 purely
+  from source), excluded DirectX SDK sample files and labelled source stand-ins. Matching function sections and
+  relocations is separate from reproducing the complete linked executable or proving gameplay parity.
 - **The game documentation lives in [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation).**
   It is the one home of the findings on the game's file formats, saves, mechanics, levels and engine (prose and specs,
   CC BY-SA 4.0), and new findings go there. [`reverse-engineering/`](reverse-engineering/RE-INDEX.md) here is a frozen
@@ -66,9 +68,11 @@ Its source and downloads are at [Onslaught CE](https://github.com/dlprentice/ons
 ## Report a problem
 
 - The game (Onslaught CE): [Onslaught CE's issues](https://github.com/dlprentice/onslaught-ce/issues).
+- The byte-matching decompilation: [onslaught-decomp's issues](https://github.com/dlprentice/onslaught-decomp/issues).
 - The companion, lore, tools or this repository's own documents: [this repository's issues](https://github.com/dlprentice/Onslaught-Career-Editor/issues).
 - The game documentation (formats, saves, mechanics, levels, engine): [onslaught-preservation's issues](https://github.com/dlprentice/onslaught-preservation/issues).
 - The Godot rebuild: [onslaught-godot's issues](https://github.com/dlprentice/onslaught-godot/issues).
+- General questions and ideas across the project: [Onslaught CE Discussions](https://github.com/dlprentice/onslaught-ce/discussions).
 
 ## Related repositories
 

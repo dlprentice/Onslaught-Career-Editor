@@ -1,7 +1,7 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-11-11 (0.1.14 in preparation; what 0.2.0 is; Companion features move into CE; the look-and-feel standard)
+Last updated: 2026-11-21 (incremental 0.1.14–0.1.19 release cadence toward 0.2.0; concession-free decompilation matching)
 Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
 
 This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
@@ -10,12 +10,12 @@ archive.
 
 ## The direction (David, 2026-10-15, with the rebuild reactivated the same day)
 
-- **Reverse engineering is grounded in decompilation.** The reconstruction matches all 5,482 mapped game functions
-  in the maintainer's private working tree, with a documented one-byte object-code correction; without that correction,
-  one function remains unmatched. Source-only matching without that concession remains a goal, alongside clear records
-  of source stand-ins; matching does not prove the developer's original spelling or complete behavioural understanding. Its public
-  export, [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), reproduces 5,449 of the 5,482 (99.40% when
-  this was written; the other 33 are in four DirectX sample files the export leaves out).
+- **Reverse engineering is grounded in decompilation.** The reconstruction matches all 5,482 of 5,482 mapped game
+  functions purely from source, with 0 object-byte concessions and 0 link aliases. Clear records of labelled source and
+  layout stand-ins remain required; matching does not prove the developer's original spelling or complete behavioural
+  understanding. Its public export, [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), reproduces
+  5,449 of the 5,482 purely from source (0 object-byte concessions, 0 link aliases; the other 33 are in excluded
+  DirectX SDK sample files).
 - **The faithful game is a native source port** of that decompilation, for Windows and Linux, published separately
   as [Onslaught CE](https://github.com/dlprentice/onslaught-ce): GPL-3.0-only source and binaries, no game files.
   Preserve a faithful baseline while fixing demonstrated defects and improving reliability, input, controller support,
@@ -128,14 +128,13 @@ build's capability claims must follow its own evidence. A player's report adds u
 to investigate within the scope actually tried; it does not certify untried features. [PROGRAM.md](PROGRAM.md#order-after-0113)
 owns the current order and remaining work.
 
-**Releases.** CE 0.1.13 is the latest release. 0.1.14, whose source is already on onslaught-ce `main`, is in
-preparation; it is not released, and David's direction of 2026-11-11 is that it releases when its gates pass.
-**0.2.0 is the large release: everything now in progress, complete.** That is online co-op, Commander as an RTS,
-playing any controllable unit, 3D map and mission editors with CE projects, mods and the complete content catalogue,
-the museum, and the Companion's player features absorbed into CE. Complete and test those workflows internally
-before considering that release. An experimental or alpha label does not authorize shipping unfinished pieces in
-their place. Do not publish 0.2 while those requirements remain incomplete; internal playtest builds and continued
-development do not lift this release hold. Publishing 0.2 also requires David's further explicit go-ahead.
+**Releases.** CE 0.1.13 is the latest published release. Rather than holding every finished feature for one monolithic
+release, CE follows an incremental release cadence (**0.1.14 through 0.1.19**) leading to **0.2.0** for the full
+milestone. Each incremental `0.1.x` release ships focused, verified improvements once its gates pass (including native
+Windows validation), without shipping unfinished prototypes under an experimental label. **0.2.0 remains the full
+milestone release:** online co-op, Commander as an RTS, playing any controllable unit, 3D map and mission editors with
+CE projects, mods and the complete content catalogue, the explorable 3D museum, and the Companion's player workflows
+absorbed into CE. Publishing any release requires passing its gates and David's explicit go-ahead.
 
 **Look and feel.** Everything CE adds must look and feel like part of the original game. A feature that works but
 reads as a separate tool bolted on does not meet this standard. The wider foundation, rebuild, quality, documentation and recovery goals remain in scope.
@@ -167,7 +166,7 @@ Unknowns are written as open questions with the cheapest falsifier.
 
 ## Where the goal stands
 
-Not met. The mapped decompilation matches with the concession above; the native port is public as Onslaught CE,
+Not met. All 5,482 mapped game functions match purely from source (0 object-byte concessions, 0 link aliases); the native port is public as Onslaught CE,
 with current downloads in the [release list](https://github.com/dlprentice/onslaught-ce/releases/latest); the rebuild proof of concept is in progress in onslaught-godot; the companion supports the original game
 and CE, with remaining acceptance and release work in [PROGRAM.md](PROGRAM.md#companion--ce-integration).
 [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) owns what is demonstrated, [PROGRAM.md](PROGRAM.md) the work
