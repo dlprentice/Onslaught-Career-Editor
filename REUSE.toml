@@ -36,6 +36,7 @@ path = [
     "*.md",
     "*.MD",
     ".github/**",
+    "docs/**",
     "lore/**",
     "lore-book/**",
     "tools/**/*.md",

@@ -14,6 +14,7 @@ To contribute to any part of the project, start with [Where to contribute](CONTR
 | --- | --- |
 | Play the game (including built-in Career, Backups, Mods & Editor) | [Onslaught CE](https://github.com/dlprentice/onslaught-ce) (you need your own copy of the game) |
 | Build the local JSON Content Catalogue or Content Inventory | [Tools guide](tools/README.md#content-catalogue) |
+| Scaffold, discover targets for, and validate an Onslaught CE mod | [Mod Author Quickstart](docs/MOD-AUTHOR-QUICKSTART.md) |
 | Inspect assets, decode formats or stage a CE world mod | [Tools guide](tools/README.md#assets-and-formats) |
 | Read the game's lore and development history | [lore/_index.md](lore/_index.md) and [lore-book/BOOK.md](lore-book/BOOK.md) |
 | Read game format specs, saves and mechanics | [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation) |

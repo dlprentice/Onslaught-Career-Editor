@@ -58,6 +58,7 @@ SUITES: tuple[tuple[str, ...], ...] = (
     # World codec, mod staging, terrain and MSL compiler/inspector suites.
     ("tools/world_resources_encode_tests.py",),
     ("tools/world_mod_stage_tests.py",),
+    ("tools/mod_starter_tests.py",),
     ("tools/world_edit_preview_tests.py",),
     ("tools/world_edit_move_tests.py",),
     ("tools/world_thing_index_tests.py",),
