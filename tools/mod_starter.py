@@ -61,10 +61,12 @@ MAX_FILE_BYTES = 64 << 20
 MAX_WORLD_BYTES = 4 << 20
 MAX_FILES_PER_MOD = 4096
 MAX_MANIFEST_BYTES = 256 << 10
+AYA_PACK_BUFFER = 0x102927
+AYA_BLOCK_BYTES = 1 << 20
 
 FORBIDDEN_PATH_CHARS = set('\\:*?"<>|')
 WINDOWS_DEVICE_NAMES = frozenset(
-    {"con", "prn", "aux", "nul"}
+    {"con", "prn", "aux", "nul", "conin$", "conout$"}
     | {f"com{i}" for i in range(10)}
     | {f"lpt{i}" for i in range(10)}
 )
@@ -89,8 +91,12 @@ class ModStarterError(ValueError):
 
 
 def is_windows_device_name(name: str) -> bool:
-    """True if `name` (or its stem before the first dot) is a reserved Windows device name."""
-    stem = name.split(".", 1)[0].casefold()
+    """True if `name` (stem before first dot, trailing spaces stripped) is a reserved Windows device name.
+
+    Matches Onslaught CE's `mods.cpp::DeviceName` identically (`CON`, `PRN`, `AUX`, `NUL`, `CONIN$`,
+    `CONOUT$`, `COM0`..`COM9`, `LPT0`..`LPT9`, case-insensitive, stripping spaces before the first dot).
+    """
+    stem = name.split(".", 1)[0].rstrip(" ").casefold()
     return stem in WINDOWS_DEVICE_NAMES
 
 
@@ -351,51 +357,91 @@ def make_world_fixture_bytes(level: int, mod_id: str) -> bytes:
     return b"WRES" + struct.pack("<I", len(body)) + body
 
 
+def inflate_aya_archive(raw: bytes, label: str = "archive.aya", max_bytes: int = MAX_FILE_BYTES) -> bytes:
+    """Inflate a PC `.aya` archive framed as `[u32_le compressed_len][zlib_blob]` blocks (<= 1 MiB/block).
+
+    Matches `tools/world_resources_encode.py` and Onslaught CE's `mods.cpp` block framing.
+    """
+    if not raw:
+        raise ModStarterError(f"{label}: empty .aya archive")
+    pos = 0
+    total = 0
+    blocks: list[bytes] = []
+    block_index = 0
+    while pos < len(raw):
+        if pos + 4 > len(raw):
+            raise ModStarterError(f"{label}: truncated block header at offset {pos}")
+        (comp_len,) = struct.unpack_from("<I", raw, pos)
+        pos += 4
+        if comp_len == 0 or comp_len > AYA_PACK_BUFFER or pos + comp_len > len(raw):
+            raise ModStarterError(
+                f"{label}: invalid compressed block length {comp_len} at block {block_index}"
+            )
+        blob = raw[pos : pos + comp_len]
+        pos += comp_len
+        remaining = max_bytes - total
+        limit = min(AYA_BLOCK_BYTES, remaining)
+        decomp = zlib.decompressobj()
+        try:
+            block = decomp.decompress(blob, limit + 1)
+            block += decomp.flush()
+        except zlib.error as error:
+            raise ModStarterError(f"{label}: zlib inflate failed at block {block_index}: {error}") from error
+        if len(block) > limit or decomp.unconsumed_tail:
+            raise ModStarterError(f"{label}: inflated block {block_index} exceeds {limit}-byte bound")
+        if not decomp.eof or decomp.unused_data:
+            raise ModStarterError(f"{label}: incomplete zlib stream or trailing bytes in block {block_index}")
+        if len(block) < AYA_BLOCK_BYTES and pos < len(raw):
+            raise ModStarterError(f"{label}: short inflated block {block_index} before final block")
+        blocks.append(block)
+        total += len(block)
+        block_index += 1
+    return b"".join(blocks)
+
+
+def _iter_chunks(data: bytes, start: int = 0, end: int | None = None, label: str = "archive"):
+    end = len(data) if end is None else end
+    at = start
+    while at < end:
+        if at + 8 > end:
+            raise ModStarterError(f"{label}: truncated chunk header at offset {at}")
+        tag, size = struct.unpack_from("<4sI", data, at)
+        payload_start = at + 8
+        payload_end = payload_start + size
+        if payload_end > end:
+            raise ModStarterError(f"{label}: chunk {tag!r} at offset {at} overruns parent")
+        yield tag, payload_start, size
+        at = payload_end
+
+
 def extract_wres_from_level_archive(game_dir: Path, level: int) -> bytes:
-    """Extract the raw WRES world body from `<game_dir>/data/resources/<NNN>_res_PC.aya`."""
+    """Extract the real-world `RLWD` body (`data/worlds/worldNNN.wrd`) from `<NNN>_res_PC.aya`.
+
+    Walks real PC `.aya` `[u32_le compressed_len][zlib_blob]` blocks, then sibling top-level chunks
+    `WRES -> WRLD -> RLWD` (skipping `LVLR`, `WDAT`, and `BSWD`), matching `world_resources_encode.py`.
+    """
     if not isinstance(level, int) or not 0 <= level <= 999:
         raise ModStarterError(f"world level must be 0..999, got {level!r}")
     rel = f"data/resources/{level:03d}_res_PC.aya"
     _, archive_path = resolve_game_file(game_dir, rel)
     raw = read_regular_bounded(archive_path, MAX_FILE_BYTES)
-    inflated_parts: list[bytes] = []
-    pos = 0
-    total = 0
-    while pos < len(raw):
-        decomp = zlib.decompressobj()
-        try:
-            chunk = decomp.decompress(raw[pos:], MAX_FILE_BYTES - total)
-            chunk += decomp.flush()
-        except zlib.error as error:
-            raise ModStarterError(f"{rel}: zlib inflate failed at offset {pos}: {error}") from error
-        inflated_parts.append(chunk)
-        total += len(chunk)
-        if total > MAX_FILE_BYTES:
-            raise ModStarterError(f"{rel}: inflated archive exceeds {MAX_FILE_BYTES} bytes")
-        consumed = len(raw) - pos - len(decomp.unused_data)
-        if consumed <= 0:
-            raise ModStarterError(f"{rel}: stalled inflating archive at offset {pos}")
-        pos += consumed
-    data = b"".join(inflated_parts)
-    # Walk top-level LVLR -> WRES chunk framing (4-byte tag + u32 little-endian size).
-    if len(data) < 8 or data[:4] != b"LVLR":
-        raise ModStarterError(f"{rel}: expected LVLR root chunk")
-    root_size = struct.unpack_from("<I", data, 4)[0]
-    end = min(len(data), 8 + root_size)
-    offset = 8
-    while offset + 8 <= end:
-        tag = data[offset : offset + 4]
-        size = struct.unpack_from("<I", data, offset + 4)[0]
-        payload_start = offset + 8
-        payload_end = payload_start + size
-        if payload_end > end:
-            raise ModStarterError(f"{rel}: truncated chunk {tag!r}")
-        if tag == b"WRES":
-            if not 0 < size <= MAX_WORLD_BYTES:
-                raise ModStarterError(f"{rel}: WRES payload size {size} outside 1..{MAX_WORLD_BYTES}")
-            return data[payload_start:payload_end]
-        offset = payload_end
-    raise ModStarterError(f"{rel}: no WRES chunk found in level archive")
+    data = inflate_aya_archive(raw, label=rel, max_bytes=MAX_FILE_BYTES)
+    for tag, at, size in _iter_chunks(data, 0, len(data), label=rel):
+        if tag != b"WRES":
+            continue
+        for wtag, wat, wsize in _iter_chunks(data, at, at + size, label=rel):
+            if wtag != b"WRLD":
+                continue
+            for ktag, kat, ksize in _iter_chunks(data, wat, wat + wsize, label=rel):
+                if ktag == b"RLWD":
+                    if not 0 < ksize <= MAX_WORLD_BYTES:
+                        raise ModStarterError(
+                            f"{rel}: RLWD world payload size {ksize} outside 1..{MAX_WORLD_BYTES}"
+                        )
+                    return data[kat : kat + ksize]
+            raise ModStarterError(f"{rel}: WRES/WRLD contains no RLWD real-world body")
+        raise ModStarterError(f"{rel}: WRES contains no WRLD chunk")
+    raise ModStarterError(f"{rel}: no top-level WRES chunk found in level archive")
 
 
 def scaffold_mod(
@@ -633,6 +679,45 @@ def _copy_mod_tree_regular(src_mod: Path, dst_mod: Path) -> None:
             dst_file.write_bytes(data)
 
 
+def _discover_bea_runtime_libs(exe: Path) -> list[str]:
+    """Locate nearby runtime shared libraries when validating against an uninstalled Linux dev build.
+
+    Returns library directories only when `libdxvk_d3d9.so.0` is actually present in one of them.
+    """
+    candidates: list[list[Path]] = []
+    sibling_lib = exe.parent / "lib"
+    if sibling_lib.is_dir():
+        candidates.append([sibling_lib])
+
+    dep_roots: list[Path] = []
+    if os.environ.get("BEA_PORT_DATA"):
+        dep_roots.append(Path(os.environ["BEA_PORT_DATA"]))
+    for ancestor in exe.parents:
+        dep_roots.append(ancestor / "local-data/port-deps-canonical")
+        if ancestor.name == ".worktrees":
+            dep_roots.append(ancestor.parent / "local-data/port-deps-canonical")
+
+    seen_roots: set[Path] = set()
+    for root in dep_roots:
+        resolved = Path(os.path.abspath(root))
+        if resolved in seen_roots:
+            continue
+        seen_roots.add(resolved)
+        dirs = [
+            resolved / "prefix-sniper/lib",
+            resolved / "dxvk-native/usr/lib32",
+            resolved / "ffmpeg-shared-sniper/linux/usr/lib",
+        ]
+        existing = [d for d in dirs if d.is_dir()]
+        if existing:
+            candidates.append(existing)
+
+    for group in candidates:
+        if any((d / "libdxvk_d3d9.so.0").is_file() for d in group):
+            return [str(d) for d in group]
+    return []
+
+
 def validate_with_bea(
     bea_exe: Path,
     mod_root: Path,
@@ -660,6 +745,11 @@ def validate_with_bea(
             "PYTHONDONTWRITEBYTECODE": "1",
         }
     )
+    runtime_libs = _discover_bea_runtime_libs(exe)
+    if runtime_libs:
+        existing_ld = env.get("LD_LIBRARY_PATH", "")
+        combined_ld = [p for p in runtime_libs + ([existing_ld] if existing_ld else []) if p]
+        env["LD_LIBRARY_PATH"] = ":".join(combined_ld)
     resolved_game = Path(os.path.abspath(game_dir)) if game_dir is not None else None
     if resolved_game is not None:
         env["BEA_GAME_DIR"] = str(resolved_game)

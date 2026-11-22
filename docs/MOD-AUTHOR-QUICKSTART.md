@@ -57,7 +57,7 @@ python3 -B tools/mod_starter.py \
   --game-dir /path/to/game \
   --target data/language/english.dat
 
-# Option B: extract a level's WRES world body into an editable worldNNN.wrd mod
+# Option B: extract a level's RLWD world body (from WRES/WRLD) into an editable worldNNN.wrd mod
 python3 -B tools/mod_starter.py \
   --out local-data/starter-mods \
   --id my-level-100 \

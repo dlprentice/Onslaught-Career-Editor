@@ -65,6 +65,13 @@ class ModStarterValidationTests(unittest.TestCase):
             self.assertEqual(summary["files"][0]["sha256"], entry["sha256"])
             self.assertTrue(raw.startswith(b"WRES"))
 
+    def _pack_aya(self, payload: bytes) -> bytes:
+        out = bytearray()
+        for start in range(0, len(payload), mod_starter.AYA_BLOCK_BYTES):
+            comp = zlib.compress(payload[start : start + mod_starter.AYA_BLOCK_BYTES], 9)
+            out += struct.pack("<I", len(comp)) + comp
+        return bytes(out)
+
     def test_game_dir_default_target_and_archive_wres_extraction(self):
         with tempfile.TemporaryDirectory(prefix="mod-starter-game-") as tmp:
             root = Path(tmp)
@@ -73,12 +80,24 @@ class ModStarterValidationTests(unittest.TestCase):
             lang_bytes = b"AUTHORED_LANGUAGE_TABLE_V1"
             (game / "data/language/english.dat").write_bytes(lang_bytes)
 
-            # Synthetic LVLR -> WRES archive inside data/resources/100_res_PC.aya
+            # Authentic PC .aya framing ([u32_le len][zlib_blob]) with sibling top-level LVLR and
+            # WRES -> WRLD -> (WDAT, BSWD, RLWD) chunks (matching world_resources_encode.py).
             (game / "data/resources").mkdir(parents=True)
-            wres_payload = b"SYNTHETIC_WORLD_100_BODY"
-            wres_chunk = b"WRES" + struct.pack("<I", len(wres_payload)) + wres_payload
-            lvlr = b"LVLR" + struct.pack("<I", len(wres_chunk)) + wres_chunk
-            (game / "data/resources/100_res_PC.aya").write_bytes(zlib.compress(lvlr))
+            lvlr_chunk = b"LVLR" + struct.pack("<I", 4) + b"HEAD"
+            wdat_chunk = b"WDAT" + struct.pack("<I", 8) + struct.pack("<ii", 100, 100)
+            bswd_chunk = b"BSWD" + struct.pack("<I", 12) + b"BASE_WORLD01"
+            rlwd_payload = b"SYNTHETIC_RLWD_REAL_WORLD_100_BODY"
+            rlwd_chunk = b"RLWD" + struct.pack("<I", len(rlwd_payload)) + rlwd_payload
+            wrld_body = wdat_chunk + bswd_chunk + rlwd_chunk
+            wrld_chunk = b"WRLD" + struct.pack("<I", len(wrld_body)) + wrld_body
+            wres_chunk = b"WRES" + struct.pack("<I", len(wrld_chunk)) + wrld_chunk
+            (game / "data/resources/100_res_PC.aya").write_bytes(self._pack_aya(lvlr_chunk + wres_chunk))
+
+            # Also verify multi-block (> 1 MiB) .aya inflation succeeds and unframed raw zlib is rejected.
+            pad = b"A" * (mod_starter.AYA_BLOCK_BYTES + 16)
+            lvlr_big = b"LVLR" + struct.pack("<I", len(pad)) + pad
+            (game / "data/resources/110_res_PC.aya").write_bytes(self._pack_aya(lvlr_big + wres_chunk))
+            (game / "data/resources/120_res_PC.aya").write_bytes(zlib.compress(lvlr_chunk + wres_chunk))
 
             out = root / "out"
             with redirect_stdout(io.StringIO()):
@@ -100,7 +119,24 @@ class ModStarterValidationTests(unittest.TestCase):
                     ]
                 )
             self.assertEqual(0, rc2)
-            self.assertEqual(wres_payload, (out / "world-from-aya/data/worlds/world100.wrd").read_bytes())
+            self.assertEqual(rlwd_payload, (out / "world-from-aya/data/worlds/world100.wrd").read_bytes())
+
+            with redirect_stdout(io.StringIO()):
+                rc3 = mod_starter.main(
+                    [
+                        "--out", str(out),
+                        "--id", "world-multiblock",
+                        "--game-dir", str(game),
+                        "--world-level", "110",
+                        "--json",
+                    ]
+                )
+            self.assertEqual(0, rc3)
+            self.assertEqual(rlwd_payload, (out / "world-multiblock/data/worlds/world110.wrd").read_bytes())
+
+            with self.assertRaises(mod_starter.ModStarterError):
+                mod_starter.extract_wres_from_level_archive(game, 120)
+
             # Game dir must remain untouched.
             self.assertEqual(lang_bytes, (game / "data/language/english.dat").read_bytes())
 
@@ -126,6 +162,11 @@ class ModStarterValidationTests(unittest.TestCase):
             "data/short~1/file.dat",
             "data/con/file.dat",
             "data/nul.dat",
+            "data/conin$.dat",
+            "data/CONOUT$.dat",
+            "data/con .dat",
+            "data/com1 .dat",
+            "data/lpt9   .wrd",
             "data/" + "/".join(["a"] * 12) + "/too_deep.dat",
             "data/" + "a" * 240,
             "data/non\x7fascii.dat",
@@ -311,6 +352,17 @@ sys.exit(0)
 
             with self.assertRaises(mod_starter.ModStarterError):
                 mod_starter.validate_with_bea(mock_bad_marker, out / "ce-example-starter", "ce-example-starter")
+
+    def test_discover_bea_runtime_libs_requires_dxvk_present(self):
+        with tempfile.TemporaryDirectory(prefix="mod-starter-libs-") as tmp:
+            root = Path(tmp)
+            exe = root / "bea"
+            exe.write_bytes(b"")
+            (root / "lib").mkdir()
+            # Without libdxvk_d3d9.so.0, sibling lib/ is not injected.
+            self.assertEqual([], mod_starter._discover_bea_runtime_libs(exe))
+            (root / "lib/libdxvk_d3d9.so.0").write_bytes(b"")
+            self.assertEqual([str(root / "lib")], mod_starter._discover_bea_runtime_libs(exe))
 
     def test_cli_returns_nonzero_on_missing_args(self):
         err = io.StringIO()
