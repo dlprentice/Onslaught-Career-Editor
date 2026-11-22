@@ -66,11 +66,20 @@ tmp*/
 # Game/runtime payloads and secrets
 .env
 .env.*
+*.env
+*.private.json
+*.key
+*.pem
+*.core
+*.dmp
+*.sqlite
 *.exe
 *.dll
 *.bes
 *.bea
+*.aya
 *.bik
+*.sav
 *.vid
 *.gzf
 *.zip
