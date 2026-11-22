@@ -354,7 +354,10 @@ sys.exit(0)
                 mod_starter.validate_with_bea(mock_bad_marker, out / "ce-example-starter", "ce-example-starter")
 
     def test_discover_bea_runtime_libs_requires_dxvk_present(self):
-        with tempfile.TemporaryDirectory(prefix="mod-starter-libs-") as tmp:
+        from unittest import mock
+        clean_env = {k: v for k, v in os.environ.items() if k != "BEA_PORT_DATA"}
+        with mock.patch.dict(os.environ, clean_env, clear=True), \
+             tempfile.TemporaryDirectory(prefix="mod-starter-libs-") as tmp:
             root = Path(tmp)
             exe = root / "bea"
             exe.write_bytes(b"")

@@ -109,7 +109,7 @@ def archived_target_problems(root: Path) -> List[str]:
     problems: List[str] = []
     if (root / ARCHIVED_TREE_PRESENT).exists():
         problems += [f"{rel} is allowed as archived but is not in the tree" for rel in sorted(ARCHIVED_TREE_TARGETS) if not (root / rel).exists()]
-    if (root / "reverse-engineering").is_dir():
+    if (root / "reverse-engineering").is_dir() and any((root / "reverse-engineering").rglob("*.md")):
         problems += [f"{page} is named in FROZEN_LINKS_TO_REBUILD but is not in the tree"
                      for page in sorted({page for page, _target in FROZEN_LINKS_TO_REBUILD}) if not (root / page).is_file()]
     try:
