@@ -677,10 +677,6 @@ class Judging(unittest.TestCase):
             self.assertIsInstance(level, int)
             self.assertTrue(name and len(reason) > 20)
             self.assertRegex(identity, r"^[0-9a-f]{64}$")
-        cs = (Path(__file__).resolve().parent.parent / "companion/OnslaughtToolkit.Godot/Development/ScriptsGateCheck.cs").read_text(encoding="utf-8")
-        entries = re.findall(r'\[\((\d+), "([^\"]+)"\)\] = new\("([^\"]+)", "([0-9a-f]{64})"\)', cs)
-        self.assertEqual(len(entries), len(gate.STALE_SOURCES))
-        self.assertEqual({(int(level), name): (reason, identity) for level, name, reason, identity in entries}, gate.STALE_SOURCES)
 
 
 class Limits(unittest.TestCase):

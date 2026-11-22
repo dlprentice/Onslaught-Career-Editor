@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an improvement to the companion app, its tools or this repository's documentation
+about: Suggest an improvement to the Modding & Content Toolkit tools, schemas, lore or documentation
 title: "[Feature] "
 labels: enhancement
 assignees: ""
@@ -10,41 +10,24 @@ assignees: ""
 
 Choose one:
 
-- [ ] Companion (fixes and its existing workflows; new player-facing features belong in Onslaught CE, see [Where to contribute](https://github.com/dlprentice/Onslaught-Career-Editor/blob/main/CONTRIBUTING.md#where-to-contribute))
-- [ ] Docs and lore
-- [ ] Tools
+- [ ] Content Catalogue / Content Inventory
+- [ ] Format decoders / World / MSL / Mod tools
+- [ ] Lore and documentation
 
-Issues with the native port belong in [Onslaught CE's issues](https://github.com/dlprentice/onslaught-ce/issues), not here; rebuild issues belong in [onslaught-godot](https://github.com/dlprentice/onslaught-godot).
+Player-facing gameplay, Career/Backups/Mods/Editor UI and launcher requests belong in [Onslaught CE](https://github.com/dlprentice/onslaught-ce/issues); see [Where to contribute](https://github.com/dlprentice/Onslaught-Career-Editor/blob/main/CONTRIBUTING.md#where-to-contribute).
 
 ## Problem
 
-What user or maintainer problem should this solve?
+What modder, preservation or tooling problem should this solve?
 
 ## Proposed Shape
 
-Describe the smallest useful version.
+Describe the smallest useful change and its authored tests.
 
 ## Safety Boundary
 
-Preserve pristine inputs and unknown save bytes. Any write into an installed game
-must require an informed choice and a verified recovery backup first, and no game
-executable is modified. Describe the selected target and how a failed write remains recoverable.
+Toolkit tools must treat retail installations as read-only, publish outputs outside the game tree via `tools/safe_generated_output.py` (or stdout), and keep retail-derived outputs in ignored `local-data/`.
 
-Confirm whether this request needs any of the following:
+- [ ] No prohibited payload, generated retail catalogue, secret or unredacted private path is included in this request.
 
-- proprietary game assets, saves, or copied executable bytes
-- runtime proof, online/multiplayer proof, or rebuild-parity claims
-- public release packaging or signing
-
-If yes, explain the boundary without including private material.
-
-Keep the request public-safe: redact local user paths and machine identifiers.
-Do not include or attach game binaries, extracted assets, saves, copied
-executables, raw runtime proof bundles, secrets, or unredacted private paths. A
-screenshot of the app or the game running is fine - redact local paths first.
-
-- [ ] No prohibited payload, proof bundle, secret, or unredacted private path is
-      included in this request.
-
-For private-data, proprietary-content, security, or online-session concerns,
-follow `SECURITY.md` instead of posting sensitive details.
+For private-data, proprietary-content or security concerns, follow `SECURITY.md` instead of posting publicly.

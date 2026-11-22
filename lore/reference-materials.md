@@ -2,7 +2,7 @@
 
 - **Status:** live source register for the lore corpus. Preservation record —
   where an entry here disagrees with a measurement under
-  [`reverse-engineering/`](../reverse-engineering/RE-INDEX.md), the measurement
+  [`reverse-engineering/`](https://github.com/dlprentice/onslaught-preservation/blob/main/INDEX.md), the measurement
   wins.
 - **Last updated:** 2026-07-28
 - **Summary:** where the claims in this directory came from — maintainer-local

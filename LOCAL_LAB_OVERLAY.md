@@ -1,72 +1,20 @@
 # Local lab overlay
 
 Status: active — the ignored-directory boundary
-Last updated: 2026-11-21 (scrubbed private Ghidra project path)
-Summary: which local paths own retail inputs and bulky generated work, and what
-may be promoted out of them into tracked evidence.
+Last updated: 2026-11-21 (updated for the repurposed Onslaught Modding & Content Toolkit)
+Summary: which ignored local paths own retail inputs and generated catalogue/inventory outputs, and what may be promoted into tracked source.
 
-This page records the maintainer's retained workspace. Public contributors do not need or receive those inputs;
-[CONTRIBUTING.md](CONTRIBUTING.md) owns public setup. Use your own licensed game files only when the selected task
-needs them, and keep them ignored.
+This page records the ignored local-directory boundary. Public contributors do not need or receive maintainer lab inputs; [CONTRIBUTING.md](CONTRIBUTING.md) owns public setup. Use your own licensed game files only when a tool needs them, and keep all game inputs and generated outputs ignored.
 
-Use ignored local directories for retail inputs and bulky/generated work. They
-are not source and must not be copied wholesale into a release candidate.
-The rebuild materializer writes its exact verified retail inputs to ignored
-asset paths so normal build and launch commands keep working without making the
-payloads repository source.
+## Ignored local directories
 
-Current owners:
+- **`local-data/`** (Git-ignored inside this checkout): default local home for Python virtual environments (`local-data/venv`), generated JSON Content Catalogues (`local-data/content-catalog`), Content Inventories (`local-data/content-inventory`), staged mod previews and other private local outputs.
+- **`local-lab/`** (Git-ignored, maintainer workstation only; absent in public clones and fresh worktrees): retained read-only retail specimens and historical evidence corpus. Fresh clones and child worktrees never copy this directory; pass explicit `--game` paths when running retail gates.
+- **`.artifacts/`** (Git-ignored): optional output directory for offline diagnostic reports such as `md_link_check.py` (without `--check-only`).
 
-- canonical
-  `local-lab/` of the maintainer's checkout (`BEA_LOCAL_LAB` names its absolute path) — the one real,
-  writable, Git-ignored owner for manually supplied game installs, copied
-  runtime targets, converted rebuild assets, campaign evidence, and other
-  durable workstation-local inputs;
-- `.artifacts/` — legacy validation, screenshots, publish output, reports,
-  and extracted release candidates; inspect before retirement because some is unique evidence;
-- `local-data/` (Git-ignored, inside this checkout) —
-  grouped `recovered/` packages, retained `_recovered-worktrees/` and Windows-profile inputs, retail
-  profiles, media, VM media, and the gen32 host attestations that are not part of
-  `local-lab/`; its own `AGENTS.md` describes the recovered packages;
-- retired local Ghidra project (kept untouched inside the maintainer's ignored lab); the
-  former tracked checkpoint (now in the private RE archive) and the sealed off-volume package are preservation
-  copies, never writable inputs.
+## Safety rules
 
-The canonical lab is a normal writable child directory of the maintainer's checkout. Where that checkout is stored on a
-given machine is in the ignored `local-data/` notes.
-Fresh clones and Git child worktrees do not receive ignored content. A worktree
-must set `BEA_LOCAL_LAB` to the canonical absolute path or pass that path through
-the owning tool's explicit lab option; do not create a per-worktree copy.
-
-The rebuild materializer detects a linked worktree and verifies the canonical
-materialized files against its current source pins, then creates individual
-file links in the worktree's ignored `Assets/` paths. The explicit equivalent, run in onslaught-godot's checkout,
-is `python rebuild/tools/materialize_retail_assets.py --reuse-canonical-assets` (see that repository's
-[rebuild/README.md](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/README.md)).
-It refuses stale inputs, conflicting destinations and directory links; it never
-regenerates the canonical files. This leaves adjacent `.import` files and the
-project's `.godot/` cache local to the worktree. Rebuild launchers place each
-invocation's output/profile under that checkout's `local-data/first-flight/`
-and only read the canonical startup-media cache. Generated production scenes
-and resources must remain checkout-local, private and ignored as well.
-
-Git ignore is a publication boundary, not a backup. Never run root-level
-`git clean` with `-x` or `-X`; any deliberate clean needs a dry run, narrow
-scope, and `-e local-lab/`. Never bulk-stage the lab.
-
-Do not store secrets in these folders merely because they are ignored. Keep
-credentials in the owning system's secret store. Prefer a copied target for lab
-mutation. An installed target is permitted only when its owner explicitly
-chooses it and the write path first creates and verifies a backup; the pristine
-specimen is never writable.
-
-Before promoting any local result to source, retain only the smallest
-public-safe, provenance-bounded fact that materially supports a current
-implementation or contract. Retail binaries/assets, real saves, raw debugger
-logs, screenshots, captures, and generated catalogs remain local.
-
-The machine-local RE campaign generations and READY bundles are history: the campaign ended on 2026-10-15 and
-its selector, `developer_state.json`, is in the private RE archive. On the maintainer's workstation,
-`local-lab/INDEX.md` lists the retained corpus and the dated campaign material in it, which is history, not a
-liveness oracle. No Ghidra work is planned; the working Ghidra project and the independent cold recovery stay as
-preservation copies.
+- Git ignore is a publication boundary, not a backup. Never run root-level `git clean -x` or `git clean -X`, and never bulk-stage ignored folders.
+- Do not store secrets or credentials inside ignored folders; use the system secret store.
+- Treat retail game installations and pristine specimens as read-only inputs; every Toolkit writer requires an explicit output directory outside the game tree.
+- Before committing any new fixture or metadata, retain only small authored or public-safe structures and verify with `npm run test:safety`. Retail binaries/assets, real saves, generated catalogues/inventories, raw captures and Ghidra databases stay local and untracked.

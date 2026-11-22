@@ -1,7 +1,7 @@
 # Documentation standard — five fields, derived from what this repository already does, and mechanically enforced
 
 Status: active — the header contract for tracked documentation
-Last updated: 2026-11-06 (the AGENTS.md citation and the specimen rule's machine-specific wording corrected; the header date means the last substantive change; mechanical edits do not bump it)
+Last updated: 2026-11-21 (repointed historical RE citations to onslaught-preservation after the frozen local reverse-engineering copy was removed)
 Summary: every tracked document declares whether it is live, how old its claim
 is, and what it settles; a finding additionally declares whether its evidence is
 MEASURED, SOURCE, INFERRED or UNKNOWN, and names its specimen when it quotes
@@ -121,10 +121,8 @@ here:
   byte comparison, focused test, or pinned source file and line.
 - **`UNKNOWN` is a passing value.** An honest unknown with a route to settling it
   is a good outcome; a plausible guess dressed as a fact is the failure mode that
-  got a previous generation of documentation deleted wholesale. This mirrors the
-  `UNSCORED` return in `tools/score_frontend_capture.py`, and the reasoning is
-  identical: "I found no gap" and "I was unable to look" must not render as the
-  same sentence.
+  got a previous generation of documentation deleted wholesale: "I found no gap"
+  and "I was unable to look" must not render as the same sentence.
 
 When a document mixes grades, grade it by its **weakest load-bearing claim** and
 partition the body — the structural form
@@ -141,9 +139,9 @@ eight hex characters.
 rule.** A machine may hold two retail binaries that are not interchangeable: an installed
 game, which may be modified, and a pristine backup kept as the baseline. A byte finding
 that does not name which one it read may simply be **false** — category 1, not
-category 4. At least one parity target has already been set from the wrong
-binary; see
-[`reverse-engineering/binary-analysis/retail-capture-provenance-2026-07-25.md`](reverse-engineering/binary-analysis/retail-capture-provenance-2026-07-25.md).
+category 4. See the
+[retail specimen baseline](https://github.com/dlprentice/onslaught-preservation/blob/main/platforms/pc/retail-specimen-baseline.md)
+in `onslaught-preservation`.
 
 The checker additionally **rejects a `Specimen:` that cites a path under
 `steamapps`** unless that same path is the `.original.backup` or a `safe-copy`.
@@ -329,5 +327,4 @@ cleanup batch. Prior wording and implementation history remain in Git.
 - [`GOAL.md`](GOAL.md) — the evidence partition the `Evidence:` grades follow.
 - [`rebuild/PROVENANCE.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PROVENANCE.md) in onslaught-godot — the
   authority order the four grades were taken from.
-- [`reverse-engineering/RE-INDEX.md`](reverse-engineering/RE-INDEX.md) — the RE
-  evidence front door, and the specimen rule in its original form.
+- [`onslaught-preservation/INDEX.md`](https://github.com/dlprentice/onslaught-preservation/blob/main/INDEX.md) — the maintained game-documentation front door and evidence rules.

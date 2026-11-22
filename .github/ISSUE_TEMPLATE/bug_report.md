@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: "Report a problem with the companion app, its tools or this repository's documentation (game documentation: onslaught-preservation)"
+about: "Report a problem with the Modding & Content Toolkit tools, schemas, lore or documentation (game docs: onslaught-preservation)"
 title: "[Bug] "
 labels: bug
 assignees: ""
@@ -8,25 +8,26 @@ assignees: ""
 
 <!--
 Status: active issue template
-Last updated: 2026-11-11 (environment fields)
-Summary: report companion bugs with valid template metadata and the protected-write contract.
+Last updated: 2026-11-21 (repurposed for the Onslaught Modding & Content Toolkit)
+Summary: report Toolkit tool, catalogue, schema or documentation bugs without leaking retail data or private paths.
 -->
 
 ## Area
 
 Choose one:
 
-- [ ] Companion
-- [ ] Docs and lore
-- [ ] Tools
+- [ ] Content Catalogue / Content Inventory
+- [ ] Format decoders / World / MSL / Mod tools
+- [ ] Lore and documentation
 
-Issues with the native port belong in [Onslaught CE's issues](https://github.com/dlprentice/onslaught-ce/issues), not here; rebuild issues belong in [onslaught-godot](https://github.com/dlprentice/onslaught-godot).
+Issues with playing the game, Career/Backups/Mods/Editor UI or the launcher belong in [Onslaught CE's issues](https://github.com/dlprentice/onslaught-ce/issues); game format/mechanics docs belong in [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation/issues); Godot rebuild issues belong in [onslaught-godot](https://github.com/dlprentice/onslaught-godot/issues).
 
 ## Environment
 
 - Operating system and version:
-- How you run it (built from source at which commit, or another way):
-- The game: Steam, another install, or none (and which game version, if you know):
+- Python version (and whether `numpy`, `Pillow`, `jsonschema` are installed):
+- Commit SHA:
+- Game install (Steam, other retail copy, or none for authored tests):
 
 ## Expected Behavior
 
@@ -38,27 +39,12 @@ What happened instead?
 
 ## Reproduction
 
-List the steps and commands that show the problem. Remove your local user paths
-and machine names, and anything copied from the game's own files.
+List the exact commands and minimal synthetic inputs that reproduce the problem. Remove local user paths, machine names and any retail game data.
 
-If available, include the exact local validation command and its result.
-
-Do not include or attach game binaries, extracted assets, saves, copied
-executables, raw runtime proof bundles, secrets, or unredacted private paths.
-
-**A screenshot of the app is welcome and often the fastest way to show a bug.**
-Crop or redact your local paths first. What we cannot take is the game's own
-content — extracted textures, models or audio, or a bulk frame dump — because
-that is the game's material rather than a picture of a problem.
+Do not attach game binaries, extracted assets, generated retail catalogues/inventories, saves, raw captures, secrets or unredacted private paths.
 
 ## Safety Check
 
-- [ ] No game binaries, extracted assets, saves, copied executables, raw runtime
-      proof bundles, secrets, or unredacted private paths are included.
-- [ ] Any screenshot shows the app or the game running, with local paths
-      redacted - not extracted game content.
-- [ ] Any career or settings write into the game folder was explicitly chosen and had a verified recovery backup;
-      no game executable was modified.
+- [ ] No game binaries, extracted assets, generated retail catalogues/inventories, saves, raw captures, secrets or unredacted private paths are included.
 
-For private-data, proprietary-content, security, or online-session concerns,
-follow `SECURITY.md` instead of posting sensitive details.
+For private-data, proprietary-content or security concerns, follow `SECURITY.md` instead of posting publicly.

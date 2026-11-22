@@ -38,4 +38,4 @@ Download: `OnslaughtToolkit-winui-v1.0.11-win-x64.zip` (+ `.sha256` sidecar).
 
 See the GitHub Releases page for prior releases.
 
-Current releases: Onslaught CE at https://github.com/dlprentice/onslaught-ce/releases. The Companion has no packaged release yet; build it from source ([README](README.MD#build-and-run)).
+Current releases: Onslaught CE at https://github.com/dlprentice/onslaught-ce/releases. This repository now holds the [Onslaught Modding & Content Toolkit](README.MD); the standalone Companion GUI was retired in favour of Onslaught CE's native screens.

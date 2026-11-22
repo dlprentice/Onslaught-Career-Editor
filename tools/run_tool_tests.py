@@ -32,21 +32,20 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 # One entry per registered command. Paths are repository-relative
 # and are resolved against ROOT so the gate behaves the same from any cwd.
 SUITES: tuple[tuple[str, ...], ...] = (
-    ("tools/companion_toolchain_tests.py",),
-    ("tools/check_installed_game_claims.py", "--self-test"),
-    ("tools/check_installed_game_claims.py", "--check"),
-    ("tools/check_registered_screenshots.py", "--self-test"),
-    ("tools/check_registered_screenshots.py", "--check"),
-    # The publication helper behind twelve writers: its own checks were not part of this gate.
+    # Publication helper behind Toolkit writers.
     ("tools/safe_generated_output.py", "--self-test"),
     ("tools/safe_generated_output_tests.py",),
+    # AYA archive, texture and CMSH mesh/animation inspection suites.
     ("tools/aya_archive_inventory_tests.py",),
-    ("tools/aya_extractor_source_audit_tests.py",),
+    ("tools/aya_texture_fidelity_census_tests.py",),
     ("tools/cmsh_animation_usage_census_tests.py",),
+    ("tools/cmsh_grammar_walk_tests.py",),
+    ("tools/cmsh_static_preview_tests.py",),
     ("tools/model_transform_catalog_tests.py",),
     ("tools/level_asset_xref_tests.py",),
-    ("tools/cmsh_grammar_walk_tests.py",),
+    ("tools/dds_census_tests.py",),
     ("tools/dds_metadata_tests.py",),
+    # JSON Content Catalogue and Content Inventory suites.
     ("tools/content_catalog_tests.py",),
     ("tools/imposter_records_tests.py",),
     ("tools/content_inventory_tests.py",),
@@ -56,33 +55,19 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/named_things_tests.py",),
     ("tools/game_tables_decode_tests.py",),
     ("tools/export_asset_catalog_tests.py",),
+    # World codec, mod staging, terrain and MSL compiler/inspector suites.
     ("tools/world_resources_encode_tests.py",),
-    ("tools/ce_museum_stage_tests.py",),
     ("tools/world_mod_stage_tests.py",),
     ("tools/world_edit_preview_tests.py",),
     ("tools/world_edit_move_tests.py",),
     ("tools/world_thing_index_tests.py",),
     ("tools/heightfield_lookup_tests.py",),
     ("tools/msl_compile_tests.py",),
-    ("tools/msl_vectors_tests.py",),
-    ("tools/script_tables_tests.py",),
-    ("tools/level_editor_vectors_tests.py",),
-    ("tools/aya_texture_fidelity_census_tests.py",),
-    ("tools/export_game_assets_tests.py",),
-    ("tools/cmsh_static_preview_tests.py",),
-    ("tools/score_frontend_capture_tests.py",),
-    ("tools/check_region_overlap_tests.py",),
-    ("tools/check_region_overlap.py",),
-    # Name-align plates (Gen34–38): keep regression guards in the sweep (Opus).
-    ("tools/worldheaders_decode.py", "--self-test"),
-    # Format, contract and decoder suites.
-    ("tools/dds_census_tests.py",),
     ("tools/mission_script_inspect_tests.py",),
+    # Format and decoder suites.
+    ("tools/worldheaders_decode.py", "--self-test"),
     ("tools/worldheaders_decode_tests.py",),
-    ("tools/cmsh_skinning_contract_tests.py",),
-    ("tools/cmsh_matrix_normal_contract_tests.py",),
     ("tools/battle_engine_config_decode_tests.py",),
-    ("tools/gltf_pose_check_tests.py",),
     ("tools/goodie_resource_walk_tests.py",),
     ("tools/xap_bank_walk_tests.py",),
 )
@@ -91,8 +76,6 @@ SUITES: tuple[tuple[str, ...], ...] = (
 # *_tests.py (or test_*.py) file that is in neither place, so a new test file cannot silently fall outside the gate.
 NOT_IN_THIS_GATE: dict[str, str] = {
     "tools/run_tool_tests.py": "this runner itself: npm run test:tools runs its --self-test before any suite",
-    "tools/companion_godot_tests.py": "fake-tool checks of the companion's Godot routes; run by npm run test:companion-tools (part of npm test)",
-    "tools/godot_host_tests.py": "owned-process cleanup with fake tools; run by npm run test:godot-host",
 }
 
 # Directories that hold other checkouts, private data or build output, never this repository's own test files.
@@ -127,12 +110,9 @@ def unregistered_test_files(
 # future one is reported as skipped rather than counted as a pass.
 WINDOWS_ONLY: dict[str, str] = {}
 
-# Suites that need submodule checkouts, by path. Without one the suite is reported as a named SKIP: the audit compares each
-# checkout with its pinned commit, so there is nothing to compare when the checkout is absent. A checkout that is present at
-# another commit is a real failure and is not skipped here.
-NEEDS_SUBMODULES: dict[str, tuple[str, ...]] = {
-    "tools/aya_extractor_source_audit_tests.py": ("references/AYAResourceExtractor", "references/Onslaught"),
-}
+# Suites that need submodule checkouts, by path. None are registered now, and the mechanism stays so a future suite whose
+# submodule checkout is absent is reported as a named SKIP rather than a pass or failure.
+NEEDS_SUBMODULES: dict[str, tuple[str, ...]] = {}
 
 
 def missing_submodules(path: str, root: pathlib.Path = ROOT) -> list[str]:
@@ -305,21 +285,20 @@ class RunToolTestsSelfTest(unittest.TestCase):
     def test_a_missing_submodule_is_a_named_skip_not_a_pass_or_a_failure(self) -> None:
         import tempfile
 
-        suite = "tools/aya_extractor_source_audit_tests.py"
-        self.assertIn(suite, {command[0] for command in SUITES})
-        self.assertEqual(("references/AYAResourceExtractor", "references/Onslaught"), NEEDS_SUBMODULES[suite])
-        with tempfile.TemporaryDirectory() as temporary:
-            root = pathlib.Path(temporary)
-            for name in NEEDS_SUBMODULES[suite]:
-                (root / name).mkdir(parents=True)                      # an empty directory is an uninitialised submodule
-            reason = skip_reason((suite,), "posix", root)
-            self.assertIn("submodule not initialised", reason)
-            for name in NEEDS_SUBMODULES[suite]:
-                self.assertIn(name, reason)
-            (root / "references/Onslaught/.git").write_text("gitdir: elsewhere\n")
-            self.assertEqual(["references/AYAResourceExtractor"], missing_submodules(suite, root))
-            (root / "references/AYAResourceExtractor/.git").write_text("gitdir: elsewhere\n")
-            self.assertIsNone(skip_reason((suite,), "posix", root))    # both present: the suite runs (and may fail)
+        suite = "tools/synthetic_submodule_audit_tests.py"
+        with mock.patch.dict(NEEDS_SUBMODULES, {suite: ("references/AYAResourceExtractor", "references/Onslaught")}):
+            with tempfile.TemporaryDirectory() as temporary:
+                root = pathlib.Path(temporary)
+                for name in NEEDS_SUBMODULES[suite]:
+                    (root / name).mkdir(parents=True)                  # an empty directory is an uninitialised submodule
+                reason = skip_reason((suite,), "posix", root)
+                self.assertIn("submodule not initialised", reason)
+                for name in NEEDS_SUBMODULES[suite]:
+                    self.assertIn(name, reason)
+                (root / "references/Onslaught/.git").write_text("gitdir: elsewhere\n")
+                self.assertEqual(["references/AYAResourceExtractor"], missing_submodules(suite, root))
+                (root / "references/AYAResourceExtractor/.git").write_text("gitdir: elsewhere\n")
+                self.assertIsNone(skip_reason((suite,), "posix", root))  # both present: the suite runs (and may fail)
         self.assertIsNone(skip_reason(("tools/content_catalog_tests.py",), "posix"))
 
     def test_skipped_suites_are_counted_and_named_apart_from_passes_and_do_not_fail_the_run(self) -> None:

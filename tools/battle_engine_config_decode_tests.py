@@ -21,9 +21,8 @@ from dataclasses import replace
 
 TOOL = pathlib.Path(__file__).with_name("battle_engine_config_decode.py")
 LAYOUT = (
-    pathlib.Path(__file__).resolve().parents[1]
-    / "reverse-engineering"
-    / "asset-formats"
+    pathlib.Path(__file__).resolve().parent
+    / "format_contracts"
     / "battle-engine-config-layout.tsv"
 )
 SPEC = importlib.util.spec_from_file_location("battle_engine_config_decode", TOOL)

@@ -3,7 +3,7 @@
 - **Status:** live preservation record. Weapon names, mode chains, and the
   numeric examples below are measured from the shipped `default physics.dat`
   byte-reads and the resolved value-id tables
-  ([physics-round-value-ids-2026-07-25.md](../reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md),
+  ([physics-round-value-ids-2026-07-25.md](https://github.com/dlprentice/onslaught-preservation/blob/main/formats/physics-round-value-ids.md),
   raw tables retained in the private RE archive), the pristine-exe
   string table
   (a string inventory generated locally from your own copy of `BEA.exe`; retail text is never committed),
@@ -33,7 +33,7 @@ weapon (statement tag 2)      — the hardpoint: charge levels, ammo, icon,
 ```
 
 Every arrow is a name reference resolved through the PhysicsScript registry
-([physics-script-static-contract.md](../reverse-engineering/binary-analysis/physics-script-static-contract.md)):
+([physics-script-static-contract.md](https://github.com/dlprentice/onslaught-preservation/blob/main/formats/physics-script-static-contract.md)):
 `CWeaponChargeLevel` maps a charge state to a weapon-mode *name*;
 `CWeaponRound` names the round; `CRoundExplosion` names the explosion. The
 manager (`CPhysicsScript__Load`, `0x0042e950`) reads all of this from
@@ -68,7 +68,7 @@ offsets, in the value-id tables):
 ## The measured tutorial pair
 
 Two weapons have been read end-to-end from the shipped `.dat` with every field
-byte-identified ([physics-round-value-ids-2026-07-25.md §6](../reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md)):
+byte-identified ([physics-round-value-ids-2026-07-25.md §6](https://github.com/dlprentice/onslaught-preservation/blob/main/formats/physics-round-value-ids.md)):
 
 ### Pulse Cannon Pod (world 100's weapon)
 
@@ -250,10 +250,10 @@ pipeline heals (noted in the round-ids document).
 ## Sources
 
 - Field tables and the two end-to-end chains:
-  [physics-round-value-ids-2026-07-25.md](../reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md)
+  [physics-round-value-ids-2026-07-25.md](https://github.com/dlprentice/onslaught-preservation/blob/main/formats/physics-round-value-ids.md)
   (byte-reads of `data/default physics.dat`, RTTI + apply-body resolution).
 - Manager/load contract:
-  [physics-script-static-contract.md](../reverse-engineering/binary-analysis/physics-script-static-contract.md).
+  [physics-script-static-contract.md](https://github.com/dlprentice/onslaught-preservation/blob/main/formats/physics-script-static-contract.md).
 - Damage pipeline (round + explosion composition, radial falloff):
   `cround-hit-damage-path-2026-08-10.md` (cited in the round-ids document §6.2).
 - String table: a string inventory generated locally from your own copy of `BEA.exe` (not tracked; retail text is never committed)

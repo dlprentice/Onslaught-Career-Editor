@@ -1,152 +1,59 @@
-# Onslaught Toolkit: agent guide
+# Onslaught Modding & Content Toolkit: agent guide
 
 Status: active — the single instruction file for this repository; `CLAUDE.md` only points here
-Last updated: 2026-11-21 (scrubbed private Ghidra project path)
-Summary: what this repository holds, which documents own its state, and the evidence, data and licensing rules
-that apply here.
+Last updated: 2026-11-21 (updated for repurposing into the Onslaught Modding & Content Toolkit; retired Companion GUI and frozen reverse-engineering copy removed)
+Summary: what this repository holds, which documents own its state, and the evidence, data, safety and licensing rules that apply here.
 
-This repository, called the Toolkit in its guides, holds the Onslaught Companion app (its project folder is still
-named OnslaughtToolkit.Godot), its lore and tools; the retired WinUI app also carried the Toolkit name
-([CHANGELOG.md](CHANGELOG.md)). If guide files exist above this checkout on your machine, follow them too.
-Contributors start with [CONTRIBUTING.md](CONTRIBUTING.md#where-to-contribute) and the
-[README](README.MD#build-and-run); no maintainer guide or private checkout is required. The ground rules, reference
-routing and definition of done below apply to everyone; "Tool outcomes and user holds" and the maintainer-workspace
-notes concern the maintainer's own agent tooling.
+This repository (`Onslaught-Career-Editor`, called the Toolkit in its guides) holds the **Onslaught Modding & Content Toolkit**: the JSON Content Catalogue, Content Inventory, asset/format decoders, mod-staging tools, canonical lore library and project overview. If guide files exist above this checkout on your machine, follow them too. Contributors start with [CONTRIBUTING.md](CONTRIBUTING.md#where-to-contribute) and [README.MD](README.MD#setup-and-checks); no private checkout is required.
 
 ## What this is
 
-A preservation project for *Battle Engine Aquila* (2003). This public repository holds the companion (`companion/`,
-Onslaught Companion), a frozen copy of the game documentation (`reverse-engineering/`, whose home is
-[onslaught-preservation](https://github.com/dlprentice/onslaught-preservation)), our tools, and a pointer page where the
-rebuild stood (it is developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot)). [`GOAL.md`](GOAL.md)
-states the outcomes, [`PROGRAM.md`](PROGRAM.md) the work queue and [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md)
-what is demonstrated; the full context is in [MAINTAINER-AGENT-PRACTICE.md](MAINTAINER-AGENT-PRACTICE.md).
+A preservation and modding-tooling repository for *Battle Engine Aquila* (2003). Its active scope is:
+
+- [`tools/`](tools/README.md): the `src/`-verified JSON Content Catalogue (`content_catalog.py`, `content_catalog.schema.json`, `content_catalog_gate.py`), Content Inventory (`content_inventory.py`, `content_inventory.schema.json`, `content_inventory_gate.py`), asset/format decoders and mod-staging utilities, plus repository doc/safety gates.
+- [`lore/`](lore/_index.md) and [`lore-book/`](lore-book/BOOK.md): canonical public lore and development history.
+- Project overview and coordination guides: [`GOAL.md`](GOAL.md), [`PROGRAM.md`](PROGRAM.md), [`CURRENT_CAPABILITIES.md`](CURRENT_CAPABILITIES.md), [`PROJECT-INDEX.md`](PROJECT-INDEX.md) and [`VALIDATION.md`](VALIDATION.md).
+
+Where related work lives:
+
+- Native Windows/Linux game port (with built-in Career, Backups, Mods and Editor screens that replaced the retired standalone Companion app): [Onslaught CE](https://github.com/dlprentice/onslaught-ce).
+- Byte-matching decompilation (reverse-engineering authority): [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp).
+- Maintained game documentation (formats, saves, mechanics, levels, engine): [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation).
+- Proof-of-concept Godot 4 C# rebuild: [onslaught-godot](https://github.com/dlprentice/onslaught-godot).
 
 ## Checkouts and branches
 
-Public fork setup uses [CONTRIBUTING.md](CONTRIBUTING.md). Contributor checks need no local-lab inputs and none of the
-maintainer's workspace described under "Maintainer-only workspace" below ([README](README.MD#build-and-run)).
-
-- `main` is the integration branch; a lane (a topic branch) merges into it when its own gate passes. Lane branches
-  start from the flattened `main` (the history was flattened into a single root; see the commit titled Describe the
-  repository after the history flatten); never merge a pre-flatten branch or resurrect its plans.
-
-### Maintainer-only workspace
-
-- The maintainer's working checkout may sit on slow external storage, and it holds the canonical `local-lab/`. Give
-  such a checkout light I/O only: do builds, test runs, captures and worktrees in a clone on a fast internal disk and
-  point it at the canonical lab ([LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md)). Worktrees never receive a copied
-  corpus. Where the checkout and the clone are on a given machine is in the ignored `local-data/` notes.
-- Which clone and reference folders this machine uses is in the ignored `local-data/rebuild-env.sh` and the private
-  notes, never in a tracked file.
-
-## Project progress and documentation
-
-Report experiments, integrated source, released packages and real-player/platform acceptance separately; a passing
-synthetic test, a branch or a byte match is evidence within its stated scope, not automatic feature completion.
-Preserve historical evidence rather than creating competing live status files, and report failures and open gaps
-without invented percentages. A handoff is a dated continuity snapshot, not a second roadmap: check current refs, claims
-and evidence before relying on it. Which document owns which state:
-[MAINTAINER-AGENT-PRACTICE.md](MAINTAINER-AGENT-PRACTICE.md#project-progress-and-documentation).
-
-## Tool outcomes and user holds
-
-Record consequential tool outcomes in existing private notes, keeping observations separate from interpretations;
-fresh evidence can correct an interpretation without erasing the original observation
-([how](MAINTAINER-AGENT-PRACTICE.md#recording-tool-outcomes)).
-
-- **Safety denial:** keep its stated scope and reason. Do not obtain the denied outcome through another tool, wrapper
-  or helper. Continue only with a materially safer permitted alternative or the supported review process. A task-level
-  safety stop follows its actual notice and its supported way to resume.
-- **Failed call without a reason:** it proves neither approval nor a permanent ban. An already-authorized harmless
-  check may be retried once. If it fails again, record the unresolved failure and finish independent authorized work,
-  without repeated status loops and without changing the request to get around a restriction. Check effects before
-  repeating any mutation.
-- **Failed status read:** the task's state is unknown. A returned task handle shows the task was accepted, not that it
-  finished: check that task or await its result rather than starting a duplicate. A helper that cannot see the caller's
-  result does not make that result invalid, and is no reason for duplicate work or interruption. Report required checks
-  that could not be observed as limits, never as passes.
-- **User hold:** keep it until the user explicitly releases that scope. Resuming the general goal, elapsed time,
-  delegation or a successful tool call does not release a narrower hold.
+- Public contributions use fork and pull request per [CONTRIBUTING.md](CONTRIBUTING.md). Contributor checks need no private lab inputs or retail game files ([README.MD](README.MD#setup-and-checks)).
+- `main` is the integration branch; topic branches merge when their focused gates pass. Never merge pre-flatten history branches.
+- Worktrees never receive a copied retail corpus; keep generated catalogues, inventories and scratch outputs in ignored `local-data/` ([LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md)).
 
 ## Ground rules
 
-- Game/save writes require an informed user choice and a verified recovery copy before overwriting original data, and
-  never happen while the game runs. The companion's `GameInstaller` (`companion/OnslaughtToolkit.Godot/Files/GameWrites.cs`; the
-  [companion README](companion/OnslaughtToolkit.Godot/README.md) describes its mechanism) is the model. Never manufacture an
-  "original" from an already modified file, and never destroy career data as a side effect.
-- The pristine specimen `local-lab/safe-copy-bea-pristine/BEA.exe.original.backup` (SHA-256 `74154bfa…`) is the
-  byte-measurement baseline: read it, never write it. The lab folder's `BEA.exe` (`e1436ef7…`) is patched. Every
-  byte or address finding names the specimen it was read from, with its hash; measure the exact selected file
-  before making a new claim about any other copy.
-- Do not synthesize `.bes` saves. Start from a real baseline and preserve length, reserved fields and unknown bytes.
-  `tests_shared/fixtures/gold_career_save.bin` is the one tracked save.
-- Never track retail binaries or assets, converted retail material, arbitrary saves, raw debugger logs, bulky
-  captures, Ghidra databases or backups, decompiler output, decomp source, credentials or `.env*`.
-  Never quote original-game bytes or a private machine path in live text. `npm run test:safety` enforces both; what
-  it checks and its reviewed exceptions are in [VALIDATION.md](VALIDATION.md).
-- Every behaviour claim cites a capture, byte comparison, focused test, or pinned source file and line. Decompiler
-  output, a plausible name or a model's opinion proves nothing; the decompilation is the naming authority, cited by
-  function, never quoted. Static evidence establishes identities and structures; only controlled runtime evidence
-  establishes causality and values. Write unknowns as open questions with the cheapest falsifier.
-- Ghidra is retired as an authority. Any retired local Ghidra project and the cold preservation copies
-  kept outside this checkout (the ignored local notes say where) stay untouched (restore a copy, never open one in place; opening without
-  `-readOnly` can roll its `db.NNNNN` version). Nothing Ghidra-derived returns to this repository.
-- `local-lab/` and `local-data/` are real ignored directories inside this checkout. Never run `git clean` here
-  (`-x`/`-X` would erase the lab) and never stage them; add paths explicitly. Before calling anything in them stale,
-  grep the tooling and tests, not only the docs: a 2026-08-06 cleanup deleted inputs whose identities were pinned in
-  tooling. Retention belongs to `local-lab/INDEX.md` and the machine's deletion queue.
-- Licensing: the rebuild is GPL and may adapt the pinned GPL source in `references/Onslaught` and the decompilation's
-  simulation (recorded per unit in [`rebuild/PROVENANCE.md`](https://github.com/dlprentice/onslaught-godot/blob/main/rebuild/PROVENANCE.md)
-  in onslaught-godot, where it is developed); it consumes locally materialized retail data but never
-  contains retail executables, decompiler output or separately licensed material. All project code is GPL-3.0-only and
-  documentation and lore are CC BY-SA 4.0, as `REUSE.toml` maps them; contributions come in under the same terms
-  ([CONTRIBUTING.md](CONTRIBUTING.md#licensing-of-contributions), which also lists kept third-party notices). None of it
-  merges with private retail material into one licensing boundary.
-- The rebuild's simulation (`OnslaughtRebuild.Parity`, now in onslaught-godot) is deterministic given its inputs: the
-  tape, the retail data and options files it reads as the game does, and the virtual clock. It never reads wall time,
-  locale, environment or thread scheduling, and has no presentation, process, network or GPU dependency. Tests compare
-  it with recorded references Present by Present; missing references, empty selections and new skips are not passes.
-- No telemetry: nothing in this repository collects or sends usage data. A network feature names exactly what it
-  contacts and why, and reads only public data.
-- C# only, built in code: no `.gd` files, no editor-authored scenes or resources (a `.tscn` only as a one-node entry
-  wrapper), shader source in C# strings, one production owner per subsystem. Repository tooling stays Python.
-- Reviews by other agents or models are optional input to reproduce, not authority. Every agent call names its model and
-  effort by role, as rule 12 of the maintainer's machine guide says; that rule overrides historical model
-  assignments and the frozen review protocol's "strongest available setting". Hosted reviewers never receive retail material or
-  secrets. Hosted CI and release automation are outside this phase; release claims need the selected platform's validation; Linux evidence alone does not establish
-  Windows behaviour.
+- **Read-only on game installs:** Toolkit inspection, catalogue, inventory and mod-staging tools must never write into a game installation. Outputs go to explicit directories outside the game tree via `tools/safe_generated_output.py` (or stdout).
+- **Save preservation:** Do not synthesize `.bes` saves from scratch; start from a real baseline and preserve length, reserved fields and unknown bytes. [`tests_shared/fixtures/gold_career_save.bin`](tests_shared/fixtures/README.md) is the one tracked save fixture.
+- **Public-repo boundary:** Never track retail binaries or assets, converted retail material, generated catalogues/inventories, arbitrary saves, raw debugger logs, bulky captures, Ghidra databases or backups, decompiler output, decomp source, credentials or `.env*`. Never quote original-game bytes or private machine paths in tracked text. `npm run test:safety` enforces both; reviewed exceptions live in `tools/public_allowlist_safety_check.py`.
+- **Evidence rules:** Every behaviour or format claim cites a controlled measurement, byte comparison, focused test or pinned function in [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) (cited by function, never quoted). `references/Onslaught` is a source reference, not proof of retail behaviour. Write unknowns explicitly as open questions with a falsifier.
+- **No `git clean` at root:** `local-data/` and `local-lab/` are ignored directories that may hold local inputs on a maintainer machine. Never run root `git clean -x`/`-X`; stage explicit paths only.
+- **No telemetry:** Nothing in this repository collects or sends usage data.
+- **Licensing:** Code and schemas in `tools/` and root config files are GPL-3.0-only (`LICENSE`); documentation, format-contract tables and `lore/` are CC BY-SA 4.0; `tests_shared/fixtures/gold_career_save.bin` is `LicenseRef-Retail-Save-Fixture` (`REUSE.toml`). Contributions follow inbound = outbound ([CONTRIBUTING.md](CONTRIBUTING.md#licensing-of-contributions)).
+- **No hosted CI:** Do not add GitHub Actions workflows or hosted release automation unless explicitly directed; run the local validation gates instead.
 
 ## Reference routing
 
-- Source layout and dependencies: [PROJECT-INDEX.md](PROJECT-INDEX.md); setup and commands:
-  [README.MD](README.MD#build-and-run) and [package.json](package.json); which gate applies:
-  [VALIDATION.md](VALIDATION.md).
-- The rebuild's setup and contracts (`README.md`, `PARITY.md`, `PROVENANCE.md`, `DETERMINISM.md`): its `rebuild/`
-  folder in [onslaught-godot](https://github.com/dlprentice/onslaught-godot); the companion's workflows and validation
-  limits: its [README](companion/OnslaughtToolkit.Godot/README.md).
-- Current game documentation: [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation); the local
-  [RE-INDEX.md](reverse-engineering/RE-INDEX.md) routes the frozen copy. Archived Ghidra and campaign records: the
-  private historical maintainer archive.
-- Ignored evidence and data: `local-lab/AGENTS.md` and `local-data/AGENTS.md` when working there.
-- Documentation headers: [DOCUMENTATION.md](DOCUMENTATION.md); contributions: [CONTRIBUTING.md](CONTRIBUTING.md);
-  security: [SECURITY.md](SECURITY.md).
+- Source layout and ownership: [PROJECT-INDEX.md](PROJECT-INDEX.md)
+- Setup and commands: [README.MD](README.MD#setup-and-checks) and [package.json](package.json)
+- Gate selection: [VALIDATION.md](VALIDATION.md)
+- Tools catalogue and Python prerequisites: [tools/README.md](tools/README.md)
+- Documentation header standard: [DOCUMENTATION.md](DOCUMENTATION.md)
+- Ignored local data boundary: [LOCAL_LAB_OVERLAY.md](LOCAL_LAB_OVERLAY.md)
+- Security and private reporting: [SECURITY.md](SECURITY.md)
 
 ## Definition of done
 
-1. The smallest gate that could falsify the change passed: docs → `git diff --check` and `npm run test:docs`; added
-   files → `npm run test:safety`; tool changes → the affected `_tests.py` cases; rebuild changes are not made here (`rebuild/` is a pointer page): send them to onslaught-godot, as [CONTRIBUTING.md](CONTRIBUTING.md) describes; companion → `npm test`, run from the repository root (the root `package.json` defines it; `companion/` has none).
-2. A new or edited tracked `.md` has `Status:`, `Last updated:` (or `Date:`) and `Summary:` (or `Verdict:`) in its
-   header and no volatile counts. `tools/doc_header_backlog.txt` may only shrink.
-3. Stage only the scoped paths, commit plainly and push the working branch to your fork, then open a PR as
-   [CONTRIBUTING.md](CONTRIBUTING.md) describes. Maintainers use the established integration route. Commits here are
-   public: keep the Co-Authored-By line, add no session-link line, and describe the change itself, not which agent or role made it.
-
-## Gotchas
-
-- `BEA.exe` writes `setuphistory.txt` and `cardid.txt` into its working directory: launch a copy from its own
-  folder. Linux Steam's install is `~/.local/share/Steam/steamapps/common/Battle Engine Aquila/`.
-- `tools/check_installed_game_claims.py` bans standing promises about the installed game (for example that it is
-  never modified); describe the backup rule instead.
-- `.worktrees/` and `.claude/worktrees/` are ignored because a broad `git add -A` has twice swept unrelated work into
-  a commit.
+1. Run the narrowest gate that could falsify the change:
+   - Docs or deletions: `git diff --check` and `npm run test:docs`
+   - Added/edited tracked files: `npm run test:safety`
+   - Tool changes: the affected `python3 -B tools/<name>_tests.py` and `npm run test:tools`
+   - Catalogue/inventory changes: `python3 -B tools/content_catalog_tests.py`, `python3 -B tools/content_inventory_tests.py`, and (when retail data is available locally) `content_catalog_gate.py` / `content_inventory_gate.py`
+2. Every new or edited tracked `.md` carries `Status:`, `Last updated:` (or `Date:`) and `Summary:` (or `Verdict:`) in its header block (`DOCUMENTATION.md`). `tools/doc_header_backlog.txt` stays at zero entries.
+3. Stage only scoped paths and write plain, public-neutral commit messages describing the change itself (no session links, private paths or internal tooling chatter).

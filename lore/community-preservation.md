@@ -43,16 +43,16 @@ looks.
 
 - `cardid.txt` (18 KB) is plain text with a documented grammar, and this
   repository ships `tools/cardid_preset_manager.py` to edit it — see
-  [modding-reference.md](../reverse-engineering/game-assets/modding-reference.md).
+  [modding-reference.md](https://github.com/dlprentice/onslaught-preservation/blob/main/platforms/command-line/modding-reference.md).
 - `defaultoptions.bea` (10,004 bytes) is a plain little-endian options snapshot
   written through `fopen`/`fwrite`/`fclose` with no crypt step, and this
   repository ships `tools/options_entries_decode.py`, which reads its entry block
   with no decryption — see
-  [game-folder-analysis.md](../reverse-engineering/game-assets/game-folder-analysis.md).
+  [game-folder-analysis.md](https://github.com/dlprentice/onslaught-preservation/blob/main/formats/game-folder-analysis.md).
 
 The only obfuscation **measured** anywhere in the retail build is the XOR'd
 cheat-string table, which is not a config file —
-[cheat-codes.md](../reverse-engineering/game-mechanics/cheat-codes.md).
+[cheat-codes.md](https://github.com/dlprentice/onslaught-preservation/blob/main/mechanics/cheats/cheat-codes.md).
 
 ### Rights Boundary
 

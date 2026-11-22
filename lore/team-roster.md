@@ -3,7 +3,7 @@
 - **Status:** live preservation record — credits from the archived Lost Toys
   website, plus developer recollection. Some claims rest on Discord recollection
   preserved in
-  [discord-archive-extract-2026-03.md](../reverse-engineering/project-meta/discord-archive-extract-2026-03.md); the
+  [discord-archive-extract-2026-03.md](https://github.com/dlprentice/onslaught-preservation/blob/main/history/community-history.md); the
   raw channel dumps were retired after extraction, so those cannot be
   re-verified from this repository. **Named people are real and living**: do not
   merge, infer or extend an identity here without a source that states it. One
@@ -71,7 +71,7 @@ After the console versions were complete, the core team moved onto other project
 
 | Name | Role | Notes |
 |------|------|-------|
-| **Jan** (surname unknown) | PC Port Developer | Ex-Mucky Foot (Startopia, Urban Chaos); sat next to Stuart; changed cheat codes. Surname unknown — an unconfirmed lead is recorded in the project's [attribution notes](../reverse-engineering/project-meta/attribution.md). |
+| **Jan** (surname unknown) | PC Port Developer | Ex-Mucky Foot (Startopia, Urban Chaos); sat next to Stuart; changed cheat codes. Surname unknown — an unconfirmed lead is recorded in the project's [attribution notes](https://github.com/dlprentice/onslaught-preservation/blob/main/history/attribution.md). |
 
 **Note**: Encore Software was only the **publisher** for the PC version. The actual port work was done in-house at Lost Toys by Jan and possibly others. Stuart confirmed this on Discord (Dec 2025): *"The PC version was done inhouse at LT though. When the original console versions were complete the team moved onto other work and LT got a person or persons to convert our already 'inhouse' development version into something releasable."*
 

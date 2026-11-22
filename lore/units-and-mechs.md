@@ -5,7 +5,7 @@
   descriptors in the pristine `BEA.exe`
   (from a string inventory generated locally from your own copy of `BEA.exe`; retail text is never committed),
   the resolved PhysicsScript value-id tables
-  ([physics-round-value-ids-2026-07-25.md](../reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md),
+  ([physics-round-value-ids-2026-07-25.md](https://github.com/dlprentice/onslaught-preservation/blob/main/formats/physics-round-value-ids.md),
   raw tables retained in the private RE archive), the exact
   777-record framing of the pristine `default physics.dat`, and the tracked
   source synthesis under `reverse-engineering/source-code/`.
@@ -44,7 +44,7 @@ buildings, bosses, and multiplayer/training variants can share one behaviour.
 ## The roster: behaviour-type ids 0x01–0x19
 
 Measured from the statement-tag-12 factory
-([physics-round-value-ids-2026-07-25.md](../reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md),
+([physics-round-value-ids-2026-07-25.md](https://github.com/dlprentice/onslaught-preservation/blob/main/formats/physics-round-value-ids.md),
 §"behaviour"; raw rows in `all_ids.tsv` lane T12):
 
 | id | BehaviourType | What it drives |
@@ -192,7 +192,7 @@ another:
   indexed destructible components: turrets 1-10, main gun 11, plane launchers
   12-17, bomb bays 18-23, engines 24-27. Damage persists across the approach
   fight and the interior fight via career slots 1-30 (measured in
-  [msl-scripting.md](../reverse-engineering/game-assets/msl-scripting.md)).
+  [msl-scripting.md](https://github.com/dlprentice/onslaught-preservation/blob/main/levels/scripting/msl-scripting.md)).
   Strings: `"Fenrir Main Gun"`, `"Fenrir Bomb Launcher"`, `"Fenrir Engines"`.
 - **Sentinel** (8xx range / finale framing) — `CSentinel`, `CSentinelAI`,
   `CMCSentinel` motion controller, behaviour id 0x14, with turret/barrel
@@ -281,7 +281,7 @@ puts all of them on the unit-statement surface. It does not silently narrow
   fields; weapons separately carry `LanguageName`.
 - Goodie-wall artwork names several vehicles we cannot yet bind to behaviour
   ids (goodies 71..73 artwork ships texture-only; reachability unproven —
-  [save-goodies.md](../reverse-engineering/quick-reference/save-goodies.md)).
+  [save-goodies.md](https://github.com/dlprentice/onslaught-preservation/blob/main/saves/save-goodies.md)).
 - The 850-866 hidden run uses existing families only, as far as the coverage
   mine reaches; whether it re-skins any unit with new physics records is open.
 
@@ -290,7 +290,7 @@ puts all of them on the unit-statement surface. It does not silently narrow
 - RTTI class inventory: a string inventory generated locally from your own copy of `BEA.exe` (not tracked; retail text is never committed)
   (658 unique `C*` type descriptors, pristine specimen).
 - Behaviour-type/unit/component value tables (static, byte-read):
-  [physics-round-value-ids-2026-07-25.md](../reverse-engineering/binary-analysis/physics-round-value-ids-2026-07-25.md)
+  [physics-round-value-ids-2026-07-25.md](https://github.com/dlprentice/onslaught-preservation/blob/main/formats/physics-round-value-ids.md)
   (raw value-id tables retained in the private RE archive).
 - Tracked source synthesis: `reverse-engineering/source-code/stuart-source-synthesis.md`
   and the focused gameplay/system notes under that directory.
@@ -299,6 +299,6 @@ puts all of them on the unit-statement surface. It does not silently narrow
 - Boss exclusivity windows: TTD deep-mine report and batches 1-10
   (private RE archive).
 - Mission-side boss behavior (Fenrir components, submarine dive/surface):
-  [msl-scripting.md](../reverse-engineering/game-assets/msl-scripting.md).
+  [msl-scripting.md](https://github.com/dlprentice/onslaught-preservation/blob/main/levels/scripting/msl-scripting.md).
 - In-universe naming and faction flavor: [world-lore.md](world-lore.md),
   [characters.md](characters.md) — fiction, marked as such.

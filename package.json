@@ -1,28 +1,15 @@
 {
-  "name": "onslaught-career-editor-workspace",
+  "name": "onslaught-modding-toolkit",
   "private": true,
-  "version": "1.0.12",
-  "description": "Onslaught Companion, lore and Battle Engine Aquila documentation.",
-  "packageManager": "npm@11.19.0",
-  "engines": {
-    "node": ">=26 <27",
-    "npm": ">=11.19 <12"
-  },
+  "version": "2.0.0",
+  "description": "Onslaught Modding & Content Toolkit: Battle Engine Aquila JSON content catalogue, format decoders, mod staging tools and lore.",
   "scripts": {
-    "test": "npm run test:companion-godot && npm run test:companion-tools",
-    "dev": "npm run run:companion-godot",
-    "build": "npm run build:companion-godot",
+    "test": "npm run test:safety && npm run test:docs && npm run test:tools",
     "test:docs": "python tools/md_link_check.py --self-test && python tools/md_link_check.py --check-only && npm run test:doc-headers",
     "test:doc-headers": "python tools/doc_header_check.py --self-test && python tools/doc_header_check.py",
     "test:safety": "python tools/public_allowlist_safety_check.py --self-test && python tools/public_allowlist_safety_check.py --include-submodules",
     "test:tools": "python ./tools/run_tool_tests.py --self-test && python ./tools/run_tool_tests.py",
-    "test:godot-host": "python ./tools/godot_host_tests.py",
-    "build:companion-godot": "python ./tools/companion_godot.py build",
-    "run:companion-godot": "python ./tools/companion_godot.py run",
-    "test:companion-godot": "python ./tools/companion_godot.py test",
-    "test:companion-tools": "python ./tools/companion_toolchain_tests.py && python ./tools/companion_godot_tests.py",
-    "export:companion-godot": "python ./tools/companion_godot.py export",
-    "capture:companion-godot": "python ./tools/companion_godot.py capture",
-    "setup:companion": "python ./tools/companion_toolchain.py setup"
+    "test:catalog": "python ./tools/content_catalog_tests.py",
+    "test:inventory": "python ./tools/content_inventory_tests.py"
   }
 }

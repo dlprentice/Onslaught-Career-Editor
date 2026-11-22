@@ -3,10 +3,10 @@
 - **Status:** live preservation record — the April 2003 Game Developer Magazine
   post-mortem, plus developer recollection. Some claims here rest on Discord
   recollection preserved in
-  [discord-archive-extract-2026-03.md](../reverse-engineering/project-meta/discord-archive-extract-2026-03.md); the
+  [discord-archive-extract-2026-03.md](https://github.com/dlprentice/onslaught-preservation/blob/main/history/community-history.md); the
   raw channel dumps were retired after extraction, so those cannot be
   re-verified from this repository. Where this file disagrees with a measurement
-  under [`reverse-engineering/`](../reverse-engineering/RE-INDEX.md), **the
+  under [`reverse-engineering/`](https://github.com/dlprentice/onslaught-preservation/blob/main/INDEX.md), **the
   measurement wins**. Five changes landed 2026-07-28, each marked at the line it
   affects: three corrections (`CORRECTED 2026-07-28`), one qualifier added to a
   claim that was true but unbounded, and one cross-reference note.
@@ -262,7 +262,7 @@ Trees were originally added as standard "things," handled like units and troops 
 
 > "[...] Unfortunately, **we realized a few weeks later that some levels now had in excess of 6,000 individual trees on them (which accounted for nearly 2MB of RAM at one stage)**, and re-engineering the code to handle this efficiently without breaking the now-established behavior took a great deal of thought and effort."
 
-*The opening sentence of this quotation is omitted as unverifiable: it was found to be byte-identical to a quotation elsewhere in this file, where it has an antecedent and here it had none. It is left truncated rather than reconstructed until someone reads the archived post-mortem. The full reasoning, and what would settle it, is in the project's [lore errata](../reverse-engineering/project-meta/lore-errata.md).*
+*The opening sentence of this quotation is omitted as unverifiable: it was found to be byte-identical to a quotation elsewhere in this file, where it has an antecedent and here it had none. It is left truncated rather than reconstructed until someone reads the archived post-mortem. The full reasoning, and what would settle it, is in the project's [lore errata](https://github.com/dlprentice/onslaught-preservation/blob/main/history/lore-errata.md).*
 
 ---
 
@@ -303,7 +303,7 @@ Stuart confirmed on Discord (Dec 2025) that Encore Software was only the **publi
 *A lead on Jan's surname exists and is deliberately **not** merged into the name
 above; it is INFERRED, not confirmed. It is recorded once, with its weaknesses and
 what would settle it, in the project's
-[attribution notes](../reverse-engineering/project-meta/attribution.md).*
+[attribution notes](https://github.com/dlprentice/onslaught-preservation/blob/main/history/attribution.md).*
 
 Source retention note (from preserved Discord archive extracts): ex-team recollection indicates no one retained the full finished retail PC source tree, which aligns with the current partial-source preservation reality.
 
@@ -314,7 +314,7 @@ The PC version was a **minimal-effort console port**, not a native PC build:
 | **Base version** | Xbox (explains split-screen multiplayer) |
 | **Graphics** | Console textures ported directly without enhancement |
 | **Multiplayer** | Only split-screen 2-player (no online/LAN) |
-| **Config file** | Nothing shipped is encrypted. MEASURED: `defaultoptions.bea` is a plain 10,004-byte options snapshot written through `fopen`/`fwrite`/`fclose` with no crypt step, and `cardid.txt` is 18 KB of plain text. See [game-folder-analysis.md](../reverse-engineering/game-assets/game-folder-analysis.md) and [modding-reference.md](../reverse-engineering/game-assets/modding-reference.md). |
+| **Config file** | Nothing shipped is encrypted. MEASURED: `defaultoptions.bea` is a plain 10,004-byte options snapshot written through `fopen`/`fwrite`/`fclose` with no crypt step, and `cardid.txt` is 18 KB of plain text. See [game-folder-analysis.md](https://github.com/dlprentice/onslaught-preservation/blob/main/formats/game-folder-analysis.md) and [modding-reference.md](https://github.com/dlprentice/onslaught-preservation/blob/main/platforms/command-line/modding-reference.md). |
 | **Data encoding** | Retail `.bes` values are raw little-endian dwords; many only *look* “shift-16” in 4-byte-aligned hex dumps because CCareer bytes are copied at `file + 2` |
 | **Cheat codes** | Changed from original Lost Toys codes by Jan |
 
@@ -324,7 +324,7 @@ The PC version was a **minimal-effort console port**, not a native PC build:
 - The retail `.bes` on-disk layout differs (CCareer blob begins at `file + 2`), which made many values appear “shift-16” in naive hex dumps
 - This explains many of the encoding/offset discrepancies documented in `reverse-engineering/`
 
-**Save-format documentation status.** No prior public description of the `.bes` on-disk layout is known to this project - but **this repository holds no search record**, so treat that as absence of evidence rather than a proven first. An earlier version of this line claimed more than that; what it claimed, and why it was withdrawn, is in the project's [lore errata](../reverse-engineering/project-meta/lore-errata.md).
+**Save-format documentation status.** No prior public description of the `.bes` on-disk layout is known to this project - but **this repository holds no search record**, so treat that as absence of evidence rather than a proven first. An earlier version of this line claimed more than that; what it claimed, and why it was withdrawn, is in the project's [lore errata](https://github.com/dlprentice/onslaught-preservation/blob/main/history/lore-errata.md).
 
 **What would settle it:** a dated search of the venues where such work is
 published, with its results written down and cited here. Until that record
@@ -345,9 +345,9 @@ exists, do not restate this as a first.
   > **shipped PC retail build is Direct3D 9** — MEASURED: `BEA.exe`'s import
   > directory names `d3d9.dll` and the setter vtable displacements resolve on
   > the `IDirect3DDevice9` layout
-  > ([d3d-default-render-state-block-2026-07-27.md](../reverse-engineering/binary-analysis/d3d-default-render-state-block-2026-07-27.md)
+  > ([d3d-default-render-state-block-2026-07-27.md](https://github.com/dlprentice/onslaught-preservation/blob/main/engine/render/d3d-default-render-state-block.md)
   > section 2), and
-  > [executable-analysis.md](../reverse-engineering/binary-analysis/executable-analysis.md)
+  > [executable-analysis.md](https://github.com/dlprentice/onslaught-preservation/blob/main/platforms/pc/executable-analysis.md)
   > records "Format: PE / D3D9" with `D3D9.DLL` in the dependency list. Do not
   > carry the DirectX 8 attribution onto the retail binary.
 - Custom in-house scripting language built with **Lex and Yacc** for level designers

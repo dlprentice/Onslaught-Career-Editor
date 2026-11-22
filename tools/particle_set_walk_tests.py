@@ -14,7 +14,6 @@ import particle_set_walk as psw
 
 ROOT = Path(__file__).resolve().parents[1]
 PARTICLES = ROOT / "tools" / "godot_reader_fixtures"
-SEMANTICS = ROOT / "reverse-engineering" / "binary-analysis" / "tokenarchive-semantics-2026-08-11.md"
 SEP = psw.SEPARATOR
 
 
@@ -270,9 +269,11 @@ class TablesTests(unittest.TestCase):
 
     def test_the_limits_are_the_reader_s(self):
         self.assertIn(f"name.Length > {psw.NAME_LIMIT} ? name[..{psw.NAME_LIMIT}]", self.set_source)
-        semantics = SEMANTICS.read_text(encoding="utf-8")
-        self.assertIn(f"at most {psw.LINE_BUFFER} bytes", semantics)
-        self.assertIn(f"{psw.WORKSPACE:,} destination pointers", semantics)
+        # Retail CTokenArchive limits (onslaught-decomp src/TokenArchive.cpp;
+        # onslaught-preservation/formats/tokenarchive-semantics.md): 999-byte line buffer
+        # and 10,000-entry destination-pointer workspace.
+        self.assertEqual(psw.LINE_BUFFER, 999)
+        self.assertEqual(psw.WORKSPACE, 10_000)
 
 
 if __name__ == "__main__":

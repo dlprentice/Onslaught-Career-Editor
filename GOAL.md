@@ -1,173 +1,42 @@
 # The goal
 
 Status: standing maintainer objective; not complete
-Last updated: 2026-11-21 (incremental 0.1.14–0.1.19 release cadence toward 0.2.0; concession-free decompilation matching)
-Summary: what David wants from the project now, where each part is owned, and the evidence and safety rules that still apply.
+Last updated: 2026-11-21 (repurposed repository as the Onslaught Modding & Content Toolkit; standalone Companion GUI retired into Onslaught CE)
+Summary: what David wants from the Onslaught preservation ecosystem now, where each part is owned, and the evidence and safety rules that still apply.
 
-This is the maintainer's statement of what is wanted. Measurements can correct implementation claims; they cannot
-narrow or mark this objective complete. The earlier Ghidra campaign remains in Git history and the private RE
-archive.
+This is the maintainer's statement of what is wanted across the project. Measurements can correct implementation claims; they cannot narrow or mark this objective complete. Earlier Ghidra-campaign records remain in Git history and the private historical archive.
 
-## The direction (David, 2026-10-15, with the rebuild reactivated the same day)
+## The direction
 
-- **Reverse engineering is grounded in decompilation.** The reconstruction matches all 5,482 of 5,482 mapped game
-  functions purely from source, with 0 object-byte concessions and 0 link aliases. Clear records of labelled source and
-  layout stand-ins remain required; matching does not prove the developer's original spelling or complete behavioural
-  understanding. Its public export, [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), reproduces
-  5,449 of the 5,482 purely from source (0 object-byte concessions, 0 link aliases; the other 33 are in excluded
-  DirectX SDK sample files).
-- **The faithful game is a native source port** of that decompilation, for Windows and Linux, published separately
-  as [Onslaught CE](https://github.com/dlprentice/onslaught-ce): GPL-3.0-only source and binaries, no game files.
-  Preserve a faithful baseline while fixing demonstrated defects and improving reliability, input, controller support,
-  in-game guidance, window/display choices, 4K readability, performance and useful, privacy-conscious diagnostics.
-  Prefer high ordinary visual settings and supported extra effects on capable hardware, while preserving saved
-  preferences and the faithful reference path. Offer controls for terrain detail/LOD, pop-in and extended draw distance,
-  alongside a separate optional maximum-distance/full-model mode; that more demanding mode is not requested as the
-  default yet. Verify actual capability selection, image quality and performance before choosing defaults.
-  Verify the developer console, cheats and free camera through usable controls rather than assuming each path works.
-  Keep faithful reference recordings separate from a future way to record and test CE enhancements and controller input.
-  Preserve the ordinary campaign and existing ways of playing with their intended rules, while retaining demonstrated
-  bug fixes and useful quality-of-life improvements. New modes are optional and must not interfere with ordinary play.
-- **Online play should be approachable.** Prove independently controlled players across Linux and Windows, including
-  co-op and opposing-team versus/skirmish maps. Extend co-op to the ordinary campaign with compatible saves and
-  progression; support larger matches and maps as the implementation is validated, without fixing a final player
-  limit here. Team colours and compatible Battle Engine/unit customization should make teams and players recognizable.
-  Host/Join, failures and content compatibility need understandable in-game workflows. Offer a browser of public
-  lobbies, creation and joining for public and private lobbies, a private invitation path, and in-game voice and text
-  chat. Voice should provide proximity/local, squad and team channels, visible speaking indicators above participating
-  units, and mute controls. These are planned workflows whose implementation and acceptance remain open. A direct
-  connection or idle synchronization is not completion.
-- **Continuous real-time 3D RTS Commander inside native CE** lets a player direct eligible friendly units with
-  appropriate camera, selection, order and status controls. A map or a toggle into a 3D preview is partial work,
-  not completion of this mode. Include an eventual multiplayer role alongside players piloting Battle Engines.
-  Aim for Linux and Windows and later more than two participants. Missions and game events still determine outcomes.
-  Prove this optional mode through a usable in-game workflow and controlled scenarios; its availability within
-  particular modes and scenarios can develop without changing ordinary campaign play.
-  David describes it as an RTS form of the game: beyond directing units, a commander should be able to select buildings
-  and act through them, for example to construct units, reusing the game's own logic where it can. Because that changes
-  how a battle plays, Commander will probably need maps of its own. This is a goal, not a completed capability.
-- **Play any controllable unit.** An optional way to directly play infantry, vehicles, mounted/fixed guns and eligible
-  controllable structures, beyond the Battle Engine. In team matches, players should be able to pilot a Battle Engine
-  or play another eligible unit; spawning as a unit and temporarily taking one over remain possible designs. Match
-  rules determine eligibility. Direct play is a separate role from a commander issuing orders to units.
-  Temporary control must preserve the unit's identity, team and squad membership. Release or disconnection should
-  restore its AI with the latest valid orders, including orders received while a human controlled it. Define explicit
-  fallback behavior for a last survivor, a missing squad, a destroyed target or an invalid destination. Give each type
-  usable controls and HUD: infantry weapons/ammunition/reloading; vehicle and artillery aiming, traverse, firing arcs,
-  trajectory, ammunition and reload; fixed-gun traverse and leaving the position. Indicators must reflect actual native
-  firing conditions and obstructions. The solo tank prototype now has bounded squad-membership/current-AI hand-back,
-  but exact formation/waypoint restoration, a unit HUD and network control remain open. It does not prescribe how
-  future online roles work. Like other new modes, these roles must not interfere with ordinary campaign play;
-  availability and final placement remain flexible.
-- **3D map and mission editors usable inside native CE**, reached through its menus, should let players author,
-  inspect, save, reopen and test maps and mission experiences in game. A button that launches an external editor does
-  not meet this requirement. A modern CE-native project format and custom gameplay are first-class targets;
-  original-game-compatible export is useful where practical but is not a prerequisite. Faithful behavior for the
-  existing campaign remains a separate baseline. **An actual explorable 3D museum reached through CE's menus** is a
-  separate required experience; the Goodies gallery and the small construction test are not museum completion.
-  An evidence-based catalogue of textures, models, animations, audio and other content should support these tools,
-  modding and future HD successors without distributing the game's proprietary assets.
-  CE is the primary place to play, create and experiment. Move gameplay, content authoring, mod selection and
-  in-game catalogue capabilities into CE where appropriate. Reuse the working tools, validated data and contracts;
-  this player-experience requirement does not prescribe embedding another engine or runtime in CE.
-- **The Godot rebuild**, developed in [onslaught-godot](https://github.com/dlprentice/onslaught-godot), currently has
-  a scoped proof of concept: a C# reimplementation aiming for startup through level 100 completion (win, loss and
-  retry), with compatible career data. `OnslaughtRebuild.Parity` owns the simulation and `OnslaughtRebuild.Host`
-  the presentation; parity is measured against retail and native-port recordings Present by Present, and
-  onslaught-godot records it. The longer-term aim is a faithful full-game baseline, followed by optional enhancements
-  such as modern creation tools, HD assets and expanded multiplayer. `rebuild/` here is a pointer page.
-- **Unify Companion's player capabilities within CE and eventually phase out the separate app.** CE should include
-  its lore, game-content exploration, career/save editing, backups, settings and installation-management workflows,
-  alongside native authoring and play. Every current Companion workflow and its subflows belong in the native CE
-  migration, including media browsing/playback/exports, recovery, read-only inspection and authoring; the
-  [migration checklist](PROGRAM.md#native-ce-migration-checklist) records their source owners and remaining requirements.
-  Migrate in verified stages; keep the working Companion, its tools and evidence
-  until the replacement preserves their useful capabilities and safety. New player features are built in CE, not in
-  the standalone app, which stays until each of its features is replaced in CE and verified. This supersedes the earlier plan to retain
-  a separate offline-management product, without prescribing an engine/runtime embedding architecture.
-  The current standalone Godot .NET app for Linux and Windows ([built from source](README.MD#build-and-run); no packaged release yet) still provides careers, Goodies, settings, backups,
-  music, voices and lore, with protected writes and verified backups, and can launch Onslaught CE.
-  It supports original-game and CE careers and backups, CE launcher settings and the steps for updating CE (the running companion
-  contacts nothing; its build setup downloads pinned tools, see [README](README.MD#build-and-run)). For older CE installations, follow the [manual migration steps](https://github.com/dlprentice/onslaught-ce#manual-migration-from-affected-launchers) for 0.1.0-0.1.7, or the [updater](https://github.com/dlprentice/onslaught-ce#updates-and-privacy) for 0.1.8 and later.
-  Its [known limits](companion/OnslaughtToolkit.Godot/README.md#known-limits) distinguish
-  the exercised Linux CE workflow and native Windows backend/load checks from Windows Godot UI
-  acceptance still awaiting validation. Original-game save
-  editing stays, with protected writes; executable patching and copied-install safe launch are retired, and
-  enhancements belong in CE as opt-in options.
-- **Recovery** should preserve unique project work, evidence, saves and necessary signing/recovery material off-site,
-  with verified restoration and a replacement-machine rehearsal. Keep sensitive locations and keys private, avoid
-  redundant large uploads, and describe uncovered data honestly.
-- **Game documentation** lives in [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation).
-  This repository retains a frozen copy and its own tools; it carries no Ghidra database, decompiler output, retail
-  binaries or assets, or decomp source.
+- **Reverse engineering is grounded in decompilation.** All 5,482 of 5,482 mapped game functions match purely from source in the maintainer tree, with 0 object-byte concessions and 0 link aliases. Its public export, [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp), reproduces 5,449 of 5,482 purely from source (0 concessions, 0 aliases; the other 33 are in excluded DirectX SDK sample files). Clear records of labelled source and layout stand-ins remain required; function matching alone does not prove complete behavioural equivalence.
+- **Onslaught CE is the unified native source port** for Windows and Linux, published separately as [Onslaught CE](https://github.com/dlprentice/onslaught-ce) (GPL-3.0-only, no game files). It preserves a faithful baseline while adding reliability fixes, modern display/input/controller support, high-resolution UI readability, optional visual/LOD controls, developer tools and privacy-conscious diagnostics. Ordinary campaign play remains preserved; new modes stay optional.
+- **Player career, backup, lore, media, modding and authoring workflows live inside native CE.** The standalone Godot/.NET Companion GUI was retired from this repository on 2026-11-21 in favour of CE's built-in Service Record, Career/Backup, Goodies, Music/Lore, Mods and 3D Map/Mission Editor screens. Integrated career editing inside CE retains verified backups, stale-write refusal, read-back checks and coordination with loaded profile state.
+- **This repository is the Onslaught Modding & Content Toolkit.** It owns the evidence-based JSON Content Catalogue (`tools/content_catalog.py`), byte-level Content Inventory (`tools/content_inventory.py`), format decoders/encoders, mod-staging utilities, MSL compiler/inspector and canonical lore library—supporting CE modding, content inspection and future HD asset pipelines without distributing proprietary game files.
+- **Online play, RTS Commander, direct unit control and an explorable 3D museum** remain required native CE outcomes on the road to CE 0.2.0:
+  - Approachable online co-op and opposing-team versus/skirmish play across Linux and Windows with lobby browsing, invitations and team/squad/proximity voice and text chat.
+  - Continuous real-time 3D RTS Commander inside CE, distinct from directly piloting any controllable unit (infantry, vehicles, mounted guns, eligible structures) with safe AI hand-back.
+  - Usable in-game 3D map and mission editors with modern `.ceproject` authoring and save/reopen/playtest loops, plus an actual explorable 3D museum reached through CE's menus.
+  - Everything CE adds must look and feel like part of the original game.
+- **The Godot rebuild** continues separately in [onslaught-godot](https://github.com/dlprentice/onslaught-godot), with `OnslaughtRebuild.Parity` owning deterministic simulation and `OnslaughtRebuild.Host` owning presentation, measured Present by Present against recorded references.
+- **Game documentation** lives in [onslaught-preservation](https://github.com/dlprentice/onslaught-preservation) (prose, format specs, mechanics, saves, levels and engine, CC BY-SA 4.0). New findings go there; this repository carries no frozen duplicate of `reverse-engineering/`.
+- **Recovery** preserves unique project work, evidence, saves and signing/recovery material off-site with verified restoration while keeping sensitive paths and keys private.
 
 ## How progress is measured
 
-Progress changes an outcome: a player can do something useful that was previously unavailable; a demonstrated defect
-is fixed and verified; a specific unknown is resolved in a way that changes the next decision; or a meaningful
-preservation or documentation gap is closed. Investigation and test infrastructure can be real progress, but report
-what they establish and what remains rather than presenting them as a delivered feature.
+Progress changes an outcome: a player or modder can do something useful that was previously unavailable; a demonstrated defect is fixed and verified; a specific unknown is resolved; or a preservation/documentation gap is closed. Report ideas, experiments, reviewed source, integrated source, validated releases and physical-device acceptance separately, without invented percentages.
 
-Describe the stage separately: an idea, an experiment, reviewed source, integrated source, a validated release, or
-player/device acceptance. A branch, passing synthetic test, idle network connection, byte match or release number is
-not on its own completion. A capability is done only for the scope actually supported: it is reachable through the
-intended workflow, preserves applicable saves and baseline behavior, and has evidence for the platforms and conditions
-claimed. Real Internet and relevant physical-device checks remain distinct from local, simulated and VM tests. Do not
-invent a project-wide percentage or promise universal parity from bounded checks.
+[PROGRAM.md](PROGRAM.md) owns the dated cross-project chart and work queue. Product repositories own their detailed release, design and evidence records; [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) owns this repository's demonstrated Toolkit capabilities.
 
-[PROGRAM.md](PROGRAM.md) owns the dated cross-project chart and work queue. Product repositories own their detailed
-release, design and evidence records; [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) owns this repository's
-demonstrated capabilities. A handoff is a dated continuity snapshot, not a competing roadmap: verify current refs,
-claims and evidence before acting, and update the existing owner when a material milestone changes.
+**CE release cadence.** CE follows an incremental release cadence (`0.1.14` through `0.1.19`) leading to `0.2.0` for the full milestone. Each release requires passing its Linux and native Windows gates plus maintainer go-ahead.
 
-David has resumed development across the requested areas after trying a refreshed unreleased development build. Work
-from the reported problems and current evidence while keeping the earlier and refreshed development builds reproducible.
-Preserve their packages, accepted builds, Companion stages, launch profiles and copied user data until their
-preservation has been verified; subsequent implementation and tests use separate outputs and profiles. Each
-build's capability claims must follow its own evidence. A player's report adds useful acceptance or a problem
-to investigate within the scope actually tried; it does not certify untried features. [PROGRAM.md](PROGRAM.md#order-after-0113)
-owns the current order and remaining work.
+## Evidence and safeguards
 
-**Releases.** CE 0.1.13 is the latest published release. Rather than holding every finished feature for one monolithic
-release, CE follows an incremental release cadence (**0.1.14 through 0.1.19**) leading to **0.2.0** for the full
-milestone. Each incremental `0.1.x` release ships focused, verified improvements once its gates pass (including native
-Windows validation), without shipping unfinished prototypes under an experimental label. **0.2.0 remains the full
-milestone release:** online co-op, Commander as an RTS, playing any controllable unit, 3D map and mission editors with
-CE projects, mods and the complete content catalogue, the explorable 3D museum, and the Companion's player workflows
-absorbed into CE. Publishing any release requires passing its gates and David's explicit go-ahead.
-
-**Look and feel.** Everything CE adds must look and feel like part of the original game. A feature that works but
-reads as a separate tool bolted on does not meet this standard. The wider foundation, rebuild, quality, documentation and recovery goals remain in scope.
-
-## Evidence
-
-Every behaviour claim needs a capture, byte comparison, focused test, or pinned source reference. The decompilation
-is cited by function, never quoted. A name, one observed call or a model report alone is insufficient. Static
-evidence establishes identities and structures; only controlled runtime evidence establishes causality and values.
-The upstream GPL Onslaught source (`stuart73/Onslaught`; the pinned reference in `references/Onslaught` is the fork `dlprentice/Onslaught`) is a source reference, not proof of retail behaviour.
-Unknowns are written as open questions with the cheapest falsifier.
-
-## Safeguards
-
-- Never write the pristine measurement specimen. Bind byte findings to its hash.
-- Installed-game writes require the owner's informed choice and a verified backup before writing. Never label an
-  already modified file as the original.
-- Never destroy saves as a side effect. Use real save baselines and preserve length, reserved fields and unknown
-  bytes; do not synthesize `.bes` saves.
-- Career editing inside CE must retain verified backups, stale-write refusal and read-back checks, and coordinate
-  with the game's loaded career state. An in-use career is protected; merely being on a frontend page does not make
-  an edit safe, because CE may still hold a profile that would overwrite it. Design and test the save/reload hand-off
-  before replacing the standalone editor's process-based guards.
-- Keep retail material, Ghidra databases and decompiler output out of this repository (`npm run test:safety`).
-- Preserve unique evidence and unrelated changes; follow [AGENTS.md](AGENTS.md) for storage, publication and
-  cleanup rules.
-- Onslaught work does not use GitHub Actions or hosted CI/CD unless David changes that direction. Run the applicable
-  local checks and documented release gates instead.
+- Every behaviour or format claim cites a capture, byte comparison, focused test or pinned function in [onslaught-decomp](https://github.com/dlprentice/onslaught-decomp) (cited by function, never quoted). `references/Onslaught` is a source reference, not proof of retail behaviour. Unknowns are written as open questions with a falsifier.
+- Never write the pristine measurement specimen or mutate an installed game without explicit informed user choice and a verified backup. Toolkit scripts never modify an installed game.
+- Never synthesize `.bes` saves from scratch; preserve length, reserved fields and unknown bytes.
+- Keep retail material, generated catalogues/inventories, Ghidra databases and decompiler output out of Git (`npm run test:safety`).
+- No hosted CI/CD or telemetry unless explicitly directed; run the local validation gates instead.
 
 ## Where the goal stands
 
-Not met. All 5,482 mapped game functions match purely from source (0 object-byte concessions, 0 link aliases); the native port is public as Onslaught CE,
-with current downloads in the [release list](https://github.com/dlprentice/onslaught-ce/releases/latest); the rebuild proof of concept is in progress in onslaught-godot; the companion supports the original game
-and CE, with remaining acceptance and release work in [PROGRAM.md](PROGRAM.md#companion--ce-integration).
-[CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) owns what is demonstrated, [PROGRAM.md](PROGRAM.md) the work
-queue and [VALIDATION.md](VALIDATION.md) the checks.
+Not met. All 5,482 mapped game functions match purely from source (0 concessions, 0 aliases); Onslaught CE is public with current downloads in its [release list](https://github.com/dlprentice/onslaught-ce/releases/latest); the Godot rebuild continues in [onslaught-godot](https://github.com/dlprentice/onslaught-godot); and this repository delivers the verified Modding & Content Toolkit (JSON Content Catalogue, Content Inventory, format decoders, mod-staging tools and lore). [CURRENT_CAPABILITIES.md](CURRENT_CAPABILITIES.md) owns what is demonstrated here, [PROGRAM.md](PROGRAM.md) the work queue and [VALIDATION.md](VALIDATION.md) the checks.

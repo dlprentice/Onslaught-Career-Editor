@@ -3,7 +3,7 @@
 - **Status:** live front door for the lore corpus. These are preservation
   records — recollection, interview and community-sourced narrative, not
   measured RE evidence. Where an article disagrees with a measurement under
-  [`reverse-engineering/`](../reverse-engineering/RE-INDEX.md), **the
+  [`reverse-engineering/`](https://github.com/dlprentice/onslaught-preservation/blob/main/INDEX.md), **the
   measurement wins** and the article is the side that gets corrected.
 - **Last updated:** 2026-10-22 (licence note: CC BY-SA 4.0, quotations stay with their authors)
 - **Summary:** navigation to the lore articles in this directory, plus
@@ -49,7 +49,7 @@ A comprehensive record of Battle Engine Aquila (2003), Lost Toys Ltd., and the p
 - [Shipped Battle Engine profiles and the complete unit roster](units-and-mechs.md)
 - [Player, enemy, and boss weapons](weapons.md)
 - [In-game cheat codes (overview)](game-overview.md#in-game-cheat-codes)
-- [In-game cheat codes (RE details)](../reverse-engineering/game-mechanics/cheat-codes.md)
+- [In-game cheat codes (RE details)](https://github.com/dlprentice/onslaught-preservation/blob/main/mechanics/cheats/cheat-codes.md)
 
 ### World & Story
 - [The Forseti faction](world-lore.md#the-forseti)

@@ -245,47 +245,9 @@ RETAIL_TEXT_FROZEN_PREFIXES = ("reverse-engineering/",)
 # A token is named by its text; a hex token that could be game bytes is named by "sha256:" and the SHA-256 of the token
 # (see token_digest), so that this list does not quote it.
 RETAIL_TEXT_ALLOW: dict[str, dict[str, str]] = {
-    'companion/OnslaughtToolkit.Godot/Careers/CheatCodeCatalog.cs': {
-        'local-lab/safe-copy-bea-pristine/BEA.exe.original.backup':
-            "a comment names the pristine specimen, in the ignored lab folder, that the table's offsets were measured on",
-    },
-    'companion/OnslaughtToolkit.Godot/Tests/CeUpdateFeedTests.cs': {
-        'e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555f':
-            'half of the empty-message signature of RFC 8032 section 7.1 TEST 1: a published test vector, never a release credential',
-        'b8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b':
-            'half of the empty-message signature of RFC 8032 section 7.1 TEST 1: a published test vector, never a release credential',
-    },
-    'companion/OnslaughtToolkit.Godot/Tests/FakeInstall.cs': {
-        '4f67675300020000':
-            'the Ogg page header bytes (OggS, version, flags) of a fake audio file made up in the test',
-    },
-    'companion/OnslaughtToolkit.Godot/Tests/GameFolderTests.cs': {
-        '/home/player/.local/share/Steam\\':
-            'a synthetic Steam library path in a test; no real account',
-        '/home/player/.local/share/Steam':
-            'a synthetic Steam library path in a test; no real account',
-    },
-    'companion/OnslaughtToolkit.Godot/Tests/InstallTests.cs': {
-        '/home/player':
-            'a synthetic home folder in a test; no real account',
-        '/home/player/.local/share/onslaught-ce':
-            'a synthetic home folder in a test; no real account',
-    },
-    'companion/OnslaughtToolkit.Godot/Tests/LevelEditorTests.cs': {
-        '1e1000000000000000000':
-            'a coordinate with a 19-digit exponent (decimal digits and an e) the parser must refuse: not bytes',
-        '/home/someone/projects/onslaught/mods/a-folder-with-a-rather-long-name/level-100-edit':
-            'a synthetic mod folder path, and its elided form, in a path-display test; no real account',
-        '/home/someone/pro…-a-rather-long-name/level-100-edit':
-            'a synthetic mod folder path, and its elided form, in a path-display test; no real account',
-    },
     'tools/aya_texture_fidelity_census_tests.py': {
         '/home/player/data.aya':
             'a synthetic path in a unit test; no real account',
-    },
-    'tools/check_installed_game_claims.py': {
-        'local-lab/':
-            'SKIP_PREFIXES: the ignored lab folder is not scanned',
     },
     'tools/cmsh_animation_usage_census_tests.py': {
         'local-lab/run/census.json':
@@ -294,22 +256,6 @@ RETAIL_TEXT_ALLOW: dict[str, dict[str, str]] = {
             "a path the census's output-is-ignored check is tested with (the ignored lab folder)",
         'local-lab/inputs/asset-mirror/INDEX.jsonl':
             "a path the census's output-is-ignored check is tested with (the ignored lab folder)",
-    },
-    'tools/cmsh_matrix_normal_contract.py': {
-        'local-lab/PUZZLE-SKIN-WEIGHTS-2026-07-31.md':
-            'an evidence file in the ignored lab folder that the contract records with its SHA-256',
-        'local-lab/ghidra-fullpass-2026-07-23/exports/W010/decompile/00549570_CMeshRenderer__RenderMeshCore.c':
-            'an evidence file in the ignored lab folder that the contract records with its SHA-256',
-        'local-lab/ds-deep-review/bundles/shard-0210/00549570/disasm.tsv':
-            'an evidence file in the ignored lab folder that the contract records with its SHA-256',
-    },
-    'tools/cockpit_intersection_mask_probe.py': {
-        'local-lab/COCKPIT-DISPLACEMENT-EVIDENCE-2026-07-26.md':
-            'cites the lab evidence note (in the ignored lab folder) the finding was read from',
-        'local-lab/COCKPIT-NORMAL-SIGN-2026-07-26.md':
-            'cites the lab evidence note (in the ignored lab folder) the finding was read from',
-        'local-lab/COCKPIT-WORLD-MATRIX-RUNTIME-2026-07-26.md':
-            'cites the lab evidence note (in the ignored lab folder) the finding was read from',
     },
     'tools/doc_header_check.py': {
         'local-lab/':
@@ -327,30 +273,6 @@ RETAIL_TEXT_ALLOW: dict[str, dict[str, str]] = {
         '/home/player/private.aya':
             'a synthetic path in a unit test; no real account',
     },
-    'tools/frontend_arc_bracket_fit.py': {
-        'local-lab/STARTUP-FLOW-FINDINGS-2026-07-25.md':
-            'cites the lab evidence note (in the ignored lab folder) the finding was read from',
-        'local-lab/retail-reference-pristine/select-level/04-select-level-640x480.png':
-            'default reference image for the fit, read from the ignored lab folder',
-        'local-lab/retail-reference-pristine/choose-game-name/choose-game-name-640x480.png':
-            'default reference image for the fit, read from the ignored lab folder',
-    },
-    'tools/level_editor_vectors.py': {
-        '0e999999999999999999':
-            'a coordinate with an exponent of 18 or 19 digits (decimal digits and an e) the grammar must refuse: not bytes',
-        '1e999999999999999999':
-            'a coordinate with an exponent of 18 or 19 digits (decimal digits and an e) the grammar must refuse: not bytes',
-        '1e1000000000000000000':
-            'a coordinate with an exponent of 18 or 19 digits (decimal digits and an e) the grammar must refuse: not bytes',
-        '0e1000000000000000000':
-            'a coordinate with an exponent of 18 or 19 digits (decimal digits and an e) the grammar must refuse: not bytes',
-    },
-    'tools/level_editor_vectors_tests.py': {
-        '0e999999999999999999':
-            'a coordinate with an exponent of 18 or 19 digits (decimal digits and an e) the grammar must refuse: not bytes',
-        '1e1000000000000000000':
-            'a coordinate with an exponent of 18 or 19 digits (decimal digits and an e) the grammar must refuse: not bytes',
-    },
     'tools/md_link_check.py': {
         'local-lab/':
             'the scope note it prints says the ignored lab folder is invisible to the check',
@@ -363,21 +285,9 @@ RETAIL_TEXT_ALLOW: dict[str, dict[str, str]] = {
         '656e645f736372697074':
             'the ASCII bytes of the text end_script that ends every script record: a format constant the compiler writes, not game data',
     },
-    'tools/score_frontend_capture.py': {
-        'local-lab/STARTUP-NOFMV-BASELINE-2026-07-26.md':
-            'cites the lab evidence note (in the ignored lab folder) the finding was read from',
-    },
-    'tools/terrain_macro_inversion_probe.py': {
-        'local-lab/godot-captures/inv-probe':
-            'an example value in an argparse help string',
-    },
     'tools/world_edit_preview_tests.py': {
         '0102030405060708090a':
             'synthetic trailer bytes counting 01 to 0a, made up in the test',
-    },
-    'tools/world_mesh_normal_probe.py': {
-        'local-lab/TERRAIN-LIGHT-STATE-RUNTIME-2026-07-26.md':
-            'cites the lab evidence note (in the ignored lab folder) the finding was read from',
     },
     'tools/worldheaders_decode_tests.py': {
         '/home/player/secret.dat':
@@ -391,20 +301,11 @@ RETAIL_TEXT_ALLOW_PREFIX: dict[str, dict[str, str]] = {
     "AGENTS.md": {"local-lab/": "the repository guide names the ignored lab folder and the files it holds"},
     "DOCUMENTATION.md": {"local-lab/": "the documentation guide says the ignored lab folder is outside the header and link checks"},
     "LOCAL_LAB_OVERLAY.md": {"local-lab/": "this document describes the ignored lab folder and how a clone is pointed at it"},
-    "PROGRAM.md": {"local-lab/": "the work queue names lab inputs and evidence in the ignored folder"},
     "PROJECT-INDEX.md": {"local-lab/": "the project index says what the ignored lab folder holds"},
-    "VALIDATION-HISTORY.md": {
-        "local-lab/": "the dated validation receipts name the ignored lab folders their evidence lives in; kept as written (lead, 2026-10-29)"
-    },
 }
 
 # A generated file that holds only authored synthetic data may carry every finding of one rule, in that file only.
-RETAIL_TEXT_ALLOW_RULE: dict[str, dict[str, str]] = {
-    "companion/OnslaughtToolkit.Godot/Tests/LevelVectors.g.cs": {
-        "deny-long-hex-string": "base64 of deflated authored vectors, written by tools/level_editor_vectors.py (--check keeps the file equal to the "
-                                "generator, which reads no game file); a run of the letter A is base64 for zero bytes",
-    },
-}
+RETAIL_TEXT_ALLOW_RULE: dict[str, dict[str, str]] = {}
 
 MAGIC_DENY_SIGNATURES = (
     ("deny-magic-executable", b"MZ"),

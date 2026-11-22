@@ -3,10 +3,10 @@
 - **Status:** live preservation record — developer recollection and community
   discovery, not measurement. Some claims here rest on Discord recollection
   preserved in
-  [discord-archive-extract-2026-03.md](../reverse-engineering/project-meta/discord-archive-extract-2026-03.md); the
+  [discord-archive-extract-2026-03.md](https://github.com/dlprentice/onslaught-preservation/blob/main/history/community-history.md); the
   raw channel dumps were retired after extraction, so those cannot be
   re-verified from this repository. Where an entry disagrees with a measurement
-  under [`reverse-engineering/`](../reverse-engineering/RE-INDEX.md), the
+  under [`reverse-engineering/`](https://github.com/dlprentice/onslaught-preservation/blob/main/INDEX.md), the
   measurement wins. Header block added 2026-07-28; no claim in this file was
   changed, so the date below is still the date of the last content change.
 - **Last updated:** 2026-03-12

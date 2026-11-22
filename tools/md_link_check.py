@@ -48,10 +48,8 @@ PUBLIC_CORE_MARKDOWN = (
     "CONTRIBUTING.md",
     "SECURITY.md",
     "VALIDATION.md",
-    "VALIDATION-HISTORY.md",
     "lore/_index.md",
-    "reverse-engineering/RE-INDEX.md",
-    "rebuild/README.md",
+    "tools/README.md",
 )
 
 

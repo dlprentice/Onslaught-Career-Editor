@@ -3,7 +3,7 @@
 - **Status:** live preservation record — release, marketing and naming history
   from published material and developer recollection. The cheat table is the
   exception: it is backed by measurement, and where this page disagrees with
-  [cheat-codes.md](../reverse-engineering/game-mechanics/cheat-codes.md) that
+  [cheat-codes.md](https://github.com/dlprentice/onslaught-preservation/blob/main/mechanics/cheats/cheat-codes.md) that
   page wins. Two changes landed 2026-07-28, each marked at the line it affects:
   one correction, and one note recording that the cheat table below is not
   exhaustive.
@@ -135,12 +135,12 @@ Steam/retail PC codes (entered as save/player name substring):
 |------|--------|-------|
 | `MALLOY` | All goodies unlocked | Runtime-only cheat path; patcher can replicate save-state result |
 | `TURKEY` | All missions unlocked | Runtime-only cheat path; patcher can replicate save-state result |
-| `Maladim` | God mode toggle | Live-confirmed: with `Maladim` in the save/player name, start a mission, pause, open `Controller Options`, and the cheat-gated line appears as `God OFF` / `God ON`. While on, normal combat damage stops sticking. Already-lost hull is **not** restored by toggling it back on. See [cheat-codes.md](../reverse-engineering/game-mechanics/cheat-codes.md). |
+| `Maladim` | God mode toggle | Live-confirmed: with `Maladim` in the save/player name, start a mission, pause, open `Controller Options`, and the cheat-gated line appears as `God OFF` / `God ON`. While on, normal combat damage stops sticking. Already-lost hull is **not** restored by toggling it back on. See [cheat-codes.md](https://github.com/dlprentice/onslaught-preservation/blob/main/mechanics/cheats/cheat-codes.md). |
 
 **This table is not the whole cheat table.** Three further strings decode out of
 the retail table — `V3R5IOF`, `Aurore` and `lat\xEAte` — and are documented with
 their gating and call sites on the RE page,
-[cheat-codes.md](../reverse-engineering/game-mechanics/cheat-codes.md). They are
+[cheat-codes.md](https://github.com/dlprentice/onslaught-preservation/blob/main/mechanics/cheats/cheat-codes.md). They are
 omitted here because they are debug/version paths rather than player-facing
 cheats, not because they do not exist. (Note added 2026-07-28; nothing above was
 changed by it.)

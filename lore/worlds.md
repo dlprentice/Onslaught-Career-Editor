@@ -3,7 +3,7 @@
 - **Status:** live preservation record. Graph links and world identities are
   measured; runtime notes are bounded observations from retained TTD openings;
   story names remain in [world-lore.md](world-lore.md). Where this page and a
-  measurement under [`reverse-engineering/`](../reverse-engineering/RE-INDEX.md)
+  measurement under [`reverse-engineering/`](https://github.com/dlprentice/onslaught-preservation/blob/main/INDEX.md)
   disagree, the measurement wins.
 - **Last updated:** 2026-11-21 (replaced private lab path with archive pointer)
 - **Summary:** all 43 career nodes and all 23 additional numeric worlds shipped
@@ -17,7 +17,7 @@ The game calls a mission a **world**. The integer is used by the career graph,
 save nodes, world headers, numeric resource archives, mission scripts, and
 frontend selection. World `100` is hard-coded as always unlocked; otherwise the
 retail unlock gate resolves the world to a career node and accepts a completed
-incoming link ([career-graph.md](../reverse-engineering/save-file/career-graph.md)).
+incoming link ([career-graph.md](https://github.com/dlprentice/onslaught-preservation/blob/main/saves/career-graph.md)).
 
 The pristine PC shelf has exactly **66 numeric resource archives**. Their IDs
 are:
@@ -483,22 +483,22 @@ last numeric world shipped in the PC resource shelf.
 ## Sources
 
 - Career nodes, links, and real-save validation:
-  [career-graph.md](../reverse-engineering/save-file/career-graph.md).
+  [career-graph.md](https://github.com/dlprentice/onslaught-preservation/blob/main/saves/career-graph.md).
 - Numeric resource count and world-header corpus:
   installed-corpus-census.md (private RE archive).
 - Per-world opening byte counts and range fingerprints:
   retained TTD deep-mine report and batches 1-7 (private RE archive;
   runtime observation, bounded to retained captures).
 - Mission slots, level-500 branching, level-901 race, and Fenrir scripts:
-  [msl-scripting.md](../reverse-engineering/game-assets/msl-scripting.md).
+  [msl-scripting.md](https://github.com/dlprentice/onslaught-preservation/blob/main/levels/scripting/msl-scripting.md).
 - Level-710 configuration evidence:
-  [battleengine-config-values.md](../reverse-engineering/quick-reference/battleengine-config-values.md).
+  [battleengine-config-values.md](https://github.com/dlprentice/onslaught-preservation/blob/main/mechanics/battleengine/battleengine-config-values.md).
 - Cross-region Xbox level-resource differences:
   BUILD_AND_DUMP_MATRIX.md (private RE archive).
 - PS2 `000`/`888` and PC/Xbox `201` world-role parse and no-payload receipt:
-  [PLATFORM_CONTENT_CROSSWALK.md](../reverse-engineering/PLATFORM_CONTENT_CROSSWALK.md)
+  [PLATFORM_CONTENT_CROSSWALK.md](https://github.com/dlprentice/onslaught-preservation/blob/main/platforms/console/platform-content-crosswalk.md)
   and
-  [resource-id-roles-000-888-201-2026-08-22.tsv](../reverse-engineering/resource-id-roles-000-888-201-2026-08-22.tsv).
+  [resource-id-roles-000-888-201-2026-08-22.tsv](https://github.com/dlprentice/onslaught-preservation/blob/main/platforms/console/resource-id-roles-000-888-201.tsv).
 - Place names and story framing: [world-lore.md](world-lore.md) and
   [characters.md](characters.md); those are lore/prose sources, not executable
   evidence.

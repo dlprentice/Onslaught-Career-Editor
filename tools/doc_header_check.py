@@ -107,7 +107,6 @@ GOVERNANCE_PATHS = frozenset(
         "README.MD",
         "SECURITY.md",
         "VALIDATION.md",
-        "VALIDATION-HISTORY.md",
     }
 )
 

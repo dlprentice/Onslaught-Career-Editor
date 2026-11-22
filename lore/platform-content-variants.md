@@ -4,7 +4,7 @@
   content tables and the authored PC/PS2 manuals; it does not turn matching
   names into executable or asset parity. The full hashes, counts, and unknowns
   are in the
-  [platform content crosswalk](../reverse-engineering/PLATFORM_CONTENT_CROSSWALK.md).
+  [platform content crosswalk](https://github.com/dlprentice/onslaught-preservation/blob/main/platforms/console/platform-content-crosswalk.md).
 - **Last updated:** 2026-08-22
 - **Summary:** what PC, Xbox, and PS2 really share — one 43-title campaign and
   one setting, alongside distinct real worlds 0, 888, and 201 and regional
@@ -132,7 +132,7 @@ across machines. Those are separate assets with their own evidence.
 ## Evidence
 
 The full reproducible boundary is in
-[Platform content crosswalk: PC, Xbox, and PS2](../reverse-engineering/PLATFORM_CONTENT_CROSSWALK.md),
+[Platform content crosswalk: PC, Xbox, and PS2](https://github.com/dlprentice/onslaught-preservation/blob/main/platforms/console/platform-content-crosswalk.md),
 with compact no-payload receipts beside it. The comparison reads user-owned
 retail files and publishes counts, hashes, token names, and conclusions — not
 the game's string tables, disc images, or extracted assets.
