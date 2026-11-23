@@ -9,8 +9,10 @@ import json
 import os
 import stat
 import struct
+import subprocess
 import sys
 import tempfile
+import tracemalloc
 import unittest
 import zlib
 from contextlib import redirect_stderr, redirect_stdout
@@ -192,6 +194,68 @@ class ModStarterValidationTests(unittest.TestCase):
                 "1.0",
                 {"data/language/english.dat": b"a", "data/language/ENGLISH.dat": b"b"},
             )
+        # Per-directory casefold collision (would collide on NTFS even though full paths differ on Linux).
+        with self.assertRaisesRegex(mod_starter.ModStarterError, "case-colliding directory"):
+            mod_starter.build_manifest(
+                "valid-id",
+                "Name",
+                "1.0",
+                {"data/Foo/a.dat": b"a", "data/foo/b.dat": b"b"},
+            )
+        # File vs directory casefold collision.
+        with self.assertRaisesRegex(mod_starter.ModStarterError, "case-colliding file and directory"):
+            mod_starter.build_manifest(
+                "valid-id",
+                "Name",
+                "1.0",
+                {"data/foo": b"a", "data/Foo/b.dat": b"b"},
+            )
+        # Same-cased directory prefix with distinct files passes cleanly.
+        ok_manifest = mod_starter.build_manifest(
+            "valid-id",
+            "Name",
+            "1.0",
+            {"data/Foo/a.dat": b"a", "data/Foo/b.dat": b"b"},
+        )
+        self.assertEqual(2, len(json.loads(ok_manifest.decode("ascii"))["files"]))
+
+    def test_inflate_aya_rejects_zip_bomb_without_unbounded_flush_allocation(self):
+        # 64 MiB of zeros compresses into ~64 KiB (< AYA_PACK_BUFFER), exceeding the 1 MiB block cap.
+        # Prior to the fix, decomp.flush() bypassed the limit+1 bound and inflated the full 64 MiB in RAM.
+        bomb = zlib.compress(bytes(64 << 20), 9)
+        framed = struct.pack("<I", len(bomb)) + bomb
+        tracemalloc.start()
+        try:
+            with self.assertRaisesRegex(mod_starter.ModStarterError, "exceeds"):
+                mod_starter.inflate_aya_archive(framed, label="bomb.aya")
+            _, peak = tracemalloc.get_traced_memory()
+        finally:
+            tracemalloc.stop()
+        self.assertLess(peak, 8 << 20, f"zip-bomb inflate allocated {peak} bytes (expected < 8 MiB)")
+
+    def test_world_level_without_game_dir_refuses_silent_synthetic_fixture(self):
+        with tempfile.TemporaryDirectory(prefix="mod-starter-world-optin-") as tmp:
+            out = Path(tmp) / "mods"
+            err = io.StringIO()
+            with redirect_stderr(err):
+                rc = mod_starter.main(["--out", str(out), "--id", "no-game", "--world-level", "100"])
+            self.assertEqual(2, rc)
+            msg = err.getvalue()
+            self.assertIn("--game-dir", msg)
+            self.assertIn("RLWD", msg)
+            self.assertIn("--synthetic-fixture", msg)
+            self.assertFalse((out / "no-game").exists())
+
+            # Explicit --synthetic-fixture opt-in succeeds and does NOT stamp "Verified" as default description.
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                rc2 = mod_starter.main(
+                    ["--out", str(out), "--id", "synth-ok", "--world-level", "100", "--synthetic-fixture", "--json"]
+                )
+            self.assertEqual(0, rc2)
+            manifest = json.loads((out / "synth-ok/mod.json").read_text(encoding="ascii"))
+            self.assertNotIn("Verified", manifest.get("description", ""))
+            self.assertIn("Synthetic", manifest.get("description", ""))
 
     def test_refuses_writing_inside_game_dir_or_existing_folder(self):
         with tempfile.TemporaryDirectory(prefix="mod-starter-safety-") as tmp:
