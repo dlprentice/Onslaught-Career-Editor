@@ -222,13 +222,31 @@ def build_manifest(
         raise ModStarterError(f"a mod may list at most {MAX_FILES_PER_MOD} files")
 
     seen_folded: dict[str, str] = {}
+    seen_dirs: dict[str, str] = {}
     entries = []
     for rel_path in sorted(files):
         check_mod_path(rel_path)
+        parts = rel_path.split("/")
+        for depth in range(1, len(parts)):
+            prefix = "/".join(parts[:depth])
+            folded_dir = prefix.casefold()
+            if folded_dir in seen_folded:
+                raise ModStarterError(
+                    f"case-colliding file and directory paths: {seen_folded[folded_dir]!r} and {prefix!r}"
+                )
+            if folded_dir in seen_dirs and seen_dirs[folded_dir] != prefix:
+                raise ModStarterError(
+                    f"case-colliding directory paths: {seen_dirs[folded_dir]!r} and {prefix!r}"
+                )
+            seen_dirs[folded_dir] = prefix
         folded = rel_path.casefold()
         if folded in seen_folded:
             raise ModStarterError(
                 f"duplicate case-folded mod file paths: {seen_folded[folded]!r} and {rel_path!r}"
+            )
+        if folded in seen_dirs:
+            raise ModStarterError(
+                f"case-colliding file and directory paths: {rel_path!r} and {seen_dirs[folded]!r}"
             )
         seen_folded[folded] = rel_path
         data = files[rel_path]
@@ -384,13 +402,16 @@ def inflate_aya_archive(raw: bytes, label: str = "archive.aya", max_bytes: int =
         decomp = zlib.decompressobj()
         try:
             block = decomp.decompress(blob, limit + 1)
-            block += decomp.flush()
+            if len(block) > limit or decomp.unconsumed_tail:
+                raise ModStarterError(f"{label}: inflated block {block_index} exceeds {limit}-byte bound")
+            if not decomp.eof or decomp.unused_data:
+                raise ModStarterError(f"{label}: incomplete zlib stream or trailing bytes in block {block_index}")
+            tail = decomp.flush()
+            if len(block) + len(tail) > limit:
+                raise ModStarterError(f"{label}: inflated block {block_index} exceeds {limit}-byte bound")
+            block += tail
         except zlib.error as error:
             raise ModStarterError(f"{label}: zlib inflate failed at block {block_index}: {error}") from error
-        if len(block) > limit or decomp.unconsumed_tail:
-            raise ModStarterError(f"{label}: inflated block {block_index} exceeds {limit}-byte bound")
-        if not decomp.eof or decomp.unused_data:
-            raise ModStarterError(f"{label}: incomplete zlib stream or trailing bytes in block {block_index}")
         if len(block) < AYA_BLOCK_BYTES and pos < len(raw):
             raise ModStarterError(f"{label}: short inflated block {block_index} before final block")
         blocks.append(block)
@@ -807,6 +828,10 @@ def _parse_payload_arg(spec: str) -> tuple[str, Path]:
     return rel_path, Path(local_path.strip())
 
 
+DEFAULT_DESCRIPTION = "Verified Onslaught CE schema-1 starter mod."
+SYNTHETIC_FIXTURE_DESCRIPTION = "Synthetic WRES test fixture (not a playable RLWD world)."
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Scaffold, discover targets for, and validate Onslaught CE schema-1 mods."
@@ -824,7 +849,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--author", default="Community Example", help="Optional author string (0..64 ASCII chars).")
     parser.add_argument(
         "--description",
-        default="Verified Onslaught CE schema-1 starter mod.",
+        default=None,
         help="Optional description (0..1024 ASCII chars).",
     )
     parser.add_argument("--ce-min", default=None, help="Optional minimum Onslaught CE version (e.g. 0.1.14).")
@@ -834,7 +859,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--target", action="append", default=[], help="Game-relative data/... path to copy from --game-dir (repeatable).")
     parser.add_argument("--world-level", type=int, default=None, help="Stage data/worlds/worldNNN.wrd for level NNN (0..999).")
     parser.add_argument("--payload-file", type=Path, default=None, help="Local .wrd payload file for --world-level.")
-    parser.add_argument("--world-fixture", action="store_true", help="Generate a self-contained authored world fixture for --world-level (zero retail bytes).")
+    parser.add_argument(
+        "--synthetic-fixture",
+        "--world-fixture",
+        dest="synthetic_fixture",
+        action="store_true",
+        help="Explicit opt-in to emit a non-playable synthetic WRES test fixture for --world-level (zero retail bytes).",
+    )
     parser.add_argument("--payload", action="append", default=[], help="Explicit <data/rel/path>=<local_file> entry (repeatable).")
 
     parser.add_argument("--validate-with", type=Path, default=None, help="Path to Onslaught CE `bea` executable to run `--check-mods <id>`.")
@@ -878,16 +909,27 @@ def main(argv: list[str] | None = None) -> int:
             limit = MAX_WORLD_BYTES if WORLD_PATH_RE.fullmatch(rel_path) else MAX_FILE_BYTES
             files[rel_path] = read_regular_bounded(local_path, limit)
 
+        used_synthetic_fixture = False
+        if args.synthetic_fixture and args.world_level is None:
+            raise ModStarterError("--synthetic-fixture requires --world-level NNN")
+
         if args.world_level is not None:
             if not 0 <= args.world_level <= 999:
                 raise ModStarterError(f"--world-level must be 0..999, got {args.world_level}")
             wrd_path = f"data/worlds/world{args.world_level:03d}.wrd"
             if args.payload_file is not None:
                 files[wrd_path] = read_regular_bounded(args.payload_file, MAX_WORLD_BYTES)
-            elif args.world_fixture or args.game_dir is None:
+            elif args.synthetic_fixture:
                 files[wrd_path] = make_world_fixture_bytes(args.world_level, args.mod_id)
-            else:
+                used_synthetic_fixture = True
+            elif args.game_dir is not None:
                 files[wrd_path] = extract_wres_from_level_archive(args.game_dir, args.world_level)
+            else:
+                raise ModStarterError(
+                    "--world-level requires --game-dir <path> to extract a real playable RLWD world "
+                    "(or --payload-file <wrd>); refusing to silently emit a synthetic WRES fixture "
+                    "without explicit --synthetic-fixture opt-in"
+                )
 
         for target in args.target:
             if args.game_dir is None:
@@ -903,8 +945,15 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 raise ModStarterError(
                     "no payload specified: pass --game-dir (with optional --target), "
-                    "--world-level NNN [--world-fixture|--payload-file PATH], or --payload data/path=file"
+                    "--world-level NNN --game-dir <path> (or --payload-file PATH / --synthetic-fixture), "
+                    "or --payload data/path=file"
                 )
+
+        description = (
+            args.description
+            if args.description is not None
+            else (SYNTHETIC_FIXTURE_DESCRIPTION if used_synthetic_fixture else DEFAULT_DESCRIPTION)
+        )
 
         summary = scaffold_mod(
             args.out,
@@ -913,7 +962,7 @@ def main(argv: list[str] | None = None) -> int:
             name=args.name,
             version=args.version,
             author=args.author,
-            description=args.description,
+            description=description,
             ce_min=args.ce_min,
             ce_max=args.ce_max,
             protected_sources=protected,
