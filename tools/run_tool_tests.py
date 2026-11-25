@@ -57,8 +57,12 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/export_asset_catalog_tests.py",),
     # World codec, mod staging, terrain and MSL compiler/inspector suites.
     ("tools/world_resources_encode_tests.py",),
+    ("tools/inline_mesh_walk_tests.py",),
     ("tools/world_mod_stage_tests.py",),
     ("tools/mod_starter_tests.py",),
+    ("tools/level888_build_tests.py",),
+    ("tools/level888_ps2_import_tests.py",),
+    ("tools/ps2_mesh_tests.py",),
     ("tools/world_edit_preview_tests.py",),
     ("tools/world_edit_move_tests.py",),
     ("tools/world_thing_index_tests.py",),
@@ -71,6 +75,7 @@ SUITES: tuple[tuple[str, ...], ...] = (
     ("tools/battle_engine_config_decode_tests.py",),
     ("tools/goodie_resource_walk_tests.py",),
     ("tools/xap_bank_walk_tests.py",),
+    ("tools/ps2_disc_tests.py",),
 )
 
 # Test files that are deliberately not in SUITES, each with why and where they run instead. The registry self-test fails for any
